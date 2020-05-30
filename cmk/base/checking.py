@@ -12,7 +12,19 @@ import signal
 import time
 from random import Random
 from types import FrameType
-from typing import IO, Any, AnyStr, Dict, Iterable, List, Optional, Tuple, Union, cast
+from typing import (
+    Any,
+    AnyStr,
+    Callable,
+    cast,
+    Dict,
+    IO,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from six import ensure_binary, ensure_str
 
@@ -312,11 +324,12 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
             service,
         )
 
-    submit, data_received, result = _get_aggregated_result(
+    submit, data_received, result = get_aggregated_result(
         multi_host_sections,
         host_config,
         ipaddress,
         service,
+        lambda: determine_check_params(service.parameters),
     )
 
     if submit:
@@ -332,12 +345,11 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
     return data_received
 
 
-def _get_aggregated_result(
-    multi_host_sections: data_sources.MultiHostSections,
-    host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
-    service: Service,
-) -> Tuple[bool, bool, ServiceCheckResult]:
+def get_aggregated_result(
+    multi_host_sections: data_sources.MultiHostSections, host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress], service: Service,
+    params_function: Callable[[],
+                              checking_types.Parameters]) -> Tuple[bool, bool, ServiceCheckResult]:
     # TODO (mo): centralize maincheckify: CMK-4295
     plugin_name = PluginName(maincheckify(service.check_plugin_name))
     plugin = config.get_registered_check_plugin(plugin_name)
@@ -367,7 +379,7 @@ def _get_aggregated_result(
         if service.item is not None:
             kwargs["item"] = service.item
         if plugin.check_ruleset_name:
-            kwargs["params"] = determine_check_params(service.parameters)
+            kwargs["params"] = params_function()
 
         with value_store.context(plugin.name, service.item):
             result = _aggregate_results(check_function(**kwargs))

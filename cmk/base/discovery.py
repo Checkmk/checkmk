@@ -38,9 +38,11 @@ from cmk.utils.type_defs import (
 import cmk.utils.cleanup
 
 from cmk.base.api import PluginName
+from cmk.base.api.agent_based.checking_types import Parameters
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     maincheckify,
     resolve_legacy_name,
+    wrap_parameters,
 )
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
@@ -1353,7 +1355,6 @@ def _get_cluster_services(
     return _merge_manual_services(host_config, cluster_items, on_error), cluster_host_labels
 
 
-# TODO: Can't we reduce the duplicate code here? Check out the "checking" code
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     # type: (HostName, bool, bool, str) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]
     """Get the list of service of a host or cluster and guess the current state of
@@ -1379,75 +1380,22 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     table = []  # type: CheckPreviewTable
     for check_source, discovered_service in services.values():
         params = _preview_params(hostname, discovered_service, check_source)
-        exitcode = None  # type: Optional[ServiceState]
-        perfdata = []  # type: List[Metric]
         if check_source in ['legacy', 'active', 'custom']:
+            exitcode = None  # type: Optional[ServiceState]
             output = u"WAITING - %s check, cannot be done offline" % check_source.title()
+            perfdata = []  # type: List[Metric]
         else:
             if discovered_service.check_plugin_name not in config.check_info:
                 continue  # Skip not existing check silently
 
-            check_api_utils.set_service(discovered_service.check_plugin_name,
-                                        discovered_service.description)
-            section_name = section_name_of(discovered_service.check_plugin_name)
-
-            section_content = None
-            try:
-                try:
-                    section_content = multi_host_sections.get_section_content(
-                        hostname,
-                        ipaddress,
-                        config.get_management_board_precedence(section_name, config.check_info),
-                        section_name,
-                        for_discovery=True,
-                    )
-                except MKParseFunctionError as e:
-                    if cmk.utils.debug.enabled() or on_error == "raise":
-                        x = e.exc_info()
-                        # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
-                        # exception which need to lead to a skipped check instead of a crash
-                        # TODO CMK-3729, PEP-3109
-                        new_exception = x[0](x[1])
-                        new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
-                        raise new_exception
-                    raise
-            except Exception as e:
-                if cmk.utils.debug.enabled():
-                    raise
-                exitcode = 3
-                output = u"Error: %s" % e
-
-            # TODO: Move this to a helper function
-            if section_content is None:  # No data for this check type
-                exitcode = 3
-                output = u"Received no data"
-
-            if not section_content and cmk.base.check_utils.is_snmp_check(discovered_service.check_plugin_name) \
-               and not config.check_info[discovered_service.check_plugin_name]["handle_empty_info"]:
-                exitcode = 0
-                output = u"Received no data"
-
-            item_state.set_item_state_prefix(discovered_service.check_plugin_name,
-                                             discovered_service.item)
-
-            if exitcode is None:
-                check_function = config.check_info[
-                    discovered_service.check_plugin_name]["check_function"]
-
-                try:
-                    item_state.reset_wrapped_counters()
-                    exitcode, output, perfdata = checking.sanitize_check_result(
-                        check_function(discovered_service.item,
-                                       checking.legacy_determine_check_params(params),
-                                       section_content))
-                    item_state.raise_counter_wrap()
-                except item_state.MKCounterWrapped:
-                    output = u"WAITING - Counter based check, cannot be done offline"
-                except Exception:
-                    if cmk.utils.debug.enabled():
-                        raise
-                    exitcode = 3
-                    output = u"UNKNOWN - invalid output from agent or error in check implementation"
+            _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
+                multi_host_sections,
+                host_config,
+                ipaddress,
+                discovered_service,
+                # mypy can't infer "the type of lambda"
+                lambda p=params: Parameters(wrap_parameters(p)),  # type: ignore[misc]
+            )
 
         table.append((
             _preview_check_source(hostname, discovered_service, check_source),

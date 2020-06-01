@@ -228,8 +228,9 @@ constexpr const char* const kCleanupSmart = "smart";  // delete only owned [*]
 constexpr const char* const kCleanupAll = "all";      // delete all
 
 // service.start_mode
-constexpr const char* const kStartModeAuto = "auto";          // start on boot
-constexpr const char* const kStartModeDemand = "demand";      // start manually
+constexpr const char* const kStartModeAuto = "auto";        // start on boot
+constexpr const char* const kStartModeDelayed = "delayed";  // start after boot
+constexpr const char* const kStartModeDemand = "demand";    // start manually
 constexpr const char* const kStartModeDisabled = "disabled";  // start disabled
 
 constexpr const char* const kErrorModeIgnore = "ignore";  // do nothing

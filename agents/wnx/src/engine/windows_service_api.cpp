@@ -1008,6 +1008,9 @@ wtools::WinService::StartMode GetServiceStartModeFromCfg(
     if (IsEqual(text, values::kStartModeAuto))
         return WinService::StartMode::started;
 
+    if (IsEqual(text, values::kStartModeDelayed))
+        return WinService::StartMode::delayed;
+
     return WinService::StartMode::started;
 }
 

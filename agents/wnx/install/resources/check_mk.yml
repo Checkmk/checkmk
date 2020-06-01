@@ -276,6 +276,7 @@ system:
                                # no may be used if you have serious problems with crasghing and starting
         error_mode: log        # ignore or log
         start_mode: auto       # Possible values are: auto - service starts with boot, demand - requires manual starting
+                               # delayed - serice started automatically(delayed)
                                # disabled - service cannot be started manually and should be enabled
 
 

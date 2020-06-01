@@ -145,17 +145,9 @@ def load_all_plugins() -> None:
 
 
 def _localize_request() -> None:
-    previous_language = cmk.gui.i18n.get_current_language()
     user_language = request.get_ascii_input("lang", user.language)
-
     set_language_cookie(request, response, user_language)
     cmk.gui.i18n.localize(user_language)
-
-    # All plugins might have to be reloaded due to a language change. Only trigger
-    # a second plugin loading when the user is really using a custom localized GUI.
-    # Otherwise the load_all_plugins() at the beginning of the request is sufficient.
-    if cmk.gui.i18n.get_current_language() != previous_language:
-        load_all_plugins()
 
 
 def handle_unhandled_exception() -> Response:

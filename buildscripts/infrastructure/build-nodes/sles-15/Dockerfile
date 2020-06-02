@@ -1,5 +1,4 @@
-ARG DOCKER_REGISTRY
-FROM ${DOCKER_REGISTRY}/sles-15-base
+FROM registry.suse.com/suse/sle15:15.0
 
 SHELL ["/bin/bash", "-c"]
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"

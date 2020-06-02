@@ -897,7 +897,12 @@ def mode_snmpget(args):
     # type: (List[str]) -> None
     if not args:
         raise MKBailOut("You need to specify an OID.")
-    snmp.do_snmpget(args[0], args[1:])
+    oid, *hostnames = args
+    if not hostnames:
+        cache = config.get_config_cache()
+        hostnames.extend(host for host in cache.all_active_realhosts()
+                         if cache.get_host_config(host).is_snmp_host)
+    snmp.do_snmpget(oid, hostnames)
 
 
 modes.register(

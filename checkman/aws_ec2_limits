@@ -15,9 +15,9 @@ description:
 
  - Elastic IP Addresses, 5
 
- - Rules of VPC security group, 50
+ - Rules of VPC security group, 120
 
- - Security Groups of VPC, 500
+ - VPC security groups, 2500
 
  - VPC security groups of elastic network interface, 5
 

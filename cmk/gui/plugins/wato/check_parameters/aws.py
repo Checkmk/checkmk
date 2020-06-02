@@ -509,8 +509,8 @@ def _parameter_valuespec_aws_ec2_limits():
     return Dictionary(elements=[
         ('vpc_elastic_ip_addresses', _vs_limits("VPC Elastic IP Addresses", 5)),
         ('elastic_ip_addresses', _vs_limits("Elastic IP Addresses", 5)),
-        ('vpc_sec_group_rules', _vs_limits("Rules of VPC security group", 50)),
-        ('vpc_sec_groups', _vs_limits("Security Groups of VPC", 500)),
+        ('vpc_sec_group_rules', _vs_limits("Rules of VPC security group", 120)),
+        ('vpc_sec_groups', _vs_limits("VPC security groups", 2500)),
         ('if_vpc_sec_group', _vs_limits("VPC security groups of elastic network interface", 5)),
         ('spot_inst_requests', _vs_limits("Spot Instance Requests", 20)),
         ('active_spot_fleet_requests', _vs_limits("Active Spot Fleet Requests", 1000)),

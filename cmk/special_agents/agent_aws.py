@@ -772,8 +772,8 @@ class EC2Limits(AWSSectionLimits):
         self._add_instance_limits(instances, res_instances, spot_inst_requests,
                                   EC2InstFamiliesquotas)
         self._add_addresses_limits(addresses)
-        self._add_security_group_limits(instances, security_groups)
-        self._add_interface_limits(instances, interfaces)
+        self._add_security_group_limits(security_groups)
+        self._add_interface_limits(interfaces)
         self._add_spot_inst_limits(spot_inst_requests)
         self._add_spot_fleet_limits(spot_fleet_requests)
         return AWSComputedContent(reservations, raw_content.cache_timestamp)
@@ -906,58 +906,35 @@ class EC2Limits(AWSSectionLimits):
                             std_addresses,
                         ))
 
-    def _add_security_group_limits(self, instances, security_groups):
-        # Security groups for EC2-Classic per instance
-        # Rules per security group for EC2-Classic
-        sgs_per_vpc = {}  # type: Dict[Tuple[Any, Any], int]
+    def _add_security_group_limits(self, security_groups):
+
+        self._add_limit(
+            "", AWSLimit(
+                "vpc_sec_groups",
+                "VPC security groups",
+                2500,
+                len(security_groups),
+            ))
+
         for sec_group in security_groups:
             vpc_id = sec_group['VpcId']
             if not vpc_id:
                 continue
-            inst = self._get_inst_assignment(instances, 'VpcId', vpc_id)
-            if inst is None:
-                continue
-            inst_id = _get_ec2_piggyback_hostname(inst, self._region)
-            if not inst_id:
-                continue
-            key = (inst_id, vpc_id)
-            sgs_per_vpc[key] = sgs_per_vpc.get(key, 0) + 1
             self._add_limit(
-                inst_id,
+                "",
                 AWSLimit(
                     "vpc_sec_group_rules",
                     "Rules of VPC security group %s" % sec_group['GroupName'],
-                    50,
+                    120,
                     len(sec_group['IpPermissions']),
                 ))
 
-        for (inst_id, vpc_id), count in sgs_per_vpc.items():
-            self._add_limit(
-                inst_id,
-                AWSLimit(
-                    "vpc_sec_groups",
-                    "Security Groups of VPC %s" % vpc_id,
-                    500,
-                    count,
-                ))
-
-    def _get_inst_assignment(self, instances, key, assignment):
-        for inst in instances.values():
-            if inst.get(key) == assignment:
-                return inst
-
-    def _add_interface_limits(self, instances, interfaces):
-        # These limits are per security groups and
-        # security groups are per instance
+    def _add_interface_limits(self, interfaces):
+        # since there can also be interfaces which are not attached to an instance, we add these
+        # limits to the host running the agent instead of to individual instances
         for iface in interfaces:
-            inst = self._get_inst_assignment(instances, 'VpcId', iface.get('VpcId'))
-            if inst is None:
-                continue
-            inst_id = _get_ec2_piggyback_hostname(inst, self._region)
-            if not inst_id:
-                continue
             self._add_limit(
-                inst_id,
+                "",
                 AWSLimit(
                     "if_vpc_sec_group",
                     "VPC security groups of elastic network interface %s" %

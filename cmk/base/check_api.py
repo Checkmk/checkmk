@@ -72,7 +72,6 @@ Global variables:
 # We import several modules here for the checks
 
 # TODO: Move imports directly to checks?
-from __future__ import division  # pylint: disable=misplaced-future
 import collections  # noqa: F401 # pylint: disable=unused-import
 import enum  # noqa: F401 # pylint: disable=unused-import
 import fnmatch  # noqa: F401 # pylint: disable=unused-import

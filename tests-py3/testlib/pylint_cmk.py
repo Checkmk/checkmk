@@ -7,8 +7,6 @@
 # pylint: disable=redefined-outer-name
 # Library for pylint checks of Check_MK
 
-from __future__ import print_function
-
 import os
 import getpass
 import glob

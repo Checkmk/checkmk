@@ -102,7 +102,6 @@ class NagiosCore(core_config.MonitoringCore):
 
 
 class NagiosConfig(object):  # pylint: disable=useless-object-inheritance
-    # type: () -> None
     def __init__(self, outfile, hostnames):
         # type: (IO[str], Optional[List[HostName]]) -> None
         super(NagiosConfig, self).__init__()

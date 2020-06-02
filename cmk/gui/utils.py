@@ -211,5 +211,5 @@ def validate_regex(regex_value):
 def set_cme_default_customer(default_value):
     site_id = cmk.gui.globals.html.request.var("site")
     if site_id and not cmk.gui.config.site_is_local(site_id):
-        default_value["customer"] = cmk.gui.config.sites[site_id]["customer"]
+        default_value["customer"] = cmk.gui.config.sites[site_id].get("customer", "provider")
     return default_value

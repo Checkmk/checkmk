@@ -141,5 +141,6 @@ def test_snmp_can_functions(monkeypatch, name, oids_data, expected_result):
         None,  # type: ignore # not used
         name,
         None,  # type: ignore # not used
+        backend=None,  # type: ignore  # monkeypatched
     )
     assert actual_result is expected_result

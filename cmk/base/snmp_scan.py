@@ -12,39 +12,38 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    SNMPHostConfig,
-)
+from cmk.utils.type_defs import ABCSNMPBackend, CheckPluginName, SNMPHostConfig
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.snmp as snmp
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPDetectAtom, SNMPDetectSpec
+from cmk.fetchers import factory
 
 
-def _evaluate_snmp_detection(detect_spec, host_config, cp_name, do_snmp_scan):
-    # type: (SNMPDetectSpec, SNMPHostConfig, str, bool) -> bool
+def _evaluate_snmp_detection(detect_spec, host_config, cp_name, do_snmp_scan, *, backend):
+    # type: (SNMPDetectSpec, SNMPHostConfig, str, bool, ABCSNMPBackend) -> bool
     """Evaluate a SNMP detection specification
 
     Return True if and and only if at least all conditions in one "line" are True
     """
     return any(
         all(
-            _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan)
+            _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan, backend=backend)
             for atom in alternative)
         for alternative in detect_spec)
 
 
-def _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan):
-    # type: (SNMPDetectAtom, SNMPHostConfig, str, bool) -> bool
+def _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan, *, backend):
+    # type: (SNMPDetectAtom, SNMPHostConfig, str, bool, ABCSNMPBackend) -> bool
     oid, pattern, flag = atom
     value = snmp.get_single_oid(
         host_config,
         oid,
         cp_name,
         do_snmp_scan=do_snmp_scan,
+        backend=backend,
     )
     if value is None:
         # check for "not_exists"
@@ -84,6 +83,7 @@ def _snmp_scan(host_config,
                for_mgmt_board=False):
     # type: (SNMPHostConfig, str, bool, bool, bool) -> Set[CheckPluginName]
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
+    backend = factory.backend(host_config)
 
     # Make hostname globally available for scan functions.
     # This is rarely used, but e.g. the scan for if/if64 needs
@@ -96,7 +96,10 @@ def _snmp_scan(host_config,
                                                         config.snmp_without_sys_descr):
         for oid, name in [(".1.3.6.1.2.1.1.1.0", "system description"),
                           (".1.3.6.1.2.1.1.2.0", "system object")]:
-            value = snmp.get_single_oid(host_config, oid, do_snmp_scan=do_snmp_scan)
+            value = snmp.get_single_oid(host_config,
+                                        oid,
+                                        do_snmp_scan=do_snmp_scan,
+                                        backend=backend)
             if value is None:
                 raise MKSNMPError(
                     "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
@@ -126,17 +129,15 @@ def _snmp_scan(host_config,
     found_plugins = set()  # type: Set[CheckPluginName]
 
     for section_plugin in these_sections:
-
         try:
-
             if _evaluate_snmp_detection(
                     section_plugin.detect_spec,
                     host_config,
                     str(section_plugin.name),
                     do_snmp_scan,
+                    backend=backend,
             ):
                 found_plugins.add(str(section_plugin.name))
-
         except MKGeneralException:
             # some error messages which we explicitly want to show to the user
             # should be raised through this

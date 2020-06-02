@@ -15,7 +15,6 @@ import sys
 from typing import Dict, List, Tuple
 
 import requests
-from six import ensure_str
 
 from cmk.utils.notify import find_wato_folder
 import cmk.utils.paths
@@ -25,8 +24,8 @@ import cmk.utils.password_store
 def collect_context():
     # type: () -> Dict[str, str]
     return {
-        var[7:]: ensure_str(value)
-        for (var, value) in os.environ.items()
+        var[7:]: value  #
+        for var, value in os.environ.items()
         if var.startswith("NOTIFY_")
     }
 
@@ -297,7 +296,7 @@ def post_request(message_constructor, success_code=200):
     try:
         r = requests.post(url=url, json=message_constructor(context), proxies=proxies)
     except requests.exceptions.ProxyError:
-        sys.stderr.write(ensure_str("Cannot connect to proxy: %s\n" % proxy_url))
+        sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
         sys.exit(2)
 
     if r.status_code == success_code:

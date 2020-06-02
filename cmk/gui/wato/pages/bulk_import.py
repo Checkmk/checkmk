@@ -98,7 +98,7 @@ class ModeBulkImport(WatoMode):
         # type: () -> Path
         file_id = html.request.get_unicode_input_mandatory(
             "file_id", "%s-%d" % (config.user.id, int(time.time())))
-        return self._upload_tmp_path / ensure_str("%s.csv" % file_id)
+        return self._upload_tmp_path / ("%s.csv" % file_id)
 
     # Upload the CSV file into a temporary directoy to make it available not only
     # for this request. It needs to be available during several potential "confirm"

@@ -11,8 +11,6 @@ import subprocess
 import sys
 from typing import Dict, List, Tuple
 
-from six import ensure_str
-
 
 def agent_ipmi_sensors_usage():
     sys.stderr.write("""Check_MK IPMI Sensors
@@ -58,9 +56,9 @@ def parse_data(data, excludes):
                     has_excludes = True
                     break
             if not has_excludes:
-                sys.stdout.write(ensure_str("%s\n" % line))
+                sys.stdout.write("%s\n" % line)
         else:
-            sys.stdout.write(ensure_str("%s\n" % line))
+            sys.stdout.write("%s\n" % line)
 
 
 def main(sys_argv=None):
@@ -187,7 +185,6 @@ def main(sys_argv=None):
             errors.append(str(e))
 
     if errors:
-        msg = "ERROR: '%s'.\n" % ", ".join(errors)
-        sys.stderr.write(ensure_str(msg))
+        sys.stderr.write("ERROR: '%s'.\n" % ", ".join(errors))
         return 1
     return 0

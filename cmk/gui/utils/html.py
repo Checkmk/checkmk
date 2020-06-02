@@ -6,8 +6,6 @@
 
 from typing import Union, Any, Iterable
 
-from six import ensure_str
-
 HTMLInput = Union["HTML", int, float, None, str]
 
 
@@ -32,13 +30,11 @@ class HTML(object):
         # type: (HTMLInput) -> str
         # value can of of any type: HTML, int, float, None, str, ...
         # TODO cleanup call sites
-        if not isinstance(value, str):
-            value = str(value)
-        return ensure_str(value)
+        return value if isinstance(value, str) else str(value)
 
     def __html__(self):
         # type: () -> str
-        return ensure_str("%s" % self)
+        return "%s" % self
 
     # TODO: This is broken! Cleanup once we are using Python 3.
     # NOTE: Return type "unicode" of "__str__" incompatible with return type "str" in supertype "object"
@@ -64,8 +60,7 @@ class HTML(object):
 
     def __repr__(self):
         # type: () -> str
-        repr_val = "HTML(\"%s\")" % self.value
-        return ensure_str(repr_val)
+        return "HTML(\"%s\")" % self.value
 
     def to_json(self):
         # type: () -> str

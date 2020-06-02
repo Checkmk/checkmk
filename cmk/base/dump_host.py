@@ -7,8 +7,6 @@
 import time
 from typing import Optional
 
-from six import ensure_str
-
 import cmk.utils.tty as tty
 import cmk.utils.render
 
@@ -112,10 +110,8 @@ def dump_host(hostname):
     for service in sorted(check_table.get_check_table(hostname).values(),
                           key=lambda s: s.description):
         table_data.append([
-            service.check_plugin_name,
-            ensure_str("None" if service.item is None else service.item),
-            _evaluate_params(service.parameters),
-            ensure_str(service.description),
+            service.check_plugin_name, "None" if service.item is None else service.item,
+            _evaluate_params(service.parameters), service.description,
             ",".join(config_cache.servicegroups_of_service(hostname, service.description))
         ])
 

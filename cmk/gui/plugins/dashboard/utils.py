@@ -10,7 +10,6 @@ import json
 import copy
 from typing import Optional, Any, Dict, Union, Tuple, List, Callable, cast
 import urllib.parse
-from six import ensure_str
 
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import UserId
@@ -277,7 +276,7 @@ class Dashlet(metaclass=abc.ABCMeta):
             return url
 
         context_vars = {
-            k: ensure_str("%s" % v)  #
+            k: "%s" % v  #
             for k, v in self._dashlet_context_vars()
             if v is not None
         }

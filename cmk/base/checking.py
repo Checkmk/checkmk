@@ -101,7 +101,7 @@ CHECK_NOT_IMPLEMENTED = (3, 'Check not implemented', [])  # type: ServiceCheckRe
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
     # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]
     cpu_tracking.start("busy")
-    console.verbose("Check_MK version %s\n", ensure_str(cmk_version.__version__))
+    console.verbose("Check_MK version %s\n", cmk_version.__version__)
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)

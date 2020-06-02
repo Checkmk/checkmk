@@ -1244,9 +1244,8 @@ def prepare_check_command(command_spec, hostname, description):
                 else:
                     descr = ""
 
-                console.warning(
-                    ensure_str("The stored password \"%s\"%s does not exist (anymore)." %
-                               (pw_ident, descr)))
+                console.warning("The stored password \"%s\"%s does not exist (anymore)." %
+                                (pw_ident, descr))
                 password = "%%%"
 
             pw_start_index = str(preformated_arg.index("%s"))

@@ -549,25 +549,25 @@ def render_number_function(timeformat):
         def render_number(n, d):
             if not d:
                 return _("n/a")
-            return ensure_str(("%." + timeformat[11:] + "f%%") % (float(n) / float(d) * 100.0))
+            return ("%." + timeformat[11:] + "f%%") % (float(n) / float(d) * 100.0)
     elif timeformat == "seconds":
 
         def render_number(n, d):
-            return ensure_str("%d s" % n)
+            return "%d s" % n
     elif timeformat == "minutes":
 
         def render_number(n, d):
-            return ensure_str("%d min" % (n / 60))  # fixed: true-division
+            return "%d min" % (n / 60)
     elif timeformat == "hours":
 
         def render_number(n, d):
-            return ensure_str("%d h" % (n / 3600))  # fixed: true-division
+            return "%d h" % (n / 3600)
     else:
 
         def render_number(n, d):
             minn, sec = divmod(n, 60)
             hours, minn = divmod(minn, 60)
-            return ensure_str("%02d:%02d:%02d" % (hours, minn, sec))
+            return "%02d:%02d:%02d" % (hours, minn, sec)
 
     return render_number
 
@@ -1604,7 +1604,7 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
         texts = []
         for _timeformat, render_number in timeformats:
             texts.append(render_number(n, d))
-        return ensure_str(", ".join(texts))
+        return ", ".join(texts)
 
     def chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width):
         # type: (AVTimeStamp, AVTimeStamp, int, int) -> AVTimelineSpan
@@ -1736,7 +1736,7 @@ def find_next_choord(broken, scale):
         epoch = time.mktime(broken)
         epoch += 3600
         broken[:] = list(time.localtime(epoch))
-        title = ensure_str(time.strftime("%H:%M", broken))
+        title = time.strftime("%H:%M", broken)
 
     elif scale == "2hours":
         broken[3] = int(broken[3] / 2) * 2

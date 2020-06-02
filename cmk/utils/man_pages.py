@@ -316,7 +316,7 @@ def print_man_page_table():
 
 def get_title_from_man_page(path):
     # type: (Path) -> str
-    with path.open(encoding=ensure_str("utf-8")) as fp:
+    with path.open(encoding="utf-8") as fp:
         for line in fp:
             if line.startswith("title:"):
                 return line.split(":", 1)[1].strip()

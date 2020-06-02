@@ -1689,7 +1689,8 @@ Copyright (C) 2009 Mathias Kettner
     the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
     Boston, MA 02111-1307, USA.
 
-""", cmk_version.__version__, ensure_str(cmk_version.edition_short().upper()))
+""", cmk_version.__version__,
+        cmk_version.edition_short().upper())
 
 
 modes.register(

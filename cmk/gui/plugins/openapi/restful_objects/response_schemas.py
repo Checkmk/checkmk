@@ -52,6 +52,7 @@ class LinkSchema(Schema):
     """A Link representation according to A-24 (2.7)
 
     """
+    domainType = fields.Constant("link", required=True)
     rel = fields.String(
         description=("Indicates the nature of the relationship of the related resource to the "
                      "resource that generated this representation"),
@@ -243,7 +244,7 @@ class FolderMembers(Schema):
     )
 
 
-class Folder(Linkable):
+class FolderSchema(Linkable):
     domainType = fields.Constant(
         "folder",
         required=True,
@@ -251,6 +252,14 @@ class Folder(Linkable):
     id = fields.String()
     title = fields.String()
     members = fields.Nested(FolderMembers())
+
+
+class ConcreteFolder(OneOfSchema):
+    type_schemas = {
+        'folder': FolderSchema,
+        'link': LinkSchema,
+    }
+    type_field = 'domainType'
 
 
 class MoveFolder(Schema):
@@ -299,7 +308,7 @@ class SiteState(Linkable):
 
 class HostMembers(Schema):
     folder = fields.Nested(
-        Folder(),
+        ConcreteFolder,
         description="The folder in which this host resides. It is represented by a hexadecimal "
         "identifier which is it's 'primary key'. The folder can be accessed via the "
         "`self`-link provided in the links array.")
@@ -317,7 +326,7 @@ class ConcreteHost(OneOfSchema):
         'host': HostSchema,
         'link': LinkSchema,
     }
-    type_field = 'type'
+    type_field = 'domainType'
 
 
 class HostCollection(Linkable):
@@ -332,7 +341,12 @@ class ObjectAction(Linkable):
 
 
 class DomainObjectCollection(Linkable):
+    domainType = fields.String()
     value = fields.List(fields.Nested(LinkSchema))
+
+
+class FolderCollection(DomainObjectCollection):
+    domainType = fields.Constant("folder")
 
 
 class User(Linkable):

@@ -125,12 +125,23 @@ components:
       - message
       - title
       type: object
+    ConcreteFolder:
+      discriminator:
+        mapping:
+          folder: '#/components/schemas/Folder'
+          link: '#/components/schemas/Link'
+        propertyName: domainType
+      oneOf:
+      - $ref: '#/components/schemas/Folder'
+      - $ref: '#/components/schemas/Link'
+      properties: {}
+      type: object
     ConcreteHost:
       discriminator:
         mapping:
-          host: '#/components/schemas/Host'
           link: '#/components/schemas/Link'
-        propertyName: type
+          object: '#/components/schemas/Host'
+        propertyName: domainType
       oneOf:
       - $ref: '#/components/schemas/Host'
       - $ref: '#/components/schemas/Link'
@@ -231,6 +242,8 @@ components:
       type: object
     DomainObjectCollection:
       properties:
+        domainType:
+          type: string
         links:
           description: list of links to other resources.
           items:
@@ -261,6 +274,23 @@ components:
           type: string
       required:
       - domainType
+      - links
+      type: object
+    FolderCollection:
+      properties:
+        domainType:
+          default: folder
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        value:
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+      required:
       - links
       type: object
     FolderMembers:
@@ -343,7 +373,7 @@ components:
       properties:
         folder:
           allOf:
-          - $ref: '#/components/schemas/Folder'
+          - $ref: '#/components/schemas/ConcreteFolder'
           description: The folder in which this host resides. It is represented by
             a hexadecimal identifier which is it's 'primary key'. The folder can be
             accessed via the `self`-link provided in the links array.
@@ -422,6 +452,9 @@ components:
             properties) required to follow the link.
           nullable: true
           type: object
+        domainType:
+          default: link
+          type: string
         href:
           description: The (absolute) address of the related resource. Any characters
             that are invalid in URLs must be URL encoded.
@@ -449,6 +482,7 @@ components:
           example: application/json
           type: string
       required:
+      - domainType
       - href
       - method
       - rel
@@ -945,7 +979,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DomainObjectCollection'
+                $ref: '#/components/schemas/FolderCollection'
           description: ''
       summary: List folders
       tags:
@@ -986,7 +1020,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Folder'
+                $ref: '#/components/schemas/ConcreteFolder'
           description: ''
           headers:
             ETag:
@@ -1013,16 +1047,16 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"title\": \"Production Hosts\"\
-          ,\n          \"name\": \"production\",\n          \"attributes\": {\n  \
-          \          \"foo\": \"bar\"\n          },\n          \"parent\": \"root\"\
+          \ application/json\" \\\n    -d '{\n          \"name\": \"production\",\n\
+          \          \"attributes\": {\n            \"foo\": \"bar\"\n          },\n\
+          \          \"title\": \"Production Hosts\",\n          \"parent\": \"root\"\
           \n        }' \\\n    \"$API_URL/collections/folder\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/folder\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    title='Production\
-          \ Hosts' \\\n    name='production' \\\n    attributes='{\"foo\": \"bar\"\
-          }' \\\n    parent='root'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='production'\
+          \ \\\n    attributes='{\"foo\": \"bar\"}' \\\n    title='Production Hosts'\
+          \ \\\n    parent='root'"
   /objects/folder/{ident}:
     delete:
       description: ''
@@ -1086,7 +1120,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Folder'
+                $ref: '#/components/schemas/ConcreteFolder'
           description: ''
           headers:
             ETag:
@@ -1148,7 +1182,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Folder'
+                $ref: '#/components/schemas/ConcreteFolder'
           description: ''
           headers:
             ETag:
@@ -1178,15 +1212,16 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"title\": \"Virtual Servers.\",\n          \"attributes\"\
-          : [\n            {\n              \"key\": \"foo\",\n              \"value\"\
-          : \"bar\"\n            }\n          ]\n        }' \\\n    \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
+          \    -d '{\n          \"attributes\": [\n            {\n              \"\
+          key\": \"foo\",\n              \"value\": \"bar\"\n            }\n     \
+          \     ],\n          \"title\": \"Virtual Servers.\"\n        }' \\\n   \
+          \ \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    title='Virtual Servers.' \\\n    attributes='[{\"\
-          key\": \"foo\", \"value\": \"bar\"}]'"
+          \ a20ceacf346041dc' \\\n    attributes='[{\"key\": \"foo\", \"value\": \"\
+          bar\"}]' \\\n    title='Virtual Servers.'"
   /objects/folder/{ident}/actions/move/invoke:
     post:
       description: ''
@@ -1213,7 +1248,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Folder'
+                $ref: '#/components/schemas/ConcreteFolder'
           description: ''
           headers:
             ETag:
@@ -1294,16 +1329,16 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"hostname\": \"example.com\"\
-          ,\n          \"nodes\": [\n            \"host1\",\n            \"host2\"\
-          ,\n            \"host3\"\n          ],\n          \"folder\": \"root\",\n\
-          \          \"attributes\": {}\n        }' \\\n    \"$API_URL/collections/host\""
+          \ application/json\" \\\n    -d '{\n          \"folder\": \"root\",\n  \
+          \        \"attributes\": {},\n          \"nodes\": [\n            \"host1\"\
+          ,\n            \"host2\",\n            \"host3\"\n          ],\n       \
+          \   \"hostname\": \"example.com\"\n        }' \\\n    \"$API_URL/collections/host\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    hostname='example.com'\
-          \ \\\n    nodes='[\"host1\", \"host2\", \"host3\"]' \\\n    folder='root'\
-          \ \\\n    attributes='{}'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    folder='root'\
+          \ \\\n    attributes='{}' \\\n    nodes='[\"host1\", \"host2\", \"host3\"\
+          ]' \\\n    hostname='example.com'"
   /domain-types/host/collections/hosts:
     get:
       description: ''
@@ -1492,15 +1527,15 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"nodes\": [\n            \"host1\",\n           \
-          \ \"host2\",\n            \"host3\"\n          ],\n          \"attributes\"\
-          : {}\n        }' \\\n    \"$API_URL/objects/host/example.com\""
+          \    -d '{\n          \"attributes\": {},\n          \"nodes\": [\n    \
+          \        \"host1\",\n            \"host2\",\n            \"host3\"\n   \
+          \       ]\n        }' \\\n    \"$API_URL/objects/host/example.com\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    nodes='[\"host1\", \"host2\", \"host3\"]' \\\
-          \n    attributes='{}'"
+          \ a20ceacf346041dc' \\\n    attributes='{}' \\\n    nodes='[\"host1\", \"\
+          host2\", \"host3\"]'"
   /collections/host_group:
     post:
       description: ''

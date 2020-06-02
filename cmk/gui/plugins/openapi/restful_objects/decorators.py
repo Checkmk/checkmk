@@ -39,10 +39,10 @@ def _constantly(arg):
 
 _SEEN_PATHS = set()  # type: Set[Tuple[str, str, str]]
 
-ETagBehaviour = Union[Literal["input"], Literal["output"], Literal["both"]]
+ETagBehaviour = Literal["input", "output", "both"]
 
 # Only these methods are supported.
-HTTPMethod = Union[Literal["get"], Literal["post"], Literal["put"], Literal["delete"]]
+HTTPMethod = Literal["get", "post", "put", "delete"]
 
 Parameter = Union[str, dict]
 

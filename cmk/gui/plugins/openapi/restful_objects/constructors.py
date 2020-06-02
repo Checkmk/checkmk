@@ -3,10 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import collections
 import hashlib
 import json
-from typing import Any, Callable, Dict, List, Optional, Union, Literal
+from typing import Any, Dict, List, Optional, Union, Literal, TypedDict
 
 from connexion import ProblemException  # type: ignore[import]
 from werkzeug.datastructures import ETags
@@ -15,11 +14,17 @@ from cmk.gui.globals import request
 from cmk.gui.http import Response
 
 DomainObject = Dict[str, str]
-CollectionItem = Dict[str, str]
-LocationType = Optional[Union[Literal['path'], Literal['query'], Literal['header'],
-                              Literal['cookie']]]
-ResultType = Literal["object", "list", "scalar", "void"]
 LinkType = Dict[str, str]
+CollectionItem = Dict[str, str]
+CollectionObject = TypedDict('CollectionObject', {
+    'id': str,
+    'domainType': str,
+    'links': List[LinkType],
+    'value': Any,
+    'extensions': Dict[str, str]
+})
+LocationType = Optional[Literal['path', 'query', 'header', 'cookie']]
+ResultType = Literal["object", "list", "scalar", "void"]
 RestfulLinkRel = Literal[
     ".../action",
     ".../action-param",
@@ -70,14 +75,9 @@ PropertyFormat = Literal[
     'int',  # the number should be interpreted as an integer.
 ]
 
-# We need to have a registry to allow plugins from other contexts (cee, cme, etc.) to be linked to
-# from here (raw). The key is the domain-type (folder, host, etc.) the values are link-factories
-# which take a base-url.
-DOMAIN_OBJECT_LINK_REGISTRY = collections.defaultdict(list)  # type: Dict[str, List[Callable]]
-
 
 def link_rel(
-        rel,  # type: Union[RestfulLinkRel, str]   # TODO: make more stringent
+        rel,  # type: Union[RestfulLinkRel, str]
         href,  # type: str
         method='GET',  # type: HTTPMethod
         content_type='application/json',  # type: str
@@ -87,10 +87,6 @@ def link_rel(
 ):
     # type: (...) -> LinkType
     """Link to a separate entity
-
-    TODO:
-        This should be 2 functions, one for spec-compliant rel-types, and one for check-mk
-        internal rel-types.
 
     Args:
         rel:
@@ -120,6 +116,7 @@ def link_rel(
         >>> link = link_rel('.../update', 'update',
         ...                 method='GET', profile='.../object', title='Update the object')
         >>> expected = {
+        ...     'domainType': 'link',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/update',
@@ -140,7 +137,8 @@ def link_rel(
         'rel': expand_rel(rel, parameters),
         'href': href,
         'method': method.upper(),
-        'type': expand_rel(content_type, content_type_params)
+        'type': expand_rel(content_type, content_type_params),
+        'domainType': 'link',
     }
     if title is not None:
         link_obj['title'] = title
@@ -199,42 +197,6 @@ def require_etag(etag):
             "Precondition failed",
             "ETag didn't match. Probable cause: Object changed by another user.",
         )
-
-
-def rel_name(rel, **kw):
-    """Generate a relationship name including it's parameters.
-
-    Notes:
-        No checking is done for the validity of the parameters in relation to the
-        rel-value name. Please consult the Spec 2.7.1.2 for detailed information about
-        the allowed parameters.
-
-    Examples:
-
-        >>> rel_name('self')
-        'self'
-
-        >>> rel_name('.../update', action="move")
-        '.../update;action="move"'
-
-        >>> rel_name('.../update;', action="move")
-        '.../update;action="move"'
-
-    Args:
-        rel:
-            The rel-name.
-
-        **kw:
-            Additional parameters.
-
-    Returns:
-        The rel-name with it's parameters concatenated.
-
-    """
-    if len(kw) == 1:
-        for key, value in kw.items():
-            rel = rel.rstrip(";") + ';%s="%s"' % (key, value)
-    return rel
 
 
 def object_action(name, parameters, base):
@@ -468,13 +430,16 @@ def domain_object(
     }
 
 
-def collection_object(domain_type, value, extensions=None):
-    # type: (str, str, Any) -> Dict[str, Union[Dict[str, str], List[LinkType], str]]
+def collection_object(domain_type: str,
+                      value: List[Union[CollectionItem, LinkType]],
+                      links: Optional[List[LinkType]] = None,
+                      extensions: Any = None) -> CollectionObject:
     """A collection object as specified in C-115 (Page 121)
 
     Args:
         domain_type:
         value:
+        links:
         extensions:
 
     Returns:
@@ -482,12 +447,15 @@ def collection_object(domain_type, value, extensions=None):
     """
     if extensions is None:
         extensions = {}
-    links = [
+    _links = [
         link_rel('self', "/collections/%s" % (domain_type,)),
     ]
+    if links is not None:
+        _links.extend(links)
     return {
         'id': domain_type,
-        'links': links,
+        'domainType': domain_type,
+        'links': _links,
         'value': value,
         'extensions': extensions,
     }
@@ -505,6 +473,7 @@ def collection_item(collection_type, domain_type, obj):
     Examples:
 
         >>> expected = {
+        ...     'domainType': 'link',
         ...     'href': '/objects/folder/3',
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/value;collection="folder"',
@@ -512,7 +481,7 @@ def collection_item(collection_type, domain_type, obj):
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ... }
         >>> res = collection_item('folder', 'folder', {'title': 'Foo', 'id': '3'})
-        >>> assert res == expected
+        >>> assert res == expected, res
 
     Returns:
         A dict representation of the collection link-entry.

@@ -26,7 +26,7 @@ from cmk.gui.wsgi.type_defs import DomainObject
 
 @endpoint_schema('/collections/folder',
                  method='post',
-                 response_schema=response_schemas.Folder,
+                 response_schema=response_schemas.ConcreteFolder,
                  etag='output',
                  request_body_required=True,
                  request_schema=request_schemas.CreateFolder)
@@ -51,7 +51,7 @@ def create(params):
 @endpoint_schema('/objects/folder/{ident}',
                  method='put',
                  parameters=['ident'],
-                 response_schema=response_schemas.Folder,
+                 response_schema=response_schemas.ConcreteFolder,
                  etag='both',
                  request_body_required=True,
                  request_schema=request_schemas.UpdateFolder)
@@ -89,7 +89,7 @@ def delete(params):
 @endpoint_schema('/objects/folder/{ident}/actions/move/invoke',
                  method='post',
                  parameters=['ident'],
-                 response_schema=response_schemas.Folder,
+                 response_schema=response_schemas.ConcreteFolder,
                  etag='both')
 def move(params):
     """Move a folder"""
@@ -112,22 +112,22 @@ def move(params):
 
 @endpoint_schema('/collections/folder',
                  method='get',
-                 response_schema=response_schemas.DomainObjectCollection)
+                 response_schema=response_schemas.FolderCollection)
 def list_folders(_params):
     """List folders"""
-    return constructors.serve_json({
-        'id': 'folders',
-        'value': [
-            constructors.collection_item('folder', 'folder', folder)
-            for folder in watolib.Folder.root_folder().subfolders()
-        ],
-        'links': [constructors.link_rel('self', '/collections/folder')]
-    })
+    return constructors.serve_json(
+        constructors.collection_object(domain_type='folder',
+                                       value=[
+                                           constructors.collection_item('folder', 'folder', folder)
+                                           for folder in watolib.Folder.root_folder().subfolders()
+                                       ],
+                                       links=[constructors.link_rel('self',
+                                                                    '/collections/folder')]))
 
 
 @endpoint_schema('/objects/folder/{ident}',
                  method='get',
-                 response_schema=response_schemas.Folder,
+                 response_schema=response_schemas.ConcreteFolder,
                  etag='output',
                  parameters=['ident'])
 def show_folder(params):

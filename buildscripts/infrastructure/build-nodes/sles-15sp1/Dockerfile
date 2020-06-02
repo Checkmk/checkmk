@@ -108,13 +108,6 @@ RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
 
-# Workaround: Intall xinetd
-ENV XINETD_PKG="xinetd-2.3.15.3-bp151.3.1.x86_64.rpmi"
-ARG ARTIFACT_STORAGE
-RUN curl ${ARTIFACT_STORAGE}/repository/sles15sp1/${XINETD_PKG} \
-    && rpm -i ${XINETD_PKG} \
-    && rm ${XINETD_PKG}
-
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container
 RUN groupadd -g 1000 jenkins \

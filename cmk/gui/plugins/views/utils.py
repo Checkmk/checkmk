@@ -15,7 +15,7 @@ from pathlib import Path
 import traceback
 from typing import Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Dict, Type, cast
 
-from six import ensure_str
+import six
 
 import livestatus
 from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
@@ -23,6 +23,7 @@ from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
 import cmk.utils.plugin_registry
 import cmk.utils.render
 import cmk.utils.regex
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import (
     Timestamp,
     TimeRange,
@@ -285,7 +286,7 @@ def row_id(view_spec, row):
     key = u''
     for col in data_source_registry[view_spec['datasource']]().id_keys:
         key += u'~%s' % row[col]
-    return ensure_str(hashlib.sha256(key.encode('utf-8')).hexdigest())
+    return ensure_unicode(hashlib.sha256(key.encode('utf-8')).hexdigest())
 
 
 def group_value(row, group_cells):
@@ -1114,7 +1115,7 @@ def paint_stalified(row, text):
 def paint_host_list(site, hosts):
     # type: (SiteId, List[HostName]) -> CellSpec
     return "", ", ".join(
-        cmk.gui.view_utils.get_host_list_links(site, [ensure_str(h) for h in hosts]))
+        cmk.gui.view_utils.get_host_list_links(site, [ensure_unicode(h) for h in hosts]))
 
 
 def format_plugin_output(output, row):
@@ -1810,7 +1811,7 @@ class Cell(object):
 
     def export_title(self):
         # type: () -> str
-        return ensure_str(self.painter_name())
+        return ensure_unicode(self.painter_name())
 
     def painter_options(self):
         # type: () -> List[str]
@@ -2118,7 +2119,7 @@ def _encode_sorter_url(sorters):
             url += '~' + s.join_key
         p.append(url)
 
-    return ensure_str(','.join(p))
+    return ensure_unicode(','.join(p))
 
 
 def _parse_url_sorters(sort):
@@ -2191,7 +2192,7 @@ def output_csv_headers(view):
     # type: (ViewSpec) -> None
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
+    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % six.ensure_str(
         filename)
 
 

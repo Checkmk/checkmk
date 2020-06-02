@@ -6,7 +6,7 @@
 
 import base64
 from typing import Union, Callable, Dict, Optional, Tuple, List, Any, TYPE_CHECKING
-from six import ensure_binary, ensure_str
+import six
 
 import cmk.gui.escaping as escaping
 from cmk.gui.htmllib import HTML
@@ -177,7 +177,7 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
                     class_=["nform", "narrow" if narrow else None, css if css else None])
 
     html.begin_foldable_container(treename=html.form_name if html.form_name else "nform",
-                                  id_=ensure_str(base64.b64encode(ensure_binary(title))),
+                                  id_=six.ensure_str(base64.b64encode(six.ensure_binary(title))),
                                   isopen=isopen,
                                   title=title,
                                   indent="nform")

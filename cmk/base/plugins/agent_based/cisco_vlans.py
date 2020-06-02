@@ -3,28 +3,27 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from .agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+    contains,
+    OIDEnd,
     parse_string_table,
     register,
     SNMPTree,
 )
 
-from .utils import checkpoint
-
 register.snmp_section(
-    name="checkpoint_inv_tunnels",
+    name="cisco_vlans",
     parse_function=parse_string_table,
     trees=[
         SNMPTree(
-            base=".1.3.6.1.4.1.2620.500.9002.1",
+            base=".1.3.6.1.4.1.9.9.68.1.2.2.1",
             oids=[
-                "1",  # tunnelPeerIpAddr
-                "7",  # tunnelSourceIpAddr
-                "2",  # tunnelPeerObjName
-                "6",  # tunnelInterface
-                "8"  # tunnelLinkPriority
+                OIDEnd(),
+                "1",  # vmVlanType
+                "2",  # vmVlan
+                "4",  # vmVlans
             ],
         ),
     ],
-    detect=checkpoint.DETECT,
+    detect=contains(".1.3.6.1.2.1.1.1.0", "cisco"),
 )

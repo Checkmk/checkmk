@@ -6,7 +6,7 @@
 
 from contextlib import contextmanager
 from typing import Iterator, Union, List
-from six import ensure_binary
+import six
 
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
@@ -51,7 +51,7 @@ class OutputFunnel(object):
         if self._is_plugged():
             self.plug_text[-1].append(text)
         else:
-            self._lowlevel_write(ensure_binary(text))
+            self._lowlevel_write(six.ensure_binary(text))
 
     # Please note that this does not work with the plugs at the moment (The plugs store text)
     def write_binary(self, data):

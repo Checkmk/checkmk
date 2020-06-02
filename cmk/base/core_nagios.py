@@ -13,7 +13,7 @@ import tempfile
 import errno
 from typing import Tuple, Any, IO, Optional, List, Set, Dict
 
-from six import ensure_binary, ensure_str
+import six
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -102,6 +102,7 @@ class NagiosCore(core_config.MonitoringCore):
 
 
 class NagiosConfig(object):  # pylint: disable=useless-object-inheritance
+    # type: () -> None
     def __init__(self, outfile, hostnames):
         # type: (IO[str], Optional[List[HostName]]) -> None
         super(NagiosConfig, self).__init__()
@@ -119,7 +120,7 @@ class NagiosConfig(object):  # pylint: disable=useless-object-inheritance
     def write(self, x):
         # type: (str) -> None
         # TODO: Something seems to be mixed up in our call sites...
-        self._outfile.write(ensure_str(x))
+        self._outfile.write(six.ensure_str(x))
 
 
 def create_config(outfile, hostnames):
@@ -617,7 +618,7 @@ def _format_nagios_object(object_type, object_spec):
 
 def _b16encode(b):
     # type: (str) -> str
-    return ensure_str(base64.b16encode(ensure_binary(b)))
+    return six.ensure_str(base64.b16encode(six.ensure_binary(b)))
 
 
 def _simulate_command(cfg, command):

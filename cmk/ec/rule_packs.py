@@ -9,7 +9,6 @@ of Check_MK. The GUI is e.g. accessing this module for gathering the default
 configuration.
 """
 
-from collections.abc import MutableMapping
 import copy
 from enum import Enum
 import logging
@@ -18,7 +17,20 @@ import pprint
 from typing import Any, Dict, Iterable, List, Optional, Union
 from pathlib import Path
 
-from six import ensure_str
+try:
+    # Python has a totally braindead history of changes in this area:
+    #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
+    #   * Python 2.2: Well, now we can subclass dict, but let's keep UserDict.
+    #   * Python 2.3: Actually, DictMixin might often be a better idea.
+    #   * Python 2.6: It is recommended to use collections.MutableMapping instead of DictMixin.
+    #   * Python 3.0: UserDict is gone...
+    #   * Python 3.3: Let's just move the ABCs from collections to collections.abc, keeping the old stuff for now.
+    #   * Python 3.8: To *really* annoy people, let's nuke the ABCs from collection! >:-)
+    from collections.abc import MutableMapping  # type: ignore[import]
+except ImportError:
+    from collections import MutableMapping
+
+import six
 
 import cmk.utils.log
 import cmk.utils.paths
@@ -282,7 +294,7 @@ def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(dir_ / "rules.mk", ensure_str(output))
+    store.save_text_to_file(dir_ / "rules.mk", six.ensure_text(output))
 
 
 # NOTE: It is essential that export_rule_pack() is called *before*

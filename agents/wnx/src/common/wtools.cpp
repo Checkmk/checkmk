@@ -14,7 +14,6 @@
 #include "psapi.h"
 #pragma comment(lib, "wbemuuid.lib")  /// Microsoft Specific
 #pragma comment(lib, "psapi.lib")     /// Microsoft Specific
-#pragma comment(lib, "Sensapi.lib")   /// Microsoft Specific
 #endif
 
 #include <cstdint>

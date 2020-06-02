@@ -6,12 +6,13 @@
 
 import contextlib
 import time
+
 from typing import Optional
 
 from connexion import problem  # type: ignore[import]
-from six import ensure_str
 
 from cmk.utils.type_defs import UserId
+from cmk.utils.encoding import ensure_unicode
 
 from cmk.gui.config import clear_user_login, set_user_by_id
 from cmk.gui.exceptions import MKException, MKAuthException, MKUserError
@@ -42,7 +43,7 @@ def bearer_auth(token):
     if "/" in user_id:
         return None
 
-    if verify_automation_secret(UserId(ensure_str(user_id)), secret):
+    if verify_automation_secret(UserId(ensure_unicode(user_id)), secret):
         # Auth with automation secret succeeded - mark transid as unneeded in this case
         return _subject(user_id)
 

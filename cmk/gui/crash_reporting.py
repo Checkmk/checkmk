@@ -14,12 +14,13 @@ import time
 import traceback
 from typing import Dict, Mapping, Optional
 
-from six import ensure_str
+import six
 
 import livestatus
 
 import cmk.utils.version as cmk_version
 import cmk.utils.crash_reporting
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.i18n
@@ -135,7 +136,7 @@ class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
     def _get_crash_report_row(self, crash_id, site_id):
         # type: (str, str) -> Optional[Dict[str, str]]
         rows = CrashReportsRowTable().get_crash_report_rows(
-            only_sites=[config.SiteId(ensure_str(site_id))],
+            only_sites=[config.SiteId(six.ensure_str(site_id))],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id))
         if not rows:
             return None
@@ -527,7 +528,7 @@ def _crash_row(title, infotext, odd=True, legend=False, pre=False):
 # Local vars are a base64 encoded repr of the python dict containing the local vars of
 # the exception context. Decode it!
 def format_local_vars(local_vars):
-    return ensure_str(base64.b64decode(local_vars))
+    return ensure_unicode(base64.b64decode(local_vars))
 
 
 def format_params(params):
@@ -551,7 +552,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
 
         html.response.headers['Content-Disposition'] = 'Attachment; filename=%s' % filename
         html.response.headers['Content-Type'] = 'application/x-tar'
-        html.write(ensure_str(_pack_crash_report(self._get_serialized_crash_report())))
+        html.write(six.ensure_str(_pack_crash_report(self._get_serialized_crash_report())))
 
 
 def _pack_crash_report(serialized_crash_report):

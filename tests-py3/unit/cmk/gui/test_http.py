@@ -8,6 +8,7 @@ import io
 import time
 
 import pytest  # type: ignore[import]
+import six
 
 from werkzeug.test import create_environ
 
@@ -59,7 +60,7 @@ def test_get_str_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_non_ascii():
-    assert html.request.get_str_input("abc") == "äbc"
+    assert html.request.get_str_input("abc") == six.ensure_str("äbc")
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -76,7 +77,7 @@ def test_get_str_input_mandatory_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_mandatory_non_ascii():
-    assert html.request.get_str_input_mandatory("abc") == "äbc"
+    assert html.request.get_str_input_mandatory("abc") == six.ensure_str(u"äbc")
 
 
 @pytest.mark.usefixtures("set_vars")

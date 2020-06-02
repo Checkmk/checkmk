@@ -16,7 +16,6 @@
 #    => These already bear all information about the contact, the plugin
 #       to call and its parameters.
 
-import io
 import logging
 import os
 import re
@@ -28,7 +27,7 @@ from typing import Dict, Tuple, List, Any, Optional, FrozenSet, Set, Union, cast
 import traceback
 import uuid
 
-from six import ensure_str
+import six
 
 import livestatus
 import cmk.utils.debug
@@ -1347,7 +1346,7 @@ def notify_via_email(plugin_context):
         body_t = notification_host_body
 
     subject = substitute_context(subject_t, plugin_context)
-    plugin_context["SUBJECT"] = ensure_str(subject)
+    plugin_context["SUBJECT"] = six.ensure_str(subject)
     body = substitute_context(notification_common_body + body_t, plugin_context)
     command = substitute_context(notification_mail_command, plugin_context)
     command_utf8 = command.encode("utf-8")
@@ -1500,7 +1499,7 @@ def call_notification_script(plugin_name, plugin_context):
             if line != '':
                 plugin_log("Output: %s" % line.rstrip())
                 if _log_to_stdout:
-                    out.output(ensure_str(line))
+                    out.output(six.ensure_str(line))
             else:
                 break
         # the stdout is closed but the return code may not be available just yet - wait for the
@@ -2130,7 +2129,7 @@ def substitute_context(template, context):
 
 def format_exception():
     # type: () -> str
-    txt = io.StringIO()
+    txt = six.StringIO()
     t, v, tb = sys.exc_info()
     traceback.print_exception(t, v, tb, None, txt)
     return str(txt.getvalue())

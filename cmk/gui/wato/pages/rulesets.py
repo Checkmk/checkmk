@@ -10,10 +10,18 @@ import itertools
 import pprint
 import re
 import json
-from typing import Dict, Generator, List, Optional, Union
+from typing import (
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Text,
+    Union,
+)
 
-from six import ensure_str
+import six
 
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.type_defs import (
@@ -82,9 +90,10 @@ else:
 
 
 def render_html(text):
-    # type: (Union[HTML, str]) -> str
+    # type: (Union[HTML, str, Text]) -> Union[str, Text]
     if isinstance(text, HTML):
         return text.__html__()
+
     return text
 
 
@@ -759,8 +768,8 @@ class ModeEditRuleset(WatoMode):
             ("varname", self._name),
             ("rulenr", rulenr),
             ("host", self._hostname),
-            ("item", ensure_str(watolib.mk_repr(self._item))),
-            ("service", ensure_str(watolib.mk_repr(self._service))),
+            ("item", six.ensure_str(watolib.mk_repr(self._item))),
+            ("service", six.ensure_str(watolib.mk_repr(self._service))),
             ("rule_folder", folder.path()),
         ])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
@@ -771,8 +780,8 @@ class ModeEditRuleset(WatoMode):
             ("varname", self._name),
             ("rulenr", rulenr),
             ("host", self._hostname),
-            ("item", ensure_str(watolib.mk_repr(self._item))),
-            ("service", ensure_str(watolib.mk_repr(self._service))),
+            ("item", six.ensure_str(watolib.mk_repr(self._item))),
+            ("service", six.ensure_str(watolib.mk_repr(self._service))),
             ("rule_folder", folder.path()),
         ])
         html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
@@ -901,8 +910,8 @@ class ModeEditRuleset(WatoMode):
             html.open_td()
             html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
             html.hidden_field("host", self._hostname)
-            html.hidden_field("item", ensure_str(watolib.mk_repr(self._item)))
-            html.hidden_field("service", ensure_str(watolib.mk_repr(self._service)))
+            html.hidden_field("item", six.ensure_str(watolib.mk_repr(self._item)))
+            html.hidden_field("service", six.ensure_str(watolib.mk_repr(self._service)))
             html.close_td()
             html.open_td(style="vertical-align:middle")
             html.write_text(label)
@@ -1685,7 +1694,7 @@ class VSExplicitConditions(Transform):
             raise MKUserError(varprefix, _("It's not allowed to use a leading \"!\" here."))
 
     def value_to_text(self, value):
-        # type: (RuleConditions) -> str
+        # type: (RuleConditions) -> Text
         with html.plugged():
             html.open_ul(class_="conditions")
             renderer = RuleConditionRenderer()
@@ -1753,8 +1762,8 @@ class LabelCondition(Transform):
 
 class RuleConditionRenderer(object):
     def render(self, rulespec, conditions):
-        # type: (Rulespec, RuleConditions) -> List[str]
-        rendered = []  # type: List[str]
+        # type: (Rulespec, RuleConditions) -> List[Text]
+        rendered = []  # type: List[Text]
         rendered += list(self._tag_conditions(conditions))
         rendered += list(self._host_label_conditions(conditions))
         rendered += list(self._host_conditions(conditions))
@@ -1856,8 +1865,8 @@ class RuleConditionRenderer(object):
         if conditions.host_name == []:
             return _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
 
-        condition = []  # type: List[Union[HTML, str]]
-        text_list = []  # type: List[Union[HTML, str]]
+        condition = []  # type: List[Union[HTML, Text]]
+        text_list = []  # type: List[Union[HTML, Text]]
 
         is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(
             conditions.host_name)
@@ -1934,7 +1943,7 @@ class RuleConditionRenderer(object):
         exact_match_count = len(
             [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"])
 
-        text_list = []  # type: List[Union[HTML, str]]
+        text_list = []  # type: List[Union[HTML, Text]]
         if exact_match_count == len(service_conditions) or exact_match_count == 0:
             if is_negate:
                 condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")
@@ -1960,10 +1969,10 @@ class RuleConditionRenderer(object):
                 text_list.append("%s%s" % (expression, html.render_b(item_spec.rstrip("$"))))
 
         if len(text_list) == 1:
-            condition += ensure_str(render_html(text_list[0]))
+            condition += ensure_unicode(render_html(text_list[0]))
         else:
             condition += ", ".join(["%s" % s for s in text_list[:-1]])
-            condition += ensure_str(render_html(_(" or ") + text_list[-1]))
+            condition += ensure_unicode(render_html(_(" or ") + text_list[-1]))
 
         if condition:
             yield condition

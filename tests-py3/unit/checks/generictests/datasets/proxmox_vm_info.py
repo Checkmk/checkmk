@@ -25,24 +25,24 @@ checks = {
     '': [
         (
             None, {}, [
-                (0, "VM ID: 133", []), (0, "Status: running", []),
-                (0, "Type: qemu", []), (0, "Host: pve-dc4-001", [])
+                (0, "VM ID: '133'", []), (0, "Status: 'running'", []),
+                (0, "Type: 'qemu'", []), (0, "Host: 'pve-dc4-001'", [])
             ]
         ),
         (
             None, {
                 'required_vm_status': None
             }, [
-                (0, "VM ID: 133", []), (0, "Status: running", []),
-                (0, "Type: qemu", []), (0, "Host: pve-dc4-001", [])
+                (0, "VM ID: '133'", []), (0, "Status: 'running'", []),
+                (0, "Type: 'qemu'", []), (0, "Host: 'pve-dc4-001'", [])
             ]
         ),
         (
             None, {
                 'required_vm_status': 'walking'
             }, [
-                (0, "VM ID: 133", []), (1, "Status: running (required: walking)", []),
-                (0, "Type: qemu", []), (0, "Host: pve-dc4-001", [])
+                (0, "VM ID: '133'", []), (1, "Status: 'running' (required: 'walking')", []),
+                (0, "Type: 'qemu'", []), (0, "Host: 'pve-dc4-001'", [])
             ]
         ),
     ]

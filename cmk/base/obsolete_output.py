@@ -5,8 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from contextlib import suppress
+from contextlib import contextmanager
 from typing import Any, IO
+
+if sys.version_info > (3, 4):
+    from contextlib import suppress  # pylint: disable=ungrouped-imports
+else:
+    from typing import Tuple, Type  # pylint: disable=ungrouped-imports
+
+    @contextmanager
+    def suppress(*exceptions):
+        # type: (Tuple[Type[BaseException]]) -> Generator[None, None, None]
+        try:
+            yield
+        except exceptions:
+            pass
 
 
 # TODO: This should be obsoleted:

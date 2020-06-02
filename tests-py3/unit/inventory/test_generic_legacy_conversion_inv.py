@@ -3,12 +3,33 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from contextlib import contextmanager
+
 import pytest  # type: ignore[import]
 
+from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES_INV
+
+from cmk.utils.check_utils import section_name_of
+
 import cmk.base.check_api as check_api
+import cmk.base.config as config
 import cmk.base.inventory_plugins as inventory_plugins
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 
 pytestmark = pytest.mark.checks
+
+KNOWN_FAILURES = set(plugin_name for _, plugin_name in KNOWN_AUTO_MIGRATION_FAILURES_INV)
+
+
+@contextmanager
+def known_exceptions(name):
+    if name not in KNOWN_FAILURES:
+        yield
+        return
+
+    with pytest.raises(NotImplementedError):
+        yield
 
 
 @pytest.fixture(scope="module", name="inv_info")
@@ -19,5 +40,13 @@ def _get_inv_info():
 
 
 def test_create_section_plugin_from_legacy(inv_info):
-    for inv_info_dict in inv_info.values():
-        assert 'snmp_info' not in inv_info_dict
+    for name, inv_info_dict in inv_info.items():
+        if 'snmp_info' not in inv_info_dict:
+            continue
+
+        section_name = PluginName(section_name_of(name))
+        with known_exceptions(name):
+            if section_name not in config.registered_snmp_sections:
+                raise NotImplementedError(name)
+            section = config.registered_snmp_sections[section_name]
+            assert isinstance(section, SNMPSectionPlugin)

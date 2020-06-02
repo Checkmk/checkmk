@@ -10,6 +10,7 @@ import time
 from typing import List, NamedTuple, Tuple as _Tuple, Union
 
 import cmk.utils.store as store
+from cmk.utils.encoding import convert_to_unicode
 
 import cmk.gui.view_utils
 import cmk.gui.wato.user_profile
@@ -583,6 +584,7 @@ class ModeNotifications(NotificationsMode):
                            title=_("Recent notifications (for analysis)"),
                            sortable=False) as table:
             for nr, context in enumerate(backlog):
+                self._convert_context_to_unicode(context)
                 table.row()
                 table.cell("&nbsp;", css="buttons")
 
@@ -664,6 +666,12 @@ class ModeNotifications(NotificationsMode):
 
                 # This dummy row is needed for not destroying the odd/even row highlighting
                 table.row(class_="notification_context hidden")
+
+    def _convert_context_to_unicode(self, context):
+        # Convert all values to unicode
+        for key, value in context.items():
+            if isinstance(value, str):
+                context[key] = convert_to_unicode(value, on_error=u"(Invalid byte sequence)")
 
     # TODO: Refactor this
     def _show_rules(self):

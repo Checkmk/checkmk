@@ -2,8 +2,7 @@ FROM ubuntu:18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN add-apt-repository ppa:deadsnakes/ppa
-    && apt-get update \
+RUN apt-get update \
     && apt-get install -y \
     alien \
     apache2 \
@@ -69,7 +68,7 @@ RUN add-apt-repository ppa:deadsnakes/ppa
     pngcrush \
     poedit \
     python-pip \
-    python3.8-dev \
+    python3.7-dev \
     python-polib \
     rpcbind \
     rpm \

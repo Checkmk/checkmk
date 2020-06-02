@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple
 
 import psutil  # type: ignore[import]
-from six import ensure_binary, ensure_str
+import six
 
 from livestatus import (
     SiteId,
@@ -1844,7 +1844,7 @@ def _create_distributed_wato_file_for_dcd(base_dir):
 
     with base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk").open(mode="w",
                                                                           encoding="utf-8") as f:
-        f.write(ensure_str(wato_fileheader()))
+        f.write(six.ensure_text(wato_fileheader()))
         f.write(u"dcd_is_wato_remote_site = True\n")
 
 
@@ -1991,11 +1991,11 @@ def _get_sync_archive(to_sync, base_dir):
 
     # Since we don't stream the archive to the remote site (we could probably do this) it should be
     # no problem to buffer it in memory for the moment
-    archive, stderr = p.communicate(b"\0".join(ensure_binary(f) for f in to_sync))
+    archive, stderr = p.communicate(b"\0".join(six.ensure_binary(f) for f in to_sync))
 
     if p.returncode != 0:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr)))
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, six.ensure_text(stderr)))
 
     return archive
 
@@ -2020,7 +2020,7 @@ def _unpack_sync_archive(sync_archive, base_dir):
     stderr = p.communicate(sync_archive)[1]
     if p.returncode != 0:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr)))
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, six.ensure_text(stderr)))
 
 
 ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [

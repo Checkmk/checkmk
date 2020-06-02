@@ -4,8 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import io
 import logging
+import sys
+
+if sys.version_info[0] >= 3:
+    from io import StringIO as StrIO
+else:
+    from io import BytesIO as StrIO
 
 import pytest  # type: ignore[import]
 
@@ -14,12 +19,18 @@ from cmk.utils.log import console
 
 @pytest.fixture(name="stream")
 def stream_fixture():
-    return io.StringIO()
+    return StrIO()
+
+
+# HACK: Older Python versions have no easy way to set the terminator in the
+# handler, so we remove it here. We switch to Python >= 3.7 soon, anyway...
+def strip_newline_hack(s):
+    return s if sys.version_info > (3, 2) else s[:-1]
 
 
 def read(stream):
     stream.seek(0)
-    return stream.read()
+    return strip_newline_hack(stream.read())
 
 
 def test_verbose_on(stream, caplog):
@@ -42,7 +53,7 @@ def test_verbose_default_stream_on(caplog, capsys):
     console.verbose("hello")
 
     captured = capsys.readouterr()
-    assert captured.out == "hello"
+    assert strip_newline_hack(captured.out) == "hello"
     assert not captured.err
 
 
@@ -96,4 +107,4 @@ def test_error(caplog, capsys):
 
     captured = capsys.readouterr()  # no `stream` arg
     assert not captured.out
-    assert captured.err == "hello"
+    assert strip_newline_hack(captured.err) == "hello"

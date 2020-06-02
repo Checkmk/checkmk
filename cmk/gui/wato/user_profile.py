@@ -7,7 +7,7 @@
 
 import time
 
-from six import ensure_str
+import six
 
 import cmk.gui.i18n
 import cmk.gui.sites
@@ -73,7 +73,7 @@ def user_profile_async_replication_dialog(sites):
                                                                      2.0)
             html.javascript('cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
                             (site_id, int(estimated_duration * 1000.0),
-                             ensure_str(_('Replication in progress'))))
+                             six.ensure_str(_('Replication in progress'))))
             num_replsites += 1
         else:
             _add_profile_replication_change(site_id, status_txt)
@@ -344,7 +344,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         site_id_val = request.get("site")
         if not site_id_val:
             raise MKUserError(None, "The site_id is missing")
-        site_id = ensure_str(site_id_val)
+        site_id = six.ensure_str(site_id_val)
         if site_id not in config.sitenames():
             raise MKUserError(None, _("The requested site does not exist"))
 

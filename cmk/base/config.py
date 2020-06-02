@@ -20,7 +20,7 @@ from typing import Any, Callable, Dict, Iterable, Iterator, List, NamedTuple, Op
 from pathlib import Path
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 
-from six import ensure_str
+import six
 
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
@@ -36,7 +36,7 @@ from cmk.utils.check_utils import section_name_of
 from cmk.utils.labels import LabelManager
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
-from cmk.utils.encoding import ensure_str_with_fallback
+from cmk.utils.encoding import convert_to_unicode
 import cmk.utils.piggyback as piggyback
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.type_defs import (
@@ -89,9 +89,7 @@ try:
     )
     from cmk.base.api.agent_based.checking_types import CheckPlugin
     from cmk.base.api.agent_based.register.check_plugins_legacy import (
-        create_check_plugin_from_legacy,
-        resolve_legacy_name,
-    )
+        create_check_plugin_from_legacy,)
 except ImportError:
     # API is only Python3. This script is still called by python2 modules,
     # which for the moment don't require the API and for the time being we
@@ -139,7 +137,6 @@ RecurringDowntime = Dict[str, Union[int, str]]
 CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
-SectionPlugin = Union[SNMPSectionPlugin, AgentSectionPlugin]
 
 
 class TimespecificParamList(list):
@@ -970,11 +967,7 @@ _old_service_descriptions = {
 
 
 def service_description(hostname, check_plugin_name, item):
-    # type: (HostName, Union[CheckPluginName, PluginName], Item) -> ServiceName
-    # TODO (mo): CMK-4576 bring this to the new API
-    if isinstance(check_plugin_name, PluginName):
-        check_plugin_name = resolve_legacy_name(check_plugin_name)
-
+    # type: (HostName, CheckPluginName, Item) -> ServiceName
     if check_plugin_name not in check_info:
         if item:
             return "Unimplemented check %s / %s" % (check_plugin_name, item)
@@ -998,7 +991,7 @@ def service_description(hostname, check_plugin_name, item):
         else:
             descr_format = check_info[check_plugin_name]["service_description"]
 
-    descr_format = ensure_str(descr_format)
+    descr_format = six.ensure_text(descr_format)
 
     # Note: we strip the service description (remove spaces).
     # One check defines "Pages %s" as a description, but the item
@@ -1069,20 +1062,8 @@ def get_final_service_description(hostname, description):
     return new_description
 
 
-def service_ignored(
-        hostname,  # type: HostName
-        check_plugin_name,  # type: Optional[Union[CheckPluginName, PluginName]]
-        description,  # type: Optional[ServiceName]
-):
-    # type: (...) -> bool
-    # TODO (mo): CMK-4573 Clean this up, once a PluginName instance can be in ignored_checktypes
-    if isinstance(check_plugin_name, PluginName):
-        try:
-            check_plugin_name = resolve_legacy_name(check_plugin_name)
-        except ValueError:
-            # no corresponding legcy plugin -> not yet disabled
-            return False
-
+def service_ignored(hostname, check_plugin_name, description):
+    # type: (HostName, Optional[CheckPluginName], Optional[ServiceName]) -> bool
     if check_plugin_name and check_plugin_name in ignored_checktypes:
         return True
 
@@ -1170,10 +1151,10 @@ def translate_piggyback_host(sourcehost, backedhost):
     # To make it possible to match umlauts we need to change the hostname
     # to a unicode string which can then be matched with regexes etc.
     # We assume the incoming name is correctly encoded in UTF-8
-    decoded_backedhost = ensure_str_with_fallback(backedhost,
-                                                  encoding="utf-8",
-                                                  fallback=fallback_agent_output_encoding)
-    return ensure_str(cmk.utils.translations.translate_hostname(translation, decoded_backedhost))
+    decoded_backedhost = convert_to_unicode(backedhost,
+                                            fallback_encoding=fallback_agent_output_encoding)
+    return six.ensure_str(cmk.utils.translations.translate_hostname(translation,
+                                                                    decoded_backedhost))
 
 
 def _get_piggyback_translations(hostname):
@@ -1244,8 +1225,9 @@ def prepare_check_command(command_spec, hostname, description):
                 else:
                     descr = ""
 
-                console.warning("The stored password \"%s\"%s does not exist (anymore)." %
-                                (pw_ident, descr))
+                console.warning(
+                    six.ensure_str("The stored password \"%s\"%s does not exist (anymore)." %
+                                   (pw_ident, descr)))
                 password = "%%%"
 
             pw_start_index = str(preformated_arg.index("%s"))
@@ -1290,7 +1272,7 @@ def get_http_proxy(http_proxy):
 
 
 def get_registered_section_plugin(plugin_name):
-    # type: (PluginName) -> Optional[SectionPlugin]
+    # type: (PluginName) -> Optional[Union[AgentSectionPlugin, SNMPSectionPlugin]]
     if plugin_name in registered_agent_sections:
         return registered_agent_sections[plugin_name]
     if plugin_name in registered_snmp_sections:
@@ -1298,29 +1280,8 @@ def get_registered_section_plugin(plugin_name):
     return None
 
 
-def get_relevant_raw_sections(check_plugin_names):
-    # type: (Iterable[PluginName]) -> Dict[PluginName, SectionPlugin]
-    """return the raw sections potentially relevant for the given check plugins"""
-    parsed_section_names = set()  # type: Set[PluginName]
-    for check_plguin_name in check_plugin_names:
-        plugin = registered_check_plugins.get(check_plguin_name)
-        if plugin:
-            parsed_section_names.update(plugin.sections)
-
-    iter_all_sections = itertools.chain(
-        registered_agent_sections.values(),
-        registered_snmp_sections.values(),
-    )  # type: Iterable[SectionPlugin]
-
-    return {
-        section.name: section
-        for section in iter_all_sections
-        if section.parsed_section_name in parsed_section_names
-    }
-
-
 def get_parsed_section_creator(parsed_section_name, available_raw_sections):
-    # type: (PluginName, List[PluginName]) -> Optional[SectionPlugin]
+    # type: (PluginName, List[PluginName]) -> Optional[Union[AgentSectionPlugin, SNMPSectionPlugin]]
     """return the section definition required to create the enquired parsed section"""
     section_defs = (get_registered_section_plugin(name) for name in available_raw_sections)
     candidates = [
@@ -1802,7 +1763,7 @@ def load_precompiled_plugin(path, check_context):
     # https://docs.python.org/3/library/py_compile.html
     # https://www.python.org/dev/peps/pep-0552/
     # HACK:
-    header_size = 16
+    header_size = 16 if sys.version_info[0] >= 3 else 8
     precompiled_path = _precompiled_plugin_path(path)
 
     if not _is_plugin_precompiled(path, precompiled_path):
@@ -1825,10 +1786,11 @@ def _is_plugin_precompiled(path, precompiled_path):
     if file_magic != _MAGIC_NUMBER:
         return False
 
-    # Skip the hash and assure that the timestamp format is used, i.e. the hash is 0.
-    # For further details see: https://www.python.org/dev/peps/pep-0552/#id15
-    file_hash = int(struct.unpack("I", f.read(4))[0])
-    assert file_hash == 0
+    if sys.version_info[0] >= 3:
+        # Skip the hash and assure that the timestamp format is used, i.e. the hash is 0.
+        # For further details see: https://www.python.org/dev/peps/pep-0552/#id15
+        file_hash = int(struct.unpack("I", f.read(4))[0])
+        assert file_hash == 0
 
     try:
         origin_file_mtime = struct.unpack("I", f.read(4))[0]
@@ -2205,9 +2167,7 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
     config_cache = get_config_cache()
 
     # Get parameters configured via checkgroup_parameters
-    checkgroup = check_info[checktype]["group"]
-    entries = ([] if not checkgroup else _get_checkgroup_parameters(config_cache, host, checkgroup,
-                                                                    item, descr))
+    entries = _get_checkgroup_parameters(config_cache, host, checktype, item, descr)
 
     # Get parameters configured via check_parameters
     entries += config_cache.service_extra_conf(host, descr, check_parameters)
@@ -2248,8 +2208,11 @@ def set_timespecific_param_list(entries, params):
     return TimespecificParamList(entries + [params])
 
 
-def _get_checkgroup_parameters(config_cache, host, checkgroup, item, descr):
-    # type: (ConfigCache, HostName, RulesetName, Item, ServiceName) -> List[CheckParameters]
+def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
+    # type: (ConfigCache, HostName, CheckPluginName, Item, ServiceName) -> List[CheckParameters]
+    checkgroup = check_info[checktype]["group"]
+    if not checkgroup:
+        return []
     rules = checkgroup_parameters.get(checkgroup)
     if rules is None:
         return []
@@ -2274,7 +2237,7 @@ def _get_checkgroup_parameters(config_cache, host, checkgroup, item, descr):
                                                                     rules,
                                                                     is_binary=False))
     except MKGeneralException as e:
-        raise MKGeneralException(str(e) + " (on host %s, checkgroup %s)" % (host, checkgroup))
+        raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
 
 
 def filter_by_management_board(hostname,
@@ -2381,7 +2344,7 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
             # we need to add this one: If we don't find the section, we just look at the first
             # matching subcheck.
             # The 'is_snmp_*' functions convert to section_name anyway, so this only affects
-            # 'get_management_board_precedence'.
+            # '_get_management_board_precedence'.
             for name in plugins_info:
                 if section_name_of(name) == check_plugin_name:
                     lookup_plugin_name = name
@@ -2395,7 +2358,7 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
             continue
 
         is_snmp_check_ = is_snmp_check_f(lookup_plugin_name)
-        mgmt_board = get_management_board_precedence(lookup_plugin_name, plugins_info)
+        mgmt_board = _get_management_board_precedence(lookup_plugin_name, plugins_info)
         if mgmt_board == check_api_utils.HOST_PRECEDENCE:
             if is_snmp_check_:
                 host_precedence_snmp.add(check_plugin_name)
@@ -2415,7 +2378,7 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
            host_precedence_tcp, host_only_tcp
 
 
-def get_management_board_precedence(check_plugin_name, plugins_info):
+def _get_management_board_precedence(check_plugin_name, plugins_info):
     # type: (CheckPluginName, CheckInfo) -> str
     mgmt_board = plugins_info[check_plugin_name].get("management_board")
     if mgmt_board is None:

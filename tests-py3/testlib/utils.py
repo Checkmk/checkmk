@@ -15,7 +15,7 @@ import sys
 from typing import Optional, List
 from pathlib import Path
 
-from six import ensure_binary, ensure_str
+import six
 
 logger = logging.getLogger()
 
@@ -52,20 +52,21 @@ def virtualenv_path(version=None):
     venv = subprocess.check_output(
         [repo_path() + "/scripts/run-pipenv",
          str(version), "--bare", "--venv"])
-    return Path(ensure_str(venv).rstrip("\n"))
+    return Path(six.ensure_str(venv).rstrip("\n"))
 
 
 def find_git_rm_mv_files(dirpath):
     # type: (Path) -> List[str]
     del_files = []
 
-    out = ensure_str(subprocess.check_output([
-        "git",
-        "-C",
-        str(dirpath),
-        "status",
-        str(dirpath),
-    ])).split("\n")
+    out = six.ensure_str(
+        subprocess.check_output([
+            "git",
+            "-C",
+            str(dirpath),
+            "status",
+            str(dirpath),
+        ])).split("\n")
 
     for line in out:
         if "deleted:" in line or "renamed:" in line:
@@ -81,7 +82,7 @@ def find_git_rm_mv_files(dirpath):
 def current_branch_name():
     # type: () -> str
     branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    return ensure_str(branch_name).split("\n", 1)[0]
+    return six.ensure_str(branch_name).split("\n", 1)[0]
 
 
 def current_base_branch_name():
@@ -91,7 +92,7 @@ def current_base_branch_name():
     # current branches git log one step by another and check which branches contain these
     # commits. Only search for our main (master + major-version) branches
     commits = subprocess.check_output(["git", "rev-list", "--max-count=30", branch_name])
-    for commit in ensure_str(commits).strip().split("\n"):
+    for commit in six.ensure_str(commits).strip().split("\n"):
         # Asking for remote heads here, since the git repos checked out by jenkins do not create all
         # the branches locally
 
@@ -110,7 +111,7 @@ def current_base_branch_name():
         #        return head
 
         lines = subprocess.check_output(["git", "branch", "-r", "--contains", commit])
-        for line in ensure_str(lines).strip().split("\n"):
+        for line in six.ensure_str(lines).strip().split("\n"):
             if not line:
                 continue
             head = line.split()[0]
@@ -176,8 +177,8 @@ def is_gui_py3():
 
 def api_str_type(s):
     if not is_gui_py3():
-        return ensure_binary(s)
-    return ensure_str(s)
+        return six.ensure_binary(s)
+    return six.ensure_str(s)
 
 
 def add_python_paths():

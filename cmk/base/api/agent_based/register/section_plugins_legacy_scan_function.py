@@ -7,6 +7,7 @@
 """
 from typing import Callable, Dict, List
 import os.path
+import sys
 import ast
 import inspect
 from cmk.base.api.agent_based.utils import (
@@ -39,15 +40,24 @@ MIGRATED_SCAN_FUNCTIONS = {
     "_is_ucd_mem": ucd_hr_detection._UCD_MEM,  # type: ignore[has-type]
 }  # type: Dict[str, SNMPDetectSpec]
 
+if sys.version_info[0] >= 3:
 
-def _is_none(expr):
-    # type: (ast.AST) -> bool
-    return isinstance(expr, ast.NameConstant) and expr.value is None
+    def _is_none(expr):
+        # type: (ast.AST) -> bool
+        return isinstance(expr, ast.NameConstant) and expr.value is None
 
+    def _is_false(expr):
+        # type: (ast.AST) -> bool
+        return isinstance(expr, ast.NameConstant) and expr.value is False
+else:
 
-def _is_false(expr):
-    # type: (ast.AST) -> bool
-    return isinstance(expr, ast.NameConstant) and expr.value is False
+    def _is_none(expr):
+        # type: (ast.AST) -> bool
+        return isinstance(expr, ast.Name) and expr.id == 'None'
+
+    def _is_false(expr):
+        # type: (ast.AST) -> bool
+        return isinstance(expr, ast.Name) and expr.id == 'False'
 
 
 def _explicit_conversions(function_name):

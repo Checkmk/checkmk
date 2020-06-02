@@ -10,8 +10,7 @@ import ast
 import tarfile
 import os
 from typing import Dict, NamedTuple, List, Optional
-
-from six import ensure_str
+import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -433,7 +432,7 @@ class ModeAjaxStartActivation(AjaxPage):
         manager = watolib.ActivateChangesManager()
         manager.load()
 
-        affected_sites_request = ensure_str(request.get("sites", "").strip())
+        affected_sites_request = six.ensure_str(request.get("sites", "").strip())
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
@@ -447,8 +446,8 @@ class ModeAjaxStartActivation(AjaxPage):
 
         activation_id = manager.start(
             sites=affected_sites,
-            activate_until=ensure_str(activate_until),
-            comment=None if comment is None else ensure_str(comment),
+            activate_until=six.ensure_str(activate_until),
+            comment=None if comment is None else six.ensure_str(comment),
             activate_foreign=activate_foreign,
         )
 

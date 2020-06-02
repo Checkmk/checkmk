@@ -12,28 +12,13 @@ from collections import defaultdict
 from pathlib import Path
 
 import pytest  # type: ignore[import]
-from six import ensure_binary, ensure_str
+import six
 
 import testlib
 
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
 import cmk.utils.memoize
-
-
-@pytest.mark.parametrize("version_str,expected", [
-    ("1.2.0", 1020050000),
-    ("1.2.0i1", 1020010100),
-    ("1.2.0b1", 1020020100),
-    ("1.2.0b10", 1020021000),
-    ("1.2.0p10", 1020050010),
-    ("2.0.0i1", 2000010100),
-    ("1.6.0-2020.05.26", 1060090000),
-    ("2020.05.26", 2020052650000),
-    ("2020.05.26-sandbox-lm-1.7-drop-py2", 2020052600000),
-])
-def test_parse_check_mk_version(version_str, expected):
-    assert cmk.utils.werks.parse_check_mk_version(version_str) == expected
 
 
 @pytest.fixture(scope="function")
@@ -133,11 +118,11 @@ _werk_to_git_tag = defaultdict(list)  # type: ignore[var-annotated]
 
 @cmk.utils.memoize.MemoizeCache
 def _werks_in_git_tag(tag):
-    werks_in_tag = ensure_str(
+    werks_in_tag = six.ensure_str(
         subprocess.check_output(
             [b"git", b"ls-tree", b"-r", b"--name-only",
-             ensure_binary(tag), b".werks"],
-            cwd=ensure_binary(testlib.cmk_path()))).split("\n")
+             six.ensure_binary(tag), b".werks"],
+            cwd=six.ensure_binary(testlib.cmk_path()))).split("\n")
 
     # Populate the map of all tags a werk is in
     for werk_file in werks_in_tag:

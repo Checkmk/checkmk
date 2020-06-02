@@ -10,7 +10,14 @@
 # files again.
 import io
 import logging
-from typing import Dict, IO, List, Optional, Set, Tuple
+from typing import (
+    Dict,
+    IO,
+    List,
+    Optional,
+    Set,
+    Tuple,
+)
 
 from cmk.utils.exceptions import MKBailOut
 from cmk.utils.log import VERBOSE

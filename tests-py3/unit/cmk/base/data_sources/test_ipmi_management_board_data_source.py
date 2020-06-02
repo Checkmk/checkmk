@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.type_defs import SourceType
-
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources.abstract import management_board_ipaddress
@@ -21,7 +19,7 @@ def test_attribute_defaults(monkeypatch):
         management_board_ipaddress(hostname),
     )
 
-    assert source.source_type is SourceType.MANAGEMENT
+    assert source._for_mgmt_board is True
     assert source._hostname == hostname
     # Address comes from management board.
     assert source._ipaddress is None

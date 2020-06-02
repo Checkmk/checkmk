@@ -6,7 +6,11 @@
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
 import collections
-from typing import NamedTuple, List
+from typing import (
+    NamedTuple,
+    Text,
+    List,
+)
 
 import cmk.utils.store as store
 
@@ -37,7 +41,7 @@ ParentScanResult = collections.namedtuple("ParentScanResult", [
 
 ParentScanSettings = NamedTuple("ParentScanSettings", [
     ("where", str),
-    ("alias", str),
+    ("alias", Text),
     ("recurse", bool),
     ("select", str),
     ("timeout", int),

@@ -9,14 +9,12 @@ import os
 from pathlib import Path
 from typing import Dict, Optional, Set
 
-from six import ensure_str
+import six
 
 from cmk.fetchers import ProgramDataFetcher  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.paths
 
-from cmk.base.api import PluginName
-from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.exceptions import MKAgentError
@@ -79,20 +77,9 @@ class ProgramDataSource(CheckMKAgentDataSource):
 
 
 class DSProgramDataSource(ProgramDataSource):
-    def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            command_template,  # type: str
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
-    ):
-        # type: (...) -> None
-        super(DSProgramDataSource, self).__init__(
-            hostname,
-            ipaddress,
-            None if selected_raw_sections is None else
-            {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
-        )
+    def __init__(self, hostname, ipaddress, command_template):
+        # type: (HostName, Optional[HostAddress], str) -> None
+        super(DSProgramDataSource, self).__init__(hostname, ipaddress)
         self._command_template = command_template
 
     def id(self):
@@ -134,26 +121,14 @@ class DSProgramDataSource(ProgramDataSource):
                                                    parents_list))
 
         macros = core_config.get_host_macros_from_attributes(self._hostname, attrs)
-        return ensure_str(core_config.replace_macros(cmd, macros))
+        return six.ensure_str(core_config.replace_macros(cmd, macros))
 
 
 class SpecialAgentDataSource(ProgramDataSource):
-    def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            special_agent_id,  # type: str
-            params,  # type: Dict
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
-    ):
-        # type: (...) -> None
+    def __init__(self, hostname, ipaddress, special_agent_id, params):
+        # type: (HostName, Optional[HostAddress], str, Dict) -> None
         self._special_agent_id = special_agent_id
-        super(SpecialAgentDataSource, self).__init__(
-            hostname,
-            ipaddress,
-            None if selected_raw_sections is None else
-            {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
-        )
+        super(SpecialAgentDataSource, self).__init__(hostname, ipaddress)
         self._params = params
 
     def id(self):

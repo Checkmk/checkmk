@@ -14,14 +14,10 @@ namespace wtools {
 
 uint32_t WinService::ReadUint32(std::wstring_view service,
                                 std::string_view name) {
-    auto val = wtools::LocalReadUint32(pathToRegistry(service).c_str(),
-                                       name.data(), -1);
+    std::string base = R"(SYSTEM\CurrentControlSet\Services\)";
+    auto val = wtools::LocalReadUint32(
+        (base + wtools::ConvertToUTF8(service)).c_str(), name.data(), -1);
     return val;
-}
-
-std::string WinService::pathToRegistry(std::wstring_view service) {
-    const std::string base = R"(SYSTEM\CurrentControlSet\Services\)";
-    return base + wtools::ConvertToUTF8(service);
 }
 
 WinService::WinService(std::wstring_view name) {
@@ -117,7 +113,7 @@ bool WinService::configureRestart(bool restart) {
     return false;
 }
 
-// returns error
+// returns error optional
 static uint32_t CallChangeServiceConfig(SC_HANDLE handle, DWORD start_type,
                                         DWORD error_control) {
     auto ret = ChangeServiceConfig(handle,
@@ -137,18 +133,6 @@ static uint32_t CallChangeServiceConfig(SC_HANDLE handle, DWORD start_type,
     return GetLastError();
 };
 
-static uint32_t CallChangeServiceDelay(SC_HANDLE handle, bool delayed) {
-    // set delayed flag if configured
-    SERVICE_DELAYED_AUTO_START_INFO dasi;
-    dasi.fDelayedAutostart = delayed ? TRUE : FALSE;
-    auto ret = ::ChangeServiceConfig2A(
-        handle, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, &dasi);
-
-    if (ret) return 0;
-
-    return GetLastError();
-};
-
 static uint32_t StartMode2WinApi(WinService::StartMode mode) {
     switch (mode) {
         case WinService::StartMode::disabled:
@@ -156,8 +140,6 @@ static uint32_t StartMode2WinApi(WinService::StartMode mode) {
         case WinService::StartMode::stopped:
             return SERVICE_DEMAND_START;
         case WinService::StartMode::started:
-            [[fallthrough]];
-        case WinService::StartMode::delayed:
             return SERVICE_AUTO_START;
     }
 
@@ -176,30 +158,25 @@ static uint32_t LogMode2WinApi(WinService::ErrorMode mode) {
 }
 
 bool WinService::configureStart(StartMode mode) {
-    auto start_mode = StartMode2WinApi(mode);
+    auto m = StartMode2WinApi(mode);
 
-    auto error_code_1 =
-        CallChangeServiceConfig(handle_, start_mode, SERVICE_NO_CHANGE);
+    auto error_code = CallChangeServiceConfig(handle_, m, SERVICE_NO_CHANGE);
+    if (error_code == 0) return true;
 
-    auto error_code_2 =
-        CallChangeServiceDelay(handle_, mode == StartMode::delayed);
-
-    if (error_code_1 == 0 && error_code_2 == 0) return true;
-
-    XLOG::l("Failed to set service start to [{}], errors are [{}] [{}]",
-            start_mode, error_code_1, error_code_2);
+    XLOG::l("Failed to set service start to [{}], error isn [{}]", m,
+            error_code);
     return false;
 }
 
 bool WinService::configureError(ErrorMode log_mode) {
-    auto error_control = LogMode2WinApi(log_mode);
-    auto error_code =
-        CallChangeServiceConfig(handle_, SERVICE_NO_CHANGE, error_control);
+    auto m = LogMode2WinApi(log_mode);
+    auto error_code = CallChangeServiceConfig(handle_, SERVICE_NO_CHANGE, m);
     if (error_code == 0) return true;
 
-    XLOG::l("Failed to set service error control to [{}], error isn [{}]",
-            error_control, error_code);
+    XLOG::l("Failed to set service error control to [{}], error isn [{}]", m,
+            error_code);
     return false;
+
 }
 
 }  // namespace wtools

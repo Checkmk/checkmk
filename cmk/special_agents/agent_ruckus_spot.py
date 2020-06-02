@@ -10,7 +10,7 @@ import socket
 from typing import NoReturn
 
 import requests
-from six import ensure_str
+import six
 
 
 def usage():
@@ -97,7 +97,7 @@ def main(sys_argv=None):
 
         if agent_port is not None:
             hostname = address.split(":")[0]
-            sys.stdout.write(ensure_str(get_agent_info_tcp(hostname)))
+            sys.stdout.write(six.ensure_str(get_agent_info_tcp(hostname)))
 
     except Exception as e:
         sys.stderr.write("Connection error %s" % e)

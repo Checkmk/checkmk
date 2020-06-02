@@ -5,12 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
 
+import sys
 from typing import List, Optional, Any, Iterator, Union, Dict, Tuple
-
-from six import ensure_binary, ensure_str
+import six
 import werkzeug.wrappers
 import werkzeug.wrappers.json as json
 from werkzeug.utils import get_content_type
+
+from cmk.utils.encoding import ensure_unicode
 
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
@@ -45,14 +47,14 @@ class LegacyVarsMixin(object):
         # Py2: All items in self._vars are encoded at the moment. This should be changed one day,
         # but for the moment we treat vars set with set_var() equal to the vars received from the
         # HTTP request.
-        varname = ensure_str(varname)
-        value = ensure_str(value)
+        varname = six.ensure_str(varname)
+        value = six.ensure_str(value)
 
         self.legacy_vars[varname] = value
 
     def del_var(self, varname):
         # type: (str) -> None
-        varname = ensure_str(varname)
+        varname = six.ensure_str(varname)
         self.legacy_vars[varname] = self.DELETED
 
     def del_vars(self, prefix=""):
@@ -82,7 +84,7 @@ class LegacyVarsMixin(object):
 
     def has_var(self, varname):
         # type: (str) -> bool
-        varname = ensure_str(varname)
+        varname = six.ensure_str(varname)
         if varname in self.legacy_vars:
             return self.legacy_vars[varname] is not self.DELETED
 
@@ -93,7 +95,7 @@ class LegacyVarsMixin(object):
 
     def var(self, varname, default=None):
         # type: (str, Optional[str]) -> Optional[str]
-        varname = ensure_str(varname)
+        varname = six.ensure_str(varname)
         legacy_var = self.legacy_vars.get(varname, None)
         if legacy_var is not None:
             if legacy_var is not self.DELETED:
@@ -147,7 +149,7 @@ class LegacyDeprecatedMixin(object):
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, ensure_str(values[-1]) if values else None
+                yield name, six.ensure_str(values[-1]) if values else None
 
     def var(self, name, default=None):
         # type: (str, Optional[str]) -> Optional[str]
@@ -159,7 +161,7 @@ class LegacyDeprecatedMixin(object):
             return default
 
         # Preserve previous behaviour
-        return ensure_str(values[-1])
+        return six.ensure_str(values[-1])
 
     def has_var(self, varname):
         # type: (str) -> bool
@@ -188,7 +190,7 @@ class LegacyDeprecatedMixin(object):
         value = self.cookies.get(varname, default)  # type: ignore[attr-defined]
         if value is not None:
             # Why would we want to do that? test_http.py requires it though.
-            return ensure_str(value)
+            return six.ensure_str(value)
         return None
 
     def get_request_header(self, key, default=None):
@@ -293,10 +295,19 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
         In case a non ASCII character is found an MKUserError() is raised."""
         value = self.var(varname, deflt)
+
         if value is None:
             return value
-        if not value.isascii():
-            raise MKUserError(varname, _("The given text must only contain ASCII characters."))
+
+        if sys.version_info[0] >= 3:
+            if not value.isascii():
+                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
+        else:
+            try:
+                value.decode("ascii")
+            except UnicodeDecodeError:
+                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
+
         return value
 
     # TODO: For historic reasons this needs to return byte strings. We will clean this up
@@ -311,10 +322,10 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
     def get_unicode_input(self, varname, deflt=None):
         # type: (str, Optional[str]) -> Optional[str]
         try:
-            val = self.var(varname, ensure_str(deflt) if deflt is not None else None)
+            val = self.var(varname, six.ensure_str(deflt) if deflt is not None else None)
             if val is None:
                 return None
-            return ensure_str(val)
+            return ensure_unicode(val)
         except UnicodeDecodeError:
             raise MKUserError(
                 varname,
@@ -330,10 +341,10 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
 
     def get_binary_input(self, varname, deflt=None):
         # type: (str, Optional[bytes]) -> Optional[bytes]
-        val = self.var(varname, ensure_str(deflt) if deflt is not None else None)
+        val = self.var(varname, six.ensure_str(deflt) if deflt is not None else None)
         if val is None:
             return None
-        return ensure_binary(val)
+        return six.ensure_binary(val)
 
     def get_binary_input_mandatory(self, varname, deflt=None):
         # type: (str, Optional[bytes]) -> bytes

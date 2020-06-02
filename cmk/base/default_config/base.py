@@ -4,7 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict as _Dict, List as _List, Optional as _Optional
+from typing import (
+    Dict as _Dict,
+    List as _List,
+    Optional as _Optional,
+    Text as _Text,
+)
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -186,7 +191,7 @@ host_contactgroups = []  # type: _List
 parents = []  # type: _List
 define_hostgroups = None
 define_servicegroups = None
-define_contactgroups = None  # type: _Optional[_Dict[str, str]]
+define_contactgroups = None  # type: _Optional[_Dict[str, _Text]]
 contactgroup_members = {}  # type: _Dict
 contacts = {}  # type: _Dict
 # needed for WATO

@@ -454,7 +454,7 @@ class LogLinesIter(object):
         self._buffer = os.read(self._fd, enc_bytes_len)
         for bom, encoding in ENCODINGS:
             if self._buffer.startswith(bom):
-                if sys.version_info[0] == 3:
+                if sys.version[0] == "3":
                     self._buffer = self._buffer[len(bom):].decode(encoding)
                 else:
                     self._buffer = self._buffer[len(bom):]
@@ -851,7 +851,7 @@ def _decode_to_unicode(match):
     # (Union[bytes, unicode, str]) -> unicode
     # we can't use 'surrogatereplace' because that a) is py3 only b) would fail upon re-encoding
     # we can't use 'six': this code may be executed using Python 2.5/2.6
-    if sys.version_info[0] == 2:
+    if sys.version[0] == "2":
         # Python 2: str @Windows && @Linux
         return match if isinstance(match, unicode) else match.decode('utf8', 'replace')
 
@@ -1071,7 +1071,7 @@ def write_output(header, lines, options):
     if options.maxcontextlines:
         lines = _filter_maxcontextlines(lines, *options.maxcontextlines)
 
-    if sys.version_info[0] == 3:
+    if sys.version[0] == "3":
         # in Python 3 we use 100% unicode and hope that this is good idea
         sys.stdout.write(header)
         filtered_enc_lines = _filter_maxoutputsize(lines, options.maxoutputsize)
@@ -1120,7 +1120,7 @@ def main(argv=None):
 
     for pattern in non_matching_patterns:
         # Python 2.5/2.6 compatible solution
-        if sys.version_info[0] == 3:
+        if sys.version[0] == "3":
             sys.stdout.write("[[[%s:missing]]]\n" % pattern)
         else:
             sys.stdout.write((u"[[[%s:missing]]]\n" % pattern).encode('utf-8'))

@@ -11,7 +11,7 @@ import tarfile
 from typing import BinaryIO, cast, List
 from pathlib import Path
 
-from six import ensure_str
+import six
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
@@ -143,7 +143,7 @@ def show_package(name, show_info=False):
             info = tar.extractfile("info")
             if info is None:
                 raise PackageException("Failed to extract \"info\"")
-            package = parse_package_info(ensure_str(info.read()))
+            package = parse_package_info(six.ensure_str(info.read()))
         else:
             this_package = read_package_info(name)
             if not this_package:

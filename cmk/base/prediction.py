@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for predictive monitoring / anomaly detection"""
+from __future__ import division
 from typing import Optional, List, Any, cast, Dict, Union, Callable, Tuple
 
 import json

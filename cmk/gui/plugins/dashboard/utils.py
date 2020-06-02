@@ -9,7 +9,8 @@ import abc
 import json
 import copy
 from typing import Optional, Any, Dict, Union, Tuple, List, Callable, cast
-import urllib.parse
+
+import six
 
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import UserId
@@ -276,17 +277,17 @@ class Dashlet(metaclass=abc.ABCMeta):
             return url
 
         context_vars = {
-            k: "%s" % v  #
+            k: six.ensure_str("%s" % v)  #
             for k, v in self._dashlet_context_vars()
             if v is not None
         }
 
-        parts = urllib.parse.urlparse(url)
-        url_vars = dict(urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
+        parts = six.moves.urllib.parse.urlparse(url)
+        url_vars = dict(six.moves.urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
         url_vars.update(context_vars)
 
-        new_qs = urllib.parse.urlencode(url_vars)
-        return urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
+        new_qs = six.moves.urllib.parse.urlencode(url_vars)
+        return six.moves.urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
 
     def _dashlet_context_vars(self):
         # type: () -> HTTPVariables

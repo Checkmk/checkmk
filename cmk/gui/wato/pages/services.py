@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for services and discovery"""
+from __future__ import print_function
 
 import ast
 import os
@@ -16,7 +17,7 @@ import re
 from hashlib import sha256
 from typing import Any, Tuple, Dict, NamedTuple, List, Optional
 
-from six import ensure_str
+import six
 
 import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
@@ -1546,8 +1547,8 @@ class DiscoveryPageRenderer(object):
                 ("mode", "edit_ruleset"),
                 ("varname", ruleset_name),
                 ("host", self._host.name()),
-                ("item", ensure_str(watolib.mk_repr(item))),
-                ("service", ensure_str(watolib.mk_repr(descr))),
+                ("item", six.ensure_str(watolib.mk_repr(item))),
+                ("service", six.ensure_str(watolib.mk_repr(descr))),
             ])
 
         html.icon_button(url, _("Edit and analyze the check parameters of this service"),
@@ -1559,7 +1560,7 @@ class DiscoveryPageRenderer(object):
                 ("mode", "edit_ruleset"),
                 ("varname", "ignored_services"),
                 ("host", self._host.name()),
-                ("item", ensure_str(watolib.mk_repr(descr))),
+                ("item", six.ensure_str(watolib.mk_repr(descr))),
             ]), _("Edit and analyze the disabled services rules"), "rulesets")
 
     def _get_ruleset_name(self, table_source, check_type, checkgroup):

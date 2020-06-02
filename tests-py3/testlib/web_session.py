@@ -10,8 +10,8 @@ import json
 import ast
 import re
 import logging
-import urllib.parse
 
+from six.moves.urllib.parse import urlparse
 from bs4 import BeautifulSoup  # type: ignore[import]
 
 import requests
@@ -121,7 +121,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         assert not matches, "Found error message: %s" % matches.groups()
 
     def _check_html_page_resources(self, url, soup):
-        base_url = urllib.parse.urlparse(url).path
+        base_url = urlparse(url).path
         if ".py" in base_url:
             base_url = os.path.dirname(base_url)
 

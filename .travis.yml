@@ -23,23 +23,23 @@ matrix:
           env: TEST_TARGETS="test-format-python"
             TEST_PATH=tests-py3
         - name: "Python3 PyLint tests"
-          python: "3.8"
+          python: "3.7"
           env: TEST_TARGETS="test-pylint"
             TEST_PATH=tests-py3
         - name: "Python3 unit tests"
-          python: "3.8"
+          python: "3.7"
           env: TEST_TARGETS="test-unit"
             TEST_PATH=tests-py3
         - name: "Python3 formatting"
-          python: "3.8"
+          python: "3.7"
           env: TEST_TARGETS="test-format-python3"
             TEST_PATH=tests-py3
         - name: "Python3 typing tests"
-          python: "3.8"
+          python: "3.7"
           env: TEST_TARGETS="test-mypy-raw"
             TEST_PATH=tests-py3
         - name: "Shell tests"
-          python: "3.8"
+          python: "3.7"
           env: TEST_TARGETS="test-unit-sh"
             TEST_PATH=tests
 env:

@@ -14,7 +14,7 @@ link_priorities = {
 def inv_snmp_checkpoint_tunnels(info):
     node = inv_tree_list("networking.tunnels:")
     index = 0
-    for peerip, sourceip, peername, tunnelinterface, linkpriority in info[0]:
+    for peerip, sourceip, peername, tunnelinterface, linkpriority in info:
         index += 1
         node.append({
             "index": index,
@@ -28,4 +28,15 @@ def inv_snmp_checkpoint_tunnels(info):
 
 inv_info['checkpoint_inv_tunnels'] = {
     'inv_function': inv_snmp_checkpoint_tunnels,
+    'snmp_info': (
+        '.1.3.6.1.4.1.2620.500.9002.1',
+        [
+            "1",  # tunnelPeerIpAddr
+            "7",  # tunnelSourceIpAddr
+            "2",  # tunnelPeerObjName
+            "6",  # tunnelInterface
+            "8"  # tunnelLinkPriority
+        ]),
+    'snmp_scan_function': scan_checkpoint,
+    'includes': ['checkpoint.include'],
 }

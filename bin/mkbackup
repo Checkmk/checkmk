@@ -31,7 +31,7 @@ import time
 import traceback
 from typing import Any, Callable, Dict, Iterator, IO, List, NamedTuple, NoReturn, Optional, Tuple
 
-from six import ensure_str
+import six
 
 from OpenSSL import crypto  # type: ignore[import]
 from Cryptodome.Cipher import AES, PKCS1_OAEP
@@ -127,7 +127,7 @@ def stop_logging():
 def log(s):
     # type: (str) -> None
     msg = "%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s)
-    sys.stdout.write(ensure_str(msg))
+    sys.stdout.write(six.ensure_str(msg))
     if is_cma():
         syslog.syslog(s)
 
@@ -700,7 +700,7 @@ def do_site_backup(opts, site=None, try_stop=True):
             backup_file.write(chunk)
 
     if p.returncode != 0:
-        err = ensure_str(p.stderr.read())
+        err = six.ensure_str(p.stderr.read())
         if not compress_archives() and "Invalid option '--no-compression'" in err:
             err = "The Check_MK version of this site does not support uncompressed backups. " \
                   "you can either re-enable the compression or update your site to version " \
@@ -859,7 +859,7 @@ class MKBackupStream:
                 return key
 
         raise MKGeneralException("Failed to load the configured backup key: %s" %
-                                 ensure_str(key_id))
+                                 six.ensure_str(key_id))
 
     # TODO: The return type is a bit questionable...
     def _load_backup_keys(self):
@@ -976,7 +976,11 @@ class RestoreStream(MKBackupStream):
         if len(this_chunk) == 0:
             # Processing last chunk. Stip off padding.
             pad = self._next_chunk[-1]
-            chunk = self._next_chunk[:-pad]
+            if sys.version_info[0] >= 3:
+                padding_length = pad
+            else:
+                padding_length = ord(pad)
+            chunk = self._next_chunk[:-padding_length]
             return chunk, True
 
         # Processing regular chunk
@@ -1603,7 +1607,7 @@ def do_site_restore(opts, info, site=None):
         p.stdin.close()
 
     if p.wait() != 0:
-        log(ensure_str(p.stderr.read()))
+        log(six.ensure_str(p.stderr.read()))
         raise MKGeneralException("Site restore failed")
 
     if not is_root():
@@ -1898,7 +1902,7 @@ def mode_jobs(opts):
     sys.stdout.write(fmt % ("Job-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
     for job_id, job_cfg in sorted(g_config["jobs"].items(), key=lambda x_y: x_y[0]):
-        sys.stdout.write(ensure_str(fmt % (job_id, job_cfg["title"])))
+        sys.stdout.write(six.ensure_str(fmt % (job_id, job_cfg["title"])))
 
 
 def mode_targets(opts):
@@ -1907,7 +1911,7 @@ def mode_targets(opts):
     sys.stdout.write(fmt % ("Target-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
     for job_id, job_cfg in sorted(g_config["targets"].items(), key=lambda x_y1: x_y1[0]):
-        sys.stdout.write(ensure_str(fmt % (job_id, job_cfg["title"])))
+        sys.stdout.write(six.ensure_str(fmt % (job_id, job_cfg["title"])))
 
 
 def usage(error=None):

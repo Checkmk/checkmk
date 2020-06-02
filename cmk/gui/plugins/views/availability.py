@@ -6,16 +6,17 @@
 
 import time
 import itertools
-from typing import List, TYPE_CHECKING, Set, Tuple
-
-from six import ensure_str
+from typing import (
+    List,
+    Text,
+    TYPE_CHECKING,
+    Set,
+    Tuple,
+)
+import six
 
 import cmk.utils.version as cmk_version
 import cmk.utils.render
-from cmk.utils.defines import (
-    host_state_name,
-    service_state_name,
-)
 
 import cmk.gui.config as config
 
@@ -51,8 +52,6 @@ from cmk.gui.valuespec import (
     Optional,
     AbsoluteDate,
     DropdownChoice,
-    MonitoringState,
-    HostState,
 )
 
 from cmk.gui.plugins.views import (
@@ -603,7 +602,7 @@ def render_timeline_bar(timeline_layout, style, timeline_nr=0):
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
 def render_bi_availability(title, aggr_rows):
-    # type: (str, Rows) -> None
+    # type: (Text, Rows) -> None
     config.user.need_permission("general.see_availability")
 
     av_mode = html.request.get_ascii_input_mandatory("av_mode", "availability")
@@ -797,7 +796,7 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
         for service in avail_entries.keys():
             for search_what in ["host", "service"]:
                 if what == "host" and search_what == "service":
-                    continue  # Service annotations are not relevant for host
+                    continue  # Service notifications are not relevant for host
 
                 if search_what == "host":
                     site_host_svc = site_host[0], site_host[1], None
@@ -811,7 +810,7 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
                             annos_to_render.append((site_host_svc, annotation))
                             annos_rendered.add(id(annotation))
 
-    return annos_to_render
+    return sorted(annos_to_render, key=lambda x: (x[0], x[1]["from"]))
 
 
 def get_annotation_date_render_function(annotations, avoptions):
@@ -878,17 +877,6 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                 html.icon(
                     _("This period has been reclassified as a not being a scheduled downtime"),
                     "nodowntime")
-            recl_host_state = annotation.get("host_state")
-            if recl_host_state is not None:
-                html.icon(
-                    _("This period has been reclassified in host state to state: %s" %
-                      host_state_name(recl_host_state)), "status")
-            recl_svc_state = annotation.get("service_state")
-            if recl_svc_state is not None:
-                html.icon(
-                    _("This period has been reclassified in service state to state: %s" %
-                      service_state_name(recl_svc_state)), "status")
-
             table.cell(_("Annotation"), html.render_text(annotation["text"]))
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
@@ -898,22 +886,21 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
 
 
 def edit_annotation():
-    site_id, hostname, host_state, service, service_state, fromtime, \
-            untiltime, site_host_svc = _handle_anno_request_vars()
+    site_id = html.request.var("anno_site") or ""
+    hostname = html.request.get_str_input_mandatory("anno_host")
+    service = html.request.var("anno_service") or None
+    fromtime = html.request.get_float_input_mandatory("anno_from")
+    untiltime = html.request.get_float_input_mandatory("anno_until")
+    site_host_svc = (site_id, hostname, service)
 
     # Find existing annotation with this specification
     annotations = availability.load_annotations()
-    annotation = availability.find_annotation(annotations, site_host_svc, host_state, service_state,
-                                              fromtime, untiltime)
+    annotation = availability.find_annotation(annotations, site_host_svc, fromtime, untiltime)
 
     if annotation:
         value = annotation.copy()
-        value.setdefault("host_state", None)
-        value.setdefault("service_state", None)
     else:
         value = {
-            "host_state": None,
-            "service_state": None,
             "from": fromtime,
             "until": untiltime,
             "text": "",
@@ -964,21 +951,6 @@ def edit_annotation():
     return True
 
 
-def _validate_reclassify_of_states(value, varprefix):
-    host_state = value.get("host_state")
-    if host_state is not None:
-        if not value.get("host"):
-            raise MKUserError("_editanno_p_host",
-                              _('Please set a hostname for host state reclassification'))
-
-    service_state = value.get("service_state")
-    if service_state is not None:
-        if not value.get("service"):
-            raise MKUserError(
-                "_editanno_p_service_value",
-                _('Please set a service description for service state reclassification'))
-
-
 def _vs_annotation():
     extra_elements = []  # type: List[Tuple[str, ValueSpec]]
     if not cmk_version.is_raw_edition():
@@ -988,25 +960,8 @@ def _vs_annotation():
         elements=[
             ("site", TextAscii(title=_("Site"))),
             ("host", TextUnicode(title=_("Hostname"))),
-            ("host_state",
-             Optional(
-                 HostState(),
-                 sameline=True,
-                 title=_("Host state"),
-                 label=_("Reclassify host state of this period"),
-             )),
-            ("service",
-             Optional(TextUnicode(allow_empty=False),
-                      sameline=True,
-                      title=_("Service"),
-                      label=_("Service description"))),
-            ("service_state",
-             Optional(
-                 MonitoringState(),
-                 sameline=True,
-                 title=_("Service state"),
-                 label=_("Reclassify service state of this period"),
-             )),
+            ("service", Optional(TextUnicode(allow_empty=False), sameline=True,
+                                 title=_("Service"))),
             ("from", AbsoluteDate(title=_("Start-Time"), include_time=True)),
             ("until", AbsoluteDate(title=_("End-Time"), include_time=True)),
             ("downtime",
@@ -1022,19 +977,22 @@ def _vs_annotation():
         ] + extra_elements,
         title=_("Edit annotation"),
         optional_keys=[],
-        validate=_validate_reclassify_of_states,
     )
 
 
 # Called at the beginning of every availability page
 def handle_delete_annotations():
     if html.request.var("_delete_annotation"):
-        _site_id, _hostname, _service, host_state, service_state, fromtime, \
-                untiltime, site_host_svc = _handle_anno_request_vars()
+        site_id = html.request.var("anno_site") or ""
+        hostname = html.request.get_str_input_mandatory("anno_host")
+        service = html.request.var("anno_service") or None
+        fromtime = html.request.get_float_input_mandatory("anno_from")
+        untiltime = html.request.get_float_input_mandatory("anno_until")
+
+        site_host_svc = (site_id, hostname, service)
 
         annotations = availability.load_annotations()
-        annotation = availability.find_annotation(annotations, site_host_svc, host_state,
-                                                  service_state, fromtime, untiltime)
+        annotation = availability.find_annotation(annotations, site_host_svc, fromtime, untiltime)
         if not annotation:
             return
 
@@ -1043,8 +1001,7 @@ def handle_delete_annotations():
                 annotation["text"]):
             return
 
-        availability.delete_annotation(annotations, site_host_svc, host_state, service_state,
-                                       fromtime, untiltime)
+        availability.delete_annotation(annotations, site_host_svc, fromtime, untiltime)
         availability.save_annotations(annotations)
 
 
@@ -1058,21 +1015,6 @@ def handle_edit_annotations():
         finished = False
 
     return finished
-
-
-def _handle_anno_request_vars():
-    site_id = html.request.var("anno_site") or ""
-    hostname = html.request.get_str_input_mandatory("anno_host")
-    host_state = html.request.var("anno_host_state") or None
-    service = html.request.var("anno_service") or None
-    service_state = html.request.var("anno_service_state") or None
-    fromtime = html.request.get_float_input_mandatory("anno_from")
-    untiltime = html.request.get_float_input_mandatory("anno_until")
-
-    site_host_svc = (site_id, hostname, service)
-
-    return site_id, hostname, host_state, service, service_state, fromtime, \
-            untiltime, site_host_svc
 
 
 #.
@@ -1146,7 +1088,7 @@ def _output_availability_csv(what, av_data, avoptions):
     # type: (AVObjectType, AVData, AVOptions) -> None
     def cells_from_row(table, group_titles, group_cells, object_titles, cell_titles, row_object,
                        row_cells):
-        # type: (Table, List[str], List[str], List[str], List[str], AVObjectCells, AVRowCells) -> None
+        # type: (Table, List[Text], List[Text], List[Text], List[Text], AVObjectCells, AVRowCells) -> None
         for column_title, group_title in zip(group_titles, group_cells):
             table.cell(column_title, group_title)
 
@@ -1199,10 +1141,10 @@ def _output_availability_csv(what, av_data, avoptions):
 
 
 def _av_output_set_content_disposition(title):
-    # type: (str) -> None
+    # type: (Text) -> None
     filename = '%s-%s.csv' % (
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),
     )
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
+    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % six.ensure_str(
         filename)

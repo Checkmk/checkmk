@@ -65,8 +65,8 @@ def test_delitem(basic_registry):
     with pytest.raises(KeyError):
         basic_registry.unregister("bla")
 
-    @basic_registry.register
-    class DelPlugin(Plugin):  # pylint: disable=unused-variable
+    @basic_registry.register  # pylint: disable=unused-variable
+    class DelPlugin(Plugin):
         pass
 
     basic_registry.unregister("DelPlugin")

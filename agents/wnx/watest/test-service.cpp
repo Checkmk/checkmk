@@ -224,13 +224,10 @@ TEST(CmaSrv, ServiceConfig) {
     EXPECT_EQ(defaults::kRestartOnCrash, true);
     EXPECT_EQ(std::string(defaults::kStartMode), values::kStartModeAuto);
 
-    //
+    // remove all from the Firewall
     {
-        // first mode, second config text
         std::pair<WinService::StartMode, std::string_view> pairs[] = {
             {WinService::StartMode::started, values::kStartModeAuto},
-            {WinService::StartMode::started, "invalid"},  // check bad value
-            {WinService::StartMode::delayed, values::kStartModeDelayed},
             {WinService::StartMode::stopped, values::kStartModeDemand},
             {WinService::StartMode::disabled, values::kStartModeDisabled}};
 

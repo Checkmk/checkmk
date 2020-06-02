@@ -12,9 +12,20 @@ import pprint
 import traceback
 import json
 import functools
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as _Tuple, Union
-
-from six import ensure_str
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    TYPE_CHECKING,
+    Text,
+    Tuple as _Tuple,
+    Union,
+)
+import six
 
 import livestatus
 from livestatus import SiteId, LivestatusRow
@@ -1142,7 +1153,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         value = ast.literal_eval(request["encoded_value"])
 
         with html.plugged():
-            vs.show_sub_valuespec(ensure_str(request["varprefix"]), sub_vs, value)
+            vs.show_sub_valuespec(six.ensure_str(request["varprefix"]), sub_vs, value)
             return {"html_code": html.drain()}
 
     def _get_sub_vs(self, vs, choice_id):
@@ -1668,10 +1679,6 @@ def columns_of_cells(cells):
     return columns
 
 
-JoinMasterKey = _Tuple[SiteId, str]
-JoinSlaveKey = str
-
-
 def _do_table_join(view, master_rows, master_filters, sorters):
     # type: (View, List[LivestatusRow], str, List[SorterEntry]) -> None
     assert view.datasource.join is not None
@@ -1695,6 +1702,9 @@ def _do_table_join(view, master_rows, master_filters, sorters):
                                 only_sites=view.only_sites,
                                 limit=None,
                                 all_active_filters=None)
+
+    JoinMasterKey = _Tuple[SiteId, Union[str, Text]]  # pylint: disable=unused-variable
+    JoinSlaveKey = Union[str, Text]  # pylint: disable=unused-variable
 
     per_master_entry = {}  # type: Dict[JoinMasterKey, Dict[JoinSlaveKey, LivestatusRow]]
     current_key = None  # type: Optional[JoinMasterKey]
@@ -2174,7 +2184,7 @@ def sorters_of_datasource(ds_name):
 
 
 def painters_of_datasource(ds_name):
-    # type: (str) -> Dict[str, Painter]
+    # type: (Text) -> Dict[str, Painter]
     return _allowed_for_datasource(painter_registry, ds_name)
 
 
@@ -2233,7 +2243,7 @@ def painter_choices_with_params(painters):
 
 
 def get_sorter_title_for_choices(sorter):
-    # type: (Sorter) -> str
+    # type: (Sorter) -> Text
     info_title = "/".join([
         visual_info_registry[info_name]().title_plural
         for info_name in sorted(infos_needed_by_painter(sorter))
@@ -2247,7 +2257,7 @@ def get_sorter_title_for_choices(sorter):
 
 
 def get_painter_title_for_choices(painter):
-    # type: (Painter) -> str
+    # type: (Painter) -> Text
     info_title = "/".join([
         visual_info_registry[info_name]().title_plural
         for info_name in sorted(infos_needed_by_painter(painter))

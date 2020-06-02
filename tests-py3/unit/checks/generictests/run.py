@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Submodule providing the `run` function of generictests package"""
+from __future__ import print_function
 from ast import literal_eval
 from contextlib import contextmanager
 import freezegun  # type: ignore[import]

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, Set, cast
+from typing import List, Optional, Set, cast
 
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -13,11 +13,9 @@ from cmk.utils.type_defs import (
     RawAgentData,
     ServiceCheckResult,
     ServiceDetails,
-    SourceType,
 )
 
-from cmk.base.api import PluginName
-from cmk.base.config import IPMICredentials, SectionPlugin
+from cmk.base.config import IPMICredentials
 from cmk.base.exceptions import MKAgentError
 
 from cmk.fetchers import IPMIDataFetcher  # pylint: disable=cmk-module-layer-violation
@@ -27,22 +25,11 @@ from .abstract import CheckMKAgentDataSource
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
 class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
-    source_type = SourceType.MANAGEMENT
+    _for_mgmt_board = True
 
-    _raw_sections = {PluginName("mgmt_ipmi_sensors")}
-
-    def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, SectionPlugin]]
-    ):
-        # type: (...) -> None
-        super(IPMIManagementBoardDataSource, self).__init__(
-            hostname,
-            ipaddress,
-            None if selected_raw_sections is None else self._raw_sections,
-        )
+    def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
+        super(IPMIManagementBoardDataSource, self).__init__(hostname, ipaddress)
         self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
 
     def id(self):
@@ -68,7 +55,7 @@ class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
 
     def _gather_check_plugin_names(self):
         # type: () -> Set[CheckPluginName]
-        return {str(n) for n in self._raw_sections}
+        return {"mgmt_ipmi_sensors"}
 
     def _execute(self):
         # type: () -> RawAgentData

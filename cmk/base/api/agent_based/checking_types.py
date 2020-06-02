@@ -5,10 +5,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types and classes used by the API for check plugins
 """
-from collections.abc import Mapping
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 import sys
 import enum
+
+try:
+    from collections.abc import Mapping  # type: ignore[import]
+except ImportError:
+    from collections import Mapping
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.base.api import PluginName
@@ -53,8 +67,10 @@ class Service:
         labels=[ServiceLabel(...)],
     )
     """
-    def __init__(self, *, item=None, parameters=None, labels=None):
+    def __init__(self, item=None, parameters=None, labels=None):
         # type: (Optional[str], Optional[Dict], Optional[List[ServiceLabel]]) -> None
+        # TODO (mo): unhack this CMK-3983
+        # all arguments should be kwarg-only
         self._item = item
         self._parameters = parameters or {}  # type: Dict[str, Any]
         self._labels = labels or []
@@ -140,16 +156,6 @@ def state_worst(*args):
 class MetricFloat(float):
     """Extends the float representation for Infinities in such way that
     they can be parsed by eval"""
-
-    # TODO: Is this really what we want? Delegate to __repr__ because of a
-    # change in Python 3.8: "Removed __str__ implementations from builtin types
-    # bool, int, float, complex and few classes from the standard library. They
-    # now inherit __str__() from object. As result, defining the __repr__()
-    # method in the subclass of these classes will affect their string
-    # representation."
-    def __str__(self):
-        return super().__repr__()
-
     def __repr__(self):
         # type: () -> str
         if self > sys.float_info.max:
@@ -201,11 +207,15 @@ class Metric:
             self,
             name,  # type: str
             value,  # type: float
-            *,
-            levels=None,  # type: _OptionalPair
+            # *args,  # type: str  # *, # type shoud be "nothing"
+        levels=None,  # type: _OptionalPair
             boundaries=None,  # type: _OptionalPair
     ):
         # type: (...) -> None
+        # if args:
+        #    # TODO (mo): unhack this CMK-3983
+        #    raise TypeError()
+
         self.validate_name(name)
 
         if not isinstance(value, (int, float)):
@@ -262,13 +272,17 @@ class Result(NamedTuple("ResultTuple", [
 
     def __new__(  # pylint: disable=redefined-outer-name
             cls,
-            *,
-            state,  # type: state
             summary=None,  # type: Optional[str]
             notice=None,  # type: Optional[str]
             details=None,  # type: Optional[str]
+            state=None,  # type: Optional[state]
     ):
         # type: (...) -> Result
+        # TODO (mo): unhack this CMK-3983
+        # all arguments should be kwarg-only
+        if state is None:
+            raise TypeError("'state' is a mandatory keyword argument")
+
         if not isinstance(state, cls._state_class):
             raise TypeError("'state' must be a checkmk state constant, got %r" % (state,))
 

@@ -8,7 +8,7 @@
 set -e
 
 REPO_PATH=$(dirname $(dirname $(realpath "$0")))
-PYTHON_VERSION=3.8
+PYTHON_VERSION=3.7
 
 # Detect whether or not mypy is available and print out an error that is in the
 # same format as mypy issues. This message is understood by e.g. vims ALE and

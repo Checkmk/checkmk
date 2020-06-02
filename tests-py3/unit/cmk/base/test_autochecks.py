@@ -5,12 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
+import sys
 from pathlib import Path
 
 import pytest  # type: ignore[import]
 
 from testlib import CheckManager
-from testlib.base import Scenario
+# TODO: Why is the suppression necessary?
+from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
@@ -234,8 +236,8 @@ def test_remove_autochecks_file():
     assert autochecks.has_autochecks("host") is False
 
 
-@pytest.mark.parametrize("items,expected_content", [
-    ([], "[\n]\n"),
+@pytest.mark.parametrize("items,expected_content_py2,expected_content_py3", [
+    ([], "[\n]\n", "[\n]\n"),
     ([
         discovery.DiscoveredService('df', u'/xyz', u"Filesystem /xyz", "None",
                                     DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
@@ -244,16 +246,21 @@ def test_remove_autochecks_file():
         discovery.DiscoveredService('cpu.loads', None, "CPU load", "cpuload_default_levels",
                                     DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
     ], """[
+  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u'x': u'y'}},
+  {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {u'x': u'y'}},
+  {'check_plugin_name': 'df', 'item': u'/xyz', 'parameters': None, 'service_labels': {u'x': u'y'}},
+]\n""", """[
   {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {'x': 'y'}},
   {'check_plugin_name': 'df', 'item': '/', 'parameters': {}, 'service_labels': {'x': 'y'}},
   {'check_plugin_name': 'df', 'item': '/xyz', 'parameters': None, 'service_labels': {'x': 'y'}},
 ]\n"""),
 ])
-def test_save_autochecks_file(items, expected_content):
+def test_save_autochecks_file(items, expected_content_py2, expected_content_py3):
     autochecks.save_autochecks_file("host", items)
 
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("r", encoding="utf-8") as f:
         content = f.read()
 
+    expected_content = expected_content_py3 if sys.version_info[0] >= 3 else expected_content_py2
     assert expected_content == content

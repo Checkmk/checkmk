@@ -9,6 +9,7 @@ import os
 import platform
 import re
 import sys
+import six
 
 import pytest
 from local import (actual_output, make_yaml_config, src_exec_dir, local_test, run_subprocess,

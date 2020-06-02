@@ -14,7 +14,7 @@ import re
 import subprocess
 from typing import Callable, List, Optional as _Optional, Tuple as _Tuple
 
-from six import ensure_str
+import six
 
 import cmk.utils.plugin_registry
 
@@ -1004,7 +1004,7 @@ class CheckTypeSelection(DualListChoice):
     def get_elements(self):
         checks = get_check_information()
         elements = sorted([
-            (cn, (cn + " - " + ensure_str(c["title"]))[:60]) for (cn, c) in checks.items()
+            (cn, (cn + " - " + six.ensure_text(c["title"]))[:60]) for (cn, c) in checks.items()
         ])
         return elements
 

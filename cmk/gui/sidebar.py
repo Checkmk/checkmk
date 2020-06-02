@@ -10,7 +10,7 @@ import json
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
-from six import ensure_str
+import six
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -575,7 +575,7 @@ class SidebarRenderer(object):
                 html.close_div()
             if 'gui_popup' in msg['methods']:
                 html.javascript(
-                    ensure_str(
+                    six.ensure_str(
                         'alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
                         (escaping.escape_attribute(msg['text']).replace('\n', '\\n'), msg['id'])))
 

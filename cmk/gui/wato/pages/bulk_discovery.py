@@ -7,7 +7,11 @@
 this mode is used."""
 
 import copy
-from typing import List, Tuple, cast
+from typing import (
+    List,
+    Tuple,
+    cast,
+)
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites

@@ -6,16 +6,17 @@
 
 import logging
 from types import TracebackType
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Optional, Type, Union
 
 import cmk.utils.snmp_table as snmp_table
-from cmk.utils.type_defs import ABCSNMPTree, RawSNMPData, SNMPHostConfig, SNMPTable
+from cmk.utils.check_utils import section_name_of
+from cmk.utils.type_defs import ABCSNMPTree, OIDInfo, RawSNMPData, SNMPHostConfig, SNMPTable
 
 
 class SNMPDataFetcher:
     def __init__(
             self,
-            oid_infos,  # type: Dict[str, List[ABCSNMPTree]]
+            oid_infos,  # type: Dict[str, Union[OIDInfo, List[ABCSNMPTree]]]
             use_snmpwalk_cache,  # type: bool
             snmp_config,  # type: SNMPHostConfig
     ):
@@ -37,16 +38,27 @@ class SNMPDataFetcher:
     def data(self):
         # type: () -> RawSNMPData
         info = {}  # type: RawSNMPData
-        for section_name, oid_info in self._oid_infos.items():
-            self._logger.debug("%s: Fetching data", section_name)
+        for check_plugin_name, oid_info in self._oid_infos.items():
+            section_name = section_name_of(check_plugin_name)
+            # Prevent duplicate data fetching of identical section in case of SNMP sub checks
+            if section_name in info:
+                self._logger.debug("%s: Skip fetching data (section already fetched)",
+                                   check_plugin_name)
+                continue
 
-            # oid_info is now a list: Each element of that list is interpreted as one real oid_info
+            self._logger.debug("%s: Fetching data", check_plugin_name)
+
+            # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
             get_snmp = snmp_table.get_snmp_table_cached if self._use_snmpwalk_cache else snmp_table.get_snmp_table
-            # branch: List[ABCSNMPTree]
-            check_info = []  # type: List[SNMPTable]
-            for entry in oid_info:
-                check_info_part = get_snmp(self._snmp_config, section_name, entry)
-                check_info.append(check_info_part)
-            info[section_name] = check_info
+            if isinstance(oid_info, list):
+                # branch: List[ABCSNMPTree]
+                check_info = []  # type: List[SNMPTable]
+                for entry in oid_info:
+                    check_info_part = get_snmp(self._snmp_config, check_plugin_name, entry)
+                    check_info.append(check_info_part)
+                info[section_name] = check_info
+            else:
+                # branch: OIDInfo
+                info[section_name] = get_snmp(self._snmp_config, check_plugin_name, oid_info)
         return info

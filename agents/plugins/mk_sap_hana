@@ -387,7 +387,7 @@ function sap_hana_connect() {
     local host_role
 
     # Get major version
-    major=$(echo "$status" | grep "Version" | awk -F";" '{print $3}' | awk -F"." '{print $1}')
+    major=$(echo "$status" | awk -F";" '{print $3}' | awk -F"." '{print $1}')
 
     # We have differnt ports for HANA 1.0 and HANA 2.0
     if [ "$major" == "1" ];then
@@ -408,7 +408,7 @@ function sap_hana_connect() {
         resp="retcode: 1"
     fi
 
-    echo "$resp" | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g"
+    echo "$resp" | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$//g"
 }
 
 function sap_hana_role_from_landscape() {

@@ -19,11 +19,18 @@
 
 import os
 import json
-from typing import Dict, Any, List, Tuple, Optional as _Optional
-
-from six import ensure_str
+from typing import (
+    Dict,
+    Any,
+    Text,
+    List,
+    Tuple,
+    Optional as _Optional,
+)
+import six
 
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages
@@ -98,7 +105,7 @@ class Base(object):
     # moment we use dedicated methods, wrong usage will be found by pylint.
     @classmethod
     def phrase(cls, phrase):
-        # type: (str) -> str
+        # type: (str) -> Text
         return _("MISSING '%s'") % phrase
 
     # Implement this function in a subclass in order to add parameters
@@ -148,7 +155,7 @@ class Base(object):
     # page type by calling parameters() for each class
     @classmethod
     def _collect_parameters(cls, mode):
-        topics = {}  # type: Dict[str, List[DictionaryEntry]]
+        topics = {}  # type: Dict[Text, List[DictionaryEntry]]
         for topic, elements in cls.parameters(mode):
             el = topics.setdefault(topic, [])
             el += elements
@@ -178,11 +185,11 @@ class Base(object):
         return self._["name"]
 
     def title(self):
-        # type: () -> str
+        # type: () -> Text
         return self._["title"]
 
     def description(self):
-        # type: () -> str
+        # type: () -> Text
         return self._.get("description", "")
 
     def is_hidden(self):
@@ -194,7 +201,7 @@ class Base(object):
         return True
 
     def render_title(self):
-        # type: () -> str
+        # type: () -> Text
         return _u(self.title())
 
     def is_empty(self):
@@ -225,7 +232,7 @@ class Base(object):
 
     @classmethod
     def default_topic(cls):
-        # type: () -> str
+        # type: () -> Text
         return _("Other")
 
     # Store for all instances of this page type. The key into
@@ -777,9 +784,10 @@ class Overridable(Base):
 
         # Now scan users subdirs for files "user_$type_name.mk"
         for user_dir in os.listdir(config.config_dir):
-            user = UserId(ensure_str(user_dir))
+            user = UserId(ensure_unicode(user_dir))
             try:
-                path = "%s/%s/user_%ss.mk" % (config.config_dir, ensure_str(user), cls.type_name())
+                path = "%s/%s/user_%ss.mk" % (config.config_dir, six.ensure_str(user),
+                                              cls.type_name())
                 if not os.path.exists(path):
                     continue
 
@@ -1184,7 +1192,7 @@ class Overridable(Base):
 
 
 def PublishTo(title=None, type_title=None, with_foreign_groups=True):
-    # type: (_Optional[str], _Optional[str], bool) -> CascadingDropdown
+    # type: (_Optional[Text], _Optional[Text], bool) -> CascadingDropdown
     if title is None:
         title = _('Make this %s available for other users') % type_title
 

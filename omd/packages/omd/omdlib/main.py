@@ -47,12 +47,12 @@ from typing import NoReturn, IO, cast, Iterable, Union, Pattern, Tuple, Optional
 
 from passlib.hash import sha256_crypt  # type: ignore[import]
 import psutil  # type: ignore[import]
-from six import ensure_str
 
 import cmk.utils.log
 import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
+from cmk.utils.encoding import ensure_unicode
 
 import omdlib
 import omdlib.certs
@@ -136,7 +136,7 @@ class Log(io.StringIO):
     # TODO: Ensure we get Text here
     def write(self, data):
         # type: (str) -> int
-        text = ensure_str(data)
+        text = ensure_unicode(data)
         self.orig.write(text)
         self.log.write(self.color_replace.sub('', text))
         return len(text)

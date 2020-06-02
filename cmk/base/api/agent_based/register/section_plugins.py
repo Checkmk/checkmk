@@ -5,11 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a section plugin
 """
-from typing import Any, Generator, List, Optional, Union
+from typing import (
+    Any,
+    Generator,
+    List,
+    Optional,
+    Union,
+)
 import functools
+import sys
 import inspect
 import itertools
-from inspect import signature
+
+if sys.version_info[0] >= 3:
+    from inspect import signature  # pylint: disable=no-name-in-module,ungrouped-imports
+else:
+    from funcsigs import signature  # type: ignore[import] # pylint: disable=import-error
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
@@ -140,13 +151,13 @@ def _create_supersedes(supersedes):
 
 
 def create_agent_section_plugin(
-        *,
-        name,  # type: str
+        #*,
+        name=None,  # type: Optional[str]
         parsed_section_name=None,  # type: Optional[str]
-        parse_function,  # type: AgentParseFunction
+        parse_function=None,  # type: Optional[AgentParseFunction]
         host_label_function=None,  # type: Optional[HostLabelFunction]
         supersedes=None,  # type:  Optional[List[str]]
-        forbidden_names,  # type: List[PluginName]
+        forbidden_names=None,  # type: Optional[List[PluginName]]
 ):
     # type: (...) -> AgentSectionPlugin
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
@@ -154,6 +165,9 @@ def create_agent_section_plugin(
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
+    # TODO (mo): unhack this CMK-3983
+    if (name is None or parse_function is None or forbidden_names is None):
+        raise TypeError()
     # TODO (mo): Well, implement it, and remove pragma below!
     if supersedes is not None:
         raise NotImplementedError("supersedes is not yet available")
@@ -174,14 +188,14 @@ def create_agent_section_plugin(
 
 
 def create_snmp_section_plugin(
-        *,
-        name,  # type: str
+        #*,
+        name=None,  # type: Optional[str]
         parsed_section_name=None,  # type: Optional[str]
-        parse_function,  # type: SNMPParseFunction
+        parse_function=None,  # type: Optional[SNMPParseFunction]
         host_label_function=None,  # type: Optional[HostLabelFunction]
         supersedes=None,  # type:  Optional[List[str]]
-        detect_spec,  # type: SNMPDetectSpec
-        trees,  # type: List[ABCSNMPTree]
+        detect_spec=None,  # type: Optional[SNMPDetectSpec]
+        trees=None,  # type: Optional[List[ABCSNMPTree]]
         forbidden_names=None,  # type: Optional[List[PluginName]]
 ):
     # type: (...) -> SNMPSectionPlugin
@@ -190,6 +204,10 @@ def create_snmp_section_plugin(
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
+    # TODO (mo): unhack this CMK-3983
+    if (name is None or parse_function is None or detect_spec is None or trees is None or
+            forbidden_names is None):
+        raise TypeError()
     # TODO (mo): Well, implement it, and remove pragma below!
     if supersedes is not None:
         raise NotImplementedError("supersedes is not yet available")

@@ -9,7 +9,7 @@ modified via rules."""
 
 from typing import List, Tuple, Optional
 
-from six import ensure_str
+import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -352,8 +352,9 @@ class ModeObjectParameters(WatoMode):
                 ('rule_folder', rule.folder.path()),
                 ('rulenr', rule.index()),
                 ('host', self._hostname),
-                ('item', ensure_str(watolib.mk_repr(svc_desc_or_item)) if svc_desc_or_item else ''),
-                ('service', ensure_str(watolib.mk_repr(svc_desc)) if svc_desc else ''),
+                ('item',
+                 six.ensure_str(watolib.mk_repr(svc_desc_or_item)) if svc_desc_or_item else ''),
+                ('service', six.ensure_str(watolib.mk_repr(svc_desc)) if svc_desc else ''),
             ])
 
         varname = rulespec.name
@@ -363,8 +364,8 @@ class ModeObjectParameters(WatoMode):
             ('mode', 'edit_ruleset'),
             ('varname', varname),
             ('host', self._hostname),
-            ('item', ensure_str(watolib.mk_repr(svc_desc_or_item))),
-            ('service', ensure_str(watolib.mk_repr(svc_desc))),
+            ('item', six.ensure_str(watolib.mk_repr(svc_desc_or_item))),
+            ('service', six.ensure_str(watolib.mk_repr(svc_desc))),
         ])
 
         forms.section(html.render_a(rulespec.title, url))

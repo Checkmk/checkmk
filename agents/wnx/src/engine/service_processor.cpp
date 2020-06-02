@@ -3,7 +3,6 @@
 
 #include "service_processor.h"
 
-#include <sensapi.h>
 #include <shlobj_core.h>
 
 #include <chrono>
@@ -527,41 +526,16 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
     return Signal::quit;
 }
 
-namespace {
-
-void WaitForNetwork(std::chrono::seconds period) {
-    using namespace std::chrono;
-    DWORD networks = NETWORK_ALIVE_LAN | NETWORK_ALIVE_WAN;
-    for (int i = 0; i < period.count(); i += 2) {
-        auto ret = ::IsNetworkAlive(&networks);
-        auto error = ::GetLastError();
-        if (error == 0 && ret == TRUE) {
-            XLOG::l.i("The network is available");
-            break;
-        }
-
-        XLOG::l.i("Check network failed [{}] {}", error, ret);
-        std::this_thread::sleep_for(2s);
-    }
-}
-}  // namespace
-
 // <HOSTING THREAD>
 // ex_port may be nullptr(command line test, for example)
 // makes a mail slot + starts IO on TCP
 void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
+    using namespace std::chrono;
     // Periodically checks if the service is stopping.
     // mail slot name selector "service" or "not service"
-    using namespace std::chrono;
-    using namespace cma::cfg;
     auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
                                           : cma::cfg::kTestingMailSlot;
 
-    if (cma::IsService()) {
-        auto wait_period = GetVal(groups::kSystem, vars::kWaitNetwork,
-                                  defaults::kServiceWaitNetwork);
-        WaitForNetwork(seconds{wait_period});
-    }
 #if 0
     // ARtificial memory allocator in thread
     std::vector<std::string> z;

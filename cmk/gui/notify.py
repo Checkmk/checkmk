@@ -9,7 +9,7 @@ import subprocess
 import time
 from typing import Any, Dict, List, Tuple
 
-from six import ensure_str
+import six
 
 import cmk.utils.store as store
 
@@ -42,7 +42,7 @@ from cmk.gui.valuespec import (
 def get_gui_messages(user_id=None):
     if user_id is None:
         user_id = config.user.id
-    path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
+    path = config.config_dir + "/" + six.ensure_str(user_id) + '/messages.mk'
     messages = store.load_object_from_file(path, default=[])
 
     # Delete too old messages
@@ -71,7 +71,7 @@ def delete_gui_message(msg_id):
 def save_gui_messages(messages, user_id=None):
     if user_id is None:
         user_id = config.user.id
-    path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
+    path = config.config_dir + "/" + six.ensure_str(user_id) + '/messages.mk'
     store.mkdir(os.path.dirname(path))
     store.save_object_to_file(path, messages)
 
@@ -341,7 +341,7 @@ def notify_mail(user_id, msg):
     # FIXME: Maybe use the configured mail command for Check_MK-Notify one day
     # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
     #       addresses. handle this correctly.
-    command = ["mail", "-s", ensure_str(subject), ensure_str(user['email'])]
+    command = ["mail", "-s", six.ensure_str(subject), six.ensure_str(user['email'])]
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is

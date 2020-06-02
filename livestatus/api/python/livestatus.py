@@ -11,7 +11,8 @@ import re
 import os
 import ast
 import ssl
-from typing import NewType, AnyStr, Any, Type, List, Tuple, Union, Dict, Pattern, Optional
+import sys
+from typing import NewType, AnyStr, Any, Type, List, cast, Tuple, Union, Dict, Pattern, Optional
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
 # (https://github.com/PyCQA/pylint/issues/2296)
@@ -275,7 +276,9 @@ class Query(object):  # pylint: disable=useless-object-inheritance
 
     def __str__(self):
         # type: () -> str
-        return self._query
+        if sys.version_info[0] >= 3:
+            return self._query
+        return self._query.encode("utf-8")
 
 
 QueryTypes = Union[str, bytes, Query]
@@ -473,7 +476,7 @@ class SingleSiteConnection(Helpers):
             query += "\n"
         query += self.auth_header + self.add_headers
         query += "Localtime: %d\n" % int(time.time())
-        query += "OutputFormat: python3\n"
+        query += "OutputFormat: %s\n" % ("python3" if sys.version_info[0] >= 3 else "python")
         query += "KeepAlive: on\n"
         query += "ResponseHeader: fixed16\n"
         query += add_headers
@@ -515,7 +518,7 @@ class SingleSiteConnection(Helpers):
             code = resp[0:3].decode("ascii")
             try:
                 length = int(resp[4:15].lstrip())
-            except Exception:
+            except:
                 self.disconnect()
                 raise MKLivestatusSocketError(
                     "Malformed output. Livestatus TCP socket might be unreachable or wrong"
@@ -526,7 +529,7 @@ class SingleSiteConnection(Helpers):
             if code == "200":
                 try:
                     return ast.literal_eval(data)
-                except Exception:
+                except:
                     self.disconnect()
                     raise MKLivestatusSocketError("Malformed output")
 
@@ -607,13 +610,16 @@ class SingleSiteConnection(Helpers):
 
         if self.socket is None:
             self.connect()
-        assert self.socket is not None  # TODO: refactor to avoid assert
+
+        # Mypy does not understand that self.connect() either sets self.socket to a socket object or
+        # raises an exception.
+        sock = cast(socket.socket, self.socket)
 
         if not cmd.endswith(u"\n"):
             cmd += u"\n"
 
         try:
-            self.socket.send(("COMMAND %s\n" % cmd).encode("utf-8"))
+            sock.send(("COMMAND %s\n" % cmd).encode("utf-8"))
         except IOError as e:
             self.socket = None
             if self.persist:
@@ -971,8 +977,8 @@ class MultiSiteConnection(Helpers):
     def command(self, command, sitename=SiteId("local")):
         # type: (AnyStr, Optional[SiteId]) -> None
         if sitename in self.deadsites:
-            raise MKLivestatusSocketError("Connection to site %s is dead: %s" %
-                                          (sitename, self.deadsites[sitename]["exception"]))
+            raise MKLivestatusSocketError("Connection to site %s is dead: %s" % \
+                    (sitename, self.deadsites[sitename]["exception"]))
         conn = [t[2] for t in self.connections if t[0] == sitename]
         if len(conn) == 0:
             raise MKLivestatusConfigError("Cannot send command to unconfigured site '%s'" %

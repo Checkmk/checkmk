@@ -226,7 +226,7 @@ test_mk_sap_hana_1_connect_OK () {
 
     # Mocks
     landscape=$(sim_landscape_1_0_worker)
-    status=$'Version;;1.00.122.22.1543461992 (fa/hana1sp12)\nAll Started;WARNING;No'
+    status="Version;;1.00.122.22.1543461992 (fa/hana1sp12)"
     su () {
         called_bin=$(echo "$4" | awk '{print $1}')
         if [[ "$called_bin" != *"odbcreg"* ]]; then
@@ -242,7 +242,7 @@ test_mk_sap_hana_1_connect_OK () {
     }
 
     actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
-    expected=$(sim_odbcreg_1_0_OK | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g")
+    expected=$(sim_odbcreg_1_0_OK | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$//g")
     assertEquals "$expected" "$actual"
 }
 
@@ -250,7 +250,7 @@ test_mk_sap_hana_1_connect_standby_not_worker () {
 
     # Mocks
     landscape=$(sim_landscape_1_0_not_worker)
-    status=$'Version;;1.00.122.22.1543461992 (fa/hana1sp12)\nAll Started;WARNING;No'
+    status="Version;;1.00.122.22.1543461992 (fa/hana1sp12)"
 
     actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
     expected="retcode: 1"
@@ -261,7 +261,7 @@ test_mk_sap_hana_2_connect_OK () {
 
     # Mocks
     landscape=$(sim_landscape_2_0_worker)
-    status=$'Version;;2.00.122.22.1543461992 (fa/hana1sp12)\nAll Started;WARNING;No'
+    status="Version;;2.00.122.22.1543461992 (fa/hana1sp12)"
     su () {
         called_bin=$(echo "$4" | awk '{print $1}')
         if [[ "$called_bin" != *"odbcreg"* ]]; then
@@ -277,7 +277,7 @@ test_mk_sap_hana_2_connect_OK () {
     }
 
     actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
-    expected=$(sim_odbcreg_2_0_OK | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g")
+    expected=$(sim_odbcreg_2_0_OK | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$//g")
 
     assertEquals "$expected" "$actual"
 }
@@ -286,7 +286,7 @@ test_mk_sap_hana_2_connect_standby_not_worker () {
 
     # Mocks
     landscape=$(sim_landscape_2_0_not_worker)
-    status=$'Version;;2.00.122.22.1543461992 (fa/hana1sp12)\nAll Started;WARNING;No'
+    status="Version;;2.00.122.22.1543461992 (fa/hana1sp12)"
 
     actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
     expected="retcode: 1"
@@ -297,7 +297,7 @@ test_mk_sap_hana_2_connect_standby_not_worker () {
 test_mk_sap_hana_unknown_version() {
 
     # Mocks
-    status=$'Version;;9.22.122.22.123445 (fa/hanaUNKNOWN)\nAll Started;WARNING;No'
+    status="Version;;9.22.122.22.123445 (fa/hanaUNKNOWN)"
 
     actual=$(sap_hana_connect "sid" "inst" "inst_user" "do not care" "do not care" "$status")
     expected="Cannot determine port due to unknown HANA version."

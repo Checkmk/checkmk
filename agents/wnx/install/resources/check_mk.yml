@@ -269,14 +269,11 @@ system:
 
     cleanup_uninstall: smart # allowed none, smart and all
 
-    wait_network: 30
-
     service:
         restart_on_crash: yes  # service will restart if crashed, you may set no to disable restarting
                                # no may be used if you have serious problems with crasghing and starting
         error_mode: log        # ignore or log
         start_mode: auto       # Possible values are: auto - service starts with boot, demand - requires manual starting
-                               # delayed - serice started automatically(delayed)
                                # disabled - service cannot be started manually and should be enabled
 
 

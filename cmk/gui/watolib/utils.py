@@ -11,7 +11,7 @@ import base64
 import pickle
 from typing import Any, Union
 
-from six import ensure_binary, ensure_str
+import six
 
 from livestatus import SiteId
 import cmk.utils.version as cmk_version
@@ -110,7 +110,7 @@ def format_config_value(value):
 
 def mk_repr(x):
     # type: (Any) -> bytes
-    r = pickle.dumps(x) if config.wato_legacy_eval else ensure_binary(repr(x))
+    r = pickle.dumps(x) if config.wato_legacy_eval else six.ensure_binary(repr(x))
     return base64.b64encode(r)
 
 
@@ -119,7 +119,7 @@ def mk_eval(s):
     # type: (Union[bytes, str]) -> Any
     try:
         d = base64.b64decode(s)
-        return pickle.loads(d) if config.wato_legacy_eval else ast.literal_eval(ensure_str(d))
+        return pickle.loads(d) if config.wato_legacy_eval else ast.literal_eval(six.ensure_text(d))
     except Exception:
         raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
 

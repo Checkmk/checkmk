@@ -9,7 +9,7 @@ import re
 import json
 from typing import Any, Dict, List, Optional, Tuple
 
-from six import ensure_str
+import six
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -50,8 +50,8 @@ def init_rowselect(view):
 def render_checkbox(view, row, num_tds):
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
-    html.input(type_="checkbox", name=ensure_str(row_id(view, row)), value=(num_tds + 1))
-    html.label("", ensure_str(row_id(view, row)))
+    html.input(type_="checkbox", name=six.ensure_str(row_id(view, row)), value=(num_tds + 1))
+    html.label("", six.ensure_str(row_id(view, row)))
 
 
 def render_checkbox_td(view, row, num_tds):

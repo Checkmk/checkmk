@@ -15,6 +15,7 @@ import datetime
 from contextlib import contextmanager
 from pathlib import Path
 
+import six
 import urllib3  # type: ignore[import]
 import freezegun  # type: ignore[import]
 
@@ -151,11 +152,21 @@ def import_module(pathname):
     modname = os.path.splitext(os.path.basename(pathname))[0]
     modpath = os.path.join(cmk_path(), pathname)
 
-    import importlib  # pylint: disable=import-outside-toplevel
-    # TODO: load_module() is deprecated, we should avoid using it.
-    # Furhermore, due to some reflection Kung-Fu and typeshed oddities,
-    # mypy is confused about its arguments.
-    return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter,deprecated-method
+    if sys.version_info[0] >= 3:
+        import importlib  # pylint: disable=import-outside-toplevel
+        # TODO: load_module() is deprecated, we should avoid using it.
+        # Furhermore, due to some reflection Kung-Fu and typeshed oddities,
+        # mypy is confused about its arguments.
+        return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter,deprecated-method
+
+    import imp  # pylint: disable=import-outside-toplevel
+    try:
+        return imp.load_source(modname, modpath)
+    finally:
+        try:
+            os.remove(modpath + "c")
+        except OSError:
+            pass
 
 
 def wait_until(condition, timeout=1, interval=0.1):

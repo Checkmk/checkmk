@@ -8,8 +8,7 @@ from contextlib import contextmanager
 import re
 import json
 from typing import NamedTuple, Union, cast, Dict, Tuple, List, Optional, Any, Iterator
-
-from six import ensure_str
+import six
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -336,7 +335,7 @@ class Table(object):
     def _evaluate_user_opts(self):
         # type: () -> Tuple[TableRows, bool, Optional[str]]
         assert self.id is not None
-        table_id = ensure_str(self.id)
+        table_id = six.ensure_str(self.id)
         rows = self.rows
 
         search_term = None

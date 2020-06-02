@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import subprocess
 
-from six import ensure_str
+import six
 
 import cmk.utils
 
@@ -75,7 +75,7 @@ def _git_add_files():
 
 
 def _git_command(args):
-    command = ["git"] + [ensure_str(a) for a in args]
+    command = ["git"] + [six.ensure_str(a) for a in args]
     logger.debug("GIT: Execute in %s: %s", cmk.utils.paths.default_config_dir,
                  subprocess.list2cmdline(command))
     try:
@@ -93,7 +93,7 @@ def _git_command(args):
 
     status = p.wait()
     if status != 0:
-        out = u"" if p.stdout is None else ensure_str(p.stdout.read())
+        out = u"" if p.stdout is None else six.ensure_text(p.stdout.read())
         raise MKGeneralException(
             _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
             (subprocess.list2cmdline(command), out.replace("\n", "<br>\n")))

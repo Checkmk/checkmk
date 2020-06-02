@@ -214,6 +214,7 @@ def _ping_worker(addresses, hosts):
             break
 
         if _ping(ipaddress):
+            # type: (HostAddress) -> None
             try:
                 host_name = socket.gethostbyaddr(ipaddress)[0]
             except socket.error:

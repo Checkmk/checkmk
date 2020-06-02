@@ -7,7 +7,7 @@
 
 import re
 
-from six import ensure_str
+import six
 
 from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName, Item
 
@@ -223,7 +223,7 @@ class ModePatternEditor(WatoMode):
                     ("varname", "logwatch_rules"),
                     ("rulenr", rulenr),
                     ("host", self._hostname),
-                    ("item", ensure_str(watolib.mk_repr(self._item))),
+                    ("item", six.ensure_str(watolib.mk_repr(self._item))),
                     ("rule_folder", folder.path()),
                 ])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")

@@ -4,12 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import division
 import time
 import abc
-from typing import Dict, Tuple, Union, Callable, Any
-from functools import partial
-
-from six import ensure_str
+from typing import (
+    Dict,
+    Tuple,
+)
+import six
 
 from cmk.utils.regex import regex
 import cmk.utils.defines as defines
@@ -1580,13 +1582,6 @@ def render_inv_dicttable(*args):
     pass
 
 
-def _sort_by_index(keyorder, item):
-    try:
-        return keyorder.index(item[0])
-    except ValueError:
-        return len(keyorder) + 1
-
-
 class NodeRenderer(object):
     def __init__(self, site_id, hostname, tree_id, invpath, show_internal_tree_paths=False):
         self._site_id = site_id
@@ -1740,17 +1735,22 @@ class NodeRenderer(object):
         invpath = ".%s" % self._get_raw_path(path)
         hint = _inv_display_hint(invpath)
 
-        keyorder = hint.get("keyorder")
-        if keyorder:
-            sort_func = partial(
-                _sort_by_index,
-                keyorder)  # type: Union[partial[Tuple[str, Any]], Callable[[Tuple[str, Any]], str]]
-        else:
-            # Simply sort by keys
-            sort_func = lambda item: item[0]
+        def _sort_attributes(item):
+            """Sort the attributes by the configured key order. In case no key order
+            is given sort by the key. In case there is a key order and a key is not
+            in the list, put it at the end and sort all of those by key."""
+            key = item[0]
+            keyorder = hint.get("keyorder")
+            if not keyorder:
+                return key
+
+            try:
+                return keyorder.index(key)
+            except ValueError:
+                return len(keyorder) + 1, key
 
         html.open_table()
-        for key, value in sorted(attributes.get_child_data().items(), key=sort_func):
+        for key, value in sorted(attributes.get_child_data().items(), key=_sort_attributes):
             sub_invpath = "%s.%s" % (invpath, key)
             _icon, title = _inv_titleinfo(sub_invpath, key)
             hint = _inv_display_hint(sub_invpath)
@@ -1786,7 +1786,7 @@ class NodeRenderer(object):
             _tdclass, code = hint["paint_function"](value)
             html.write(code)
         elif isinstance(value, str):
-            html.write_text(ensure_str(value))
+            html.write_text(six.ensure_text(value))
         elif isinstance(value, int):
             html.write(str(value))
         elif isinstance(value, float):

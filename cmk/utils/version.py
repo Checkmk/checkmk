@@ -18,9 +18,8 @@ import sys
 import time
 from typing import Any, Dict
 
-from six import ensure_str
-
 import cmk.utils.paths
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
@@ -28,7 +27,7 @@ from cmk.utils.i18n import _
 def omd_version():
     # type: () -> str
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
-    return ensure_str(version_link.resolve().name)
+    return ensure_unicode(version_link.resolve().name)
 
 
 def omd_site():

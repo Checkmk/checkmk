@@ -156,7 +156,8 @@ def _include_file_path(name):
 def is_snmp_plugin(check_plugin_name):
     # type: (str) -> bool
     section_name = section_name_of(check_plugin_name)
-    return PluginName(section_name) in config.registered_snmp_sections
+    return "snmp_info" in inv_info.get(section_name, {}) \
+           or cmk.base.check_utils.is_snmp_check(check_plugin_name)
 
 
 def sorted_inventory_plugins():

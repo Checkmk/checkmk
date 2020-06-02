@@ -10,9 +10,13 @@ import socket
 import sys
 from typing import Any, Dict
 from base64 import b64encode
-from http.client import HTTPConnection
 
-from six import ensure_binary, ensure_str
+if sys.version_info[0] >= 3:
+    from http.client import HTTPConnection
+else:
+    from httplib import HTTPConnection  # pylint: disable=import-error
+
+import six
 
 
 def usage():
@@ -121,8 +125,8 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 sys.stdout.write('Connecting to %s:%s...\n' % (arg_host, opt_port))
             connection.connect()
 
-            auth = b64encode(ensure_binary('%s:%s' % (opt_username, opt_password)))
-            headers = {'Authorization': 'Basic ' + ensure_str(auth)}
+            auth = b64encode(six.ensure_binary('%s:%s' % (opt_username, opt_password)))
+            headers = {'Authorization': 'Basic ' + six.ensure_str(auth)}
             for obj in ['Agent', '*|*']:
                 connection.request('GET',
                                    url % {

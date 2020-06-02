@@ -81,12 +81,13 @@ import copy
 import inspect
 from hashlib import sha256
 from typing import TYPE_CHECKING, Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union
-from six import ensure_str
+import six
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.translations
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.regex import regex
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.render as render
@@ -453,7 +454,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
     mode = mode_class()
 
     # Do actions (might switch mode)
-    action_message = None  # type: _Optional[str]
+    action_message = None  # type: _Optional[Text]
     if html.is_transaction():
         try:
             config.user.need_permission("wato.edit")
@@ -683,8 +684,8 @@ def add_scanned_hosts_to_folder(folder, found):
 
     entries = []
     for host_name, ipaddr in found:
-        host_name = ensure_str(
-            cmk.utils.translations.translate_hostname(translation, ensure_str(host_name)))
+        host_name = six.ensure_str(
+            cmk.utils.translations.translate_hostname(translation, ensure_unicode(host_name)))
 
         attrs = cmk.gui.watolib.hosts_and_folders.update_metadata({}, created_by=_("Network scan"))
 

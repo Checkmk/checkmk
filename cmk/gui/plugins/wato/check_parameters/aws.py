@@ -902,7 +902,7 @@ def _item_spec_aws_rds():
     return TextAscii(
         title=_("Instance identifier & region"),
         help="Identfier of the DB instance and the name of the region in square brackets, e.g. "
-        "'db-instance-1 \\[eu-central-1\\]'.")
+        "'db-instance-1 \[eu-central-1\]'.")  # pylint: disable=anomalous-backslash-in-string
 
 
 rulespec_registry.register(

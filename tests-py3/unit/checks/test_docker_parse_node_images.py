@@ -10,8 +10,9 @@
 # pylint: disable=invalid-name
 import os
 import re
-
+# No stub file
 import pytest  # type: ignore[import]
+import six
 
 pytestmark = pytest.mark.checks
 

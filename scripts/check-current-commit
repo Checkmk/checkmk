@@ -35,7 +35,7 @@ run_pipenv() {
         PYTHON_VERSION=2.7
     else
         if [ $pyver -eq 3 ]; then
-            PYTHON_VERSION=3.8
+            PYTHON_VERSION=3.7
         else
             echo Unknown >&2
             exit 1

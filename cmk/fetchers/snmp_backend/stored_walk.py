@@ -7,7 +7,7 @@
 
 from typing import List, Optional, Tuple
 
-from six import ensure_binary, ensure_str
+import six
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
@@ -135,7 +135,7 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
                     # FIXME: This encoding ping-pong os horrible...
-                    value = ensure_str(agent_simulator.process(ensure_binary(parts[1])))
+                    value = six.ensure_str(agent_simulator.process(six.ensure_binary(parts[1])))
                 else:
                     value = ""
                 # Fix for missing starting oids

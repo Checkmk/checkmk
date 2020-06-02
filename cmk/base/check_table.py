@@ -5,7 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Callable, cast, Dict, Iterator, List, Optional, Set, Tuple, TypeVar
+from typing import (
+    Callable,
+    cast,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Text,
+    Tuple,
+    TypeVar,
+)
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -277,8 +288,8 @@ def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
 
 def remove_duplicate_checks(check_table):
     # type: (AbstractCheckTable) -> AbstractCheckTable
-    have_with_tcp = {}  # type: Dict[str, Tuple[CheckPluginName, Item]]
-    have_with_snmp = {}  # type: Dict[str, Tuple[CheckPluginName, Item]]
+    have_with_tcp = {}  # type: Dict[Text, Tuple[CheckPluginName, Item]]
+    have_with_snmp = {}  # type: Dict[Text, Tuple[CheckPluginName, Item]]
     without_duplicates = {}  # type: AbstractCheckTable
     for key, service in check_table.items():
         if cmk.base.check_utils.is_snmp_check(service.check_plugin_name):

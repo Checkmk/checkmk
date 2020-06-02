@@ -9,7 +9,7 @@ import base64
 import traceback
 import time
 
-from six import ensure_str
+import six
 
 import cmk.utils.version as cmk_version
 import cmk.utils.render as render
@@ -234,7 +234,8 @@ class ModeUsers(WatoMode):
                            css="checkbox")
 
                 if uid != config.user.id:
-                    html.checkbox("_c_user_%s" % ensure_str(base64.b64encode(uid.encode("utf-8"))))
+                    html.checkbox("_c_user_%s" %
+                                  six.ensure_str(base64.b64encode(uid.encode("utf-8"))))
 
                 user_connection_id = cleanup_connection_id(user.get('connector'))
                 connection = get_connection(user_connection_id)
@@ -940,7 +941,7 @@ class ModeEditUser(WatoMode):
 
     def _pw_suffix(self):
         # type: () -> str
-        return 'new' if self._user_id is None else ensure_str(
+        return 'new' if self._user_id is None else six.ensure_str(
             base64.b64encode(self._user_id.encode("utf-8")))
 
     def _is_locked(self, attr):

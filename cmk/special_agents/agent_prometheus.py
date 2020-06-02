@@ -55,32 +55,12 @@ def setup_logging(verbosity):
     logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
 
 
-class FilesystemInfo:
-    def __init__(self, name, fstype, mountpoint, size=None, available=None, used=None):
-        self.name = name
-        self.fstype = fstype
-        self.mountpoint = mountpoint
-        self.size = size
-        self.available = available
-        self.used = used
-
-    def set_entity(self, entity_name, value):
-        setattr(self, entity_name, value)
-
-    def is_complete(self):
-        # type: () -> bool
-        for entity in [a for a in dir(self) if not a.startswith('__')]:
-            if not getattr(self, entity):
-                return False
-        return True
-
-
 class NodeExporter:
     def __init__(self, api_client):
         self.api_client = api_client
 
     def df_summary(self):
-        # type: () -> Dict[str, List[str]]
+        # type: () -> List[str]
 
         # value division by 1000 because of Prometheus format
         df_list = [
@@ -88,50 +68,43 @@ class NodeExporter:
             ("size", "node_filesystem_size_bytes/1000"),
             ("used", "(node_filesystem_size_bytes - node_filesystem_free_bytes)/1000"),
         ]
-        return self._process_filesystem_info(self._retrieve_filesystem_info(df_list))
+        return self._process_filesystem_queries(df_list)
 
     def df_inodes_summary(self):
-        # type: () -> Dict[str, List[str]]
+        # type: () -> List[str]
 
         # no value division for inodes as format already correct
         inodes_list = [("available", "node_filesystem_files_free"),
                        ("used", "node_filesystem_files - node_filesystem_files_free"),
                        ("size", "node_filesystem_files")]
-        return self._process_filesystem_info(self._retrieve_filesystem_info(inodes_list))
+        return self._process_filesystem_queries(inodes_list)
 
-    def _process_filesystem_info(self, retrieved_filesystem_info):
-        # type: (Dict[str, Dict[str, FilesystemInfo]]) -> Dict[str, List[str]]
-        result = {}  # type: Dict[str, List[str]]
-        for node_name, node_dict in retrieved_filesystem_info.items():
-            temp_list = []  # type: List[str]
-            for _device, device_info in node_dict.items():
-                if device_info.is_complete():
-                    device_parsed = "{0.name} {0.fstype} {0.size} {0.used} {0.available} None {0.mountpoint}".format(
-                        device_info)
-                    temp_list.append(device_parsed)
-            if temp_list:
-                result[node_name] = temp_list
-        return result
+    def _process_filesystem_queries(self, promql_list):
+        # type: (List[Tuple[str, str]]) -> List[str]
 
-    def _retrieve_filesystem_info(self, promql_list):
-        # type: (List[Tuple[str, str]]) -> Dict[str, Dict[str, FilesystemInfo]]
-        result = {}  # type: Dict[str, Dict[str, FilesystemInfo]]
-
+        temp_result = {}  # type: Dict[str, Dict[str, Union[int, str]]]
         for entity_name, promql_query in promql_list:
             for mountpoint_info in self.api_client.perform_multi_result_promql(
                     promql_query).promql_metrics:
-                labels = mountpoint_info["labels"]
-                node = result.setdefault(labels["instance"], {})
-                if labels["device"] not in node:
-                    node[labels["device"]] = FilesystemInfo(labels["device"], labels["fstype"],
-                                                            labels["mountpoint"])
+                mountpoint_dict = temp_result.setdefault(mountpoint_info["labels"]["device"], {})
+                if "name" not in mountpoint_dict:
+                    mountpoint_dict["name"] = mountpoint_info["labels"]["device"]
+                if "type" not in mountpoint_dict:
+                    mountpoint_dict["type"] = mountpoint_info["labels"]["fstype"]
+                if "mountpoint" not in mountpoint_dict:
+                    mountpoint_dict["mountpoint"] = mountpoint_info["labels"]["mountpoint"]
+                mountpoint_dict[entity_name] = int(float(mountpoint_info["value"]))
 
-                device = node[labels["device"]]
-                device.set_entity(entity_name, int(float(mountpoint_info["value"])))
+        result = []  # type: List[str]
+        for _device, device_info in temp_result.items():
+            if all(k in device_info for k in ("type", "size", "used", "available", "mountpoint")):
+                device_parsed = "{name} {type} {size} {used} {available} None {mountpoint}".format(
+                    **device_info)
+                result.append(device_parsed)
         return result
 
     def diskstat_summary(self):
-        # type: () -> Dict[str, List[str]]
+        # type: () -> List[str]
 
         diskstat_list = [("reads_completed", "node_disk_reads_completed_total"),
                          ("reads_merged", "node_disk_reads_merged_total"),
@@ -152,38 +125,34 @@ class NodeExporter:
         return self._process_diskstat_info(diskstat_list,
                                            self._retrieve_diskstat_info(diskstat_list))
 
-    def _process_diskstat_info(self, diskstat_list, diskstat_node_dict):
-        # type: (List[Tuple[str, str]], Dict[str, Dict[str, Dict[str, Union[int, str]]]]) -> Dict[str, List[str]]
+    def _process_diskstat_info(self, diskstat_list, diskstat_info_dict):
+        # type: (List[Tuple[str, str]], Dict[str, Dict[str, Union[int, str]]]) -> List[str]
 
-        result = {}  # type: Dict[str, List[str]]
+        result = []  # type: List[str]
         diskstat_entities_list = [diskstat_info[0] for diskstat_info in diskstat_list]
-        for node_name, diskstat_info_dict in diskstat_node_dict.items():
-            temp_result = ["%d" % time.time()]
-            for _device_name, device_info in diskstat_info_dict.items():
-                if all(k in device_info for k in diskstat_entities_list):
-                    device_parsed = "None None {device} {reads_completed} {reads_merged} {sectors_read} {time_reading} {writes_completed} " \
-                                    "{writes_merged} {sectors_written} {time_spent_writing} {ios_progress} {time_io} {weighted_time_io} " \
-                                    "{discards_completed} {discards_merged} {sectors_discarded} {time_discarding}".format(**device_info)
-                    temp_result.append(device_parsed)
-            if temp_result:
-                result[node_name] = temp_result
+        result.append("%d" % time.time())
+        for _device_name, device_info in diskstat_info_dict.items():
+            if all(k in device_info for k in diskstat_entities_list):
+                device_parsed = "None None {device} {reads_completed} {reads_merged} {sectors_read} {time_reading} {writes_completed} " \
+                                "{writes_merged} {sectors_written} {time_spent_writing} {ios_progress} {time_io} {weighted_time_io} " \
+                                "{discards_completed} {discards_merged} {sectors_discarded} {time_discarding}".format(**device_info)
+                result.append(device_parsed)
         return result
 
     def _retrieve_diskstat_info(self, diskstat_list):
-        # type: (List[Tuple[str, str]]) -> Dict[str, Dict[str, Dict[str, Union[int, str]]]]
-        result = {}  # type: Dict[str, Dict[str, Dict[str, Union[int, str]]]]
+        # type: (List[Tuple[str, str]]) -> Dict[str, Dict[str, Union[int, str]]]
+
+        result = {}  # type: Dict[str, Dict[str, Union[int, str]]]
         for entity_name, promql_query in diskstat_list:
-            for node_info in self.api_client.perform_multi_result_promql(
+            for device_info in self.api_client.perform_multi_result_promql(
                     promql_query).promql_metrics:
-                node = result.setdefault(node_info["labels"]["instance"], {})
-                device = node.setdefault(node_info["labels"]["device"], {})
-                if "device" not in device:
-                    device["device"] = node_info["labels"]["device"]
-                device[entity_name] = int(float(node_info["value"]))
+                device_dict = result.setdefault(device_info["labels"]["device"], {})
+                if "device" not in device_dict:
+                    device_dict["device"] = device_info["labels"]["device"]
+                device_dict[entity_name] = int(float(device_info["value"]))
         return result
 
     def memory_summary(self):
-        # type: () -> Dict[str, List[str]]
         memory_list = [
             ("MemTotal", "node_memory_MemTotal_bytes/1024"),
             ("MemFree", "node_memory_MemFree_bytes/1024"),
@@ -240,21 +209,20 @@ class NodeExporter:
         return self._generate_memory_stats(memory_list)
 
     def _generate_memory_stats(self, promql_list):
-        # type: (List[Tuple[str, str]]) -> Dict[str, List[str]]
-        result = {}  # type: Dict[str, List[str]]
+        result = []
         for entity_name, promql_query in promql_list:
             promql_result = self.api_client.perform_multi_result_promql(promql_query).promql_metrics
-            for node_element in promql_result:
-                node_mem = result.setdefault(node_element["labels"]["instance"], [])
-                node_mem.append("{}: {} kB".format(entity_name, node_element["value"]))
+            if len(promql_result) != 1:
+                return []
+            result.append("{}: {} kB".format(entity_name, promql_result[0]["value"]))
         return result
 
     def kernel_summary(self):
-        # type: () -> Dict[str, List[str]]
+        # type: () -> List[str]
 
-        kernel_list = [("cpu", "sum by (mode, instance)(node_cpu_seconds_total*100)"),
+        kernel_list = [("cpu", "sum by (mode)(node_cpu_seconds_total*100)"),
                        ("cpu", "node_cpu_seconds_total*100"),
-                       ("guest", "sum by (mode, instance)(node_cpu_guest_seconds_total)"),
+                       ("guest", "sum by (mode)(node_cpu_guest_seconds_total)"),
                        ("guest", "node_cpu_guest_seconds_total"),
                        ("ctxt", "node_context_switches_total"), ("pswpin", "node_vmstat_pswpin"),
                        ("pwpout", "node_vmstat_pswpout"), ("pgmajfault", "node_vmstat_pgmajfault")]
@@ -262,37 +230,34 @@ class NodeExporter:
 
     @staticmethod
     def _process_kernel_info(temp_result):
-        # type: (Dict[str, Dict[str, Dict[str, int]]]) -> Dict[str, List[str]]
-        result = {}  # type: Dict[str, List[str]]
-        for node_name, cpu_result in temp_result.items():
-            temp = ["%d" % time.time()]  # type: List[str]
-            for entity_name, entity_info in cpu_result.items():
-                if entity_name.startswith("cpu"):
-                    entity_parsed = "{cpu} {user} {nice} {system} {idle} {iowait} {irq} " \
-                                    "{softirq} {steal} {guest_user} {guest_nice}".format(cpu=entity_name, **entity_info)
-                    temp.append(entity_parsed)
-                else:
-                    temp.append("{} {}".format(entity_name, entity_info["value"]))
-            result[node_name] = temp
+        # type: (Dict[str, Dict[str, int]]) -> List[str]
+
+        result = ["%d" % time.time()]  # type: List[str]
+        for entity_name, entity_info in temp_result.items():
+            if entity_name.startswith("cpu"):
+                entity_parsed = "{cpu} {user} {nice} {system} {idle} {iowait} {irq} " \
+                                "{softirq} {steal} {guest_user} {guest_nice}".format(cpu=entity_name, **entity_info)
+                result.append(entity_parsed)
+            else:
+                result.append("{} {}".format(entity_name, entity_info["value"]))
         return result
 
     def _retrieve_kernel_info(self, kernel_list):
-        # type: (List[Tuple[str, str]]) -> Dict[str, Dict[str, Dict[str, int]]]
-        result = {}  # type: Dict[str, Dict[str, Dict[str, int]]]
+        # type: (List[Tuple[str, str]]) -> Dict[str, Dict[str, int]]
+        result = {}  # type: Dict[str, Dict[str, int]]
 
         for entity_name, promql_query in kernel_list:
             for device_info in self.api_client.perform_multi_result_promql(
                     promql_query).promql_metrics:
                 metric_value = int(float(device_info["value"]))
-                labels = device_info["labels"]
-                node = result.setdefault(labels["instance"], {})
                 if entity_name in ("cpu", "guest"):
+                    labels = device_info["labels"]
                     cpu_name = "cpu{}".format(labels["cpu"]) if "cpu" in labels else "cpu"
                     mode_name = "guest_{}".format(
                         labels["mode"]) if entity_name == "guest" else labels["mode"]
-                    node.setdefault(cpu_name, {})[mode_name] = metric_value
+                    result.setdefault(cpu_name, {})[mode_name] = metric_value
                 else:
-                    node[entity_name] = {"value": metric_value}
+                    result[entity_name] = {"value": metric_value}
         return result
 
 
@@ -1529,63 +1494,36 @@ class ApiData:
         yield '\n'.join(group.output(piggyback_prefix=piggyback_prefix))
 
     def node_exporter_section(self, node_options):
-        # type: (Dict[str, Union[List[str], str]]) -> Iterator[str]
-        node_entities = node_options["entities"]
-        if "host_mapping" in node_options:
-            host_mapping = [node_options["host_mapping"]]
-        else:
-            host_mapping = ["localhost", node_options["host_address"], node_options["host_name"]]
+        # type: (Dict[str, List[str]]) -> Iterator[str]
 
-        if "df" in node_entities:
+        if "df" in node_options:
             df_result = self.node_exporter.df_summary()
             df_inodes_result = self.node_exporter.df_inodes_summary()
 
-            for node_name, node_df_info in df_result.items():
-                piggyback_host_name = self._get_node_piggyback_host_name(node_name)
-                if node_df_info and node_name in df_inodes_result:
-                    df_section = [
-                        "<<<df>>>", '\n'.join(node_df_info), "<<<df>>>", "[df_inodes_start]",
-                        '\n'.join(df_inodes_result[node_name]), "[df_inodes_end]\n"
-                    ]
+            if df_result and df_inodes_result:
+                df_section = [
+                    "<<<df>>>", '\n'.join(df_result), "<<<df>>>", "[df_inodes_start]",
+                    '\n'.join(df_inodes_result), "[df_inodes_end]\n"
+                ]
+                yield "\n".join(df_section)
 
-                    if piggyback_host_name not in host_mapping:
-                        df_section.insert(0, "<<<<%s>>>>" % piggyback_host_name)
-                        df_section.append("<<<<>>>>\n")
-                    else:
-                        df_section.append("\n")
-                    yield "\n".join(df_section)
-
-        if "diskstat" in node_entities:
+        if "diskstat" in node_options:
             diskstat_result = self.node_exporter.diskstat_summary()
             if diskstat_result:
-                yield from self._output_node_section("diskstat", diskstat_result, host_mapping)
+                df_section = ["<<<diskstat>>>", '\n'.join(diskstat_result), "\n"]
+                yield "\n".join(df_section)
 
-        if "mem" in node_entities:
+        if "mem" in node_options:
             mem_result = self.node_exporter.memory_summary()
             if mem_result:
-                yield from self._output_node_section("mem", mem_result, host_mapping)
+                mem_section = ["<<<mem>>>", '\n'.join(mem_result), "\n"]
+                yield "\n".join(mem_section)
 
-        if "kernel" in node_entities:
+        if "kernel" in node_options:
             kernel_result = self.node_exporter.kernel_summary()
             if kernel_result:
-                yield from self._output_node_section("kernel", kernel_result, host_mapping)
-
-    def _output_node_section(self, service_name, entity_result, host_mapping):
-        for node_name, node_entity_summary in entity_result.items():
-            if len(node_entity_summary) > 1:
-                piggyback_host_name = self._get_node_piggyback_host_name(node_name)
-                entity_section = ["<<<%s>>>" % service_name, '\n'.join(node_entity_summary)]
-
-                if piggyback_host_name not in host_mapping:
-                    entity_section.insert(0, "<<<<%s>>>>" % piggyback_host_name)
-                    entity_section.append("<<<<>>>>\n")
-                else:
-                    entity_section.append("\n")
-                yield "\n".join(entity_section)
-
-    @staticmethod
-    def _get_node_piggyback_host_name(node_name):
-        return node_name.split(":")[0]
+                kernel_section = ["<<<kernel>>>", '\n'.join(kernel_result), "\n"]
+                yield "\n".join(kernel_section)
 
 
 def _extract_config_args(config):
@@ -1601,15 +1539,8 @@ def _extract_config_args(config):
             exporter_options[exporter_name] = {
                 "grouping_option": exporter_info["entity_level"][0],
                 "container_id": exporter_info["entity_level"][1].get("container_id", "short"),
-                "entities": exporter_info["entities"],
+                "entities": exporter_info["entities"]
             }
-        elif exporter_name == "node_exporter":
-            exporter_info.update({
-                "host_address": config["host_address"],
-                "host_name": config["host_name"]
-            })
-            exporter_options[exporter_name] = exporter_info
-
         else:
             exporter_options[exporter_name] = exporter_info
 
@@ -1646,7 +1577,8 @@ def main(argv=None):
         if "kube_state" in exporter_options:
             print(*list(api_data.kube_state_section(exporter_options["kube_state"]["entities"])))
         if "node_exporter" in exporter_options:
-            print(*list(api_data.node_exporter_section(exporter_options["node_exporter"])))
+            print(*list(
+                api_data.node_exporter_section(exporter_options["node_exporter"]["entities"])))
 
     except Exception as e:
         if args.debug:

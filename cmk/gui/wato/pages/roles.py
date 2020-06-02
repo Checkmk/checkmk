@@ -20,7 +20,8 @@ configuration of all roles.
 """
 
 import re
-from typing import Optional
+from typing import (
+    Optional,)
 
 import cmk.utils.store as store
 

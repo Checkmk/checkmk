@@ -7,6 +7,7 @@
 import json
 import re
 import functools
+import six
 
 
 class DeprecatedDict(dict):

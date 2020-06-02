@@ -21,8 +21,7 @@ def parse_mrpe(info):
         if len(line) < 2:
             continue
 
-        import urllib.parse
-        item = urllib.parse.unquote(line[0])
+        item = six.moves.urllib.parse.unquote(line[0])
         state = line[1]
         line = line[2:]
 

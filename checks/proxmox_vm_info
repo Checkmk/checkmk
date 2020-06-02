@@ -10,25 +10,24 @@ def discovery_proxmox_vm_info(parsed):
 
 
 def check_proxmox_vm_info(_item, params, parsed):
-    params = params or {}
     vm_status = parsed.get("status", "n/a")
     req_vm_status = params.get("required_vm_status")
     yield (
         0,
-        "VM ID: %s" % str(parsed.get("vmid")),
+        "VM ID: %r" % parsed.get("vmid"),
     )
     yield (
         0 if not req_vm_status or vm_status.lower() == req_vm_status.lower() else 1,
-        "Status: %s%s" %
-        (str(vm_status), "" if req_vm_status is None else " (required: %s)" % str(req_vm_status)),
+        "Status: %r%s" %
+        (vm_status, "" if req_vm_status is None else " (required: %r)" % req_vm_status),
     )
     yield (
         0,
-        "Type: %s" % str(parsed.get("type")),
+        "Type: %r" % parsed.get("type"),
     )
     yield (
         0,
-        "Host: %s" % str(parsed.get("node")),
+        "Host: %r" % parsed.get("node"),
     )
 
 

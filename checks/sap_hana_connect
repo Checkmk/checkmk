@@ -34,13 +34,13 @@ def parse_sap_hana_connect(info):
             })
         for elem in lines[0]:
             if "retcode" in elem:
-                retcode = elem.split(":")[1].lstrip()
+                retcode = elem.split(":")[1].replace(" ", "")
                 for k, v in sap_hana_connect_state_map.items():
                     if v["fun"](retcode):
                         inst["cmk_state"] = v["cmk_state"]
                         inst["message"] = k
             if "Driver version" in elem:
-                inst["driver_version"] = elem.split("Driver version")[1].lstrip()
+                inst["driver_version"] = elem.split("HDB")[1].lstrip()
             if "Connect string:" in elem:
                 inst["server_node"] = re.search('SERVERNODE=(.*),SERVERDB', elem).group(1)
             if "Select now()" in elem:

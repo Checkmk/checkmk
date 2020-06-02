@@ -7,6 +7,8 @@
 import traceback
 from typing import Any as _Any, Dict as _Dict
 
+import six
+
 import cmk.utils.regex
 
 import cmk.gui.config as config

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import http.client
 import os
 import time
 import traceback
@@ -12,11 +11,12 @@ from hashlib import md5
 from typing import List, Union, Optional, Tuple
 from pathlib import Path
 
-from six import ensure_binary, ensure_str
+import six
 from werkzeug.local import LocalProxy
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
@@ -111,7 +111,7 @@ def _load_secret():
 
 def _generate_secret():
     # type: () -> str
-    return ensure_str(utils.get_random_string(256))
+    return ensure_unicode(utils.get_random_string(256))
 
 
 def _load_serial(username):
@@ -128,7 +128,7 @@ def _load_serial(username):
 
 def _generate_auth_hash(username, now):
     # type: (UserId, float) -> str
-    return _generate_hash(username, ensure_str(username) + str(now))
+    return _generate_hash(username, six.ensure_str(username) + str(now))
 
 
 def _generate_hash(username, value):
@@ -136,7 +136,7 @@ def _generate_hash(username, value):
     """Generates a hash to be added into the cookie value"""
     secret = _load_secret()
     serial = _load_serial(username)
-    return md5(ensure_binary(value + str(serial) + secret)).hexdigest()
+    return md5(six.ensure_binary(value + str(serial) + secret)).hexdigest()
 
 
 def del_auth_cookie():
@@ -154,7 +154,7 @@ def del_auth_cookie():
 def _auth_cookie_value(username):
     # type: (UserId) -> str
     now = time.time()
-    return ":".join([ensure_str(username), str(now), _generate_auth_hash(username, now)])
+    return ":".join([six.ensure_str(username), str(now), _generate_auth_hash(username, now)])
 
 
 def _invalidate_auth_session():
@@ -201,7 +201,7 @@ def _session_cookie_name():
 
 def _session_cookie_value(username, session_id):
     # type: (UserId, str) -> str
-    value = ensure_str(username) + ":" + session_id
+    value = six.ensure_str(username) + ":" + session_id
     return value + ":" + _generate_hash(username, value)
 
 
@@ -211,7 +211,7 @@ def _get_session_id_from_cookie(username):
     assert raw_value is not None
     cookie_username, session_id, cookie_hash = raw_value.split(':', 2)
 
-    if ensure_str(cookie_username) != username \
+    if ensure_unicode(cookie_username) != username \
        or cookie_hash != _generate_hash(username, cookie_username + ":" + session_id):
         auth_logger.error("Invalid session: %s, Cookie: %r" % (username, raw_value))
         return ""
@@ -268,9 +268,9 @@ def _parse_auth_cookie(cookie_name):
     raw_cookie = html.request.cookie(cookie_name, "::")
     assert raw_cookie is not None
 
-    raw_value = ensure_str(raw_cookie)
+    raw_value = ensure_unicode(raw_cookie)
     username, issue_time, cookie_hash = raw_value.split(':', 2)
-    return UserId(username), float(issue_time) if issue_time else 0.0, ensure_str(cookie_hash)
+    return UserId(username), float(issue_time) if issue_time else 0.0, six.ensure_str(cookie_hash)
 
 
 def _check_parsed_auth_cookie(username, issue_time, cookie_hash):
@@ -329,12 +329,12 @@ def _check_auth(request):
 def verify_automation_secret(user_id, secret):
     # type: (UserId, str) -> bool
     if secret and user_id and "/" not in user_id:
-        path = Path(cmk.utils.paths.var_dir) / "web" / ensure_str(user_id) / "automation.secret"
+        path = Path(cmk.utils.paths.var_dir) / "web" / six.ensure_str(user_id) / "automation.secret"
         if not path.is_file():
             return False
 
         with path.open(encoding="utf-8") as f:
-            return ensure_str(f.read()).strip() == secret
+            return six.ensure_str(f.read()).strip() == secret
 
     return False
 
@@ -365,7 +365,7 @@ def _check_auth_http_header():
     if not user_id:
         return None
 
-    user_id = UserId(ensure_str(user_id))
+    user_id = UserId(ensure_unicode(user_id))
     set_auth_type("http_header")
     _renew_cookie(auth_cookie_name(), user_id)
     return user_id
@@ -381,7 +381,7 @@ def check_auth_web_server(request):
     user = request.remote_user
     if user is not None:
         set_auth_type("web_server")
-        return UserId(ensure_str(user))
+        return UserId(ensure_unicode(user))
 
 
 def _check_auth_by_cookie():
@@ -598,7 +598,7 @@ class LogoutPage(Page):
             html.response.headers['WWW-Authenticate'] = ('Basic realm="OMD Monitoring Site %s"' %
                                                          config.omd_site())
             html.response.set_http_cookie('logout', '1')
-            raise FinalizeRequest(http.client.UNAUTHORIZED)
+            raise FinalizeRequest(six.moves.http_client.UNAUTHORIZED)
 
         html.response.delete_cookie('logout')
         raise HTTPRedirect(config.url_prefix() + 'check_mk/')

@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-import http.client as http_client
 import os
 import traceback
+import six
 
 import livestatus
 
@@ -274,7 +274,7 @@ def _process_request(environ, start_response):  # pylint: disable=too-many-branc
         page_handler = get_and_wrap_page(html.myfile)
         response = page_handler()
         # If page_handler didn't raise we assume everything is OK.
-        response.status_code = http_client.OK
+        response.status_code = six.moves.http_client.OK
     except HTTPRedirect as e:
         # This can't be a new Response as it can have already cookies set/deleted by the pages.
         # We can't return the response because the Exception has been raised instead.
@@ -304,11 +304,11 @@ def _process_request(environ, start_response):  # pylint: disable=too-many-branc
 
     except livestatus.MKLivestatusException as e:
         response = _render_exception(e, title=_("Livestatus problem"))
-        response.status_code = http_client.BAD_GATEWAY
+        response.status_code = six.moves.http_client.BAD_GATEWAY
 
     except MKUnauthenticatedException as e:
         response = _render_exception(e, title=_("Not authenticated"))
-        response.status_code = http_client.UNAUTHORIZED
+        response.status_code = six.moves.http_client.UNAUTHORIZED
 
     except MKConfigError as e:
         response = _render_exception(e, title=_("Configuration error"))

@@ -15,7 +15,8 @@ except ImportError:
 import os
 import platform
 import pytest
-from local import (make_yaml_config, local_test, run_subprocess, write_config, main_exe)
+from local import (actual_output, make_yaml_config, local_test, run_subprocess, write_config,
+                   main_exe)
 import sys
 
 

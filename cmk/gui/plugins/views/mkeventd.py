@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Callable, Optional, TypeVar, Union
-import urllib.parse
+
+import six
 
 from cmk.utils.defines import short_service_state_name
 
@@ -761,9 +762,9 @@ def render_delete_event_icons(row):
         # links to the source view where the action can be performed.
         title_url = view.get("title_url")
         if title_url:
-            parsed_url = urllib.parse.urlparse(title_url)
+            parsed_url = six.moves.urllib.parse.urlparse(title_url)
             filename = parsed_url.path  # type: Optional[str]
-            urlvars += urllib.parse.parse_qsl(parsed_url.query)
+            urlvars += six.moves.urllib.parse.parse_qsl(parsed_url.query)
     else:
         # Regular view
         view = get_permitted_views()[(html.request.get_str_input_mandatory("view_name"))]

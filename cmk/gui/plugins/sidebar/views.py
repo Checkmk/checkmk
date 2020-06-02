@@ -7,7 +7,7 @@
 import re
 from collections import OrderedDict
 from typing import NamedTuple, Dict, List, Tuple
-from six import ensure_str
+import six
 
 import cmk.gui.config as config
 import cmk.gui.views as views
@@ -59,7 +59,7 @@ class Views(SidebarSnapin):
 
     def _render_topic(self, topic, entries):
         # type: (str, List[ViewMenuItem]) -> None
-        container_id = ensure_str(re.sub('[^a-zA-Z]', '', topic))
+        container_id = six.ensure_str(re.sub('[^a-zA-Z]', '', topic))
         html.begin_foldable_container(treename="views",
                                       id_=container_id,
                                       isopen=False,

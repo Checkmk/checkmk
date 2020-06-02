@@ -10,6 +10,7 @@ import datetime
 import itertools
 from typing import Any, Dict, List, Optional, Tuple
 
+from six.moves import zip_longest
 import pytest  # type: ignore[import]
 
 from cmk.base.check_api import MKGeneralException
@@ -202,7 +203,7 @@ def test_parse_ps(check_manager, capture, result):
 
     parsed = check.context['parse_ps'](capture)
     assert parsed[0] == result[0]  # cpu_cores
-    for out, ref in itertools.zip_longest(parsed[1], result[1]):
+    for out, ref in zip_longest(parsed[1], result[1]):
         assert out[0] == ref[0]
         assert out[1] == check.context["ps_info"](*ref[1])
         assert out[2:] == ref[2:]

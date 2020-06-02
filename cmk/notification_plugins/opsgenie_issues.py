@@ -7,7 +7,7 @@
 import sys
 from typing import Optional
 
-from six import ensure_str
+import six
 from opsgenie.swagger_client import AlertApi  # type: ignore[import]  # pylint: disable=import-error
 from opsgenie.swagger_client import configuration  # pylint: disable=import-error
 from opsgenie.swagger_client.models import AcknowledgeAlertRequest  # type: ignore[import] # pylint: disable=import-error
@@ -103,7 +103,7 @@ $LONGSERVICEOUTPUT$
         handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url)
     else:
         sys.stdout.write(
-            ensure_str('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE'])))
+            six.ensure_str('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE'])))
         return 0
 
 

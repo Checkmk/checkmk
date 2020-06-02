@@ -14,9 +14,8 @@ import marshal
 import itertools
 from pathlib import Path
 from typing import Optional, Union, Any, List, Dict, Tuple
-import urllib.parse
 
-from six import ensure_str
+import six
 
 import cmk.utils.paths
 
@@ -58,7 +57,7 @@ def is_allowed_url(url):
     # type: (str) -> bool
     """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
     # Also prevent using of "javascript:" URLs which could used to inject code
-    parsed = urllib.parse.urlparse(url)
+    parsed = six.moves.urllib.parse.urlparse(url)
 
     # Don't allow the user to set a URL scheme
     if parsed.scheme != "":
@@ -133,7 +132,7 @@ def get_random_string(size, from_ascii=48, to_ascii=90):
         while len(secret) < size:
             c = urandom.read(1)
             if ord(c) >= from_ascii and ord(c) <= to_ascii:
-                secret += ensure_str(c)
+                secret += six.ensure_str(c)
     return secret
 
 
@@ -142,7 +141,7 @@ def gen_id():
     """Generates a unique id"""
     try:
         with Path("/proc/sys/kernel/random/uuid").open("r", encoding="utf-8") as f:
-            return ensure_str(f.read().strip())
+            return six.ensure_str(f.read().strip())
     except IOError:
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback
@@ -172,7 +171,7 @@ def load_web_plugins(forwhat, globalvars):
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
                     with file_path.open(encoding="utf-8") as f:
-                        exec(f.read(), globalvars)
+                        exec(_drop_comments(f.read()), globalvars)
 
                 elif file_path.suffix == ".pyc":
                     with file_path.open("rb") as pyc:
@@ -183,6 +182,21 @@ def load_web_plugins(forwhat, globalvars):
             except Exception as e:
                 logger.exception("Failed to load plugin %s: %s", file_path, e)
                 _failed_plugins[forwhat].append((str(file_path), e))
+
+
+def _drop_comments(content):
+    # type: (str) -> str
+    if six.PY3:
+        return content
+
+    # Files opened with Pathlib handler are by default unicode encoded,
+    # which is what we want. We constantly use exec to load modules or user
+    # defined scripts. In python2, it is not possible to exec a unicode
+    # string, which in itself defines an encoding. Minimal example
+    # exec(u'# coding=utf8')
+    # Thus we just drop all comment lines
+
+    return "\n".join(x for x in content.split('\n') if not x.lstrip().startswith("#"))
 
 
 def get_failed_plugins():

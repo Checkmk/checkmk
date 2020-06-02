@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import logging
+import cmk.utils.log as log
 
 from testlib import on_time
-
-import cmk.utils.log as log
 
 
 def test_get_logger():
@@ -47,11 +47,19 @@ def test_open_log(tmp_path):
 
     with on_time('2018-04-15 16:50', 'CET'):
         log.logger.warning("abc")
-        log.logger.warning("äbc")
+        log.logger.warning(u"äbc")
+        # With python 3 we do not have the implicit conversion from byte strings
+        # to text strings anymore: No need to test this.
+        if sys.version_info[0] >= 3:
+            log.logger.warning("äbc")
+        else:
+            log.logger.warning(b"\xc3\xa4bc")
 
     with log_file.open("rb") as f:
-        assert f.read() == (b"2018-04-15 18:50:00,000 [30] [cmk] abc\n"
-                            b"2018-04-15 18:50:00,000 [30] [cmk] \xc3\xa4bc\n")
+        assert f.read() == \
+            b"2018-04-15 18:50:00,000 [30] [cmk] abc\n" \
+            b"2018-04-15 18:50:00,000 [30] [cmk] \xc3\xa4bc\n" \
+            b"2018-04-15 18:50:00,000 [30] [cmk] \xc3\xa4bc\n"
 
 
 def test_set_verbosity():

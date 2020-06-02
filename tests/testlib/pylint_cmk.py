@@ -10,6 +10,7 @@
 from __future__ import print_function
 
 import os
+import sys
 import getpass
 import glob
 import time
@@ -99,7 +100,7 @@ def get_pylint_files(base_path, file_pattern):
 
 def is_python_file(path, shebang_name=None):
     if shebang_name is None:
-        shebang_name = "python"
+        shebang_name = "python3" if sys.version_info[0] >= 3 else "python"
 
     if not os.path.isfile(path) or os.path.islink(path):
         return False

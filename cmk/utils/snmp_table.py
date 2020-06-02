@@ -5,12 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Any, Callable, List, Optional, Set, Tuple, Union, cast
+from typing import Any, List, Optional, Set, Tuple, Union, cast
 
-from six import ensure_binary
+import six
 
 import cmk.utils.debug
 import cmk.utils.store as store
+from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -24,6 +25,7 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     Column,
     Columns,
+    DecodedBinary,
     DecodedValues,
     HostName,
     OIDBytes,
@@ -119,7 +121,7 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
             fetchoid, first_column, value_encoding = columns[0]
             new_first_column = []
             for o, col_val in first_column:
-                new_first_column.append((o, ensure_binary(suboid) + b"." + col_val))
+                new_first_column.append((o, six.ensure_binary(suboid) + b"." + col_val))
             columns[0] = fetchoid, new_first_column, value_encoding
 
         info += _make_table(columns, snmp_config)
@@ -175,9 +177,9 @@ def _make_index_rows(max_column, index_format, fetchoid):
     index_rows = []
     for o, _unused_value in max_column:
         if index_format == OID_END:
-            val = ensure_binary(_extract_end_oid(fetchoid, o))
+            val = six.ensure_binary(_extract_end_oid(fetchoid, o))
         elif index_format == OID_STRING:
-            val = ensure_binary(o)
+            val = six.ensure_binary(o)
         elif index_format == OID_BIN:
             val = _oid_to_bin(o)
         elif index_format == OID_END_BIN:
@@ -208,7 +210,7 @@ def _make_table(columns, snmp_config):
 
 def _oid_to_bin(oid):
     # type: (OID) -> RawValue
-    return ensure_binary("".join([chr(int(p)) for p in oid.strip(".").split(".")]))
+    return six.ensure_binary("".join([chr(int(p)) for p in oid.strip(".").split(".")]))
 
 
 def _extract_end_oid(prefix, complete):
@@ -301,19 +303,23 @@ def _compute_fetch_oid(oid, suboid, column):
 
 def _sanitize_snmp_encoding(snmp_config, columns):
     # type: (SNMPHostConfig, ResultColumnsSanitized) -> ResultColumnsDecoded
-    return [
-        _decode_column(snmp_config, column, value_encoding)  #
-        for column, value_encoding in columns
-    ]
+    snmp_encoding = snmp_config.character_encoding
+
+    def decode_string_func(s):
+        return convert_to_unicode(s, encoding=snmp_encoding)
+
+    new_columns = []  # type: ResultColumnsDecoded
+    for column, value_encoding in columns:
+        if value_encoding == "string":
+            new_columns.append(list(map(decode_string_func, column)))
+        else:
+            new_columns.append(list(map(_snmp_decode_binary, column)))
+    return new_columns
 
 
-def _decode_column(snmp_config, column, value_encoding):
-    # type: (SNMPHostConfig, List[RawValue], SNMPValueEncoding) -> List[DecodedValues]
-    if value_encoding == "string":
-        decode = snmp_config.ensure_str  # type: Callable[[bytes], DecodedValues]
-    else:
-        decode = lambda v: list(bytearray(v))
-    return [decode(v) for v in column]
+def _snmp_decode_binary(text):
+    # type: (RawValue) -> DecodedBinary
+    return list(bytearray(text))
 
 
 def _sanitize_snmp_table_columns(columns):

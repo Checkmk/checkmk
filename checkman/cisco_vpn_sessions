@@ -18,8 +18,8 @@ description:
 
 item:
  The type of VPN session, one of 'IPsec RA' (remote access), 'IPsec L2L' (LAN-to-LAN),
- 'AnyConnect SVC' (SSL VPN Client), 'WebVPN' (clientless) or 'Summary' (summary of the
- previous items).
+ 'SVC' (SSL VPN Client, e.g. AnyConnect), 'WebVPN' (clientless) or 'Summary' (summary
+ of the previous items).
 
 inventory:
  One service is created for each type of VPN session. Additionally, one summary service

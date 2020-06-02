@@ -4,12 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from html import escape as html_escape
+import sys
 import re
 from typing import Union
+import six
 
-from six import ensure_str
+if sys.version_info[0] >= 3:
+    from html import escape as html_escape  # type: ignore[attr-defined]
+else:
+    from future.moves.html import escape as html_escape  # type: ignore[import] # pylint: disable=import-error
 
+from cmk.utils.encoding import ensure_unicode
 from cmk.gui.utils.html import HTML
 
 #.
@@ -68,7 +73,7 @@ def escape_attribute(value):
     if isinstance(attr_type, str):
         return html_escape(value, quote=True)
     if isinstance(attr_type, bytes):  # TODO: Not in the signature!
-        return html_escape(ensure_str(value), quote=True)
+        return html_escape(six.ensure_str(value), quote=True)
     # TODO: What is this case for? Exception?
     return html_escape(u"%s" % value, quote=True)  # TODO: Not in the signature!
 
@@ -76,11 +81,11 @@ def escape_attribute(value):
 def unescape_attributes(value):
     # type: (str) -> str
     # In python3 use html.unescape
-    return ensure_str(value  #
-                      .replace("&amp;", "&")  #
-                      .replace("&quot;", "\"")  #
-                      .replace("&lt;", "<")  #
-                      .replace("&gt;", ">"))
+    return ensure_unicode(value  #
+                          .replace("&amp;", "&")  #
+                          .replace("&quot;", "\"")  #
+                          .replace("&lt;", "<")  #
+                          .replace("&gt;", ">"))
 
 
 def escape_text(text):
@@ -183,7 +188,7 @@ def strip_tags(ht):
     if not isinstance(ht, str):
         return u"%s" % ht
 
-    ht = ensure_str(ht)
+    ht = ensure_unicode(ht)
 
     while True:
         x = ht.find('<')

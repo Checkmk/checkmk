@@ -16,7 +16,7 @@ parsed = parse_cisco_vpn_sessions([[['31', '100', '50', '2', '55', '11', '776', 
 
 discovery = {'': [('IPsec RA', {}),
                   ('IPsec L2L', {}),
-                  ('AnyConnect SVC', {}),
+                  ('SVC', {}),
                   ('WebVPN', {}),
                   ('Summary', {})]}
 
@@ -44,7 +44,7 @@ checks = {'': [('IPsec RA',
                   'Overall system maximum: 12345'),
                  (0,
                   'Cumulative count: 55')]),
-               ('AnyConnect SVC',
+               ('SVC',
                 {'active_sessions': (10, 100)},
                 [(2,
                   'Active sessions: 776 (warn/crit at 10/100)',

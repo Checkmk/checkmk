@@ -897,11 +897,6 @@ TEST(AgentConfig, WorkConfig) {
     }
 
     {
-        auto mode = GetVal(groups::kSystem, vars::kWaitNetwork, 1);
-        EXPECT_TRUE(mode == defaults::kServiceWaitNetwork);
-    }
-
-    {
         auto service = GetNode(groups::kSystem, vars::kService);
         auto restart_on_crash = GetVal(service, vars::kRestartOnCrash, false);
         EXPECT_TRUE(restart_on_crash);

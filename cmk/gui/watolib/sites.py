@@ -10,7 +10,7 @@ import time
 from typing import NamedTuple, Type
 from pathlib import Path
 
-import six
+from six import ensure_binary
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -705,7 +705,7 @@ class AutomationPushSnapshot(AutomationCommand):
         if not snapshot:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
 
-        return PushSnapshotRequest(site_id=site_id, tar_content=six.ensure_binary(snapshot[2]))
+        return PushSnapshotRequest(site_id=site_id, tar_content=ensure_binary(snapshot[2]))
 
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool

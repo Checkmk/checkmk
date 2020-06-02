@@ -11,17 +11,10 @@ import multiprocessing
 import socket
 import contextlib
 import binascii
+import queue
+from typing import Dict, List, NamedTuple, Union, Tuple as _Tuple
 
-from typing import (
-    Dict,
-    List,
-    NamedTuple,
-    Text,
-    Union,
-    Tuple as _Tuple,
-)
-
-import six
+from six import ensure_binary, ensure_str
 from OpenSSL import crypto  # type: ignore[import]
 from OpenSSL import SSL  # type: ignore[attr-defined]
 # mypy can't find x509 for some reason (is a c extension involved?)
@@ -849,7 +842,7 @@ class ReplicationStatusFetcher(object):
                 result_queue.task_done()
                 results_by_site[result.site_id] = result
 
-            except six.moves.queue.Empty:
+            except queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
@@ -1026,11 +1019,11 @@ ChainVerifyResult = NamedTuple("ChainVerifyResult", [
 ])
 
 CertificateDetails = NamedTuple("CertificateDetails", [
-    ("issued_to", Text),
-    ("issued_by", Text),
-    ("valid_from", Text),
-    ("valid_till", Text),
-    ("signature_algorithm", Text),
+    ("issued_to", str),
+    ("issued_by", str),
+    ("valid_from", str),
+    ("valid_till", str),
+    ("signature_algorithm", str),
     ("digest_sha256", str),
     ("serial_number", int),
     ("is_ca", bool),
@@ -1201,7 +1194,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         cert_details = []
         for result in verify_chain_results:
             # use cryptography module over OpenSSL because it is easier to do the x509 parsing
-            crypto_cert = x509.load_pem_x509_certificate(six.ensure_binary(result.cert_pem),
+            crypto_cert = x509.load_pem_x509_certificate(ensure_binary(result.cert_pem),
                                                          default_backend())
 
             cert_details.append(
@@ -1211,7 +1204,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
                     valid_from=str(crypto_cert.not_valid_before),
                     valid_till=str(crypto_cert.not_valid_after),
                     signature_algorithm=crypto_cert.signature_hash_algorithm.name,
-                    digest_sha256=six.ensure_str(
+                    digest_sha256=ensure_str(
                         binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256()))),
                     serial_number=crypto_cert.serial_number,
                     is_ca=self._is_ca_certificate(crypto_cert),

@@ -10,7 +10,7 @@ import os
 import time
 from typing import Dict, Callable, List, Optional, Tuple
 
-import six
+from six import ensure_str
 
 import livestatus
 from cmk.utils.exceptions import MKGeneralException
@@ -197,14 +197,13 @@ def lq_logic(filter_condition, values, join):
 def livestatus_lql(host_names, columns, service_description=None):
     # type: (List[HostName], List[str], Optional[ServiceName]) -> str
     query_filter = u"Columns: %s\n" % u" ".join(columns)
-    query_filter += lq_logic(u"Filter: host_name =", [six.ensure_text(n) for n in host_names],
-                             u"Or")
+    query_filter += lq_logic(u"Filter: host_name =", [ensure_str(n) for n in host_names], u"Or")
     if service_description == "_HOST_" or service_description is None:
         what = 'host'
     else:
         what = 'service'
         query_filter += lq_logic(u"Filter: service_description =",
-                                 [six.ensure_text(service_description)], u"Or")
+                                 [ensure_str(service_description)], u"Or")
     return "GET %ss\n%s" % (what, query_filter)
 
 
@@ -269,7 +268,7 @@ def rrd_datacolum(hostname, service_description, varname, cf):
 def predictions_dir(hostname, service_description, dsname):
     # type: (HostName, ServiceName, MetricName) -> str
     return os.path.join(cmk.utils.paths.var_dir, "prediction", hostname,
-                        cmk.utils.pnp_cleanup(six.ensure_str(service_description)),
+                        cmk.utils.pnp_cleanup(ensure_str(service_description)),
                         cmk.utils.pnp_cleanup(dsname))
 
 

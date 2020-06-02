@@ -19,16 +19,8 @@ import operator
 import os
 import sys
 import time
-from typing import (
-    Any,
-    Dict,
-    Generic,
-    List,
-    Mapping,
-    Optional,
-    TypeVar,
-    Union,
-)
+from typing import Any, Dict, Generic, List, Mapping, Optional, TypeVar, Union
+
 import urllib3  # type: ignore[import]
 
 from dateutil.parser import parse as parse_time

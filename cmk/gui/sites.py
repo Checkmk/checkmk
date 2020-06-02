@@ -5,18 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import contextmanager
-from typing import (
-    Any,
-    cast,
-    Dict,
-    Iterator,
-    List,
-    NewType,
-    Optional,
-    Text,
-    Tuple,
-    Union,
-)
+from typing import Any, cast, Dict, Iterator, List, NewType, Optional, Tuple, Union
 
 from livestatus import (
     MultiSiteConnection,
@@ -75,13 +64,13 @@ def disconnect():
 
 # TODO: This should live somewhere else, it's just a random helper...
 def all_groups(what):
-    # type: (str) -> List[Tuple[Text, Text]]
+    # type: (str) -> List[Tuple[str, str]]
     """Returns a list of host/service/contact groups (pairs of name/alias)
 
     Groups are collected via livestatus from all sites. In case no alias is defined
     the name is used as second element. The list is sorted by lower case alias in the first place."""
     query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % what
-    groups = cast(List[Tuple[Text, Text]], live().query(query))
+    groups = cast(List[Tuple[str, str]], live().query(query))
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
     return sorted([(name, alias or name) for name, alias in dict(groups).items()],
                   key=lambda e: e[1].lower())

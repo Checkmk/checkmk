@@ -12,7 +12,7 @@ import pyghmi.constants as ipmi_const  # type: ignore[import]
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
-import six
+from six import ensure_binary
 
 import cmk.utils.debug
 from cmk.utils.log import VERBOSE
@@ -168,10 +168,10 @@ class IPMIDataFetcher(AbstractDataFetcher):
 
         return [
             b"%d" % number,
-            six.ensure_binary(reading.name),
-            six.ensure_binary(reading.type),
+            ensure_binary(reading.name),
+            ensure_binary(reading.type),
             (b"%0.2f" % reading.value) if reading.value else b"N/A",
-            six.ensure_binary(reading.units) if reading.units != b"\xc2\xb0C" else b"C",
+            ensure_binary(reading.units) if reading.units != b"\xc2\xb0C" else b"C",
             health_txt,
         ]
 

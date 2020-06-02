@@ -5,24 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a check plugin
 """
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Union,
-)
-import sys
+from typing import Any, Callable, Dict, Generator, List, Optional, Union
 import functools
 import inspect
 import itertools
-
-if sys.version_info[0] >= 3:
-    from inspect import signature  # pylint: disable=no-name-in-module,ungrouped-imports
-else:
-    from funcsigs import signature  # type: ignore[import] # pylint: disable=import-error
+from inspect import signature
 
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.checking_types import (
@@ -37,6 +24,10 @@ from cmk.base.api.agent_based.checking_types import (
 
 ITEM_VARIABLE = "%s"
 
+MANAGEMENT_NAME_PREFIX = "mgmt_"
+
+MANAGEMENT_DESCR_PREFIX = "Management Interface: "
+
 
 def _validate_service_name(plugin_name, service_name):
     # type: (str, str) -> None
@@ -47,6 +38,15 @@ def _validate_service_name(plugin_name, service_name):
     if service_name.count(ITEM_VARIABLE) not in (0, 1):
         raise ValueError("[%s]: service_name must contain %r at most once" %
                          (plugin_name, ITEM_VARIABLE))
+
+    if (plugin_name.startswith(MANAGEMENT_NAME_PREFIX)
+            is not service_name.startswith(MANAGEMENT_DESCR_PREFIX)):
+        raise ValueError(
+            "[%s]: service name and description inconsistency: Please neither have your plugins "
+            "name start with %r, nor the description with %r. In the rare case that you want to "
+            "implement a check plugin explicitly designed for management boards (and nothing else),"
+            " you must do both of the above." %
+            (plugin_name, MANAGEMENT_NAME_PREFIX, MANAGEMENT_DESCR_PREFIX))
 
 
 def _requires_item(service_name):
@@ -196,19 +196,19 @@ def unfit_for_clustering_wrapper(check_function):
 
 
 def create_check_plugin(
-        #*,
-        name=None,  # type: Optional[str]
+        *,
+        name,  # type: str
         sections=None,  # type: Optional[List[str]]
-        service_name=None,  # type: Optional[str]
+        service_name,  # type: str
         management_board_option=None,  # type: Optional[management_board]
-        discovery_function=None,  # type: Callable
+        discovery_function,  # type: Callable
         discovery_default_parameters=None,  # type: Optional[Dict]
         discovery_ruleset_name=None,  # type: Optional[str]
-        check_function=None,  # type: Callable
+        check_function,  # type: Callable
         check_default_parameters=None,  # type: Optional[Dict]
         check_ruleset_name=None,  # type: Optional[str]
         cluster_check_function=None,  # type:  Optional[Callable]
-        forbidden_names=None,  # type: Optional[List[PluginName]]
+        forbidden_names,  # type: List[PluginName]
 ):
     # type: (...) -> CheckPlugin
     """Return an CheckPlugin object after validating and converting the arguments one by one
@@ -216,18 +216,6 @@ def create_check_plugin(
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    # TODO (mo): unhack this CMK-3983
-    if name is None:
-        raise TypeError("name must not be None")
-    if service_name is None:
-        raise TypeError("service_name must not be None")
-    if discovery_function is None:
-        raise TypeError("discovery_function must not be None")
-    if check_function is None:
-        raise TypeError("check_function must not be None")
-    if forbidden_names is None:
-        raise TypeError("forbidden_names must not be None")
-
     plugin_name = PluginName(name, forbidden_names)
 
     subscribed_sections = _create_sections(sections, plugin_name)

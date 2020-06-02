@@ -6,11 +6,9 @@
 """Verify or find out a hosts agent related configuration"""
 
 import json
-from typing import (
-    List,
-    Text,
-)
-import six
+from typing import List
+
+from six import ensure_str
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -355,7 +353,7 @@ class ModeAjaxDiagHost(AjaxPage):
             raise MKGeneralException(_('Invalid test.'))
 
         # TODO: Use ModeDiagHost._vs_rules() for processing/validation?
-        args = [u""] * 13  # type: List[Text]
+        args = [u""] * 13  # type: List[str]
         for idx, what in enumerate([
                 'ipaddress',
                 'snmp_community',
@@ -403,5 +401,5 @@ class ModeAjaxDiagHost(AjaxPage):
         return {
             "next_transid": html.transaction_manager.fresh_transid(),
             "status_code": result[0],
-            "output": six.ensure_text(result[1], errors="replace"),
+            "output": ensure_str(result[1], errors="replace"),
         }

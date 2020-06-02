@@ -14,8 +14,9 @@ import shutil
 import subprocess
 import sys
 import time
+import urllib.parse
 
-import six
+from six import ensure_str
 
 from testlib.utils import (
     cmk_path,
@@ -93,7 +94,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         assert not path.startswith("http")
         assert "://" not in path
 
-        if "/" not in six.moves.urllib.parse.urlparse(path).path:
+        if "/" not in urllib.parse.urlparse(path).path:
             path = "/%s/check_mk/%s" % (self.id, path)
         return '%s://%s:%d%s' % (self.http_proto, self.http_address, self.apache_port, path)
 
@@ -293,7 +294,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             p = self.execute(["tee", self.path(rel_path)],
                              stdin=subprocess.PIPE,
                              stdout=open(os.devnull, "w"))
-            p.communicate(six.ensure_text(content))
+            p.communicate(ensure_str(content))
             p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))

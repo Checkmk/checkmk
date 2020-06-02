@@ -5,40 +5,47 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Any, Callable, Dict, Iterable, Optional, Set, Union
+from typing import Iterable, Set
 
 import cmk.utils.snmp_cache as snmp_cache
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import OID, CheckPluginName, DecodedString, SNMPHostConfig
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    SNMPHostConfig,
+)
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.snmp as snmp
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPDetectAtom, SNMPDetectSpec
-from cmk.base.snmp_utils import ScanFunction
 
 
-def _evaluate_snmp_detection(oid_function, detect_spec):
-    # type: (Callable, SNMPDetectSpec) -> bool
-    """This is a compatibility wrapper for the new SNMP detection.
+def _evaluate_snmp_detection(detect_spec, host_config, cp_name, do_snmp_scan):
+    # type: (SNMPDetectSpec, SNMPHostConfig, str, bool) -> bool
+    """Evaluate a SNMP detection specification
+
+    Return True if and and only if at least all conditions in one "line" are True
     """
-    # TODO: Once this is the only used method, we can consolidate
-    #       this into the code below and simplify.
     return any(
-        all(_evaluate_snmp_detection_atom(oid_function, atom)
+        all(
+            _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan)
             for atom in alternative)
         for alternative in detect_spec)
 
 
-def _evaluate_snmp_detection_atom(oid_function, atom):
-    # type: (Callable, SNMPDetectAtom) -> bool
+def _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan):
+    # type: (SNMPDetectAtom, SNMPHostConfig, str, bool) -> bool
     oid, pattern, flag = atom
-    value = oid_function(oid)
+    value = snmp.get_single_oid(
+        host_config,
+        oid,
+        cp_name,
+        do_snmp_scan=do_snmp_scan,
+    )
     if value is None:
         # check for "not_exists"
         return pattern == '.*' and not flag
@@ -53,22 +60,21 @@ def gather_available_raw_section_names(host_config,
                                        for_inventory=False,
                                        for_mgmt_board=False):
     # type: (SNMPHostConfig, str, bool, bool, bool) -> Set[CheckPluginName]
-    check_plugin_names = set()  # type: Set[CheckPluginName]
-
     try:
-        check_plugin_names.update(
-            _snmp_scan(host_config,
-                       on_error=on_error,
-                       do_snmp_scan=do_snmp_scan,
-                       for_inv=for_inventory,
-                       for_mgmt_board=for_mgmt_board))
+        return _snmp_scan(
+            host_config,
+            on_error=on_error,
+            do_snmp_scan=do_snmp_scan,
+            for_inv=for_inventory,
+            for_mgmt_board=for_mgmt_board,
+        )
     except Exception as e:
         if on_error == "raise":
             raise
         if on_error == "warn":
             console.error("SNMP scan failed: %s\n" % e)
 
-    return check_plugin_names
+    return set()
 
 
 def _snmp_scan(host_config,
@@ -104,56 +110,40 @@ def _snmp_scan(host_config,
         snmp_cache.set_single_oid_cache(".1.3.6.1.2.1.1.1.0", "")
         snmp_cache.set_single_oid_cache(".1.3.6.1.2.1.1.2.0", "")
 
+    # TODO (mo): Assumption here is that inventory plugins are significantly fewer
+    #            than check plugins. We should pass an explicit list along, instead
+    #            of this flag. That way we would also get rid of the import above.
     if for_inv:
-        these_plugin_names = [
-            name for name in inventory_plugins.inv_info if inventory_plugins.is_snmp_plugin(name)
+        section_names = [PluginName(n) for n in inventory_plugins.inv_info]
+        these_sections = [
+            config.registered_snmp_sections[section_name]
+            for section_name in section_names
+            if section_name in config.registered_snmp_sections
         ]
     else:
-        # TODO (mo): stop converting to string!
-        these_plugin_names = [str(n) for n in config.registered_snmp_sections]
+        these_sections = list(config.registered_snmp_sections.values())
 
     found_plugins = set()  # type: Set[CheckPluginName]
 
-    for check_plugin_name in these_plugin_names:
-        if config.service_ignored(host_config.hostname, check_plugin_name, None):
-            continue
-
-        detection_spec = _get_detection_spec_from_plugin_name(check_plugin_name,
-                                                              inventory_plugins.inv_info)
-
-        if detection_spec is None:
-            console.warning("   SNMP check %s: Could not detect specifications for plugin" %
-                            check_plugin_name)
-
-            continue
+    for section_plugin in these_sections:
 
         try:
 
-            def oid_function(oid, default_value=None, cp_name=check_plugin_name):
-                # type: (OID, Optional[DecodedString], Optional[CheckPluginName]) -> Optional[DecodedString]
-                value = snmp.get_single_oid(host_config, oid, cp_name, do_snmp_scan=do_snmp_scan)
-                return default_value if value is None else value
+            if _evaluate_snmp_detection(
+                    section_plugin.detect_spec,
+                    host_config,
+                    str(section_plugin.name),
+                    do_snmp_scan,
+            ):
+                found_plugins.add(str(section_plugin.name))
 
-            if callable(detection_spec):
-                result = detection_spec(oid_function)
-            else:
-                result = _evaluate_snmp_detection(oid_function, detection_spec)
-
-            if result is not None and not isinstance(result, (str, bool)):
-                if on_error == "warn":
-                    console.warning("   SNMP scan function of %s returns invalid type %s." %
-                                    (check_plugin_name, type(result)))
-                elif on_error == "raise":
-                    raise MKGeneralException("SNMP Scan aborted.")
-            elif result:
-                found_plugins.add(check_plugin_name)
         except MKGeneralException:
             # some error messages which we explicitly want to show to the user
             # should be raised through this
             raise
         except Exception:
             if on_error == "warn":
-                console.warning("   Exception in SNMP scan function of %s" % check_plugin_name)
+                console.warning("   Exception in SNMP scan function of %s" % section_plugin.name)
             elif on_error == "raise":
                 raise
 
@@ -170,20 +160,6 @@ def _snmp_scan(host_config,
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
     snmp_cache.write_single_oid_cache(host_config)
     return filtered
-
-
-def _get_detection_spec_from_plugin_name(check_plugin_name, inv_info):
-    # type: (CheckPluginName, Dict[str, Any]) -> Union[SNMPDetectSpec, Optional[ScanFunction]]
-    # This function will hopefully shrink and finally disappear during API development.
-    section_name = section_name_of(check_plugin_name)
-    section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
-    if section_plugin:
-        return section_plugin.detect_spec
-
-    # TODO (mo): migrate section definitions from inventory plugins to
-    #            section plugins and remove this conditional entirely
-    info = inv_info[section_name]
-    return info.get("snmp_scan_function")
 
 
 def _output_snmp_check_plugins(title, collection):

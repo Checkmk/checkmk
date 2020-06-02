@@ -14,7 +14,7 @@ from typing import Set, Any, AnyStr, Callable, Dict, List, Optional, Tuple, Unio
 from pathlib import Path
 import time
 
-import six
+from six import ensure_str
 
 from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
     SiteId, SiteConfiguration, SiteConfigurations,
@@ -24,7 +24,6 @@ import cmk.utils.version as cmk_version
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
 
 # TODO: Nuke the 'user' import and simply use cmk.gui.globals.user. Currently
@@ -444,7 +443,7 @@ def _initial_permission_cache(user_id):
     # type: (Optional[UserId]) -> Dict[str, bool]
     # Prepare cache of already computed permissions
     # Make sure, admin can restore permissions in any case!
-    if user_id in [six.ensure_text(u) for u in admin_users]:
+    if user_id in [ensure_str(u) for u in admin_users]:
         return {
             "general.use": True,  # use Multisite
             "wato.use": True,  # enter WATO
@@ -459,7 +458,7 @@ def _confdir_for_user_id(user_id):
     if user_id is None:
         return None
 
-    confdir = config_dir + "/" + six.ensure_str(user_id)
+    confdir = config_dir + "/" + ensure_str(user_id)
     store.mkdir(confdir)
     return confdir
 
@@ -885,13 +884,13 @@ def roles_of_user(user_id):
 
     if user_id in multisite_users:
         return existing_role_ids(multisite_users[user_id]["roles"])
-    if user_id in [six.ensure_text(u) for u in admin_users]:
+    if user_id in [ensure_str(u) for u in admin_users]:
         return ["admin"]
-    if user_id in [six.ensure_text(u) for u in guest_users]:
+    if user_id in [ensure_str(u) for u in guest_users]:
         return ["guest"]
-    if users is not None and user_id in [six.ensure_text(u) for u in users]:
+    if users is not None and user_id in [ensure_str(u) for u in users]:
         return ["user"]
-    if user_id is not None and os.path.exists(config_dir + "/" + six.ensure_str(user_id) +
+    if user_id is not None and os.path.exists(config_dir + "/" + ensure_str(user_id) +
                                               "/automation.secret"):
         return ["guest"]  # unknown user with automation account
     if 'roles' in default_user_profile:
@@ -919,7 +918,7 @@ def save_user_file(name, data, user_id):
     if user_id is None:
         raise TypeError("The profiles of LoggedInSuperUser and LoggedInNobody cannot be saved")
 
-    path = config_dir + "/" + six.ensure_str(user_id) + "/" + name + ".mk"
+    path = config_dir + "/" + ensure_str(user_id) + "/" + name + ".mk"
     store.mkdir(os.path.dirname(path))
     store.save_object_to_file(path, data)
 
@@ -1001,7 +1000,7 @@ def _migrate_pre_16_socket_config(site_cfg):
 
 def _migrate_string_encoded_socket(value):
     # type: (AnyStr) -> Tuple[str, Union[Dict]]
-    str_value = six.ensure_str(value)
+    str_value = ensure_str(value)
     family_txt, address = str_value.split(":", 1)
 
     if family_txt == "unix":
@@ -1286,5 +1285,5 @@ def theme_choices():
 def get_page_heading():
     # type: () -> str
     if "%s" in page_heading:
-        return ensure_unicode(page_heading % (site(omd_site()).get('alias', _("GUI"))))
-    return ensure_unicode(page_heading)
+        return ensure_str(page_heading % (site(omd_site()).get('alias', _("GUI"))))
+    return ensure_str(page_heading)

@@ -13,10 +13,9 @@ from typing import Dict, Type, List, Optional, Any
 from pathlib import Path
 
 from difflib import SequenceMatcher
-import six
+from six import ensure_str
 
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.weblib as weblib
@@ -99,7 +98,7 @@ class ModeBulkImport(WatoMode):
         # type: () -> Path
         file_id = html.request.get_unicode_input_mandatory(
             "file_id", "%s-%d" % (config.user.id, int(time.time())))
-        return self._upload_tmp_path / six.ensure_str("%s.csv" % file_id)
+        return self._upload_tmp_path / ("%s.csv" % file_id)
 
     # Upload the CSV file into a temporary directoy to make it available not only
     # for this request. It needs to be available during several potential "confirm"
@@ -116,7 +115,7 @@ class ModeBulkImport(WatoMode):
 
         file_id = "%s-%d" % (config.user.id, int(time.time()))
 
-        store.save_text_to_file(self._file_path(), ensure_unicode(content))
+        store.save_text_to_file(self._file_path(), ensure_str(content))
 
         # make selections available to next page
         html.request.set_var("file_id", file_id)

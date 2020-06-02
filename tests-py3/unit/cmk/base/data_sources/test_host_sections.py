@@ -8,8 +8,11 @@ import collections
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
-import cmk.base.config as config
+from cmk.utils.type_defs import SourceType
+
 from cmk.base.api import PluginName
+import cmk.base.check_api_utils as check_api_utils
+import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources.host_sections import MultiHostSections
 from cmk.base.data_sources.abstract import AgentHostSections
@@ -111,11 +114,14 @@ def test_get_parsed_section(monkeypatch, node_section_content, expected_result):
 
     multi_host_sections = MultiHostSections()
     multi_host_sections.setdefault_host_sections(
-        ("node1", "127.0.0.1"),
+        ("node1", "127.0.0.1", SourceType.HOST),
         AgentHostSections(sections=node_section_content),
     )
 
-    content = multi_host_sections.get_parsed_section("node1", "127.0.0.1", PluginName("parsed"))
+    content = multi_host_sections.get_parsed_section(
+        ("node1", "127.0.0.1", SourceType.HOST),
+        PluginName("parsed"),
+    )
 
     assert expected_result == content,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, content)
@@ -157,14 +163,18 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
         "three": NODE_1
     }
 
+    host_key = ("node1", "127.0.0.1", SourceType.HOST)
+
     multi_host_sections = MultiHostSections()
     multi_host_sections.setdefault_host_sections(
-        ("node1", "127.0.0.1"),
+        host_key,
         AgentHostSections(sections=node_section_content),
     )
 
-    kwargs = multi_host_sections.get_section_kwargs("node1", "127.0.0.1",
-                                                    [PluginName(n) for n in required_sections])
+    kwargs = multi_host_sections.get_section_kwargs(
+        host_key,
+        [PluginName(n) for n in required_sections],
+    )
 
     assert expected_result == kwargs,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, kwargs)
@@ -237,16 +247,20 @@ def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_res
 
     multi_host_sections = MultiHostSections()
     multi_host_sections.setdefault_host_sections(
-        ("node1", "127.0.0.1"),
+        ("node1", "127.0.0.1", SourceType.HOST),
         AgentHostSections(sections=node1_section_content),
     )
     multi_host_sections.setdefault_host_sections(
-        ("node2", "127.0.0.1"),
+        ("node2", "127.0.0.1", SourceType.HOST),
         AgentHostSections(sections=node2_section_content),
     )
 
     kwargs = multi_host_sections.get_section_cluster_kwargs(
-        "cluster", [PluginName(n) for n in required_sections], "_service_description")
+        "cluster",
+        SourceType.HOST,
+        [PluginName(n) for n in required_sections],
+        "_service_description",
+    )
 
     assert expected_result == kwargs,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, kwargs)
@@ -307,14 +321,39 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
     multi_host_sections = MultiHostSections()
     for nodename, node_section_content in host_entries:
         multi_host_sections.setdefault_host_sections(
-            (nodename, "127.0.0.1"),
+            (nodename, "127.0.0.1", SourceType.HOST),
             AgentHostSections(sections={"check_plugin_name": node_section_content}),
         )
 
-    section_content = multi_host_sections.get_section_content(hostname,
-                                                              "127.0.0.1",
-                                                              "check_plugin_name",
-                                                              False,
-                                                              service_description=service_descr)
+    section_content = multi_host_sections.get_section_content(
+        hostname,
+        "127.0.0.1",
+        check_api_utils.HOST_ONLY,
+        "check_plugin_name",
+        False,
+        service_description=service_descr,
+    )
     assert expected_result == section_content,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, section_content)
+
+    section_content = multi_host_sections.get_section_content(
+        hostname,
+        "127.0.0.1",
+        check_api_utils.HOST_PRECEDENCE,
+        "check_plugin_name",
+        False,
+        service_description=service_descr,
+    )
+    assert expected_result == section_content,\
+           "Section content: Expected '%s' but got '%s'" % (expected_result, section_content)
+
+    section_content = multi_host_sections.get_section_content(
+        hostname,
+        "127.0.0.1",
+        check_api_utils.MGMT_ONLY,
+        "check_plugin_name",
+        False,
+        service_description=service_descr,
+    )
+    assert section_content is None, \
+           "Section content: Expected 'None' but got '%s'" % (section_content,)

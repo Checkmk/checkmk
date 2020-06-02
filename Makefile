@@ -76,7 +76,7 @@ OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
         format-linux format-python format-python2 format-python3 \
 	format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel .venv .venv-2.7 .venv-3.7 openapi openapi-doc
+        am--refresh skel .venv .venv-2.7 .venv-3.8 openapi openapi-doc
 
 
 help:
@@ -425,7 +425,7 @@ setup:
 	    shellcheck \
 	    direnv \
 	    python-pip \
-	    python3.7-dev \
+	    python3.8-dev \
 	    python-setuptools \
 	    chrpath \
 	    enchant \
@@ -576,18 +576,18 @@ endif
 
 .venv-2.7:
 	$(MAKE) -C virtual-envs/2.7 .venv
-	$(MAKE) -C virtual-envs/3.7 .venv
+	$(MAKE) -C virtual-envs/3.8 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
 	ln -s virtual-envs/2.7/{Pipfile,Pipfile.lock,.venv} .
 
-.venv-3.7:
+.venv-3.8:
 	$(MAKE) -C virtual-envs/2.7 .venv
-	$(MAKE) -C virtual-envs/3.7 .venv
+	$(MAKE) -C virtual-envs/3.8 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
-	ln -s virtual-envs/3.7/{Pipfile,Pipfile.lock,.venv} .
+	ln -s virtual-envs/3.8/{Pipfile,Pipfile.lock,.venv} .
 
-# This alias is for compatibility: The target .venv should refer to 3.7 for the moment
-.venv: .venv-3.7
+# This alias is for compatibility: The target .venv should refer to 3.8 for the moment
+.venv: .venv-3.8
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

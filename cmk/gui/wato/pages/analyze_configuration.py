@@ -13,8 +13,7 @@ import multiprocessing
 import traceback
 import ast
 from typing import Any, Dict, Tuple
-
-import six
+import queue
 
 from livestatus import SiteId
 
@@ -284,7 +283,7 @@ class ModeAnalyzeConfig(WatoMode):
                 else:
                     raise NotImplementedError()
 
-            except six.moves.queue.Empty:
+            except queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:

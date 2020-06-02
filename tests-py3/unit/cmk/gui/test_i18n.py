@@ -8,7 +8,6 @@
 
 import gettext
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest  # type: ignore[import]
@@ -17,12 +16,6 @@ from testlib import cmk_path
 
 import cmk.utils.paths
 import cmk.gui.i18n as i18n
-
-
-def _gettext(trans, message):
-    if sys.version_info[0] >= 3:
-        return trans.gettext(message)
-    return trans.ugettext(message)
 
 
 @pytest.fixture(autouse=True)
@@ -105,7 +98,7 @@ def test_init_language_only_builtin():
     assert trans.info()["language"] == "de"
     assert trans.info()["project-id-version"] == "Check_MK Multisite translation 0.1"
 
-    translated = _gettext(trans, "bla")
+    translated = trans.gettext("bla")
     assert isinstance(translated, str)
     assert translated == "bla"
 
@@ -116,7 +109,7 @@ def test_init_language_with_local_modification(local_translation):
     assert trans.info()["language"] == "de"
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
 
-    translated = _gettext(trans, "bla")
+    translated = trans.gettext("bla")
     assert isinstance(translated, str)
     assert translated == "blub"
 
@@ -127,13 +120,13 @@ def test_init_language_with_local_modification_fallback(local_translation):
     assert trans.info()["language"] == "de"
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
 
-    translated = _gettext(trans, "bla")
+    translated = trans.gettext("bla")
     assert isinstance(translated, str)
     assert translated == "blub"
 
     # This string is localized in the standard file, not in the locally
     # overridden file
-    translated = _gettext(trans, "Age")
+    translated = trans.gettext("Age")
     assert isinstance(translated, str)
     assert translated == "Alter"
 
@@ -141,7 +134,7 @@ def test_init_language_with_local_modification_fallback(local_translation):
 def test_init_language_with_package_localization(local_translation):
     trans = i18n._init_language("de")
     assert trans is not None
-    translated = _gettext(trans, "pkg1")
+    translated = trans.gettext("pkg1")
     assert isinstance(translated, str)
     assert translated == "lala"
 

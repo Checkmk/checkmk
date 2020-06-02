@@ -40,13 +40,14 @@ def test_create_discovery_function():
         assert info == ["info"]
         return [
             ("foo", {}),
+            ("foo", "params_string"),
             "some string",
             HostLabel("whoop", "deedoo"),
             OldService("bar", {"P": "O"}),
         ]
 
     new_function = check_plugins_legacy._create_discovery_function(
-        {"inventory_function": insane_discovery},)
+        {"inventory_function": insane_discovery}, {"levels": "default"})
 
     fixed_params = inspect.signature(new_function).parameters
     assert list(fixed_params) == ["section"]
@@ -55,6 +56,7 @@ def test_create_discovery_function():
     result = list(new_function(["info"]))
     assert result == [
         checking_types.Service(item="foo"),
+        checking_types.Service(item="foo", parameters={"levels": "default"}),
         "some string",  # bogus value let through intentionally
         checking_types.Service(item="bar", parameters={"P": "O"}),
     ]

@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, List
-
-import six
+import urllib.parse
 
 import cmk.utils.store as store
 
@@ -157,7 +156,7 @@ class BookmarkList(pagetypes.Overridable):
 
     @classmethod
     def validate_url(cls, value, varprefix):
-        parsed = six.moves.urllib.parse.urlparse(value)
+        parsed = urllib.parse.urlparse(value)
 
         # Absolute URLs are allowed, but limit it to http/https
         if parsed.scheme != "" and parsed.scheme not in ["http", "https"]:
@@ -302,8 +301,8 @@ class Bookmarks(SidebarSnapin):
     def _try_shorten_url(self, url):
         referer = html.request.referer
         if referer:
-            ref_p = six.moves.urllib.parse.urlsplit(referer)
-            url_p = six.moves.urllib.parse.urlsplit(url)
+            ref_p = urllib.parse.urlsplit(referer)
+            url_p = urllib.parse.urlsplit(url)
 
             # If http/https or user, pw, host, port differ, don't try to shorten
             # the URL to be linked. Simply use the full URI

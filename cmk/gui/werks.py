@@ -13,7 +13,7 @@ import re
 import time
 from typing import Any, Dict, Union
 
-import six
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -296,7 +296,7 @@ _SORT_AND_GROUP = {
     ),
     "week": (
         cmk.utils.werks.sort_by_date,
-        lambda werk: time.strftime("%s %%U - %%Y" % six.ensure_str(_("Week")),
+        lambda werk: time.strftime("%s %%U - %%Y" % ensure_str(_("Week")),
                                    time.localtime(werk["date"]))  #
     ),
     None: (

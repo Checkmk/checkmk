@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -13,12 +13,12 @@ from pathlib import Path
 from typing import NamedTuple, Any
 from http.cookiejar import CookieJar
 import shutil
+import urllib.parse
 
 from mock import MagicMock
 import webtest  # type: ignore[import]
 import pytest  # type: ignore[import]
-import six
-from six.moves.urllib.parse import urlencode
+from six import ensure_str
 from werkzeug.test import create_environ
 
 import cmk.utils.log
@@ -95,7 +95,7 @@ def _mk_user_obj(username, password, automation=False):
             },
             'is_new_user': True,
         }
-    }
+    }  # type: dict
     if automation:
         user[username]['attributes'].update(automation_secret=password,)
     return user
@@ -161,7 +161,7 @@ def recreate_openapi_spec(mocker, _cache=[]):  # pylint: disable=dangerous-defau
             if not _cache:
                 _cache.append(generate())
 
-    spec_data = six.ensure_text(_cache[0])
+    spec_data = ensure_str(_cache[0])
     store.makedirs(spec_path)
     store.save_text_to_file(spec_path + "/checkmk.yaml", spec_data)
 
@@ -274,7 +274,7 @@ class WebTestAppForCMK(webtest.TestApp):
     def api_request(self, action, request, output_format='json', **kw):
         if self.username is None or self.password is None:
             raise RuntimeError("Not logged in.")
-        qs = urlencode([
+        qs = urllib.parse.urlencode([
             ('_username', self.username),
             ('_secret', self.password),
             ('request_format', output_format),

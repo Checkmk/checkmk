@@ -26,6 +26,7 @@ def removeprefix(text, prefix):
 
 _COMPONENTS = (
     "cmk.base",
+    "cmk.fetchers",
     "cmk.gui",
     "cmk.ec",
     "cmk.notification_plugins",
@@ -130,6 +131,9 @@ class CMKModuleLayerChecker(BaseChecker):
             if not self._is_part_of_component(mod_name, file_path, component):
                 continue
 
+            if self._is_disallowed_fetchers_import(mod_name, component):
+                return True
+
             if self._is_import_in_component(import_modname, component):
                 return True
 
@@ -158,6 +162,16 @@ class CMKModuleLayerChecker(BaseChecker):
             return True
 
         return False
+
+    def _is_disallowed_fetchers_import(self, mod_name, component):
+        """Disallow import of `fetchers` in `cmk.utils`.
+
+        The layering is such that `fetchers` is between `utils` and
+        `base` so that importing `fetchers` in `utils` is wrong but
+        anywhere else is OK.
+
+        """
+        return not (component.startswith("cmk.fetchers") and mod_name.startswith("cmk.utils"))
 
     def _is_import_in_component(self, import_modname, component):
         return import_modname == component or import_modname.startswith(component + ".")

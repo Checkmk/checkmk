@@ -11,12 +11,11 @@ from contextlib import suppress
 from typing import Dict, Iterable, List, Optional, Tuple
 from pathlib import Path
 
-import six
+from six import ensure_binary, ensure_str
 
 import cmk.utils.debug
 import cmk.utils.snmp_cache as snmp_cache
 import cmk.utils.tty as tty
-from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -109,8 +108,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
         console.vverbose("failed.\n")
 
     if value is not None:
-        decoded_value = convert_to_unicode(
-            value, encoding=snmp_config.character_encoding)  # type: Optional[DecodedString]
+        decoded_value = snmp_config.ensure_str(value)  # type: Optional[DecodedString]
     else:
         decoded_value = value
 
@@ -161,7 +159,7 @@ def _convert_rows_for_stored_walk(rows):
         if should_be_encoded(value):
             new_rows.append((oid, hex_encode_value(value)))
         else:
-            new_rows.append((oid, six.ensure_text(value)))
+            new_rows.append((oid, ensure_str(value)))
     return new_rows
 
 
@@ -226,13 +224,13 @@ def do_snmptranslate(walk_filename):
         console.error("\r%d to go...    " % (len(walk_lines) - i))
         process_lines = walk_lines[i:i + entries_per_cycle]
         # FIXME: This encoding ping-pong os horrible...
-        translated = translate([six.ensure_binary(pl) for pl in process_lines])
+        translated = translate([ensure_binary(pl) for pl in process_lines])
         i += len(translated)
         translated_lines += translated
     console.error("\rfinished.                \n")
 
     with suppress(IOError):
-        sys.stdout.write("\n".join("%s --> %s" % (six.ensure_str(line), six.ensure_str(translation))
+        sys.stdout.write("\n".join("%s --> %s" % (ensure_str(line), ensure_str(translation))
                                    for translation, line in translated_lines) + "\n")
 
 
@@ -269,7 +267,7 @@ def _do_snmpwalk_on(snmp_config, options, filename):
     with Path(filename).open("w", encoding="utf-8") as file:
         for rows in _execute_walks_for_dump(snmp_config, oids):
             for oid, value in rows:
-                file.write(six.ensure_text("%s %s\n" % (oid, value)))
+                file.write("%s %s\n" % (oid, value))
             console.verbose("%d variables.\n" % len(rows))
 
     console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))

@@ -200,6 +200,8 @@ constexpr const char* const kService = "service";                  // dictionary
 constexpr const char* const kRestartOnCrash = "restart_on_crash";  // bool
 constexpr const char* const kErrorMode = "error_mode";             // string
 constexpr const char* const kStartMode = "start_mode";             // string
+
+constexpr const char* const kWaitNetwork = "wait_network";  // int, seconds
 }  // namespace vars
 
 namespace values {
@@ -226,8 +228,9 @@ constexpr const char* const kCleanupSmart = "smart";  // delete only owned [*]
 constexpr const char* const kCleanupAll = "all";      // delete all
 
 // service.start_mode
-constexpr const char* const kStartModeAuto = "auto";          // start on boot
-constexpr const char* const kStartModeDemand = "demand";      // start manually
+constexpr const char* const kStartModeAuto = "auto";        // start on boot
+constexpr const char* const kStartModeDelayed = "delayed";  // start after boot
+constexpr const char* const kStartModeDemand = "demand";    // start manually
 constexpr const char* const kStartModeDisabled = "disabled";  // start disabled
 
 constexpr const char* const kErrorModeIgnore = "ignore";  // do nothing
@@ -251,6 +254,8 @@ constexpr const char* const kTryKillPluginProcess = values::kTryKillSafe;
 constexpr std::string_view kModulesDir = "modules\\{}";
 
 constexpr std::string_view kModuleUsageDefaultMode = values::kModuleUsageAuto;
+
+constexpr uint32_t kServiceWaitNetwork = 30;
 
 }  // namespace defaults
 

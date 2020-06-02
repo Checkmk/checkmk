@@ -80,12 +80,12 @@ def test_management_board_interface_prefix(check_info):
         ("MGMT_ONLY must be set", lambda k, c: c["management_board"] == check_api.MGMT_ONLY),
     )
 
-    managemtent_checks = [(key, check)
-                          for key, check in check_info.items()
-                          if (check["service_description"] is not None and any(
-                              test(key, check) for _, test in mgmt_criteria))]
+    management_checks = [(key, check)
+                         for key, check in check_info.items()
+                         if (check["service_description"] is not None and any(
+                             test(key, check) for _, test in mgmt_criteria))]
 
-    for key, check in managemtent_checks:
+    for key, check in management_checks:
 
         for requirement, test in mgmt_criteria:
             assert test(key,
@@ -135,7 +135,7 @@ def test_snmp_info_snmp_scan_functions_equal(snmp_info, snmp_scan_functions):
     assert set(snmp_scan_functions) == set(snmp_info)
 
 
-def test_snmp_tree_tranlation(snmp_info):
+def test_snmp_tree_translation(snmp_info):
     for info_spec in snmp_info.values():
         new_trees, recover_function = _create_snmp_trees(info_spec)
         assert callable(recover_function)  # is tested separately

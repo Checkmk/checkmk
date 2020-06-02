@@ -18,10 +18,11 @@ import pprint
 import tempfile
 from typing import Any, Union, Dict, Iterator, Optional, AnyStr, cast
 
+from six import ensure_binary
+
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKTerminate
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
-from cmk.utils.encoding import ensure_bytestr
 
 logger = logging.getLogger("cmk.store")
 
@@ -280,8 +281,8 @@ def save_bytes_to_file(path, content, mode=0o660):
 
 def save_file(path, content, mode=0o660):
     # type: (Union[Path, str], AnyStr, int) -> None
-    # Just to be sure: ensure_bytestr
-    _save_data_to_file(path, ensure_bytestr(content), mode=mode)
+    # Just to be sure: ensure_binary
+    _save_data_to_file(path, ensure_binary(content), mode=mode)
 
 
 # Saving assumes a locked destination file (usually done by loading code)

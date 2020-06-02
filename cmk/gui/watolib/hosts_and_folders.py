@@ -4,21 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
+from collections.abc import Mapping
+import io
 import operator
 import os
 import time
 import re
 import shutil
 import uuid
-
-try:
-    from collections.abc import Mapping  # type: ignore[import]
-except ImportError:
-    from collections import Mapping
-
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
-import six
 from livestatus import SiteId
 
 import cmk.gui.config as config
@@ -472,7 +467,7 @@ def deep_update(original, update, overwrite=True):
 
     """
     # Adapted from https://stackoverflow.com/a/3233356
-    for k, v in six.iteritems(update):
+    for k, v in update.items():
         if isinstance(v, Mapping):
             original[k] = deep_update(original.get(k, {}), v, overwrite=overwrite)
         else:
@@ -909,7 +904,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 os.remove(self.hosts_file_path())
             return
 
-        out = six.StringIO()
+        out = io.StringIO()
         out.write(wato_fileheader())
 
         all_hosts = []  # type: List[str]

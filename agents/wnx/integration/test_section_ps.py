@@ -54,7 +54,8 @@ def expected_output():
     # *.exe, *.dll, System, System( Idle Process), Registry,Memory Compression
     re_str = (
         r'\([^,]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+\)\s+'
-        r'(.+(\.[Ee][Xx][Ee]|\.[Dd][Ll][Ll])|System( Idle Process)?|Registry|Memory Compression)')
+        r'(.+(\.[Ee][Xx][Ee]|\.[Dd][Ll][Ll]|\.service)|System( Idle Process)?|Registry|Memory Compression|Secure System|vmmem|com.docker.service)'
+    )
     if not Globals.alone:
         re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
 

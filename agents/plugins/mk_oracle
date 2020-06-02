@@ -2462,10 +2462,21 @@ mk_ora_db_connect () {
 
         else
             # use an individuel user or the default DBUSER from mk_oracle.cfg
-            dummy="DBUSER_${ORACLE_SID}"
-            ORACFGLINE=${!dummy}
-            if [ "$ORACFGLINE" = '' ]; then
-                ORACFGLINE=${DBUSER}
+            # It's possible that the config file uses only upper case, but
+            # the fetched SID is lower case. And vice versa. To handle this, we
+            # need to try both cases.
+            # Important: This does not cover config variables that uses both
+            # upper and lower case letters. We simply cannot handle that!
+            dummy_upper="DBUSER_${ORACLE_SID^^}"
+            dummy_lower="DBUSER_${ORACLE_SID,,}"
+            if [ "${!dummy_upper}" = '' ]; then
+                if [ "${!dummy_lower}" = '' ]; then
+                    ORACFGLINE=${DBUSER}
+                else
+                    ORACFGLINE=${!dummy_lower}
+                fi
+            else
+                ORACFGLINE=${!dummy_upper}
             fi
         fi
 

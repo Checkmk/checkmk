@@ -38,7 +38,7 @@
 import copy
 from pathlib import Path
 
-import six
+from six import ensure_str
 
 import cmk.utils.store as store
 import cmk.utils.paths
@@ -68,7 +68,7 @@ def _format_php(data, lvl=1):
                                                                                  lvl + 1) + ',\n'
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, str):
-        s += '\'%s\'' % six.ensure_str(data).replace('\'', '\\\'')
+        s += '\'%s\'' % ensure_str(data).replace('\'', '\\\'')
     elif isinstance(data, bool):
         s += data and 'true' or 'false'
     elif data is None:

@@ -21,7 +21,7 @@ fi
 if [ "$PYTHON_VERSION" = "2" ]; then
     PYTHON_VERSION="2.7"
 elif [ "$PYTHON_VERSION" = "3" ]; then
-    PYTHON_VERSION="3.7"
+    PYTHON_VERSION="3.8"
 fi
 
 if [ ! -d "$REPO_PATH/virtual-envs/$PYTHON_VERSION" ]; then

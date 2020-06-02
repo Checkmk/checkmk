@@ -7,18 +7,16 @@
 import abc
 import ast
 import time
-from typing import Callable, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import Callable, Dict, List, Optional, Set, cast
 
 from mypy_extensions import NamedArg
 
-from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import (
     ABCSNMPTree,
     CheckPluginName,
     HostAddress,
     HostName,
-    OIDInfo,
     PersistedSNMPSections,
     RawSNMPData,
     SectionName,
@@ -26,10 +24,13 @@ from cmk.utils.type_defs import (
     SNMPHostConfig,
     SNMPSectionContent,
     SNMPSections,
+    SourceType,
 )
 
 import cmk.base.config as config
 from cmk.base.api import PluginName
+from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
+from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
 
@@ -131,17 +132,27 @@ class ABCSNMPDataSource(DataSource[RawSNMPData, SNMPSections, PersistedSNMPSecti
 
 
 class SNMPDataSource(ABCSNMPDataSource):
-    _for_mgmt_board = False
+    source_type = SourceType.HOST
 
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(SNMPDataSource, self).__init__(hostname, ipaddress)
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
+    ):
+        # type: (...) -> None
+        super(SNMPDataSource, self).__init__(
+            hostname,
+            ipaddress,
+            None if selected_raw_sections is None else
+            {s.name for s in selected_raw_sections.values() if isinstance(s, SNMPSectionPlugin)},
+        )
         self._detector = CachedSNMPDetector()
         self._do_snmp_scan = False
         self._on_error = "raise"
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
-        self._fetched_raw_section_names = set()  # type: Set[CheckPluginName]
+        self._fetched_raw_section_names = set()  # type: Set[PluginName]
 
     def id(self):
         # type: () -> str
@@ -232,8 +243,8 @@ class SNMPDataSource(ABCSNMPDataSource):
         # type: (PluginNameFilterFunction) -> None
         self._detector.set_filter_function(filter_func)
 
-    def set_fetched_raw_section_names(self, check_plugin_names):
-        # type: (Set[CheckPluginName]) -> None
+    def set_fetched_raw_section_names(self, raw_section_names):
+        # type: (Set[PluginName]) -> None
         """Sets a list of already fetched host sections/check plugin names.
 
         Especially for SNMP data sources there are already fetched
@@ -241,7 +252,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         which have no related check plugin the host must be contacted again
         in order to create the full tree.
         """
-        self._fetched_raw_section_names = check_plugin_names
+        self._fetched_raw_section_names = raw_section_names
 
     def _gather_check_plugin_names(self):
         # type: () -> Set[CheckPluginName]
@@ -253,7 +264,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             self._snmp_config,
             on_error=self._on_error,
             do_snmp_scan=self._do_snmp_scan,
-            for_mgmt_board=self._for_mgmt_board,
+            for_mgmt_board=self.source_type is SourceType.MANAGEMENT,
         )
 
     def _execute(self):
@@ -268,67 +279,49 @@ class SNMPDataSource(ABCSNMPDataSource):
         raise MKAgentError("Failed to read data")
 
     def _make_oid_infos(self):
-        # type: () -> Dict[CheckPluginName, Union[OIDInfo, List[ABCSNMPTree]]]
-        oid_infos = {}  # Dict[CheckPluginName, Union[OIDInfo, List[ABCSNMPTree]]]
-        raw_sections_to_process = self._get_raw_section_names_to_process()
-        for check_plugin_name in self._sort_check_plugin_names(raw_sections_to_process):
-            # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
-            # Please note, that if the check_plugin_name is foo.bar then we lookup the
-            # snmp info for "foo", not for "foo.bar".
-            section_name = section_name_of(check_plugin_name)
-            oid_info, has_snmp_info = self._oid_info_from_section_name(section_name)
-
-            if not has_snmp_info and check_plugin_name in self._fetched_raw_section_names:
+        # type: () -> Dict[str, List[ABCSNMPTree]]
+        oid_infos = {}  # Dict[str, List[ABCSNMPTree]]
+        raw_sections_to_process = {PluginName(n) for n in self._get_raw_section_names_to_process()}
+        for section_name in self._sort_section_names(raw_sections_to_process):
+            plugin = config.registered_snmp_sections.get(section_name)
+            if plugin is None:
+                self._logger.debug("%s: No such section definiton", section_name)
                 continue
 
-            if oid_info is None:
+            if section_name in self._fetched_raw_section_names:
                 continue
 
             # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added later
-            if self._persisted_sections and section_name in self._persisted_sections:
-                self._logger.debug("%s: Skip fetching data (persisted info exists)",
-                                   check_plugin_name)
+            if self._persisted_sections and str(section_name) in self._persisted_sections:
+                self._logger.debug("%s: Skip fetching data (persisted info exists)", section_name)
                 continue
 
-            oid_infos[check_plugin_name] = oid_info
+            oid_infos[str(section_name)] = plugin.trees
         return oid_infos
-
-    @staticmethod
-    def _oid_info_from_section_name(section_name):
-        # type: (str) -> Tuple[Union[Optional[OIDInfo], List[ABCSNMPTree]], bool]
-        import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
-        has_snmp_info = False
-        oid_info = None  # type: Optional[Union[OIDInfo, List[ABCSNMPTree]]]
-        snmp_section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
-        if snmp_section_plugin:
-            oid_info = snmp_section_plugin.trees
-        elif section_name in cmk.base.inventory_plugins.inv_info:
-            # TODO: merge this into config.registered_snmp_sections!
-            oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
-            if oid_info:
-                has_snmp_info = True
-        else:
-            oid_info = None
-        return oid_info, has_snmp_info
 
     def _get_raw_section_names_to_process(self):
         # type: () -> Set[CheckPluginName]
         """Return a set of raw section names that shall be processed"""
-        # TODO (mo): At this point, this is an exact copy of the super classes
-        #            former get_check_plugin_names method. Obviously this will change...
+        # TODO (mo): Make this (and the called) function(s) return the sections directly!
+        if self._selected_raw_section_names is not None:
+            return {str(n) for n in self._selected_raw_section_names}
+
+        # TODO (mo): At the moment, we must also consider the legacy version:
         if self._enforced_check_plugin_names is not None:
-            return self._enforced_check_plugin_names
+            # TODO (mo): centralize maincheckify: CMK-4295
+            return {maincheckify(n) for n in self._enforced_check_plugin_names}
+
         return self._detector(
             self._snmp_config,
             on_error=self._on_error,
             do_snmp_scan=self._do_snmp_scan,
-            for_mgmt_board=self._for_mgmt_board,
+            for_mgmt_board=self.source_type is SourceType.MANAGEMENT,
         )
 
     @staticmethod
-    def _sort_check_plugin_names(check_plugin_names):
-        # type: (Set[CheckPluginName]) -> List[CheckPluginName]
+    def _sort_section_names(section_names):
+        # type: (Set[PluginName]) -> List[PluginName]
         # In former Check_MK versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
         # In Check_MK versions >= 1.5.0 the order is random and
@@ -338,10 +331,13 @@ class SNMPDataSource(ABCSNMPDataSource):
         # There are some nested check plugin names which have to be considered, too.
         #   for f in $(grep "service_description.*CPU [^lL]" -m1 * | cut -d":" -f1); do
         #   if grep -q "snmp_info" $f; then echo $f; fi done
-        cpu_checks_without_cpu_in_check_name = {"brocade_sys", "bvip_util"}
-        return sorted(check_plugin_names,
+        cpu_sections_without_cpu_in_name = {
+            PluginName("brocade_sys"),
+            PluginName("bvip_util"),
+        }
+        return sorted(section_names,
                       key=lambda x:
-                      (not ('cpu' in x or x in cpu_checks_without_cpu_in_check_name), x))
+                      (not ('cpu' in str(x) or x in cpu_sections_without_cpu_in_name), x))
 
     def _convert_to_sections(self, raw_data):
         # type: (RawSNMPData) -> SNMPHostSections
@@ -389,11 +385,17 @@ class SNMPDataSource(ABCSNMPDataSource):
 
 
 class SNMPManagementBoardDataSource(SNMPDataSource):
-    _for_mgmt_board = True
+    source_type = SourceType.MANAGEMENT
 
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress)
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
+    ):
+        # type: (...) -> None
+        super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress,
+                                                            selected_raw_sections)
         self._credentials = cast(SNMPCredentials, self._host_config.management_credentials)
 
     def id(self):

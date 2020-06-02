@@ -432,7 +432,7 @@ def main(args=None):
     if entities == B_SERIES_ENTITIES and section_needed not in data:
         sys.stdout.write("<<<%s:sep(9)>>>\n" % section_needed)
 
-    for header, class_data in data.iteritems():
+    for header, class_data in data.items():
         sys.stdout.write("<<<%s:sep(9)>>>\n" % header)
         for class_id, values in class_data:
             values_str = "\t".join(["%s %s" % v for v in values])

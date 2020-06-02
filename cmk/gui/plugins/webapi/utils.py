@@ -11,7 +11,7 @@ import abc
 from hashlib import md5
 import json
 
-import six
+from six import ensure_binary
 
 import cmk.utils.plugin_registry
 
@@ -88,7 +88,7 @@ def add_configuration_hash(response, configuration_object):
 def compute_config_hash(entity):
     try:
         entity_encoded = json.dumps(entity, sort_keys=True)
-        entity_hash = md5(six.ensure_binary(entity_encoded)).hexdigest()
+        entity_hash = md5(ensure_binary(entity_encoded)).hexdigest()
     except Exception as e:
         logger.error("Error %s", e)
         entity_hash = "0"

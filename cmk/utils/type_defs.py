@@ -6,8 +6,11 @@
 """Checkmk wide type definitions"""
 
 import abc
+import enum
 import string
-from typing import Any, Dict, List, NamedTuple, NewType, Optional, Set, Tuple, Union
+from typing import Any, AnyStr, Dict, List, NamedTuple, NewType, Optional, Set, Tuple, Union
+
+from six import ensure_str
 
 HostName = str
 HostAddress = str
@@ -117,6 +120,12 @@ SNMPCredentials = Union[SNMPCommunity, Tuple[str, ...]]
 SNMPTiming = Dict
 
 
+class SourceType(enum.Enum):
+    """Classification of management sources vs regular hosts"""
+    HOST = "HOST"
+    MANAGEMENT = "MANAGEMENT"
+
+
 # Wraps the configuration of a host into a single object for the SNMP code
 class SNMPHostConfig(
         NamedTuple("SNMPHostConfig", [
@@ -156,6 +165,15 @@ class SNMPHostConfig(
         cfg = self._asdict()
         cfg.update(**kwargs)
         return SNMPHostConfig(**cfg)
+
+    def ensure_str(self, value):
+        # type: (AnyStr) -> str
+        if self.character_encoding:
+            return ensure_str(value, self.character_encoding)
+        try:
+            return ensure_str(value, "utf-8")
+        except UnicodeDecodeError:
+            return ensure_str(value, "latin1")
 
 
 class ABCSNMPBackend(metaclass=abc.ABCMeta):

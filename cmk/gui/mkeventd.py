@@ -11,7 +11,7 @@ import time
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 
-import six
+from six import ensure_binary, ensure_str
 
 import livestatus
 from livestatus import SiteId
@@ -181,19 +181,23 @@ def send_event(event):
         (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", [six.ensure_str(r) for r in rfc], site=event["site"])
+    execute_command("CREATE", [ensure_str(r) for r in rfc], site=event["site"])
 
     return ";".join(rfc)
 
 
 def get_local_ec_status():
     response = livestatus.LocalConnection().query("GET eventconsolestatus")
+    if len(response) == 1:
+        return None  # In case the EC is not running, there may be some
     return dict(zip(response[0], response[1]))
 
 
 def replication_mode():
     try:
         status = get_local_ec_status()
+        if not status:
+            return "stopped"
         return status["status_replication_slavemode"]
     except livestatus.MKLivestatusSocketError:
         return "stopped"
@@ -215,7 +219,7 @@ def query_ec_directly(query):
             if not chunk:
                 break
 
-        return ast.literal_eval(six.ensure_str(response_text))
+        return ast.literal_eval(ensure_str(response_text))
     except SyntaxError:
         raise MKGeneralException(
             _("Invalid response from event daemon: "
@@ -393,8 +397,7 @@ def check_timeperiod(tpname):
     try:
         livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         livesock.connect(cmk.utils.paths.livestatus_unix_socket)
-        livesock.send(
-            six.ensure_binary("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname))
+        livesock.send(ensure_binary("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname))
         livesock.shutdown(socket.SHUT_WR)
         answer = livesock.recv(100).strip()
         if answer == b"":

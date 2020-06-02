@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import time
 import tarfile
 import shutil
@@ -12,7 +11,7 @@ from io import IOBase
 from typing import Dict, List
 from pathlib import Path
 
-import six
+from six import ensure_str
 import pytest  # type: ignore[import]
 import responses  # type: ignore[import]
 
@@ -184,12 +183,12 @@ def _get_expected_paths(user_id, is_pre_17_site):
         "etc/htpasswd",
         "etc/auth.serials",
         "etc/check_mk/multisite.d/wato/users.mk",
-        six.ensure_str('var/check_mk/web/%s' % user_id),
-        six.ensure_str('var/check_mk/web/%s/cached_profile.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/enforce_pw_change.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/last_pw_change.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/num_failed_logins.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/serial.mk' % user_id),
+        ensure_str('var/check_mk/web/%s' % user_id),
+        ensure_str('var/check_mk/web/%s/cached_profile.mk' % user_id),
+        ensure_str('var/check_mk/web/%s/enforce_pw_change.mk' % user_id),
+        ensure_str('var/check_mk/web/%s/last_pw_change.mk' % user_id),
+        ensure_str('var/check_mk/web/%s/num_failed_logins.mk' % user_id),
+        ensure_str('var/check_mk/web/%s/serial.mk' % user_id),
     ]
 
     # The new sync directories create all needed files on the central site now
@@ -618,10 +617,7 @@ def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
     assert list(kwargs.keys()) == ["files"]
     assert list(kwargs["files"].keys()) == ["snapshot"]
     # TODO: Add correct type once we are on Python 3 only
-    if sys.version_info[0] >= 3:
-        assert isinstance(kwargs["files"]["snapshot"], IOBase)
-    else:
-        assert isinstance(kwargs["files"]["snapshot"], file)  # pylint: disable=undefined-variable
+    assert isinstance(kwargs["files"]["snapshot"], IOBase)
 
     file_name = kwargs["files"]["snapshot"].name  # type: ignore[attr-defined]
     assert file_name == snapshot_settings.snapshot_path

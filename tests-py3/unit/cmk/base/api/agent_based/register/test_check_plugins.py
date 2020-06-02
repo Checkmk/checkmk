@@ -130,6 +130,23 @@ def test_create_check_plugin_mandatory(key):
         _ = check_plugins.create_check_plugin(**kwargs)
 
 
+def test_create_check_plugin_mgmt_reserved():
+    kwargs = MINIMAL_CREATION_KWARGS.copy()
+    kwargs["service_name"] = "Management Interface: "
+    with pytest.raises(ValueError):
+        _ = check_plugins.create_check_plugin(**kwargs)
+
+    kwargs = MINIMAL_CREATION_KWARGS.copy()
+    kwargs["name"] = "mgmt_foo"
+    with pytest.raises(ValueError):
+        _ = check_plugins.create_check_plugin(**kwargs)
+
+    kwargs = MINIMAL_CREATION_KWARGS.copy()
+    kwargs["service_name"] = "Management Interface: "
+    kwargs["name"] = "mgmt_foo"
+    _ = check_plugins.create_check_plugin(**kwargs)
+
+
 def test_create_check_plugin():
     plugin = check_plugins.create_check_plugin(**MINIMAL_CREATION_KWARGS)
 

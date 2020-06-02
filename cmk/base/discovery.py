@@ -9,22 +9,9 @@ import signal
 import socket
 import time
 from types import FrameType
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    NoReturn,
-    Optional,
-    Pattern,
-    Set,
-    Text,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterator, List, NoReturn, Optional, Pattern, Set, Tuple, Union
 
-import six
+from six import ensure_binary
 
 import livestatus
 
@@ -33,7 +20,6 @@ import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
@@ -47,8 +33,14 @@ from cmk.utils.type_defs import (
     Metric,
     RulesetName,
     ServiceState,
+    SourceType,
 )
 
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.register.check_plugins_legacy import (
+    maincheckify,
+    resolve_legacy_name,
+)
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
@@ -66,8 +58,6 @@ import cmk.base.section as section
 import cmk.base.snmp_scan as snmp_scan
 import cmk.base.utils
 
-from cmk.base.api import PluginName
-from cmk.base.api.agent_based.register.check_plugins_legacy import resolve_legacy_name
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import CheckParameters, DiscoveredService, FinalSectionContent
 from cmk.base.core_config import MonitoringCore
@@ -80,8 +70,8 @@ _marked_host_discovery_timeout = 120
 DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.Item],
                                Tuple[str, DiscoveredService]]
 CheckPreviewEntry = Tuple[str, CheckPluginName, Optional[RulesetName], check_table.Item,
-                          check_table.CheckParameters, check_table.CheckParameters, Text,
-                          Optional[int], Text, List[Metric], Dict[Text, Text]]
+                          check_table.CheckParameters, check_table.CheckParameters, str,
+                          Optional[int], str, List[Metric], Dict[str, str]]
 CheckPreviewTable = List[CheckPreviewEntry]
 DiscoveryEntry = Union[check_api_utils.Service, DiscoveredHostLabels, HostLabel,
                        Tuple[Item, CheckParameters]]
@@ -111,6 +101,8 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
+    check_plugin_names = {PluginName(maincheckify(n)) for n in arg_check_plugin_names
+                         } if arg_check_plugin_names is not None else None
 
     # Now loop through all hosts
     for hostname in sorted(host_names):
@@ -125,16 +117,22 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
             # yet (do not have autochecks), we enable SNMP scan.
             do_snmp_scan = not use_caches or not autochecks.has_autochecks(hostname)
 
-            sources = _get_sources_for_discovery(hostname, ipaddress, do_snmp_scan, on_error)
+            # If check plugins are specified via command line,
+            # see which raw sections we may need
+            selected_raw_sections = (None if check_plugin_names is None else
+                                     config.get_relevant_raw_sections(check_plugin_names))
 
-            # When check types are specified via command line,
-            # enforce them and disable auto detection
-            if arg_check_plugin_names:
-                sources.enforce_check_plugin_names(arg_check_plugin_names)
+            sources = _get_sources_for_discovery(
+                hostname,
+                ipaddress,
+                do_snmp_scan,
+                on_error,
+                selected_raw_sections=selected_raw_sections,
+            )
 
             multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
-            _do_discovery_for(hostname, ipaddress, multi_host_sections, arg_check_plugin_names,
+            _do_discovery_for(hostname, ipaddress, multi_host_sections, check_plugin_names,
                               arg_only_new, on_error)
 
         except Exception as e:
@@ -174,7 +172,7 @@ def _do_discovery_for(
         hostname,  # type: str
         ipaddress,  # type: Optional[str]
         multi_host_sections,  # type: data_sources.MultiHostSections
-        check_plugin_names,  # type: Optional[Set[CheckPluginName]]
+        check_plugin_names,  # type: Optional[Set[PluginName]]
         only_new,  # type: bool
         on_error,  # type: str
 ):
@@ -184,8 +182,7 @@ def _do_discovery_for(
         ipaddress,
         multi_host_sections,
         on_error=on_error,
-        check_plugin_whitelist=(None if check_plugin_names is None else
-                                {PluginName(n) for n in check_plugin_names}),
+        check_plugin_whitelist=check_plugin_names,
     )
 
     # There are three ways of how to merge existing and new discovered checks:
@@ -209,8 +206,8 @@ def _do_discovery_for(
     # Take over old items if -I is selected or if -II is selected with
     # --checks= and the check type is not one of the listed ones
     for existing_service in existing_services:
-        if only_new or (check_plugin_names and
-                        existing_service.check_plugin_name not in check_plugin_names):
+        service_plugin_name = PluginName(maincheckify(existing_service.check_plugin_name))
+        if only_new or (check_plugin_names and service_plugin_name not in check_plugin_names):
             new_services.append(existing_service)
 
     services_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
@@ -224,8 +221,12 @@ def _do_discovery_for(
 
     section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
-        hostname,
-        ipaddress,
+        (hostname, ipaddress, SourceType.HOST),
+        multi_host_sections,
+        on_error=on_error,
+    )
+    discovered_host_labels += _discover_host_labels(
+        (hostname, ipaddress, SourceType.MANAGEMENT),
         multi_host_sections,
         on_error=on_error,
     )
@@ -414,7 +415,7 @@ def _accept_all_services(_hostname, _check_plugin_name, _item):
 
 @cmk.base.decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def check_discovery(hostname, ipaddress):
-    # type: (str, Optional[str]) -> Tuple[int, List[Text], List[Text], List[Tuple]]
+    # type: (str, Optional[str]) -> Tuple[int, List[str], List[str], List[Tuple]]
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
@@ -830,7 +831,7 @@ def schedule_discovery_check(hostname):
         if config.monitoring_core == "cmc":
             command += ";TRY"
 
-        s.send(six.ensure_binary("COMMAND [%d] %s\n" % (now, command)))
+        s.send(ensure_binary("COMMAND [%d] %s\n" % (now, command)))
     except Exception:
         if cmk.utils.debug.enabled():
             raise
@@ -849,12 +850,16 @@ def schedule_discovery_check(hostname):
 #   '----------------------------------------------------------------------'
 
 
-def _discover_host_labels(hostname, ipaddress, multi_host_sections, on_error):
-    # type: (str, Optional[str], data_sources.MultiHostSections, str) -> DiscoveredHostLabels
+def _discover_host_labels(
+        host_key,  # type: data_sources.host_sections.HostKey
+        multi_host_sections,  # type: data_sources.MultiHostSections
+        on_error,  # type: str
+):
+    # type: (...) -> DiscoveredHostLabels
     discovered_host_labels = DiscoveredHostLabels()
 
     try:
-        host_data = multi_host_sections.get_host_sections()[(hostname, ipaddress)]
+        host_data = multi_host_sections.get_host_sections()[host_key]
     except KeyError:
         return discovered_host_labels
 
@@ -870,8 +875,7 @@ def _discover_host_labels(hostname, ipaddress, multi_host_sections, on_error):
         for parsed_section_name in sorted(parsed_sections):
             try:
                 plugin = config.get_parsed_section_creator(parsed_section_name, raw_sections)
-                parsed = multi_host_sections.get_parsed_section(hostname, ipaddress,
-                                                                parsed_section_name)
+                parsed = multi_host_sections.get_parsed_section(host_key, parsed_section_name)
                 if plugin is None or parsed is None:
                     continue
                 for label in plugin.host_label_function(parsed):
@@ -962,9 +966,15 @@ def _get_sources_for_discovery(
         do_snmp_scan,  # type: bool
         on_error,  # type: str
         for_check_discovery=False,  # type: bool
+        *,
+        selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
 ):
     # type: (...) -> data_sources.DataSources
-    sources = data_sources.DataSources(hostname, ipaddress)
+    sources = data_sources.DataSources(
+        hostname,
+        ipaddress,
+        selected_raw_sections=selected_raw_sections,
+    )
 
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
@@ -1007,10 +1017,13 @@ def _execute_discovery(
     try:
         # TODO: There is duplicate code with checking.execute_check(). Find a common place!
         try:
-            section_content = multi_host_sections.get_section_content(hostname,
-                                                                      ipaddress,
-                                                                      check_plugin_name,
-                                                                      for_discovery=True)
+            section_content = multi_host_sections.get_section_content(
+                hostname,
+                ipaddress,
+                config.get_management_board_precedence(check_plugin_name, config.check_info),
+                check_plugin_name,
+                for_discovery=True,
+            )
         except MKParseFunctionError as e:
             if cmk.utils.debug.enabled() or on_error == "raise":
                 x = e.exc_info()
@@ -1125,12 +1138,6 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
                           (hostname, check_plugin_name, repr(entry)))
             continue
 
-        # Check_MK 1.2.7i3 defines items to be unicode strings. Convert non unicode
-        # strings here seamless. TODO remove this conversion one day and replace it
-        # with a validation that item needs to be of type unicode
-        if isinstance(item, str):
-            item = convert_to_unicode(item)
-
         description = config.service_description(hostname, check_plugin_name, item)
         # make sanity check
         if len(description) == 0:
@@ -1227,8 +1234,12 @@ def _get_discovered_services(
 
     section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
-        hostname,
-        ipaddress,
+        (hostname, ipaddress, SourceType.HOST),
+        multi_host_sections,
+        on_error,
+    )
+    discovered_host_labels += _discover_host_labels(
+        (hostname, ipaddress, SourceType.MANAGEMENT),
         multi_host_sections,
         on_error,
     )
@@ -1388,10 +1399,13 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
             try:
                 try:
-                    section_content = multi_host_sections.get_section_content(hostname,
-                                                                              ipaddress,
-                                                                              section_name,
-                                                                              for_discovery=True)
+                    section_content = multi_host_sections.get_section_content(
+                        hostname,
+                        ipaddress,
+                        config.get_management_board_precedence(section_name, config.check_info),
+                        section_name,
+                        for_discovery=True,
+                    )
                 except MKParseFunctionError as e:
                     if cmk.utils.debug.enabled() or on_error == "raise":
                         x = e.exc_info()

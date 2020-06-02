@@ -2135,15 +2135,20 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
     def page(self):
         self._verify_ec_enabled()
 
+        warning = _("The Event Console Daemon is currently not running. ")
+        warning += _(
+            "Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
+            "before starting this site.")
+
         if not cmk.gui.mkeventd.daemon_running():
-            warning = _("The Event Console Daemon is currently not running. ")
-            warning += _(
-                "Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
-                "before starting this site.")
             html.show_warning(warning)
             return
 
         status = cmk.gui.mkeventd.get_local_ec_status()
+        if not status:
+            html.show_warning(warning)
+            return
+
         repl_mode = status["status_replication_slavemode"]
         html.h3(_("Current status of local Event Console"))
         html.open_ul()

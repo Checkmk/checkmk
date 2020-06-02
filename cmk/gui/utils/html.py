@@ -5,9 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Union, Any, Iterable
-import six
-
-from cmk.utils.encoding import ensure_unicode
 
 HTMLInput = Union["HTML", int, float, None, str]
 
@@ -27,19 +24,17 @@ class HTML(object):
     def __init__(self, value=u''):
         # type: (HTMLInput) -> None
         super(HTML, self).__init__()
-        self.value = self._ensure_unicode(value)
+        self.value = self._ensure_str(value)
 
-    def _ensure_unicode(self, value):
+    def _ensure_str(self, value):
         # type: (HTMLInput) -> str
         # value can of of any type: HTML, int, float, None, str, ...
         # TODO cleanup call sites
-        if not isinstance(value, str):
-            value = str(value)
-        return ensure_unicode(value)
+        return value if isinstance(value, str) else str(value)
 
     def __html__(self):
         # type: () -> str
-        return six.ensure_text("%s" % self)
+        return "%s" % self
 
     # TODO: This is broken! Cleanup once we are using Python 3.
     # NOTE: Return type "unicode" of "__str__" incompatible with return type "str" in supertype "object"
@@ -65,8 +60,7 @@ class HTML(object):
 
     def __repr__(self):
         # type: () -> str
-        repr_val = "HTML(\"%s\")" % self.value
-        return six.ensure_str(repr_val)
+        return "HTML(\"%s\")" % self.value
 
     def to_json(self):
         # type: () -> str
@@ -74,7 +68,7 @@ class HTML(object):
 
     def __add__(self, other):
         # type: (HTMLInput) -> HTML
-        return HTML(self.value + self._ensure_unicode(other))
+        return HTML(self.value + self._ensure_str(other))
 
     def __iadd__(self, other):
         # type: (HTMLInput) -> HTML
@@ -82,19 +76,19 @@ class HTML(object):
 
     def __radd__(self, other):
         # type: (HTMLInput) -> HTML
-        return HTML(self._ensure_unicode(other) + self.value)
+        return HTML(self._ensure_str(other) + self.value)
 
     def join(self, iterable):
         # type: (Iterable[HTMLInput]) -> HTML
-        return HTML(self.value.join(map(self._ensure_unicode, iterable)))
+        return HTML(self.value.join(map(self._ensure_str, iterable)))
 
     def __eq__(self, other):
         # type: (Any) -> bool
-        return self.value == self._ensure_unicode(other)
+        return self.value == self._ensure_str(other)
 
     def __ne__(self, other):
         # type: (Any) -> bool
-        return self.value != self._ensure_unicode(other)
+        return self.value != self._ensure_str(other)
 
     def __len__(self):
         # type: () -> int
@@ -106,24 +100,24 @@ class HTML(object):
 
     def __contains__(self, item):
         # type: (HTMLInput) -> bool
-        return self._ensure_unicode(item) in self.value
+        return self._ensure_str(item) in self.value
 
     def count(self, sub, *args):
-        return self.value.count(self._ensure_unicode(sub), *args)
+        return self.value.count(self._ensure_str(sub), *args)
 
     def index(self, sub, *args):
-        return self.value.index(self._ensure_unicode(sub), *args)
+        return self.value.index(self._ensure_str(sub), *args)
 
     def lstrip(self, *args):
-        args = tuple(map(self._ensure_unicode, args[:1])) + args[1:]
+        args = tuple(map(self._ensure_str, args[:1])) + args[1:]
         return HTML(self.value.lstrip(*args))
 
     def rstrip(self, *args):
-        args = tuple(map(self._ensure_unicode, args[:1])) + args[1:]
+        args = tuple(map(self._ensure_str, args[:1])) + args[1:]
         return HTML(self.value.rstrip(*args))
 
     def strip(self, *args):
-        args = tuple(map(self._ensure_unicode, args[:1])) + args[1:]
+        args = tuple(map(self._ensure_str, args[:1])) + args[1:]
         return HTML(self.value.strip(*args))
 
     def lower(self):
@@ -135,4 +129,4 @@ class HTML(object):
         return HTML(self.value.upper())
 
     def startswith(self, prefix, *args):
-        return self.value.startswith(self._ensure_unicode(prefix), *args)
+        return self.value.startswith(self._ensure_str(prefix), *args)

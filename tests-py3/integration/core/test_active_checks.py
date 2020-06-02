@@ -7,7 +7,6 @@
 # pylint: disable=redefined-outer-name
 # flake8: noqa
 
-from __future__ import print_function
 import logging
 import collections
 import pytest  # type: ignore[import]

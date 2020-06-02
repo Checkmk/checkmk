@@ -6,7 +6,8 @@
 
 import json
 import time
-import six
+
+from six import ensure_str
 
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
@@ -133,8 +134,8 @@ class LayoutJSONExport(JSONLayout):
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         filename = '%s-%s.json' % (view['name'],
                                    time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-        html.response.headers[
-            "Content-Disposition"] = "Attachment; filename=\"%s\"" % six.ensure_str(filename)
+        html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
+            filename)
 
         super(LayoutJSONExport, self).render(rows, view, group_cells, cells, num_columns,
                                              show_checkboxes)

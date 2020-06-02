@@ -17,7 +17,7 @@
 .mypy_cache
 .ropeproject
 .venv-2.7
-.venv-3.7
+.venv-3.8
 GPATH
 GRTAGS
 GTAGS

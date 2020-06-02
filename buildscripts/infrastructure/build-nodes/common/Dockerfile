@@ -2,7 +2,8 @@ FROM ubuntu:18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update \
+RUN add-apt-repository ppa:deadsnakes/ppa
+    && apt-get update \
     && apt-get install -y \
     alien \
     apache2 \

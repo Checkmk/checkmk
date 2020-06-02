@@ -8,7 +8,7 @@
 # type: ignore
 
 
-checkname = u'aws_ec2'
+checkname = 'aws_ec2'
 
 parsed = {
     'Summary': {
@@ -16,7 +16,11 @@ parsed = {
         'NetworkIn': 3540.4,
         'StatusCheckFailed_Instance': 0.0,
         'NetworkOut': 27942.1,
-        'StatusCheckFailed_System': 0.0
+        'StatusCheckFailed_System': 0.0,
+        'DiskReadOps': 1000,
+        'DiskWriteOps': 2000,
+        'DiskReadBytes': 3000,
+        'DiskWriteBytes': 4000,
     }
 }
 
@@ -24,22 +28,38 @@ discovery = {
     '': [(None, {})],
     'cpu_util': [(None, {})],
     'network_io': [('Summary', {})],
-    'disk_io': [],
+    'disk_io': [('Summary', {})],
     'cpu_credits': []
 }
 
 checks = {
-    '': [(None, {}, [(0, 'System: passed', []), (0, 'Instance: passed', [])])],
+    '': [(None,
+          {},
+          [(0, 'System: passed', []), (0, 'Instance: passed', [])])],
     'cpu_util':
-    [(None, {
-        'util': (0.01, 95.0)
-    }, [(1, 'Total CPU: 0.1% (warn/crit at 0.01%/95.0%)', [('util', 0.1, 0.01,
-                                                            95.0, 0, 100)])]),
-     (None, {
-         'util': (90.0, 95.0)
-     }, [(0, 'Total CPU: 0.1%', [('util', 0.1, 90.0, 95.0, 0, 100)])])],
-    'network_io': [('Summary', {
-        'errors_in': (0.01, 0.1),
-        'errors_out': (0.01, 0.1)
-    }, [(0, '[0] (up) speed unknown', [])])]
+        [(None,
+          {'util': (0.01, 95.0)},
+          [(1, 'Total CPU: 0.1% (warn/crit at 0.01%/95.0%)', [('util', 0.1, 0.01, 95.0, 0, 100)])]),
+         (None,
+          {'util': (90.0, 95.0)},
+          [(0, 'Total CPU: 0.1%', [('util', 0.1, 90.0, 95.0, 0, 100)])])],
+    'disk_io':
+        [('Summary',
+          {},
+          [(0, 'Read: 50.00 B/s', [('disk_read_throughput', 50.0, None, None)]),
+           (0, 'Write: 66.67 B/s', [('disk_write_throughput', 66.66666666666667, None, None)]),
+           (0, 'Read operations: 16.67 1/s', [('disk_read_ios', 16.666666666666668, None, None)]),
+           (0, 'Write operations: 33.33 1/s', [('disk_write_ios', 33.333333333333336, None, None)]),
+           ])],
+    'network_io':
+        [('Summary',
+          {'errors_in': (0.01, 0.1), 'errors_out': (0.01, 0.1)},
+          [(0, '[0] (up) speed unknown, In: 59.01 B/s, Out: 465.70 B/s',
+            [('in', 59.00666666666667, None, None, 0, None),
+             ('inucast', 0.0, None, None, None, None), ('innucast', 0.0, None, None, None, None),
+             ('indisc', 0.0, None, None, None, None), ('inerr', 0.0, 0.01, 0.1, None, None),
+             ('out', 465.70166666666665, None, None, 0, None),
+             ('outucast', 0.0, None, None, None, None), ('outnucast', 0.0, None, None, None, None),
+             ('outdisc', 0.0, None, None, None, None), ('outerr', 0.0, 0.01, 0.1, None, None),
+             ('outqlen', 0)])])]
 }

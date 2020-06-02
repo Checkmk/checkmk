@@ -46,17 +46,23 @@ def parse_aws_ec2(info):
 
 def check_aws_ec2_status_check(item, params, parsed):
     # item is None, therefore we cannot use @get_parsed_item_data
-    metrics = parsed.get(EC2DefaultItemName)
-    if metrics is None:
-        return
+    go_stale = True
 
+    metrics = parsed.get(EC2DefaultItemName)
     for title, key in [
         ('System', 'StatusCheckFailed_System'),
         ('Instance', 'StatusCheckFailed_Instance'),
     ]:
-        state, state_readable =\
-            _get_status_check_readable(metrics[key])
+        try:
+            state, state_readable =\
+                _get_status_check_readable(metrics[key])
+        except KeyError:
+            continue
         yield state, "%s: %s" % (title, state_readable)
+        go_stale = False
+
+    if go_stale:
+        raise MKCounterWrapped("Currently no data from AWS")
 
 
 def _get_status_check_readable(value):
@@ -92,15 +98,19 @@ factory_settings['aws_cpu_credits'] = {
 def check_aws_ec2_cpu_credits(item, params, parsed):
     # item is None, therefore we cannot use @get_parsed_item_data
     metrics = parsed.get(EC2DefaultItemName)
-    if metrics is None:
-        return
-
-    yield 0, "Usage: %.2f" % metrics['CPUCreditUsage']
-    warn, crit = params["balance_levels_lower"]
-    yield check_levels(metrics['CPUCreditBalance'],
-                       "aws_cpu_credit_balance", (None, None, warn, crit),
-                       human_readable_func=lambda x: "%.2f" % x,
-                       infoname='Balance')
+    return check_aws_metrics([{
+        'metric_val': metrics.get(cw_metric_name),
+        'metric_name': metric_name,
+        'levels': levels,
+        'human_readable_func': human_readable_func,
+        'info_name': info_name,
+    } for cw_metric_name, metric_name, levels, human_readable_func, info_name in zip(
+        ['CPUCreditUsage', 'CPUCreditBalance'],
+        [None, 'aws_cpu_credit_balance'],
+        [None, (None, None) + params["balance_levels_lower"]],
+        [lambda x: "%.2f" % x] * 2,
+        ['Usage', 'Balance'],
+    )])
 
 
 check_info['aws_ec2.cpu_credits'] = {
@@ -132,8 +142,8 @@ factory_settings['aws_ec2_cpu_util_default_levels'] = {
 def check_aws_ec2_cpu_util(item, params, parsed):
     # item is None, therefore we cannot use @get_parsed_item_data
     metrics = parsed.get(EC2DefaultItemName)
-    if metrics is None:
-        return
+    if metrics is None or 'CPUUtilization' not in metrics:
+        raise MKCounterWrapped("Currently no data from AWS")
     return check_cpu_util(metrics['CPUUtilization'], params, time.time())
 
 
@@ -159,9 +169,18 @@ check_info['aws_ec2.cpu_util'] = {
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
+# It would be better to use metrics with the statistics "Sum" instead of "Average" for this check
+# (since we want to compute rates). However, this is does not seem to be possible here. AWS
+# publishes the EC2 metrics at 5-minute intervals, whereby each published datapoint consists of 5
+# 1-minute datapoints (one can check this using the statistics "SampleCount", which gives the number
+# of data points in the specified interval). If we request one of the metrics used below for the
+# last 600s (which is what the agent does), we should get a SampleCount of 10, however, we will
+# only get a sample count of 5. Hence, if we used the "Sum" statistics, we would be dividing a sum
+# corresponding to a 5-minute interval by 10 minutes. Note that this problem does not occur when
+# collecting the metrics for a 10-minute interval further in the past (for example from -20 min to
+# -10 min).
+@aws_get_parsed_item_data
 def check_aws_ec2_disk_io(item, params, metrics):
-    now = time.time()
     disk_data = {}
     for key, metrics_key in [
         ("read_ios", "DiskReadOps"),
@@ -172,17 +191,21 @@ def check_aws_ec2_disk_io(item, params, metrics):
         value = metrics.get(metrics_key)
         if value is None:
             continue
-        disk_data[key] = get_rate("aws_ebs_disk_io_%s.%s" % (key, item), now, value)
+        disk_data[key] = value / 60
 
     if not disk_data:
-        return
+        raise MKCounterWrapped("Currently no data from AWS")
 
     return check_diskstat_dict(item, params, {item: disk_data})
 
 
 check_info['aws_ec2.disk_io'] = {
-    'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['DiskReadOps', 'DiskWriteOps', 'DiskReadBytes', 'DiskWriteBytes']),
+    'inventory_function': lambda p: inventory_aws_generic(p, [
+        'DiskReadOps',
+        'DiskWriteOps',
+        'DiskReadBytes',
+        'DiskWriteBytes',
+    ]),
     'check_function': check_aws_ec2_disk_io,
     'service_description': 'AWS/EC2 Disk IO %s',
     'includes': ['diskstat.include', 'aws.include'],
@@ -201,36 +224,39 @@ check_info['aws_ec2.disk_io'] = {
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
+# See the comment for disk_io
+@aws_get_parsed_item_data
 def check_aws_ec2_network_io(item, params, metrics):
-    interfaces = [[
-        "0",
-        item,
-        "1",
-        "",
-        "1",
-        metrics['NetworkIn'],
-        "",
-        "",
-        "",
-        "",
-        "",
-        metrics['NetworkOut'],
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        item,
-        "",
-    ]]
-    return check_if_common_single(item, params, interfaces)
+    try:
+        interfaces = [[
+            "0",
+            item,
+            "1",
+            "",
+            "1",
+            metrics['NetworkIn'] / 60,
+            "",
+            "",
+            "",
+            "",
+            "",
+            metrics['NetworkOut'] / 60,
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            item,
+            "",
+        ]]
+    except KeyError:
+        raise MKCounterWrapped("Currently no data from AWS")
+    return check_if_common_single(item, params, interfaces, input_is_rate=True)
 
 
 check_info['aws_ec2.network_io'] = {
-    'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['NetworkIn', 'NetworkOut']),
+    'inventory_function': lambda p: inventory_aws_generic(p, ['NetworkIn', 'NetworkOut']),
     'check_function': check_aws_ec2_network_io,
     'service_description': 'AWS/EC2 Network IO %s',
     'includes': ['aws.include', 'if.include'],

@@ -296,7 +296,7 @@ headers:
 $(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py") $(shell find cmk/gui/cee/plugins/openapi -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
 	export TMPFILE=$$(mktemp);  \
-	$(PIPENV2) run python -m cmk.gui.openapi > $$TMPFILE && \
+	$(PIPENV3) run python -m cmk.gui.openapi > $$TMPFILE && \
 	mv $$TMPFILE $@
 
 

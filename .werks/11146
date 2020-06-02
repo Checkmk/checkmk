@@ -1,0 +1,17 @@
+Title: Optional package: Update Prometheus to 1.1 (improve Node Exporter)
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p13
+Date: 1591095831
+Class: feature
+
+This change updates the optional extension package for the Prometheus suite. It introduces
+the multi-nodes processing for the Node Exporter. This allows Checkmk to handle a Prometheus
+instance where multiple Node Exporters are connected.
+If the Prometheus package v1 was already in use, you should perform a Tabula Rasa after
+upgrading to the package v1.1.
+For a first installation, you can find this package in the Extension packages page. The
+Prometheus package is listed as an optional extension package and becomes available to your
+site after performing the "Install this package" action.

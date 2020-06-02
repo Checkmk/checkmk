@@ -140,6 +140,16 @@ def state_worst(*args):
 class MetricFloat(float):
     """Extends the float representation for Infinities in such way that
     they can be parsed by eval"""
+
+    # TODO: Is this really what we want? Delegate to __repr__ because of a
+    # change in Python 3.8: "Removed __str__ implementations from builtin types
+    # bool, int, float, complex and few classes from the standard library. They
+    # now inherit __str__() from object. As result, defining the __repr__()
+    # method in the subclass of these classes will affect their string
+    # representation."
+    def __str__(self):
+        return super().__repr__()
+
     def __repr__(self):
         # type: () -> str
         if self > sys.float_info.max:

@@ -127,14 +127,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'winperf_phydisk'),
 ]
 
-KNOWN_AUTO_MIGRATION_FAILURES_INV = [
-    # this is a sorted (!) list of auto conversions currently
-    # failing. These are used in various tests, to predict the
-    # expected console output. In an ideal world, this list will (!)
-    # be empty. If that is the case, please remove it entirely.
-    ('section', 'inv_if'),
-]
-
 
 class Scenario(object):  # pylint: disable=useless-object-inheritance
     """Helper class to modify the Check_MK base configuration for unit tests"""

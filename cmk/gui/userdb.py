@@ -13,13 +13,12 @@ import traceback
 import copy
 from pathlib import Path
 
-import six
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId, ContactgroupName
-from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -185,7 +184,7 @@ def user_exists(username):
 
 def _user_exists_according_to_profile(username):
     # type: (UserId) -> bool
-    base_path = config.config_dir + "/" + six.ensure_str(username) + "/"
+    base_path = config.config_dir + "/" + ensure_str(username) + "/"
     return os.path.exists(base_path + "transids.mk") \
             or os.path.exists(base_path + "serial.mk")
 
@@ -580,7 +579,7 @@ def load_users(lock=False):
     result = {}
     for uid, user in users.items():
         # Transform user IDs which were stored with a wrong type
-        uid = ensure_unicode(uid)
+        uid = ensure_str(uid)
 
         profile = contacts.get(uid, {})
         profile.update(user)
@@ -588,14 +587,14 @@ def load_users(lock=False):
 
         # Convert non unicode mail addresses
         if "email" in profile:
-            profile["email"] = ensure_unicode(profile["email"])
+            profile["email"] = ensure_str(profile["email"])
 
     # This loop is only neccessary if someone has edited
     # contacts.mk manually. But we want to support that as
     # far as possible.
     for uid, contact in contacts.items():
         # Transform user IDs which were stored with a wrong type
-        uid = ensure_unicode(uid)
+        uid = ensure_str(uid)
 
         if uid not in result:
             result[uid] = contact
@@ -622,7 +621,7 @@ def load_users(lock=False):
         line = line.strip()
         if ':' in line:
             uid, password = line.strip().split(":")[:2]
-            uid = ensure_unicode(uid)
+            uid = ensure_str(uid)
             if password.startswith("!"):
                 locked = True
                 password = password[1:]
@@ -649,7 +648,7 @@ def load_users(lock=False):
         line = line.strip()
         if ':' in line:
             user_id, serial = line.split(':')[:2]
-            user_id = ensure_unicode(user_id)
+            user_id = ensure_str(user_id)
             if user_id in result:
                 result[user_id]['serial'] = utils.saveint(serial)
 
@@ -657,7 +656,7 @@ def load_users(lock=False):
     directory = cmk.utils.paths.var_dir + "/web/"
     for d in os.listdir(directory):
         if d[0] != '.':
-            uid = ensure_unicode(d)
+            uid = ensure_str(d)
 
             # read special values from own files
             if uid in result:
@@ -678,7 +677,7 @@ def load_users(lock=False):
             try:
                 user_secret_path = Path(directory) / d / "automation.secret"
                 with user_secret_path.open(encoding="utf-8") as f:
-                    secret = six.ensure_str(f.read().strip())  # type: Optional[str]
+                    secret = ensure_str(f.read().strip())  # type: Optional[str]
             except IOError:
                 secret = None
 
@@ -699,7 +698,7 @@ def load_users(lock=False):
 
 def custom_attr_path(userid, key):
     # type: (UserId, str) -> str
-    return cmk.utils.paths.var_dir + "/web/" + six.ensure_str(userid) + "/" + key + ".mk"
+    return cmk.utils.paths.var_dir + "/web/" + ensure_str(userid) + "/" + key + ".mk"
 
 
 def load_custom_attr(userid, key, conv_func, default=None):
@@ -707,7 +706,7 @@ def load_custom_attr(userid, key, conv_func, default=None):
     path = Path(custom_attr_path(userid, key))
     try:
         with path.open(encoding="utf-8") as f:
-            return conv_func(six.ensure_str(f.read().strip()))
+            return conv_func(ensure_str(f.read().strip()))
     except IOError:
         return default
 
@@ -792,7 +791,7 @@ def _save_user_profiles(updated_profiles):
     multisite_keys = _multisite_keys()
 
     for user_id, user in updated_profiles.items():
-        user_dir = cmk.utils.paths.var_dir + "/web/" + six.ensure_str(user_id)
+        user_dir = cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id)
         store.mkdir(user_dir)
 
         # authentication secret for local processes
@@ -839,7 +838,7 @@ def _cleanup_old_user_profiles(updated_profiles):
     ]
     directory = cmk.utils.paths.var_dir + "/web"
     for user_dir in os.listdir(cmk.utils.paths.var_dir + "/web"):
-        if user_dir not in ['.', '..'] and ensure_unicode(user_dir) not in updated_profiles:
+        if user_dir not in ['.', '..'] and ensure_str(user_dir) not in updated_profiles:
             entry = directory + "/" + user_dir
             if not os.path.isdir(entry):
                 continue

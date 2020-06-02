@@ -7,15 +7,7 @@
 checks and tells the user what could be improved."""
 
 import traceback
-from typing import (
-    Dict,
-    Type,
-    Iterator,
-    Text,
-    Optional,
-    List,
-    Any,
-)
+from typing import Dict, Type, Iterator, Optional, List, Any
 
 from livestatus import LocalConnection
 import cmk.utils.defines
@@ -40,7 +32,7 @@ class ACResult(object):
     status = None  # type: Optional[int]
 
     def __init__(self, text):
-        # type: (Text) -> None
+        # type: (str) -> None
         super(ACResult, self).__init__()
         self.text = text
         self.site_id = config.omd_site()
@@ -71,7 +63,7 @@ class ACResult(object):
         return worst_cls(", ".join(texts))
 
     def status_name(self):
-        # type: () -> Text
+        # type: () -> str
         if self.status is None:
             return u""
         return cmk.utils.defines.short_service_state_name(self.status)
@@ -155,11 +147,11 @@ class ACTest(object):
         raise NotImplementedError()
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     def is_relevant(self):
@@ -208,7 +200,7 @@ class ACTest(object):
         return max([0] + [(r.status or 0) for r in self.results])
 
     def status_name(self):
-        # type: () -> Text
+        # type: () -> str
         return cmk.utils.defines.short_service_state_name(self.status())
 
     @property

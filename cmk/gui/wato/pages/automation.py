@@ -8,7 +8,7 @@ automation functions on slaves,"""
 
 import traceback
 
-import six
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -127,7 +127,7 @@ class ModeAutomation(AjaxPage):
     def _execute_push_profile(self):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
-            html.write(six.ensure_str(watolib.mk_repr(self._automation_push_profile())))
+            html.write(ensure_str(watolib.mk_repr(self._automation_push_profile())))
         except Exception as e:
             logger.exception("error pushing profile")
             if config.debug:

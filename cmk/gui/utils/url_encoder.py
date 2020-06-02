@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Optional
-import six
+import urllib.parse
+
+from six import ensure_str
 
 from cmk.gui.type_defs import HTTPVariables
 
@@ -34,11 +36,11 @@ class URLEncoder(object):
                 # we need to be compatible with the previous behavior.
                 value = ""
 
-            value = six.ensure_str(value)
+            value = ensure_str(value)
             #assert type(value) == str, "%s: %s" % (varname, value)
             pairs.append((varname, value))
 
-        return six.moves.urllib.parse.urlencode(pairs)
+        return urllib.parse.urlencode(pairs)
 
     def urlencode(self, value):
         # type: (Optional[str]) -> str
@@ -48,6 +50,6 @@ class URLEncoder(object):
         if value is None:
             return ""
 
-        value = six.ensure_str(value)
+        value = ensure_str(value)
         assert isinstance(value, str)
-        return six.moves.urllib.parse.quote_plus(value)
+        return urllib.parse.quote_plus(value)

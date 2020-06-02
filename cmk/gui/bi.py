@@ -18,7 +18,7 @@ from contextlib import contextmanager
 import traceback
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
-import six
+from six import ensure_binary
 from livestatus import SiteId, LivestatusRow
 
 from cmk.utils.defines import host_state_name
@@ -464,7 +464,7 @@ class JobWorker(multiprocessing.Process):
 
         # Generates a unique id for the given entry
         def get_hash(entry):
-            return hashlib.md5(six.ensure_binary(repr(entry))).hexdigest()
+            return hashlib.md5(ensure_binary(repr(entry))).hexdigest()
 
         for group in set(groups):  # Flattened groups
             new_entries_hash = list(map(get_hash, new_entries))
@@ -2148,7 +2148,7 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
                     "title": "%s - %s" % (hostname, service)
                 })
 
-    found.sort()
+    found.sort(key=lambda item: item.get("title"))
 
     for entry in found:
         if "service" in entry:
@@ -2376,7 +2376,10 @@ def execute_rule_node(node, status_info, aggregation_options):
     state["in_downtime"] = isinstance(dt_state, (int, float)) and dt_state >= dt_threshold
 
     # Compute acknowledgedment state
-    if state["state"] > 0:  # Non-OK-State -> compute acknowledgedment
+    state_to_compute = state.get("state")
+    if state_to_compute is None:
+        state["acknowledged"] = False
+    elif state_to_compute > 0:  # Non-OK-State -> compute acknowledgedment
         ack_state = func(*([ack_states] + funcargs))
         state["acknowledged"] = ack_state["state"] == 0  # would be OK if acked problems would be OK
     else:

@@ -4,27 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
-from __future__ import division
 
 from collections import OrderedDict
 import colorsys
 import random
 import shlex
-from typing import (
-    Any,
-    AnyStr,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Text,
-    Tuple,
-    Union,
-)
+from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
-import six
+from six import ensure_binary, ensure_str
 
 import cmk.utils.regex
 from cmk.utils.memoize import MemoizeCache
@@ -266,10 +253,10 @@ def _float_or_int(val):
 def _split_perf_data(perf_data_string):
     # type: (AnyStr) -> List[AnyStr]
     "Split the perf data string into parts. Preserve quoted strings!"
-    parts = shlex.split(six.ensure_str(perf_data_string))
+    parts = shlex.split(ensure_str(perf_data_string))
     if isinstance(perf_data_string, bytes):
-        return [six.ensure_binary(s) for s in parts]
-    return [six.ensure_text(s) for s in parts]
+        return [ensure_binary(s) for s in parts]
+    return [ensure_str(s) for s in parts]
 
 
 def perfvar_translation(perfvar_name, check_command):
@@ -949,7 +936,7 @@ def MetricName():
         if value is None:
             raise MKUserError(varprefix, _("You need to select a metric"))
 
-    choices = [(None, "")]  # type: List[Tuple[Any, Text]]
+    choices = [(None, "")]  # type: List[Tuple[Any, str]]
     choices += [
         (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
     ]

@@ -11,9 +11,9 @@ PYTHON_VERSION=2.7
 if [ $# -gt 0 ]; then
     FILE_ARG="${@: -1}"
     if [[ "$FILE_ARG" =~ "/tests-py3/" ]] && [[ "$FILE_ARG" == *.py ]]; then
-        PYTHON_VERSION=3.7
+        PYTHON_VERSION=3.8
     elif test -f "$FILE_ARG" && head -n 1 "$FILE_ARG" | grep -q '^#!.*python3$' >/dev/null 2>&1; then
-        PYTHON_VERSION=3.7
+        PYTHON_VERSION=3.8
     fi
 fi
 echo $PYTHON_VERSION

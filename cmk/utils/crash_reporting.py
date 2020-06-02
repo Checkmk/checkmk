@@ -19,14 +19,14 @@ import sys
 import traceback
 from typing import Any, Dict, Iterator, Optional, Tuple, Type
 import uuid
+import urllib.parse
 
-import six
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
-from cmk.utils.encoding import ensure_unicode
 
 
 @contextlib.contextmanager
@@ -205,13 +205,13 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
-        return cmk.utils.paths.crash_dir / six.ensure_str(self.type()) / six.ensure_str(ident_text)
+        return cmk.utils.paths.crash_dir / ensure_str(self.type()) / ensure_str(ident_text)
 
     def local_crash_report_url(self):
         # type: () -> str
         """Returns the site local URL to the current crash report"""
-        return "crash.py?%s" % six.moves.urllib.parse.urlencode([("component", self.type()),
-                                                                 ("ident", self.ident_to_text())])
+        return "crash.py?%s" % urllib.parse.urlencode([("component", self.type()),
+                                                       ("ident", self.ident_to_text())])
 
 
 def _get_generic_crash_info(type_name, details):
@@ -277,7 +277,7 @@ def _get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return ensure_unicode(
+    return ensure_str(
         base64.b64encode(
             _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"),
                                    maxsize=5 * 1024 * 1024)))

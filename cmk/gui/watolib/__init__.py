@@ -39,7 +39,6 @@ from pathlib import Path
 
 import requests
 import urllib3  # type: ignore[import]
-import six
 
 import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon

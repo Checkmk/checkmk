@@ -5,9 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Set
 
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 from cmk.base.check_utils import RawAgentData
+from cmk.base.config import SectionPlugin
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 from cmk.fetchers import TCPDataFetcher  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.type_defs import HostName, HostAddress
@@ -30,9 +33,19 @@ from .abstract import CheckMKAgentDataSource, verify_ipaddress
 class TCPDataSource(CheckMKAgentDataSource):
     _use_only_cache = False
 
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(TCPDataSource, self).__init__(hostname, ipaddress)
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            selected_raw_sections=None,  # type: Optional[Dict[PluginName, SectionPlugin]]
+    ):
+        # type: (...) -> None
+        super(TCPDataSource, self).__init__(
+            hostname,
+            ipaddress,
+            None if selected_raw_sections is None else
+            {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
+        )
         self._port = None  # type: Optional[int]
         self._timeout = None  # type: Optional[float]
 

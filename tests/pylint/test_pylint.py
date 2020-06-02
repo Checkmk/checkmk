@@ -93,12 +93,6 @@ def _get_files_to_check(pylint_test_dir):
     if is_enterprise_repo():
         _compile_bakery_plugins(pylint_test_dir)
 
-    # Not checking compiled check, inventory, bakery plugins with Python 3
-    if sys.version_info[0] == 3:
-        files += [
-            pylint_test_dir,
-        ]
-
     return files
 
 

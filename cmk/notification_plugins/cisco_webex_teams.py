@@ -9,11 +9,7 @@ Send notification messages to Cisco Webex Teams
 
 Use a Cisco Webex Teams webhook to send notification messages
 """
-from __future__ import unicode_literals
-
 from typing import Dict
-
-import six
 
 import cmk.notification_plugins.utils as utils
 
@@ -30,10 +26,10 @@ def cisco_webex_teams_msg(context):
     if context.get("WHAT", None) == "SERVICE":
         monitored_type = "Service"
         host_service_info = "Host: %s (IP: %s)  \nService: %s" % \
-                            (utils.format_link(six.ensure_str("<%s|%s>"), utils.host_url_from_context(context),
+                            (utils.format_link("<%s|%s>", utils.host_url_from_context(context),
                                                context["HOSTNAME"]),
                              context["HOSTADDRESS"],
-                             utils.format_link(six.ensure_str("<%s|%s>"), utils.service_url_from_context(context),
+                             utils.format_link("<%s|%s>", utils.service_url_from_context(context),
                                                context["SERVICEDESC"]))
         state = "State: %s" % context["SERVICESTATE"]
         output = context["SERVICEOUTPUT"]
@@ -42,7 +38,7 @@ def cisco_webex_teams_msg(context):
     else:
         monitored_type = "Host"
         host_service_info = "Host: %s (IP: %s)" % \
-                            (utils.format_link(six.ensure_str("<%s|%s>"), utils.host_url_from_context(context),
+                            (utils.format_link("<%s|%s>", utils.host_url_from_context(context),
                                                context["HOSTNAME"]), context["HOSTADDRESS"])
         state = "State: %s" % context["HOSTSTATE"]
         output = context["HOSTOUTPUT"]

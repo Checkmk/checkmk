@@ -3,13 +3,17 @@ properties([
 ])
 
 def NODE = ''
+def DOCKER_TAG_DEFAULT
 withFolderProperties{
     NODE = env.BUILD_NODE
+    DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
 node (NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
+        // We don't have the "versioning" library here. For this reason we can not use versioning.select_docker_tag.
+        // Always use the default docker tag we got from the environment.
+        def COMMON_IMAGE = docker.image('ubuntu-19.04:' + DOCKER_TAG_DEFAULT)
         COMMON_IMAGE.pull()
         // The commands are executed with the 1001:1000 UID:GID (non-root).
         // This is the UID of the jenkins user on the node which does not exist

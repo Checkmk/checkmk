@@ -58,7 +58,7 @@ checks = {
             'H11 11', {}, [
                 (
                     0,
-                    'Worker: OK\nODBC Driver Version: 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55',
+                    'Worker: OK\nODBC Driver Version: SAP HDB 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55',
                     []
                 )
             ]
@@ -67,7 +67,7 @@ checks = {
             'H22 22', {}, [
                 (
                     0,
-                    'Standby: OK\nODBC Driver Version: 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55',
+                    'Standby: OK\nODBC Driver Version: SAP HDB 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55',
                     []
                 )
             ]
@@ -76,7 +76,7 @@ checks = {
             'H33 33', {}, [
                 (
                     2,
-                    'No connect\nODBC Driver Version: 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55',
+                    'No connect\nODBC Driver Version: SAP HDB 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55',
                     []
                 )
             ]

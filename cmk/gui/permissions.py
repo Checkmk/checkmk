@@ -6,7 +6,8 @@
 
 import abc
 from typing import Type, List
-import six
+
+from six import ensure_str
 
 import cmk.utils.plugin_registry
 
@@ -146,7 +147,7 @@ def declare_permission_section(name, title, prio=50, do_sort=False):
 # Some dynamically registered permissions still use this
 def declare_permission(name, title, description, defaults):
     if not isinstance(name, str):
-        name = six.ensure_str(name, encoding="ascii")
+        name = ensure_str(name, encoding="ascii")
 
     section_name, permission_name = name.split(".", 1)
 

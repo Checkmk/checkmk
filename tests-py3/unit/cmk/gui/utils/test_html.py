@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import json.encoder  # type: ignore[import]
+import json.encoder
+
 import pytest  # type: ignore[import]
-import six
+from six import ensure_str
 
 from cmk.gui.utils.html import HTML
 
@@ -59,10 +60,10 @@ def test_class_HTML():
     assert HTML() == HTML('')
     assert HTML(HTML()) == HTML()
     # One day we will fix this!
-    assert str(A) == six.ensure_text(a), str(A)
-    assert "%s" % A == six.ensure_text(a), "%s" % A
+    assert str(A) == ensure_str(a), str(A)
+    assert "%s" % A == ensure_str(a), "%s" % A
     assert json.loads(json.dumps(A)) == A
-    assert repr(A) == 'HTML(\"%s\")' % six.ensure_str(A.value)
+    assert repr(A) == 'HTML(\"%s\")' % ensure_str(A.value)
     assert len(B) == len(b)
     assert str(B) == str(b)
 
@@ -111,7 +112,7 @@ def test_class_HTML():
 
     assert A == a
 
-    assert ("%s" % A) == six.ensure_text(a)
+    assert ("%s" % A) == ensure_str(a)
 
     assert B + C != C + B
 

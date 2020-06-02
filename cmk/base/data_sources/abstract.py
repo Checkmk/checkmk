@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from typing import AnyStr, Dict, Generic, List, Optional, Set, Tuple, TypeVar, Union, cast
 
-import six
+from six import ensure_binary, ensure_str
 
 import cmk.utils
 import cmk.utils.agent_simulator as agent_simulator
@@ -24,7 +24,7 @@ import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
-from cmk.utils.encoding import convert_to_unicode, ensure_bytestr
+from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout, MKSNMPError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
@@ -37,8 +37,11 @@ from cmk.utils.type_defs import (
     ServiceCheckResult,
     ServiceDetails,
     ServiceState,
+    SourceType,
 )
 from cmk.utils.werks import parse_check_mk_version
+
+from cmk.base.api import PluginName
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -244,7 +247,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                  metaclass=abc.ABCMeta):
     """Abstract base class for all data source classes"""
 
-    _for_mgmt_board = False
+    source_type = SourceType.HOST
 
     # TODO: Clean these options up! We need to change all call sites to use
     #       a single DataSources() object during processing first. Then we
@@ -263,12 +266,26 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     _use_outdated_cache_file = False
     _use_outdated_persisted_sections = False
 
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> None
+        """Initialize the abstract base class
+
+        :param hostname: The name of the host this data source is associated to
+        :param ipaddress: The IP address of the host this data source is associated to
+        :param selected_raw_section_names: A set of raw sections, that we are interested in.
+            If set, we assume that these sections should be produced if possible, and any raw
+            section that is not listed here *may* be omitted.
+        """
         super(DataSource, self).__init__()
         self._hostname = hostname
         self._ipaddress = ipaddress
         self._max_cachefile_age = None  # type: Optional[int]
+        self._selected_raw_section_names = selected_raw_section_names
         self._enforced_check_plugin_names = None  # type: Optional[Set[CheckPluginName]]
 
         self._logger = logging.getLogger("cmk.base.data_source.%s" % self.id())
@@ -442,6 +459,11 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         # type: () -> str
         return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
 
+    def is_relevant_raw_section(self, raw_section_name):
+        # type: (PluginName) -> bool
+        return (self._selected_raw_section_names is None or
+                raw_section_name in self._selected_raw_section_names)
+
     @abc.abstractmethod
     def _gather_check_plugin_names(self):
         # type: () -> Set[CheckPluginName]
@@ -463,7 +485,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         """
         if check_plugin_names is not None:
             self._enforced_check_plugin_names = config.filter_by_management_board(
-                self._hostname, check_plugin_names, self._for_mgmt_board)
+                self._hostname, check_plugin_names, self.source_type is SourceType.MANAGEMENT)
         else:
             self._enforced_check_plugin_names = check_plugin_names
 
@@ -644,9 +666,15 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
 
     # pylint: disable=abstract-method
 
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress)
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> None
+        super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress,
+                                                     selected_raw_section_names)
         self._is_main_agent_data_source = False
 
     # TODO: We should cleanup these old directories one day. Then we can remove this special case
@@ -701,7 +729,7 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
         # type: (RawAgentData) -> bytes
         raw_data = cast(RawAgentData, raw_data)
         # TODO: This does not seem to be needed
-        return ensure_bytestr(raw_data)
+        return ensure_binary(raw_data)
 
     def _convert_to_sections(self, raw_data):
         # type: (RawAgentData) -> AgentHostSections
@@ -781,10 +809,8 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
                 if raw_nostrip is None:
                     line = stripped_line
 
-                if encoding:
-                    decoded_line = convert_to_unicode(line, std_encoding=six.ensure_str(encoding))
-                else:
-                    decoded_line = convert_to_unicode(line)
+                decoded_line = ensure_str_with_fallback(
+                    line, encoding=("utf-8" if encoding is None else encoding), fallback="latin-1")
 
                 section_content.append(decoded_line.split(separator))
 
@@ -794,7 +820,7 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
     @staticmethod
     def _parse_section_header(headerline):
         # type: (bytes) -> Tuple[str, Dict[str, Optional[str]]]
-        headerparts = six.ensure_str(headerline).split(":")
+        headerparts = ensure_str(headerline).split(":")
         section_name = headerparts[0]
         section_options = {}  # type: Dict[str, Optional[str]]
         for option in headerparts[1:]:
@@ -807,7 +833,7 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
 
     def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
         # type: (bytes) -> Optional[HostName]
-        piggybacked_hostname = six.ensure_str(orig_piggyback_header[4:-4])
+        piggybacked_hostname = ensure_str(orig_piggyback_header[4:-4])
         if not piggybacked_hostname:
             return None
 
@@ -827,8 +853,8 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
         if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
             return orig_section_header
         return b'<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3],
-                                            six.ensure_binary("%d" % cached_at),
-                                            six.ensure_binary("%d" % cache_age))
+                                            ensure_binary(
+                                                "%d" % cached_at), ensure_binary("%d" % cache_age))
 
     # TODO: refactor
     def _summary_result(self, for_checking):
@@ -1033,7 +1059,7 @@ def _normalize_ip_addresses(ip_addresses):
     if not isinstance(ip_addresses, list):
         ip_addresses = ip_addresses.split()
 
-    decoded_ip_addresses = [six.ensure_text(word) for word in ip_addresses]
+    decoded_ip_addresses = [ensure_str(word) for word in ip_addresses]
     expanded = [word for word in decoded_ip_addresses if '{' not in word]
     for word in decoded_ip_addresses:
         if word in expanded:

@@ -679,7 +679,7 @@ def test_bulk_discovery_start_with_defaults(web, local_test_hosts):
     assert "discovery successful" in status["job"]["result_msg"]
     assert "discovery started" in status["job"]["output"]
     assert "test-host: discovery successful" in status["job"]["output"]
-    assert "63 added" in status["job"]["output"]
+    assert "46 added" in status["job"]["output"]
     assert "discovery successful" in status["job"]["output"]
 
 

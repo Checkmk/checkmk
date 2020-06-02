@@ -32,13 +32,9 @@ class SNMPTree(ABCSNMPTree):
     be handed a list of lists with the values of the corresponding
     OIDs.
     """
-    def __init__(self, base=None, oids=None):
+    def __init__(self, *, base, oids):
         # type: (str, List[Union[str, OIDSpec, OIDEnd]]) -> None
         super(SNMPTree, self).__init__()
-        if base is None or oids is None:
-            # TODO (mo): unhack this CMK-3983
-            raise TypeError("specify exactly 'base' and 'oids' keyword arguments")
-        # replace int by OIDEnd once ready
         self._base = self._sanitize_base(base)
         self._oids = self._sanitize_oids(oids)
 

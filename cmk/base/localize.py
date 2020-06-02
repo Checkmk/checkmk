@@ -11,7 +11,7 @@ import sys
 from typing import Optional, List
 from pathlib import Path
 
-import six
+from six import ensure_str
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
@@ -106,7 +106,7 @@ def do_localize(args):
 
     alias = None  # type: Optional[str]
     if len(args) > 2:
-        alias = six.ensure_text(args[2])
+        alias = ensure_str(args[2])
 
     commands = {
         "update": _localize_update,

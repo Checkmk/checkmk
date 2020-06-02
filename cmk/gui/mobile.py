@@ -4,14 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Set,
-    Text,
-    Tuple,
-    Union,
-    Optional,
-    List,
-)
+from typing import Set, Tuple, Union, Optional, List
 
 import cmk.gui.views as views
 import cmk.gui.config as config
@@ -38,13 +31,13 @@ from cmk.gui.plugins.views.utils import (
 )
 from cmk.gui.plugins.visuals.utils import Filter
 
-HeaderButton = Union[Tuple[str, Text, str], Tuple[str, Text, str, str]]
+HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]
 Items = List[Tuple[str, str, str]]
-NavigationBar = List[Tuple[str, Text, str, str]]
+NavigationBar = List[Tuple[str, str, str, str]]
 
 
 def mobile_html_head(title):
-    # type: (Text) -> None
+    # type: (str) -> None
     html.mobile = True
     html.write(
         """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
@@ -89,7 +82,7 @@ def mobile_html_foot():
 
 
 def jqm_header_button(pos, url, title, icon=""):
-    # type: (str, str, Text, str) -> None
+    # type: (str, str, str, str) -> None
     html.a('',
            href=url,
            class_="ui-btn-%s" % pos,
@@ -102,7 +95,7 @@ def jqm_header_button(pos, url, title, icon=""):
 
 
 def jqm_page_header(title, id_=None, left_button=None, right_button=None):
-    # type: (Text, Optional[str], Optional[HeaderButton], Optional[HeaderButton]) -> None
+    # type: (str, Optional[str], Optional[HeaderButton], Optional[HeaderButton]) -> None
     html.open_div(id_=id_ if id_ else None, **{"data-role": "page"})
     html.open_div(
         **{
@@ -156,7 +149,7 @@ def jqm_page_navfooter(items, current, page_id):
 
 
 def jqm_page_index(title, items):
-    # type: (Text, Items) -> None
+    # type: (str, Items) -> None
     manual_sort = [_("Hosts"), _("Services"), _("Events")]
 
     items.sort(key=lambda x: (x[0], x[2]))
@@ -170,7 +163,7 @@ def jqm_page_index(title, items):
 
 
 def jqm_page_index_topic_renderer(topic, items):
-    # type: (Text, Items) -> None
+    # type: (str, Items) -> None
     has_items_for_topic = any(i for i in items if i[0] == topic)
     if not has_items_for_topic:
         return

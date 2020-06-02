@@ -11,9 +11,8 @@ import subprocess
 from types import TracebackType
 from typing import Optional, Type, Union
 
-import six
+from six import ensure_binary, ensure_str
 
-from cmk.utils.encoding import ensure_bytestr
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import RawAgentData
 
@@ -93,11 +92,11 @@ class ProgramDataFetcher(AbstractDataFetcher):
         if self._process is None:
             raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(
-            input=ensure_bytestr(self._stdin) if self._stdin else None)
+            input=ensure_binary(self._stdin) if self._stdin else None)
         if self._process.returncode == 127:
             exepath = self._cmdline.split()[0]  # for error message, hide options!
-            raise MKFetcherError("Program '%s' not found (exit code 127)" % six.ensure_str(exepath))
+            raise MKFetcherError("Program '%s' not found (exit code 127)" % ensure_str(exepath))
         if self._process.returncode:
             raise MKFetcherError("Agent exited with code %d: %s" %
-                                 (self._process.returncode, six.ensure_str(stderr)))
+                                 (self._process.returncode, ensure_str(stderr)))
         return stdout

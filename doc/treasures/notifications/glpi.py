@@ -3,11 +3,12 @@
 # Create/Update/Remove GLPI Ticket
 # Bulk: No
 
-from socket import socket, AF_UNIX, SOCK_STREAM, SHUT_WR
-import os
+import ast
 import logging
-import time
+import os
 import re
+from socket import socket, AF_UNIX, SOCK_STREAM, SHUT_WR
+import time
 
 log = logging.getLogger("ticket_log")
 
@@ -323,14 +324,7 @@ class LiveStatus(object):
     def query_obj(self, lql):
         lql = lql + "\nOutputFormat: python\n"
         obj_string = "\n".join(list(self.query(lql)))
-
-        if not obj_string:
-            return []
-        try:
-            import ast
-            return ast.literal_eval(obj_string)
-        except ImportError:
-            return eval(obj_string)
+        return ast.literal_eval(obj_string) if obj_string else []
 
     def execute(self, lql):
         sock = socket(AF_UNIX, SOCK_STREAM)

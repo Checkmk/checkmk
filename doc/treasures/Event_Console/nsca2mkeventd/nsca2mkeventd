@@ -8,8 +8,12 @@
 # commands are sent by NSCA to the command pipe. Forwards these
 # events to the local event console daemon.
 
-import os, sys, getopt, traceback, time, socket
-import six
+import getopt
+import os
+import socket
+import sys
+import time
+import traceback
 
 opt_debug = False
 opt_verbose = False

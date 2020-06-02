@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // wtools_service.h
 //
@@ -14,9 +15,9 @@
 #include "wtools.h"
 
 namespace wtools {
-class WinService {
+class WinService final {
 public:
-    enum class StartMode { disabled, stopped, started };
+    enum class StartMode { disabled, stopped, started, delayed };
     enum class ErrorMode { ignore, log };
     explicit WinService(std::wstring_view name);
 
@@ -59,6 +60,8 @@ public:
     }
     LocalResource<SERVICE_FAILURE_ACTIONS> GetServiceFailureActions();
 
+    static std::string pathToRegistry(std::wstring_view service);
+
     bool configureRestart(bool restart);
 
     bool configureStart(StartMode mode);
@@ -68,9 +71,7 @@ public:
 private:
     mutable std::mutex lock_;
     SC_HANDLE handle_ = nullptr;
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class WtoolsService;
-    FRIEND_TEST(WtoolsService, All);
+#if defined(FRIEND_TEST)
     FRIEND_TEST(WtoolsService, Ctor);
 #endif
 };

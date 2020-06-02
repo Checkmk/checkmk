@@ -6,11 +6,8 @@
 
 import abc
 import signal
-import sys
 from types import FrameType
 from typing import NoReturn, Dict, Any, List, Optional
-
-import six
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKTimeout

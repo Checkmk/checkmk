@@ -17,7 +17,7 @@ import time
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 from pathlib import Path
 
-import six
+from six import ensure_binary, ensure_str
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -26,7 +26,7 @@ import cmk.utils.paths
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.snmp_table as snmp_table
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
@@ -152,16 +152,11 @@ class AutomationDiscovery(DiscoveryAutomation):
 
 automations.register(AutomationDiscovery())
 
-if sys.version_info[0] >= 3:
-    StrIO = io.StringIO
-else:
-    StrIO = io.BytesIO
-
 
 # Python 3? use contextlib.redirect_stdout
 @contextlib.contextmanager
 def redirect_output(where):
-    # type: (StrIO) -> Iterator[StrIO]
+    # type: (io.StringIO) -> Iterator[io.StringIO]
     """Redirects stdout/stderr to the given file like object"""
     prev_stdout, prev_stderr = sys.stdout, sys.stderr
     prev_stdout.flush()
@@ -181,7 +176,7 @@ class AutomationTryDiscovery(Automation):
 
     def execute(self, args):
         # type: (List[str]) -> Dict[str, Any]
-        with redirect_output(StrIO()) as buf:
+        with redirect_output(io.StringIO()) as buf:
             log.setup_console_logging()
             log.logger.setLevel(log.VERBOSE)
             check_preview_table, host_labels = self._execute_discovery(args)
@@ -1015,7 +1010,7 @@ class AutomationGetCheckInformation(Automation):
                 if manfile:
                     title = cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
                 else:
-                    title = six.ensure_text(check_plugin_name)
+                    title = ensure_str(check_plugin_name)
 
                 check_infos[check_plugin_name] = {"title": title}
 
@@ -1049,7 +1044,7 @@ class AutomationGetRealTimeChecks(Automation):
         rt_checks = []
         for check_plugin_name, check in config.check_info.items():
             if check["handle_real_time_checks"]:
-                title = six.ensure_text(check_plugin_name)
+                title = ensure_str(check_plugin_name)
                 try:
                     manfile = manuals.get(check_plugin_name)
                     if manfile:
@@ -1059,7 +1054,7 @@ class AutomationGetRealTimeChecks(Automation):
                         raise
 
                 rt_checks.append(
-                    (check_plugin_name, u"%s - %s" % (six.ensure_text(check_plugin_name), title)))
+                    (check_plugin_name, u"%s - %s" % (ensure_str(check_plugin_name), title)))
 
         return rt_checks
 
@@ -1275,7 +1270,7 @@ class AutomationDiagHost(Automation):
             # respect the ecoding options of sections.
             # If this is a problem, we would have to apply parse and
             # decode logic and unparse the decoded output again.
-            output += convert_to_unicode(source_output)
+            output += ensure_str_with_fallback(source_output, encoding="utf-8", fallback="latin-1")
 
             if source.exception():
                 state = 1
@@ -1570,7 +1565,7 @@ class AutomationGetAgentOutput(Automation):
                     try:
                         for oid, value in snmp.walk_for_export(host_config, walk_oid):
                             raw_oid_value = "%s %s\n" % (oid, value)
-                            lines.append(six.ensure_binary(raw_oid_value))
+                            lines.append(ensure_binary(raw_oid_value))
                     except Exception as e:
                         if cmk.utils.debug.enabled():
                             raise
@@ -1798,7 +1793,7 @@ class AutomationCreateDiagnosticsDump(Automation):
 
     def execute(self, args):
         # type: (List[str]) -> Dict[str, Any]
-        with redirect_output(StrIO()) as buf:
+        with redirect_output(io.StringIO()) as buf:
             log.setup_console_logging()
             dump = DiagnosticsDump()
             dump.create()

@@ -13,9 +13,8 @@ import re
 import pprint
 from typing import AnyStr, Dict, List, Optional
 
-import six
+from six import ensure_binary, ensure_str
 
-from cmk.utils.encoding import ensure_unicode
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
@@ -78,10 +77,10 @@ class StructuredDataTree:
         # type: (AnyStr) -> None
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        # TODO: Check if bytes/ensure_unicode is necessary.
+        # TODO: Check if bytes/ensure_str is necessary.
         if not isinstance(tree_path, (bytes, str)):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
-        tp = ensure_unicode(tree_path)
+        tp = ensure_str(tree_path)
         if not tp.endswith((":", ".")):
             raise MKGeneralException("No valid tree path.")
         if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tp)):
@@ -113,7 +112,7 @@ class StructuredDataTree:
         store.save_object_to_file(filepath, output, pretty=pretty)
         # TODO: Can be set to encoding="utf-8" once we are on Python 3 only
         with gzip.open(filepath + ".gz", "wb") as f:
-            f.write(six.ensure_binary(repr(output) + "\n"))
+            f.write(ensure_binary(repr(output) + "\n"))
         # Inform Livestatus about the latest inventory update
         store.save_text_to_file("%s/.last" % path, u"")
 

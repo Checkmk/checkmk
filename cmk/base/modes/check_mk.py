@@ -8,7 +8,7 @@ import os
 import sys
 from typing import Optional, Dict, List
 
-import six
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.tty as tty
@@ -396,10 +396,10 @@ def mode_dump_agent(hostname):
         for source in sources.get_data_sources():
             source_state, source_output, _source_perfdata = source.get_summary_result_for_checking()
             if source_state != 0:
-                console.error("ERROR [%s]: %s\n", source.id(), six.ensure_str(source_output))
+                console.error("ERROR [%s]: %s\n", source.id(), ensure_str(source_output))
                 has_errors = True
 
-        out.output(six.ensure_str(output, errors="surrogateescape"))
+        out.output(ensure_str(output, errors="surrogateescape"))
         if has_errors:
             sys.exit(1)
     except Exception as e:
@@ -1689,7 +1689,8 @@ Copyright (C) 2009 Mathias Kettner
     the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
     Boston, MA 02111-1307, USA.
 
-""", cmk_version.__version__, six.ensure_str(cmk_version.edition_short().upper()))
+""", cmk_version.__version__,
+        cmk_version.edition_short().upper())
 
 
 modes.register(

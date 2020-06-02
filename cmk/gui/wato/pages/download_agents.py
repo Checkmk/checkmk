@@ -7,11 +7,7 @@
 
 import os
 import glob
-
-from typing import (
-    List,
-    Text,
-)
+from typing import List
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -41,7 +37,7 @@ class ModeDownloadAgents(WatoMode):
         return ["download_agents"]
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Agents and Plugins")
 
     def buttons(self):
@@ -104,7 +100,7 @@ class ModeDownloadAgents(WatoMode):
         html.close_div()
 
     def _download_table(self, title, paths):
-        # type: (Text, List[str]) -> None
+        # type: (str, List[str]) -> None
         forms.header(title)
         forms.container()
         for path in paths:

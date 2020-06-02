@@ -172,6 +172,12 @@ metric_info['aws_rds_replication_slot_disk_usage'] = {
     'color': '13/a',
 }
 
+metric_info['aws_rds_replica_lag'] = {
+    'title': _('Replica Lag'),
+    'unit': 's',
+    'color': '14/a',
+}
+
 metric_info['aws_rds_oldest_replication_slot_lag'] = {
     'title': _('Oldest Replication Slot Lag Size'),
     'unit': 'bytes',

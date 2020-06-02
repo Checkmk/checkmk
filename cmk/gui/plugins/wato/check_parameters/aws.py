@@ -982,35 +982,17 @@ rulespec_registry.register(
 def _parameter_valuespec_aws_rds_replica_lag():
     return Dictionary(elements=[
         ('lag_levels',
-         Alternative(title=_("Upper levels replica lag"),
-                     style="dropdown",
-                     elements=[
-                         Tuple(title=_("Set levels"),
-                               elements=[
-                                   Age(title=_("Warning at")),
-                                   Age(title=_("Critical at")),
-                               ]),
-                         Tuple(title=_("No levels"),
-                               elements=[
-                                   FixedValue(None, totext=""),
-                                   FixedValue(None, totext=""),
-                               ]),
-                     ])),
+         Tuple(title=_("Upper levels on the replica lag"),
+               elements=[
+                   Float(title=_("Warning at"), unit='s', display_format="%.3f"),
+                   Float(title=_("Critical at"), unit='s', display_format="%.3f")
+               ])),
         ('slot_levels',
-         Alternative(title=_("Upper levels the oldest replication slot lag"),
-                     style="dropdown",
-                     elements=[
-                         Tuple(title=_("Set levels"),
-                               elements=[
-                                   Filesize(title=_("Warning at")),
-                                   Filesize(title=_("Critical at")),
-                               ]),
-                         Tuple(title=_("No levels"),
-                               elements=[
-                                   FixedValue(None, totext=""),
-                                   FixedValue(None, totext=""),
-                               ]),
-                     ])),
+         Tuple(title=_("Upper levels on the oldest replication slot lag"),
+               elements=[
+                   Filesize(title=_("Warning at")),
+                   Filesize(title=_("Critical at")),
+               ])),
     ])
 
 

@@ -4,21 +4,22 @@ catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:
- This check monitors
+ This check monitors the
 
- - the CPU credits
+ - CPU Credit Usage
 
- - balance spent resp. earned
+ - CPU Credit Balance
 
- by RDS instances.
+ - Burst Balance
+
+ of RDS instances. The reported values for the CPU credit usage
+ correspond to intervals of 5 minutes.
 
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- No default levels are set.
-
- Lower levels for the CPU credit usage and the burst balance
- can be set via the rule "AWS/RDS CPU Credits".
+ No default levels are set. Lower levels for the CPU credit usage
+ and the burst balance can be set via the rule "AWS/RDS CPU Credits".
 
 item:
  Name of the instance and region name (to avoid duplicate services

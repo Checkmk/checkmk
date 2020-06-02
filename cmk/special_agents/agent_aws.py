@@ -2904,30 +2904,35 @@ class RDS(AWSSectionCloudwatch):
         return AWSColleagueContents({}, 0.0)
 
     def _get_metrics(self, colleague_contents):
+        # the documentation
+        # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MonitoringOverview.html
+        # seems to be partially wrong: FailedSQLServerAgentJobsCount has to be queried in Counts
+        # (instead of Count/Minute) and OldestReplicationSlotLag, ReplicationSlotDiskUsage and
+        # TransactionLogsDiskUsage have to be queried in Bytes (instead of Megabytes)
         metrics = []
         for idx, (instance_id, instance) in enumerate(colleague_contents.content.items()):
-            for metric_name, unit in [
-                ("BinLogDiskUsage", "Bytes"),
-                ("BurstBalance", "Percent"),
-                ("CPUUtilization", "Percent"),
-                ("CPUCreditUsage", "Count"),
-                ("CPUCreditBalance", "Count"),
-                ("DatabaseConnections", "Count"),
-                ("DiskQueueDepth", "Count"),
-                ("FailedSQLServerAgentJobsCount", "Count/Second"),
-                ("NetworkReceiveThroughput", "Bytes/Second"),
-                ("NetworkTransmitThroughput", "Bytes/Second"),
-                ("OldestReplicationSlotLag", "Megabytes"),
-                ("ReadIOPS", "Count/Second"),
-                ("ReadLatency", "Seconds"),
-                ("ReadThroughput", "Bytes/Second"),
-                ("ReplicaLag", "Seconds"),
-                ("ReplicationSlotDiskUsage", "Megabytes"),
-                ("TransactionLogsDiskUsage", "Megabytes"),
-                ("TransactionLogsGeneration", "Megabytes/Second"),
-                ("WriteIOPS", "Count/Second"),
-                ("WriteLatency", "Seconds"),
-                ("WriteThroughput", "Bytes/Second"),
+            for metric_name, stat, unit in [
+                ("BinLogDiskUsage", "Average", "Bytes"),
+                ("BurstBalance", "Average", "Percent"),
+                ("CPUUtilization", "Average", "Percent"),
+                ("CPUCreditUsage", "Average", "Count"),
+                ("CPUCreditBalance", "Average", "Count"),
+                ("DatabaseConnections", "Average", "Count"),
+                ("DiskQueueDepth", "Average", "Count"),
+                ("FailedSQLServerAgentJobsCount", "Sum", "Count"),
+                ("NetworkReceiveThroughput", "Average", "Bytes/Second"),
+                ("NetworkTransmitThroughput", "Average", "Bytes/Second"),
+                ("OldestReplicationSlotLag", "Average", "Bytes"),
+                ("ReadIOPS", "Average", "Count/Second"),
+                ("ReadLatency", "Average", "Seconds"),
+                ("ReadThroughput", "Average", "Bytes/Second"),
+                ("ReplicaLag", "Average", "Seconds"),
+                ("ReplicationSlotDiskUsage", "Average", "Bytes"),
+                ("TransactionLogsDiskUsage", "Average", "Bytes"),
+                ("TransactionLogsGeneration", "Average", "Bytes/Second"),
+                ("WriteIOPS", "Average", "Count/Second"),
+                ("WriteLatency", "Average", "Seconds"),
+                ("WriteThroughput", "Average", "Bytes/Second"),
                     #("FreeableMemory", "Bytes"),
                     #("SwapUsage", "Bytes"),
                     #("FreeStorageSpace", "Bytes"),
@@ -2946,11 +2951,10 @@ class RDS(AWSSectionCloudwatch):
                             }]
                         },
                         'Period': self.period,
-                        'Stat': 'Average',
+                        'Stat': stat,
+                        'Unit': unit,
                     },
                 }
-                if unit:
-                    metric['MetricStat']['Unit'] = unit
                 metrics.append(metric)
         return metrics
 

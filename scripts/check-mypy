@@ -48,7 +48,7 @@ fi
 if [ ! -z "$PYTHON3_FILES" ]; then
     $PIPENV 3 run mypy \
         --config-file "$REPO_PATH/mypy-raw.ini" \
-        --python-version 3.7 \
+        --python-version 3.8 \
         --scripts-are-modules \
         --show-error-codes \
         $PYTHON3_FILES

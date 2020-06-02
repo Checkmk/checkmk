@@ -68,7 +68,7 @@ RUN apt-get update \
     pngcrush \
     poedit \
     python-pip \
-    python3.7-dev \
+    python3.8-dev \
     python-polib \
     rpcbind \
     rpm \

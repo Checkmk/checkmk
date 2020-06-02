@@ -23,7 +23,9 @@ def inventory_symantec_av_updates(info):
 def check_symantec_av_updates(_no_item, params, info):
     warn, crit = params
     last_text = info[0][0]
-    if '/' in last_text:
+    if " ".join(info[0]) == "Waiting for update.":
+        return 2, "SEP definition file not found.  'sav info -d' returns 'Waiting for update.'  Try running 'sav liveupdate -u'."
+    elif '/' in last_text:
         if len(last_text) == 10:
             last_broken = time.strptime(last_text, "%m/%d/%Y")
         else:

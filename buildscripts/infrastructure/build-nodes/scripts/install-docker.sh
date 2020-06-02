@@ -16,11 +16,6 @@ ubuntu-*)
     apt-get install -y docker-ce
     rm -rf /var/lib/apt/lists/*
 
-    # This is needed to have access to the docker daemon socket that is exposed to the container
-    # when jobs are executed that need to control docker containers. Yes, this grants a lot of
-    # permissions to the job...
-    groupadd -g 999 docker
-
     exit 0
     ;;
 *)

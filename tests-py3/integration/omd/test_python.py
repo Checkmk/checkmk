@@ -64,7 +64,6 @@ def test_03_pip_interpreter_version(site):
     "cryptography",
     "pysmi",
     "pysnmp",
-    "pymssql",
     "ldap",
     "pymysql",
     "psycopg2",

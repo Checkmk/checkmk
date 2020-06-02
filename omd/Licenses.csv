@@ -78,7 +78,6 @@ Python module: pyghmi,1.2.14,Apache-2.0,https://opensource.org/licenses/Apache-2
 Python module: PyInstaller,3.3.1,GPL-3.0,https://opensource.org/licenses/GPL-3.0,agents/windows/frozen_binaries/src/pip/PyInstaller-3.3.1.tar.gz,,,,
 Python module: PyJWT,1.6.4,MIT,https://opensource.org/licenses/MIT,omd/packages/python-modules/src/PyJWT-1.6.4.tar.gz,,,,
 Python module: pykerberos,1.2.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/python-modules/src/pykerberos-1.2.1.tar.gz,,,,
-Python module: pymssql,2.1.3,LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,omd/packages/python-modules/src/pymssql-2.1.3.tar.gz,,,,
 Python module: PyNaCl,1.3.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/python-modules/src/PyNaCl-1.3.0.tar.gz,,,,
 Python module: pyOpenSSL,16.2.0,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/python-modules/src/pyOpenSSL-16.2.0.tar.gz,,,,
 Python module: PyPDF2,1.26.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/python-modules/src/PyPDF2-1.26.0.tar.gz,,,,

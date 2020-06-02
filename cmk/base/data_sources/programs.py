@@ -11,7 +11,7 @@ from typing import Dict, Optional, Set
 
 from six import ensure_str
 
-from cmk.fetchers import ProgramDataFetcher  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers import ProgramDataFetcher
 
 import cmk.utils.paths
 

@@ -16,7 +16,7 @@ from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 import cmk.base.config as config
 from cmk.base.exceptions import MKAgentError
 
-from cmk.fetchers import PiggyBackDataFetcher  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers import PiggyBackDataFetcher
 
 from .abstract import CheckMKAgentDataSource
 

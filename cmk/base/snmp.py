@@ -31,12 +31,11 @@ from cmk.utils.type_defs import (
 import cmk.base.cleanup
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.fetchers import factory  # pylint: disable=cmk-module-layer-violation
-from cmk.fetchers.snmp_backend import (StoredWalkSNMPBackend  # pylint: disable=cmk-module-layer-violation,
-                                      )
+from cmk.fetchers import factory
+from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
 
 try:
-    from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=cmk-module-layer-violation, ungrouped-imports
+    from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=ungrouped-imports
 except ImportError:
     inline = None  # type: ignore[assignment]
 

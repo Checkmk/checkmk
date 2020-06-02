@@ -20,7 +20,7 @@ from cmk.base.api import PluginName
 from cmk.base.config import IPMICredentials, SectionPlugin
 from cmk.base.exceptions import MKAgentError
 
-from cmk.fetchers import IPMIDataFetcher  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers import IPMIDataFetcher
 
 from .abstract import CheckMKAgentDataSource
 

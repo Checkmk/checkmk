@@ -21,7 +21,7 @@ import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import TagValue, HostgroupName
 from cmk.utils.log import console
 
-import cmk.fetchers.factory as snmp_factory  # pylint: disable=cmk-module-layer-violation
+import cmk.fetchers.factory as snmp_factory
 import cmk.base.data_sources as data_sources
 import cmk.base.config as config
 import cmk.base.discovery as discovery

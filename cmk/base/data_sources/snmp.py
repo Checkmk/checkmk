@@ -34,7 +34,7 @@ from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
 
-from cmk.fetchers import SNMPDataFetcher  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers import SNMPDataFetcher
 
 from .abstract import DataSource, verify_ipaddress
 from .host_sections import AbstractHostSections

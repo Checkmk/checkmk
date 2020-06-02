@@ -54,6 +54,7 @@ import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.snmp as snmp
+import cmk.base.snmp_utils as snmp_utils
 from cmk.base.automations import Automation, MKAutomationError, automations
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -1560,7 +1561,7 @@ class AutomationGetAgentOutput(Automation):
                         success = False
                         output += "[%s] %s\n" % (source.id(), source_output)
             else:
-                host_config = snmp.create_snmp_host_config(hostname)
+                host_config = snmp_utils.create_snmp_host_config(hostname)
 
                 lines = []
                 for walk_oid in snmp.oids_to_walk():

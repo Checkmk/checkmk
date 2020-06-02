@@ -5,16 +5,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Callable, List, Optional, Tuple
+from typing import List, Tuple
 
 from six import iterbytes
 
-from cmk.utils.type_defs import OID, CheckPluginName, DecodedString
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import OID, OIDFunction, ScanFunction, SNMPHostConfig
 
-OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],
-                       Optional[DecodedString]]
-ScanFunction = Callable[[OIDFunction], bool]
+import cmk.base.config as config
+import cmk.base.ip_lookup as ip_lookup
+
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
+
+
+# TODO: This belongs in `cmk.base.config.HostConfig` but we cannot
+# have it there now since `ip_lookup` imports `config` and that
+# results in circular imports.
+def create_snmp_host_config(hostname):
+    # type: (str) -> SNMPHostConfig
+    host_config = config.get_config_cache().get_host_config(hostname)
+
+    # ip_lookup.lookup_ipv4_address() returns Optional[str] in general, but for
+    # all cases that reach the code here we seem to have "str".
+    address = ip_lookup.lookup_ip_address(hostname)
+    if address is None:
+        raise MKGeneralException("Failed to gather IP address of %s" % hostname)
+
+    return host_config.snmp_config(address)
 
 
 def binstring_to_int(binstring):

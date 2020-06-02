@@ -59,6 +59,7 @@ from cmk.utils.type_defs import (
     TagGroups,
     Ruleset,
     CheckVariables,
+    ScanFunction,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPTiming,
@@ -74,7 +75,6 @@ import cmk.base.default_config as default_config
 import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
-import cmk.base.snmp_utils as snmp_utils
 from cmk.base.check_utils import (
     SectionName,
     CheckParameters,
@@ -1409,7 +1409,7 @@ check_config_variables = []  # type:  List[Any]
 # whichs OIDs to fetch for which check (for tabular information)
 snmp_info = {}  # type: Dict[str, Union[Tuple[Any], List[Tuple[Any]]]]
 # SNMP autodetection
-snmp_scan_functions = {}  # type: Dict[str, snmp_utils.ScanFunction]
+snmp_scan_functions = {}  # type: Dict[str, ScanFunction]
 # definitions of active "legacy" checks
 active_check_info = {}  # type: Dict[str, Dict[str, Any]]
 special_agent_info = {}  # type: Dict[str, SpecialAgentInfoFunction]

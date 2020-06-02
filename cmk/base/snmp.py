@@ -21,7 +21,6 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import (
     ABCSNMPBackend,
     DecodedString,
-    HostName,
     OID,
     RawValue,
     SNMPHostConfig,
@@ -29,8 +28,6 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.base.cleanup
-import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
 from cmk.fetchers import factory
 
 try:
@@ -52,19 +49,6 @@ SNMPWalkOptions = Dict[str, List[OID]]
 #   +----------------------------------------------------------------------+
 #   | Top level functions to realize SNMP functionality for Check_MK.      |
 #   '----------------------------------------------------------------------'
-
-
-def create_snmp_host_config(hostname):
-    # type: (str) -> SNMPHostConfig
-    host_config = config.get_config_cache().get_host_config(hostname)
-
-    # ip_lookup.lookup_ipv4_address() returns Optional[str] in general, but for
-    # all cases that reach the code here we seem to have "str".
-    address = ip_lookup.lookup_ip_address(hostname)
-    if address is None:
-        raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-
-    return host_config.snmp_config(address)
 
 
 # Contextes can only be used when check_plugin_name is given.
@@ -236,25 +220,24 @@ def do_snmptranslate(walk_filename):
                                    for translation, line in translated_lines) + "\n")
 
 
-def do_snmpwalk(options, hostnames):
-    # type: (SNMPWalkOptions, List[HostName]) -> None
+def do_snmpwalk(options, host_configs):
+    # type: (SNMPWalkOptions, List[SNMPHostConfig]) -> None
     if "oids" in options and "extraoids" in options:
         raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
 
-    if not hostnames:
+    if not host_configs:
         raise MKBailOut("Please specify host names to walk on.")
 
     if not os.path.exists(cmk.utils.paths.snmpwalks_dir):
         os.makedirs(cmk.utils.paths.snmpwalks_dir)
 
-    for hostname in hostnames:
+    for snmp_config in host_configs:
         #TODO: What about SNMP management boards?
-        snmp_config = create_snmp_host_config(hostname)
-
         try:
-            _do_snmpwalk_on(snmp_config, options, cmk.utils.paths.snmpwalks_dir + "/" + hostname)
+            _do_snmpwalk_on(snmp_config, options,
+                            cmk.utils.paths.snmpwalks_dir + "/" + snmp_config.hostname)
         except Exception as e:
-            console.error("Error walking %s: %s\n" % (hostname, e))
+            console.error("Error walking %s: %s\n" % (snmp_config.hostname, e))
             if cmk.utils.debug.enabled():
                 raise
         cmk.base.cleanup.cleanup_globals()
@@ -306,17 +289,16 @@ def oids_to_walk(options=None):
     return sorted(oids, key=lambda x: list(map(int, x.strip(".").split("."))))
 
 
-def do_snmpget(oid, hostnames):
-    # type: (OID, List[HostName]) -> None
-    assert hostnames
-    for hostname in hostnames:
+def do_snmpget(oid, host_configs):
+    # type: (OID, List[SNMPHostConfig]) -> None
+    assert host_configs
+    for snmp_config in host_configs:
         #TODO what about SNMP management boards?
-        snmp_config = create_snmp_host_config(hostname)
         backend = factory.backend(snmp_config)
         snmp_cache.initialize_single_oid_cache(snmp_config)
 
         value = get_single_oid(snmp_config, oid, backend=backend)
-        sys.stdout.write("%s (%s): %r\n" % (hostname, snmp_config.ipaddress, value))
+        sys.stdout.write("%s (%s): %r\n" % (snmp_config.hostname, snmp_config.ipaddress, value))
         cmk.base.cleanup.cleanup_globals()
 
 

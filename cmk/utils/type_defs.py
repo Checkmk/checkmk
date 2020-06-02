@@ -8,7 +8,19 @@
 import abc
 import enum
 import string
-from typing import Any, AnyStr, Dict, List, NamedTuple, NewType, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    AnyStr,
+    Callable,
+    Dict,
+    List,
+    NamedTuple,
+    NewType,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 from six import ensure_str
 
@@ -87,6 +99,10 @@ Columns = List[Column]
 OID = str
 OIDWithColumns = Tuple[OID, Columns]
 OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]
+
+OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],
+                       Optional[DecodedString]]
+ScanFunction = Callable[[OIDFunction], bool]
 
 # TODO (CMK-4490): Typing here is just wrong as there is no practical
 # difference between an OIDWithColumns and OIDWithSubOIDsAndColumns with

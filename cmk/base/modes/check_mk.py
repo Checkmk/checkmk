@@ -29,6 +29,7 @@ import cmk.base.inventory as inventory
 import cmk.base.inventory_plugins as inventory_plugins
 import cmk.base.check_api as check_api
 import cmk.base.snmp as snmp
+import cmk.base.snmp_utils as snmp_utils
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.profiling as profiling
 import cmk.base.core
@@ -836,14 +837,14 @@ _oids = []  # type: List[str]
 _extra_oids = []  # type: List[str]
 
 
-def mode_snmpwalk(options, args):
+def mode_snmpwalk(options, hostnames):
     # type: (Dict, List[str]) -> None
     if _oids:
         options["oids"] = _oids
     if _extra_oids:
         options["extraoids"] = _extra_oids
 
-    snmp.do_snmpwalk(options, args)
+    snmp.do_snmpwalk(options, [snmp_utils.create_snmp_host_config(host) for host in hostnames])
 
 
 modes.register(
@@ -902,7 +903,7 @@ def mode_snmpget(args):
         cache = config.get_config_cache()
         hostnames.extend(host for host in cache.all_active_realhosts()
                          if cache.get_host_config(host).is_snmp_host)
-    snmp.do_snmpget(oid, hostnames)
+    snmp.do_snmpget(oid, [snmp_utils.create_snmp_host_config(host) for host in hostnames])
 
 
 modes.register(

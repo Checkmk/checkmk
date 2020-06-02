@@ -2,6 +2,7 @@ import java.text.SimpleDateFormat
 
 def DISTRO_LIST_DEFAULT = ''
 def NODE = ''
+def DOCKER_TAG_DEFAULT
 withFolderProperties{
     if(JOB_BASE_NAME == 'nightly_build_containerized') {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST
@@ -10,6 +11,7 @@ withFolderProperties{
     }
 
     NODE = env.BUILD_NODE
+    DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
 properties([
@@ -28,7 +30,10 @@ def PACKAGE_BUILDS = [:]
 def AGENT_LIST = get_agent_list(EDITION)
 def AGENT_BUILDS= [:]
 def DISTRO_LIST = DISTROS.split(' ');
-def BUILD_IMAGE = 'ubuntu-18.04-common'
+
+// We don't have the "versioning" library here. For this reason we can not use versioning.select_docker_tag.
+// Always use the default docker tag we got from the environment.
+def BUILD_IMAGE_NAME = 'ubuntu-19.04:' + DOCKER_TAG_DEFAULT
 
 println("Building for the following Distros:" + DISTRO_LIST)
 currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST + '\nFake artifacts: ' + FAKE_WINDOWS_ARTIFACTS
@@ -70,7 +75,7 @@ def DOCKER_REGISTRY_NO_HTTP
 //
 node(NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
+        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
             stage('Checkout sources') {
                 cleanup_work_directories(DAILY_DATA)
                 dir("${DAILY_DATA}/git") {
@@ -81,7 +86,7 @@ node(NODE) {
                     str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
                     notify = load 'buildscripts/scripts/lib/notify.groovy'
                     withFolderProperties{
-                        DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
+                        DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, DOCKER_TAG_DEFAULT)
                     }
 
                     patch_themes(EDITION)
@@ -125,7 +130,7 @@ try {
                     node(NODE) {
                         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
 
-                            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --privileged") {
+                            docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --privileged") {
                                 build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO_HTTP)
                             }
                         }
@@ -138,7 +143,7 @@ try {
 
     node(NODE) {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+            docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
                 prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
                 create_source_package(DAILY_DATA, CMK_VERS)
 
@@ -170,7 +175,7 @@ try {
             }
             node(NODE) {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+                    docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
                         def PACKAGE_NAME = get_package_name(DAILY_DATA, DISTRO, CMK_VERS)
                         def BUILD_PACKAGE_PATH = DAILY_DATA + "/" + DISTRO + "-dest/" + PACKAGE_NAME
                         def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME

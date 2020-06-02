@@ -309,14 +309,12 @@ def oids_to_walk(options=None):
 
 def do_snmpget(oid, hostnames):
     # type: (OID, List[HostName]) -> None
-    config_cache = config.get_config_cache()
-
     if not hostnames:
-        hostnames = []
-        for host in config_cache.all_active_realhosts():
-            host_config = config_cache.get_host_config(host)
-            if host_config.is_snmp_host:
-                hostnames.append(host)
+        cache = config.get_config_cache()
+        hostnames = [
+            host for host in cache.all_active_realhosts()
+            if cache.get_host_config(host).is_snmp_host
+        ]
 
     for hostname in hostnames:
         #TODO what about SNMP management boards?

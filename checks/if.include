@@ -774,6 +774,14 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
                                   timestamp=this_time)
 
 
+def _get_rate(counter, counter_name, timestamp, input_is_rate):
+    if input_is_rate:
+        if counter:
+            return counter
+        return 0.
+    return get_rate(counter_name, timestamp, saveint(counter), onwrap=RAISE)
+
+
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
 # One case of winperf_if appeared to indicate that in that case Errors = Discards.
 def check_if_common_single(item,
@@ -783,7 +791,8 @@ def check_if_common_single(item,
                            has_nodeinfo=False,
                            group_members=None,
                            group_name="Group",
-                           timestamp=None):
+                           timestamp=None,
+                           input_is_rate=False):
 
     if timestamp is None:
         this_time = time.time()
@@ -972,7 +981,7 @@ def check_if_common_single(item,
             counter_name = _get_counter_name(node, name, item)
 
             try:
-                rate = get_rate(counter_name, this_time, saveint(counter), onwrap=RAISE)
+                rate = _get_rate(counter, counter_name, timestamp, input_is_rate)
                 if force_counter_wrap:
                     raise MKCounterWrapped("Forced counter wrap")
                 rates.append(rate)

@@ -12,8 +12,6 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../../enterprise/cmk/cee/dcd/plugins/connectors/'))
-sys.path.insert(0, os.path.abspath('../../../cmk/base/plugins/agent_based/'))
 sys.path.insert(0, os.path.abspath('../../../'))
 
 
@@ -42,6 +40,9 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+# Instead of absolute module names like "cmk.gui.plugins.dashboard.dashboard_api.v0.IFrameDashlet",
+# that fill the whole page, use the plain module local names of the classes.
+add_module_names = False
 
 # -- Options for HTML output -------------------------------------------------
 

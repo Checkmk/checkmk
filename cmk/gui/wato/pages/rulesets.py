@@ -471,9 +471,10 @@ class ModeEditRuleset(WatoMode):
         super(ModeEditRuleset, self).__init__()
         store = PredefinedConditionStore()
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
-        self._folder = watolib.Folder.current()
 
     def _from_vars(self):
+        self._folder = watolib.Folder.current()
+
         self._name = html.request.get_ascii_input_mandatory("varname")
         self._back_mode = html.request.get_ascii_input_mandatory(
             "back_mode", html.request.get_ascii_input_mandatory("ruleset_back_mode", "rulesets"))

@@ -266,8 +266,7 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid, *, bac
     rowinfo = []  # type: SNMPRowInfo
 
     for context_name in snmp_config.snmpv3_contexts_of(check_plugin_name):
-        rows = backend.walk(snmp_config,
-                            oid=fetchoid,
+        rows = backend.walk(oid=fetchoid,
                             check_plugin_name=check_plugin_name,
                             table_base_oid=base_oid,
                             context_name=context_name)

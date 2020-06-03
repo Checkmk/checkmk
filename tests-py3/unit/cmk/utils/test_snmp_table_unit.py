@@ -36,15 +36,10 @@ SNMPConfig = SNMPHostConfig(
 
 
 class SNMPTestBackend(ABCSNMPBackend):
-    def get(self, snmp_config, oid, context_name=None):
+    def get(self, oid, context_name=None):
         pass
 
-    def walk(self,
-             snmp_config,
-             oid,
-             check_plugin_name=None,
-             table_base_oid=None,
-             context_name=None):
+    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
         return [("%s.%s" % (oid, r), b"C0FEFE") for r in (1, 2, 3)]
 
 
@@ -94,7 +89,7 @@ def test_value_encoding(column):
 ])
 def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     def get_all_snmp_tables(info):
-        backend = SNMPTestBackend()
+        backend = SNMPTestBackend(SNMPConfig)
         if not isinstance(info, list):
             return snmp_table.get_snmp_table(SNMPConfig, "unit-test", info, backend=backend)
         return [

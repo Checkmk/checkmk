@@ -19,7 +19,6 @@ from cmk.utils.type_defs import (
     ContextName,
     OID,
     RawValue,
-    SNMPHostConfig,
     SNMPRowInfo,
 )
 
@@ -29,8 +28,8 @@ __all__ = ["ClassicSNMPBackend"]
 
 
 class ClassicSNMPBackend(ABCSNMPBackend):
-    def get(self, snmp_config, oid, context_name=None):
-        # type: (SNMPHostConfig, OID, Optional[ContextName]) -> Optional[RawValue]
+    def get(self, oid, context_name=None):
+        # type: (OID, Optional[ContextName]) -> Optional[RawValue]
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
             commandtype = "getnext"
@@ -38,13 +37,13 @@ class ClassicSNMPBackend(ABCSNMPBackend):
             oid_prefix = oid
             commandtype = "get"
 
-        protospec = self._snmp_proto_spec(snmp_config)
-        ipaddress = snmp_config.ipaddress
-        if snmp_config.is_ipv6_primary:
+        protospec = self._snmp_proto_spec()
+        ipaddress = self.config.ipaddress
+        if self.config.is_ipv6_primary:
             ipaddress = "[" + ipaddress + "]"
-        portspec = self._snmp_port_spec(snmp_config)
+        portspec = self._snmp_port_spec()
         command = (
-            self._snmp_base_command(commandtype, snmp_config, context_name) +
+            self._snmp_base_command(commandtype, context_name) +
             ["-On", "-OQ", "-Oe", "-Ot",
              "%s%s%s" % (protospec, ipaddress, portspec), oid_prefix])
 
@@ -88,21 +87,16 @@ class ClassicSNMPBackend(ABCSNMPBackend):
 
         return strip_snmp_value(value)
 
-    def walk(self,
-             snmp_config,
-             oid,
-             check_plugin_name=None,
-             table_base_oid=None,
-             context_name=None):
-        # type: (SNMPHostConfig, str, Optional[str], Optional[str], Optional[str]) -> SNMPRowInfo
-        protospec = self._snmp_proto_spec(snmp_config)
+    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
+        # type: (str, Optional[str], Optional[str], Optional[str]) -> SNMPRowInfo
+        protospec = self._snmp_proto_spec()
 
-        ipaddress = snmp_config.ipaddress
-        if snmp_config.is_ipv6_primary:
+        ipaddress = self.config.ipaddress
+        if self.config.is_ipv6_primary:
             ipaddress = "[" + ipaddress + "]"
 
-        portspec = self._snmp_port_spec(snmp_config)
-        command = self._snmp_walk_command(snmp_config, context_name)
+        portspec = self._snmp_port_spec()
+        command = self._snmp_walk_command(context_name)
         command += ["-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid]
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
@@ -185,26 +179,26 @@ class ClassicSNMPBackend(ABCSNMPBackend):
             rowinfo.append((oid, strip_snmp_value(value)))
         return rowinfo
 
-    def _snmp_proto_spec(self, snmp_config):
-        # type: (SNMPHostConfig) -> str
-        if snmp_config.is_ipv6_primary:
+    def _snmp_proto_spec(self):
+        # type: () -> str
+        if self.config.is_ipv6_primary:
             return "udp6:"
 
         return ""
 
-    def _snmp_port_spec(self, snmp_config):
-        # type: (SNMPHostConfig) -> str
-        if snmp_config.port == 161:
+    def _snmp_port_spec(self):
+        # type: () -> str
+        if self.config.port == 161:
             return ""
-        return ":%d" % snmp_config.port
+        return ":%d" % self.config.port
 
-    def _snmp_walk_command(self, snmp_config, context_name):
-        # type: (SNMPHostConfig, Optional[ContextName]) -> List[str]
+    def _snmp_walk_command(self, context_name):
+        # type: (Optional[ContextName]) -> List[str]
         """Returns command lines for snmpwalk and snmpget
 
         Including options for authentication. This handles communities and
         authentication for SNMP V3. Also bulkwalk hosts"""
-        return self._snmp_base_command('walk', snmp_config, context_name) + ["-Cc"]
+        return self._snmp_base_command('walk', context_name) + ["-Cc"]
 
     # if the credentials are a string, we use that as community,
     # if it is a four-tuple, we use it as V3 auth parameters:
@@ -215,64 +209,64 @@ class ClassicSNMPBackend(ABCSNMPBackend):
     # And if it is a six-tuple, it has the following additional arguments:
     # (5) privacy protocol (DES|AES) (-x)
     # (6) privacy protocol pass phrase (-X)
-    def _snmp_base_command(self, what, snmp_config, context_name):
-        # type: (str, SNMPHostConfig, Optional[ContextName]) -> List[str]
+    def _snmp_base_command(self, what, context_name):
+        # type: (str, Optional[ContextName]) -> List[str]
         options = []
 
         if what == 'get':
             command = ['snmpget']
         elif what == 'getnext':
             command = ['snmpgetnext', '-Cf']
-        elif snmp_config.is_bulkwalk_host:
+        elif self.config.is_bulkwalk_host:
             command = ['snmpbulkwalk']
 
-            options.append("-Cr%d" % snmp_config.bulk_walk_size_of)
+            options.append("-Cr%d" % self.config.bulk_walk_size_of)
         else:
             command = ['snmpwalk']
 
-        if not snmp_config.is_snmpv3_host:
+        if not self.config.is_snmpv3_host:
             # Handle V1 and V2C
-            if snmp_config.is_bulkwalk_host:
+            if self.config.is_bulkwalk_host:
                 options.append('-v2c')
             else:
                 if what == 'walk':
                     command = ['snmpwalk']
-                if snmp_config.is_snmpv2or3_without_bulkwalk_host:
+                if self.config.is_snmpv2or3_without_bulkwalk_host:
                     options.append('-v2c')
                 else:
                     options.append('-v1')
 
-            if not isinstance(snmp_config.credentials, str):
+            if not isinstance(self.config.credentials, str):
                 raise TypeError()
-            options += ["-c", snmp_config.credentials]
+            options += ["-c", self.config.credentials]
 
         else:
             # Handle V3
-            if len(snmp_config.credentials) == 6:
+            if len(self.config.credentials) == 6:
                 options += [
-                    "-v3", "-l", snmp_config.credentials[0], "-a", snmp_config.credentials[1], "-u",
-                    snmp_config.credentials[2], "-A", snmp_config.credentials[3], "-x",
-                    snmp_config.credentials[4], "-X", snmp_config.credentials[5]
+                    "-v3", "-l", self.config.credentials[0], "-a", self.config.credentials[1], "-u",
+                    self.config.credentials[2], "-A", self.config.credentials[3], "-x",
+                    self.config.credentials[4], "-X", self.config.credentials[5]
                 ]
-            elif len(snmp_config.credentials) == 4:
+            elif len(self.config.credentials) == 4:
                 options += [
-                    "-v3", "-l", snmp_config.credentials[0], "-a", snmp_config.credentials[1], "-u",
-                    snmp_config.credentials[2], "-A", snmp_config.credentials[3]
+                    "-v3", "-l", self.config.credentials[0], "-a", self.config.credentials[1], "-u",
+                    self.config.credentials[2], "-A", self.config.credentials[3]
                 ]
-            elif len(snmp_config.credentials) == 2:
+            elif len(self.config.credentials) == 2:
                 options += [
-                    "-v3", "-l", snmp_config.credentials[0], "-u", snmp_config.credentials[1]
+                    "-v3", "-l", self.config.credentials[0], "-u", self.config.credentials[1]
                 ]
             else:
                 raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be "
                                          "string, 2-tuple, 4-tuple or 6-tuple" %
-                                         (snmp_config.credentials, snmp_config.hostname))
+                                         (self.config.credentials, self.config.hostname))
 
         # Do not load *any* MIB files. This save lot's of CPU.
         options += ["-m", "", "-M", ""]
 
         # Configuration of timing and retries
-        settings = snmp_config.timing
+        settings = self.config.timing
         if "timeout" in settings:
             options += ["-t", "%0.2f" % settings["timeout"]]
         if "retries" in settings:

@@ -35,10 +35,11 @@ def backend(snmp_config, *, use_cache=None):
     # type: (SNMPHostConfig, Optional[bool]) -> ABCSNMPBackend
     if use_cache is None:
         use_cache = get_force_stored_walks()
+
     if use_cache or snmp_config.is_usewalk_host:
-        return StoredWalkSNMPBackend()
+        return StoredWalkSNMPBackend(snmp_config)
 
     if snmp_config.is_inline_snmp_host:
-        return inline.InlineSNMPBackend(snmp_config.record_stats)
+        return inline.InlineSNMPBackend(snmp_config)
 
-    return ClassicSNMPBackend()
+    return ClassicSNMPBackend(snmp_config)

@@ -75,7 +75,6 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True, 
     for context_name in snmp_config.snmpv3_contexts_of(check_plugin_name):
         try:
             value = backend.get(
-                snmp_config,
                 oid=oid,
                 context_name=context_name,
             )
@@ -104,8 +103,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True, 
 def walk_for_export(snmp_config, oid):
     # type: (SNMPHostConfig, OID) -> SNMPRowInfoForStoredWalk
     backend = factory.backend(snmp_config, use_cache=False)
-    rows = backend.walk(snmp_config, oid=oid)
-    return _convert_rows_for_stored_walk(rows)
+    return _convert_rows_for_stored_walk(backend.walk(oid=oid))
 
 
 #.

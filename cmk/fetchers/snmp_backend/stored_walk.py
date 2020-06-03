@@ -20,7 +20,6 @@ from cmk.utils.type_defs import (
     ContextName,
     OID,
     RawValue,
-    SNMPHostConfig,
     SNMPRowInfo,
 )
 
@@ -30,9 +29,9 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 
 class StoredWalkSNMPBackend(ABCSNMPBackend):
-    def get(self, snmp_config, oid, context_name=None):
-        # type: (SNMPHostConfig, OID, Optional[ContextName]) -> Optional[RawValue]
-        walk = self.walk(snmp_config, oid)
+    def get(self, oid, context_name=None):
+        # type: (OID, Optional[ContextName]) -> Optional[RawValue]
+        walk = self.walk(oid)
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
         if len(walk) == 1 and oid == walk[0][0]:
@@ -41,13 +40,8 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
             return walk[0][1]
         return None
 
-    def walk(self,
-             snmp_config,
-             oid,
-             check_plugin_name=None,
-             table_base_oid=None,
-             context_name=None):
-        # type: (SNMPHostConfig, OID, Optional[CheckPluginName], Optional[OID], Optional[ContextName]) -> SNMPRowInfo
+    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
+        # type: (OID, Optional[CheckPluginName], Optional[OID], Optional[ContextName]) -> SNMPRowInfo
         if oid.startswith("."):
             oid = oid[1:]
 
@@ -58,18 +52,18 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
             oid_prefix = oid
             dot_star = False
 
-        path = cmk.utils.paths.snmpwalks_dir + "/" + snmp_config.hostname
+        path = cmk.utils.paths.snmpwalks_dir + "/" + self.config.hostname
 
         console.vverbose("  Loading %s from %s\n" % (oid, path))
 
-        if snmp_cache.host_cache_contains(snmp_config.hostname):
-            lines = snmp_cache.host_cache_get(snmp_config.hostname)
+        if snmp_cache.host_cache_contains(self.config.hostname):
+            lines = snmp_cache.host_cache_get(self.config.hostname)
         else:
             try:
                 lines = open(path).readlines()
             except IOError:
                 raise MKSNMPError("No snmpwalk file %s" % path)
-            snmp_cache.host_cache_set(snmp_config.hostname, lines)
+            snmp_cache.host_cache_set(self.config.hostname, lines)
 
         begin = 0
         end = len(lines)

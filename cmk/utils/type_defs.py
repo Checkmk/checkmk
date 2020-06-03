@@ -193,9 +193,14 @@ class SNMPHostConfig(
 
 
 class ABCSNMPBackend(metaclass=abc.ABCMeta):
+    def __init__(self, snmp_config):
+        # type: (SNMPHostConfig) -> None
+        super(ABCSNMPBackend, self).__init__()
+        self.config = snmp_config
+
     @abc.abstractmethod
-    def get(self, snmp_config, oid, context_name=None):
-        # type: (SNMPHostConfig, OID, Optional[ContextName]) -> Optional[RawValue]
+    def get(self, oid, context_name=None):
+        # type: (OID, Optional[ContextName]) -> Optional[RawValue]
         """Fetch a single OID from the given host in the given SNMP context
 
         The OID may end with .* to perform a GETNEXT request. Otherwise a GET
@@ -204,13 +209,8 @@ class ABCSNMPBackend(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def walk(self,
-             snmp_config,
-             oid,
-             check_plugin_name=None,
-             table_base_oid=None,
-             context_name=None):
-        # type: (SNMPHostConfig, OID, Optional[CheckPluginName], Optional[OID], Optional[ContextName]) -> SNMPRowInfo
+    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
+        # type: (OID, Optional[CheckPluginName], Optional[OID], Optional[ContextName]) -> SNMPRowInfo
         return []
 
 

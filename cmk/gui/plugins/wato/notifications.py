@@ -592,11 +592,14 @@ class NotificationParameterServiceNow(NotificationParameter):
                      allow_empty=False,
                  )),
                 ("proxy_url", HTTPProxyReference()),
-                ("username", TextAscii(
-                    title=_("Username"),
-                    size=40,
-                    allow_empty=False,
-                )),
+                ("username",
+                 TextAscii(
+                     title=_("Username"),
+                     help=_("The user, used for login, has to have at least the "
+                            "role 'itil' in servicenow."),
+                     size=40,
+                     allow_empty=False,
+                 )),
                 ("password", PasswordFromStore(
                     title=_("Password of the user"),
                     allow_empty=False,
@@ -605,7 +608,13 @@ class NotificationParameterServiceNow(NotificationParameter):
                  TextAscii(
                      title=_("Caller ID"),
                      help=_("Caller is the user on behalf of whom the incident is being reported "
-                            "within servicenow. Please enter the name of the caller here."),
+                            "within servicenow. Please enter the name of the caller here. "
+                            "It is recommended to user the same user as used for login. "
+                            "Otherwise, your ACL rules in servicenow must be "
+                            "adjusted, so that the user who is used for login "
+                            "can create/edit/resolve incidents on behalf of the "
+                            "caller. Please have a look at servicenow "
+                            "documentation for details."),
                  )),
                 ("host_short_desc",
                  TextAscii(

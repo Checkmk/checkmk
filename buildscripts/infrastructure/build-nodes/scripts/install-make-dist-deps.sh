@@ -20,6 +20,10 @@ ubuntu-*)
     apt-get install -y \
         mono-complete \
         mono-xbuild
+    # Not needed for "make dist", but for the post-build steps of
+    # buildscripts/scripts/build-cmk-version.jenkins
+    apt-get install -y \
+        dpkg-sig
 
     rm -rf /var/lib/apt/lists/*
 

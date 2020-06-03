@@ -13,6 +13,7 @@ from cmk.gui.watolib.groups import edit_group, add_group, load_service_group_inf
 
 
 @endpoint_schema('/collections/service_group',
+                 'cmk/create',
                  method='post',
                  etag='output',
                  request_body_required=True,
@@ -29,6 +30,7 @@ def create(params):
 
 
 @endpoint_schema('/collections/service_group',
+                 '.../collection',
                  method='get',
                  response_schema=response_schemas.DomainObjectCollection)
 def list_groups(params):
@@ -44,6 +46,7 @@ def list_groups(params):
 
 
 @endpoint_schema('/objects/service_group/{name}',
+                 'cmk/show',
                  method='get',
                  response_schema=response_schemas.ServiceGroup,
                  etag='output',
@@ -56,6 +59,7 @@ def show_group(params):
 
 
 @endpoint_schema('/objects/service_group/{name}',
+                 '.../delete',
                  method='delete',
                  parameters=['name'],
                  output_empty=True,
@@ -70,6 +74,7 @@ def delete(params):
 
 
 @endpoint_schema('/objects/service_group/{name}',
+                 '.../update',
                  method='put',
                  parameters=['name'],
                  response_schema=response_schemas.ServiceGroup,

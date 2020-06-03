@@ -11,8 +11,12 @@ from connexion import ProblemException  # type: ignore
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.restful_objects import (response_schemas, constructors,
-                                                     endpoint_schema, request_schemas)
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    endpoint_schema,
+    request_schemas,
+    response_schemas,
+)
 from cmk.gui.watolib import CREFolder
 from cmk.gui.wsgi.type_defs import DomainObject
 
@@ -25,6 +29,7 @@ from cmk.gui.wsgi.type_defs import DomainObject
 
 
 @endpoint_schema('/collections/folder',
+                 'cmk/create',
                  method='post',
                  response_schema=response_schemas.ConcreteFolder,
                  etag='output',
@@ -49,6 +54,7 @@ def create(params):
 
 
 @endpoint_schema('/objects/folder/{ident}',
+                 '.../persist',
                  method='put',
                  parameters=['ident'],
                  response_schema=response_schemas.ConcreteFolder,
@@ -72,6 +78,7 @@ def update(params):
 
 
 @endpoint_schema('/objects/folder/{ident}',
+                 '.../delete',
                  method='delete',
                  parameters=['ident'],
                  output_empty=True,
@@ -87,6 +94,7 @@ def delete(params):
 
 
 @endpoint_schema('/objects/folder/{ident}/actions/move/invoke',
+                 'cmk/move',
                  method='post',
                  parameters=['ident'],
                  response_schema=response_schemas.ConcreteFolder,
@@ -111,21 +119,27 @@ def move(params):
 
 
 @endpoint_schema('/collections/folder',
+                 '.../collection',
                  method='get',
                  response_schema=response_schemas.FolderCollection)
 def list_folders(_params):
     """List folders"""
-    return constructors.serve_json(
-        constructors.collection_object(domain_type='folder',
-                                       value=[
-                                           constructors.collection_item('folder', 'folder', folder)
-                                           for folder in watolib.Folder.root_folder().subfolders()
-                                       ],
-                                       links=[constructors.link_rel('self',
-                                                                    '/collections/folder')]))
+    folders = [
+        constructors.collection_item('folder', 'folder', folder)
+        for folder in watolib.Folder.root_folder().subfolders()
+    ]
+
+    collection_object = constructors.collection_object(
+        domain_type='folder',
+        value=folders,
+        links=[constructors.link_rel('self', '/collections/folder')],
+    )
+
+    return constructors.serve_json(collection_object)
 
 
 @endpoint_schema('/objects/folder/{ident}',
+                 'cmk/show',
                  method='get',
                  response_schema=response_schemas.ConcreteFolder,
                  etag='output',
@@ -156,7 +170,8 @@ def _serialize_folder(folder):
                 name='hosts',
                 entries=[
                     constructors.link_rel(
-                        rel='.../value;collection="items"',
+                        rel='.../value',
+                        parameters={'collection': "items"},
                         href=constructors.object_href('host', host),
                     ) for host in folder.hosts().values()
                 ],

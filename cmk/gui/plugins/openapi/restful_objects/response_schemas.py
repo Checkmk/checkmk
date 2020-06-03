@@ -341,12 +341,15 @@ class ObjectAction(Linkable):
 
 
 class DomainObjectCollection(Linkable):
+    id = fields.String()
     domainType = fields.String()
     value = fields.List(fields.Nested(LinkSchema))
+    extensions = fields.Dict()
 
 
 class FolderCollection(DomainObjectCollection):
     domainType = fields.Constant("folder")
+    value = fields.List(fields.Nested(ConcreteFolder))
 
 
 class User(Linkable):

@@ -56,16 +56,12 @@ such a method. In these cases the HTTP method to use has to be POST. You can't o
 
 """
 import re
-import typing
-
-if typing.TYPE_CHECKING:
-    pass
 
 import apispec.utils  # type: ignore
 import apispec_oneofschema  # type: ignore
 
 from cmk.gui.plugins.openapi import plugins
-from cmk.gui.plugins.openapi.restful_objects.request_schemas import HOSTNAME_REGEXP
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOSTNAME, IDENT, NAME, ACCEPT_HEADER
 
 # Path parameters look like {varname} and need to be checked.
 PARAM_RE = re.compile(r"\{([a-z][a-z0-9]*)\}")
@@ -174,47 +170,10 @@ SPEC.components.security_scheme(
 #     'Warning',
 #     'Content-Type',
 # }
-SPEC.components.parameter(
-    'Accept', 'header', {
-        'description': "Media type(s) that is/are acceptable for the response.",
-        'example': 'application/json',
-        'schema': {
-            'type': 'string',
-        }
-    })
-
-SPEC.components.parameter(
-    'ident', 'path', {
-        'description': ("The identifier for this object. "
-                        "It's a 128bit uuid represented in hexadecimal (32 characters). "
-                        "There are no fixed parts or parts derived from the current hardware "
-                        "in this number."),
-        'example': '49167bd012b44719a67956cf3ef7b3dd',
-        'schema': {
-            'pattern': "[a-fA-F0-9]{32}|root",
-            'type': 'string',
-        }
-    })
-
-SPEC.components.parameter(
-    'hostname', 'path', {
-        'description': "A hostname.",
-        'example': 'example.com',
-        'schema': {
-            'pattern': HOSTNAME_REGEXP,
-            'type': 'string',
-        }
-    })
-
-SPEC.components.parameter(
-    'name', 'path', {
-        'description': "A name used as an identifier. Can be of arbitrary (sensible) length.",
-        'example': 'pathname',
-        'schema': {
-            'pattern': "[a-zA-Z][a-zA-Z0-9_-]+",
-            'type': 'string',
-        }
-    })
+SPEC.components.parameter(*ACCEPT_HEADER.spec_tuple())
+SPEC.components.parameter(*IDENT.spec_tuple())
+SPEC.components.parameter(*HOSTNAME.spec_tuple())
+SPEC.components.parameter(*NAME.spec_tuple())
 
 
 def add_operation(path, method, operation_spec):

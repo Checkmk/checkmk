@@ -12,7 +12,10 @@ from cmk.gui.globals import request
 from cmk.gui.plugins.openapi.restful_objects import endpoint_schema, response_schemas
 
 
-@endpoint_schema('/version', method='get', response_schema=response_schemas.InstalledVersions)
+@endpoint_schema('/version',
+                 'cmk/show',
+                 method='get',
+                 response_schema=response_schemas.InstalledVersions)
 def search(param):
     if request.args.get('fail'):
         raise Exception("This is an intentional failure.")

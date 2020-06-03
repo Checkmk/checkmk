@@ -12,8 +12,11 @@ from werkzeug.datastructures import ETags
 
 from cmk.gui.globals import request
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.restful_objects.type_defs import (EndpointName, HTTPMethod,
+                                                               RestfulEndpointName, PropertyFormat,
+                                                               DomainType, DomainObject)
+from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
 
-DomainObject = Dict[str, str]
 LinkType = Dict[str, str]
 CollectionItem = Dict[str, str]
 CollectionObject = TypedDict('CollectionObject', {
@@ -23,61 +26,13 @@ CollectionObject = TypedDict('CollectionObject', {
     'value': Any,
     'extensions': Dict[str, str]
 })
+Serializable = Union[Dict[str, Any], CollectionObject]  # because TypedDict is stricter
 LocationType = Optional[Literal['path', 'query', 'header', 'cookie']]
 ResultType = Literal["object", "list", "scalar", "void"]
-RestfulLinkRel = Literal[
-    ".../action",
-    ".../action-param",
-    ".../add-to",  # takes params
-    ".../attachment",  # takes params
-    ".../choice",  # takes params
-    ".../clear",
-    ".../collection",
-    ".../default",
-    ".../delete",
-    ".../details",  # takes params
-    ".../domain-type",
-    ".../domain-types",
-    ".../element",
-    ".../element-type",
-    ".../invoke",
-    ".../modify",
-    ".../persist",
-    ".../property",
-    ".../remove-from",  # takes params
-    ".../return-type",
-    ".../service",  # takes params
-    ".../services",
-    ".../update",
-    ".../user",
-    ".../value",  # takes params
-    ".../version",
-]  # yapf: disable
-HTTPMethod = Literal["GET", "PUT", "POST", "DELETE"]
-PropertyFormat = Literal[
-    # String values
-    'string',
-    # The value should simply be interpreted as a string. This is also the default if
-    # the "format" json-property is omitted (or if no domain metadata is available)
-    'date-time',  # A date in ISO 8601 format of YYYY-MM-DDThh:mm:ssZ in UTC time
-    'date',  # A date in the format of YYYY-MM-DD.
-    'time',  # A time in the format of hh:mm:ss.
-    'utc-millisec',  # The difference, measured in milliseconds, between the
-    # specified time and midnight, 00:00 of January 1, 1970 UTC.
-    'big-integer(n)',  # The value should be parsed as an integer, scale n.
-    'big-integer(s,p)',  # The value should be parsed as a big decimal, scale n,
-    # precision p.
-    'blob',  # base-64 encoded byte-sequence
-    'clob',  # character large object: the string is a large array of
-    # characters, for example an HTML resource
-    # Non-string values
-    'decimal',  # the number should be interpreted as a float-point decimal.
-    'int',  # the number should be interpreted as an integer.
-]
 
 
 def link_rel(
-        rel,  # type: Union[RestfulLinkRel, str]
+        rel,  # type: Union[RestfulEndpointName, EndpointName]
         href,  # type: str
         method='GET',  # type: HTTPMethod
         content_type='application/json',  # type: str
@@ -364,7 +319,7 @@ def object_href(domain_type, obj):
 
 
 def domain_object(
-        domain_type,  # type: str
+        domain_type,  # type: DomainType
         identifier,  # type: str
         title,  # type: str
         members=None,  # type: Optional[Dict[str, Any]]
@@ -373,7 +328,7 @@ def domain_object(
         deletable=True,  # type: bool
         links=None,  # type: Optional[List[LinkType]]
 ):
-    # type: (...) -> Dict[str, Any]
+    # type: (...) -> DomainObject
     """Renders a domain-object dict structure.
 
     Most of the parameters are optional, yet without them nothing interesting would happen.
@@ -478,6 +433,7 @@ def collection_item(collection_type, domain_type, obj):
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/value;collection="folder"',
         ...     'title': 'Foo',
+        ...     'domainType': 'link',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ... }
         >>> res = collection_item('folder', 'folder', {'title': 'Foo', 'id': '3'})
@@ -505,6 +461,7 @@ def obj_title(obj):
 
 
 def serve_json(data, profile=None):
+    # type: (Serializable, Dict[str, str]) -> Response
     content_type = 'application/json'
     if profile is not None:
         content_type += ';profile="%s"' % (profile,)
@@ -577,7 +534,7 @@ def param(
         schema_type='string',  # type: str
         schema_pattern=None,  # type: str
         **kw):
-    # type: (...) -> Union[str, dict]
+    # type: (...) -> ParamDict
     """Specify an OpenAPI parameter to be used on a particular endpoint.
 
     Args:
@@ -606,23 +563,20 @@ def param(
         The parameter dict.
 
     """
-    if location is None:
-        return param_name
-
     if location == 'path' and not required:
         raise ValueError("path parameters' `required` field always needs to be True!")
 
     schema = {'type': schema_type}
     if schema_pattern is not None:
         schema['pattern'] = schema_pattern
-    _param = {
+    _param = ParamDict({
         'name': param_name,
         'in': location,
         'required': required,
         'description': description,
         'allowEmptyValue': allow_emtpy,
         'schema': schema
-    }
+    })
     for key, value in kw.items():
         if key in _param:
             raise ValueError("Please specify %s through the normal parameters." % key)

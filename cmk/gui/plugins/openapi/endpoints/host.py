@@ -25,6 +25,7 @@ from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
 
 
 @endpoint_schema('/collections/host',
+                 'cmk/create',
                  method='post',
                  etag='output',
                  request_body_required=True,
@@ -56,6 +57,7 @@ def create_host(params):
 
 
 @endpoint_schema('/domain-types/host/collections/hosts',
+                 '.../collection',
                  method='get',
                  response_schema=response_schemas.HostCollection)
 def list_hosts(param):
@@ -71,6 +73,7 @@ def list_hosts(param):
 
 
 @endpoint_schema('/objects/host/{hostname}',
+                 '.../update',
                  method='put',
                  parameters=['hostname'],
                  etag='both',
@@ -90,6 +93,7 @@ def update_host(params):
 
 
 @endpoint_schema('/objects/host/{hostname}',
+                 '.../delete',
                  method='delete',
                  parameters=['hostname'],
                  etag='input',
@@ -106,6 +110,7 @@ def delete(params):
 
 
 @endpoint_schema('/objects/host/{hostname}',
+                 'cmk/show',
                  method='get',
                  parameters=['hostname'],
                  etag='output',

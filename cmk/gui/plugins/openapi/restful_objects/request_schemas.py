@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from marshmallow import Schema, fields  # type: ignore[import]
 
-HOSTNAME_REGEXP = '[-0-9a-zA-Z_.]+'
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOSTNAME_REGEXP
 
 
 class InputAttribute(Schema):

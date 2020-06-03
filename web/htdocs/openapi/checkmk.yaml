@@ -244,6 +244,10 @@ components:
       properties:
         domainType:
           type: string
+        extensions:
+          type: object
+        id:
+          type: string
         links:
           description: list of links to other resources.
           items:
@@ -281,6 +285,10 @@ components:
         domainType:
           default: folder
           type: string
+        extensions:
+          type: object
+        id:
+          type: string
         links:
           description: list of links to other resources.
           items:
@@ -288,7 +296,7 @@ components:
           type: array
         value:
           items:
-            $ref: '#/components/schemas/Link'
+            $ref: '#/components/schemas/ConcreteFolder'
           type: array
       required:
       - links
@@ -738,7 +746,7 @@ paths:
       summary: List contact-groups
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -787,7 +795,7 @@ paths:
       summary: Create a new contact group
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -833,7 +841,7 @@ paths:
       summary: Delete a contact-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -882,7 +890,7 @@ paths:
       summary: Show a contact-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -942,7 +950,7 @@ paths:
       summary: Update a contact-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -984,7 +992,7 @@ paths:
       summary: List folders
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1033,7 +1041,7 @@ paths:
       summary: Create a new folder
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1047,15 +1055,15 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"name\": \"production\",\n\
-          \          \"attributes\": {\n            \"foo\": \"bar\"\n          },\n\
-          \          \"title\": \"Production Hosts\",\n          \"parent\": \"root\"\
+          \ application/json\" \\\n    -d '{\n          \"title\": \"Production Hosts\"\
+          ,\n          \"attributes\": {\n            \"foo\": \"bar\"\n         \
+          \ },\n          \"name\": \"production\",\n          \"parent\": \"root\"\
           \n        }' \\\n    \"$API_URL/collections/folder\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/folder\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='production'\
-          \ \\\n    attributes='{\"foo\": \"bar\"}' \\\n    title='Production Hosts'\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    title='Production\
+          \ Hosts' \\\n    attributes='{\"foo\": \"bar\"}' \\\n    name='production'\
           \ \\\n    parent='root'"
   /objects/folder/{ident}:
     delete:
@@ -1084,7 +1092,7 @@ paths:
       summary: Delete a folder
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1133,7 +1141,7 @@ paths:
       summary: Show a folder
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1195,7 +1203,7 @@ paths:
       summary: Update a folder
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1212,16 +1220,15 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"attributes\": [\n            {\n              \"\
-          key\": \"foo\",\n              \"value\": \"bar\"\n            }\n     \
-          \     ],\n          \"title\": \"Virtual Servers.\"\n        }' \\\n   \
-          \ \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
+          \    -d '{\n          \"title\": \"Virtual Servers.\",\n          \"attributes\"\
+          : [\n            {\n              \"key\": \"foo\",\n              \"value\"\
+          : \"bar\"\n            }\n          ]\n        }' \\\n    \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    attributes='[{\"key\": \"foo\", \"value\": \"\
-          bar\"}]' \\\n    title='Virtual Servers.'"
+          \ a20ceacf346041dc' \\\n    title='Virtual Servers.' \\\n    attributes='[{\"\
+          key\": \"foo\", \"value\": \"bar\"}]'"
   /objects/folder/{ident}/actions/move/invoke:
     post:
       description: ''
@@ -1261,7 +1268,7 @@ paths:
       summary: Move a folder
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1315,7 +1322,7 @@ paths:
       summary: Create a host
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1329,16 +1336,16 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"folder\": \"root\",\n  \
-          \        \"attributes\": {},\n          \"nodes\": [\n            \"host1\"\
-          ,\n            \"host2\",\n            \"host3\"\n          ],\n       \
-          \   \"hostname\": \"example.com\"\n        }' \\\n    \"$API_URL/collections/host\""
+          \ application/json\" \\\n    -d '{\n          \"nodes\": [\n           \
+          \ \"host1\",\n            \"host2\",\n            \"host3\"\n          ],\n\
+          \          \"hostname\": \"example.com\",\n          \"folder\": \"root\"\
+          ,\n          \"attributes\": {}\n        }' \\\n    \"$API_URL/collections/host\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    folder='root'\
-          \ \\\n    attributes='{}' \\\n    nodes='[\"host1\", \"host2\", \"host3\"\
-          ]' \\\n    hostname='example.com'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    nodes='[\"\
+          host1\", \"host2\", \"host3\"]' \\\n    hostname='example.com' \\\n    folder='root'\
+          \ \\\n    attributes='{}'"
   /domain-types/host/collections/hosts:
     get:
       description: ''
@@ -1359,7 +1366,7 @@ paths:
       summary: List all hosts
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1402,7 +1409,7 @@ paths:
       summary: Delete a host
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1451,7 +1458,7 @@ paths:
       summary: Show a host
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1511,7 +1518,7 @@ paths:
       summary: Update a host
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1570,7 +1577,7 @@ paths:
       summary: Create a host-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1616,7 +1623,7 @@ paths:
       summary: Delete a host-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1665,7 +1672,7 @@ paths:
       summary: Show a host-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1725,7 +1732,7 @@ paths:
       summary: Update a host-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1767,7 +1774,7 @@ paths:
       summary: List service-groups
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1816,7 +1823,7 @@ paths:
       summary: Create a service-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1863,7 +1870,7 @@ paths:
       summary: Delete a service-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1912,7 +1919,7 @@ paths:
       summary: Show a service-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -1972,7 +1979,7 @@ paths:
       summary: Update a service-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -2014,7 +2021,7 @@ paths:
           description: ''
       tags:
       - cmk.gui.plugins.openapi.endpoints.version
-      x-code-samples:
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -2033,7 +2040,7 @@ paths:
   /domain-types/agent/actions/sign:
     post:
       description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.sign_agents
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.sign_agents
       requestBody:
         content:
           application/json:
@@ -2055,8 +2062,8 @@ paths:
           description: ''
       summary: Sign all agents
       tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agents
-      x-code-samples:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -2069,17 +2076,17 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"key_id\": \"asdf\",\n  \
-          \        \"passphrase\": \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
+          \ application/json\" \\\n    -d '{\n          \"passphrase\": \"sw0rdfish\"\
+          ,\n          \"key_id\": \"asdf\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    key_id='asdf'\
-          \ \\\n    passphrase='sw0rdfish'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    passphrase='sw0rdfish'\
+          \ \\\n    key_id='asdf'"
   /collections/agent:
     get:
       description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.list_agents
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.list_agents
       responses:
         default:
           content:
@@ -2095,8 +2102,8 @@ paths:
           description: ''
       summary: List all agents
       tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agents
-      x-code-samples:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -2112,48 +2119,10 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/collections/agent\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
-  /objects/host/{hostname}/objects/agent:
-    get:
-      description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.get_agent_of_host
-      parameters:
-      - $ref: '#/components/parameters/hostname'
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
-      summary: List agents for a specific host
-      tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agents
-      x-code-samples:
-      - lang: requests
-        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
-          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
-          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
-          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
-          \    API_URL + \"/objects/host/example.com/objects/agent\",\n)\nresp.raise_for_status()"
-      - lang: curl
-        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
-          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    \"$API_URL/objects/host/example.com/objects/agent\""
-      - lang: httpie
-        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/host/example.com/objects/agent\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /domain-types/agent/actions/bake:
     post:
       description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.bake_all_agents
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.bake_all_agents
       responses:
         default:
           content:
@@ -2169,8 +2138,8 @@ paths:
           description: ''
       summary: Bake all agents
       tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agents
-      x-code-samples:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -2189,7 +2158,7 @@ paths:
   /domain-types/agent/actions/automatic-deployment:
     get:
       description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.automatic_deployment_status
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.automatic_deployment_status
       responses:
         default:
           content:
@@ -2205,8 +2174,8 @@ paths:
           description: ''
       summary: Show the status of the automatic deployment system
       tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agents
-      x-code-samples:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -2226,7 +2195,7 @@ paths:
   /domain-types/agent/actions/baking_status:
     get:
       description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.baking_status
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.baking_status
       responses:
         default:
           content:
@@ -2242,8 +2211,8 @@ paths:
           description: ''
       summary: Show the baking status
       tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agents
-      x-code-samples:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -2261,8 +2230,11 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /objects/agent/{agent_hash}:
     get:
-      description: "Args:\n    params:"
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.download_agent
+      description: 'This may be done via the host or by the agent''s hash. In any
+        case the operating system
+
+        needs to be specified.'
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.download_agent
       parameters:
       - allowEmptyValue: false
         description: The configuration hash representing an agent.
@@ -2279,20 +2251,17 @@ paths:
         example: linux_tgz
         in: query
         name: os_type
-        required: true
+        required: false
         schema:
           pattern: aix_tgz|linux_deb|linux_rpm|linux_tgz|solaris_pkg|solaris_tgz|windows_msi
           type: string
-      - allowEmptyValue: false
-        description: Optionally the hostname for which a certain agent has been configured.
-          If omitted you may only download this agent if you have the rights for all
-          agents.
+      - description: A hostname.
         example: example.com
         in: query
-        name: host
+        name: hostname
         required: false
         schema:
-          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       responses:
         default:
@@ -2303,10 +2272,10 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
-      summary: A single agent
+      summary: Download a single agent
       tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agents
-      x-code-samples:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
       - lang: requests
         source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
@@ -2382,7 +2351,7 @@ tags:
   x-displayName: Creating a service group
 - name: cmk.gui.plugins.openapi.endpoints.version
   x-displayName: Miscellaneous
-- name: cmk.gui.cee.plugins.openapi.endpoints.agents
+- name: cmk.gui.cee.plugins.openapi.endpoints.agent
   x-displayName: Agent related endpoints
 - description: <SchemaDefinition schemaRef="#/components/schemas/AgentSign" showReadOnly={true}
     showWriteOnly={true} />
@@ -2403,7 +2372,7 @@ x-tagGroups:
   - cmk.gui.plugins.openapi.endpoints.host_group
   - cmk.gui.plugins.openapi.endpoints.service_group
   - cmk.gui.plugins.openapi.endpoints.version
-  - cmk.gui.cee.plugins.openapi.endpoints.agents
+  - cmk.gui.cee.plugins.openapi.endpoints.agent
 - name: Response Schemas
   tags: []
 - name: Request Schemas

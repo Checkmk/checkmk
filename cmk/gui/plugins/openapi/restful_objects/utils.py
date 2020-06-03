@@ -31,19 +31,31 @@ class ParamDict(dict):
 
     Examples:
 
-        >>> p = ParamDict(field="foo", required=True)
+        >>> p = ParamDict(schema={'pattern': '123'})
+        >>> type(p['schema'])
+        <class 'dict'>
+
+        >>> p = ParamDict(name='foo', location='query', required=True)
         >>> p
-        {'field': 'foo', 'required': True}
+        {'name': 'foo', 'required': True, 'in': 'query'}
 
         >>> p(required=False)
-        {'field': 'foo', 'required': False}
+        {'name': 'foo', 'required': False, 'in': 'query'}
+
+        >>> p.spec_tuple()
+        ('foo', 'query', {'required': True})
 
     """
+    def __init__(self, *seq, **kwargs):
+        if 'location' in kwargs:
+            kwargs['in'] = kwargs.pop('location')
+        super(ParamDict, self).__init__(*seq, **kwargs)
+
     def __call__(self,
-                 name=None,
+                 name: str = None,
                  location: Literal["query", "header", "path", "cookie"] = None,
-                 description=None,
-                 example=None,
+                 description: str = None,
+                 example: str = None,
                  schema: Dict[str, str] = None,
                  required: bool = None,
                  **kw):
@@ -66,7 +78,10 @@ class ParamDict(dict):
         This is useful for parameter re-use."""
         return self['name']
 
+    def to_dict(self):
+        return dict(self)
+
     def spec_tuple(self):
         """Return a tuple suitable for passing into components.parameters()"""
         new = self()
-        return new.pop('name'), new.pop('location'), new
+        return new.pop('name'), new.pop('in'), dict(new)

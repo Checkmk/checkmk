@@ -13,16 +13,16 @@ connexion is disabled.
 
 """
 import functools
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union, Literal
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union, Sequence, Literal
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
 from connexion import problem  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
-
 from werkzeug.utils import import_string
 
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
+from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
 from cmk.gui.plugins.openapi.restful_objects.specification import (
     add_operation,
@@ -31,6 +31,8 @@ from cmk.gui.plugins.openapi.restful_objects.specification import (
     PARAM_RE,
     SPEC,
 )
+from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointName, RestfulEndpointName
+from cmk.gui.type_defs import SetOnceDict
 
 
 def _constantly(arg):
@@ -41,17 +43,27 @@ _SEEN_PATHS = set()  # type: Set[Tuple[str, str, str]]
 
 ETagBehaviour = Literal["input", "output", "both"]
 
-# Only these methods are supported.
+# We only support these methods.
 HTTPMethod = Literal["get", "post", "put", "delete"]
-
-Parameter = Union[str, dict]
+Parameter = Union[ParamDict, str]
+PrimitiveParameter = Union[Dict[str, Any], str]
 
 ResponseSchema = Optional[Schema]
 RequestSchema = Optional[Schema]
 
+ENDPOINT_REGISTRY = SetOnceDict()
+
+# FIXME: Group of endpoints is currently derived from module-name. This prevents sub-packages.
+
+
+def reduce_to_primitives(parameters):
+    # type: (Optional[List[Parameter]]) -> List[PrimitiveParameter]
+    return [p.to_dict() if isinstance(p, ParamDict) else p for p in (parameters or [])]
+
 
 def endpoint_schema(
         path,  # type: str
+        name,  # type: Union[EndpointName, RestfulEndpointName]
         method='get',  # type: HTTPMethod
         parameters=None,  # type: List[Parameter]
         content_type='application/json',  # type: str
@@ -74,6 +86,10 @@ def endpoint_schema(
         path (str):
             The URI. Can contain 0-N placeholders like this: /path/{placeholder1}/{placeholder2}.
             These variables have to be defined elsewhere first. See the `specification` module.
+
+        name (EndpointName):
+            The name of the endpoint. This is the name where this endpoint is "registered" under
+            and can only be used once globally.
 
         method (str):
             The HTTP method under which the endpoint should be accessible. Methods are written
@@ -138,10 +154,9 @@ def endpoint_schema(
     if etag is not None and etag not in ('input', 'output', 'both'):
         raise ValueError("etag must be one of 'input', 'output', 'both'.")
 
-    if parameters is None:
-        parameters = []
-
-    param_names = _names_of(parameters)
+    primitive_parameters = reduce_to_primitives(parameters)
+    del parameters
+    param_names = _names_of(primitive_parameters)
 
     for path_param in PARAM_RE.findall(path):
         if path_param not in param_names:
@@ -149,7 +164,7 @@ def endpoint_schema(
                              (path_param,))
 
     global_param_names = SPEC.components.to_dict().get('parameters', {}).keys()
-    for param in parameters:
+    for param in primitive_parameters:
         if isinstance(param, str) and param not in global_param_names:
             raise ValueError("Param %r, which is required, was specified nowhere." % (param,))
 
@@ -157,6 +172,17 @@ def endpoint_schema(
         module_obj = import_string(func.__module__)
         module_name = module_obj.__name__
         operation_id = func.__module__ + "." + func.__name__
+        endpoint_key = (module_name, name)
+
+        try:
+            ENDPOINT_REGISTRY[endpoint_key] = func
+        except ValueError:
+            if ENDPOINT_REGISTRY[endpoint_key] != func:
+                raise RuntimeError("The endpoint %r has already been set to %r" %
+                                   (endpoint_key, ENDPOINT_REGISTRY[endpoint_key]))
+            # But if it's already us that has been set, that means the function under
+            # consideration is receiving multiple URLs, which is fine in our case. We might want
+            # to have a struct set here which collects the URLs, so we can recreate them at runtime.
 
         if not output_empty and response_schema is None:
             raise ValueError("%s: 'response_schema' required when output is to be sent!" %
@@ -201,11 +227,8 @@ def endpoint_schema(
                     }
                 }
             },
-            'parameters': [],
+            'parameters': primitive_parameters,
         }
-
-        if param_names:
-            operation_spec['parameters'].extend(parameters)
 
         if etag in ('input', 'both'):
             operation_spec['parameters'].append(ETAG_IF_MATCH_HEADER)
@@ -236,8 +259,7 @@ def endpoint_schema(
                 }
             }
 
-        operation_spec['x-code-samples'] = code_samples(path, method, request_schema,
-                                                        operation_spec)
+        operation_spec['x-codeSamples'] = code_samples(path, method, request_schema, operation_spec)
 
         # If we don't have any parameters we remove the empty list, so the spec will not have it.
         if not operation_spec['parameters']:
@@ -406,6 +428,7 @@ def _docstring_keys(docstring, title, description):
 
 
 def _names_of(params):
+    # type: (List[PrimitiveParameter]) -> Sequence[PrimitiveParameter]
     """Give a list of parameter names
 
     Both dictionary and string form are supported. See examples.

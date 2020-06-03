@@ -13,6 +13,7 @@ from cmk.gui.watolib.groups import load_host_group_information, edit_group, add_
 
 
 @endpoint_schema('/collections/host_group',
+                 'cmk/create',
                  method='post',
                  etag='output',
                  request_body_required=True,
@@ -29,6 +30,7 @@ def create(params):
 
 
 @endpoint_schema('/objects/host_group/{name}',
+                 '.../delete',
                  method='delete',
                  parameters=['name'],
                  output_empty=True,
@@ -43,6 +45,7 @@ def delete(params):
 
 
 @endpoint_schema('/objects/host_group/{name}',
+                 '.../update',
                  method='put',
                  parameters=['name'],
                  response_schema=response_schemas.HostGroup,
@@ -60,6 +63,7 @@ def update(params):
 
 
 @endpoint_schema('/objects/host_group/{name}',
+                 'cmk/show',
                  method='get',
                  response_schema=response_schemas.HostGroup,
                  etag='output',

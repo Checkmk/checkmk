@@ -27,7 +27,7 @@ from cmk.utils.type_defs import (
     SNMPRowInfo,
 )
 
-import cmk.base.cleanup
+import cmk.utils.cleanup
 from cmk.fetchers import factory
 
 try:
@@ -238,7 +238,7 @@ def do_snmpwalk(options, host_configs):
             console.error("Error walking %s: %s\n" % (snmp_config.hostname, e))
             if cmk.utils.debug.enabled():
                 raise
-        cmk.base.cleanup.cleanup_globals()
+        cmk.utils.cleanup.cleanup_globals()
 
 
 def _do_snmpwalk_on(snmp_config, options, filename):
@@ -297,9 +297,9 @@ def do_snmpget(oid, host_configs):
 
         value = get_single_oid(snmp_config, oid, backend=backend)
         sys.stdout.write("%s (%s): %r\n" % (snmp_config.hostname, snmp_config.ipaddress, value))
-        cmk.base.cleanup.cleanup_globals()
+        cmk.utils.cleanup.cleanup_globals()
 
 
-cmk.base.cleanup.register_cleanup(snmp_cache.cleanup_host_caches)
+cmk.utils.cleanup.register_cleanup(snmp_cache.cleanup_host_caches)
 if inline:
-    cmk.base.cleanup.register_cleanup(inline.cleanup_inline_snmp_globals)
+    cmk.utils.cleanup.register_cleanup(inline.cleanup_inline_snmp_globals)

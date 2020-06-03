@@ -21,17 +21,13 @@ structures like log files or stuff.
 
 import os
 import traceback
-from typing import AnyStr, Union, List, Optional, Dict, Any, Tuple
+from typing import Any, AnyStr, Dict, List, Optional, Tuple, Union
 
+import cmk.utils.cleanup
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.exceptions import (
-    MKException,
-    MKGeneralException,
-)
+from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.type_defs import HostName
-
-import cmk.base.cleanup
 
 # Constants for counters
 SKIP = None
@@ -388,4 +384,4 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero=
     return average
 
 
-cmk.base.cleanup.register_cleanup(cleanup_item_states)
+cmk.utils.cleanup.register_cleanup(cleanup_item_states)

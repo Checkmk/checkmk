@@ -35,6 +35,7 @@ from cmk.utils.type_defs import (
     ServiceState,
     SourceType,
 )
+import cmk.utils.cleanup
 
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
@@ -46,7 +47,6 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
 import cmk.base.checking as checking
-import cmk.base.cleanup
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
@@ -140,7 +140,7 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
                 raise
             section.section_error("%s" % e)
         finally:
-            cmk.base.cleanup.cleanup_globals()
+            cmk.utils.cleanup.cleanup_globals()
 
 
 def _preprocess_hostnames(arg_host_names, config_cache):

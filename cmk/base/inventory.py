@@ -11,6 +11,7 @@ In the future all inventory code should be moved to this module."""
 import os
 from typing import Dict, List, Optional, Set, Tuple
 
+import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
@@ -33,7 +34,6 @@ from cmk.utils.type_defs import (
 from cmk.base.api import PluginName
 import cmk.base.check_api as check_api
 import cmk.base.check_api_utils as check_api_utils
-import cmk.base.cleanup
 import cmk.base.config as config
 import cmk.base.data_sources as data_sources
 import cmk.base.decorator
@@ -88,7 +88,7 @@ def do_inv(hostnames):
 
             section.section_error("%s" % e)
         finally:
-            cmk.base.cleanup.cleanup_globals()
+            cmk.utils.cleanup.cleanup_globals()
 
 
 def _show_inventory_results_on_console(inventory_tree, status_data_tree):

@@ -67,6 +67,7 @@ from cmk.utils.type_defs import (
 from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
     OIDBytes, OIDCached  # these are required in the modules' namespace to load the configuration!
 )
+import cmk.utils.cleanup
 from cmk.utils.log import console
 
 from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache
@@ -74,7 +75,6 @@ import cmk.base.autochecks as autochecks
 import cmk.base.default_config as default_config
 import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
-import cmk.base.cleanup
 from cmk.base.check_utils import (
     SectionName,
     CheckParameters,
@@ -2421,7 +2421,7 @@ def get_management_board_precedence(check_plugin_name, plugins_info):
     return mgmt_board
 
 
-cmk.base.cleanup.register_cleanup(check_api_utils.reset_hostname)
+cmk.utils.cleanup.register_cleanup(check_api_utils.reset_hostname)
 
 #.
 #   .--Host Configuration--------------------------------------------------.

@@ -13,6 +13,7 @@ import errno
 from typing import Optional
 
 import cmk.utils.paths
+import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
@@ -24,7 +25,6 @@ import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 from cmk.base.caching import config_cache as _config_cache
-import cmk.base.cleanup
 from cmk.base.core_config import MonitoringCore
 
 # suppress "Cannot find module" error from mypy
@@ -227,4 +227,4 @@ def cleanup_timeperiod_caches():
     _config_cache.get_dict("timeperiods_cache").clear()
 
 
-cmk.base.cleanup.register_cleanup(cleanup_timeperiod_caches)
+cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)

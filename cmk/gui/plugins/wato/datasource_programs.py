@@ -664,7 +664,7 @@ def _valuespec_special_agents_vsphere():
                          "your connection settings here."),
                      forth=lambda a: dict([("skip_placeholder_vms", True), ("ssl", False),
                                            ("use_pysphere", False),
-                                           ("spaces", "underscore")] + a.items()))
+                                           ("spaces", "underscore")] + list(a.items())))
 
 
 rulespec_registry.register(
@@ -817,7 +817,7 @@ def _valuespec_special_agents_netapp():
             "<tt>~/share/check_mk/agents/special</tt>."),
         optional_keys=False,
     ),
-                     forth=lambda x: dict([("skip_elements", [])] + x.items()))
+                     forth=lambda x: dict([("skip_elements", [])] + list(x.items())))
 
 
 rulespec_registry.register(

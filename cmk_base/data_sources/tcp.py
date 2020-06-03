@@ -148,7 +148,7 @@ class TCPDataSource(CheckMKAgentDataSource):
 
                 output = self._decrypt_package(output[2:], encryption_settings["passphrase"])
             except ValueError:
-                raise MKAgentError("Unsupported protocol version: %s" % output[:2])
+                raise MKAgentError("Unsupported protocol version: %r" % output[:2])
             except Exception, e:
                 if encryption_settings["use_regular"] == "enforce":
                     raise MKAgentError("Failed to decrypt agent output: %s" % e)

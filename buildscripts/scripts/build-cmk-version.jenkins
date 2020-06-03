@@ -76,8 +76,11 @@ def DOCKER_REGISTRY_NO_HTTP
 node(NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker.image(BUILD_IMAGE_NAME).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
-            stage('Checkout sources') {
+            stage('Cleanup work directories') {
                 cleanup_work_directories(DAILY_DATA)
+            }
+
+            stage('Checkout sources') {
                 dir("${DAILY_DATA}/git") {
                     checkout_git(scm, VERSION)
                     // Load libraries

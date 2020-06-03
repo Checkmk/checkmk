@@ -31,8 +31,9 @@ pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker f
 webtest = "*"  # used by WSGI based tests
 responses = "*" # used for unit tests
 yapf = "*"  # used for editor integration and the format-python Makefile target
-sphinx = "*" # used for API documentation
-sphinx-autodoc-typehints = "*"
+sphinx = "*" # used for the plugin API documentation
+sphinx-autodoc-typehints = "*" # used for the plugin API documentation
+sphinx-rtd-theme = "*" # used for the plugin API documentation
 
 [packages]
 setuptools_scm = "==3.3.3"  # needed by various setup.py

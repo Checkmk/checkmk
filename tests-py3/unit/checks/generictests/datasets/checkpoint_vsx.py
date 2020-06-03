@@ -6,9 +6,12 @@
 
 # yapf: disable
 # type: ignore
+
+from cmk.base.plugins.agent_based.checkpoint_vsx import parse_checkpoint_vsx
+
 checkname = 'checkpoint_vsx'
 
-info = [
+parsed = parse_checkpoint_vsx([
     [
         [
             '0', 'my_vsid1', 'VSX Gateway', '192.168.1.11', 'Standard',
@@ -29,7 +32,31 @@ info = [
             '44344', '0', '2386'
         ]
     ]
-]
+])
+
+
+#info = [
+#    [
+#        [
+#            '0', 'my_vsid1', 'VSX Gateway', '192.168.1.11', 'Standard',
+#            'ACTIVE', 'Trust established', 'Standby'
+#        ],
+#        [
+#            '1', 'my_vsid2', 'VSX Gateway', '192.168.1.111', 'Standard',
+#            'STANDBY', 'not known', 'Standby'
+#        ]
+#    ],
+#    [
+#        [
+#            '104470', '499900', '150512', '369', '150143', '0', '46451524',
+#            '44344', '0', '2386'
+#        ],
+#        [
+#            '104470', '499900', '150512', '369', '150143', '0', '46451524',
+#            '44344', '0', '2386'
+#        ]
+#    ]
+#]
 
 discovery = {
     '': [('my_vsid1 0', {}), ('my_vsid2 1', {})],

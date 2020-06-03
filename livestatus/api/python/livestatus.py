@@ -203,12 +203,12 @@ class Helpers(object):
 
     def query_column_unique(self, query):
         """Issues a query that returns exactly one column and returns the values
-           of all lines with duplicates removed"""
-        result = []
+           of all lines with duplicates removed. The "natural order" of the rows is
+           not preserved."""
+        result = set()
         for line in self.query(query, "ColumnHeaders: off\n"):
-            if line[0] not in result:
-                result.append(line[0])
-        return result
+            result.add(line[0])
+        return list(result)
 
     def query_table(self, query):
         """Issues a query that may return multiple lines and columns and returns

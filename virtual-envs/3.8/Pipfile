@@ -95,7 +95,7 @@ jira = "==2.0.0" # needed by jira
 Pillow = "==7.0.0" # needed by GUI
 python-ldap = "==3.2.0" # needed by GUI (User sync)
 dicttoxml = "==1.7.4" # needed by GUI (API XML format)
-numpy = "==1.15.4"  # Downgraded to 1.15.4 due to https://github.com/numpy/numpy/issues/14384
+numpy = "==1.18.4"  # needed by GUI (metrics)
 reportlab = "==3.5.34" # needed by GUI (reporting)
 PyPDF2 = "==1.26.0" # needed by GUI (reporting)
 roman = "==3.2" # needed by GUI (reporting)

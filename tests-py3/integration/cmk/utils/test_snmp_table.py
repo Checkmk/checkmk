@@ -82,8 +82,9 @@ def snmpsim_fixture(site, request, tmp_path_factory):
 
     # Ensure that snmpsim is ready for clients before starting with the tests
     def is_listening():
-        if p.poll() is not None:
-            raise Exception("snmpsimd died. Exit code: %d" % p.poll())
+        exitcode = p.poll()
+        if exitcode is not None:
+            raise Exception("snmpsimd died. Exit code: %d" % exitcode)
 
         num_sockets = 0
         try:
@@ -94,9 +95,10 @@ def snmpsim_fixture(site, request, tmp_path_factory):
                 except OSError:
                     pass
         except OSError:
-            if p.poll() is None:
+            exitcode = p.poll()
+            if exitcode is None:
                 raise
-            raise Exception("snmpsimd died. Exit code: %d" % p.poll())
+            raise Exception("snmpsimd died. Exit code: %d" % exitcode)
 
         if num_sockets < 2:
             return False

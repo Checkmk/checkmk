@@ -215,6 +215,10 @@ def load_services(only_hosts):
     sites.live().set_prepend_site(False)
     sites.live().set_auth_domain('read')
 
+    # Technically, the pre-annotations are a lie, we should really have a typed
+    # interface for Livestatus.
+    varnames: List[str]
+    values: List[str]
     for site, host, varnames, values, svcs, childs, parents, alias in data:
         vars_ = dict(zip(varnames, values))
         tags = vars_.get("TAGS", "").split(" ")
@@ -765,6 +769,10 @@ class BISitedataManager(object):
             sites.live().set_only_sites(None)
 
         site_dict = {}  # type: Dict[str, Any]
+        # Technically, the pre-annotations are a lie, we should really have a typed
+        # interface for Livestatus.
+        varnames: List[str]
+        values: List[str]
         for site, host, varnames, values, svcs, childs, parents, alias in data:
             vars_ = dict(zip(varnames, values))
             tags = vars_.get("TAGS", "").split(" ")

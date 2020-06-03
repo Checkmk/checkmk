@@ -1199,6 +1199,7 @@ def should_notify(context, entry):
 
     # Check if the host has to be in a special service_level
     if "match_sl" in entry:
+        assert isinstance(entry['match_sl'], list)
         from_sl, to_sl = entry['match_sl']
         if context['WHAT'] == "SERVICE" and context.get('SVC_SL', '').isdigit():
             sl = events.saveint(context.get('SVC_SL'))
@@ -1261,6 +1262,7 @@ def should_notify(context, entry):
 
     # Check notification number (in case of repeated notifications/escalations)
     if "escalation" in entry:
+        assert isinstance(entry["escalation"], list)
         from_number, to_number = entry["escalation"]
         assert isinstance(from_number, (int, float))
         assert isinstance(to_number, (int, float))

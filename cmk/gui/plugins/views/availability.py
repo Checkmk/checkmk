@@ -1153,7 +1153,7 @@ def _output_availability_csv(what, av_data, avoptions):
         for title, (name, _url) in zip(object_titles, row_object):
             table.cell(title, name)
 
-        for (title, _help), (text, _css) in zip(cell_titles, row_cells):
+        for title, (text, _css) in zip(cell_titles, row_cells):
             table.cell(title, text)
 
     _av_output_set_content_disposition("Checkmk-Availability")

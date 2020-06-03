@@ -10,7 +10,6 @@
 import sys
 from email.mime.text import MIMEText
 
-from six import ensure_str
 from cmk.notification_plugins import utils
 
 opt_debug = '-d' in sys.argv
@@ -129,9 +128,7 @@ def main():
         content_txt = ""
         parameters, contexts = utils.read_bulk_contexts()
         hosts = set()
-        for context_str in contexts:
-            # TODO: We should probably fix the typing of utils.
-            context = {k: ensure_str(v) for k, v in context_str}
+        for context in contexts:
             context.update(parameters)
             content_txt += construct_content(context)
             mailto = context['CONTACTEMAIL']  # Assume the same in each context

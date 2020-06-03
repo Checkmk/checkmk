@@ -2233,7 +2233,7 @@ class ListOfMultiple(ValueSpec):
     def value_to_text(self, value):
         # type: (Dict[str, Any]) -> str
         table_content = HTML()
-        for ident, val in value:
+        for ident, val in value.items():
             vs = self._choice_dict[ident]
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             table_content += html.render_tr(

@@ -202,6 +202,7 @@ def call_hook(site, hook_name, args):
     )
     content = p.communicate()[0].strip()
     exitcode = p.poll()
+    assert exitcode is not None  # we have terminated, so there *is* an exit code
 
     if exitcode and args[0] != "depends":
         sys.stderr.write("Error running %s: %s\n" % (subprocess.list2cmdline(cmd), content))

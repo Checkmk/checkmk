@@ -19,7 +19,7 @@ matrix:
           env: TEST_TARGETS="test-unit test-python-futurize test-bandit"
             TEST_PATH=tests
         - name: "Python2 formatting"
-          python: "2.7"
+          python: "3.8"
           env: TEST_TARGETS="test-format-python"
             TEST_PATH=tests-py3
         - name: "Python3 PyLint tests"

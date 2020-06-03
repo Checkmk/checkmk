@@ -23,7 +23,7 @@ PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += six-1.14.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL
 PYTHON3_MODULES_LIST += python-dateutil-2.8.1.tar.gz # direct dependency
 
-PYTHON3_MODULES_LIST += PyYAML-5.3.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += PyYAML-5.3.1.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += wrapt-1.11.2.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += yarl-1.3.0.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += multidict-4.5.2.tar.gz # needed by yarl

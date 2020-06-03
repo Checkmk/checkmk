@@ -225,4 +225,4 @@ python3-modules-dump-Pipfile:
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'
 	@echo ''
 	@echo '[requires]'
-	@echo 'python_version = "3.7"'
+	@echo 'python_version = "3.8"'

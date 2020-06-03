@@ -40,8 +40,10 @@ curl -sSf --user %creds% -o %fname%  %url%/%fname% > nul 2>&1
 IF /I "!ERRORLEVEL!" NEQ "0" (
   powershell Write-Host "%fname% not found on %url%, building..." -Foreground cyan
   rem Will be replaced with correct call to the make after checking of whole data path.
-  powershell Write-Host "Re-Using prebuild Python..." -Foreground yellow
-  copy backup\python-3.8.zip "%arti_dir%"\
+  rem powershell Write-Host "Re-Using prebuild Python..." -Foreground yellow
+  rem copy backup\python-3.8.zip "%arti_dir%"\
+  rem Make
+  make ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 33
 
   powershell Write-Host "Checking the result of the build..." -Foreground cyan
   if NOT exist %arti_dir%\python-3.8.zip (

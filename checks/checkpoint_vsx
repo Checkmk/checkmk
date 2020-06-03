@@ -61,7 +61,7 @@ check_info["checkpoint_vsx"] = {
     'inventory_function': discover(lambda k, values: "vs_name" in values),
     'check_function': check_checkpoint_vsx,
     'service_description': 'VS %s Info',
-    'snmp_info': lambda oid: False, # migrated to cmk/base/plugins/agent_based/checkpoint_vsx.py
+    'snmp_info': (".1.3.6.1.4.1.2620.1.16.22.1.1.1", ["1"]),  #  migrated to cmk/base/plugins/agent_based/checkpoint_vsx
     'snmp_scan_function': lambda oid: False,  # already migrated!
 }
 #.

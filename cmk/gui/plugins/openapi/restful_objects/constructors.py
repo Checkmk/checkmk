@@ -6,13 +6,7 @@
 import collections
 import hashlib
 import json
-import sys
-from typing import Any, Callable, Dict, List, Optional, Union
-
-if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
-    from typing_extensions import Literal
-else:
-    from typing import Literal  # pylint: disable=no-name-in-module
+from typing import Any, Callable, Dict, List, Optional, Union, Literal
 
 from connexion import ProblemException  # type: ignore[import]
 from werkzeug.datastructures import ETags

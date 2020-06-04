@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 from pathlib import Path
 
 import pytest  # type: ignore[import]
@@ -145,7 +144,6 @@ def _is_pure_section_declaration(check):
     return check.get('inventory_function') is None and check.get('check_function') is None
 
 
-@pytest.mark.skipif(sys.version_info[0] < 3, reason="cmk.base.check_api is Python-3-only")
 def test_find_missing_manpages():
     all_check_manuals = man_pages.all_man_pages()
 

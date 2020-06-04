@@ -13,13 +13,7 @@ connexion is disabled.
 
 """
 import functools
-import sys
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
-
-if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
-    from typing_extensions import Literal
-else:
-    from typing import Literal  # pylint: disable=no-name-in-module
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union, Literal
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]

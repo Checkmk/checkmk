@@ -4,13 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union, Tuple, Optional, AnyStr, List
-
-# TODO: Can be removed with python 3.8+
-if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
-    from mypy_extensions import TypedDict
-else:
-    from typing import TypedDict  # pylint: disable=no-name-in-module
+from typing import Union, Tuple, Optional, AnyStr, List, TypedDict
 
 
 def minn(a, b):

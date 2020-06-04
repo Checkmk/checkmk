@@ -4,13 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-import sys
-from typing import Any, Dict, Union
-
-if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
-    from typing_extensions import Literal
-else:
-    from typing import Literal  # pylint: disable=no-name-in-module
+from typing import Any, Dict, Union, Literal
 
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors

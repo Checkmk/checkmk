@@ -30,19 +30,13 @@ import numbers
 import os
 import re
 import socket
-import sys
 import time
 import uuid
 import urllib.parse
-from typing import Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Tuple as _Tuple, Type, TypeVar, Union, Sequence
+from typing import Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Tuple as _Tuple, Type, TypeVar, Union, Sequence, Protocol
 
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
-
-if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
-    from typing_extensions import Protocol
-else:
-    from typing import Protocol  # pylint: disable=no-name-in-module
 
 from PIL import Image  # type: ignore[import]
 from six import ensure_binary, ensure_str

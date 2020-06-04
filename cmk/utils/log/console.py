@@ -12,35 +12,21 @@ from typing import Any, Generator, IO, Optional
 import cmk.utils.tty as tty
 from ._level import VERBOSE
 
-if sys.version_info > (3, 7):
-    # For StreamHandler.setStream()
-    @contextmanager
-    def set_stream(logger, handler, stream):
-        # type: (logging.Logger, logging.StreamHandler, IO[str]) -> Generator[None, None, None]
-        # See `https://bugs.python.org/issue6333` for why this is necessary.
-        old = handler.setStream(stream)
-        logger.addHandler(handler)
-        try:
-            yield
-        finally:
-            logger.removeHandler(handler)
-            handler.close()
-            if old:
-                handler.setStream(old)
-else:
 
-    @contextmanager
-    def set_stream(logger, handler, stream):
+# For StreamHandler.setStream()
+@contextmanager
+def set_stream(logger, handler, stream):
+    # type: (logging.Logger, logging.StreamHandler, IO[str]) -> Generator[None, None, None]
+    # See `https://bugs.python.org/issue6333` for why this is necessary.
+    old = handler.setStream(stream)
+    logger.addHandler(handler)
+    try:
+        yield
+    finally:
+        logger.removeHandler(handler)
         handler.close()
-        old, handler.stream = handler.stream, stream
-        logger.addHandler(handler)
-        try:
-            yield
-        finally:
-            logger.removeHandler(handler)
-            handler.close()
-            if old:
-                handler.stream = old
+        if old:
+            handler.setStream(old)
 
 
 _handler = logging.StreamHandler()

@@ -4,20 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for predictive monitoring / anomaly detection"""
-from typing import Optional, List, Any, cast, Dict, Union, Callable, Tuple
 
 import json
 import logging
 import math
 import os
-import sys
 import time
-
-# TODO: Can be removed with python 3.8+
-if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
-    from mypy_extensions import TypedDict
-else:
-    from typing import TypedDict  # pylint: disable=no-name-in-module,ungrouped-imports
+from typing import Optional, List, Any, cast, Dict, Union, Callable, Tuple, TypedDict
 
 import cmk.utils.debug
 import cmk.utils

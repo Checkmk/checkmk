@@ -575,12 +575,10 @@ endif
 
 .venv-2.7:
 	$(MAKE) -C virtual-envs/2.7 .venv
-	$(MAKE) -C virtual-envs/3.8 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
 	ln -s virtual-envs/2.7/{Pipfile,Pipfile.lock,.venv} .
 
 .venv-3.8:
-	$(MAKE) -C virtual-envs/2.7 .venv
 	$(MAKE) -C virtual-envs/3.8 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
 	ln -s virtual-envs/3.8/{Pipfile,Pipfile.lock,.venv} .

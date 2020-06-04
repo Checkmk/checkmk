@@ -118,8 +118,10 @@ class ModeDiagnostics(WatoMode):
                 )),
                 ("general",
                  FixedValue(None,
+                            title=_("General information"),
                             totext=_("Collect information about OS and Checkmk version"),
-                            title=_("General information"))),
+                            help=_("Collect information about OS, Checkmk version and edition, "
+                                   "Time, Core, Python version and paths, Architecture"))),
                 ("opt_info", ListChoice(
                     title=_("Optional information"),
                     choices=[],

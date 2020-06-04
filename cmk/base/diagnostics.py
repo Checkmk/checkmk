@@ -12,6 +12,7 @@ import tarfile
 import json
 from pathlib import Path
 import tempfile
+import platform
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -170,10 +171,13 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElement):
     @property
     def description(self):
         # type: () -> str
-        return "OS, Checkmk version and edition, Time, Core, Python version and paths"
+        return ("OS, Checkmk version and edition, Time, Core, "
+                "Python version and paths, Architecture")
 
     def add_or_get_file(self, tmp_dump_folder):
         # type: (Path) -> Optional[Path]
         filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".json")
-        store.save_text_to_file(filepath, json.dumps(cmk_version.get_general_version_infos()))
+        version_infos = cmk_version.get_general_version_infos()
+        version_infos["arch"] = platform.machine()
+        store.save_text_to_file(filepath, json.dumps(version_infos))
         return filepath

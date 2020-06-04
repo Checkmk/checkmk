@@ -8,7 +8,6 @@ import re
 import logging
 from typing import Dict, List
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
 
@@ -2197,39 +2196,31 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
                 "With this option you can specify the attributes a user which is created during "
                 "its initial login gets added. For example, the default is to add the role \"user\" "
                 "to all automatically created users."),
-            elements=self._default_user_profile_elements,
+            elements=[
+                ('roles',
+                 ListChoice(
+                     title=_('User roles'),
+                     help=_('Specify the initial roles of an automatically created user.'),
+                     default_value=['user'],
+                     choices=self._list_roles,
+                 )),
+                ('contactgroups',
+                 ListChoice(
+                     title=_('Contact groups'),
+                     help=_('Specify the initial contact groups of an automatically created user.'),
+                     default_value=[],
+                     choices=self._list_contactgroups,
+                 )),
+                ("force_authuser",
+                 Checkbox(
+                     title=_("Visibility of Hosts/Services"),
+                     label=_("Only show hosts and services the user is a contact for"),
+                     help=_("Specifiy the initial setting for an automatically created user."),
+                     default_value=False,
+                 )),
+            ],
             optional_keys=[],
         )
-
-    def _default_user_profile_elements(self):
-        if cmk_version.is_managed_edition():
-            import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-            elements = managed.customer_choice_element()
-        else:
-            elements = []
-        return elements + [
-            ('roles',
-             ListChoice(
-                 title=_('User roles'),
-                 help=_('Specify the initial roles of an automatically created user.'),
-                 default_value=['user'],
-                 choices=self._list_roles,
-             )),
-            ('contactgroups',
-             ListChoice(
-                 title=_('Contact groups'),
-                 help=_('Specify the initial contact groups of an automatically created user.'),
-                 default_value=[],
-                 choices=self._list_contactgroups,
-             )),
-            ("force_authuser",
-             Checkbox(
-                 title=_("Visibility of Hosts/Services"),
-                 label=_("Only show hosts and services the user is a contact for"),
-                 help=_("Specifiy the initial setting for an automatically created user."),
-                 default_value=False,
-             ))
-        ]
 
     def _list_roles(self):
         roles = userdb.load_roles()

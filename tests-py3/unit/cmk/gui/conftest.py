@@ -8,32 +8,34 @@
 import ast
 import contextlib
 import json
-import threading
-from pathlib import Path
-from typing import NamedTuple, Any
-from http.cookiejar import CookieJar
 import shutil
+import threading
 import urllib.parse
+from http.cookiejar import CookieJar
+from pathlib import Path
+from typing import Any, NamedTuple
 
-from mock import MagicMock
-import webtest  # type: ignore[import]
 import pytest  # type: ignore[import]
+import webtest  # type: ignore[import]
+from mock import MagicMock
 from six import ensure_str
 from werkzeug.test import create_environ
 
+from testlib.utils import DummyApplication
+
 import cmk.utils.log
 import cmk.utils.paths as paths
+from cmk.utils import store
+
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 import cmk.gui.login as login
-from cmk.gui.http import Request
 from cmk.gui.globals import AppContext, RequestContext
+from cmk.gui.http import Request
 from cmk.gui.plugins.userdb import htpasswd
 from cmk.gui.utils import get_random_string
-from cmk.gui.watolib.users import edit_users, delete_users
+from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
-from cmk.utils import store
-from testlib.utils import DummyApplication
 
 SPEC_LOCK = threading.Lock()
 
@@ -200,7 +202,7 @@ def inline_local_automation_calls(mocker):
 
 @pytest.fixture()
 def make_html_object_explode(mocker):
-    class HtmlExploder(object):
+    class HtmlExploder:
         def __init__(self, *args, **kw):
             raise NotImplementedError("Tried to instantiate html")
 
@@ -268,8 +270,10 @@ class WebTestAppForCMK(webtest.TestApp):
             rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
         if rel.startswith("cmk/"):
             rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
-        link = get_link(resp.json, rel)
-        return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)
+        if resp.status.startswith("2"):
+            link = get_link(resp.json, rel)
+            return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)
+        return resp
 
     def api_request(self, action, request, output_format='json', **kw):
         if self.username is None or self.password is None:

@@ -219,21 +219,24 @@ def check_cpu_util_unix(values, params, cores=None, values_counter=True):
 
 
 def _util_perfdata(core, total_perc, core_index, this_time, params):
-    if params.get("core_util_graph"):
-        yield 0, "", [(cpu_util_core_name(core, core_index), total_perc)]
 
     if "core_util_time" in params:
         threshold, warn, crit = params["core_util_time"]
         yield cpu_util_time(this_time, core, total_perc, threshold, warn, crit)
 
-    state, infotext, _ = check_levels(
+    state, infotext, perfdata = check_levels(
         total_perc,
-        "core_%s" % core,  # Not used in perfdata
+        cpu_util_core_name(core, core_index) if params.get("core_util_graph") else None,
         params.get('levels_single'),
         human_readable_func=get_percent_human_readable,
-        infoname="Core %s" % core)
-    if state:
-        yield state, infotext, []
+        infoname="Core %s" % core,
+    )
+
+    if not state:
+        infotext = ""
+
+    if infotext or perfdata:
+        yield state, infotext, perfdata
 
 
 def check_cpu_util_linux_container(_no_item, params, parsed):

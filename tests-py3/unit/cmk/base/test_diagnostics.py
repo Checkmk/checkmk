@@ -77,15 +77,16 @@ def test_diagnostics_cleanup_dump_folders(monkeypatch, tmp_path):
 #   '----------------------------------------------------------------------'
 
 
-def test_version_diagnostics_element(monkeypatch, tmp_path):
+def test_diagnostics_element_general(monkeypatch, tmp_path):
     tmppath = Path(tmp_path).joinpath("tmp")
 
     version_diagnostics_element = diagnostics.GeneralDiagnosticsElement()
     assert version_diagnostics_element.ident == "general"
+    assert version_diagnostics_element.title == "General"
 
     filepath = version_diagnostics_element.add_or_get_file(tmppath)
     assert filepath == tmppath.joinpath("general.json")
-    assert version_diagnostics_element.description == "General: OS, Checkmk version and edition, Time, Core, Python version and paths"
+    assert version_diagnostics_element.description == "OS, Checkmk version and edition, Time, Core, Python version and paths"
 
     info_keys = [
         "time",

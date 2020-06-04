@@ -105,7 +105,7 @@ class DiagnosticsDump:
             if filepath is None:
                 console.verbose("  %s: No informations\n" % element.ident)
                 continue
-            out.output("  %s\n" % element.description)
+            out.output("  %s: %s\n" % (element.title, element.description))
             filepaths.append(filepath)
         return filepaths
 
@@ -163,6 +163,11 @@ class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractproperty
+    def title(self):
+        # type: () -> str
+        raise NotImplementedError()
+
+    @abc.abstractproperty
     def description(self):
         # type: () -> str
         raise NotImplementedError()
@@ -180,9 +185,14 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElement):
         return "general"
 
     @property
+    def title(self):
+        # type: () -> str
+        return "General"
+
+    @property
     def description(self):
         # type: () -> str
-        return "General: OS, Checkmk version and edition, Time, Core, Python version and paths"
+        return "OS, Checkmk version and edition, Time, Core, Python version and paths"
 
     def add_or_get_file(self, tmp_dump_folder):
         # type: (Path) -> Optional[Path]

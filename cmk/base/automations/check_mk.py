@@ -39,6 +39,11 @@ from cmk.utils.type_defs import (
     SNMPHostConfig,
 )
 
+from cmk.utils.diagnostics import (
+    DiagnosticsCLParameters,
+    deserialize_cl_parameters,
+)
+
 import cmk.base.check_api as check_api
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
@@ -1796,10 +1801,10 @@ class AutomationCreateDiagnosticsDump(Automation):
     needs_checks = False
 
     def execute(self, args):
-        # type: (List[str]) -> Dict[str, Any]
+        # type: (DiagnosticsCLParameters) -> Dict[str, Any]
         with redirect_output(io.StringIO()) as buf:
             log.setup_console_logging()
-            dump = DiagnosticsDump()
+            dump = DiagnosticsDump(deserialize_cl_parameters(args))
             dump.create()
             return {
                 "output": buf.getvalue(),

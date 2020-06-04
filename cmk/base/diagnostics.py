@@ -6,7 +6,7 @@
 
 import errno
 import abc
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import uuid
 import tarfile
 import json
@@ -14,19 +14,25 @@ from pathlib import Path
 import tempfile
 import platform
 
+from cmk.utils.i18n import _
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 from cmk.utils.log import console
+import cmk.utils.packaging as packaging
+from cmk.utils.diagnostics import (
+    OPT_LOCAL_FILES,
+    DiagnosticsOptionalParameters,
+)
 
 import cmk.base.obsolete_output as out
 
 SUFFIX = ".tar.gz"
 
 
-def create_diagnostics_dump():
-    # type: () -> None
-    dump = DiagnosticsDump()
+def create_diagnostics_dump(parameters):
+    # type: (Optional[DiagnosticsOptionalParameters]) -> None
+    dump = DiagnosticsDump(parameters)
     dump.create()
     out.output("Created diagnostics dump:\n")
     out.output("  '%s'\n" % _get_short_filepath(dump.tarfile_path))
@@ -51,10 +57,10 @@ class DiagnosticsDump:
     """Caring about the persistance of diagnostics dumps in the local site"""
     _keep_num_dumps = 5
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self, parameters=None):
+        # type: (Optional[DiagnosticsOptionalParameters]) -> None
         self.fixed_elements = self._get_fixed_elements()
-        self.optional_elements = self._get_optional_elements()
+        self.optional_elements = self._get_optional_elements(parameters)
         self.elements = self.fixed_elements + self.optional_elements
 
         dump_folder = cmk.utils.paths.diagnostics_dir
@@ -67,9 +73,16 @@ class DiagnosticsDump:
             GeneralDiagnosticsElement(),
         ]
 
-    def _get_optional_elements(self):
-        # type: () -> List[ABCDiagnosticsElement]
-        return []
+    def _get_optional_elements(self, parameters):
+        # type: (Optional[DiagnosticsOptionalParameters]) -> List[ABCDiagnosticsElement]
+        if parameters is None:
+            return []
+
+        optional_elements = []  # type: List[ABCDiagnosticsElement]
+        if parameters.get(OPT_LOCAL_FILES):
+            optional_elements.append(LocalFilesDiagnosticsElement())
+
+        return optional_elements
 
     def create(self):
         # type: () -> None
@@ -157,7 +170,23 @@ class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class GeneralDiagnosticsElement(ABCDiagnosticsElement):
+class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
+    def add_or_get_file(self, tmp_dump_folder):
+        # type: (Path) -> Optional[Path]
+        filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".json")
+        store.save_text_to_file(filepath, json.dumps(self._collect_infos()))
+        return filepath
+
+    @abc.abstractmethod
+    def _collect_infos(self):
+        # type: () -> Dict[str, Any]
+        raise NotImplementedError()
+
+
+#   ---json dumps-----------------------------------------------------------
+
+
+class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self):
         # type: () -> str
@@ -166,18 +195,38 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElement):
     @property
     def title(self):
         # type: () -> str
-        return "General"
+        return _("General")
 
     @property
     def description(self):
         # type: () -> str
-        return ("OS, Checkmk version and edition, Time, Core, "
-                "Python version and paths, Architecture")
+        return _("OS, Checkmk version and edition, Time, Core, "
+                 "Python version and paths, Architecture")
 
-    def add_or_get_file(self, tmp_dump_folder):
-        # type: (Path) -> Optional[Path]
-        filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".json")
+    def _collect_infos(self):
+        # type: () -> Dict[str, Any]
         version_infos = cmk_version.get_general_version_infos()
         version_infos["arch"] = platform.machine()
-        store.save_text_to_file(filepath, json.dumps(version_infos))
-        return filepath
+        return version_infos
+
+
+class LocalFilesDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self):
+        # type: () -> str
+        return "local_files"
+
+    @property
+    def title(self):
+        # type: () -> str
+        return _("Local Files")
+
+    @property
+    def description(self):
+        # type: () -> str
+        return _("List of installed, unpacked, optional files below $OMD_ROOT/local. "
+                 "This also includes information about installed MKPs.")
+
+    def _collect_infos(self):
+        # type: () -> Dict[str, Any]
+        return packaging.get_all_package_infos()

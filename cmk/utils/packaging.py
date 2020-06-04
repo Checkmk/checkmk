@@ -534,7 +534,7 @@ def package_part_info():
 
         part_info[part.ident] = {
             "title": part.title,
-            "permissions": map(_get_permissions, [os.path.join(part.path, f) for f in files]),
+            "permissions": list(map(_get_permissions, [os.path.join(part.path, f) for f in files])),
             "path": part.path,
             "files": files,
         }

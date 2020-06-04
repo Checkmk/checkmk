@@ -20,6 +20,10 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException
 import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import TagValue, HostgroupName
 from cmk.utils.log import console
+from cmk.utils.diagnostics import (
+    OPT_LOCAL_FILES,
+    DiagnosticsOptionalParameters,
+)
 
 import cmk.fetchers.factory as snmp_factory
 import cmk.base.data_sources as data_sources
@@ -1768,20 +1772,26 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_create_diagnostics_dump():
-    # type: () -> None
-    cmk.base.diagnostics.create_diagnostics_dump()
+def mode_create_diagnostics_dump(options):
+    # type: (DiagnosticsOptionalParameters) -> None
+    cmk.base.diagnostics.create_diagnostics_dump(options)
 
 
 modes.register(
-    Mode(
-        long_option="create-diagnostics-dump",
-        handler_function=mode_create_diagnostics_dump,
-        short_help="Create diagnostics dump",
-        long_help=[
-            "Create a dump containing information for diagnostic analysis "
-            "in the folder var/check_mk/diagnostics."
-        ],
-        needs_config=False,
-        needs_checks=False,
-    ))
+    Mode(long_option="create-diagnostics-dump",
+         handler_function=mode_create_diagnostics_dump,
+         short_help="Create diagnostics dump",
+         long_help=[
+             "Create a dump containing information for diagnostic analysis "
+             "in the folder var/check_mk/diagnostics."
+         ],
+         needs_config=False,
+         needs_checks=False,
+         sub_options=[
+             Option(
+                 long_option=OPT_LOCAL_FILES,
+                 short_help=(
+                     "Pack a list of installed, unpacked, optional files below $OMD_ROOT/local. "
+                     "This also includes information about installed MKPs."),
+             ),
+         ]))

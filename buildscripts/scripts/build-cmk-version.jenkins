@@ -317,6 +317,8 @@ def build_linux_agent_updater(DAILY_DATA, WORKSPACE, AGENT, EDITION, BRANCH_VERS
             cp -r ${DAILY_DATA}/git/enterprise/agents/plugins/* ${WORK_DIR}/enterprise/agents/plugins/
             mkdir -p ${WORK_DIR}/buildscripts/infrastructure/build-nodes/scripts
             cp ${DAILY_DATA}/git/buildscripts/infrastructure/build-nodes/scripts/build_lib.sh ${WORK_DIR}/buildscripts/infrastructure/build-nodes/scripts
+            cp ${DAILY_DATA}/git/buildscripts/infrastructure/build-nodes/scripts/install-openssl.sh ${WORK_DIR}/buildscripts/infrastructure/build-nodes/scripts
+            cp ${DAILY_DATA}/git/buildscripts/infrastructure/build-nodes/scripts/install-python.sh ${WORK_DIR}/buildscripts/infrastructure/build-nodes/scripts
         """
         withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
             sh script: """

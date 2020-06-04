@@ -38,19 +38,32 @@ factory_settings["f5_bigip_mem_default_levels"] = {
 }
 
 def parse_f5_bigip_mem(info):
-    parsed = {
-        "mem" : (info[0][0], info[0][1]),
-        "tmm" : (info[0][2], info[0][3]),
-    }
+    parsed = {}
+    for key, index, factor in [
+        ('mem_total', 0, 1),
+        ('mem_used', 1, 1),
+        ('tmm_mem_total', 2, 1024),
+        ('tmm_mem_used', 3, 1024),
+    ]:
+        try:
+            parsed[key] = float(info[0][index]) * factor
+        except (ValueError, IndexError):
+            pass
     return parsed
 
+
 def inventory_f5_bigip_mem(parsed):
-    return [ ( "total", {} ) ]
+    if parsed.get('mem_total') is not None and parsed.get('mem_used') is not None:
+        return [ ( "total", {} ) ]
 
 
 def check_f5_bigip_mem(item, params, parsed):
-    mem_total, mem_used = parsed["mem"]
-    return check_memory_simple(float(mem_used), float(mem_total), params)
+    mem_total = parsed.get('mem_total')
+    mem_used = parsed.get('mem_used')
+    if mem_total is None or mem_used is None:
+        return 3, "Memory information missing"
+    return check_memory_simple(mem_used, mem_total, params)
+
 
 check_info['f5_bigip_mem'] = {
     'parse_function'            : parse_f5_bigip_mem,
@@ -71,15 +84,19 @@ check_info['f5_bigip_mem'] = {
 }
 
 def inventory_f5_bigip_mem_tmm(parsed):
-    mem = parsed["tmm"][0]
-    # Some devices obviously do not deliver this information...
-    if not mem == '' and not float(mem) == 0:
-        return [ ( "TMM", {} ) ]
+    mem_total = parsed.get('tmm_mem_total')
+    mem_used = parsed.get('tmm_mem_used')
+    if mem_total is not None and mem_used is not None and mem_total > 0:
+        return [("TMM", {})]
 
 
 def check_f5_bigip_mem_tmm(item, params, parsed):
-    mem_total, mem_used = parsed["tmm"]
-    return check_memory_simple(float(mem_used) * 1024, float(mem_total) * 1024, params)
+    mem_total = parsed.get('tmm_mem_total')
+    mem_used = parsed.get('tmm_mem_used')
+    if mem_total is None or mem_used is None:
+        return 3, "Memory information missing"
+    return check_memory_simple(mem_used, mem_total, params)
+
 
 check_info['f5_bigip_mem.tmm'] = {
     'inventory_function'        : inventory_f5_bigip_mem_tmm,

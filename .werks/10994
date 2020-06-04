@@ -1,0 +1,10 @@
+Title: f5_bigip_mem: Discover only if memory total and used values are available
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p25
+Date: 1591272304
+Class: fix
+
+

@@ -50,7 +50,7 @@ def _parameter_valuespec_job():
                  Age(title=_("Critical at"), default_value=0)
              ],
          )),
-        ("exit_codes",
+        ("exit_code_to_state_map",
          ListOf(
              Tuple(
                  orientation="horizontal",
@@ -59,7 +59,12 @@ def _parameter_valuespec_job():
                      MonitoringState(title=_("Resulting state"),),
                  ],
                  default_value=(0, 0)),
-             title = _("Map exit codes"),
+             title=_("Explicit mapping of job exit codes to states"),
+             help=_("Here you can define a mapping between possible exit codes and service states. "
+                    "If no mapping is defined, the check becomes CRITICAL when the exit code is not 0. "
+                    "If an exit code occurs that is not defined in this mapping, the check becomes CRITICAL. "
+                    "If you happen to define the same exit code multiple times the first entry will be used."),
+             allow_empty=False,
          )),
         ("outcome_on_cluster",
          DropdownChoice(

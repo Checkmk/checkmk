@@ -26,7 +26,7 @@ def make_env(instance):
     return env
 
 
-class Database():
+class Database:
     def __init__(self):
         self.args = self._parse_arguments()
 
@@ -259,7 +259,7 @@ class Database():
 
     # TODO: use platform independent approach:
     #
-    # class ABCConnector():
+    # class ABCConnector:
     #     @abc.abstractmethod
     #     def run_db2(self, cmd):
     #         raise NotImplementedError()

@@ -29,41 +29,31 @@ def test_diagnostics_dump_elements():
 
 def test_diagnostics_dump_create(monkeypatch, tmp_path):
     diagnostics_dump = diagnostics.DiagnosticsDump()
-    diagnostics_dump._create_dump_folders()
+    diagnostics_dump._create_dump_folder()
 
     assert diagnostics_dump.dump_folder.exists()
-    assert diagnostics_dump.tmp_dump_folder.exists()
     assert diagnostics_dump.dump_folder.name == "diagnostics"
-    assert diagnostics_dump.tmp_dump_folder.name == "tmp"
 
     diagnostics_dump._create_tarfile()
 
-    assert len(list(diagnostics_dump.dump_folder.glob("*.tar.gz"))) == 1
-    assert len(list(diagnostics_dump.dump_folder.iterdir())) == 2
-    assert len(diagnostics_dump.fixed_elements) <= len(
-        list(diagnostics_dump.tmp_dump_folder.iterdir())) <= len(diagnostics_dump.elements)
+    tarfiles = diagnostics_dump.dump_folder.iterdir()
+    assert len(list(tarfiles)) == 1
+    assert all(tarfile.suffix == ".tar.gz" for tarfile in tarfiles)
 
 
-def test_diagnostics_cleanup_dump_folders(monkeypatch, tmp_path):
+def test_diagnostics_cleanup_dump_folder(monkeypatch, tmp_path):
     diagnostics_dump = diagnostics.DiagnosticsDump()
-    diagnostics_dump._create_dump_folders()
-
-    # Fake existing diagnostics elements
-    for nr in range(10):
-        diagnostics_dump.tmp_dump_folder.joinpath("dummy-%s" % nr).touch()
+    diagnostics_dump._create_dump_folder()
 
     # Fake existing tarfiles
     for nr in range(10):
         diagnostics_dump.dump_folder.joinpath("dummy-%s.tar.gz" % nr).touch()
 
-    # 10 tarfiles + tmp folder
-    assert len(list(diagnostics_dump.dump_folder.iterdir())) >= 11
-
-    diagnostics_dump._cleanup_tmp_dump_folder()
     diagnostics_dump._cleanup_dump_folder()
 
-    assert len(list(diagnostics_dump.dump_folder.iterdir())) == 5
-    assert not diagnostics_dump.tmp_dump_folder.exists()
+    tarfiles = diagnostics_dump.dump_folder.iterdir()
+    assert len(list(tarfiles)) == diagnostics_dump._keep_num_dumps
+    assert all(tarfile.suffix == ".tar.gz" for tarfile in tarfiles)
 
 
 #.

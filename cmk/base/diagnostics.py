@@ -11,6 +11,7 @@ import uuid
 import tarfile
 import json
 from pathlib import Path
+import tempfile
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -56,9 +57,7 @@ class DiagnosticsDump:
         self.elements = self.fixed_elements + self.optional_elements
 
         dump_folder = cmk.utils.paths.diagnostics_dir
-        # TODO use context manager for temporary folders
         self.dump_folder = dump_folder
-        self.tmp_dump_folder = dump_folder.joinpath("tmp")
         self.tarfile_path = dump_folder.joinpath(str(uuid.uuid4())).with_suffix(SUFFIX)
 
     def _get_fixed_elements(self):
@@ -73,56 +72,35 @@ class DiagnosticsDump:
 
     def create(self):
         # type: () -> None
-        self._create_dump_folders()
+        self._create_dump_folder()
         self._create_tarfile()
-        self._cleanup_tmp_dump_folder()
         self._cleanup_dump_folder()
 
-    def _create_dump_folders(self):
+    def _create_dump_folder(self):
         # type: () -> None
-        console.verbose("Create dump folders:\n")
+        console.verbose("Create dump folder:\n")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
         console.verbose("  '%s'\n" % _get_short_filepath(self.dump_folder))
-        self.tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-        console.verbose("  '%s'\n" % _get_short_filepath(self.tmp_dump_folder))
 
     def _create_tarfile(self):
         # type: () -> None
-        filepaths = self._get_filepaths()
-
-        console.verbose("Pack temporary files:\n")
-        with tarfile.open(name=self.tarfile_path, mode='w:gz') as tar:
-            for filepath in filepaths:
-                console.verbose("  '%s'\n" % _get_short_filepath(filepath))
+        with tarfile.open(name=self.tarfile_path, mode='w:gz') as tar,\
+             tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder:
+            for filepath in self._get_filepaths(Path(tmp_dump_folder)):
                 tar.add(str(filepath), arcname=filepath.name)
 
-    def _get_filepaths(self):
-        # type: () -> List[Path]
+    def _get_filepaths(self, tmp_dump_folder):
+        # type: (Path) -> List[Path]
         out.output("Collect diagnostics information:\n")
         filepaths = []
         for element in self.elements:
-            filepath = element.add_or_get_file(self.tmp_dump_folder)
+            filepath = element.add_or_get_file(tmp_dump_folder)
             if filepath is None:
-                console.verbose("  %s: No informations\n" % element.ident)
+                console.verbose("  %s: No information\n" % element.title)
                 continue
             out.output("  %s: %s\n" % (element.title, element.description))
             filepaths.append(filepath)
         return filepaths
-
-    def _cleanup_tmp_dump_folder(self):
-        # type: () -> None
-        console.verbose("Remove temporary files:\n")
-        for filepath in self.tmp_dump_folder.iterdir():
-            console.verbose("  '%s'\n" % _get_short_filepath(filepath))
-            self._remove_file(filepath)
-
-        console.verbose("Remove temporary dump folder:\n")
-        console.verbose("  '%s'\n" % _get_short_filepath(self.tmp_dump_folder))
-        try:
-            self.tmp_dump_folder.rmdir()
-        except OSError as e:
-            if e.errno != errno.ENOTEMPTY:
-                raise
 
     def _cleanup_dump_folder(self):
         # type: () -> None

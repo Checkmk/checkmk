@@ -24,7 +24,7 @@ def test_02_python_interpreter_path(site):
 def test_03_python_interpreter_version(site):
     p = site.execute(["python3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("Python 3.7.4")
+    assert version.startswith("Python 3.8.3")
 
 
 def test_03_python_path(site):
@@ -33,7 +33,7 @@ def test_03_python_path(site):
     assert sys_path[0] == ""
     assert site.root + "/local/lib/python3" in sys_path
     assert site.root + "/lib/python3" in sys_path
-    assert site.root + "/lib/python3.7" in sys_path
+    assert site.root + "/lib/python3.8" in sys_path
 
     for p in sys_path:
         if p != "" and not p.startswith(site.root):
@@ -53,7 +53,7 @@ def test_02_pip_path(site):
 def test_03_pip_interpreter_version(site):
     p = site.execute(["pip3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("pip 19.0.3")
+    assert version.startswith("pip 19.2.3")
 
 
 # TODO: Improve this test to automatically adapt the expected modules from our Pipfile

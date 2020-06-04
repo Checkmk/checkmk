@@ -85,6 +85,7 @@ You should find an example configuration file at
 import errno
 import glob
 import logging
+import operator
 import os
 import re
 import shlex
@@ -280,6 +281,15 @@ class AbstractFilter(object):
         raise NotImplementedError()
 
 
+COMPARATORS = {
+    '<': operator.lt,
+    '<=': operator.le,
+    '>': operator.gt,
+    '>=': operator.ge,
+    '==': operator.eq,
+}
+
+
 class AbstractNumericFilter(AbstractFilter):
     """Common code for filtering by comparing integers"""
     def __init__(self, spec_string):
@@ -288,22 +298,11 @@ class AbstractNumericFilter(AbstractFilter):
         if match is None:
             raise ValueError("unable to parse filter spec: %r" % spec_string)
         spec = match.groupdict()
-        operator, value = spec['operator'], spec['value']
-        self._value = int(value)
-        if operator not in ('<', '<=', '>', '>=', '=='):
-            raise ValueError("unknown operator for numeric filter: %r" % operator)
-        self._positive_cmp_results = []
-        if '<' in operator:
-            self._positive_cmp_results.append(1)
-        if '>' in operator:
-            self._positive_cmp_results.append(-1)
-        if '=' in operator:
-            self._positive_cmp_results.append(0)
-
-    def _matches_value(self, other_value):
-        """decide whether an integer value matches"""
-        # TODO: Python 3 has no __cmp__ anymore!
-        return self._value.__cmp__(int(other_value)) in self._positive_cmp_results
+        comp = COMPARATORS.get(spec['operator'])
+        if comp is None:
+            raise ValueError("unknown operator for numeric filter: %r" % spec['operator'])
+        reference = int(spec['value'])
+        self._matches_value = lambda actual: comp(int(actual), reference)
 
     def matches(self, filestat):
         raise NotImplementedError()

@@ -11,7 +11,7 @@ import re
 import os
 import ast
 import ssl
-from typing import NewType, AnyStr, Any, Type, List, Tuple, Union, Dict, Pattern, Optional
+from typing import NewType, AnyStr, Any, Type, List, Tuple, Union, Dict, Pattern, Optional, Set
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
 # (https://github.com/PyCQA/pylint/issues/2296)
@@ -199,14 +199,13 @@ class Helpers(object):  # pylint: disable=useless-object-inheritance
     def query_column_unique(self, query):
         # type: (QueryTypes) -> List[LivestatusColumn]
         """Issues a query that returns exactly one column and returns the values
-           of all lines with duplicates removed"""
+           of all lines with duplicates removed. The "natural order" of the rows is
+           not preserved."""
         normalized_query = Query(query) if not isinstance(query, Query) else query
-
-        result = []  # type: List[LivestatusColumn]
+        result = set()  # type: Set[LivestatusColumn]
         for line in self.query(normalized_query, "ColumnHeaders: off\n"):
-            if line[0] not in result:
-                result.append(line[0])
-        return result
+            result.add(line[0])
+        return list(result)
 
     def query_table(self, query):
         # type: (QueryTypes) -> LivestatusResponse

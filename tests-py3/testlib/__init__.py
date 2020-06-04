@@ -168,7 +168,7 @@ def wait_until(condition, timeout=1, interval=0.1):
     raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
-class WatchLog(object):  # pylint: disable=useless-object-inheritance
+class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
     def __init__(self, site, log_path, default_timeout=5):
         self._site = site
@@ -266,7 +266,7 @@ def create_linux_test_host(request, web_fixture, site, hostname):
 #   '----------------------------------------------------------------------'
 
 
-class CheckManager(object):  # pylint: disable=useless-object-inheritance
+class CheckManager:
     def load(self, file_names=None):
         """Load either all check plugins or the given file_names"""
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
@@ -397,7 +397,7 @@ class ActiveCheck(BaseCheck):
         return self.info['service_description'](params)
 
 
-class SpecialAgent(object):  # pylint: disable=useless-object-inheritance
+class SpecialAgent:
     def __init__(self, name):
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(SpecialAgent, self).__init__()
@@ -438,7 +438,7 @@ def on_time(utctime, timezone):
 #   '----------------------------------------------------------------------'
 
 
-class MockStructuredDataTree(object):  # pylint: disable=useless-object-inheritance
+class MockStructuredDataTree:
     def __init__(self):
         self.data = {}
 
@@ -449,7 +449,7 @@ class MockStructuredDataTree(object):  # pylint: disable=useless-object-inherita
         return self.data.setdefault(path, list())
 
 
-class InventoryPluginManager(object):  # pylint: disable=useless-object-inheritance
+class InventoryPluginManager:
     def load(self):
         import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
         import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
@@ -474,7 +474,7 @@ class MissingInvInfoError(KeyError):
     pass
 
 
-class InventoryPlugin(object):  # pylint: disable=useless-object-inheritance
+class InventoryPlugin:
     def __init__(self, name, g_inv_tree, g_status_tree):
         import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
         super(InventoryPlugin, self).__init__()

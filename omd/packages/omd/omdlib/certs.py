@@ -36,8 +36,7 @@ CERT_NOT_AFTER = 999 * 365 * 24 * 60 * 60  # 999 years by default
 CA_CERT_NOT_AFTER = CERT_NOT_AFTER
 
 
-# TODO: This module is imported by livestatus.py which is still used in Python 2
-class CertificateAuthority(object):  # pylint: disable=useless-object-inheritance
+class CertificateAuthority:
     """Management of the site local CA and certificates issued by it"""
     def __init__(self, ca_path, ca_name):
         # type: (Path, str) -> None

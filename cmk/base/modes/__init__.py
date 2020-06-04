@@ -23,7 +23,7 @@ Options = List[Tuple[OptionSpec, Argument]]
 Arguments = List[str]
 
 
-class Modes(object):  # pylint: disable=useless-object-inheritance
+class Modes:
     def __init__(self):
         # type: () -> None
         # TODO: This disable is needed because of a pylint bug. Remove one day.
@@ -211,7 +211,7 @@ class Modes(object):  # pylint: disable=useless-object-inheritance
         return None
 
 
-class Option(object):  # pylint: disable=useless-object-inheritance
+class Option:
     def __init__(self,
                  long_option,
                  short_help,

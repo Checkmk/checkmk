@@ -58,7 +58,7 @@ class BackgroundJobAlreadyRunning(MKGeneralException):
 #   +----------------------------------------------------------------------+
 
 
-class BackgroundProcessInterface(object):
+class BackgroundProcessInterface:
     def __init__(self, job_parameters):
         # type: (JobParameters) -> None
         super(BackgroundProcessInterface, self).__init__()
@@ -249,7 +249,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         cmk.gui.log.logger.addHandler(handler)
 
 
-class BackgroundJobDefines(object):
+class BackgroundJobDefines:
     base_dir = os.path.join(cmk.utils.paths.var_dir, "background_jobs")
     process_name = "cmk-job"  # NOTE: keep this name short! psutil.Process tends to truncate long names
 
@@ -278,7 +278,7 @@ class BackgroundJobDefines(object):
 #   '----------------------------------------------------------------------'
 
 
-class BackgroundJob(object):
+class BackgroundJob:
     _background_process_class = BackgroundProcess
     housekeeping_max_age_sec = 86400 * 30
     housekeeping_max_count = 50
@@ -551,7 +551,7 @@ class BackgroundJob(object):
         os._exit(code)
 
 
-class JobStatusStates(object):
+class JobStatusStates:
     INITIALIZED = "initialized"
     RUNNING = "running"
     FINISHED = "finished"
@@ -559,7 +559,7 @@ class JobStatusStates(object):
     EXCEPTION = "exception"
 
 
-class JobStatus(object):
+class JobStatus:
     def __init__(self, work_dir):
         # type: (str) -> None
         super(JobStatus, self).__init__()
@@ -631,7 +631,7 @@ class JobStatus(object):
         return pprint.pformat(value)
 
 
-class BackgroundJobManager(object):
+class BackgroundJobManager:
     def __init__(self, logger):
         # type: (logging.Logger) -> None
         self._logger = logger.getChild("job_manager")

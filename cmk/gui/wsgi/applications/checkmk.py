@@ -242,7 +242,7 @@ def profiling_middleware(func):
     return profiler
 
 
-class CheckmkApp(object):
+class CheckmkApp:
     """The Check_MK GUI WSGI entry point"""
     def __init__(self):
         # TODO: Just inline profiling_middleware, getting rid of this useless meta-Kung-Fu.

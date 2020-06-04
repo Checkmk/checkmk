@@ -50,7 +50,7 @@ BoundedAbstractPersistedSections = TypeVar("BoundedAbstractPersistedSections",
                                            bound=AbstractPersistedSections)
 
 
-class Service(object):  # pylint: disable=useless-object-inheritance
+class Service:
     __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
 
     def __init__(self, check_plugin_name, item, description, parameters, service_labels=None):

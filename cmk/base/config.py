@@ -284,7 +284,7 @@ def _perform_post_config_loading_actions():
         set_check_variables_for_checks()
 
 
-class SetFolderPathAbstract(object):  # pylint: disable=useless-object-inheritance
+class SetFolderPathAbstract:
     def __init__(self, the_object):
         # type: (Iterable) -> None
         # TODO: Cleanup this somehow to work nicer with mypy
@@ -530,7 +530,7 @@ def all_nonfunction_vars():
     }
 
 
-class PackedConfig(object):  # pylint: disable=useless-object-inheritance
+class PackedConfig:
     """The precompiled host checks and the CMC Check_MK helpers use a
     "precompiled" part of the Check_MK configuration during runtime.
 
@@ -2438,7 +2438,7 @@ cmk.base.cleanup.register_cleanup(check_api_utils.reset_hostname)
 #   +----------------------------------------------------------------------+
 
 
-class HostConfig(object):  # pylint: disable=useless-object-inheritance
+class HostConfig:
     def __init__(self, config_cache, hostname):
         # type: (ConfigCache, str) -> None
         super(HostConfig, self).__init__()
@@ -3241,7 +3241,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
 # TODO: Shouldn't we find a better place for the *_of_service() methods?
 # Wouldn't it be better to make them part of HostConfig?
-class ConfigCache(object):  # pylint: disable=useless-object-inheritance
+class ConfigCache:
     def __init__(self):
         # type: () -> None
         super(ConfigCache, self).__init__()

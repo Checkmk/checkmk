@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 _sentinel = object()
 
 
-class _AppCtxGlobals(object):
+class _AppCtxGlobals:
     def get(self, name, default=None):
         return self.__dict__.get(name, default)
 
@@ -57,7 +57,7 @@ def _lookup_app_object(name):
     return getattr(top, name)
 
 
-class AppContext(object):
+class AppContext:
     def __init__(self, app):
         self.app = app
         self.g = _AppCtxGlobals()
@@ -101,7 +101,7 @@ def _lookup_req_object(name):
     return getattr(top, name)
 
 
-class RequestContext(object):
+class RequestContext:
     def __init__(self, html_obj=None, req=None, resp=None):
         self.html = html_obj
         self.auth_type = None

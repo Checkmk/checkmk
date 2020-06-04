@@ -13,7 +13,7 @@ from marshmallow import Schema, fields, post_load  # type: ignore[import]
 from cmk.gui.plugins.openapi.plugins import ValueTypedDictSchema, ValueTypedDictMarshmallowPlugin
 
 
-class Movie(object):  # pylint: disable=useless-object-inheritance
+class Movie:
     def __init__(self, **kw):
         for key, value in kw.items():
             setattr(self, key, value)

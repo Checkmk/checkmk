@@ -36,7 +36,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.exceptions import MKUserError
 
 
-class KeypairStore(object):
+class KeypairStore:
     def __init__(self, path, attr):
         # type: (str, str) -> None
         self._path = Path(path)
@@ -75,7 +75,7 @@ class KeypairStore(object):
         raise KeyError()
 
 
-class PageKeyManagement(object):
+class PageKeyManagement:
     edit_mode = "edit_key"
     upload_mode = "upload_key"
     download_mode = "download_key"
@@ -165,7 +165,7 @@ class PageKeyManagement(object):
                 table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5").decode("ascii")))
 
 
-class PageEditKey(object):
+class PageEditKey:
     back_mode = "keys"
 
     def __init__(self):
@@ -251,7 +251,7 @@ class PageEditKey(object):
         raise NotImplementedError()
 
 
-class PageUploadKey(object):
+class PageUploadKey:
     back_mode = "keys"
 
     def load(self):
@@ -373,7 +373,7 @@ class PageUploadKey(object):
         raise NotImplementedError()
 
 
-class PageDownloadKey(object):
+class PageDownloadKey:
     back_mode = "keys"
 
     def load(self):

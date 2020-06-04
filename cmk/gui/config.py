@@ -86,39 +86,39 @@ HOST_STATE = ('__HOST_STATE__',)
 HIDDEN = ('__HIDDEN__',)
 
 
-class FOREACH_HOST(object):
+class FOREACH_HOST:
     pass
 
 
-class FOREACH_CHILD(object):
+class FOREACH_CHILD:
     pass
 
 
-class FOREACH_CHILD_WITH(object):
+class FOREACH_CHILD_WITH:
     pass
 
 
-class FOREACH_PARENT(object):
+class FOREACH_PARENT:
     pass
 
 
-class FOREACH_SERVICE(object):
+class FOREACH_SERVICE:
     pass
 
 
-class REMAINING(object):
+class REMAINING:
     pass
 
 
-class DISABLED(object):
+class DISABLED:
     pass
 
 
-class HARD_STATES(object):
+class HARD_STATES:
     pass
 
 
-class DT_AGGR_WARN(object):
+class DT_AGGR_WARN:
     pass
 
 
@@ -466,7 +466,7 @@ def _confdir_for_user_id(user_id):
 # This objects intention is currently only to handle the currently logged in user after authentication.
 # But maybe this can be used for managing all user objects in future.
 # TODO: Cleanup accesses to module global vars and functions
-class LoggedInUser(object):
+class LoggedInUser:
     def __init__(self, user_id):
         # type: (Optional[str]) -> None
         self.id = UserId(user_id) if user_id else None

@@ -117,7 +117,7 @@ def is_python_file(path, shebang_name=None):
 # python sources
 # TODO: This can be dropped once we have refactored checks/inventory/bakery plugins
 # to real modules
-class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
+class CMKFixFileMixin:
     def handle_message(self, msg):
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 
@@ -150,7 +150,7 @@ class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
         return orig_file, (None if orig_file is None else went_back)
 
 
-class CMKOutputScanTimesMixin(object):  # pylint: disable=useless-object-inheritance
+class CMKOutputScanTimesMixin:
     """Prints out the files being checked and the time needed
 
     Can be useful to track down pylint performance issues. Simply make the

@@ -94,7 +94,7 @@ def add_change(action_name,
                                        domains, sites)
 
 
-class ActivateChangesWriter(object):
+class ActivateChangesWriter:
     def add_change(self, action_name, text, obj, add_user, need_sync, need_restart, domains, sites):
         # Default to a core only change
         if domains is None:
@@ -146,7 +146,7 @@ class ActivateChangesWriter(object):
         })
 
 
-class SiteChanges(object):
+class SiteChanges:
     """Manage persisted changes of a single site"""
     def __init__(self, site_id):
         super(SiteChanges, self).__init__()

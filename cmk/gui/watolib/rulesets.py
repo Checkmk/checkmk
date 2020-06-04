@@ -54,7 +54,7 @@ from cmk.gui.watolib.utils import (
 _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
 
 
-class RuleConditions(object):
+class RuleConditions:
     def __init__(
             self,
             host_folder,  # type: str
@@ -201,7 +201,7 @@ class RuleConditions(object):
         return pattern_list, negate
 
 
-class RulesetCollection(object):
+class RulesetCollection:
     """Abstract class for holding a collection of rulesets. The most basic
     specific class is the FolderRulesets class which cares about all rulesets
     configured in a folder."""
@@ -434,7 +434,7 @@ class SearchedRulesets(FilteredRulesetCollection):
 # TODO: Cleanup the rule indexing by position in the rules list. The "rule_nr" is used
 # as index accross several HTTP requests where other users may have done something with
 # the ruleset. In worst cases the user modifies a rule which should not be modified.
-class Ruleset(object):
+class Ruleset:
     def __init__(self, name, tag_to_group_map):
         super(Ruleset, self).__init__()
         self.name = name
@@ -775,7 +775,7 @@ class Ruleset(object):
         return None, []  # No match
 
 
-class Rule(object):
+class Rule:
     @classmethod
     def create(cls, folder, ruleset):
         rule = Rule(folder, ruleset)

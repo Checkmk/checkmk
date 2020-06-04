@@ -24,7 +24,7 @@ class APIError(Exception):
 logger = logging.getLogger()
 
 
-class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
+class CMKWebSession:
     def __init__(self, site):
         super(CMKWebSession, self).__init__()
         self.transids = []

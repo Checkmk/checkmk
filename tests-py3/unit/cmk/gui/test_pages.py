@@ -206,7 +206,7 @@ def test_pages_register(monkeypatch, capsys):
 def test_pages_register_handler(monkeypatch, capsys):
     monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
 
-    class PageClass(object):  # pylint: disable=bad-option-value,useless-object-inheritance
+    class PageClass:
         def handle_page(self):
             sys.stdout.write("234")
 

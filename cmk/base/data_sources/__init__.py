@@ -59,7 +59,7 @@ if TYPE_CHECKING:
 #   '----------------------------------------------------------------------'
 
 
-class DataSources(object):  # pylint: disable=useless-object-inheritance
+class DataSources:
     def __init__(
             self,
             hostname,  # type: HostName

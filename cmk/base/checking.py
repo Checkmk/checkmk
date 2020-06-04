@@ -872,7 +872,7 @@ def _get_candidate_names():
     return _name_sequence
 
 
-class _RandomNameSequence(object):  # pylint: disable=useless-object-inheritance
+class _RandomNameSequence:
     """An instance of _RandomNameSequence generates an endless
     sequence of unpredictable strings which can safely be incorporated
     into file names.  Each string is eight characters long.  Multiple

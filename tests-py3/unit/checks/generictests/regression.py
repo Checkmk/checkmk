@@ -80,7 +80,7 @@ YAPF_STYLE = {
 }
 
 
-class WritableDataset(object):  # pylint: disable=useless-object-inheritance
+class WritableDataset:
     def __init__(self, init_dict):
         self.writelist = (
             'checkname',

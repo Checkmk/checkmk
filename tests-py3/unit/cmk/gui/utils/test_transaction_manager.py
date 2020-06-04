@@ -36,7 +36,7 @@ def test_transaction_new_id(tm):
     assert tm._new_transids == [trans_id]
 
 
-class MockLoggedInUser(object):  # pylint: disable=useless-object-inheritance
+class MockLoggedInUser:
     def __init__(self, ids):
         self._ids = ids
 

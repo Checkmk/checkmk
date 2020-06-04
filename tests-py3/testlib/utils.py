@@ -192,7 +192,7 @@ def add_python_paths():
         sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 
 
-class DummyApplication(object):  # pylint: disable=useless-object-inheritance
+class DummyApplication:
     def __init__(self, environ, start_response):
         self._environ = environ
         self._start_response = start_response

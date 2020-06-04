@@ -27,7 +27,7 @@ class MKAutomationError(MKException):
     pass
 
 
-class Automations(object):  # pylint: disable=useless-object-inheritance
+class Automations:
     def __init__(self):
         # type: () -> None
         # TODO: This disable is needed because of a pylint bug. Remove one day.

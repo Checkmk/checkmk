@@ -12,7 +12,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.misc
 
 
-class CacheManager(object):  # pylint: disable=useless-object-inheritance
+class CacheManager:
     def __init__(self):
         # type: () -> None
         self._caches = {}  # type: Dict[str, Cache]

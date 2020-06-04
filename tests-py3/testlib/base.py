@@ -128,7 +128,7 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
 ]
 
 
-class Scenario(object):  # pylint: disable=useless-object-inheritance
+class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
     def __init__(self, site_id="unit"):
         super(Scenario, self).__init__()

@@ -792,7 +792,7 @@ def graph_legend_height_ex(graph_render_options, graph_artwork):
 #   '----------------------------------------------------------------------'
 
 
-class GraphDestinations(object):
+class GraphDestinations:
     dashlet = "dashlet"
     view = "view"
     report = "report"

@@ -32,7 +32,7 @@ from testlib.version import CMKVersion
 logger = logging.getLogger(__name__)
 
 
-class Site(object):  # pylint: disable=useless-object-inheritance
+class Site:
     def __init__(self,
                  site_id,
                  reuse=True,
@@ -711,7 +711,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         return port
 
 
-class SiteFactory(object):  # pylint: disable=useless-object-inheritance
+class SiteFactory:
     def __init__(self,
                  version,
                  edition,

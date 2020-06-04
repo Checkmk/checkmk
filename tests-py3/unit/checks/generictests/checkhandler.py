@@ -21,7 +21,7 @@ def _cmk_debug_enabled():
         cmk.utils.debug.disable()
 
 
-class CheckHandler(object):  # pylint: disable=useless-object-inheritance
+class CheckHandler:
     """Collect the info on all checks"""
     def __init__(self):
         with _cmk_debug_enabled():  # fail if any check plugin cannot be loaded!

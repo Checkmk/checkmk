@@ -52,7 +52,7 @@ class MKCounterWrapped(MKException):
     pass
 
 
-class CachedItemStates(object):  # pylint: disable=useless-object-inheritance
+class CachedItemStates:
     def __init__(self):
         # type: () -> None
         super(CachedItemStates, self).__init__()

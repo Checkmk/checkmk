@@ -12,7 +12,7 @@ logger = logging.getLogger()
 
 
 # It's ok to make it currently only work on debian based distros
-class CMKVersion(object):  # pylint: disable=useless-object-inheritance
+class CMKVersion:
     DEFAULT = "default"
     DAILY = "daily"
     GIT = "git"

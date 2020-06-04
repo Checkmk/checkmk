@@ -30,7 +30,7 @@ _check_type = None  # type: Optional[CheckPluginName]
 _service_description = None  # type: Optional[ServiceName]
 
 
-class Service(object):  # pylint: disable=useless-object-inheritance
+class Service:
     """Can be used to by the discovery function to tell Checkmk about a new service"""
     def __init__(self, item, parameters=None, service_labels=None, host_labels=None):
         # type: (Item, CheckParameters, DiscoveredServiceLabels, DiscoveredHostLabels) -> None

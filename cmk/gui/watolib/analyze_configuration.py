@@ -28,7 +28,7 @@ from cmk.gui.watolib.automation_commands import (
 )
 
 
-class ACResult(object):
+class ACResult:
     status = None  # type: Optional[int]
 
     def __init__(self, text):
@@ -111,7 +111,7 @@ class ACResultOK(ACResult):
     status = 0
 
 
-class ACTestCategories(object):
+class ACTestCategories:
     connectivity = "connectivity"
     usability = "usability"
     performance = "performance"
@@ -131,7 +131,7 @@ class ACTestCategories(object):
         }[ident]
 
 
-class ACTest(object):
+class ACTest:
     def __init__(self):
         # type: () -> None
         self._executed = False

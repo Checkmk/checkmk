@@ -101,7 +101,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
         return "DiscoveredHostLabels(%s)" % ", ".join(repr(arg) for arg in self.to_list())
 
 
-class ABCLabel(object):  # pylint: disable=useless-object-inheritance
+class ABCLabel:
     """Representing a label in Checkmk
     """
 

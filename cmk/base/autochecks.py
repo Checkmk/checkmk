@@ -30,7 +30,7 @@ GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
 
 
-class AutochecksManager(object):  # pylint: disable=useless-object-inheritance
+class AutochecksManager:
     """Read autochecks from the configuration
 
     Autochecks of a host are once read and cached for the whole lifetime of the

@@ -420,7 +420,7 @@ def container_exec(container,
     return ContainerExec(container.client, exec_id, output)
 
 
-class ContainerExec(object):  # pylint: disable=useless-object-inheritance
+class ContainerExec:
     def __init__(self, client, container_id, output):
         self.client = client
         self.id = container_id

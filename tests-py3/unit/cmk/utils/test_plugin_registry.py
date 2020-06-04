@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 import cmk.utils.plugin_registry
 
 
-class Plugin(object):  # pylint: disable=useless-object-inheritance
+class Plugin:
     pass
 
 

@@ -540,7 +540,7 @@ class JobWorker(multiprocessing.Process):
 #   The has_lock(..) indicates if the locking attempt was successful
 # Since this class has __enter__ and __exit__ functions its best use
 # is in conjunction with a with-statement
-class BILock(object):
+class BILock:
     def __init__(self, filepath, shared=False, blocking=True):
         self._filepath = filepath
         self._blocking = blocking
@@ -612,7 +612,7 @@ def marshal_load_data(filepath):
 #         to open huge files with it
 # Note 2: Generally these files are never deleted, just overwritten
 #         or truncated. This helps preserving any locked filedescriptor
-class BICacheFile(object):
+class BICacheFile:
     def __init__(self, filepath):
         # type: (str) -> None
         self._filepath = filepath
@@ -686,7 +686,7 @@ class BICacheFile(object):
 # This class contains all host and service data used for the compilation
 # of an aggregation. It takes care of querying the data and tries to
 # prevent reduntant livestatus calls by caching the data.
-class BISitedataManager(object):
+class BISitedataManager:
     def __init__(self):
         self._data_filepath_lock = "%s/bi_cache_data_LOCK" % get_cache_dir()
 
@@ -875,7 +875,7 @@ class BISitedataManager(object):
         return True
 
 
-class BIJobManager(object):
+class BIJobManager:
     # TODO: Make this a *real* class with a *real* constructor... :-/
     def __init__(self):
         self._queued_jobs = []  # type: List[Dict[str, Any]]
@@ -1092,7 +1092,7 @@ class BIJobManager(object):
         return self._compilation_info
 
 
-class BICacheManager(object):
+class BICacheManager:
     def __init__(self):
         # Contains compiled trees
         self._bicache_file = BICacheFile(filepath="%s/bi_cache" % get_cache_dir())

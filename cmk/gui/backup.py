@@ -104,7 +104,7 @@ def is_canonical(directory):
 
 
 # TODO: Locking!
-class Config(object):
+class Config:
     def __init__(self, file_path):
         self._file_path = file_path
 
@@ -129,7 +129,7 @@ class Config(object):
 #   '----------------------------------------------------------------------'
 
 
-class BackupEntity(object):
+class BackupEntity:
     def __init__(self, ident, config):
         self._ident = ident
         self._config = {}
@@ -152,7 +152,7 @@ class BackupEntity(object):
         self._config = config
 
 
-class BackupEntityCollection(object):
+class BackupEntityCollection:
     def __init__(self, config_file_path, cls, config_attr):
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
@@ -203,7 +203,7 @@ class BackupEntityCollection(object):
 
 
 # Abstract class for backup jobs (Job) and restore job (RestoreJob)
-class MKBackupJob(object):
+class MKBackupJob:
     @classmethod
     def state_name(cls, state):
         return {
@@ -527,7 +527,7 @@ class Jobs(BackupEntityCollection):
         pass
 
 
-class PageBackup(object):
+class PageBackup:
     def title(self):
         raise NotImplementedError()
 
@@ -610,7 +610,7 @@ class PageBackup(object):
         self.jobs().show_list(editable=self._may_edit_config())
 
 
-class PageEditBackupJob(object):
+class PageEditBackupJob:
     def __init__(self):
         super(PageEditBackupJob, self).__init__()
         job_ident = html.request.var("job")
@@ -803,7 +803,7 @@ class PageEditBackupJob(object):
         html.end_form()
 
 
-class PageAbstractBackupJobState(object):
+class PageAbstractBackupJobState:
     def __init__(self):
         super(PageAbstractBackupJobState, self).__init__()
         self._job = None  # type: Optional[MKBackupJob]
@@ -1032,7 +1032,7 @@ class Targets(BackupEntityCollection):
         target.type().validate_local_directory(path, varprefix)
 
 
-class PageBackupTargets(object):
+class PageBackupTargets:
     def title(self):
         raise NotImplementedError()
 
@@ -1087,7 +1087,7 @@ class PageBackupTargets(object):
         return True
 
 
-class PageEditBackupTarget(object):
+class PageEditBackupTarget:
     def __init__(self):
         super(PageEditBackupTarget, self).__init__()
         target_ident = html.request.var("target")
@@ -1540,7 +1540,7 @@ class RestoreJob(MKBackupJob):
         super(RestoreJob, self).start(env)
 
 
-class PageBackupRestore(object):
+class PageBackupRestore:
     def __init__(self):
         self._load_target()
         super(PageBackupRestore, self).__init__()

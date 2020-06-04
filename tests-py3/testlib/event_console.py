@@ -11,7 +11,7 @@ from typing import Any, Dict
 from testlib.web_session import CMKWebSession
 
 
-class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
+class CMKEventConsole:
     def __init__(self, site):
         super(CMKEventConsole, self).__init__()
         self.site = site
@@ -102,7 +102,7 @@ class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
         return event
 
 
-class CMKEventConsoleStatus(object):  # pylint: disable=useless-object-inheritance
+class CMKEventConsoleStatus:
     def __init__(self, address):
         self._address = address
 

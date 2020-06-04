@@ -104,7 +104,7 @@ class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSectio
         self.sections[section_name] = section  # type: ignore[assignment]
 
 
-class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
+class MultiHostSections:
     """Container object for wrapping the host sections of a host being processed
     or multiple hosts when a cluster is processed. Also holds the functionality for
     merging these information together for a check"""

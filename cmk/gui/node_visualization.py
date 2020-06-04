@@ -317,7 +317,7 @@ BILeafTreeState = Tuple[Dict[str, Any], Any, Dict[str, Any]]
 
 
 # Creates are hierarchical dictionary which can be read by the NodeVisualization framework
-class NodeVisualizationBIDataMapper(object):
+class NodeVisualizationBIDataMapper:
     def consume(self, treestate, depth=1):
         # type: (Union[BIAggrTreeState, BILeafTreeState], int) -> Dict[str, Any]
         state_info, node, subtrees = self._normalize_treestate(treestate)
@@ -372,7 +372,7 @@ class NodeVisualizationBIDataMapper(object):
         return node_data
 
 
-class BILayoutManagement(object):
+class BILayoutManagement:
     _config_file = Path(watolib.multisite_dir()) / "bi_layouts.mk"
 
     @classmethod
@@ -555,7 +555,7 @@ class AjaxFetchTopology(AjaxPage):
         return topology_class(topology_config)
 
 
-class Topology(object):
+class Topology:
     def __init__(self, topology_config):
         # type: (TopologyConfig) -> None
         super(Topology, self).__init__()

@@ -32,7 +32,7 @@ def binstring_to_int(binstring):
     return value
 
 
-class MutexScanRegistry(object):  # pylint: disable=useless-object-inheritance
+class MutexScanRegistry:
     """Register scan functions that are checked before a fallback is used
 
     Add any number of scan functions to a registry instance by decorating

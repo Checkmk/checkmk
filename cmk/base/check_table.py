@@ -33,7 +33,7 @@ AbstractCheckTable = TypeVar("AbstractCheckTable", CheckTable, DiscoveredCheckTa
 # TODO: This is just a first cleanup step: Continue cleaning this up.
 # - Check all call sites and cleanup the different
 # - Make this a helper object of HostConfig?
-class HostCheckTable(object):  # pylint: disable=useless-object-inheritance
+class HostCheckTable:
     def __init__(self, config_cache, host_config):
         # type: (config.ConfigCache, config.HostConfig) -> None
         super(HostCheckTable, self).__init__()

@@ -108,7 +108,7 @@ class TooManyRowsError(MKException):
     pass
 
 
-class LivestatusSearchBase(object):
+class LivestatusSearchBase:
     def _build_url(self, url_params):
         new_params = url_params[:]
         return html.makeuri(new_params, delvars=["q"], filename="view.py")

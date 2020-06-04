@@ -210,9 +210,6 @@ class _NullContext:
     def __bool__(self):
         return False
 
-    # python2 uses __nonzero__ instead of __bool__:
-    __nonzero__ = __bool__
-
 
 def vcrtrace(**vcr_init_kwargs):
     """Returns the class of an argparse.Action to enter a vcr context

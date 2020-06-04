@@ -153,8 +153,8 @@ def snmp_config_fixture(request, snmpsim, backend):
         oid_range_limits=[],
         snmpv3_contexts=[],
         character_encoding=None,
-        is_usewalk_host=backend == StoredWalkSNMPBackend,
-        is_inline_snmp_host=backend == InlineSNMPBackend,
+        is_usewalk_host=isinstance(backend, StoredWalkSNMPBackend),
+        is_inline_snmp_host=isinstance(backend, InlineSNMPBackend),
         record_stats=False,
     )
 

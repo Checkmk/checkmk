@@ -124,21 +124,21 @@ def snmpsim_fixture(site, request, tmp_path_factory):
 
 @pytest.fixture(name="backend",
                 params=[ClassicSNMPBackend, StoredWalkSNMPBackend, InlineSNMPBackend])
-def backend_fixture(request):
+def backend_fixture(request, monkeypatch):
     backend = request.param
     if backend is None:
         return pytest.skip("CEE feature only")
-    return backend()
 
-
-@pytest.fixture(name="snmp_config", params=["inline_snmp", "classic_snmp", "stored_snmp"])
-def snmp_config_fixture(request, snmpsim, monkeypatch):
-    backend_name = request.param
-
-    if backend_name == "stored_snmp":
+    if backend == StoredWalkSNMPBackend:
+        # Point the backend to the test walks shipped with the test file in git
         source_data_dir = Path(request.fspath.dirname) / "snmp_data" / "cmk-walk"
         monkeypatch.setattr(cmk.utils.paths, "snmpwalks_dir", str(source_data_dir))
 
+    return backend()
+
+
+@pytest.fixture(name="snmp_config")
+def snmp_config_fixture(request, snmpsim, backend):
     return SNMPHostConfig(
         is_ipv6_primary=False,
         ipaddress="127.0.0.1",
@@ -153,8 +153,8 @@ def snmp_config_fixture(request, snmpsim, monkeypatch):
         oid_range_limits=[],
         snmpv3_contexts=[],
         character_encoding=None,
-        is_usewalk_host=backend_name == "stored_snmp",
-        is_inline_snmp_host=backend_name == "inline_snmp",
+        is_usewalk_host=backend == StoredWalkSNMPBackend,
+        is_inline_snmp_host=backend == InlineSNMPBackend,
         record_stats=False,
     )
 

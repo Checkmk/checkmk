@@ -30,8 +30,6 @@ def test_builtin_icons_and_actions():
         'inventory',
         'logwatch',
         'mkeventd',
-        'ntop_host_interface',
-        'ntop_service_interface',
         'notes',
         'parent_child_topology',
         'perfgraph',
@@ -57,6 +55,8 @@ def test_builtin_icons_and_actions():
             'agent_deployment',
             'deployment_status',
             'status_shadow',
+            'ntop_host_interface',
+            'ntop_service_interface',
         ]
 
     cmk.gui.views.transform_old_dict_based_icons()

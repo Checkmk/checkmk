@@ -131,7 +131,6 @@ def test_registered_configvars():
         'notification_fallback_email',
         'notification_logging',
         'notification_plugin_timeout',
-        'ntop_connection',
         'page_heading',
         'pagetitle_date_format',
         'password_policy',
@@ -259,6 +258,7 @@ def test_registered_configvars():
             'reporting_use',
             'reporting_view_limit',
             'site_liveproxyd',
+            'ntop_connection',
         ]
 
     if cmk_version.is_managed_edition():
@@ -292,7 +292,6 @@ def test_registered_configvar_groups():
         u'Site Management',
         u'User Interface',
         u'User Management',
-        u'Ntopng',
     ]
 
     if not cmk_version.is_raw_edition():
@@ -303,6 +302,7 @@ def test_registered_configvar_groups():
             u'Livestatus Proxy',
             u'Reporting',
             u'Monitoring Core',
+            u'Ntopng',
         ]
 
     registered = sorted(config_variable_group_registry.keys())

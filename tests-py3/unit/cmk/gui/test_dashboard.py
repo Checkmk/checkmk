@@ -50,8 +50,6 @@ def test_dashlet_registry_plugins():
         'linked_view',
         'notify_users',
         'nodata',
-        'ntop_alerts',
-        'ntop_flows',
         'single_metric',
         'snapin',
     ]
@@ -59,6 +57,8 @@ def test_dashlet_registry_plugins():
     if not cmk_version.is_raw_edition():
         expected_plugins += [
             'custom_graph',
+            'ntop_alerts',
+            'ntop_flows',
         ]
 
     dashboard._transform_old_dict_based_dashlets()

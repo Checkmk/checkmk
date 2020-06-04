@@ -814,7 +814,7 @@ ReplicationStatus = NamedTuple("ReplicationStatus", [
 ])
 
 
-class ReplicationStatusFetcher(object):
+class ReplicationStatusFetcher:
     """Helper class to retrieve the replication status of all relevant sites"""
     def __init__(self):
         super(ReplicationStatusFetcher, self).__init__()

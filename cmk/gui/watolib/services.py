@@ -26,7 +26,7 @@ from cmk.gui.watolib.automations import (
 
 # Would rather use an Enum for this, but this information is exported to javascript
 # using JSON and Enum is not serializable
-class DiscoveryAction(object):
+class DiscoveryAction:
     NONE = ""
     STOP = "stop"
     SCAN = "scan"

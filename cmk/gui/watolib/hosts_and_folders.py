@@ -68,7 +68,7 @@ if cmk_version.is_managed_edition():
 # add, remove      mean just modifications in the data structures
 
 
-class WithPermissions(object):
+class WithPermissions:
     def may(self, how):  # how is "read" or "write"
         # type: (str) -> bool
         try:
@@ -209,7 +209,7 @@ class WithUniqueIdentifier(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class WithAttributes(object):
+class WithAttributes:
     """Mixin containing attribute management methods.
 
     Used in the Host and Folder classes."""
@@ -263,7 +263,7 @@ class WithAttributes(object):
         return self._effective_attributes.copy()
 
 
-class BaseFolder(object):
+class BaseFolder:
     """Base class of SearchFolder and Folder. Implements common methods"""
     def hosts(self):
         raise NotImplementedError()

@@ -19,7 +19,7 @@ from cmk.gui.exceptions import MKUserError
 UploadedFile = Tuple[str, str, bytes]
 
 
-class LegacyVarsMixin(object):
+class LegacyVarsMixin:
     """Holds a dict of vars.
 
     These vars are being set throughout the codebase. Using this Mixin the vars will
@@ -106,7 +106,7 @@ class LegacyVarsMixin(object):
         return super(LegacyVarsMixin, self).var(varname, default)  # type: ignore[misc]
 
 
-class LegacyUploadMixin(object):
+class LegacyUploadMixin:
     def __init__(self, *args, **kw):
         # type: (*Any, **Any) -> None
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
@@ -133,7 +133,7 @@ class LegacyUploadMixin(object):
         return upload
 
 
-class LegacyDeprecatedMixin(object):
+class LegacyDeprecatedMixin:
     """Some wrappers which are still used while their use is considered deprecated.
 
     They are to be removed as they provide no additional value over the already available

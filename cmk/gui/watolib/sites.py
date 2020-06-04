@@ -58,7 +58,7 @@ from cmk.gui.watolib.utils import (
 )
 
 
-class SiteManagementFactory(object):
+class SiteManagementFactory:
     @staticmethod
     def factory():
         # type: () -> SiteManagement
@@ -70,7 +70,7 @@ class SiteManagementFactory(object):
         return cls()
 
 
-class SiteManagement(object):
+class SiteManagement:
     @classmethod
     def connection_method_valuespec(cls):
         return CascadingDropdown(

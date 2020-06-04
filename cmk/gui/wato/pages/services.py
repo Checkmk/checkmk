@@ -63,7 +63,7 @@ AjaxDiscoveryRequest = Dict[str, Any]
 # check_state:
 # - passive: new/vanished/old/ignored/removed
 # - active/custom/legacy: old/ignored
-class DiscoveryState(object):
+class DiscoveryState:
     UNDECIDED = "new"
     VANISHED = "vanished"
     MONITORED = "old"
@@ -700,7 +700,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         return table_source
 
 
-class DiscoveryPageRenderer(object):
+class DiscoveryPageRenderer:
     @staticmethod
     def checkbox_name(check_type, item):
         """This function returns the HTTP variable name to use for a service

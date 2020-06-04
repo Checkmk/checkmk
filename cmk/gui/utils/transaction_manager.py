@@ -12,7 +12,7 @@ import cmk.gui.config as config
 from cmk.gui.http import Request
 
 
-class TransactionManager(object):
+class TransactionManager:
     """Manages the handling of transaction IDs used by the GUI to prevent against
     performing the same action multiple times."""
     def __init__(self, request):

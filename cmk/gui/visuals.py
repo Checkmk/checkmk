@@ -166,7 +166,7 @@ def declare_visual_permissions(what, what_plural):
 #   '----------------------------------------------------------------------'
 
 
-class UserVisualsCache(object):
+class UserVisualsCache:
     """Realizes a in memory cache (per apache process). This has been introduced to improve the
     situation where there are hundreds of custom visuals (views here). These visuals are rarely
     changed, but read and evaluated(!) during each page request which costs a lot of time."""

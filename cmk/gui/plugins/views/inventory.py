@@ -1587,7 +1587,7 @@ def _sort_by_index(keyorder, item):
         return len(keyorder) + 1
 
 
-class NodeRenderer(object):
+class NodeRenderer:
     def __init__(self, site_id, hostname, tree_id, invpath, show_internal_tree_paths=False):
         self._site_id = site_id
         self._hostname = hostname

@@ -145,7 +145,7 @@ def transform_old_quicksearch_match_plugins():
         cmk.gui.plugins.sidebar.quicksearch.match_plugin_registry.register(match_plugin)
 
 
-class UserSidebarConfig(object):
+class UserSidebarConfig:
     """Manages the configuration of the users sidebar"""
     def __init__(self, user, default_config):
         # type: (LoggedInUser, List[Tuple[str, str]]) -> None
@@ -281,7 +281,7 @@ class SnapinVisibility(Enum):
     CLOSED = "closed"
 
 
-class UserSidebarSnapin(object):
+class UserSidebarSnapin:
     """An instance of a snapin that is configured in the users sidebar"""
     @staticmethod
     def from_config(cfg):
@@ -320,7 +320,7 @@ class UserSidebarSnapin(object):
         return not self.__eq__(other)
 
 
-class SidebarRenderer(object):
+class SidebarRenderer:
     def show(self, title=None, content=None):
         # type: (Optional[str], Optional[HTML]) -> None
         # TODO: Right now the method renders the full HTML page, i.e.

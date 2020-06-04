@@ -271,7 +271,7 @@ def translate_perf_data(perf_data_string, check_command=None):
 #   '----------------------------------------------------------------------'
 
 
-class Perfometers(object):
+class Perfometers:
     def get_matching_perfometers(self, translated_metrics):
         # type: (TranslatedMetrics) -> List[Perfometer]
         perfometers = []

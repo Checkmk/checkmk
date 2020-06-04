@@ -17,7 +17,7 @@ from cmk.gui.utils.html import HTML
 OutputFunnelInput = Union[int, "HTML", str]
 
 
-class OutputFunnel(object):
+class OutputFunnel:
     """
     Provides the write functionality. The method _lowlevel_write needs
     to be overwritten in the specific subclass!

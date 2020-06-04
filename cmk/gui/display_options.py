@@ -22,7 +22,7 @@ from cmk.gui.globals import html
 #   '----------------------------------------------------------------------'
 
 
-class DisplayOptions(object):
+class DisplayOptions:
     H = "H"  # The HTML header and body-tag (containing the tags <HTML> and <BODY>)
     T = "T"  # The title line showing the header and the logged in user
     B = "B"  # The blue context buttons that link to other views

@@ -295,7 +295,7 @@ def remove_site_config_directory(site_id):
             raise
 
 
-class ActivateChanges(object):
+class ActivateChanges:
     def __init__(self):
         self._repstatus = {}
 
@@ -794,7 +794,7 @@ class ActivateChangesManager(ActivateChanges):
         return "site_%s.mk" % site_id
 
 
-class SnapshotManager(object):
+class SnapshotManager:
     @staticmethod
     def factory(work_dir, site_snapshot_settings):
         # type: (str, Dict[SiteId, SnapshotSettings]) -> SnapshotManager

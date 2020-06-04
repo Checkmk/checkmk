@@ -31,7 +31,7 @@ from cmk.gui.plugins.views import (
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 
 
-class Perfometer(object):
+class Perfometer:
     def __init__(self, row):
         super(Perfometer, self).__init__()
 

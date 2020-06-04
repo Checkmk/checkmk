@@ -28,7 +28,7 @@ PreprocessedServiceRuleset = List[Tuple[RuleValue, Set[HostName], LabelCondition
                                         PreprocessedPattern]]
 
 
-class RulesetMatchObject(object):
+class RulesetMatchObject:
     """Wrapper around dict to ensure the ruleset match objects are correctly created"""
     __slots__ = ["host_name", "service_description", "service_labels", "service_cache_id"]
 
@@ -60,7 +60,7 @@ class RulesetMatchObject(object):
         return "RulesetMatchObject(%s)" % kwargs
 
 
-class RulesetMatcher(object):
+class RulesetMatcher:
     """Performing matching on host / service rulesets
 
     There is some duplicate logic for host / service rulesets. This has been
@@ -242,7 +242,7 @@ class RulesetMatcher(object):
         return entries
 
 
-class RulesetOptimizer(object):
+class RulesetOptimizer:
     """Performs some precalculations on the configured rulesets to improve the
     processing performance"""
     def __init__(self, ruleset_matcher, host_tag_lists, host_paths, labels, all_configured_hosts,

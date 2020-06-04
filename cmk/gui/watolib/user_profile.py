@@ -48,7 +48,7 @@ from cmk.gui.watolib.utils import (
 # TODO: Should we move this to watolib?
 
 
-class SynchronizationResult(object):
+class SynchronizationResult:
     def __init__(self, site_id, error_text=None, disabled=False, succeeded=False, failed=False):
         self.site_id = site_id
         self.error_text = error_text

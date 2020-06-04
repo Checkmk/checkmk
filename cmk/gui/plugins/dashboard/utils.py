@@ -444,7 +444,7 @@ dashlet_registry = DashletRegistry()
 
 
 # TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
-class DashboardStore(object):
+class DashboardStore:
     @classmethod
     def get_instance(cls):
         """Use the request globals to prevent multiple instances during a request"""

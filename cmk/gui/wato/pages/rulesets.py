@@ -1752,7 +1752,7 @@ class LabelCondition(Transform):
         raise NotImplementedError()
 
 
-class RuleConditionRenderer(object):
+class RuleConditionRenderer:
     def render(self, rulespec, conditions):
         # type: (Rulespec, RuleConditions) -> List[str]
         rendered = []  # type: List[str]

@@ -193,7 +193,7 @@ sample_config_generator_registry = SampleConfigGeneratorRegistry()
 #   '----------------------------------------------------------------------'
 
 
-class ConfigVariableGroup(object):
+class ConfigVariableGroup:
     # TODO: The identity of a configuration variable group should be a pure
     # internal unique key and it should not be localized. The title of a
     # group was always used as identity. Check all call sites and introduce
@@ -231,7 +231,7 @@ class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
 config_variable_group_registry = ConfigVariableGroupRegistry()
 
 
-class ConfigVariable(object):
+class ConfigVariable:
     def group(self):
         # type () -> Type[ConfigVariableGroup]
         """Returns the class of the configuration variable group this configuration variable belongs to"""

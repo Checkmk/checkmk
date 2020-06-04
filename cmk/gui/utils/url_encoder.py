@@ -13,7 +13,7 @@ from cmk.gui.type_defs import HTTPVariables
 
 
 # TODO: Change methods to simple helper functions. The URLEncoder class is not really needed
-class URLEncoder(object):
+class URLEncoder:
     def urlencode_vars(self, vars_):
         # type: (HTTPVariables) -> str
         """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string

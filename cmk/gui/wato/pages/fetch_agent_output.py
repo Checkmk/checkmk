@@ -43,7 +43,7 @@ from cmk.gui.watolib import (
 #       to better location.
 
 
-class FetchAgentOutputRequest(object):
+class FetchAgentOutputRequest:
     def __init__(self, host, agent_type):
         # type: (watolib.CREHost, str) -> None
         self.host = host

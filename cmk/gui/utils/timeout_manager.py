@@ -11,7 +11,7 @@ from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.i18n import _
 
 
-class TimeoutManager(object):
+class TimeoutManager:
     """Request timeout handling
 
     The system apache process will end the communication with the client after

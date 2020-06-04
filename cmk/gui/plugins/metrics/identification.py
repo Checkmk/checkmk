@@ -30,7 +30,7 @@ from cmk.gui.exceptions import MKUserError
 #   '----------------------------------------------------------------------'
 
 
-class GraphIdentificationTypes(object):
+class GraphIdentificationTypes:
     """Container class for managing all known identification types"""
     def __init__(self):
         super(GraphIdentificationTypes, self).__init__()

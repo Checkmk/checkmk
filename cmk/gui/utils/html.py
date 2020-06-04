@@ -9,7 +9,7 @@ from typing import Union, Any, Iterable
 HTMLInput = Union["HTML", int, float, None, str]
 
 
-class HTML(object):
+class HTML:
     """This is a simple class which wraps a unicode string provided by
     the caller to make escaping.escape_attribute() know that this string should
     not be escaped.

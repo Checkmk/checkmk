@@ -14,7 +14,7 @@ import cmk.utils.plugin_registry
 from cmk.gui.globals import html
 
 
-class MainMenu(object):
+class MainMenu:
     def __init__(self, items=None, columns=2):
         self._items = items or []
         self._columns = columns
@@ -37,7 +37,7 @@ class MainMenu(object):
         html.close_div()
 
 
-class MenuItem(object):
+class MenuItem:
     def __init__(self, mode_or_url, title, icon, permission, description, sort_index=20):
         self._mode_or_url = mode_or_url
         self._title = title

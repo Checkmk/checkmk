@@ -113,7 +113,7 @@ class Bounds(Generic[C]):
                 _("%s is too high. The maximum allowed value is %s.") % (value, self.__upper))
 
 
-class ValueSpec(object):
+class ValueSpec:
     """Abstract base class of all value declaration classes"""
 
     # TODO: Remove **kwargs once all valuespecs have been changed
@@ -395,7 +395,7 @@ class Age(ValueSpec):
         self._bounds.validate_value(value, varprefix)
 
 
-class NumericRenderer(object):
+class NumericRenderer:
     def __init__(
             self,
             size,  # type: _Optional[int]
@@ -3943,7 +3943,7 @@ class TimeofdayRange(ValueSpec):
                 _("The <i>from</i> time must not be later then the <i>until</i> time."))
 
 
-class TimeHelper(object):
+class TimeHelper:
     @staticmethod
     def round(timestamp, unit):
         lt = datetime.datetime.fromtimestamp(timestamp, tzlocal()).replace(hour=0,

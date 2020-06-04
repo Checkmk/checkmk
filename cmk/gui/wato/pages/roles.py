@@ -52,7 +52,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-class RoleManagement(object):
+class RoleManagement:
     def __init__(self):
         self._roles = userdb.load_roles()
         super(RoleManagement, self).__init__()

@@ -15,7 +15,7 @@ HostLabelValueDict = Dict[str, Union[str, Optional[CheckPluginName]]]
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
 
 
-class ABCDiscoveredLabels(MutableMapping, object, metaclass=abc.ABCMeta):
+class ABCDiscoveredLabels(MutableMapping, metaclass=abc.ABCMeta):
     def __init__(self, *args):
         # type: (ABCLabel) -> None
         super(ABCDiscoveredLabels, self).__init__()

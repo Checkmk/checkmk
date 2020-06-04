@@ -107,7 +107,7 @@ def table_element(
 #   '----------------------------------------------------------------------'
 
 
-class Table(object):
+class Table:
     def __init__(
             self,
             table_id=None,  # type: Optional[str]

@@ -1921,7 +1921,7 @@ rulespec_registry.register(
     ))
 
 
-class MultisiteBiDatasource(object):
+class MultisiteBiDatasource:
     def get_valuespec(self):
         return Dictionary(
             elements=self._get_dynamic_valuespec_elements(),

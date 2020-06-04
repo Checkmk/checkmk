@@ -30,8 +30,6 @@ bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
 
 [MESSAGES CONTROL]
 disable=
-    # Just remove the ...(object) from all class definitions and enable this.
-    useless-object-inheritance,
     # Use local suppressions or (even better) refactor the code.
     import-outside-toplevel,
     #---------------------------------------------------------------------------

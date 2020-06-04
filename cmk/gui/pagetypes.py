@@ -71,7 +71,7 @@ from cmk.gui.permissions import (
 #   '----------------------------------------------------------------------'
 
 
-class Base(object):
+class Base:
     def __init__(self, d):
         # type: (Dict[str, Any]) -> None
         super(Base, self).__init__()

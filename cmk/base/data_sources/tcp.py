@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import Dict, List, Optional, Tuple, Set
+from typing import Dict, Optional
 
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin

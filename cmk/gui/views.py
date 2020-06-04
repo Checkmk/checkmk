@@ -286,7 +286,7 @@ class PermissionSectionViews(PermissionSection):
         return True
 
 
-class View(object):
+class View:
     """Manages processing of a single view, e.g. during rendering"""
     def __init__(self, view_name, view_spec, context):
         # type: (str, Dict, Dict) -> None

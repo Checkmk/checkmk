@@ -60,7 +60,7 @@ class ReplicationPath(
         )
 
 
-class SnapshotCreationBase(object):
+class SnapshotCreationBase:
     def __init__(self, activation_work_dir):
         # type: (str) -> None
         super(SnapshotCreationBase, self).__init__()

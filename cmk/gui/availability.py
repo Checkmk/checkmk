@@ -104,7 +104,7 @@ AVBITimelineStates = Dict[_Tuple[SiteId, HostName, ServiceName], AVBITimelineSta
 #   '----------------------------------------------------------------------'
 
 
-class AvailabilityColumns(object):
+class AvailabilityColumns:
     def __init__(self):
         super(AvailabilityColumns, self).__init__()
         self.host = self._host_availability_columns()
@@ -1814,7 +1814,7 @@ def get_timeline_containers(aggr_rows, avoptions, timewarp, livestatus_limit):
 
 
 # Not a real class, more a struct
-class TimelineContainer(object):
+class TimelineContainer:
     def __init__(self, aggr_row):
         self._aggr_row = aggr_row
 

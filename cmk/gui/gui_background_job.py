@@ -317,7 +317,7 @@ job_registry = GUIBackgroundJobRegistry()
 #
 # TODO: BackgroundJob should provide an explicit status object, which we can use
 # here without any metaprogramming Kung Fu and arcane inheritance hierarchies.
-class GUIBackgroundStatusSnapshot(object):
+class GUIBackgroundStatusSnapshot:
     def __init__(self, job):
         super(GUIBackgroundStatusSnapshot, self).__init__()
         self._job_status = job.get_status()
@@ -424,7 +424,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
 #   +----------------------------------------------------------------------+
 
 
-class JobRenderer(object):
+class JobRenderer:
     @classmethod
     def show_job_details(cls, job_id, job_status):
         """Renders the complete job details in a single table with left headers"""
@@ -650,7 +650,7 @@ class JobRenderer(object):
 #   +----------------------------------------------------------------------+
 
 
-class ActionHandler(object):
+class ActionHandler:
     stop_job_var = "_stop_job"
     delete_job_var = "_delete_job"
     acknowledge_job_var = "_acknowledge_job"

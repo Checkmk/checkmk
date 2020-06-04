@@ -483,7 +483,7 @@ def _write_python(response):
     html.write(repr(response))
 
 
-class InventoryHousekeeping(object):
+class InventoryHousekeeping:
     def __init__(self):
         super(InventoryHousekeeping, self).__init__()
         self._inventory_path = Path(cmk.utils.paths.var_dir) / "inventory"

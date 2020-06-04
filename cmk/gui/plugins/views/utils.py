@@ -82,7 +82,7 @@ PDFCellSpec = Union[CellSpec, Tuple[CSSClass, PDFCellContent]]
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
 # painters, but some which affect generic behaviour of the views, so DisplayOptions might
 # be better.
-class PainterOptions(object):
+class PainterOptions:
     """Painter options are settings that can be changed per user per view.
     These options are controlled throught the painter options form which
     is accessible through the small monitor icon on the top left of the
@@ -1487,7 +1487,7 @@ def render_cache_info(what, row):
     return text
 
 
-class ViewStore(object):
+class ViewStore:
     @classmethod
     def get_instance(cls):
         # type: () -> ViewStore
@@ -1728,7 +1728,7 @@ def painter_exists(painter_spec):
     return painter_name in painter_registry
 
 
-class Cell(object):
+class Cell:
     """A cell is an instance of a painter in a view (-> a cell or a grouping cell)"""
     def __init__(self, view, painter_spec=None):
         # type: (View, Optional[PainterSpec]) -> None

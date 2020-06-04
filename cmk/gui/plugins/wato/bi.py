@@ -89,7 +89,7 @@ BIAggrNode = _Tuple
 #   '----------------------------------------------------------------------'
 
 
-class BIManagement(object):
+class BIManagement:
     def __init__(self):
         # We need to replace the BI constants internally with something
         # that we can replace back after writing the BI-Rules out

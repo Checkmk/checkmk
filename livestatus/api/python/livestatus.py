@@ -268,10 +268,6 @@ class Query(object):  # pylint: disable=useless-object-inheritance
         else:
             self.suppress_exceptions = suppress_exceptions
 
-    def __unicode__(self):
-        # type: () -> str
-        return self._query
-
     def __str__(self):
         # type: () -> str
         return self._query

@@ -66,6 +66,46 @@ cpu_util_common_dict = Dictionary(
              default_value=15,
              label=_("Compute average over last "),
          )),
+        ("average_single",
+         Dictionary(
+             title=_("Averaging for single cores"),
+             help=_("Compute averaged single-core CPU utilizations. Note that this option only has "
+                    "an effect if at least one of the sub-options 'Apply single-core levels' or "
+                    "'Graphs for averaged single-core utilizations' is enabled."),
+             elements=[
+                 ("time_average",
+                  Integer(
+                      title=_("Time frame"),
+                      unit=_("minutes"),
+                      minvalue=1,
+                      default_value=15,
+                      label=_("Compute average over last "),
+                  )),
+                 ("apply_levels",
+                  DropdownChoice(
+                      title=_("Apply single-core levels defined in 'Levels on single cores'"),
+                      help=_("Apply the levels for single cores to the averaged instead of the "
+                             "instantaneous utilizations."),
+                      choices=[
+                          (True, _("Enable")),
+                          (False, _("Disable")),
+                      ],
+                      default_value=False,
+                  )),
+                 ("show_graph",
+                  DropdownChoice(
+                      title=_("Graphs for averaged single-core utilizations"),
+                      help=_("Create a separate graph showing the averaged single-core CPU "
+                             "utilizations."),
+                      choices=[
+                          (True, _("Enable")),
+                          (False, _("Disable")),
+                      ],
+                      default_value=False,
+                  )),
+             ],
+             optional_keys=False,
+         )),
         ("util",
          Levels(
              title=_("Levels on total CPU utilization"),

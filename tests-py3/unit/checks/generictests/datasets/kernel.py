@@ -33,6 +33,13 @@ info = [[u'11238'], [u'nr_free_pages', u'198749'], [u'pgpgin', u'169984814'],
 
 discovery = {'': [], 'performance': [(None, {})], 'util': [(None, {})]}
 
+_basic_result_util = [
+    (0, 'User: 6.49%', [('user', 6.48547647710549)]),
+    (0, 'System: 2.87%', [('system', 2.868503817100648)]),
+    (0, 'Wait: 0.04%', [('wait', 0.03648018320959447)]),
+    (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
+]
+
 checks = {
     '':
         [],
@@ -79,68 +86,44 @@ checks = {
             (
                 None,
                 {},
-                [
-                    (0, 'User: 6.49%', [('user', 6.48547647710549, None, None, None, None)]),
-                    (0, 'System: 2.87%', [('system', 2.868503817100648, None, None, None, None)]),
-                    (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None, None, None)]),
-                    (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
-                ],
+                _basic_result_util,
             ),
             (None,
              {'levels_single': (80, 90)},
-             [
-                 (0, 'User: 6.49%', [('user', 6.48547647710549, None, None)]),
-                 (0, 'System: 2.87%', [('system', 2.868503817100648, None, None)]),
-                 (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None)]),
-                 (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
-             ]),
+             _basic_result_util,
+             ),
             (None,
              {'levels_single': (1, 5)},
+             _basic_result_util +
              [
-                 (0, 'User: 6.49%', [('user', 6.48547647710549, None, None)]),
-                 (0, 'System: 2.87%', [('system', 2.868503817100648, None, None)]),
-                 (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None)]),
-                 (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
                  (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)', []),
                  (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)', []),
              ]),
             (None,
              {'core_util_graph': True},
+             _basic_result_util +
              [
-                 (0, 'User: 6.49%', [('user', 6.48547647710549, None, None)]),
-                 (0, 'System: 2.87%', [('system', 2.868503817100648, None, None)]),
-                 (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None)]),
-                 (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
                  (0, '', [('cpu_core_util_0', 2.544477089431855)]),
                  (0, '', [('cpu_core_util_1', 2.158715165178048)]),
              ]),
             (None,
              {'core_util_time': (1, 1, 2)},
+             _basic_result_util +
              [
-                 (0, 'User: 6.49%', [('user', 6.48547647710549, None, None)]),
-                 (0, 'System: 2.87%', [('system', 2.868503817100648, None, None)]),
-                 (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None)]),
-                 (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
                  (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
                  (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
              ]),
             (None,
              {'levels_single': (80, 90), 'core_util_graph': True},
+             _basic_result_util +
              [
-                 (0, 'User: 6.49%', [('user', 6.48547647710549, None, None)]),
-                 (0, 'System: 2.87%', [('system', 2.868503817100648, None, None)]),
-                 (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None)]),
-                 (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
                  (0, '', [('cpu_core_util_0', 2.544477089431855, 80.0, 90.0)]),
                  (0, '', [('cpu_core_util_1', 2.158715165178048, 80.0, 90.0)]),
              ]),
             (None,
              {'levels_single': (1, 5), 'core_util_graph': True},
+             _basic_result_util +
              [
-                 (0, 'User: 6.49%', [('user', 6.48547647710549, None, None)]),
-                 (0, 'System: 2.87%', [('system', 2.868503817100648, None, None)]),
-                 (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None)]),
-                 (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
                  (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)',
                   [('cpu_core_util_0', 2.544477089431855, 1.0, 5.0)]),
                  (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)',
@@ -148,21 +131,15 @@ checks = {
              ]),
             (None,
              {'levels_single': (80, 90), 'core_util_time': (1, 1, 2)},
+             _basic_result_util +
              [
-                 (0, 'User: 6.49%', [('user', 6.48547647710549, None, None)]),
-                 (0, 'System: 2.87%', [('system', 2.868503817100648, None, None)]),
-                 (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None)]),
-                 (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
                  (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
                  (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
              ]),
             (None,
              {'levels_single': (1, 5), 'core_util_time': (1, 1, 2)},
+             _basic_result_util +
              [
-                 (0, 'User: 6.49%', [('user', 6.48547647710549, None, None)]),
-                 (0, 'System: 2.87%', [('system', 2.868503817100648, None, None)]),
-                 (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None)]),
-                 (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
                  (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
                  (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)', []),
                  (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
@@ -170,11 +147,8 @@ checks = {
              ]),
             (None,
              {'levels_single': (80, 90), 'core_util_graph': True, 'core_util_time': (1, 1, 2)},
+             _basic_result_util +
              [
-                 (0, 'User: 6.49%', [('user', 6.48547647710549, None, None)]),
-                 (0, 'System: 2.87%', [('system', 2.868503817100648, None, None)]),
-                 (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None)]),
-                 (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
                  (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
                  (0, '', [('cpu_core_util_0', 2.544477089431855, 80.0, 90.0)]),
                  (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
@@ -182,17 +156,138 @@ checks = {
              ]),
             (None,
              {'levels_single': (1, 5), 'core_util_graph': True, 'core_util_time': (1, 1, 2)},
+             _basic_result_util +
              [
-                 (0, 'User: 6.49%', [('user', 6.48547647710549, None, None)]),
-                 (0, 'System: 2.87%', [('system', 2.868503817100648, None, None)]),
-                 (0, 'Wait: 0.04%', [('wait', 0.03648018320959447, None, None)]),
-                 (0, 'Total CPU: 9.39%', [('util', 9.390460477415733, None, None, 0, None)]),
                  (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
                  (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)',
                   [('cpu_core_util_0', 2.544477089431855, 1.0, 5.0)]),
                  (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
                  (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)',
                   [('cpu_core_util_1', 2.158715165178048, 1.0, 5.0)]),
+             ]),
+            (None,
+             {'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': False}},
+             _basic_result_util
+             ),
+            (None,
+             {'levels_single': (80, 90),
+              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': False}},
+             _basic_result_util
+             ),
+            (None,
+             {'levels_single': (1, 5),
+              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': False}},
+             _basic_result_util +
+             [
+                 (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)', []),
+                 (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)', []),
+
+             ]),
+            (None,
+             {'levels_single': (80, 90),
+              'average_single': {'time_average': 2, 'apply_levels': True, 'show_graph': False}},
+             _basic_result_util
+             ),
+            (None,
+             {'levels_single': (1, 5),
+              'average_single': {'time_average': 2, 'apply_levels': True, 'show_graph': False}},
+             _basic_result_util
+             ),
+            (None,
+             {'levels_single': (0, 1),
+              'average_single': {'time_average': 2, 'apply_levels': True, 'show_graph': False}},
+             _basic_result_util +
+             [
+                 (1, 'Core cpu0 (2-min average): 0% (warn/crit at 0%/1.0%)', []),
+                 (1, 'Core cpu1 (2-min average): 0% (warn/crit at 0%/1.0%)', []),
+             ]),
+            (None,
+             {'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': True}},
+             _basic_result_util +
+             [
+                 (0, '', [('cpu_core_util_average_0', 0.0, None, None)]),
+                 (0, '', [('cpu_core_util_average_1', 0.0, None, None)]),
+             ]),
+            (None,
+             {'core_util_graph': True,
+              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': False}},
+             _basic_result_util +
+             [
+                 (0, '', [('cpu_core_util_0', 2.544477089431855, None, None)]),
+                 (0, '', [('cpu_core_util_1', 2.158715165178048, None, None)]),
+             ]),
+            (None,
+             {'core_util_graph': True,
+              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': True}},
+             _basic_result_util +
+             [
+                 (0, '', [('cpu_core_util_0', 2.544477089431855, None, None)]),
+                 (0, '', [('cpu_core_util_average_0', 0.0, None, None)]),
+                 (0, '', [('cpu_core_util_1', 2.158715165178048, None, None)]),
+                 (0, '', [('cpu_core_util_average_1', 0.0, None, None)]),
+             ]),
+            (None,
+             {'levels_single': (1, 5),
+              'core_util_graph': True,
+              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': True}},
+             _basic_result_util +
+             [
+                 (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)',
+                  [('cpu_core_util_0', 2.544477089431855, 1.0, 5.0)]),
+                 (0, '', [('cpu_core_util_average_0', 0.0, None, None)]),
+                 (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)',
+                  [('cpu_core_util_1', 2.158715165178048, 1.0, 5.0)]),
+                 (0, '', [('cpu_core_util_average_1', 0.0, None, None)]),
+             ]),
+            (None,
+             {'levels_single': (0, 1),
+              'core_util_graph': True,
+              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': True}},
+             _basic_result_util +
+             [
+                 (2, 'Core cpu0: 2.54% (warn/crit at 0%/1.0%)',
+                  [('cpu_core_util_0', 2.544477089431855, 0.0, 1.0)]),
+                 (0, '', [('cpu_core_util_average_0', 0.0, None, None)]),
+                 (2, 'Core cpu1: 2.16% (warn/crit at 0%/1.0%)',
+                  [('cpu_core_util_1', 2.158715165178048, 0.0, 1.0)]),
+                 (0, '', [('cpu_core_util_average_1', 0.0, None, None)]),
+             ]),
+            (None,
+             {'levels_single': (0, 1),
+              'core_util_graph': True,
+              'average_single': {'time_average': 2, 'apply_levels': True, 'show_graph': True}},
+             _basic_result_util +
+             [
+                 (0, '', [('cpu_core_util_0', 2.544477089431855, None, None)]),
+                 (1, 'Core cpu0 (2-min average): 0% (warn/crit at 0%/1.0%)',
+                  [('cpu_core_util_average_0', 0.0, 0.0, 1.0)]),
+                 (0, '', [('cpu_core_util_1', 2.158715165178048, None, None)]),
+                 (1, 'Core cpu1 (2-min average): 0% (warn/crit at 0%/1.0%)',
+                  [('cpu_core_util_average_1', 0.0, 0.0, 1.0)]),
+             ]),
+            (None,
+             {'core_util_time': (1, 1, 2),
+              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': False}},
+             _basic_result_util +
+             [
+                 (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
+                 (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
+             ]),
+            (None,
+             {'core_util_time': (1, 1, 2),
+              'levels_single': (0, 1),
+              'core_util_graph': True,
+              'average_single': {'time_average': 2, 'apply_levels': True, 'show_graph': True}},
+             _basic_result_util +
+             [
+                 (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
+                 (0, '', [('cpu_core_util_0', 2.544477089431855, None, None)]),
+                 (1, 'Core cpu0 (2-min average): 0% (warn/crit at 0%/1.0%)',
+                  [('cpu_core_util_average_0', 0.0, 0.0, 1.0)]),
+                 (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
+                 (0, '', [('cpu_core_util_1', 2.158715165178048, None, None)]),
+                 (1, 'Core cpu1 (2-min average): 0% (warn/crit at 0%/1.0%)',
+                  [('cpu_core_util_average_1', 0.0, 0.0, 1.0)]),
              ]),
         ],
 }

@@ -95,7 +95,7 @@ def cpu_util_core_name(orig, core_index):
         # fallback: if the cores have odd names, use
         # consecutive numbers for each call
         num = core_index
-    return "cpu_core_util_%s" % num
+    return "cpu_core_util_%s" % num, "cpu_core_util_average_%s" % num
 
 
 def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
@@ -146,10 +146,16 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
         threshold, warn, crit = params["core_util_time_total"]
         yield cpu_util_time(this_time, "total", util, threshold, warn, crit)
 
-    if cores and any([x in params for x in ["core_util_graph", "core_util_time", "levels_single"]]):
+    if cores and any([
+            x in params for x in [
+                "average_single",
+                "core_util_graph",
+                "core_util_time",
+                "levels_single",
+            ]
+    ]):
         for core_index, (core, total_perc) in enumerate(cores):
-            for sub_result in _util_perfdata(core, total_perc, core_index, this_time, params):
-                yield sub_result
+            yield from _util_perfdata(core, total_perc, core_index, this_time, params)
 
 
 def check_cpu_util_unix(values, params, cores=None, values_counter=True):
@@ -218,25 +224,61 @@ def check_cpu_util_unix(values, params, cores=None, values_counter=True):
         yield check_result
 
 
+def _check_single_core_util(util, metric, levels, infoname):
+    state, infotext, perfdata = check_levels(
+        util,
+        metric,
+        levels,
+        human_readable_func=get_percent_human_readable,
+        infoname=infoname,
+    )
+    if not state:
+        infotext = ""
+    if infotext or perfdata:
+        yield state, infotext, perfdata
+
+
 def _util_perfdata(core, total_perc, core_index, this_time, params):
 
     if "core_util_time" in params:
         threshold, warn, crit = params["core_util_time"]
         yield cpu_util_time(this_time, core, total_perc, threshold, warn, crit)
 
-    state, infotext, perfdata = check_levels(
+    config_single_avg = params.get('average_single', {})
+
+    metric_raw, metric_avg = cpu_util_core_name(core, core_index)
+    if not params.get("core_util_graph"):
+        metric_raw = None
+    if not config_single_avg.get('show_graph'):
+        metric_avg = None
+
+    if config_single_avg.get('apply_levels'):
+        levels_raw = None
+        levels_avg = params.get('levels_single')
+    else:
+        levels_raw = params.get('levels_single')
+        levels_avg = None
+
+    yield from _check_single_core_util(
         total_perc,
-        cpu_util_core_name(core, core_index) if params.get("core_util_graph") else None,
-        params.get('levels_single'),
-        human_readable_func=get_percent_human_readable,
-        infoname="Core %s" % core,
+        metric_raw,
+        levels_raw,
+        "Core %s" % core,
     )
 
-    if not state:
-        infotext = ""
-
-    if infotext or perfdata:
-        yield state, infotext, perfdata
+    time_avg = config_single_avg.get('time_average')
+    if time_avg:
+        yield from _check_single_core_util(
+            get_average(
+                "cpu_utilization_%d.avg" % core_index,
+                this_time,
+                total_perc,
+                time_avg,
+            ),
+            metric_avg,
+            levels_avg,
+            "Core %s (%d-min average)" % (core, time_avg),
+        )
 
 
 def check_cpu_util_linux_container(_no_item, params, parsed):

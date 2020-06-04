@@ -299,6 +299,11 @@ for i in range(MAX_CORES):
         "unit": "%",
         "color": indexed_color(i, MAX_CORES),
     }
+    metric_info["cpu_core_util_average_%d" % i] = {
+        "title": _("Average utilization core %d") % (i + 1),
+        "unit": "%",
+        "color": indexed_color(i, MAX_CORES),
+    }
 
 metric_info["cpu_time_percent"] = {
     "title": _("CPU time"),
@@ -727,6 +732,13 @@ graph_info["per_core_utilization"] = {
     "metrics": [("cpu_core_util_%d" % num, "line") for num in range(MAX_CORES)],
     "range": (0, 100),
     "optional_metrics": ["cpu_core_util_%d" % num for num in range(2, MAX_CORES)]
+}
+
+graph_info["per_core_utilization_average"] = {
+    "title": _("Average utilization per core"),
+    "metrics": [("cpu_core_util_average_%d" % num, "line") for num in range(MAX_CORES)],
+    "range": (0, 100),
+    "optional_metrics": ["cpu_core_util_average_%d" % num for num in range(2, MAX_CORES)],
 }
 
 graph_info["context_switches"] = {

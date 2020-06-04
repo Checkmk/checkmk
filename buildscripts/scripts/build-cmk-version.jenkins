@@ -358,7 +358,7 @@ def create_source_package(DAILY_DATA, CMK_VERS) {
         } else {
             sh "mkdir -p ${DAILY_DATA}/agents"
             if(EDITION != 'raw') {
-                sh "touch ${DAILY_DATA}/agents/cmk-update-agent ${DAILY_DATA}/agents/cmk-update-agent-32 ${DAILY_DATA}/agents/cmk-update-agent.exe"
+                sh "touch ${DAILY_DATA}/agents/cmk-update-agent ${DAILY_DATA}/agents/cmk-update-agent-32"
             }
             sh "touch check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml mk_logwatch.exe mk_jolokia.exe python-3.8.zip"
         }
@@ -368,7 +368,6 @@ def create_source_package(DAILY_DATA, CMK_VERS) {
             if(EDITION != 'raw') {
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
-                sh "cp ${DAILY_DATA}/agents/cmk-update-agent.exe enterprise/agents/windows/plugins/"
             }
             sh "cp ${DAILY_DATA}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.zip} agents/windows"
             sh "cp ${DAILY_DATA}/agents/{mk_logwatch.exe,mk_jolokia.exe} agents/windows/plugins"

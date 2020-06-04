@@ -302,37 +302,31 @@ def set_version(CMK_VERS) {
     sh "make NEW_VERSION=${CMK_VERS} setversion"
 }
 
-// TODO: Clean this up
-// - AGENT variable handling is confusing
-// - Naming is misleading here. We build:
-//   b) linux32 agent updater
-//   c) linux64 agent updater
-// - Split agent logic from agent updater
 def build_linux_agent_updater(DAILY_DATA, WORKSPACE, AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO_HTTP) {
     stage('Build agent updater ' + AGENT) {
-        if (AGENT == 'au-linux-64bit') {
-            AGENT = ''
-        } else if (AGENT == 'au-linux-32bit') {
-            AGENT = '-32'
+        def SUFFIX = ""
+        if (AGENT == 'au-linux-32bit') {
+            SUFFIX = '-32'
         }
+        def WORK_DIR = "${WORKSPACE}/agent${SUFFIX}-dest"
 
         sh 'rm -rf *'
         sh """
-            cp -r ${DAILY_DATA}/git/.git ${WORKSPACE}/agent${AGENT}-dest/
-            mkdir -p ${WORKSPACE}/agent${AGENT}-dest/enterprise/agents/plugins
-            cp -r ${DAILY_DATA}/git/enterprise/agents/plugins/* ${WORKSPACE}/agent${AGENT}-dest/enterprise/agents/plugins/
-            mkdir -p ${WORKSPACE}/agent${AGENT}-dest/buildscripts/infrastructure/build-nodes/scripts
-            cp ${DAILY_DATA}/git/buildscripts/infrastructure/build-nodes/scripts/build_lib.sh ${WORKSPACE}/agent${AGENT}-dest/buildscripts/infrastructure/build-nodes/scripts
+            cp -r ${DAILY_DATA}/git/.git ${WORK_DIR}/
+            mkdir -p ${WORK_DIR}/enterprise/agents/plugins
+            cp -r ${DAILY_DATA}/git/enterprise/agents/plugins/* ${WORK_DIR}/enterprise/agents/plugins/
+            mkdir -p ${WORK_DIR}/buildscripts/infrastructure/build-nodes/scripts
+            cp ${DAILY_DATA}/git/buildscripts/infrastructure/build-nodes/scripts/build_lib.sh ${WORK_DIR}/buildscripts/infrastructure/build-nodes/scripts
         """
         withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
             sh script: """
-                cd agent${AGENT}-dest/enterprise/agents/plugins
-                BRANCH_VERSION=${BRANCH_VERSION} DOCKER_REGISTRY_NO_HTTP=${DOCKER_REGISTRY_NO_HTTP} ./make-agent-updater${AGENT}
+                cd ${WORK_DIR}/enterprise/agents/plugins
+                BRANCH_VERSION=${BRANCH_VERSION} DOCKER_REGISTRY_NO_HTTP=${DOCKER_REGISTRY_NO_HTTP} ./make-agent-updater${SUFFIX}
             """
         }
         sh """
             mkdir -p ${DAILY_DATA}/agents
-            cp agent${AGENT}-dest/enterprise/agents/plugins/cmk-update-agent${AGENT} ${DAILY_DATA}/agents
+            cp ${WORK_DIR}/enterprise/agents/plugins/cmk-update-agent${SUFFIX} ${DAILY_DATA}/agents
         """
     }
 }

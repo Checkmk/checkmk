@@ -104,7 +104,7 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         return "%s.resize()" % self.instance_name
 
 
-class TableFigureDataCreator(object):
+class TableFigureDataCreator:
     """ Helps to create the data shown in a table_figure.js figure
         The javascript TableFigure supports partial data updates and the integration of dc.js pie charts within cells
         {

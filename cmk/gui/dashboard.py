@@ -1078,7 +1078,7 @@ def page_create_view_dashlet():
     name = html.request.get_str_input_mandatory('name')
 
     if create:
-        import cmk.gui.views as views
+        import cmk.gui.views as views  # pylint: disable=import-outside-toplevel
         url = html.makeuri([('back', html.makeuri([]))], filename="create_view_dashlet_infos.py")
         views.show_create_view_dialog(next_url=url)
 
@@ -1120,7 +1120,7 @@ def page_create_view_dashlet_infos():
 
 def choose_view(name, title, create_dashlet_spec_func):
     # type: (DashboardName, str, Callable) -> None
-    import cmk.gui.views as views
+    import cmk.gui.views as views  # pylint: disable=import-outside-toplevel
     vs_view = DropdownChoice(
         title=_('View name'),
         choices=views.view_choices,

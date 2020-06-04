@@ -988,7 +988,7 @@ class CommandScheduleDowntimes(Command):
                           label=_("Repeat this downtime on a regular basis every"))
             html.write_text(" ")
 
-            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types  # pylint: disable=no-name-in-module
+            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types  # pylint: disable=no-name-in-module,import-outside-toplevel
 
             recurring_selections = [
                 (str(k), v) for (k, v) in sorted(recurring_downtimes_types().items())
@@ -1003,7 +1003,7 @@ class CommandScheduleDowntimes(Command):
         down_to = None
 
         if self._has_recurring_downtimes() and html.get_checkbox("_down_do_recur"):
-            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types  # pylint: disable=no-name-in-module
+            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types  # pylint: disable=no-name-in-module,import-outside-toplevel
             recurring_type = html.request.get_integer_input_mandatory("_down_recurring")
             title_start = (_("schedule a periodic downtime every %s") %
                            recurring_downtimes_types()[recurring_type])
@@ -1227,7 +1227,7 @@ class CommandScheduleDowntimes(Command):
     def _has_recurring_downtimes(self):
         try:
             # The suppression below is OK, we just want to check if the module is there.
-            import cmk.gui.cee.plugins.wato.cmc  # noqa: F401 # pylint: disable=unused-variable,unused-import
+            import cmk.gui.cee.plugins.wato.cmc  # noqa: F401 # pylint: disable=unused-variable,unused-import,import-outside-toplevel
             return True
         except ImportError:
             return False

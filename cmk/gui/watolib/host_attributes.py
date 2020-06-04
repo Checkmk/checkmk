@@ -562,7 +562,7 @@ def _update_config_based_host_attributes():
     _declare_host_tag_attributes()
     declare_custom_host_attrs()
 
-    from cmk.gui.watolib.hosts_and_folders import Folder
+    from cmk.gui.watolib.hosts_and_folders import Folder  # pylint: disable=import-outside-toplevel
     Folder.invalidate_caches()
 
     setattr(_update_config_based_host_attributes, "._config_hash", _compute_config_hash())

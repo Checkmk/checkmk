@@ -1462,7 +1462,7 @@ def show_view(view, view_renderer, only_count=False):
                     ", ".join(sorted(corrupted_inventory_files)))
 
         if not cmk_version.is_raw_edition():
-            import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module
+            import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module,import-outside-toplevel
             sla_params = []
             for cell in cells:
                 if cell.painter_name() in ["sla_specific", "sla_fixed"]:

@@ -78,7 +78,7 @@ check_info['f5_bigip_mem'] = {
 }
 
 check_info['f5_bigip_mem.tmm'] = {
-    'inventory_function': discover(lambda key, value: key == "TMM" and value[0]),
+    'inventory_function': discover(lambda key, value: key == "TMM" and value[0] > 0.0),
     'check_function': check_f5_bigip_mem,
     'service_description': 'Memory',
     'has_perfdata': True,

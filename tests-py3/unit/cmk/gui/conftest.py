@@ -270,7 +270,7 @@ class WebTestAppForCMK(webtest.TestApp):
             rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
         if rel.startswith("cmk/"):
             rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
-        if resp.status.startswith("2"):
+        if resp.status.startswith("2") and resp.content_type.endswith("json"):
             link = get_link(resp.json, rel)
             return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)
         return resp

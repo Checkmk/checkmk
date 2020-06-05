@@ -731,6 +731,170 @@ info:
   version: 0.3.2
 openapi: 3.0.2
 paths:
+  /domain-types/activation_run/actions/activate-changes:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.activate_changes.activate_changes
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: ''
+      summary: Activate pending changes.
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.activate_changes
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/domain-types/activation_run/actions/activate-changes\"\
+          ,\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/domain-types/activation_run/actions/activate-changes\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/activation_run/actions/activate-changes\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
+  /objects/activation_run/{activation_id}/actions/wait-for-completion:
+    get:
+      description: This endpoint will periodically redirect on itself to prevent timeouts.
+      operationId: cmk.gui.plugins.openapi.endpoints.activate_changes.activate_changes_state
+      parameters:
+      - allowEmptyValue: false
+        description: The activation-id.
+        example: d3b07384d113e0ec49eaa6238ad5ff00
+        in: path
+        name: activation_id
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '302':
+          description: Either the resource has moved or has not yet completed. Please
+            see this resource for further information.
+        '204':
+          description: Operation done successfully. No further output.
+      summary: Wait for an activation-run to complete.
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.activate_changes
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00/actions/wait-for-completion\"\
+          ,\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00/actions/wait-for-completion\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00/actions/wait-for-completion\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
+  /objects/activation_run/{activation_id}:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.activate_changes.show_activation
+      parameters:
+      - allowEmptyValue: false
+        description: The activation-id.
+        example: d3b07384d113e0ec49eaa6238ad5ff00
+        in: path
+        name: activation_id
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: ''
+      summary: Show the status of a particular activation-run.
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.activate_changes
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00\"\
+          ,\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
+  /collections/activation_run:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.activate_changes.list_activations
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+      summary: List currently running activations.
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.activate_changes
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/collections/activation_run\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/collections/activation_run\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/collections/activation_run\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /collections/contact_group:
     get:
       description: ''
@@ -815,13 +979,13 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"alias\": \"Not on Sundays.\"\
-          ,\n          \"name\": \"OnCall\"\n        }' \\\n    \"$API_URL/collections/contact_group\""
+          \ application/json\" \\\n    -d '{\n          \"name\": \"OnCall\",\n  \
+          \        \"alias\": \"Not on Sundays.\"\n        }' \\\n    \"$API_URL/collections/contact_group\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/contact_group\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Not\
-          \ on Sundays.' \\\n    name='OnCall'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='OnCall'\
+          \ \\\n    alias='Not on Sundays.'"
   /objects/contact_group/{name}:
     delete:
       description: ''
@@ -981,13 +1145,13 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"alias\": \"Not on Sundays.\",\n          \"name\"\
-          : \"OnCall\"\n        }' \\\n    \"$API_URL/objects/contact_group/pathname\""
+          \    -d '{\n          \"name\": \"OnCall\",\n          \"alias\": \"Not\
+          \ on Sundays.\"\n        }' \\\n    \"$API_URL/objects/contact_group/pathname\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/contact_group/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
+          \ a20ceacf346041dc' \\\n    name='OnCall' \\\n    alias='Not on Sundays.'"
   /collections/folder:
     get:
       description: ''
@@ -1074,16 +1238,16 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"title\": \"Production Hosts\"\
+          \ application/json\" \\\n    -d '{\n          \"parent\": \"root\",\n  \
+          \        \"name\": \"production\",\n          \"title\": \"Production Hosts\"\
           ,\n          \"attributes\": {\n            \"foo\": \"bar\"\n         \
-          \ },\n          \"name\": \"production\",\n          \"parent\": \"root\"\
-          \n        }' \\\n    \"$API_URL/collections/folder\""
+          \ }\n        }' \\\n    \"$API_URL/collections/folder\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/folder\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    title='Production\
-          \ Hosts' \\\n    attributes='{\"foo\": \"bar\"}' \\\n    name='production'\
-          \ \\\n    parent='root'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    parent='root'\
+          \ \\\n    name='production' \\\n    title='Production Hosts' \\\n    attributes='{\"\
+          foo\": \"bar\"}'"
   /objects/folder/{ident}:
     delete:
       description: ''
@@ -1634,13 +1798,13 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"alias\": \"Windows Servers\"\
-          ,\n          \"name\": \"windows\"\n        }' \\\n    \"$API_URL/collections/host_group\""
+          \ application/json\" \\\n    -d '{\n          \"name\": \"windows\",\n \
+          \         \"alias\": \"Windows Servers\"\n        }' \\\n    \"$API_URL/collections/host_group\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host_group\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Windows\
-          \ Servers' \\\n    name='windows'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='windows'\
+          \ \\\n    alias='Windows Servers'"
   /objects/host_group/{name}:
     delete:
       description: ''
@@ -1800,13 +1964,13 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"alias\": \"Windows Servers\",\n          \"name\"\
-          : \"windows\"\n        }' \\\n    \"$API_URL/objects/host_group/pathname\""
+          \    -d '{\n          \"name\": \"windows\",\n          \"alias\": \"Windows\
+          \ Servers\"\n        }' \\\n    \"$API_URL/objects/host_group/pathname\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host_group/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    alias='Windows Servers' \\\n    name='windows'"
+          \ a20ceacf346041dc' \\\n    name='windows' \\\n    alias='Windows Servers'"
   /domain-types/service/collections/services:
     get:
       description: ''
@@ -2051,13 +2215,13 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"alias\": \"Environment Sensors\"\
-          ,\n          \"name\": \"environment\"\n        }' \\\n    \"$API_URL/collections/service_group\""
+          \ application/json\" \\\n    -d '{\n          \"name\": \"environment\"\
+          ,\n          \"alias\": \"Environment Sensors\"\n        }' \\\n    \"$API_URL/collections/service_group\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/service_group\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Environment\
-          \ Sensors' \\\n    name='environment'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='environment'\
+          \ \\\n    alias='Environment Sensors'"
   /objects/service_group/{name}:
     delete:
       description: ''
@@ -2217,13 +2381,14 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"alias\": \"Environment Sensors\",\n          \"\
-          name\": \"environment\"\n        }' \\\n    \"$API_URL/objects/service_group/pathname\""
+          \    -d '{\n          \"name\": \"environment\",\n          \"alias\": \"\
+          Environment Sensors\"\n        }' \\\n    \"$API_URL/objects/service_group/pathname\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/service_group/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    alias='Environment Sensors' \\\n    name='environment'"
+          \ a20ceacf346041dc' \\\n    name='environment' \\\n    alias='Environment\
+          \ Sensors'"
   /version:
     get:
       description: ''
@@ -2298,13 +2463,13 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"passphrase\": \"sw0rdfish\"\
-          ,\n          \"key_id\": \"asdf\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
+          \ application/json\" \\\n    -d '{\n          \"key_id\": \"asdf\",\n  \
+          \        \"passphrase\": \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    passphrase='sw0rdfish'\
-          \ \\\n    key_id='asdf'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    key_id='asdf'\
+          \ \\\n    passphrase='sw0rdfish'"
   /collections/agent:
     get:
       description: ''
@@ -2517,6 +2682,8 @@ paths:
 security:
 - BearerAuth: []
 tags:
+- name: cmk.gui.plugins.openapi.endpoints.activate_changes
+  x-displayName: Activate changes
 - name: cmk.gui.plugins.openapi.endpoints.contact_group
   x-displayName: Contact-groups
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputContactGroup"
@@ -2590,6 +2757,7 @@ x-logo:
 x-tagGroups:
 - name: Endpoints
   tags:
+  - cmk.gui.plugins.openapi.endpoints.activate_changes
   - cmk.gui.plugins.openapi.endpoints.contact_group
   - cmk.gui.plugins.openapi.endpoints.folder
   - cmk.gui.plugins.openapi.endpoints.host

@@ -174,10 +174,10 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 if typename in ['app', 'memory', 'sessions', 'web_container_runtime']:
                     sys.stdout.write('<<<appdynamics_%s:sep(124)>>>\n' %
                                      (typename.replace("_runtime", "")))
-                    for item, values in items.iteritems():
+                    for item, values in items.items():
                         if values:
                             output_items = [application, item]
-                            for name, value in values.iteritems():
+                            for name, value in values.items():
                                 if not name:
                                     output_items.append('%s' % value)
                                 else:

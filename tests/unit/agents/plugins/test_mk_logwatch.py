@@ -288,7 +288,7 @@ def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
     # loading and __getitem__
     state = mk_logwatch.State(str(file_path)).read()
     assert state._data == state_dict
-    for expected_data in state_dict.itervalues():
+    for expected_data in state_dict.values():
         key = expected_data['file']
         assert state.get(key) == expected_data
 
@@ -319,7 +319,7 @@ def test_state_write(mk_logwatch, tmp_path, state_dict):
     assert not state._data
 
     # writing
-    for data in state_dict.itervalues():
+    for data in state_dict.values():
         key = data['file']
         filestate = state.get(key)
         # should work w/o setting 'file'

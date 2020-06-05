@@ -106,7 +106,7 @@ def write_title(section):
 def send_request(opener, path, headers, parameters=None):
     url = "%s/PrismGateway/services/rest/v1/%s/" % (base_url, path)
     if parameters is not None:
-        url = "%s?%s" % (url, "&".join(["%s=%s" % par for par in parameters.iteritems()]))
+        url = "%s?%s" % (url, "&".join(["%s=%s" % par for par in parameters.items()]))
     req = Request(url, headers=headers)
     response = opener.open(req)
     res = response.read()

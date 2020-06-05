@@ -500,9 +500,9 @@ def query_instance(inst):
     write_section('jolokia_metrics', generate_values(inst, QUERY_SPECS_LEGACY))
 
     sections_specific = MBEAN_SECTIONS_SPECIFIC.get(inst.product, {})
-    for section_name, mbeans in sections_specific.iteritems():
+    for section_name, mbeans in sections_specific.items():
         write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
-    for section_name, mbeans in MBEAN_SECTIONS.iteritems():
+    for section_name, mbeans in MBEAN_SECTIONS.items():
         write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
 
     write_section('jolokia_generic', generate_values(inst, inst.custom_vars))

@@ -11,7 +11,7 @@ import cmk.special_agents.utils as utils
 def main():
     agent = utils.AgentJSON("salesforce", "Salesforce")
     content = agent.get_content()
-    for section, section_content in content.iteritems():
+    for section, section_content in content.items():
         sys.stdout.write("<<<%s>>>\n" % section)
         for entry in section_content:
             sys.stdout.write("%s\n" % "".join(entry))

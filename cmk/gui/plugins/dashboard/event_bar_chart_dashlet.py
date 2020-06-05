@@ -128,7 +128,7 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
 
         # Context
         for fil in context.values():
-            for k, f in fil.iteritems():
+            for k, f in fil.items():
                 args.append((k, f))
 
         return tooltip, html.makeuri_contextless(args, filename="view.py")

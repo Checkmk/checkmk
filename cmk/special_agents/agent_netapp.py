@@ -1137,7 +1137,7 @@ def process_vserver_status(args, server):
         return
     vserver_dict = create_dict(vservers, custom_key=["vserver-name"], is_counter=False)
     print("<<<netapp_api_vs_status:sep(9)>>>")
-    for vserver, vserver_data in vserver_dict.iteritems():
+    for vserver, vserver_data in vserver_dict.items():
         words = [vserver]
         for key in ("state", "vserver-subtype"):
             if vserver_data.get(key):

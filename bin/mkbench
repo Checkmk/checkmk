@@ -1163,7 +1163,7 @@ class AgentListener(multiprocessing.Process):
             self._update_counter(host_id, "kernel_cpu%s_idle" % i, per_sec=0.30)
             self._update_counter(host_id, "kernel_cpu%s_iowait" % i, per_sec=0.05)
 
-        counters = {k: v for k, (_t, v) in self._counters[host_id].iteritems()}
+        counters = {k: v for k, (_t, v) in self._counters[host_id].items()}
         counters["now"] = time.time()
 
         cpu_output = ""

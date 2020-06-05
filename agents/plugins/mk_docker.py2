@@ -344,7 +344,7 @@ def section_node_images(client):
 
     LOGGER.debug(client.all_containers)
     section.append('[[[containers]]]')
-    for container in client.all_containers.itervalues():
+    for container in client.all_containers.values():
         section.append(json.dumps(container.attrs))
 
     section.write()

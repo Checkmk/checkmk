@@ -70,7 +70,7 @@ domains = get_domains()
 #   7. Auf FTP neues Verzeichnis anlegen: <kunde>_2012<monat>
 #   8. Konfiguration in Plesk anpassen
 output = ['<<<plesk_backups>>>']
-for domain, p in domains.iteritems():
+for domain, p in domains.items():
     try:
         if not p:
             output.append('%s 4' % domain)  # Backup nicht konfiguriert

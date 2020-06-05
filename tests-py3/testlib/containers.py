@@ -142,7 +142,8 @@ def _get_or_load_image(client, image_name_with_tag):
             return image
 
     except docker.errors.ImageNotFound:
-        logger.info("  Not available locally, try to pull")
+        logger.info("  Not available locally, try to pull "
+                    "(May take some time. Grab a coffee or two...)")
 
     try:
         image = client.images.pull(image_name_with_tag)

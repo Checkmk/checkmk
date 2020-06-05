@@ -218,6 +218,174 @@ def test_automation_try_discovery_host(test_cfg, site):
     assert isinstance(data["output"], str)
     assert isinstance(data["check_table"], list)
 
+    # The following has been nailed down during major refactoring in cmk/base/discovery.py.
+    # remove it afterwards, as this is probably going to be annoying.
+
+    # Drop last row (Uptime) and ignore metrics (both are time sensitive)
+    # Also ignore labels for readability.
+    check_table = sorted(row[:-2] for row in data["check_table"][:-1])
+
+    assert check_table == [
+        ('old', 'apache_status', 'apache_status', '127.0.0.1:5000', '{}', {},
+         'Apache 127.0.0.1:5000 Status', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'apache_status', 'apache_status', '127.0.0.1:5004', '{}', {},
+         'Apache 127.0.0.1:5004 Status', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'apache_status', 'apache_status', '127.0.0.1:5007', '{}', {},
+         'Apache 127.0.0.1:5007 Status', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'apache_status', 'apache_status', '127.0.0.1:5008', '{}', {},
+         'Apache 127.0.0.1:5008 Status', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'apache_status', 'apache_status', '127.0.0.1:5009', '{}', {},
+         'Apache 127.0.0.1:5009 Status', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'apache_status', 'apache_status', '::1:80', '{}', {}, 'Apache ::1:80 Status', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'check_mk.agent_update', 'agent_update', None, '{}', {}, 'Check_MK Agent', 1,
+         "Error: Check_MK Site on deployment server not started(!), Last update check: 2017-01-01 11:01:06 (warn at 2 d)(!), Last agent update: 2017-01-01 11:01:07"
+        ),
+        ('old', 'cpu.loads', 'cpu_load', None, 'cpuload_default_levels', (5.0, 10.0), 'CPU load', 0,
+         "15 min load: 0.48 at 8 Cores (0.06 per Core)"),
+        ('old', 'cpu.threads', 'threads', None, '{}', {
+            'levels': (2000, 4000)
+        }, 'Number of threads', 0, "Count: 969 threads"),
+        ('old', 'df', 'filesystem', '/', "{'include_volume_name': False}", {
+            'include_volume_name': False,
+            'inodes_levels': (10.0, 5.0),
+            'levels': (80.0, 90.0),
+            'levels_low': (50.0, 60.0),
+            'magic_normsize': 20,
+            'show_inodes': 'onlow',
+            'show_levels': 'onmagic',
+            'show_reserved': False,
+            'trend_perfdata': True,
+            'trend_range': 24
+        }, 'Filesystem /', 2, '98.48% used (210.35 of 213.60 GB), (warn/crit at 80.0%/90.0%)(!!)'),
+        ('old', 'df', 'filesystem', '/boot', "{'include_volume_name': False}", {
+            'include_volume_name': False,
+            'inodes_levels': (10.0, 5.0),
+            'levels': (80.0, 90.0),
+            'levels_low': (50.0, 60.0),
+            'magic_normsize': 20,
+            'show_inodes': 'onlow',
+            'show_levels': 'onmagic',
+            'show_reserved': False,
+            'trend_perfdata': True,
+            'trend_range': 24
+        }, 'Filesystem /boot', 1,
+         '86.35% used (204.05 of 236.29 MB), (warn/crit at 80.0%/90.0%)(!)'),
+        ('old', 'df', 'filesystem', '/boot/efi', "{'include_volume_name': False}", {
+            'include_volume_name': False,
+            'inodes_levels': (10.0, 5.0),
+            'levels': (80.0, 90.0),
+            'levels_low': (50.0, 60.0),
+            'magic_normsize': 20,
+            'show_inodes': 'onlow',
+            'show_levels': 'onmagic',
+            'show_reserved': False,
+            'trend_perfdata': True,
+            'trend_range': 24
+        }, 'Filesystem /boot/efi', 0, '0.7% used (3.58 of 510.98 MB)'),
+        ('old', 'kernel.performance', 'kernel_performance', None, '{}', {}, 'Kernel Performance', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'kernel.util', 'cpu_iowait', None, '{}', {}, 'CPU utilization', 0,
+         'User: 6.32%, System: 0.93%, Wait: 0.1%, Total CPU: 7.34%'),
+        ('old', 'lnx_thermal', 'temperature', 'Zone 0', '{}', {
+            'device_levels_handling': 'devdefault',
+            'levels': (70.0, 80.0)
+        }, 'Temperature Zone 0', 0, '32.4 °C'),
+        ('old', 'lnx_thermal', 'temperature', 'Zone 1', '{}', {
+            'device_levels_handling': 'devdefault',
+            'levels': (70.0, 80.0)
+        }, 'Temperature Zone 1', 0, '50.0 °C'),
+        ('old', 'mem.linux', 'memory_linux', None, '{}', {
+            'levels_commitlimit': ('perc_free', (20.0, 10.0)),
+            'levels_committed': ('perc_used', (100.0, 150.0)),
+            'levels_hardwarecorrupted': ('abs_used', (1, 1)),
+            'levels_pagetables': ('perc_used', (8.0, 16.0)),
+            'levels_shm': ('perc_used', (20.0, 30.0)),
+            'levels_total': ('perc_used', (120.0, 150.0)),
+            'levels_virtual': ('perc_used', (80.0, 90.0)),
+            'levels_vmalloc': ('abs_free', (52428800, 31457280))
+        }, 'Memory', 0,
+         "Total virtual memory: 14.05% - 4.42 GB of 31.43 GB, RAM: 28.4% - 4.42 GB of 15.55 GB, Swap: 0% - 0.00 B of 15.88 GB"
+        ),
+        ('old', 'mkeventd_status', None, 'heute', '{}', {}, 'OMD heute Event Console', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'mkeventd_status', None, 'test1', '{}', {}, 'OMD test1 Event Console', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'mkeventd_status', None, 'test2', '{}', {}, 'OMD test2 Event Console', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'mkeventd_status', None, 'test3', '{}', {}, 'OMD test3 Event Console', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'mkeventd_status', None, 'test_crawl', '{}', {}, 'OMD test_crawl Event Console', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'mknotifyd', None, 'heute', '{}', {}, 'OMD heute Notification Spooler', 2,
+         'Version: 1.4.0i4, Status last updated 3.4 y ago, spooler seems crashed or busy(!!)'),
+        ('old', 'mknotifyd', None, 'heute_slave_1', '{}', {},
+         'OMD heute_slave_1 Notification Spooler', 2,
+         'Version: 2016.12.23, Status last updated 3.4 y ago, spooler seems crashed or busy(!!)'),
+        ('old', 'mknotifyd', None, 'test1', '{}', {}, 'OMD test1 Notification Spooler', 2,
+         'Version: 1.4.0i3, Status last updated 3.4 y ago, spooler seems crashed or busy(!!)'),
+        ('old', 'mknotifyd', None, 'test2', '{}', {}, 'OMD test2 Notification Spooler', 2,
+         'Version: 1.4.0i3, Status last updated 3.4 y ago, spooler seems crashed or busy(!!)'),
+        ('old', 'mknotifyd', None, 'test3', '{}', {}, 'OMD test3 Notification Spooler', 2,
+         'Version: 1.4.0i3, Status last updated 3.4 y ago, spooler seems crashed or busy(!!)'),
+        ('old', 'mknotifyd', None, 'test_crawl', '{}', {}, 'OMD test_crawl Notification Spooler', 2,
+         'Version: 2016.12.21, Status last updated 3.4 y ago, spooler seems crashed or busy(!!)'),
+        ('old', 'mounts', 'fs_mount_options', '/',
+         "['data=ordered', 'errors=remount-ro', 'noatime', 'nodiratime', 'rw']",
+         ['data=ordered', 'errors=remount-ro', 'noatime', 'nodiratime',
+          'rw'], 'Mount options of /', 0, 'Mount options exactly as expected'),
+        ('old', 'mounts', 'fs_mount_options', '/boot',
+         "['acl', 'barrier', 'block_validity', 'relatime', 'rw', 'stripe=4', 'user_xattr']",
+         ['acl', 'barrier', 'block_validity', 'relatime', 'rw', 'stripe=4',
+          'user_xattr'], 'Mount options of /boot', 0, 'Mount options exactly as expected'),
+        ('old', 'mounts', 'fs_mount_options', '/boot/efi',
+         "['codepage=437', 'dmask=0077', 'errors=remount-ro', 'fmask=0077', 'iocharset=iso8859-1', 'relatime', 'rw', 'shortname=mixed']",
+         [
+             'codepage=437', 'dmask=0077', 'errors=remount-ro', 'fmask=0077', 'iocharset=iso8859-1',
+             'relatime', 'rw', 'shortname=mixed'
+         ], 'Mount options of /boot/efi', 0, 'Mount options exactly as expected'),
+        ('old', 'ntp.time', 'ntp_time', None, '{}', {
+            'alert_delay': (300, 3600),
+            'ntp_levels': (10, 200.0, 500.0)
+        }, 'NTP Time', 0,
+         'sys.peer - stratum 2, offset -0.84 ms, jitter 20.87 ms, last reached 62 secs ago (synchronized on 176.9.31.215)'
+        ),
+        ('old', 'omd_apache', None, 'aq', 'None', None, 'OMD aq apache', 0,
+         'No activity since last check'),
+        ('old', 'omd_apache', None, 'heute', 'None', None, 'OMD heute apache', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'omd_apache', None, 'heute_slave_1', 'None', None, 'OMD heute_slave_1 apache', 0,
+         'No activity since last check'),
+        ('old', 'omd_apache', None, 'onelogin', 'None', None, 'OMD onelogin apache', 0,
+         'No activity since last check'),
+        ('old', 'omd_apache', None, 'stable', 'None', None, 'OMD stable apache', 0,
+         'No activity since last check'),
+        ('old', 'omd_apache', None, 'stable_slave_1', 'None', None, 'OMD stable_slave_1 apache', 0,
+         'No activity since last check'),
+        ('old', 'omd_apache', None, 'test1', 'None', None, 'OMD test1 apache', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'omd_apache', None, 'test2', 'None', None, 'OMD test2 apache', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'omd_apache', None, 'test3', 'None', None, 'OMD test3 apache', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'omd_apache', None, 'test_crawl', 'None', None, 'OMD test_crawl apache', 0,
+         'WAITING - Counter based check, cannot be done offline'),
+        ('old', 'postfix_mailq', 'mail_queue_length', '', '{}', {
+            'active': (200, 300),
+            'deferred': (10, 20)
+        }, 'Postfix Queue', 0, 'Deferred queue length: 0, Active queue length: 0'),
+        ('old', 'postfix_mailq_status', None, '', 'None', None, 'Postfix status', 0,
+         'Status: the Postfix mail system is running, PID: 2051'),
+        ('old', 'tcp_conn_stats', 'tcp_conn_stats', None, 'tcp_conn_stats_default_levels', {},
+         'TCP Connections', 0,
+         'CLOSE_WAIT: 7, ESTABLISHED: 3, FIN_WAIT2: 1, LISTEN: 38, TIME_WAIT: 14'),
+    ]
+
 
 def test_automation_set_autochecks(test_cfg, site):
     new_items = {

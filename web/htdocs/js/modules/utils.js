@@ -120,6 +120,23 @@ export function add_event_handler(type, func, obj) {
 }
 
 
+export function del_event_handler(type, func, obj) {
+    obj = (typeof(obj) === "undefined") ? window : obj;
+
+    if (obj.removeEventListener) {
+        // W3 stadnard browsers
+        obj.removeEventListener(type, func, false);
+    }
+    else if (obj.detachEvent) {
+        // IE<9
+        obj.detachEvent("on"+type, func);
+    }
+    else {
+        obj["on" + type] = null;
+    }
+}
+
+
 export function get_target(event) {
     return event.target ? event.target : event.srcElement;
 }

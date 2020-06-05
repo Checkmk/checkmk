@@ -8,52 +8,82 @@
 
 import * as utils from "utils";
 import * as ajax from "ajax";
+import * as valuespecs from "valuespecs";
 
-var popup_data      = null;
-var popup_id        = null;
+var active_popup = popup_context();
+
+function popup_context() {
+    const popup = {
+        id: null,
+        data: null,
+        onclose: null
+    };
+
+    popup.popup = function() {
+        return document.getElementById("popup_menu");
+    };
+
+    popup.container = function() {
+        // FIXME: Ideally we could use getElementById directly to get the
+        //        container. Unfortunately, many HTML elements used for
+        //        popups do NOT have a unique ID. An example is the hamburger
+        //        menu in the "All services" view where all menus share the
+        //        same ID.
+        //        This also causes the bug that two clicks are necessary to
+        //        close the active popup and to open a popup of the same
+        //        kind.
+        //        To fix this issues all call sites of (render_)popup_trigger
+        //        have to berefactored so that all IDs are unique.
+        const popup = this.popup();
+        return popup ? popup.parentNode : null;
+    };
+
+    popup.register = function(spec) {
+        spec = spec || {};
+        this.id = spec.id || null;
+        this.data = spec.data || null;
+        this.conclose = spec.onclose || null;
+
+        if (this.id) {
+            utils.add_event_handler("click", handle_popup_close);
+        }
+    };
+
+    popup.close = function() {
+        if (this.id) {
+            utils.del_event_handler("click", handle_popup_close);
+        }
+
+        if (this.onclose) {
+            eval(this.onclose);
+        }
+
+        this.id = null;
+        this.data = null;
+        this.onclose = null;
+    };
+
+    return popup;
+}
 
 export function close_popup()
 {
-    del_event_handler("click", handle_popup_close);
-
-    var menu = document.getElementById("popup_menu");
+    const menu = active_popup.popup();
+    const container = active_popup.container();
     if (menu) {
-        // hide the open menu
-        menu.parentNode.removeChild(menu);
+        container.removeChild(menu);
     }
-    popup_id = null;
 
-    if (on_popup_close)
-        eval(on_popup_close);
-}
-
-function del_event_handler(type, func, obj) {
-    obj = (typeof(obj) === "undefined") ? window : obj;
-
-    if (obj.removeEventListener) {
-        // W3 stadnard browsers
-        obj.removeEventListener(type, func, false);
-    }
-    else if (obj.detachEvent) {
-        // IE<9
-        obj.detachEvent("on"+type, func);
-    }
-    else {
-        obj["on" + type] = null;
-    }
+    active_popup.close();
 }
 
 // Registerd as click handler on the page while the popup menu is opened
 // This is used to close the menu when the user clicks elsewhere
 function handle_popup_close(event) {
-    var target = utils.get_target(event);
+    const container = active_popup.container();
+    const target = utils.get_target(event);
 
-    // Check whether or not a parent of the clicked node is the popup menu
-    while (target && target.id != "popup_menu" && !utils.has_class(target, "popup_trigger")) { // FIXME
-        target = target.parentNode;
-    }
-
-    if (target) {
+    if (container.contains(target)) {
         return true; // clicked menu or statusicon
     }
 
@@ -69,35 +99,35 @@ function handle_popup_close(event) {
 // data:        json data which can be used by actions in popup menus
 // url_vars:    vars are added to ajax_popup_*.py calls for rendering the popup menu
 // resizable:   Allow the user to resize the popup by drag/drop (not persisted)
-var on_popup_close = null;
 export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_content, onclose, resizable, content_body)
 {
-    on_popup_close = onclose;
-
     if (!event)
         event = window.event;
 
-    if (popup_id) {
-        if (popup_id === ident) {
+    if (active_popup.id) {
+        if (active_popup.id === ident) {
             close_popup();
             return; // same icon clicked: just close the menu
-        }
-        else {
+        } else {
             close_popup();
         }
     }
-    popup_id = ident;
 
-    utils.add_event_handler("click", handle_popup_close)
+    active_popup.register({
+        id: ident,
+        data: data,
+        onclose: onclose,
+    });
 
     var container = trigger_obj.parentNode;
 
+    let menu;
     if (content_body) {
-        var menu = content_body[0]
+        menu = content_body[0];
         var varprefix = content_body[1];
         var value = content_body[2];
     } else {
-        var menu = document.createElement("div");
+        menu = document.createElement("div");
         menu.setAttribute("id", "popup_menu");
         menu.className = "popup_menu";
 
@@ -111,7 +141,7 @@ export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, me
     }
 
     if (resizable)
-	utils.add_class(menu, "resizable");
+        utils.add_class(menu, "resizable");
 
     container.appendChild(menu);
     fix_popup_menu_position(event, menu);
@@ -125,7 +155,7 @@ export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, me
         prerequisites the current window as it accesses multiple attributes such as the
         offsetHeight of its slideElement
         */
-        cmk.valuespecs.add_color_picker(varprefix, value);
+        valuespecs.add_color_picker(varprefix, value);
     }
 
 
@@ -137,7 +167,6 @@ export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, me
     }
     // update the menus contents using a webservice
     if (what) {
-        popup_data = data;
         content.innerHTML = "<img src=\"themes/facelift/images/icon_reload.png\" class=\"icon reloading\">";
         url_vars = !url_vars ? "" : "?"+url_vars;
         ajax.get_url("ajax_popup_"+what+".py"+url_vars, handle_render_popup_contents, {
@@ -196,7 +225,7 @@ function rgb2hex(rgb) {
     for (let i=1; i < rgb.length; i++){
         hex_string += ("0" + parseInt(matches[i], 10).toString(16)).slice(-2);
     }
-    return hex_string
+    return hex_string;
 }
 
 
@@ -247,16 +276,14 @@ function fix_popup_menu_position(event, menu) {
 // converted to pagetypes.py
 export function add_to_visual(visual_type, visual_name)
 {
-    var element_type = popup_data[0];
+    var element_type = active_popup.data[0];
     var create_info = {
-        "context": popup_data[1],
-        "params": popup_data[2],
+        "context": active_popup.data[1],
+        "params": active_popup.data[2],
     };
     var create_info_json = JSON.stringify(create_info);
 
     close_popup();
-
-    popup_data = null;
 
     var url = "ajax_add_visual.py"
         + "?visual_type=" + visual_type
@@ -281,17 +308,15 @@ export function add_to_visual(visual_type, visual_name)
 // FIXME: Adapt error handling which has been addded to add_to_visual() in the meantime
 export function pagetype_add_to_container(page_type, page_name)
 {
-    var element_type = popup_data[0]; // e.g. "pnpgraph"
+    var element_type = active_popup.data[0]; // e.g. "pnpgraph"
     // complex JSON struct describing the thing
     var create_info  = {
-        "context"    : popup_data[1],
-        "parameters" : popup_data[2]
+        "context"    : active_popup.data[1],
+        "parameters" : active_popup.data[2]
     };
     var create_info_json = JSON.stringify(create_info);
 
     close_popup();
-
-    popup_data = null;
 
     var url = "ajax_pagetype_add_element.py"
               + "?page_type=" + page_type
@@ -319,8 +344,8 @@ export function pagetype_add_to_container(page_type, page_name)
 export function graph_export(page)
 {
     var request = {
-        "specification": popup_data[2]["definition"]["specification"],
-        "data_range": popup_data[2]["data_range"],
+        "specification": active_popup.data[2]["definition"]["specification"],
+        "data_range": active_popup.data[2]["data_range"],
     };
     location.href = page + ".py?request=" + encodeURIComponent(JSON.stringify(request));
 }

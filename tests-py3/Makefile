@@ -5,7 +5,6 @@
 SHELL := /bin/bash -e
 SCRIPTS := ../scripts
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
-PIPENV2 := $(SCRIPTS)/run-pipenv 2
 PIPENV3 := $(SCRIPTS)/run-pipenv 3
 PYTEST := $(PIPENV3) run py.test -vv
 YAPF := $(PIPENV3) run yapf
@@ -168,7 +167,7 @@ test-composition-docker:
 # the agent updater to Python 3. The composition tests currently import the agent
 # updater code for the test execution, which should not be done.
 test-composition: prepare-node-modules
-	$(PIPENV2) run py.test -vv -T composition $(realpath ../tests/composition)
+	$(PYTEST) -T composition $(realpath composition)
 
 test-pipenv-deps:
 	$(PIPENV3) check

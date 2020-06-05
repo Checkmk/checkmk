@@ -76,6 +76,7 @@ from cmk.gui.plugins.wato import (
     ConfigDomainGUI,
     ConfigDomainCore,
     ConfigDomainCACertificates,
+    ConfigDomainOMD,
     site_neutral_path,
     rulespec_registry,
     HostRulespec,
@@ -3060,9 +3061,13 @@ rulespec_registry.register(
     ))
 
 
+def _default_check_interval():
+    return 6.0 if ConfigDomainOMD().default_globals()["site_core"] == "cmc" else 60.0
+
+
 def _valuespec_extra_host_conf_check_interval():
     return Transform(
-        Age(minvalue=1, default_value=60),
+        Age(minvalue=1, default_value=_default_check_interval()),
         forth=lambda v: int(v * 60),
         back=lambda v: float(v) / 60.0,
         title=_("Normal check interval for host checks"),
@@ -3084,7 +3089,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_host_conf_retry_interval():
     return Transform(
-        Age(minvalue=1, default_value=60),
+        Age(minvalue=1, default_value=_default_check_interval()),
         forth=lambda v: int(v * 60),
         back=lambda v: float(v) / 60.0,
         title=_("Retry check interval for host checks"),
@@ -3157,7 +3162,8 @@ def _valuespec_host_check_commands():
         _("The option to use a custom command can only be configured with the permission "
           "\"Can add or modify executables\"."),
         choices=_host_check_commands_host_check_command_choices,
-        default_value="ping",
+        default_value="smart"
+        if ConfigDomainOMD().default_globals()["site_core"] == "cmc" else "ping",
         orientation="horizontal",
     )
 

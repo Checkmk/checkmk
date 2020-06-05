@@ -1,0 +1,13 @@
+Title: Fixed some wrong displayed parameters for hosts if cmc is used
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.6.0p13
+Date: 1591350486
+Class: fix
+
+If cmc is used as core, the default host check command is smart ping, not ping as shown before.
+Also the normal and retry check interval for host checks is 6 seconds, not 1 minute.
+
+Note: This was only a display error and didn't affect correct execution.

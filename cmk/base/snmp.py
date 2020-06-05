@@ -32,7 +32,6 @@ import cmk.base.cleanup
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.fetchers import factory
-from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
 
 try:
     from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=ungrouped-imports
@@ -120,7 +119,8 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True, 
 
 def walk_for_export(snmp_config, oid):
     # type: (SNMPHostConfig, OID) -> SNMPRowInfoForStoredWalk
-    rows = StoredWalkSNMPBackend().walk(snmp_config, oid=oid)
+    backend = factory.backend(snmp_config, use_cache=False)
+    rows = backend.walk(snmp_config, oid=oid)
     return _convert_rows_for_stored_walk(rows)
 
 

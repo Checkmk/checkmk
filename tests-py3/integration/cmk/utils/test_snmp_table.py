@@ -49,10 +49,14 @@ def monkeymodule(request):
     mpatch.undo()
 
 
+@pytest.fixture(name="snmp_data_dir", scope="module")
+def snmp_data_dir_fixture(request):
+    return Path(request.fspath.dirname) / "snmp_data"
+
+
 @pytest.fixture(name="snmpsim", scope="module", autouse=True)
-def snmpsim_fixture(site, request, tmp_path_factory):
+def snmpsim_fixture(site, snmp_data_dir, tmp_path_factory):
     tmp_path = tmp_path_factory.getbasetemp()
-    source_data_dir = Path(request.fspath.dirname) / "snmp_data"
 
     log.logger.setLevel(logging.DEBUG)
     debug.enable()
@@ -62,7 +66,7 @@ def snmpsim_fixture(site, request, tmp_path_factory):
         "--cache-dir",
         str(tmp_path / "snmpsim"),
         "--data-dir",
-        str(source_data_dir),
+        str(snmp_data_dir),
         # TODO: Fix port allocation to prevent problems with parallel tests
         #"--agent-unix-endpoint="
         "--agent-udpv4-endpoint=127.0.0.1:1337",
@@ -126,17 +130,22 @@ def snmpsim_fixture(site, request, tmp_path_factory):
 
 @pytest.fixture(name="backend",
                 params=[ClassicSNMPBackend, StoredWalkSNMPBackend, InlineSNMPBackend])
-def backend_fixture(request, monkeypatch):
+def backend_fixture(request, snmp_data_dir):
     backend = request.param
     if backend is None:
         return pytest.skip("CEE feature only")
 
-    if backend == StoredWalkSNMPBackend:
-        # Point the backend to the test walks shipped with the test file in git
-        source_data_dir = Path(request.fspath.dirname) / "snmp_data" / "cmk-walk"
-        monkeypatch.setattr(cmk.utils.paths, "snmpwalks_dir", str(source_data_dir))
+    snmpwalks_dir = cmk.utils.paths.snmpwalks_dir
+    # Point the backend to the test walks shipped with the test file in git
+    cmk.utils.paths.snmpwalks_dir = str(snmp_data_dir / "cmk-walk")
 
-    return backend()
+    assert snmp_data_dir.exists()
+    assert (snmp_data_dir / "cmk-walk").exists()
+
+    yield backend()
+
+    # Restore global variable.
+    cmk.utils.paths.snmpwalks_dir = snmpwalks_dir
 
 
 @pytest.fixture(name="snmp_config")

@@ -8,6 +8,7 @@ FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV3 := $(SCRIPTS)/run-pipenv 3
 PYTEST := $(PIPENV3) run py.test -vv
 YAPF := $(PIPENV3) run yapf
+3TO2 := $(PIPENV3) run 3to2
 BANDIT := $(PIPENV3) run bandit
 MYPY := $(SCRIPTS)/run-mypy
 ADDITIONAL_MYPY_ARGS :=
@@ -45,6 +46,7 @@ help:
 	@echo "test-pipenv-deps              - Run pipenv dependency issue test"
 	@echo "test-bandit                   - Run bandit (security) tests"
 	@echo "test-agent-integration        - Run agent (plugin) related integration tests"
+	@echo "test-agent-plugin-unit-py%-docker - Run Agent plugin tests in container (py version specific)"
 
 prepare-node-modules:
 	$(MAKE) -C .. node_modules/.bin/webpack
@@ -165,6 +167,36 @@ test-composition-docker:
 
 test-composition: prepare-node-modules
 	$(PYTEST) -p no:cov -T composition $(realpath composition)
+
+# Since the unit tests (that are written for Python 3) are executed with Python 2.6, we need to
+# convert them, just like it is done for the agent plugins (see agents/plugins/Makefile)
+AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
+AGENT_PLUGIN_UNIT_TEST_FILES_PY26 := $(subst agent-plugin-unit,agent-plugin-unit/py26,$(AGENT_PLUGIN_UNIT_TEST_FILES))
+
+test-agent-plugin-unit-py2.6-docker: $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
+
+agent-plugin-unit/py26/test_%.py: agent-plugin-unit/test_%.py
+	mkdir -p "$(dir $@)"
+	cp "$<" "$@"
+	$(3TO2) -x str -n -w "$@" >/dev/null
+
+test-agent-plugin-unit-py%-docker:
+	make -C ../agents/plugins
+	if [ "$*" = "2.6" ]; then \
+	    TEST_PATH="$(realpath agent-plugin-unit)/py26" ; \
+	else \
+	    TEST_PATH="$(realpath agent-plugin-unit)" ; \
+	fi && \
+	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION="$*" -q "$(realpath agent-plugin-unit)")" && \
+	docker run \
+	    -e PYTEST_ADDOPTS \
+	    -u $$(id -u):$$(id -g) \
+	    -v "$$TEST_PATH:/tests" \
+	    -v "$(realpath agent-plugin-unit)/utils.py:/tests/utils.py" \
+	    -v "$(realpath agent-plugin-unit)/datasets:/tests/datasets" \
+	    -v "$(realpath ../agents/plugins):/plugins" \
+	    $$IMAGE_HASH \
+	    python$* -m pytest --ignore=tests/py26/ "/tests"
 
 test-pipenv-deps:
 	$(PIPENV3) check

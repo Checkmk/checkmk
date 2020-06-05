@@ -43,6 +43,7 @@ test_types = collections.OrderedDict([
     ("pylint", EXECUTE_IN_VENV),
     ("docker", EXECUTE_IN_VENV),
     ("agent-integration", EXECUTE_IN_VENV),
+    ("agent-plugin-unit", EXECUTE_IN_VENV),
     ("integration", EXECUTE_IN_SITE),
     ("gui_crawl", EXECUTE_IN_VENV),
     ("packaging", EXECUTE_IN_VENV),

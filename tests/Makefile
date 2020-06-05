@@ -8,18 +8,16 @@ SHELL    := /bin/bash -e
 PIPENV2  := ../scripts/run-pipenv 2
 BANDIT   := $(PIPENV2) run bandit
 PYTEST   := $(PIPENV2) run py.test
-FUTURIZE := $(PIPENV2) run ./test-futurize
 
 .PHONY: help test-bandit \
         test-format-shell \
-        test-pylint test-python-futurize test-shellcheck test-unit \
+        test-pylint test-shellcheck test-unit \
         list-unit-tests test-unit-one-by-one test-unit-sh
 
 help:
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-format-shell         - Run the shell formatting"
 	@echo "test-pylint               - Run pylint based tests"
-	@echo "test-python-futurize      - Run python futurize tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
 	@echo "test-unit                 - Run Python unit tests"
 	@echo "test-unit-one-by-one      - Run unit tests one by one"
@@ -38,9 +36,6 @@ test-format-shell:
 
 test-pylint:
 	$(PYTEST) -T pylint pylint
-
-test-python-futurize:
-	$(FUTURIZE)
 
 test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \

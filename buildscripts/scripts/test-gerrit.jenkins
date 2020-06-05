@@ -43,8 +43,6 @@ node (NODE) {
 
         // Gather the list of changed livestatus / core files
         def CHANGED_CORE_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-       // Gather changes futurize files
-        def CHANGED_TEST_FUTURIZE_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/tests/test-futurize' - || true", returnStdout: true).toString().trim()
 
         // this variable is needed as long as we have base plugins that are
         // concantenated for pylint (See tests/pylint/test_pylint.py)
@@ -54,7 +52,6 @@ node (NODE) {
         print "Changed python3 files: ${CHANGED_PYTHON3_FILES}"
         print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
         print "Changed core files: ${CHANGED_CORE_FILES}"
-        print "Changed futurize files: ${CHANGED_TEST_FUTURIZE_FILE}"
 
         //Add description to the build
         gerrit_stages.desc_init()
@@ -96,24 +93,6 @@ node (NODE) {
             ENV_VARS: ["PYTHON_FILES=${CHANGED_PYTHON3_FILES}"],
             COMMAND: "make --quiet test-format-python3 &> ${RESULTS}/python3-yapf.txt",
             TEXT_ON_SKIP: 'No Python 3 files changed. Skipping.'
-         )
-
-         gerrit_stages.run(
-            NAME: 'Python Futurize I',
-            CONDITION: CHANGED_TEST_FUTURIZE_FILE != "",
-            DIR: 'tests',
-            ENV_VARS: [],
-            COMMAND: "make --quiet test-python-futurize &> ${RESULTS}/python-futurize.txt",
-            TEXT_ON_SKIP: 'test-futurize did not change. Skipping.'
-         )
-
-         gerrit_stages.run(
-            NAME: 'Python Futurize II',
-            CONDITION: CHANGED_TEST_FUTURIZE_FILE == "" && CHANGED_PYTHON_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["PYTHON_FILES=${CHANGED_PYTHON_FILES}"],
-            COMMAND: "make --quiet test-python-futurize &> ${RESULTS}/python-futurize.txt",
-            TEXT_ON_SKIP: 'No Python 2 files changed. Skipping.'
          )
 
         gerrit_stages.run(
@@ -268,7 +247,7 @@ node (NODE) {
         throw e
     } finally {
         stage("Analyse Issues") {
-            def CLANG = scanForIssues tool: clang(pattern: "results/*-tidy.txt,results/*futurize.txt")
+            def CLANG = scanForIssues tool: clang(pattern: "results/*-tidy.txt")
             def GCC = scanForIssues tool: gcc(pattern: "results/*.iwyu.txt,results/neb-cmc-compile.txt,results/*neb-cmc.txt,results/*yapf.txt")
             def PYLINT = scanForIssues tool: pyLint(pattern: "results/pylint*.txt")
             def MYPY = scanForIssues tool: myPy(pattern: "results/mypy*.xml")

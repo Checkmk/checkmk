@@ -163,11 +163,8 @@ test-integration-docker-debug test-composition-docker-debug: prepare-node-module
 test-composition-docker:
 	$(PIPENV3) run scripts/run-dockerized.py "test-composition"
 
-# TODO: Need to either untie composition tests with agent updater code or migrate
-# the agent updater to Python 3. The composition tests currently import the agent
-# updater code for the test execution, which should not be done.
 test-composition: prepare-node-modules
-	$(PYTEST) -T composition $(realpath composition)
+	$(PYTEST) -p no:cov -T composition $(realpath composition)
 
 test-pipenv-deps:
 	$(PIPENV3) check

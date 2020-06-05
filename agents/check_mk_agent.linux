@@ -1454,9 +1454,6 @@ run_mrpe
 # Local checks
 run_local_checks
 
-# Plugins
-run_plugins
-
 # Agent output snippets created by cronjobs, etc.
 if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
     pushd "$SPOOLDIR" >/dev/null
@@ -1490,3 +1487,7 @@ if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
     done
     popd >/dev/null
 fi
+
+# Plugins
+run_plugins
+

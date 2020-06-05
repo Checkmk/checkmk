@@ -60,7 +60,9 @@ node (NODE) {
                         dir('buildscripts/infrastructure/build-nodes') {
                             def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
                             withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                                IMAGE = docker.build(DISTRO + ':' + VERS_TAG, "--build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL' --build-arg DISTRO='$DISTRO' --build-arg NEXUS_USERNAME='$USERNAME' --build-arg NEXUS_PASSWORD='$PASSWORD' --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' --build-arg VERS_TAG='$VERS_TAG' --build-arg BRANCH_VERSION='$BRANCH_VERSION' -f $DISTRO/Dockerfile .")
+                                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                                    IMAGE = docker.build(DISTRO + ':' + VERS_TAG, "--build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL' --build-arg DISTRO='$DISTRO' --build-arg NEXUS_USERNAME='$USERNAME' --build-arg NEXUS_PASSWORD='$PASSWORD' --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' --build-arg VERS_TAG='$VERS_TAG' --build-arg BRANCH_VERSION='$BRANCH_VERSION' -f $DISTRO/Dockerfile .")
+                                }
                             }
                         }
                     }

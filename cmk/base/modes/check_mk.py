@@ -22,6 +22,7 @@ from cmk.utils.type_defs import TagValue, HostgroupName
 from cmk.utils.log import console
 from cmk.utils.diagnostics import (
     OPT_LOCAL_FILES,
+    OPT_OMD_CONFIG,
     DiagnosticsOptionalParameters,
 )
 
@@ -1793,5 +1794,9 @@ modes.register(
                  short_help=(
                      "Pack a list of installed, unpacked, optional files below $OMD_ROOT/local. "
                      "This also includes information about installed MKPs."),
+             ),
+             Option(
+                 long_option=OPT_OMD_CONFIG,
+                 short_help="Pack content of 'etc/omd/site.conf'",
              ),
          ]))

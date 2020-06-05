@@ -19,8 +19,10 @@ DiagnosticsParameters = TypedDict("DiagnosticsParameters", {
 })
 
 OPT_LOCAL_FILES = "local-files"
+OPT_OMD_CONFIG = "omd-config"
 _BOOLEAN_CONFIG_OPTS = [
     OPT_LOCAL_FILES,
+    OPT_OMD_CONFIG,
 ]
 
 

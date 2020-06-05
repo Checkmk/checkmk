@@ -20,8 +20,11 @@ import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 from cmk.utils.log import console
 import cmk.utils.packaging as packaging
+import cmk.utils.site as site
+
 from cmk.utils.diagnostics import (
     OPT_LOCAL_FILES,
+    OPT_OMD_CONFIG,
     DiagnosticsOptionalParameters,
 )
 
@@ -81,6 +84,9 @@ class DiagnosticsDump:
         optional_elements = []  # type: List[ABCDiagnosticsElement]
         if parameters.get(OPT_LOCAL_FILES):
             optional_elements.append(LocalFilesDiagnosticsElement())
+
+        if parameters.get(OPT_OMD_CONFIG):
+            optional_elements.append(OMDConfigDiagnosticsElement())
 
         return optional_elements
 
@@ -230,3 +236,27 @@ class LocalFilesDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def _collect_infos(self):
         # type: () -> Dict[str, Any]
         return packaging.get_all_package_infos()
+
+
+class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self):
+        # type: () -> str
+        return "omd_config"
+
+    @property
+    def title(self):
+        # type: () -> str
+        return _("OMD Config")
+
+    @property
+    def description(self):
+        # type: () -> str
+        return _("Apache mode and TCP address and port, Core, "
+                 "Liveproxy daemon and livestatus TCP mode, "
+                 "Event daemon config, Multiste authorisation, "
+                 "NSCA mode, TMP filesystem mode")
+
+    def _collect_infos(self):
+        # type: () -> site.OMDConfig
+        return site.get_omd_config()

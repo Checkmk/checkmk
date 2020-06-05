@@ -12,6 +12,7 @@ from cmk.utils.diagnostics import (
     DiagnosticsParameters,
     serialize_wato_parameters,
     OPT_LOCAL_FILES,
+    OPT_OMD_CONFIG,
 )
 
 from cmk.gui.i18n import _
@@ -130,6 +131,16 @@ class ModeDiagnostics(WatoMode):
                               help=_(
                                   "List of installed, unpacked, optional files below OMD_ROOT/local. "
                                   "This also includes information about installed MKPs."),
+                          )),
+                         (OPT_OMD_CONFIG,
+                          FixedValue(
+                              True,
+                              totext="",
+                              title=_("OMD Config"),
+                              help=_("Apache mode and TCP address and port, Core, "
+                                     "Liveproxy daemon and livestatus TCP mode, "
+                                     "Event daemon config, Multiste authorisation, "
+                                     "NSCA mode, TMP filesystem mode"),
                           )),
                      ],
                  )),

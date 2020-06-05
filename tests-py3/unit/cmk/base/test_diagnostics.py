@@ -211,3 +211,107 @@ def test_diagnostics_element_local_files_content(tmp_path):
     assert content["optional_packages"] == {}
 
     shutil.rmtree(str(packaging.package_dir()))
+
+
+def test_diagnostics_element_omd_config():
+    diagnostics_element = diagnostics.OMDConfigDiagnosticsElement()
+    assert diagnostics_element.ident == "omd_config"
+    assert diagnostics_element.title == "OMD Config"
+    assert diagnostics_element.description == ("Apache mode and TCP address and port, Core, "
+                                               "Liveproxy daemon and livestatus TCP mode, "
+                                               "Event daemon config, Multiste authorisation, "
+                                               "NSCA mode, TMP filesystem mode")
+
+
+def test_diagnostics_element_omd_config_content(tmp_path):
+    diagnostics_element = diagnostics.OMDConfigDiagnosticsElement()
+    # Fake raw output of site.conf
+    etc_omd_dir = Path(cmk.utils.paths.omd_root) / "etc" / "omd"
+    etc_omd_dir.mkdir(parents=True, exist_ok=True)
+    with etc_omd_dir.joinpath("site.conf").open("w") as f:
+        f.write("""CONFIG_ADMIN_MAIL=''
+CONFIG_APACHE_MODE='own'
+CONFIG_APACHE_TCP_ADDR='127.0.0.1'
+CONFIG_APACHE_TCP_PORT='5000'
+CONFIG_AUTOSTART='off'
+CONFIG_CORE='cmc'
+CONFIG_DOKUWIKI_AUTH='off'
+CONFIG_LIVEPROXYD='on'
+CONFIG_LIVESTATUS_TCP='off'
+CONFIG_LIVESTATUS_TCP_ONLY_FROM='0.0.0.0 ::/0'
+CONFIG_LIVESTATUS_TCP_PORT='6557'
+CONFIG_LIVESTATUS_TCP_TLS='on'
+CONFIG_MKEVENTD='on'
+CONFIG_MKEVENTD_SNMPTRAP='off'
+CONFIG_MKEVENTD_SYSLOG='on'
+CONFIG_MKEVENTD_SYSLOG_TCP='off'
+CONFIG_MULTISITE_AUTHORISATION='on'
+CONFIG_MULTISITE_COOKIE_AUTH='on'
+CONFIG_NAGIOS_THEME='classicui'
+CONFIG_NSCA='off'
+CONFIG_NSCA_TCP_PORT='5667'
+CONFIG_PNP4NAGIOS='on'
+CONFIG_TMPFS='on'""")
+
+    tmppath = Path(tmp_path).joinpath("tmp")
+    filepath = diagnostics_element.add_or_get_file(tmppath)
+
+    assert isinstance(filepath, Path)
+    assert filepath == tmppath.joinpath("omd_config.json")
+
+    info_keys = [
+        'CONFIG_ADMIN_MAIL',
+        'CONFIG_APACHE_MODE',
+        'CONFIG_APACHE_TCP_ADDR',
+        'CONFIG_APACHE_TCP_PORT',
+        'CONFIG_AUTOSTART',
+        'CONFIG_CORE',
+        'CONFIG_DOKUWIKI_AUTH',
+        'CONFIG_LIVEPROXYD',
+        'CONFIG_LIVESTATUS_TCP',
+        'CONFIG_LIVESTATUS_TCP_ONLY_FROM',
+        'CONFIG_LIVESTATUS_TCP_PORT',
+        'CONFIG_LIVESTATUS_TCP_TLS',
+        'CONFIG_MKEVENTD',
+        'CONFIG_MKEVENTD_SNMPTRAP',
+        'CONFIG_MKEVENTD_SYSLOG',
+        'CONFIG_MKEVENTD_SYSLOG_TCP',
+        'CONFIG_MULTISITE_AUTHORISATION',
+        'CONFIG_MULTISITE_COOKIE_AUTH',
+        'CONFIG_NAGIOS_THEME',
+        'CONFIG_NSCA',
+        'CONFIG_NSCA_TCP_PORT',
+        'CONFIG_PNP4NAGIOS',
+        'CONFIG_TMPFS',
+    ]
+    content = json.loads(filepath.open().read())
+
+    assert sorted(content.keys()) == sorted(info_keys)
+    for key, value in zip(info_keys, [
+            '',
+            'own',
+            '127.0.0.1',
+            '5000',
+            'off',
+            'cmc',
+            'off',
+            'on',
+            'off',
+            '0.0.0.0 ::/0',
+            '6557',
+            'on',
+            'on',
+            'off',
+            'on',
+            'off',
+            'on',
+            'on',
+            'classicui',
+            'off',
+            '5667',
+            'on',
+            'on',
+    ]):
+        assert content[key] == value
+
+    shutil.rmtree(str(etc_omd_dir))

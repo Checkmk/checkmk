@@ -69,6 +69,7 @@ def endpoint_schema(
         request_body_required=True,  # type: bool
         error_schema=ApiError,  # type: Schema
         etag=None,  # type: ETagBehaviour
+        will_do_redirects=False,  # type: bool
         **options  # type: dict
 ):
     """Mark the function as a REST-API endpoint.
@@ -122,6 +123,10 @@ def endpoint_schema(
             the 'If-Match' request header. When set to 'output' a ETag is sent to the client
             with the 'ETag' response header. When set to 'both', it will act as if set to
             'input' and 'output' at the same time.
+
+        will_do_redirects (bool):
+            This endpoint can also emit a 302 response (moved temporarily) code. Setting this to
+            true will add this to the specification and documentation. Defaults to False.
 
         **options (dict):
             Various keys which will be directly applied to the OpenAPI operation object.
@@ -187,23 +192,29 @@ def endpoint_schema(
         if output_empty and response_schema:
             raise ValueError("%s: On empty output 'output_schema' may not be used." % operation_id)
 
+        path_item = {}
         # We don't(!) support any endpoint without an output schema.
         # Just define one!
         if response_schema is not None:
-            path_item = {
-                '200': {
-                    'content': {
-                        content_type: {
-                            'schema': response_schema
-                        },
+            path_item['200'] = {
+                'content': {
+                    content_type: {
+                        'schema': response_schema
                     },
-                    'description': apispec.utils.dedent(response_schema.__doc__ or ''),
-                }
+                },
+                'description': apispec.utils.dedent(response_schema.__doc__ or ''),
+            }
+
+        if will_do_redirects:
+            path_item['302'] = {
+                'description':
+                    ('Either the resource has moved or has not yet completed. Please see this '
+                     'resource for further information.')
             }
 
         # Actually, iff you don't want to give out anything, then we don't need a schema.
         if output_empty:
-            path_item = {'204': {'description': 'Operation done successfully. No further output.'}}
+            path_item['204'] = {'description': 'Operation done successfully. No further output.'}
 
         tag_obj = {'name': module_name}
         tag_obj.update(_docstring_keys(module_obj.__doc__, 'x-displayName', 'description'))

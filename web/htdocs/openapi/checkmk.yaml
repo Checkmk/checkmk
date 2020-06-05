@@ -1074,15 +1074,15 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"parent\": \"root\",\n  \
-          \        \"title\": \"Production Hosts\",\n          \"name\": \"production\"\
-          ,\n          \"attributes\": {\n            \"foo\": \"bar\"\n         \
-          \ }\n        }' \\\n    \"$API_URL/collections/folder\""
+          \ application/json\" \\\n    -d '{\n          \"title\": \"Production Hosts\"\
+          ,\n          \"parent\": \"root\",\n          \"name\": \"production\",\n\
+          \          \"attributes\": {\n            \"foo\": \"bar\"\n          }\n\
+          \        }' \\\n    \"$API_URL/collections/folder\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/folder\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    parent='root'\
-          \ \\\n    title='Production Hosts' \\\n    name='production' \\\n    attributes='{\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    title='Production\
+          \ Hosts' \\\n    parent='root' \\\n    name='production' \\\n    attributes='{\"\
           foo\": \"bar\"}'"
   /objects/folder/{ident}:
     delete:
@@ -1372,14 +1372,14 @@ paths:
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    -d '{\n          \"nodes\": [\n           \
           \ \"host1\",\n            \"host2\",\n            \"host3\"\n          ],\n\
-          \          \"attributes\": {},\n          \"folder\": \"root\",\n      \
-          \    \"hostname\": \"example.com\"\n        }' \\\n    \"$API_URL/collections/host\""
+          \          \"hostname\": \"example.com\",\n          \"folder\": \"root\"\
+          ,\n          \"attributes\": {}\n        }' \\\n    \"$API_URL/collections/host\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    nodes='[\"\
-          host1\", \"host2\", \"host3\"]' \\\n    attributes='{}' \\\n    folder='root'\
-          \ \\\n    hostname='example.com'"
+          host1\", \"host2\", \"host3\"]' \\\n    hostname='example.com' \\\n    folder='root'\
+          \ \\\n    attributes='{}'"
   /domain-types/host/collections/hosts:
     get:
       description: ''

@@ -150,15 +150,15 @@ std::wstring Module::buildCommandLineForced(
     return {};
 }
 
-std::wstring Module::buildCommandLine(const std::filesystem::path &script) const
-    noexcept {
+std::wstring Module::buildCommandLine(
+    const std::filesystem::path &script) const noexcept {
     if (!isMyScript(script)) return {};
 
     return buildCommandLineForced(script);
 }
 
-[[nodiscard]] bool Module::isModuleZip(const std::filesystem::path &file) const
-    noexcept {
+[[nodiscard]] bool Module::isModuleZip(
+    const std::filesystem::path &file) const noexcept {
     try {
         return tools::IsEqual(name() + std::string(kExtension),
                               file.u8string());
@@ -210,7 +210,7 @@ ModuleCommander::GetSystemExtensions() {
             vec.push_back(m);
         }
 
-        XLOG::l.i("Processed [{}] modules", vec.size());
+        XLOG::l.i("Processed [{}] module(s)", vec.size());
         return vec;
 
     } catch (const std::exception &e) {
@@ -222,25 +222,15 @@ ModuleCommander::GetSystemExtensions() {
 }
 
 [[nodiscard]] bool Module::loadFrom(const YAML::Node &node) {
-    //
-    //
     try {
         name_ = node[vars::kModulesName].as<std::string>();
         exec_ =
             wtools::ConvertToUTF16(node[vars::kModulesExec].as<std::string>());
         exts_ = GetArray<std::string>(node[vars::kModulesExts]);
-        std::string dir;
 
         // dir is optional
-        try {
-            dir = node[vars::kModulesDir].as<std::string>();
-        } catch (const std::exception &e) {
-            XLOG::t("dir is missing or not valid, this is ok '{}'", e.what());
-        }
-        if (dir.empty()) {
-            dir = defaults::kModulesDir;
-        }
-
+        auto dir = cma::cfg::GetVal(node, vars::kModulesDir,
+                                    std::string{defaults::kModulesDir});
         dir_ = fmt::format(dir, name());
 
     } catch (const std::exception &e) {
@@ -257,7 +247,7 @@ ModuleCommander::GetSystemExtensions() {
     return true;
 }
 
-// internal API, shoudl not be called directly
+// internal API, should not be called directly
 // scans all modules and remove form each corresponding extension if
 // usage of the modules defined as 'system'
 void ModuleCommander::removeSystemExtensions(YAML::Node &node) {

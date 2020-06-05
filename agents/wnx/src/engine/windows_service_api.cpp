@@ -576,6 +576,62 @@ int ExecVersion() {
     return 0;
 }
 
+// params is a list of valid cmk-agent-updater commands
+// update -v for example
+int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
+    namespace fs = std::filesystem;
+
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::DuplicateOnStdio(true);
+
+    // find agent updater
+    fs::path dir{cma::cfg::GetUserPluginsDir()};
+    if (!fs::exists(dir)) {
+        XLOG::l.e("Plugins directory '{}' not found", dir.u8string());
+        return 1;
+    }
+    auto f = dir / "cmk_update_agent.checkmk.py";
+    if (!fs::exists(f)) {
+        XLOG::l.w("Agent Updater File '{}' not found", f.u8string());
+        XLOG::SendStringToStdio(
+            fmt::format(
+                "\n\tYou must install Agent Updater Python plugin to use the command '{}'.\n"
+                "\tTo install the plugin you may use the Bakery.\n"
+                "\tAnother possibility is copy Agent Updater file manually into the plugins directory\n",
+                wtools::ConvertToUTF8(params[0])),
+            XLOG::Colors::white);
+        return 1;
+    }
+
+    // find module
+    cma::cfg::modules::ModuleCommander mc;
+    mc.LoadDefault();
+    auto to_run = mc.buildCommandLine(f.u8string());
+    if (to_run.empty()) {
+        XLOG::l.e("Python Module to execute '{}' is not installed",
+                  f.u8string());
+        XLOG::SendStringToStdio(
+            fmt::format(
+                "\n\tYou must install Python Module to use the command '{}'.\n"
+                "\tTo install Python Module you should use Bakery.\n",
+                wtools::ConvertToUTF8(params[0])),
+            XLOG::Colors::white);
+        return 1;
+    }
+
+    // run cmk-agent-updater
+    for (auto& p : params) to_run += L" " + p;
+
+    auto proc_id = cma::tools::RunStdCommand(to_run, true);
+    if (proc_id > 0) {
+        XLOG::l.i("Agent Updater process [{}] started\n", proc_id);
+        return 0;
+    }
+
+    XLOG::l("Agent Updater process failed to start\n", proc_id);
+    return 0;
+}
+
 // on -cap
 int ExecCap() {
     XLOG::setup::DuplicateOnStdio(true);

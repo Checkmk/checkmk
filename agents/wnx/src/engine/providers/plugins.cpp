@@ -121,7 +121,7 @@ void PluginsProvider::UpdatePluginMapCmdLine(PluginMap& pm,
 
         if (!mc.isModuleScript(fname)) continue;  // skip non-module
 
-        XLOG::l.i("building commmand line");
+        XLOG::l.i("building command line");
 
         auto cmd_line = mc.buildCommandLine(fname);
         if (!cmd_line.empty()) {

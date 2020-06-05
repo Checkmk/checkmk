@@ -108,6 +108,11 @@ RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
 
+# The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
+# using a tmpfs for /omd/sites/[site]/tmp, which we want to have during our tests. We can
+# simply solve this by pre-creating the empty file here.
+RUN touch /etc/fstab
+
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container
 RUN groupadd -g 1000 jenkins \

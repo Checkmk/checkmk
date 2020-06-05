@@ -90,16 +90,32 @@ function handle_popup_close(event) {
     close_popup();
 }
 
-// trigger_obj: DOM object of trigger object (e.g. icon)
-// ident:       page global uinique identifier of the popup
-// what:        type of popup (used for constructing webservice url "ajax_popup_"+what+".py")
-//              This can be null for fixed content popup windows. In this case
-//              "data" and "url_vars" are not used and can be left null.
-//              The static content of the menu is given in the "menu_content" parameter.
-// data:        json data which can be used by actions in popup menus
-// url_vars:    vars are added to ajax_popup_*.py calls for rendering the popup menu
+// event:       The browser event that triggered the action
+// trigger_obj: DOM object of the action
+// ident:       page global uinique identifier of the popup container
+// method:      A JavaScript object that describes the method that is used
+//              to add the content of the popup menu. The different methods
+//              are distinguished by the attribute "type". Currently the
+//              methods ajax, inline and colorpicker are supported.
+//
+//              ajax: Contains an attribute endpoint that used to construct the
+//                    webservice url "ajax_popup_" + method.endpoint + ".py".
+//                    The attribute url_vars contains the URL variables that are
+//                    added to ajax_popup_*.py calls for rendering the popup menu.
+//                    The url_vars may be null.
+//
+//              inline: The attribute content contains the string representation of
+//                      the popup menu content.
+//
+//              colorpicker: Used to render color pickers. The object contains the
+//                           attributes varprefix and value used to determine the
+//                           ID of the color picker and its recent color.
+//
+// data:        JSON data which can be used by actions in popup menus
+// onclose:     JavaScript code represented as a string that is evaluated when the
+//              popup is closed
 // resizable:   Allow the user to resize the popup by drag/drop (not persisted)
-export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_content, onclose, resizable, content_body)
+export function toggle_popup(event, trigger_obj, ident, method, data, onclose, resizable)
 {
     if (!event)
         event = window.event;
@@ -122,10 +138,8 @@ export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, me
     var container = trigger_obj.parentNode;
 
     let menu;
-    if (content_body) {
-        menu = content_body[0];
-        var varprefix = content_body[1];
-        var value = content_body[2];
+    if (method.type === "colorpicker") {
+        menu = generate_colorpicker_body(trigger_obj, method.varprefix);
     } else {
         menu = document.createElement("div");
         menu.setAttribute("id", "popup_menu");
@@ -146,7 +160,7 @@ export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, me
     container.appendChild(menu);
     fix_popup_menu_position(event, menu);
 
-    if (content_body) {
+    if (method.type === "colorpicker") {
         /*The requirement for add_color_picker function to work is that the menu element is
         appended to the container element prior to the function call. In consequence, the
         add_color_picker function cannot not be called in the generate_colorpicker_body function.
@@ -155,9 +169,12 @@ export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, me
         prerequisites the current window as it accesses multiple attributes such as the
         offsetHeight of its slideElement
         */
-        valuespecs.add_color_picker(varprefix, value);
+        let rgb = trigger_obj.firstChild.style.backgroundColor;
+        if (rgb !== "") {
+            method.value = rgb2hex(rgb);
+        }
+        valuespecs.add_color_picker(method.varprefix, method.value);
     }
-
 
     if (resizable) {
         // Add a handle because we can not customize the styling of the default resize handle using css
@@ -165,22 +182,23 @@ export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, me
         resize.className = "resizer";
         wrapper.appendChild(resize);
     }
+
     // update the menus contents using a webservice
-    if (what) {
+    if (method.type === "ajax") {
         content.innerHTML = "<img src=\"themes/facelift/images/icon_reload.png\" class=\"icon reloading\">";
-        url_vars = !url_vars ? "" : "?"+url_vars;
-        ajax.get_url("ajax_popup_"+what+".py"+url_vars, handle_render_popup_contents, {
+        const url_vars = !method.url_vars ? "" : "?" + method.url_vars;
+        ajax.get_url("ajax_popup_" + method.endpoint + ".py" + url_vars, handle_render_popup_contents, {
             ident: ident,
             content: content,
             event: event,
         });
-    } else if (content_body === null) {
-        content.innerHTML = menu_content;
+    } else if (method.type === "inline") {
+        content.innerHTML = method.content;
         utils.execute_javascript_by_object(content);
     }
 }
 
-export function generate_colorpicker_body(trigger_obj, varprefix, value)
+function generate_colorpicker_body(trigger_obj, varprefix)
 {
     var menu = document.createElement("div");
     menu.setAttribute("id", "popup_menu");
@@ -209,11 +227,7 @@ export function generate_colorpicker_body(trigger_obj, varprefix, value)
     input_field.setAttribute("type", "text");
     cp_input.appendChild(input_field);
 
-    let rgb = trigger_obj.firstChild.style.backgroundColor;
-    if (rgb !== ""){
-        value = rgb2hex(rgb);
-    }
-    return [menu, varprefix, value]
+    return menu;
 }
 
 function rgb2hex(rgb) {

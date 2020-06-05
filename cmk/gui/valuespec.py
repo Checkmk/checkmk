@@ -5896,8 +5896,7 @@ class Color(ValueSpec):
                            varprefix + '_popup',
                            cssclass="colorpicker",
                            onclose=self._on_change,
-                           content_body="cmk.popup_menu.generate_colorpicker_body(this, %s, %s)" %
-                           (json.dumps(varprefix), json.dumps(value)))
+                           color_assignment=(varprefix, value))
 
     def from_html_vars(self, varprefix):
         color = html.request.var(varprefix + '_value')

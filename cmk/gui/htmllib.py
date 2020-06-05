@@ -3054,11 +3054,11 @@ class html(ABCHTMLGenerator):
                       cssclass=None,
                       onclose=None,
                       resizable=False,
-                      content_body=None):
-        # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[str]) -> None
+                      color_assignment=None):
+        # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[Tuple[str, str]]) -> None
         self.write_html(
             self.render_popup_trigger(content, ident, what, data, url_vars, style, menu_content,
-                                      cssclass, onclose, resizable, content_body))
+                                      cssclass, onclose, resizable, color_assignment))
 
     def render_popup_trigger(self,
                              content,
@@ -3071,17 +3071,35 @@ class html(ABCHTMLGenerator):
                              cssclass=None,
                              onclose=None,
                              resizable=False,
-                             content_body=None):
-        # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[str]) -> HTML
-        onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s, %s, %s, %s);' % \
+                             color_assignment=None):
+        # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[Tuple[str, str]]) -> HTML
+        if what:
+            method = {
+                'type': 'ajax',
+                'endpoint': what if what else None,
+                'url_vars': self.urlencode_vars(url_vars) if url_vars else None,
+            }
+        elif menu_content:
+            method = {
+                'type': 'inline',
+                'content': menu_content if menu_content else None,
+            }
+        elif color_assignment:
+            # FIXME: we have a special treatment for color pickers that we should get rid of
+            method = {
+                'type': 'colorpicker',
+                'varprefix': color_assignment[0],
+                'value': color_assignment[1],
+            }
+        else:
+            raise ValueError('Cannot determine the method to open popup')
+
+        onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s);' % \
                     (json.dumps(ident),
-                     json.dumps(what if what else None),
+                     json.dumps(method),
                      json.dumps(data if data else None),
-                     json.dumps(self.urlencode_vars(url_vars) if url_vars else None),
-                     json.dumps(menu_content if menu_content else None),
                      json.dumps(onclose.replace("'", "\\'") if onclose else None),
-                     json.dumps(resizable),
-                     content_body if content_body else json.dumps(None))
+                     json.dumps(resizable))
 
         atag = self.render_a(
             content,

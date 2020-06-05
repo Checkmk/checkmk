@@ -16,8 +16,7 @@ PYTHON_TMP_DIR     := tmp
 PYTHON_SYSTEM_EXE  := python.exe
 
 PYTHON_INSTALL_DIR := $(PYTHON_TMP_DIR)\to_install
-PYTHON_WORK_DIR    := $(PYTHON_TMP_DIR)\work
-PYTHON_VENV_DIR    := $(PYTHON_WORK_DIR)\.venv
+PYTHON_SAVE_DIR    := $(PYTHON_TMP_DIR)\to_save
 
 # external paths
 ROOT_CMK_PATH      := ..\..\..
@@ -35,11 +34,12 @@ OMD_PYTHON_PACKAGE := $(OMD_PACKAGES_DIR)\$(OMD_PYTHON_NAME).zip
 
 PYTHON_INSTALLER   := $(PYTHON_TMP_DIR)\out\win32\python-3.8.1.exe
 SRC_PIPFILE        := $(SRC_PIPFILE_DIR)\Pipfile
-PYTHON_PIPFILE     := $(PYTHON_WORK_DIR)\Pipfile
+
+PYTHON_PIPFILE     := $(PYTHON_SAVE_DIR)\Pipfile
 PYTHON_PIPFILE_LOCK:= $(PYTHON_PIPFILE).lock
 
 ARTEFACT_MODULE    := $(ARTEFACTS_DIR)\$(PYTHON_MODULE_NAME)
-PYTHON_MODULE      := $(PYTHON_WORK_DIR)\$(PYTHON_MODULE_NAME)
+PYTHON_MODULE      := $(PYTHON_TMP_DIR)\$(PYTHON_MODULE_NAME)
 
 
 
@@ -77,37 +77,39 @@ python_install: $(PYTHON_INSTALLER)    ## python installation
 	@call exec_cmd.bat install_python.cmd
 	@call exec_cmd.bat upgrade_pip.cmd
 	@call exec_cmd.bat install_pipenv.cmd
-	@powershell Write-Host -foreground Green "Python is ready to use"
+	@call exec_cmd.bat save_python.cmd
+	@call exec_cmd.bat uninstall_python.cmd
+	@powershell Write-Host -foreground Green "Python is saved"
 
 
 $(PYTHON_PIPFILE): $(SRC_PIPFILE) ## pifile copy and patch
-	@powershell Write-Host "Target $@" -foreground white
-	@if not exist $(PYTHON_WORK_DIR) mkdir $(PYTHON_WORK_DIR) 2> nul
+	@powershell Write-Host "Making pipfile on target $@" -foreground white
+	@if not exist $(PYTHON_SAVE_DIR) powershell "$(PYTHON_SAVE_DIR) absent" && exit 3
 	@copy /Y $< $@
 	@$(PYTHON_SYSTEM_EXE) patch_pipfile.py $@
 
 $(PYTHON_PIPFILE_LOCK): $(PYTHON_PIPFILE) ## piplock building
 	@powershell Write-Host "Target $@" -foreground white
-	@call exec_cmd.bat build_piplock.cmd
-
+	@call exec_cmd.bat build_pipfile_lock.cmd
 
 venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
-	@powershell Write-Host "Target $@" -foreground white
-	@call exec_cmd.bat build_venv.cmd
+	@powershell Write-Host "Target '$@'" -foreground white
+	@call exec_cmd.bat build_environment.cmd
+	@call exec_cmd.bat clean_environment.cmd
 	
 	
 $(PYTHON_MODULE): venv ## zipping venv
-	@powershell Write-Host "Target $@" -foreground white
-	@cd $(PYTHON_VENV_DIR) && 7z a -r -tzip -y -stl -mmt4 ..\$(PYTHON_MODULE_NAME) *.*
+	@powershell Write-Host "+Target $@" -foreground white
+	@cd $(PYTHON_SAVE_DIR) && 7z a -r -tzip -y -stl -mmt4 ..\$(PYTHON_MODULE_NAME) *.*
 
 $(ARTEFACT_MODULE): $(PYTHON_MODULE) ## copy to artefacts
-	@powershell Write-Host "Target $@" -foreground white
+	@powershell Write-Host "+Target $@" -foreground white
 	@if not exist $(ARTEFACTS_DIR) mkdir $(ARTEFACTS_DIR) 2> nul
 	@copy /Y $< $@ 
 
 build: unpack $(ARTEFACT_MODULE) ## building all
 	@powershell Write-Host -foreground Green "Build finished, uninstalling python"
-	@call exec_cmd.bat uninstall_python.cmd
+	@echo NOT REQUIRED call exec_cmd.bat uninstall_python.cmd
 	
 
 clean:

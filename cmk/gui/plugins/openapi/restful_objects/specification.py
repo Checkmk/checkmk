@@ -55,7 +55,6 @@ If you have a client which can't do the HTTP PUT or DELETE methods, then you can
 such a method. In these cases the HTTP method to use has to be POST. You can't override from GET.
 
 """
-import re
 
 import apispec.utils  # type: ignore
 import apispec_oneofschema  # type: ignore
@@ -64,37 +63,10 @@ from cmk.gui.plugins.openapi import plugins
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOSTNAME, IDENT, NAME, ACCEPT_HEADER
 
 # Path parameters look like {varname} and need to be checked.
-PARAM_RE = re.compile(r"\{([a-z][a-z0-9]*)\}")
 
 DEFAULT_HEADERS = [
     ('Accept', 'Media type(s) that is/are acceptable for the response.', 'application/json'),
 ]
-
-ETAG_IF_MATCH_HEADER = {
-    'in': 'header',
-    'name': 'If-Match',
-    'required': True,
-    'description':
-        ('The ETag of the object to be modified. This value comes from the ETag HTTP header '
-         'whenever the object is displayed. To update this object the currently stored ETag '
-         'needs to be the same as the one sent.'),
-    'example': 'a20ceacf346041dc',
-    'schema': {
-        'type': 'string'
-    },
-}
-
-ETAG_HEADER_PARAM = {
-    'ETag': {
-        'schema': {
-            'type': 'string',
-            'pattern': '[0-9a-fA-F]{32}',
-        },
-        'description': ('The HTTP ETag header for this resource. It identifies the '
-                        'current state of the object and needs to be sent along in '
-                        'the "If-Match" request-header for subsequent modifications.')
-    }
-}
 
 OPTIONS = {
     'info': {

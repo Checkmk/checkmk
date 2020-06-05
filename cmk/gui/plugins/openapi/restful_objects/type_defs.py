@@ -3,9 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, Any
-
-from typing_extensions import Literal
+from typing import Dict, Any, Text, Union, List, Literal, TypedDict
 
 # We don't differentiate between raw and cee versions here. It's a unified list of types.
 DomainType = Literal[
@@ -22,6 +20,8 @@ DomainType = Literal[
 DomainObject = Dict[str, Any]
 
 EndpointName = Literal[
+    'cmk/run',
+    'cmk/activate',
     'cmk/bake',
     'cmk/cancel',
     'cmk/create',
@@ -93,4 +93,16 @@ PropertyFormat = Literal[
     # Non-string values
     'decimal',  # the number should be interpreted as a float-point decimal.
     'int',  # the number should be interpreted as an integer.
-]
+]  # yapf: disable
+CollectionItem = Dict[str, Text]
+LocationType = Literal['path', 'query', 'header', 'cookie']
+ResultType = Literal["object", "list", "scalar", "void"]
+LinkType = Dict[str, str]
+CollectionObject = TypedDict('CollectionObject', {
+    'id': str,
+    'domainType': str,
+    'links': List[LinkType],
+    'value': Any,
+    'extensions': Dict[str, str]
+})
+Serializable = Union[Dict[str, Any], CollectionObject]  # because TypedDict is stricter

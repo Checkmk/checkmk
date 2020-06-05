@@ -11,7 +11,8 @@ import threading
 import jinja2
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 
-from cmk.gui.plugins.openapi.restful_objects.specification import PARAM_RE, SPEC
+from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
+from cmk.gui.plugins.openapi.restful_objects.utils import fill_out_path_template
 
 CODE_TEMPLATES_LOCK = threading.Lock()
 
@@ -167,7 +168,8 @@ def _build_code_templates():
     >>> result = tmpls['curl'].render(
     ...     request_endpoint='foo',
     ...     request_method='get',
-    ...     request_schema=resolve_schema_instance('CreateHost')
+    ...     request_schema=resolve_schema_instance('CreateHost'),
+    ...     headers=[],
     ... )
     >>> assert '&' not in result
 
@@ -207,33 +209,7 @@ def _build_code_templates():
 
 @jinja2.contextfilter
 def fill_out_parameters(ctx, val):
-    return _fill_out_parameters(val, ctx['parameters'])
-
-
-def _fill_out_parameters(orig_path, parameters):
-    """Fill out a simple template.
-
-    Examples:
-
-        >>> param_spec = {'var': {'example': 'foo'}}
-        >>> _fill_out_parameters('/path/{var}', param_spec)
-        '/path/foo'
-
-    Args:
-        orig_path:
-        parameters:
-
-    Returns:
-
-    """
-    path = orig_path
-    for path_param in PARAM_RE.findall(path):
-        param_spec = parameters[path_param]
-        try:
-            path = path.replace("{" + path_param + "}", param_spec['example'])
-        except KeyError:
-            raise KeyError("Param %s of path %r has no example" % (path_param, orig_path))
-    return path
+    return fill_out_path_template(val, ctx['parameters'])
 
 
 def indent(s, skip_lines=0, spaces=2):
@@ -246,10 +222,10 @@ def indent(s, skip_lines=0, spaces=2):
 
         >>> text = u"blah1\\nblah2\\nblah3"
         >>> indent(text, spaces=1)
-        u' blah1\\n blah2\\n blah3'
+        ' blah1\\n blah2\\n blah3'
 
         >>> indent(text, skip_lines=2, spaces=1)
-        u'blah1\\nblah2\\n blah3'
+        'blah1\\nblah2\\n blah3'
 
     Args:
         s:
@@ -271,4 +247,4 @@ def indent(s, skip_lines=0, spaces=2):
             resp.append(line)
         else:
             resp.append((' ' * spaces) + line)
-    return u'\n'.join(resp)
+    return '\n'.join(resp)

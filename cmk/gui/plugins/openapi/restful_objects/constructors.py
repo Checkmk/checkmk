@@ -5,30 +5,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import hashlib
 import json
-from typing import Any, Dict, List, Optional, Union, Literal, TypedDict
+from typing import Any, Dict, List, Optional, Union
 
 from connexion import ProblemException  # type: ignore[import]
 from werkzeug.datastructures import ETags
 
 from cmk.gui.globals import request
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.restful_objects.type_defs import (EndpointName, HTTPMethod,
-                                                               RestfulEndpointName, PropertyFormat,
-                                                               DomainType, DomainObject)
-from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
+from cmk.gui.plugins.openapi.restful_objects.type_defs import (
+    CollectionItem,
+    CollectionObject,
+    DomainObject,
+    DomainType,
+    EndpointName,
+    HTTPMethod,
+    LinkType,
+    PropertyFormat,
+    RestfulEndpointName,
+    ResultType,
+    Serializable,
+)
+from cmk.gui.plugins.openapi.restful_objects.utils import (
+    fill_out_path_template,
+    ENDPOINT_REGISTRY,
+    param as param_,
+)
 
-LinkType = Dict[str, str]
-CollectionItem = Dict[str, str]
-CollectionObject = TypedDict('CollectionObject', {
-    'id': str,
-    'domainType': str,
-    'links': List[LinkType],
-    'value': Any,
-    'extensions': Dict[str, str]
-})
-Serializable = Union[Dict[str, Any], CollectionObject]  # because TypedDict is stricter
-LocationType = Optional[Literal['path', 'query', 'header', 'cookie']]
-ResultType = Literal["object", "list", "scalar", "void"]
+# Export this to the endpoint modules. Must be removed after refactoring.
+param = param_
 
 
 def link_rel(
@@ -416,8 +420,20 @@ def collection_object(domain_type: str,
     }
 
 
+def link_endpoint(module_name, rel, **kw):
+    """Link to a specific endpoint by name."""
+    endpoint = ENDPOINT_REGISTRY[(module_name, rel)]
+    return link_rel(
+        rel=rel,
+        href=fill_out_path_template(endpoint['path'], kw),
+        method=endpoint['method'],
+        # This one needs more work to get the structure right.
+        # parameters=endpoint['parameters']
+    )
+
+
 def collection_item(collection_type, domain_type, obj):
-    # type: (str, str, Any) -> CollectionItem
+    # type: (str, DomainType, Any) -> CollectionItem
     """A link for use in a collection object.
 
     Args:
@@ -522,62 +538,3 @@ def etag_of_obj(obj):
                                "Can't create ETag.")
 
     return ETags(strong_etags=[str(updated_at)])
-
-
-def param(
-        param_name,  # type: str
-        description=None,  # type: Optional[str]
-        location=None,  # type: LocationType
-        required=True,  # type: bool
-        allow_emtpy=False,  # type: bool
-        schema_type='string',  # type: str
-        schema_pattern=None,  # type: str
-        **kw):
-    # type: (...) -> ParamDict
-    """Specify an OpenAPI parameter to be used on a particular endpoint.
-
-    Args:
-        param_name:
-            The name of the parameter.
-
-        description:
-            Optionally the description of the parameter. Markdown may be used.
-
-        location:
-            One of 'query', 'path', 'cookie', 'header'.
-
-        required:
-            If `location` is `path` this needs to be set and True. Otherwise it can even be absent.
-
-        allow_emtpy:
-            If None as a value is allowed.
-
-        schema_type:
-            May be 'string', 'bool', etc.
-
-        schema_pattern:
-            A regex which is used to filter invalid values.
-
-    Returns:
-        The parameter dict.
-
-    """
-    if location == 'path' and not required:
-        raise ValueError("path parameters' `required` field always needs to be True!")
-
-    schema = {'type': schema_type}
-    if schema_pattern is not None:
-        schema['pattern'] = schema_pattern
-    _param = ParamDict({
-        'name': param_name,
-        'in': location,
-        'required': required,
-        'description': description,
-        'allowEmptyValue': allow_emtpy,
-        'schema': schema
-    })
-    for key, value in kw.items():
-        if key in _param:
-            raise ValueError("Please specify %s through the normal parameters." % key)
-        _param[key] = value
-    return _param

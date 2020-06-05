@@ -1,13 +1,16 @@
 components:
   parameters:
     Accept:
+      allowEmptyValue: false
       description: Media type(s) that is/are acceptable for the response.
       example: application/json
       in: header
       name: Accept
+      required: true
       schema:
         type: string
     hostname:
+      allowEmptyValue: false
       description: A hostname.
       example: example.com
       in: path
@@ -17,6 +20,7 @@ components:
         pattern: '[-0-9a-zA-Z_.]+'
         type: string
     ident:
+      allowEmptyValue: false
       description: The identifier for this object. It's a 128bit uuid represented
         in hexadecimal (32 characters). There are no fixed parts or parts derived
         from the current hardware in this number.
@@ -28,6 +32,7 @@ components:
         pattern: '[a-fA-F0-9]{32}|root'
         type: string
     name:
+      allowEmptyValue: false
       description: A name used as an identifier. Can be of arbitrary (sensible) length.
       example: pathname
       in: path
@@ -786,9 +791,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -820,7 +828,8 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.contact_group.delete
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -881,9 +890,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -911,7 +923,8 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.contact_group.update
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -941,9 +954,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1032,9 +1048,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1055,23 +1074,24 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"title\": \"Production Hosts\"\
-          ,\n          \"name\": \"production\",\n          \"attributes\": {\n  \
-          \          \"foo\": \"bar\"\n          },\n          \"parent\": \"root\"\
-          \n        }' \\\n    \"$API_URL/collections/folder\""
+          \ application/json\" \\\n    -d '{\n          \"parent\": \"root\",\n  \
+          \        \"title\": \"Production Hosts\",\n          \"name\": \"production\"\
+          ,\n          \"attributes\": {\n            \"foo\": \"bar\"\n         \
+          \ }\n        }' \\\n    \"$API_URL/collections/folder\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/folder\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    title='Production\
-          \ Hosts' \\\n    name='production' \\\n    attributes='{\"foo\": \"bar\"\
-          }' \\\n    parent='root'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    parent='root'\
+          \ \\\n    title='Production Hosts' \\\n    name='production' \\\n    attributes='{\"\
+          foo\": \"bar\"}'"
   /objects/folder/{ident}:
     delete:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.folder.delete
       parameters:
       - $ref: '#/components/parameters/ident'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -1132,9 +1152,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1164,7 +1187,8 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.folder.update
       parameters:
       - $ref: '#/components/parameters/ident'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -1194,9 +1218,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1235,7 +1262,8 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.folder.move
       parameters:
       - $ref: '#/components/parameters/ident'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -1259,9 +1287,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1313,9 +1344,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1336,16 +1370,16 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"hostname\": \"example.com\"\
-          ,\n          \"nodes\": [\n            \"host1\",\n            \"host2\"\
-          ,\n            \"host3\"\n          ],\n          \"folder\": \"root\",\n\
-          \          \"attributes\": {}\n        }' \\\n    \"$API_URL/collections/host\""
+          \ application/json\" \\\n    -d '{\n          \"nodes\": [\n           \
+          \ \"host1\",\n            \"host2\",\n            \"host3\"\n          ],\n\
+          \          \"attributes\": {},\n          \"folder\": \"root\",\n      \
+          \    \"hostname\": \"example.com\"\n        }' \\\n    \"$API_URL/collections/host\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    hostname='example.com'\
-          \ \\\n    nodes='[\"host1\", \"host2\", \"host3\"]' \\\n    folder='root'\
-          \ \\\n    attributes='{}'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    nodes='[\"\
+          host1\", \"host2\", \"host3\"]' \\\n    attributes='{}' \\\n    folder='root'\
+          \ \\\n    hostname='example.com'"
   /domain-types/host/collections/hosts:
     get:
       description: ''
@@ -1388,7 +1422,8 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.host.delete
       parameters:
       - $ref: '#/components/parameters/hostname'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -1449,9 +1484,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1479,7 +1517,8 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.host.update_host
       parameters:
       - $ref: '#/components/parameters/hostname'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -1509,9 +1548,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1568,9 +1610,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1602,7 +1647,8 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.host_group.delete
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -1663,9 +1709,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1693,7 +1742,8 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.host_group.update
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -1723,9 +1773,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1814,9 +1867,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1849,7 +1905,8 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.service_group.delete
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -1910,9 +1967,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -1940,7 +2000,8 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.service_group.update
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified. This value comes from
+      - allowEmptyValue: false
+        description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
           the currently stored ETag needs to be the same as the one sent.
         example: a20ceacf346041dc
@@ -1970,9 +2031,12 @@ paths:
           description: ''
           headers:
             ETag:
+              allowEmptyValue: false
               description: The HTTP ETag header for this resource. It identifies the
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -2254,7 +2318,8 @@ paths:
         schema:
           pattern: aix_tgz|linux_deb|linux_rpm|linux_tgz|solaris_pkg|solaris_tgz|windows_msi
           type: string
-      - description: A hostname.
+      - allowEmptyValue: false
+        description: A hostname.
         example: example.com
         in: query
         name: hostname

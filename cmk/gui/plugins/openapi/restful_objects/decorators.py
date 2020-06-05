@@ -22,17 +22,15 @@ from marshmallow import Schema  # type: ignore[import]
 from werkzeug.utils import import_string
 
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
-from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
+from cmk.gui.plugins.openapi.restful_objects.utils import ENDPOINT_REGISTRY, PARAM_RE, ParamDict
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
 from cmk.gui.plugins.openapi.restful_objects.specification import (
     add_operation,
-    ETAG_HEADER_PARAM,
-    ETAG_IF_MATCH_HEADER,
-    PARAM_RE,
     SPEC,
 )
+from cmk.gui.plugins.openapi.restful_objects.parameters import ETAG_IF_MATCH_HEADER, \
+    ETAG_HEADER_PARAM
 from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointName, RestfulEndpointName
-from cmk.gui.type_defs import SetOnceDict
 
 
 def _constantly(arg):
@@ -50,8 +48,6 @@ PrimitiveParameter = Union[Dict[str, Any], str]
 
 ResponseSchema = Optional[Schema]
 RequestSchema = Optional[Schema]
-
-ENDPOINT_REGISTRY = SetOnceDict()
 
 # FIXME: Group of endpoints is currently derived from module-name. This prevents sub-packages.
 
@@ -175,14 +171,14 @@ def endpoint_schema(
         endpoint_key = (module_name, name)
 
         try:
-            ENDPOINT_REGISTRY[endpoint_key] = func
+            ENDPOINT_REGISTRY[endpoint_key] = {
+                'path': path,
+                'method': method,
+                'parameters': primitive_parameters,
+            }
         except ValueError:
-            if ENDPOINT_REGISTRY[endpoint_key] != func:
-                raise RuntimeError("The endpoint %r has already been set to %r" %
-                                   (endpoint_key, ENDPOINT_REGISTRY[endpoint_key]))
-            # But if it's already us that has been set, that means the function under
-            # consideration is receiving multiple URLs, which is fine in our case. We might want
-            # to have a struct set here which collects the URLs, so we can recreate them at runtime.
+            raise RuntimeError("The endpoint %r has already been set to %r" %
+                               (endpoint_key, ENDPOINT_REGISTRY[endpoint_key]))
 
         if not output_empty and response_schema is None:
             raise ValueError("%s: 'response_schema' required when output is to be sent!" %
@@ -231,7 +227,7 @@ def endpoint_schema(
         }
 
         if etag in ('input', 'both'):
-            operation_spec['parameters'].append(ETAG_IF_MATCH_HEADER)
+            operation_spec['parameters'].append(ETAG_IF_MATCH_HEADER.to_dict())
 
         if etag in ('output', 'both'):
             # We can't put this completely in a schema because 'headers' is a map. We therefore
@@ -242,7 +238,7 @@ def endpoint_schema(
             # needs to be refactored.
             only_key = list(path_item.keys())[0]
             path_item[only_key].setdefault('headers', {})
-            path_item[only_key]['headers'].update(ETAG_HEADER_PARAM)
+            path_item[only_key]['headers'].update(ETAG_HEADER_PARAM.header_dict())
 
         operation_spec['responses'].update(path_item)
 

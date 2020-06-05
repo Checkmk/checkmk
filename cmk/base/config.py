@@ -1298,8 +1298,8 @@ def get_relevant_raw_sections(check_plugin_names):
     # type: (Iterable[PluginName]) -> Dict[PluginName, SectionPlugin]
     """return the raw sections potentially relevant for the given check plugins"""
     parsed_section_names = set()  # type: Set[PluginName]
-    for check_plguin_name in check_plugin_names:
-        plugin = registered_check_plugins.get(check_plguin_name)
+    for check_plugin_name in check_plugin_names:
+        plugin = registered_check_plugins.get(check_plugin_name)
         if plugin:
             parsed_section_names.update(plugin.sections)
 

@@ -2413,7 +2413,9 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
 
 def get_management_board_precedence(check_plugin_name, plugins_info):
     # type: (CheckPluginName, CheckInfo) -> str
-    mgmt_board = plugins_info[check_plugin_name].get("management_board")
+    # TODO(mo): The first .get() has been added as quick fix for an issue during new Check-API
+    # development. This should not be kept after the situation in clearer.
+    mgmt_board = plugins_info.get(check_plugin_name, {}).get("management_board")
     if mgmt_board is None:
         return check_api_utils.HOST_PRECEDENCE
     return mgmt_board

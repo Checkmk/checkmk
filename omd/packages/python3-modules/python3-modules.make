@@ -222,6 +222,7 @@ python3-modules-dump-Pipfile:
 	@echo 'sphinx = "*" # used for the plugin API documentation'
 	@echo 'sphinx-autodoc-typehints = "*" # used for the plugin API documentation'
 	@echo 'sphinx-rtd-theme = "*" # used for the plugin API documentation'
+	@echo '3to2 = "*" # used for converting agent plugins from py3 to 2'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

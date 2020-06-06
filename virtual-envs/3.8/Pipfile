@@ -34,6 +34,7 @@ yapf = "*"  # used for editor integration and the format-python Makefile target
 sphinx = "*" # used for the plugin API documentation
 sphinx-autodoc-typehints = "*" # used for the plugin API documentation
 sphinx-rtd-theme = "*" # used for the plugin API documentation
+3to2 = "*" # used for converting agent plugins from py3 to 2
 
 [packages]
 setuptools_scm = "==3.3.3"  # needed by various setup.py

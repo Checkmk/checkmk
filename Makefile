@@ -201,9 +201,11 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12
 	gzip $(DISTNAME)/doc.tar
 
+	make -C agents/plugins
 	cd agents ; tar czf ../$(DISTNAME)/agents.tar.gz $(TAROPTS) \
 		--exclude check_mk_agent.spec \
 		--exclude special/lib \
+		--exclude plugins/Makefile \
 		cfg_examples \
 		plugins \
 		sap \

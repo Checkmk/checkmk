@@ -245,7 +245,7 @@ unit_info["l/s"] = {
 }
 
 unit_info["rpm"] = {
-    "title": _("Rotations per minute"),
+    "title": _("Revolutions per minute"),
     "symbol": _("rpm"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 4, _("rpm")),
 }

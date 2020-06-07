@@ -34971,8 +34971,8 @@ msgstr "rotiert"
 msgid "Rotated Log"
 msgstr "rotiertes Log"
 
-msgid "Rotations per minute"
-msgstr "Umdrehung pro Minute"
+msgid "Revolutions per minute"
+msgstr "Umdrehungen pro Minute"
 
 msgid "Round"
 msgstr "Rund"

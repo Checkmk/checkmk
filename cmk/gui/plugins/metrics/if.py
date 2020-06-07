@@ -122,6 +122,30 @@ metric_info["if_out_non_unicast_octets"] = {
     "color": "#0080c0",
 }
 
+metric_info["if_in_mcast"] = {
+    "title": _("Input multicast packets"),
+    "unit": "1/s",
+    "color": "#00ffc0",
+}
+
+metric_info["if_in_bcast"] = {
+    "title": _("Input broadcast packets"),
+    "unit": "1/s",
+    "color": "#00c080",
+}
+
+metric_info["if_out_mcast"] = {
+    "title": _("Output multicast packets"),
+    "unit": "1/s",
+    "color": "#00c0ff",
+}
+
+metric_info["if_out_bcast"] = {
+    "title": _("Output broadcast packets"),
+    "unit": "1/s",
+    "color": "#0080c0",
+}
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -165,5 +189,15 @@ graph_info["if_errors"] = {
         ("if_in_discards", "stack"),
         ("if_out_errors", "-area"),
         ("if_out_discards", "-stack"),
+    ],
+}
+
+graph_info["bm_packets"] = {
+    "title": _("Broad-/Multicast"),
+    "metrics": [
+        ("if_in_mcast", "line"),
+        ("if_in_bcast", "line"),
+        ("if_out_mcast", "-line"),
+        ("if_out_bcast", "-line"),
     ],
 }

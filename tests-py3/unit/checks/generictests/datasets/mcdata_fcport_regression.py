@@ -101,11 +101,15 @@ MB = 1024**2
 mock_item_state = {
     '': {
         'if.in.04': (0.0, 6116281794924 - 300 * MB),
+        'if.inmcast.04': (0.0, 0),
+        'if.inbcast.04': (0.0, 0),
         'if.inucast.04': (0.0, 3346958079 - 60 * MB),
         'if.innucast.04': (0.0, 0),
         'if.indisc.04': (0.0, 0),
         'if.inerr.04': (0.0, 0),
         'if.out.04': (0.0, 4067529216280 - 180 * MB),
+        'if.outmcast.04': (0.0, 0),
+        'if.outbcast.04': (0.0, 0),
         'if.outucast.04': (0.0, 2310296998 - 30 * MB),
         'if.outnucast.04': (0.0, 0),
         'if.outdisc.04': (0.0, 0),
@@ -124,11 +128,15 @@ checks = {
         ('04', DEFAULT_PARAMS, [
             (0, '[04] (up) 2 Gbit/s, In: 5.00 MB/s (2.1%), Out: 3.00 MB/s (1.3%)', [
                 ('in', 5 * MB, None, None, 0, 250000000.0),
+                ('inmcast', 0.0, None, None, None, None),
+                ('inbcast', 0.0, None, None, None, None),
                 ('inucast', MB, None, None, None, None),
                 ('innucast', 0.0, None, None, None, None),
                 ('indisc', 0.0, None, None, None, None),
                 ('inerr', 0.0, 0.01, 0.1, None, None),
                 ('out', 3 * MB, None, None, 0, 250000000.0),
+                ('outmcast', 0.0, None, None, None, None),
+                ('outbcast', 0.0, None, None, None, None),
                 ('outucast', 0.5 * MB, None, None, None, None),
                 ('outnucast', 0.0, None, None, None, None),
                 ('outdisc', 0.0, None, None, None, None),

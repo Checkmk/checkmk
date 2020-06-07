@@ -497,6 +497,72 @@ def _parameter_valuespec_if():
                             Integer(title=_("Critical at"), unit=_("pkts / sec")),
                         ]),
                 ),
+                ("multicast",
+                 Alternative(title=_("Multicast packet rates"),
+                             help=_(
+                                 "These levels make the check go warning or critical whenever the "
+                                 "<b>percentual packet rate</b> or the <b>absolute packet "
+                                 "rate</b> of the monitored interface reaches the given "
+                                 "bounds. The percentual packet rate is computed by "
+                                 "dividing the number of multicast packets by the number "
+                                 "of unicast packets."),
+                             elements=[
+                                 Tuple(title=_("Percentual levels for multicast packets"),
+                                       elements=[
+                                           Percentage(title=_("Warning at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=10.0,
+                                                      display_format='%.3f'),
+                                           Percentage(title=_("Critical at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=20.0,
+                                                      display_format='%.3f')
+                                       ]),
+                                 Tuple(title=_("Absolute levels for multicast packets"),
+                                       elements=[
+                                           Integer(title=_("Warning at"), unit=_("pkts / sec")),
+                                           Integer(title=_("Critical at"), unit=_("pkts / sec"))
+                                       ])
+                             ])),
+                ("broadcast",
+                 Alternative(title=_("Broadcast packet rates"),
+                             help=_(
+                                 "These levels make the check go warning or critical whenever the "
+                                 "<b>percentual packet rate</b> or the <b>absolute packet "
+                                 "rate</b> of the monitored interface reaches the given "
+                                 "bounds. The percentual packet rate is computed by "
+                                 "dividing the number of broadcast packets by the number "
+                                 "of unicast packets."),
+                             elements=[
+                                 Tuple(title=_("Percentual levels for broadcast packets"),
+                                       elements=[
+                                           Percentage(title=_("Warning at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=10.0,
+                                                      display_format='%.3f'),
+                                           Percentage(title=_("Critical at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=20.0,
+                                                      display_format='%.3f')
+                                       ]),
+                                 Tuple(title=_("Absolute levels for broadcast packets"),
+                                       elements=[
+                                           Integer(title=_("Warning at"), unit=_("pkts / sec")),
+                                           Integer(title=_("Critical at"), unit=_("pkts / sec"))
+                                       ])
+                             ])),
+                ("average_bm",
+                 Integer(
+                     title=_("Average values for broad- and multicast packet rates"),
+                     help=_(
+                         "By activating the computation of averages, the levels on "
+                         "broad- and multicast packet rates are applied to "
+                         "the averaged value. That way you can make the check react only on long-time "
+                         "changes, not on one-minute events."),
+                     unit=_("minutes"),
+                     minvalue=1,
+                     default_value=15,
+                 )),
                 ("discards",
                  Tuple(title=_("Absolute levels for discards rates"),
                        elements=[

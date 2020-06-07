@@ -891,6 +891,18 @@ if_translation = {
     "outerr": {
         "name": "if_out_errors"
     },
+    "inmcast": {
+        "name": "if_in_mcast"
+    },
+    "inbcast": {
+        "name": "if_in_bcast"
+    },
+    "outmcast": {
+        "name": "if_out_mcast"
+    },
+    "outbcast": {
+        "name": "if_out_bcast"
+    },
     "inucast": {
         "name": "if_in_unicast"
     },

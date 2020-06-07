@@ -182,9 +182,8 @@ from cmk.base.discovered_labels import (  # noqa: F401 # pylint: disable=unused-
 
 network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
 
-# The class 'as_float' has been moved to the cmk.base.api domain.
-# import it here under the old name
-from cmk.base.api.agent_based.checking_types import MetricFloat as as_float
+# The class 'as_float' has been moved; import it here under the old name
+from cmk.utils.type_defs import EvalableFloat as as_float
 
 
 def saveint(i):

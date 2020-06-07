@@ -7,10 +7,10 @@
 """
 from collections.abc import Mapping
 from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
-import sys
 import enum
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
+from cmk.utils.type_defs import EvalableFloat
 from cmk.base.api import PluginName
 from cmk.base.discovered_labels import ServiceLabel
 
@@ -137,28 +137,6 @@ def state_worst(*args):
     return state(max(int(s or 0) for s in args))
 
 
-class MetricFloat(float):
-    """Extends the float representation for Infinities in such way that
-    they can be parsed by eval"""
-
-    # TODO: Is this really what we want? Delegate to __repr__ because of a
-    # change in Python 3.8: "Removed __str__ implementations from builtin types
-    # bool, int, float, complex and few classes from the standard library. They
-    # now inherit __str__() from object. As result, defining the __repr__()
-    # method in the subclass of these classes will affect their string
-    # representation."
-    def __str__(self):
-        return super().__repr__()
-
-    def __repr__(self):
-        # type: () -> str
-        if self > sys.float_info.max:
-            return '1e%d' % (sys.float_info.max_10_exp + 1)
-        if self < -1 * sys.float_info.max:
-            return '-1e%d' % (sys.float_info.max_10_exp + 1)
-        return super(MetricFloat, self).__repr__()
-
-
 class Metric:
     @staticmethod
     def validate_name(metric_name):
@@ -173,11 +151,11 @@ class Metric:
 
     @staticmethod
     def _sanitize_single_value(field, value):
-        # type: (str, Optional[float]) -> Optional[MetricFloat]
+        # type: (str, Optional[float]) -> Optional[EvalableFloat]
         if value is None:
             return None
         if isinstance(value, (int, float)):
-            return MetricFloat(value)
+            return EvalableFloat(value)
         raise TypeError("%s values for metric must be float, int or None" % field)
 
     def _sanitize_optionals(
@@ -185,7 +163,7 @@ class Metric:
             field,  # type: str
             values,  # type: _OptionalPair
     ):
-        # type: (...) -> Tuple[Optional[MetricFloat], Optional[MetricFloat]]
+        # type: (...) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]
         if values is None:
             return None, None
 
@@ -212,7 +190,7 @@ class Metric:
             raise TypeError("value for metric must be float or int, got %r" % (value,))
 
         self._name = name
-        self._value = MetricFloat(value)
+        self._value = EvalableFloat(value)
         self._levels = self._sanitize_optionals('levels', levels)
         self._boundaries = self._sanitize_optionals('boundaries', boundaries)
 
@@ -223,17 +201,17 @@ class Metric:
 
     @property
     def value(self):
-        # type: () -> MetricFloat
+        # type: () -> EvalableFloat
         return self._value
 
     @property
     def levels(self):
-        # () -> Tuple[Optional[MetricFloat], Optional[MetricFloat]]
+        # () -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]
         return self._levels
 
     @property
     def boundaries(self):
-        # () -> Tuple[Optional[MetricFloat], Optional[MetricFloat]]
+        # () -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]
         return self._boundaries
 
     def __eq__(self, other):

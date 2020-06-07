@@ -3,8 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from ast import literal_eval
-
 import pytest  # type: ignore[import]
 
 from cmk.base.api.agent_based.checking_types import (
@@ -12,7 +10,6 @@ from cmk.base.api.agent_based.checking_types import (
     Parameters,
     ServiceLabel,
     Service,
-    MetricFloat,
     Metric,
     Result,
 )
@@ -112,11 +109,6 @@ def test_state():
 
     with pytest.raises(TypeError):
         _ = state.OK < state.WARN  # type: ignore[operator]
-
-
-def test_metric_float():
-    inf = MetricFloat('inf')
-    assert literal_eval("%r" % inf) == float('inf')
 
 
 def test_metric_kwarg():

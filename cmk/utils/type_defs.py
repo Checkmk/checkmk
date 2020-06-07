@@ -8,6 +8,7 @@
 import abc
 import enum
 import string
+import sys
 from typing import (
     Any,
     AnyStr,
@@ -328,3 +329,18 @@ def timeperiod_spec_alias(timeperiod_spec, default=u""):
     if isinstance(alias, str):
         return alias
     raise Exception("invalid timeperiod alias %r" % (alias,))
+
+
+class EvalableFloat(float):
+    """Extends the float representation for Infinities in such way that
+    they can be parsed by eval"""
+    def __str__(self):
+        return super().__repr__()
+
+    def __repr__(self):
+        # type: () -> str
+        if self > sys.float_info.max:
+            return '1e%d' % (sys.float_info.max_10_exp + 1)
+        if self < -1 * sys.float_info.max:
+            return '-1e%d' % (sys.float_info.max_10_exp + 1)
+        return super().__repr__()

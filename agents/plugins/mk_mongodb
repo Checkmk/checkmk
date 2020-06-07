@@ -21,7 +21,16 @@ import time
 import inspect
 import json
 from collections import defaultdict
-import pymongo  # pylint: disable=import-error
+
+try:
+    import pymongo  # pylint: disable=import-error
+except ImportError:
+    sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
+    sys.stdout.write(
+        "error\tpymongo library is not installed. Please install it on the monitored system (pip install pymongo)\n"
+    )
+    sys.exit(1)
+
 from bson.json_util import dumps
 
 MK_VARDIR = os.environ.get("MK_VARDIR")

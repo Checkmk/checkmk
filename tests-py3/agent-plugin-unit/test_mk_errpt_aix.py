@@ -7,9 +7,9 @@
 import os
 import subprocess
 import pytest  # type: ignore[import]
-from testlib.utils import cmk_path
+from utils import plugin_path
 
-PLUGIN = os.path.join(cmk_path(), 'agents', 'plugins', 'mk_errpt.aix')
+PLUGIN = os.path.join(plugin_path(), 'mk_errpt.aix')
 
 ERRPT_OUTPUT = [
     u'IDENTIFIER TIMESTAMP  T C RESOURCE_NAME  DESCRIPTION',
@@ -25,17 +25,17 @@ STATE_FILE_NAME = "mk_errpt_aix.last_reported"
 LEGACY_STATE_FILE_NAME = "mk_logwatch_aix.last_reported"
 
 
-def _prepare_mock_errpt(tmp_path, errpt_output):
-    errpt_name = str(tmp_path / 'errpt')
+def _prepare_mock_errpt(tmp_dir, errpt_output):
+    errpt_name = os.path.join(tmp_dir, 'errpt')
     errpt_script = ''.join(['#!/bin/sh\n'] + ['echo "%s"\n' % line for line in errpt_output])
     with open(errpt_name, 'w') as errpt_file:
         errpt_file.write(errpt_script)
     os.chmod(errpt_name, 0o777)  # nosec
 
 
-def _get_env(tmp_path):
+def _get_env(tmp_dir):
     env = os.environ.copy()
-    env.update({"PATH": '%s:%s' % (tmp_path, os.getenv("PATH")), "MK_VARDIR": str(tmp_path)})
+    env.update({"PATH": '%s:%s' % (tmp_dir, os.getenv("PATH")), "MK_VARDIR": tmp_dir})
     return env
 
 
@@ -43,20 +43,22 @@ def prepare_state(filepath, write_name, state):
     # make sure we have no left-over files
     for base_file in (STATE_FILE_NAME, LEGACY_STATE_FILE_NAME):
         try:
-            (filepath / base_file).unlink()
+            os.unlink(os.path.join(filepath, base_file))
         except OSError:
             pass
 
     if state is None:
         return
 
-    with (filepath / write_name).open('w') as statefile:
+    path = os.path.join(filepath, write_name)
+    with open(path, 'w') as statefile:
         statefile.write(u"%s\n" % state)
 
 
 def read_state(filepath):
     try:
-        with (filepath / STATE_FILE_NAME).open() as statefile:
+        path = os.path.join(filepath, STATE_FILE_NAME)
+        with open(path) as statefile:
             new_state = statefile.read()
             assert new_state[-1] == u"\n"
             return new_state[:-1]
@@ -70,6 +72,7 @@ def _format_expected(lines):
     return ''.join(added_header)
 
 
+@pytest.mark.skip("Not a real unit test, we'll have to find a better place")
 @pytest.mark.parametrize(
     "state_file_name,errpt_output,last_reported,expectations",
     [
@@ -92,20 +95,22 @@ def _format_expected(lines):
             [ERRPT_OUTPUT[1:], ERRPT_OUTPUT[1:], ERRPT_OUTPUT[1:3], [], ERRPT_OUTPUT[1:]],
         ),
     ])
-def test_mk_errpt_aix(tmp_path, state_file_name, errpt_output, last_reported, expectations):
-
-    _prepare_mock_errpt(tmp_path, errpt_output)
-    env = _get_env(tmp_path)
+def test_mk_errpt_aix(tmpdir, state_file_name, errpt_output, last_reported, expectations):
+    tmp_dir = str(tmpdir)
+    _prepare_mock_errpt(tmp_dir, errpt_output)
+    env = _get_env(tmp_dir)
 
     for state, expected in zip(last_reported, expectations):
 
-        prepare_state(tmp_path, state_file_name, state)
+        prepare_state(tmp_dir, state_file_name, state)
 
-        output = subprocess.check_output(PLUGIN, env=env)
+        p = subprocess.Popen(PLUGIN, env=env, stdout=subprocess.STDOUT)
+        output = p.communicate()[0]
+
         expected = _format_expected(expected)
         assert output == expected, "expected\n  %r, but got\n  %r" % (expected, output)
 
-        new_state = read_state(tmp_path)
+        new_state = read_state(tmp_dir)
 
         if len(errpt_output) > 1:  # we should have updated state file
             assert new_state == errpt_output[1]

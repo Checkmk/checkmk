@@ -7,15 +7,13 @@
 import ast
 # pylint: disable=protected-access,redefined-outer-name
 import os
-
 import pytest  # type: ignore[import]
-
-from testlib.importer import import_module  # pylint: disable=import-error
+from utils import import_module
 
 
 @pytest.fixture(scope="module")
 def mk_filestats():
-    return import_module("agents/plugins/mk_filestats.py")
+    return import_module("mk_filestats.py")
 
 
 @pytest.fixture

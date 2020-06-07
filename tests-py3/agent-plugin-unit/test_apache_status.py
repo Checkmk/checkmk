@@ -7,19 +7,19 @@
 # pylint: disable=protected-access,redefined-outer-name
 import io
 import pytest  # type: ignore[import]
-from testlib.importer import import_module  # pylint: disable=import-error
+from utils import import_module
 
 RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))
 
 
 @pytest.fixture(scope="module")
 def apache_status():
-    return import_module("agents/plugins/apache_status")
+    return import_module("apache_status")
 
 
 @pytest.fixture
 def response():
-    return io.BytesIO(RESPONSE)
+    return io.StringIO(RESPONSE)
 
 
 @pytest.mark.parametrize("cfg", [
@@ -62,6 +62,6 @@ def test_agent(apache_status, cfg, response, monkeypatch, capsys):
     monkeypatch.setattr(apache_status, "get_config", lambda: {"servers": cfg, "ssl_ports": [443]})
     monkeypatch.setattr(apache_status, "get_response", lambda *args: response)
     apache_status.main()
-    captured = capsys.readouterr()
-    assert captured.out == ("<<<apache_status:sep(124)>>>\n" + "\n".join(
+    captured_stdout = capsys.readouterr()[0]
+    assert captured_stdout == ("<<<apache_status:sep(124)>>>\n" + "\n".join(
         ("127.0.0.1|None||%s" % line for line in RESPONSE.split("\n"))) + "\n")

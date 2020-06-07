@@ -558,13 +558,7 @@ def generate_json(inst, mbeans):
 
 
 def yield_configured_instances(custom_config=None):
-
-    if custom_config is None:
-        custom_config = get_default_config_dict()
-
-    conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
-    if os.path.exists(conffile):
-        exec(open(conffile).read(), {}, custom_config)
+    custom_config = load_config(custom_config)
 
     # Generate list of instances to monitor. If the user has defined
     # instances in his configuration, we will use this (a list of dicts).
@@ -575,6 +569,16 @@ def yield_configured_instances(custom_config=None):
         if VERBOSE:
             sys.stderr.write("DEBUG: configuration: %r\n" % conf_dict)
         yield conf_dict
+
+
+def load_config(custom_config):
+    if custom_config is None:
+        custom_config = get_default_config_dict()
+
+    conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
+    if os.path.exists(conffile):
+        exec(open(conffile).read(), {}, custom_config)
+    return custom_config
 
 
 def main(configs_iterable=None):

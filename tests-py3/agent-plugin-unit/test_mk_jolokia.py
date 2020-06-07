@@ -6,12 +6,12 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 import pytest  # type: ignore[import]
-from testlib.importer import import_module  # pylint: disable=import-error
+from utils import import_module
 
 
 @pytest.fixture(scope="module")
 def mk_jolokia():
-    return import_module("agents/plugins/mk_jolokia.py")
+    return import_module("mk_jolokia.py")
 
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])
@@ -104,7 +104,7 @@ def test_jolokia_yield_configured_instances(mk_jolokia):
     assert next(yci) == {"server": "s2", "port": 1234}
 
 
-class _MockHttpResponse(object):
+class _MockHttpResponse(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, http_status, **kwargs):
         self.status_code = http_status
         self.headers = {}

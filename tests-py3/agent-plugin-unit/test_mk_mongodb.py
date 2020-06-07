@@ -7,15 +7,13 @@
 # pylint: disable=protected-access,redefined-outer-name
 
 import os
-from bson.json_util import loads  # type: ignore[import]
 import pytest  # type: ignore[import]
-from testlib.importer import import_module  # type: ignore[import] # pylint: disable=import-error
-from testlib.utils import cmk_path
+from utils import import_module
 
 
 @pytest.fixture(scope="module")
 def mk_mongodb():
-    return import_module("agents/plugins/mk_mongodb")
+    return import_module("mk_mongodb")
 
 
 def read_dataset(filename):
@@ -25,9 +23,9 @@ def read_dataset(filename):
     :param filename: filename of the dataset
     :return: dataset as extended JSON
     """
+    from bson.json_util import loads  # type: ignore[import]
     dataset_file = os.path.abspath(
-        os.path.join(cmk_path(), 'tests', 'unit', 'agents', 'plugins', 'datasets', 'mk_mongodb',
-                     filename))
+        os.path.join(os.path.dirname(__file__), 'datasets', 'mk_mongodb', filename))
     with open(dataset_file) as f:
         return loads(f.read())
 

@@ -250,6 +250,9 @@ def parse_filenames(line):
         _processed_line = _processed_line.replace('\\', '\\\\')
         return shlex.split(_processed_line)
 
+    if sys.version_info[0] < 3:
+        return [x.decode("utf-8") for x in shlex.split(line.encode("utf-8"))]
+
     return shlex.split(line)
 
 

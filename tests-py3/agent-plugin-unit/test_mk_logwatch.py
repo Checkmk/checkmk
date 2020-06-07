@@ -10,14 +10,19 @@ import os
 import re
 import sys
 import locale
-import six
 import pytest  # type: ignore[import]
-from testlib.importer import import_module  # pylint: disable=import-error
+from utils import import_module
+
+
+def text_type():
+    if sys.version_info[0] == 2:
+        return unicode  # pylint: disable=undefined-variable
+    return str
 
 
 @pytest.fixture(scope="module")
 def mk_logwatch():
-    return import_module("agents/plugins/mk_logwatch")
+    return import_module("mk_logwatch")
 
 
 def test_options_defaults(mk_logwatch):
@@ -62,29 +67,34 @@ def test_options_setter_regex(mk_logwatch, option_string, expected_pattern, expe
     assert opt.regex.flags == expected_flags
 
 
-def test_get_config_files(mk_logwatch, tmp_path):
-    fake_config_dir = tmp_path / "test"
-    fake_config_dir.mkdir()
-    (fake_config_dir / "logwatch.d").mkdir()
-    (fake_config_dir / "logwatch.d" / "custom.cfg").open(mode="w")
+def test_get_config_files(mk_logwatch, tmpdir):
+    fake_config_dir = os.path.join(str(tmpdir), "test")
+    os.mkdir(fake_config_dir)
+
+    logwatch_d_dir = os.path.join(fake_config_dir, "logwatch.d")
+    os.mkdir(logwatch_d_dir)
+
+    open(os.path.join(logwatch_d_dir, "custom.cfg"), mode="w")
 
     expected = [
-        str(fake_config_dir / "logwatch.cfg"),
-        str(fake_config_dir / "logwatch.d/custom.cfg")
+        str(os.path.join(fake_config_dir, "logwatch.cfg")),
+        str(os.path.join(fake_config_dir, "logwatch.d/custom.cfg"))
     ]
 
     assert mk_logwatch.get_config_files(str(fake_config_dir)) == expected
 
 
-def test_iter_config_lines(mk_logwatch, tmp_path):
+def test_iter_config_lines(mk_logwatch, tmpdir):
     """Fakes a logwatch config file and checks if the agent plugin reads it appropriately"""
     # setup
-    fake_config_path = tmp_path / "test"
-    fake_config_path.mkdir()
-    fake_config_file = fake_config_path / "logwatch.cfg"
-    fake_config_file.write_text(u"# this is a comment\nthis is a line   ", encoding="utf-8")
-    files = [str(fake_config_file)]
+    fake_config_path = os.path.join(str(tmpdir), "test")
+    os.mkdir(fake_config_path)
 
+    fake_config_file = os.path.join(fake_config_path, "logwatch.cfg")
+    with open(fake_config_file, "wb") as f:
+        f.write(u"# this is a comment\nthis is a line   ".encode("utf-8"))
+
+    files = [fake_config_file]
     read = list(mk_logwatch.iter_config_lines(files))
 
     assert read == ['this is a line']
@@ -173,6 +183,14 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
             (u'W', u'generic protection rip', [], []),
             (u'W', u'.*Unrecovered read error - auto reallocate failed', [], []),
         ],
+    ),
+    (
+        [
+            u'/var/log/äumlaut.log',
+            u' W sshd.*Corrupted MAC on input',
+        ],
+        [u'/var/log/äumlaut.log'],
+        [(u'W', u'sshd.*Corrupted MAC on input', [], [])],
     ),
 ])
 def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfiles_patterns,
@@ -280,13 +298,14 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
         },
     }),
 ])
-def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
+def test_state_load(mk_logwatch, tmpdir, state_data, state_dict):
     # setup for reading
-    file_path = tmp_path / "logwatch.state.testcase"
-    file_path.write_text(state_data, encoding="utf-8")
+    file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
+    with open(file_path, "wb") as f:
+        f.write(state_data.encode("utf-8"))
 
     # loading and __getitem__
-    state = mk_logwatch.State(str(file_path)).read()
+    state = mk_logwatch.State(file_path).read()
     assert state._data == state_dict
     for expected_data in state_dict.values():
         key = expected_data['file']
@@ -312,10 +331,10 @@ def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
         }
     },
 ])
-def test_state_write(mk_logwatch, tmp_path, state_dict):
+def test_state_write(mk_logwatch, tmpdir, state_dict):
     # setup for writing
-    file_path = tmp_path / "logwatch.state.testcase"
-    state = mk_logwatch.State(str(file_path))
+    file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
+    state = mk_logwatch.State(file_path)
     assert not state._data
 
     # writing
@@ -327,7 +346,7 @@ def test_state_write(mk_logwatch, tmp_path, state_dict):
         filestate['inode'] = data['inode']
     state.write()
 
-    read_state = mk_logwatch.State(str(file_path)).read()
+    read_state = mk_logwatch.State(file_path).read()
     assert read_state._data == state_dict
 
 
@@ -350,7 +369,7 @@ STAR_FILES = [
     ]),
 ])
 def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, file_suffixes):
-    fake_fs_path_b = str(fake_filesystem)
+    fake_fs_path_b = fake_filesystem
     fake_fs_path_u = fake_fs_path_b.decode('utf8')
     files = mk_logwatch.find_matching_logfiles(fake_fs_path_u + pattern_suffix)
 
@@ -358,7 +377,7 @@ def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, fi
         assert isinstance(actual[0], type(expected[0]))
         assert actual[0].endswith(expected[0])
 
-        assert isinstance(actual[1], unicode)
+        assert isinstance(actual[1], text_type())
         assert actual[1].startswith(fake_fs_path_u)
         assert actual[1][len(fake_fs_path_u):] == expected[1]
 
@@ -393,7 +412,7 @@ def test_log_lines_iter(mk_logwatch):
         assert log_iter.get_position() == 121
 
         line = log_iter.next_line()
-        assert isinstance(line, unicode)
+        assert isinstance(line, text_type())
         assert line == u"# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"
         assert log_iter.get_position() == 206
 
@@ -440,15 +459,15 @@ def test_log_lines_iter(mk_logwatch):
             u"abc3\n",
         ]),
     ])
-def test_non_ascii_line_processing(mk_logwatch, tmp_path, monkeypatch, use_specific_encoding, lines,
+def test_non_ascii_line_processing(mk_logwatch, tmpdir, monkeypatch, use_specific_encoding, lines,
                                    expected_result):
     # Write test logfile first
-    log_path = tmp_path / "testlog"
-    with log_path.open("wb") as f:
-        f.write(b"\n".join(lines) + "\n")
+    log_path = os.path.join(str(tmpdir), "testlog")
+    with open(log_path, "wb") as f:
+        f.write(b"\n".join(lines) + b"\n")
 
     # Now test processing
-    with mk_logwatch.LogLinesIter(str(log_path), None) as log_iter:
+    with mk_logwatch.LogLinesIter(log_path, None) as log_iter:
         if use_specific_encoding:
             log_iter._enc = use_specific_encoding
 
@@ -462,7 +481,7 @@ def test_non_ascii_line_processing(mk_logwatch, tmp_path, monkeypatch, use_speci
         assert result == expected_result
 
 
-class MockStdout(object):
+class MockStdout(object):  # pylint: disable=useless-object-inheritance
     def isatty(self):
         return False
 
@@ -540,7 +559,7 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
     monkeypatch.setattr(sys, 'stdout', MockStdout())
     header, warning_and_errors = mk_logwatch.process_logfile(section, state, False)
     output = [header] + warning_and_errors
-    assert all(isinstance(item, six.text_type) for item in output)
+    assert all(isinstance(item, text_type()) for item in output)
     assert output == expected_output
     if len(output) > 1:
         assert isinstance(state['offset'], int)
@@ -558,7 +577,7 @@ def test_filter_maxcontextlines(mk_logwatch, input_lines, before, after, expecte
 
 
 @pytest.fixture
-def fake_filesystem(tmp_path):
+def fake_filesystem(tmpdir):
     root = [
         # name     | type  | content/target
         ("file.log", "file", None),
@@ -594,9 +613,11 @@ def fake_filesystem(tmp_path):
             return
 
         source = os.path.join(dirpath, value)
-        link = os.symlink if type_ == "symlink" else os.link
-        link(source, obj_path)
+        if type_ == "symlink":
+            os.symlink(source, obj_path)
+        else:
+            os.link(source, obj_path)
 
-    create_recursively(str(tmp_path), "root", "dir", root)
+    create_recursively(str(tmpdir), "root", "dir", root)
 
-    return tmp_path / "root"
+    return os.path.join(str(tmpdir), "root")

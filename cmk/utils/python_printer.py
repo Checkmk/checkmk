@@ -11,6 +11,8 @@ from io import StringIO as StrIO
 import sys
 from typing import List, Any, Callable, Dict, IO, Iterable, Optional, Tuple
 
+from cmk.utils.type_defs import EvalableFloat
+
 _bytes = bytes
 _str = str
 _long = int
@@ -149,19 +151,20 @@ def _format_sequence(printer, seq, format_element, open_str, close_str):
 
 
 _dispatch = {
-    bytearray: _format_via_repr,
-    float: _format_via_repr,
-    complex: _format_via_repr,
     bool: _format_via_repr,
-    type(None): _format_via_repr,
-    int: _format_via_repr,
-    _long: _format_via_repr,
+    bytearray: _format_via_repr,
     _bytes: _format_byte_string,
+    complex: _format_via_repr,
+    dict: _format_dict,
+    EvalableFloat: _format_via_repr,
+    float: _format_via_repr,
+    int: _format_via_repr,
+    list: _format_list,
+    _long: _format_via_repr,
+    set: _format_set,
     _str: _format_unicode_string,
     tuple: _format_tuple,
-    list: _format_list,
-    set: _format_set,
-    dict: _format_dict,
+    type(None): _format_via_repr,
 }  # type: Dict[Any, Any]
 
 

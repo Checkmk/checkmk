@@ -4,6 +4,7 @@
 // source code package.
 
 #include "Store.h"
+
 #include <ctime>
 #include <filesystem>
 #include <memory>
@@ -12,6 +13,7 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
 #include "CrashReport.h"
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"

@@ -4,8 +4,10 @@
 // source code package.
 
 #include "TableTimeperiods.h"
+
 #include <cstdint>
 #include <memory>
+
 #include "Column.h"
 #include "IntLambdaColumn.h"
 #include "Query.h"

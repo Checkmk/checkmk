@@ -7,10 +7,12 @@
 #define AttributeListAsIntColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "Filter.h"
 #include "IntColumn.h"
 #include "contact_fwd.h"

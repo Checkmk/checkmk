@@ -4,10 +4,12 @@
 // source code package.
 
 #include "opids.h"
+
 #include <algorithm>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
+
 #include "RegExp.h"
 
 namespace {

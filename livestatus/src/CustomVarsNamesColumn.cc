@@ -4,9 +4,11 @@
 // source code package.
 
 #include "CustomVarsNamesColumn.h"
+
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
+
 #include "MonitoringCore.h"
 #include "Row.h"
 

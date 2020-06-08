@@ -7,7 +7,9 @@
 #define TableTimeperiods_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "Table.h"
 #ifdef CMC
 class Timeperiod;

@@ -7,12 +7,14 @@
 #define ListFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <algorithm>
 #include <chrono>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
+
 #include "ColumnFilter.h"
 #include "Filter.h"
 #include "ListColumn.h"

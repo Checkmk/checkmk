@@ -4,8 +4,10 @@
 // source code package.
 
 #include "ListFilter.h"
+
 #include <sstream>
 #include <string>
+
 #include "Filter.h"
 #include "ListColumn.h"
 #include "Logger.h"

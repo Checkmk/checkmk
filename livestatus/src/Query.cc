@@ -4,6 +4,7 @@
 // source code package.
 
 #include "Query.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cctype>
@@ -14,6 +15,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+
 #include "Aggregator.h"
 #include "AndingFilter.h"
 #include "ChronoUtils.h"

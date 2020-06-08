@@ -7,12 +7,14 @@
 #define HostFileColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <filesystem>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
+
 #include "BlobColumn.h"
 #include "Column.h"
 class Row;

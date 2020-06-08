@@ -4,6 +4,7 @@
 // source code package.
 
 #include "ServiceSpecialDoubleColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC
@@ -12,6 +13,7 @@ class Object;
 #else
 #include <cstring>
 #include <ctime>
+
 #include "nagios.h"
 #endif
 

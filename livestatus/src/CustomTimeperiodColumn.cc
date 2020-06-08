@@ -4,7 +4,9 @@
 // source code package.
 
 #include "CustomTimeperiodColumn.h"
+
 #include <unordered_map>
+
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "TimeperiodsCache.h"

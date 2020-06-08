@@ -4,8 +4,10 @@
 // source code package.
 
 #include "CustomVarsExplicitColumn.h"
+
 #include <unordered_map>
 #include <utility>
+
 #include "MonitoringCore.h"
 #include "Row.h"
 

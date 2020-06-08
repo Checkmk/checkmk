@@ -4,11 +4,13 @@
 // source code package.
 
 #include "LogEntry.h"
+
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
+
 #include "StringUtils.h"
 
 // 0123456789012345678901234567890

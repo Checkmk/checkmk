@@ -7,12 +7,14 @@
 #define Column_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "Filter.h"
 #include "Row.h"
 #include "contact_fwd.h"

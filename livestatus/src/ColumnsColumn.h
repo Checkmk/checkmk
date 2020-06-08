@@ -7,7 +7,9 @@
 #define ColumnsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "Column.h"
 #include "StringColumn.h"
 class Row;

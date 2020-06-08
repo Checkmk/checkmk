@@ -4,8 +4,10 @@
 // source code package.
 
 #include "Column.h"
+
 #include <iterator>
 #include <utility>
+
 #include "Logger.h"
 
 Column::Column(std::string name, std::string description, Offsets offsets)

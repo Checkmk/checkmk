@@ -4,9 +4,11 @@
 // source code package.
 
 #include "OffsetStringMacroColumn.h"
+
 #include <cstdlib>
 #include <type_traits>
 #include <utility>
+
 #include "Column.h"
 #include "MonitoringCore.h"
 #include "RegExp.h"

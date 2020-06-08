@@ -4,12 +4,14 @@
 // source code package.
 
 #include "CrashReport.h"
+
 #include <iosfwd>
 #include <optional>
 #include <regex>
 #include <system_error>
 #include <utility>
 #include <vector>  // IWYU pragma: keep
+
 #include "Logger.h"
 
 CrashReport::CrashReport(std::string id, std::string component)

@@ -4,11 +4,13 @@
 // source code package.
 
 #include "TableStatus.h"
+
 #include <atomic>
 #include <cstdint>
 #include <ctime>
 #include <filesystem>
 #include <memory>
+
 #include "Average.h"
 #include "BoolPointerColumn.h"
 #include "Column.h"

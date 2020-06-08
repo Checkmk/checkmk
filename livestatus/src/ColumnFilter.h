@@ -7,11 +7,13 @@
 #define ColumnFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <functional>
 #include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
+
 #include "Column.h"
 #include "Filter.h"
 #include "opids.h"

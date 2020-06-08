@@ -7,8 +7,10 @@
 #define Aggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <cmath>
 #include <functional>
+
 #include "Renderer.h"
 #include "Row.h"
 #include "contact_fwd.h"

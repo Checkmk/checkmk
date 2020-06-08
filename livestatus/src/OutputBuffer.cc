@@ -4,11 +4,14 @@
 // source code package.
 
 #include "OutputBuffer.h"
+
 #include <unistd.h>
+
 #include <cerrno>
 #include <chrono>
 #include <cstddef>
 #include <iomanip>
+
 #include "Logger.h"
 #include "Poller.h"
 

@@ -7,6 +7,7 @@
 #define LogCache_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <ctime>
 #include <map>

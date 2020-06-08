@@ -4,6 +4,7 @@
 // source code package.
 
 #include "DynamicServiceRRDColumn.h"
+
 #include "Column.h"
 #include "ServiceRRDColumn.h"
 

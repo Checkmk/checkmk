@@ -4,8 +4,10 @@
 // source code package.
 
 #include "CustomVarsDictColumn.h"
+
 #include <stdexcept>
 #include <utility>
+
 #include "CustomVarsDictFilter.h"
 #include "Filter.h"
 #include "Renderer.h"

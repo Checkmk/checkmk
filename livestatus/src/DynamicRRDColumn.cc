@@ -4,9 +4,11 @@
 // source code package.
 
 #include "DynamicRRDColumn.h"
+
 #include <cstdlib>
 #include <stdexcept>
 #include <vector>
+
 #include "strutil.h"
 
 DynamicRRDColumn::DynamicRRDColumn(const std::string &name,

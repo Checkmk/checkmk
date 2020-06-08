@@ -7,7 +7,9 @@
 #define OffsetSStringColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "StringColumn.h"
 class Row;
 

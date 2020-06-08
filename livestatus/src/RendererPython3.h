@@ -7,9 +7,11 @@
 #define RendererPython3_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <iosfwd>
 #include <string>
 #include <vector>
+
 #include "Renderer.h"
 #include "data_encoding.h"
 class Logger;

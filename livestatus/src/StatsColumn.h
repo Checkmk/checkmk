@@ -7,7 +7,9 @@
 #define StatsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <memory>
+
 #include "Column.h"
 #include "Filter.h"
 class Aggregator;

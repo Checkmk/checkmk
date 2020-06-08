@@ -4,7 +4,9 @@
 // source code package.
 
 #include "TableHostGroups.h"
+
 #include <memory>
+
 #include "Column.h"
 #include "HostListColumn.h"
 #include "HostListStateColumn.h"

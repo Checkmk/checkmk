@@ -7,8 +7,10 @@
 #define StringLambdaColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <functional>
 #include <string>
+
 #include "StringColumn.h"
 class Row;
 

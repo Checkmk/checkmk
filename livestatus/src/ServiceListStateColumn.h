@@ -7,8 +7,10 @@
 #define ServiceListStateColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <cstdint>
 #include <string>
+
 #include "Column.h"
 #include "IntColumn.h"
 class MonitoringCore;

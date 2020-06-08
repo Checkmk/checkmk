@@ -4,6 +4,7 @@
 // source code package.
 
 #include "OffsetDoubleColumn.h"
+
 #include "Row.h"
 
 double OffsetDoubleColumn::getValue(Row row) const {

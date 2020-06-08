@@ -4,11 +4,13 @@
 // source code package.
 
 #include "ServiceListStateColumn.h"
+
 #include "LogEntry.h"
 #include "Row.h"
 
 #ifdef CMC
 #include <memory>
+
 #include "Service.h"
 #include "State.h"
 #else

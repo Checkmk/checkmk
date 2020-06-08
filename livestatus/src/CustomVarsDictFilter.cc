@@ -4,11 +4,13 @@
 // source code package.
 
 #include "CustomVarsDictFilter.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+
 #include "CustomVarsDictColumn.h"
 #include "Filter.h"
 #include "RegExp.h"

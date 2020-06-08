@@ -7,6 +7,7 @@
 #define ServiceRRDColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include "RRDColumn.h"
 
 class Row;

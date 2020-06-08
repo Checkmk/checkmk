@@ -4,12 +4,14 @@
 // source code package.
 
 #include "PerfdataAggregator.h"
+
 #include <cmath>
 #include <functional>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+
 #include "Renderer.h"
 #include "Row.h"
 #include "StringColumn.h"

@@ -4,6 +4,7 @@
 // source code package.
 
 #include "TimeperiodColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC

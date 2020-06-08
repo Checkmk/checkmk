@@ -4,6 +4,7 @@
 // source code package.
 
 #include "HostGroupsColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC

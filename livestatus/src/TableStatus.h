@@ -7,7 +7,9 @@
 #define TableStatus_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "Table.h"
 #include "global_counters.h"
 #ifdef CMC

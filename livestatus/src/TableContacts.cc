@@ -4,6 +4,7 @@
 // source code package.
 
 #include "TableContacts.h"
+
 #include <algorithm>
 #include <iosfwd>
 #include <iterator>
@@ -11,6 +12,7 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+
 #include "AttributeListLambdaColumn.h"
 #include "AttributesLambdaColumn.h"
 #include "BoolLambdaColumn.h"

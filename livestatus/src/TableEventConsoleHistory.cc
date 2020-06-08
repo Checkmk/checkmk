@@ -4,7 +4,9 @@
 // source code package.
 
 #include "TableEventConsoleHistory.h"
+
 #include <memory>
+
 #include "Column.h"
 #include "Row.h"
 #include "TableEventConsoleEvents.h"

@@ -4,6 +4,7 @@
 // source code package.
 
 #include "RendererJSON.h"
+
 #include <ostream>
 class Logger;
 

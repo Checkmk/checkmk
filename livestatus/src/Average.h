@@ -7,6 +7,7 @@
 #define Average_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 
 // NOTE: The suppression below is necessary because cppcheck doesn't seem to

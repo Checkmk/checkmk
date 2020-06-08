@@ -4,6 +4,7 @@
 // source code package.
 
 #include "OffsetIntColumn.h"
+
 #include "Row.h"
 
 int32_t OffsetIntColumn::getValue(Row row,

@@ -4,9 +4,11 @@
 // source code package.
 
 #include "ServiceMetricsColumn.h"
+
 #include <algorithm>
 #include <filesystem>
 #include <iterator>
+
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Row.h"

@@ -4,6 +4,7 @@
 // source code package.
 
 #include "ColumnsColumn.h"
+
 #include "Row.h"
 #include "TableColumns.h"
 

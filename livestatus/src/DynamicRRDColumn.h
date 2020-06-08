@@ -7,8 +7,10 @@
 #define DynamicRRDColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <memory>
 #include <string>
+
 #include "Column.h"
 #include "DynamicColumn.h"
 #include "opids.h"

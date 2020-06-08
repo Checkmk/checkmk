@@ -7,6 +7,7 @@
 #include <deque>
 #include <memory>
 #include <optional>
+
 #include "Queue.h"
 #include "gtest/gtest.h"
 

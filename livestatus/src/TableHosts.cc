@@ -4,10 +4,12 @@
 // source code package.
 
 #include "TableHosts.h"
+
 #include <filesystem>
 #include <memory>
 #include <optional>
 #include <ostream>
+
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
 #include "Column.h"

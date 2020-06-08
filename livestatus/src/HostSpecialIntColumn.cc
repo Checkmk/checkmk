@@ -4,7 +4,9 @@
 // source code package.
 
 #include "HostSpecialIntColumn.h"
+
 #include <filesystem>
+
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "mk_inventory.h"

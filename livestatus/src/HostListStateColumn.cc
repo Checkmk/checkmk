@@ -4,11 +4,13 @@
 // source code package.
 
 #include "HostListStateColumn.h"
+
 #include "LogEntry.h"
 #include "Row.h"
 
 #ifdef CMC
 #include <unordered_set>
+
 #include "Host.h"
 #include "State.h"
 #else

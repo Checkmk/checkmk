@@ -4,6 +4,7 @@
 // source code package.
 
 #include "Average.h"
+
 #include <cmath>
 
 namespace {

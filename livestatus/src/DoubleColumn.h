@@ -7,9 +7,11 @@
 #define DoubleColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <memory>
 #include <string>
+
 #include "Column.h"
 #include "Filter.h"
 #include "contact_fwd.h"

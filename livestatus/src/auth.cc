@@ -4,6 +4,7 @@
 // source code package.
 
 #include "auth.h"
+
 #include "MonitoringCore.h"
 #include "contact_fwd.h"
 

@@ -7,6 +7,7 @@
 #include <fstream>
 #include <optional>
 #include <string>
+
 #include "CrashReport.h"
 #include "Logger.h"
 #include "NagiosCore.h"

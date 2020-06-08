@@ -4,8 +4,10 @@
 // source code package.
 
 #include "mk_logwatch.h"
+
 #include <ostream>
 #include <system_error>
+
 #include "Logger.h"
 #include "pnp4nagios.h"
 

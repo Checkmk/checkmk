@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <iterator>
 #include <string>
+
 #include "Column.h"
 #include "NagiosCore.h"
 #include "OffsetStringHostMacroColumn.h"

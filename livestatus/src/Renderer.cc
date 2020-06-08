@@ -4,10 +4,12 @@
 // source code package.
 
 #include "Renderer.h"
+
 #include <cmath>
 #include <ctime>
 #include <iomanip>
 #include <ostream>
+
 #include "Logger.h"
 #include "OStreamStateSaver.h"
 #include "RendererBrokenCSV.h"

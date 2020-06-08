@@ -7,9 +7,11 @@
 #define CustomVarsDictFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <memory>
 #include <string>
+
 #include "ColumnFilter.h"
 #include "Filter.h"
 #include "opids.h"

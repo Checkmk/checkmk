@@ -4,6 +4,7 @@
 // source code package.
 
 #include "DoubleColumn.h"
+
 #include "Aggregator.h"
 #include "DoubleAggregator.h"
 #include "DoubleFilter.h"

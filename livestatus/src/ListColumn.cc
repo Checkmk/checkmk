@@ -4,7 +4,9 @@
 // source code package.
 
 #include "ListColumn.h"
+
 #include <stdexcept>
+
 #include "Filter.h"
 #include "ListFilter.h"
 #include "Renderer.h"

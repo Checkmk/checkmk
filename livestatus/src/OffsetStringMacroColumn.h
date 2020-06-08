@@ -7,9 +7,11 @@
 #define OffsetStringMacroColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <memory>
 #include <optional>
 #include <string>
+
 #include "Column.h"
 #include "StringColumn.h"
 #include "nagios.h"

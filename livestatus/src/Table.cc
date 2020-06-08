@@ -4,7 +4,9 @@
 // source code package.
 
 #include "Table.h"
+
 #include <stdexcept>
+
 #include "Column.h"
 #include "DynamicColumn.h"
 #include "MonitoringCore.h"

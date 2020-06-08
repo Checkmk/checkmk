@@ -7,8 +7,10 @@
 #define CountAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <cstdint>
+
 #include "Aggregator.h"
 #include "contact_fwd.h"
 class Filter;

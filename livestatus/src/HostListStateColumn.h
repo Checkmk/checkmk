@@ -7,8 +7,10 @@
 #define HostListStateColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <cstdint>
 #include <string>
+
 #include "Column.h"
 #include "IntColumn.h"
 #include "ServiceListStateColumn.h"

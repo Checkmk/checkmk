@@ -4,7 +4,9 @@
 // source code package.
 
 #include "OffsetTimeColumn.h"
+
 #include <ctime>
+
 #include "Row.h"
 
 std::chrono::system_clock::time_point OffsetTimeColumn::getRawValue(

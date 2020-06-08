@@ -7,7 +7,9 @@
 #define TableCrashReports_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "Table.h"
 
 class MonitoringCore;

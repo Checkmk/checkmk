@@ -4,6 +4,7 @@
 // source code package.
 
 #include "TableStateHistory.h"
+
 #include <cstdint>
 #include <ctime>
 #include <memory>
@@ -14,6 +15,7 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
 #include "Column.h"
 #include "Filter.h"
 #include "HostServiceState.h"
@@ -47,6 +49,7 @@
 #define STATE_UNKNOWN 3
 #else
 #include <unordered_map>
+
 #include "auth.h"
 #include "nagios.h"
 #endif

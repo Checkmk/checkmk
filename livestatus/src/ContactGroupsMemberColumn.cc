@@ -4,6 +4,7 @@
 // source code package.
 
 #include "ContactGroupsMemberColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC

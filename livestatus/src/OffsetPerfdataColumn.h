@@ -7,7 +7,9 @@
 #define OffsetPerfdataColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <memory>
+
 #include "Column.h"
 #include "OffsetStringColumn.h"
 class Aggregator;

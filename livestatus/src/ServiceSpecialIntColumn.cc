@@ -4,6 +4,7 @@
 // source code package.
 
 #include "ServiceSpecialIntColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC

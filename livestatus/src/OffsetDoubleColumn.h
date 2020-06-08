@@ -7,6 +7,7 @@
 #define OffsetDoubleColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include "DoubleColumn.h"
 class Row;
 

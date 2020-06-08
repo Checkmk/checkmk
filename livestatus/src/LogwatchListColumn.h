@@ -7,10 +7,12 @@
 #define LogwatchListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <filesystem>
 #include <string>
 #include <vector>
+
 #include "Column.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"

@@ -7,6 +7,7 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
 #include "LogEntry.h"
 #include "gtest/gtest.h"
 

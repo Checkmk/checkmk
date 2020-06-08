@@ -4,10 +4,12 @@
 // source code package.
 
 #include "TimeperiodsCache.h"
+
 #include <ostream>
 #include <string>
 #include <type_traits>
 #include <utility>
+
 #include "Logger.h"
 
 extern timeperiod *timeperiod_list;

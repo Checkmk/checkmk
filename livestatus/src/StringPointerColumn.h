@@ -7,6 +7,7 @@
 #define StringPointerColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include "Column.h"
 #include "StringColumn.h"
 

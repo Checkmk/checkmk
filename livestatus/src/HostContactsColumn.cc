@@ -4,6 +4,7 @@
 // source code package.
 
 #include "HostContactsColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC
@@ -12,6 +13,7 @@
 #include "cmc.h"
 #else
 #include <unordered_set>
+
 #include "nagios.h"
 #endif
 

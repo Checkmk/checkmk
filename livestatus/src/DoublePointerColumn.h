@@ -7,6 +7,7 @@
 #define DoublePointerColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include "Column.h"
 #include "DoubleColumn.h"
 

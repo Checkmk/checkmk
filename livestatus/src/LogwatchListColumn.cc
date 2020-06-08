@@ -4,10 +4,12 @@
 // source code package.
 
 #include "LogwatchListColumn.h"
+
 #include <algorithm>
 #include <filesystem>
 #include <iterator>
 #include <ostream>
+
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "Row.h"

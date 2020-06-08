@@ -4,7 +4,9 @@
 // source code package.
 
 #include "HostSpecialDoubleColumn.h"
+
 #include <chrono>
+
 #include "Row.h"
 
 #ifdef CMC
@@ -13,6 +15,7 @@
 #include "Timeperiod.h"
 #else
 #include <ctime>
+
 #include "nagios.h"
 #endif
 

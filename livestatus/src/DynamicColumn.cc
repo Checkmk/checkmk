@@ -4,7 +4,9 @@
 // source code package.
 
 #include "DynamicColumn.h"
+
 #include <utility>
+
 #include "Column.h"
 #include "Logger.h"
 

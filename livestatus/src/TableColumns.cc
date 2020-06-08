@@ -4,8 +4,10 @@
 // source code package.
 
 #include "TableColumns.h"
+
 #include <map>
 #include <memory>
+
 #include "Column.h"
 #include "ColumnsColumn.h"
 #include "Query.h"

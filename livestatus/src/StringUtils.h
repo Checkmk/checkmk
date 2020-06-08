@@ -7,6 +7,7 @@
 #define StringUtils_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <cstddef>
 #include <ostream>

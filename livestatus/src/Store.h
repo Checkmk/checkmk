@@ -7,6 +7,7 @@
 #define Store_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <cstddef>
 #include <list>
 #include <map>
@@ -48,11 +49,13 @@ class OutputBuffer;
 
 #ifdef CMC
 #include <cstdint>
+
 #include "TableCachedStatehist.h"
 class Core;
 class Object;
 #else
 #include <mutex>
+
 #include "DowntimesOrComments.h"
 #include "nagios.h"
 #endif

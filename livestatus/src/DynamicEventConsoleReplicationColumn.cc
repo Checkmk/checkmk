@@ -4,12 +4,14 @@
 // source code package.
 
 #include "DynamicEventConsoleReplicationColumn.h"
+
 #include <filesystem>
 #include <iosfwd>
 #include <memory>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
 #include "BlobColumn.h"
 #include "Column.h"
 #include "EventConsoleConnection.h"

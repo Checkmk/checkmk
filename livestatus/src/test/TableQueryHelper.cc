@@ -4,6 +4,7 @@
 // source code package.
 
 #include "TableQueryHelper.h"
+
 #include "OutputBuffer.h"
 #include "Query.h"
 #include "Table.h"

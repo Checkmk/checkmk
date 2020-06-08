@@ -9,6 +9,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+
 #include "ListColumn.h"
 #include "contact_fwd.h"
 class Row;

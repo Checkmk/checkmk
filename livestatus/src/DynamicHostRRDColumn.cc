@@ -4,6 +4,7 @@
 // source code package.
 
 #include "DynamicHostRRDColumn.h"
+
 #include "Column.h"
 #include "HostRRDColumn.h"
 

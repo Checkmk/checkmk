@@ -7,10 +7,12 @@
 #define ListAttributesColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
+
 #include "Column.h"
 #include "CustomVarsDictColumn.h"
 #include "Filter.h"

@@ -4,8 +4,10 @@
 // source code package.
 
 #include "TableComments.h"
+
 #include <memory>
 #include <utility>
+
 #include "Column.h"
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"

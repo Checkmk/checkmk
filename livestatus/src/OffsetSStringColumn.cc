@@ -4,6 +4,7 @@
 // source code package.
 
 #include "OffsetSStringColumn.h"
+
 #include "Row.h"
 
 std::string OffsetSStringColumn::getValue(Row row) const {

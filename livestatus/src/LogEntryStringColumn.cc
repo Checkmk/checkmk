@@ -4,6 +4,7 @@
 // source code package.
 
 #include "LogEntryStringColumn.h"
+
 #include "LogEntry.h"
 #include "Row.h"
 

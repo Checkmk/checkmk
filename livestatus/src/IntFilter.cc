@@ -4,7 +4,9 @@
 // source code package.
 
 #include "IntFilter.h"
+
 #include <cstdlib>
+
 #include "Filter.h"
 #include "IntColumn.h"
 #include "Row.h"

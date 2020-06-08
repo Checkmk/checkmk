@@ -7,6 +7,7 @@
 #define BoolPointerColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include "IntColumn.h"
 
 class BoolPointerColumn : public IntColumn {

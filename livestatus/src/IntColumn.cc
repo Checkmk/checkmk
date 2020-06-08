@@ -4,6 +4,7 @@
 // source code package.
 
 #include "IntColumn.h"
+
 #include "Aggregator.h"
 #include "Filter.h"
 #include "IntAggregator.h"

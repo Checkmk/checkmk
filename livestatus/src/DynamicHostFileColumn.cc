@@ -4,9 +4,11 @@
 // source code package.
 
 #include "DynamicHostFileColumn.h"
+
 #include <filesystem>
 #include <stdexcept>
 #include <utility>
+
 #include "FileSystemHelper.h"
 #include "HostFileColumn.h"
 class Row;

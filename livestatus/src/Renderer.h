@@ -7,12 +7,14 @@
 #define Renderer_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <iosfwd>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "data_encoding.h"
 class CSVSeparators;
 class Logger;

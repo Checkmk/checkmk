@@ -7,6 +7,7 @@
 #define Logger_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <atomic>
 #include <cerrno>
 #include <chrono>

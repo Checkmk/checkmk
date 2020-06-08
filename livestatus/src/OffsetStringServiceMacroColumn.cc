@@ -4,7 +4,9 @@
 // source code package.
 
 #include "OffsetStringServiceMacroColumn.h"
+
 #include <optional>
+
 #include "OffsetStringHostMacroColumn.h"
 #include "Row.h"
 #include "nagios.h"

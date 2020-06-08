@@ -4,7 +4,9 @@
 // source code package.
 
 #include "RRDColumn.h"
+
 #include <rrd.h>
+
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
@@ -17,6 +19,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
 #include "Logger.h"
 #include "Metric.h"
 #include "MonitoringCore.h"

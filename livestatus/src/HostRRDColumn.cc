@@ -4,6 +4,7 @@
 // source code package.
 
 #include "HostRRDColumn.h"
+
 #include "Row.h"
 
 class host;

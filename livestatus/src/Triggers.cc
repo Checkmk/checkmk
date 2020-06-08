@@ -4,6 +4,7 @@
 // source code package.
 
 #include "Triggers.h"
+
 #include <stdexcept>
 
 // static

@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <string>
+
 #include "IntColumn.h"
 #include "contact_fwd.h"
 class Row;

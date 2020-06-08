@@ -10,12 +10,14 @@
 // https://github.com/include-what-you-use/include-what-you-use/issues/166
 // IWYU pragma: no_include <ext/alloc_traits.h>
 #include "config.h"
+
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <unistd.h>
+
 #include <algorithm>
 #include <atomic>
 #include <cerrno>
@@ -31,6 +33,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+
 #include "Average.h"
 #include "ChronoUtils.h"
 #include "InputBuffer.h"

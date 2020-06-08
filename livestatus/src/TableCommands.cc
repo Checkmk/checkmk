@@ -4,9 +4,11 @@
 // source code package.
 
 #include "TableCommands.h"
+
 #include <memory>
 #include <utility>
 #include <vector>
+
 #include "Column.h"
 #include "MonitoringCore.h"
 #include "Query.h"

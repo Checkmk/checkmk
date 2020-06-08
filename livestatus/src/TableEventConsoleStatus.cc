@@ -4,7 +4,9 @@
 // source code package.
 
 #include "TableEventConsoleStatus.h"
+
 #include <memory>
+
 #include "Column.h"
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)

@@ -4,9 +4,11 @@
 // source code package.
 
 #include "ServiceGroupMembersColumn.h"
+
 #include <algorithm>
 #include <iterator>
 #include <ostream>
+
 #include "Filter.h"
 #include "ListFilter.h"
 #include "Logger.h"
@@ -15,6 +17,7 @@
 
 #ifdef CMC
 #include <unordered_set>
+
 #include "Host.h"
 #include "LogEntry.h"
 #include "Service.h"

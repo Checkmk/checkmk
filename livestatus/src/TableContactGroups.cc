@@ -4,7 +4,9 @@
 // source code package.
 
 #include "TableContactGroups.h"
+
 #include <memory>
+
 #include "Column.h"
 #include "ContactGroupsMemberColumn.h"
 #include "MonitoringCore.h"

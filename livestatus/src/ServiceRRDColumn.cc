@@ -4,6 +4,7 @@
 // source code package.
 
 #include "ServiceRRDColumn.h"
+
 #include "Row.h"
 
 class service;

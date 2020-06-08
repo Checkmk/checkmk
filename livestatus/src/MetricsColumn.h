@@ -7,6 +7,7 @@
 #define MetricsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include "ListColumn.h"
 
 using MetricsColumn = ListColumn;

@@ -4,7 +4,9 @@
 // source code package.
 
 #include "StringColumn.h"
+
 #include <stdexcept>
+
 #include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"

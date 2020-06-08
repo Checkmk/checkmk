@@ -4,6 +4,7 @@
 // source code package.
 
 #include "TableLog.h"
+
 #include <bitset>
 #include <cstdint>
 #include <map>
@@ -12,6 +13,7 @@
 #include <optional>
 #include <stdexcept>
 #include <utility>
+
 #include "Column.h"
 #include "LogCache.h"
 #include "LogEntry.h"

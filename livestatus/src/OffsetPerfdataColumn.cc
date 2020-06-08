@@ -4,6 +4,7 @@
 // source code package.
 
 #include "OffsetPerfdataColumn.h"
+
 #include "Aggregator.h"
 #include "PerfdataAggregator.h"
 

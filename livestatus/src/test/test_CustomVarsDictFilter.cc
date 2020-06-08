@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+
 #include "Column.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsDictFilter.h"

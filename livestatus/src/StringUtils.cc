@@ -4,6 +4,7 @@
 // source code package.
 
 #include "StringUtils.h"
+
 #include <algorithm>
 #include <cctype>
 #include <sstream>

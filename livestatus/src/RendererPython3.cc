@@ -4,6 +4,7 @@
 // source code package.
 
 #include "RendererPython3.h"
+
 #include <ostream>
 class Logger;
 

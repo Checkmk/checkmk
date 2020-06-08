@@ -7,8 +7,10 @@
 #define TableColumns_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
 #include <vector>
+
 #include "ColumnsColumn.h"
 #include "Table.h"
 class Column;

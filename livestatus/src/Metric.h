@@ -7,12 +7,14 @@
 #define Metric_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <cstddef>
 #include <filesystem>
 #include <string>
 #include <system_error>
 #include <utility>
 #include <vector>
+
 #include "pnp4nagios.h"
 
 class Logger;

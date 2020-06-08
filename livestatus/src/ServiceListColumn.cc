@@ -4,8 +4,10 @@
 // source code package.
 
 #include "ServiceListColumn.h"
+
 #include <algorithm>
 #include <iterator>
+
 #include "Renderer.h"
 #include "Row.h"
 
@@ -13,6 +15,7 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_set>
+
 #include "Host.h"
 #include "LogEntry.h"
 #include "Service.h"
@@ -20,6 +23,7 @@
 #include "Timeperiod.h"
 #else
 #include <unordered_map>
+
 #include "MonitoringCore.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"

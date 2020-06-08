@@ -4,7 +4,9 @@
 // source code package.
 
 #include "TableEventConsoleRules.h"
+
 #include <memory>
+
 #include "Column.h"
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)

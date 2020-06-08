@@ -7,8 +7,10 @@
 #define DowntimeOrComment_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <ctime>
 #include <string>
+
 #include "nagios.h"
 class MonitoringCore;
 

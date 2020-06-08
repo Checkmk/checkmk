@@ -4,9 +4,11 @@
 // source code package.
 
 #include "StatsColumn.h"
+
 #include <ostream>
 #include <stdexcept>
 #include <utility>
+
 #include "Aggregator.h"
 #include "AndingFilter.h"
 #include "Column.h"

@@ -7,7 +7,9 @@
 #define IntAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
+
 #include "Aggregator.h"
 #include "IntColumn.h"
 #include "contact_fwd.h"

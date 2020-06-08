@@ -4,7 +4,9 @@
 // source code package.
 
 #include "TableServiceGroups.h"
+
 #include <memory>
+
 #include "Column.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"

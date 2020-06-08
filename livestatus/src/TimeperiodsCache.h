@@ -7,10 +7,12 @@
 #define TimeperiodsCache_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <map>
 #include <mutex>
 #include <string>
+
 #include "nagios.h"
 class Logger;
 

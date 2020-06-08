@@ -4,6 +4,7 @@
 // source code package.
 
 #include "EventConsoleConnection.h"
+
 #include <asio/basic_socket_streambuf.hpp>
 #include <asio/error.hpp>
 #include <asio/error_code.hpp>
@@ -14,6 +15,7 @@
 #include <system_error>
 #include <thread>
 #include <utility>
+
 #include "Logger.h"
 
 using namespace std::chrono_literals;

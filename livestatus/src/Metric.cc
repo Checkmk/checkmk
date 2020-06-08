@@ -4,7 +4,9 @@
 // source code package.
 
 #include "Metric.h"
+
 #include <sstream>
+
 #include "Logger.h"
 #include "StringUtils.h"
 

@@ -7,8 +7,10 @@
 #define AttributeListLambdaColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <functional>
 #include <string>
+
 #include "AttributeListAsIntColumn.h"
 #include "ListColumn.h"
 

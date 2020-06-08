@@ -4,10 +4,12 @@
 // source code package.
 
 #include "TableCrashReports.h"
+
 #include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
+
 #include "Column.h"
 #include "CrashReport.h"
 #include "DynamicColumn.h"

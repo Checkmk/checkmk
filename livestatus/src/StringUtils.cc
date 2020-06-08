@@ -104,7 +104,7 @@ std::string replace_all(const std::string &str, const std::string &from,
     result.reserve(str.size());
     size_t added_after_match = from.empty() ? 1 : 0;
     size_t pos = 0;
-    size_t match;
+    size_t match = 0;
     while ((match = str.find(from, pos)) != std::string::npos) {
         result.append(str, pos, match - pos)
             .append(to)

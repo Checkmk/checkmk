@@ -43,7 +43,7 @@ std::string refValueFor(const std::string &value, Logger *logger) {
     char *scan = &value_vec[0];
 
     modified_atttibutes values;
-    for (const char *t; (t = next_token(&scan, ',')) != nullptr;) {
+    for (const char *t = nullptr; (t = next_token(&scan, ',')) != nullptr;) {
         auto it = known_attributes.find(t);
         if (it == known_attributes.end()) {
             Informational(logger)

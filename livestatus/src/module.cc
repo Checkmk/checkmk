@@ -168,7 +168,6 @@ void livestatus_cleanup_after_fork() {
     // store_deinit();
     struct stat st;
 
-    int i;
     // We need to close our server and client sockets. Otherwise
     // our connections are inherited to host and service checks.
     // If we close our client connection in such a situation,
@@ -181,7 +180,7 @@ void livestatus_cleanup_after_fork() {
     // Es sind ja auch Dateideskriptoren offen, die von Threads gehalten
     // werden und nicht mehr in der Queue sind. Und in store_deinit()
     // wird mit mutexes rumgemacht....
-    for (i = 3; i < g_max_fd_ever; i++) {
+    for (int i = 3; i < g_max_fd_ever; i++) {
         if (0 == fstat(i, &st) && S_ISSOCK(st.st_mode)) {
             close(i);
         }
@@ -316,7 +315,7 @@ void start_threads() {
 
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-    size_t defsize;
+    size_t defsize = 0;
     if (pthread_attr_getstacksize(&attr, &defsize) == 0) {
         Debug(fl_logger_nagios) << "default stack size is " << defsize;
     }

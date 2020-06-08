@@ -456,7 +456,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 }
 
                 // Find state object for this host/service
-                HostServiceState *state;
+                HostServiceState *state = nullptr;
                 auto it_hst = state_info.find(key);
                 if (it_hst == state_info.end()) {
                     // Create state object that we also need for filtering right

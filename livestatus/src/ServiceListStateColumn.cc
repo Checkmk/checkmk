@@ -72,7 +72,7 @@ void ServiceListStateColumn::update(Type logictype, service *svc,
     int current_state = svc->current_state;
     bool has_been_checked = svc->has_been_checked != 0;
 #endif
-    int service_state;
+    int service_state = 0;
     Type lt;
     if (static_cast<int>(logictype) >= 60) {
         service_state = last_hard_state;

@@ -274,13 +274,13 @@ RRDColumn::Data RRDColumn::getData(Row row) const {
     // Now do the actual export. The library function rrd_xport mimicks the
     // command line API of rrd xport, but - fortunately - we get direct access
     // to a binary buffer with doubles. No parsing is required.
-    int xxsize;
-    time_t start;
-    time_t end;
-    unsigned long step;
-    unsigned long col_cnt;
-    char **legend_v;
-    rrd_value_t *rrd_data;
+    int xxsize = 0;
+    time_t start = 0;
+    time_t end = 0;
+    unsigned long step = 0;
+    unsigned long col_cnt = 0;
+    char **legend_v = nullptr;
+    rrd_value_t *rrd_data = nullptr;
 
     // Clear the RRD error float. RRDTool will not do this and immediately fail
     // if an error already occurred.

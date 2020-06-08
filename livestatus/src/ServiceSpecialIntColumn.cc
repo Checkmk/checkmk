@@ -19,16 +19,16 @@
 #endif
 
 int32_t ServiceSpecialIntColumn::getValue(
-    Row row, const contact* /* auth_user */) const {
+    Row row, const contact * /* auth_user */) const {
 #ifdef CMC
     (void)_mc;
-    if (const auto object = columnData<Object>(row)) {
+    if (const auto *const object = columnData<Object>(row)) {
         switch (_type) {
             case Type::real_hard_state: {
                 if (object->isCurrentStateOK()) {
                     return 0;
                 }
-                const auto state = object->state();
+                const auto *const state = object->state();
                 return state->_state_type == StateType::hard
                            ? state->_current_state
                            : state->_last_hard_state;

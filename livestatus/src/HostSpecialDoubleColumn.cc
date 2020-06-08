@@ -47,7 +47,7 @@ double HostSpecialDoubleColumn::getValue(Row row) const {
 #ifdef CMC
 // static
 double HostSpecialDoubleColumn::staleness(const Object *object) {
-    auto state = object->state();
+    const auto *state = object->state();
     std::chrono::system_clock::duration check_result_age;
     const Timeperiod *check_period = object->_check_period;
     std::chrono::system_clock::time_point last_period_change =

@@ -54,7 +54,7 @@ std::vector<HostListColumn::Member> HostListColumn::getMembers(
     std::vector<Member> members;
 #ifdef CMC
     (void)_mc;  // HACK
-    if (auto p = columnData<std::unordered_set<Host *>>(row)) {
+    if (const auto *p = columnData<std::unordered_set<Host *>>(row)) {
         for (const auto &hst : *p) {
             if (auth_user == nullptr || hst->hasContact(auth_user)) {
                 members.emplace_back(

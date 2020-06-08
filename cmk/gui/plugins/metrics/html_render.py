@@ -29,6 +29,8 @@ from cmk.gui.plugins.metrics.utils import render_color_icon
 from cmk.gui.plugins.metrics import artwork
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 
+from cmk.gui.utils.popups import MethodAjax
+
 RenderOutput = Union[HTML, str]
 
 #   .--HTML-Graphs---------------------------------------------------------.
@@ -285,12 +287,11 @@ def render_graph_add_to_icon_for_popup(graph_artwork, graph_data_range, graph_re
     return html.render_popup_trigger(
         content=icon_html,
         ident='add_visual',
-        what='add_visual',  # URL for content will be 'ajax_popup_' + what + '.py'
+        method=MethodAjax(endpoint='add_visual', url_vars=[("add_type", "pnpgraph")]),
         data=[
             element_type_name, None,
             graph_ajax_context(graph_artwork, graph_data_range, graph_render_options)
         ],
-        url_vars=[("add_type", "pnpgraph")],
         style="z-index:2")  # Ensures that graph canvas does not cover it
 
 

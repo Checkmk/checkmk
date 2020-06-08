@@ -39,6 +39,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.valuespec import (
     TextUnicode,
     TextAscii,
@@ -375,12 +376,12 @@ class ModeFolder(WatoMode):
                              title=_("Move this %s to another folder") % what_title,
                              cssclass="iconbutton"),
             ident="move_" + obj.name(),
-            what="move_to_folder",
-            url_vars=[
-                ("what", what),
-                ("ident", ident),
-                ("back_url", html.makeactionuri([])),
-            ],
+            method=MethodAjax(endpoint="move_to_folder",
+                              url_vars=[
+                                  ("what", what),
+                                  ("ident", ident),
+                                  ("back_url", html.makeactionuri([])),
+                              ]),
             style=style,
         )
 

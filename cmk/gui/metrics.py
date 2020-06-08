@@ -35,6 +35,7 @@ from cmk.gui.plugins.metrics.html_render import (
     host_service_graph_popup_cmk,
     host_service_graph_dashlet_cmk,
 )
+from cmk.gui.utils.popups import MethodAjax
 
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
@@ -712,12 +713,12 @@ def render_metrics_table(translated_metrics, host_name, service_description):
                                      title=_("Add this metric to dedicated graph"),
                                      cssclass="iconbutton"),
                     ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
-                    what="add_metric_to_graph",
-                    url_vars=[
-                        ("host", host_name),
-                        ("service", service_description),
-                        ("metric", metric_name),
-                    ]))
+                    method=MethodAjax(endpoint="add_metric_to_graph",
+                                      url_vars=[
+                                          ("host", host_name),
+                                          ("service", service_description),
+                                          ("metric", metric_name),
+                                      ])))
             output += "</td>"
         output += "</tr>"
     output += "</table>"

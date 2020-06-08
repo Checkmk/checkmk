@@ -106,7 +106,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
-from cmk.gui.utils.popups import PopupMethod, MethodAjax, MethodInline, MethodColorpicker
+from cmk.gui.utils.popups import PopupMethod, MethodAjax
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
@@ -3047,42 +3047,27 @@ class html(ABCHTMLGenerator):
     def popup_trigger(self,
                       content,
                       ident,
-                      what=None,
+                      method,
                       data=None,
-                      url_vars=None,
                       style=None,
-                      menu_content=None,
                       cssclass=None,
                       onclose=None,
-                      resizable=False,
-                      color_assignment=None):
-        # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[Tuple[str, str]]) -> None
+                      resizable=False):
+        # type: (HTML, str, PopupMethod, Any, Optional[str], Optional[str], Optional[str], bool) -> None
         self.write_html(
-            self.render_popup_trigger(content, ident, what, data, url_vars, style, menu_content,
-                                      cssclass, onclose, resizable, color_assignment))
+            self.render_popup_trigger(content, ident, method, data, style, cssclass, onclose,
+                                      resizable))
 
     def render_popup_trigger(self,
                              content,
                              ident,
-                             what=None,
+                             method,
                              data=None,
-                             url_vars=None,
                              style=None,
-                             menu_content=None,
                              cssclass=None,
                              onclose=None,
-                             resizable=False,
-                             color_assignment=None):
-        # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[Tuple[str, str]]) -> HTML
-        if what:
-            method = MethodAjax(what, url_vars)  # type: PopupMethod
-        elif menu_content:
-            method = MethodInline(menu_content)
-        elif color_assignment:
-            # FIXME: we have a special treatment for color pickers that we should get rid of
-            method = MethodColorpicker(color_assignment[0], color_assignment[1])
-        else:
-            raise ValueError('Cannot determine the method to open popup')
+                             resizable=False):
+        # type: (HTML, str, PopupMethod, Any, Optional[str], Optional[str], Optional[str], bool) -> HTML
 
         onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s);' % \
                     (json.dumps(ident),
@@ -3195,24 +3180,24 @@ class html(ABCHTMLGenerator):
             self.popup_trigger(
                 self.render_icon("menu", _("Add this view to..."), cssclass="iconbutton inline"),
                 'add_visual',
-                'add_visual',
+                MethodAjax(endpoint='add_visual', url_vars=[("add_type", mode_name)]),
                 data=[mode_name, encoded_vars, {
                     'name': self.request.var('view_name')
-                }],
-                url_vars=[("add_type", mode_name)])
+                }])
 
         # TODO: This should be handled by pagetypes.py
         elif self.myfile == "graph_collection":
 
-            self.popup_trigger(self.render_icon("menu",
-                                                _("Add this graph collection to..."),
-                                                cssclass="iconbutton inline"),
-                               'add_visual',
-                               'add_visual',
-                               data=["graph_collection", {}, {
-                                   'name': self.request.var('name')
-                               }],
-                               url_vars=[("add_type", "graph_collection")])
+            self.popup_trigger(
+                self.render_icon("menu",
+                                 _("Add this graph collection to..."),
+                                 cssclass="iconbutton inline"),
+                'add_visual',
+                MethodAjax(endpoint='add_visual', url_vars=[("add_type", "graph_collection")]),
+                data=["graph_collection", {}, {
+                    'name': self.request.var('name')
+                }],
+            )
 
         for img, tooltip in self.status_icons.items():
             if isinstance(tooltip, tuple):

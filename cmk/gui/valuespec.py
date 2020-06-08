@@ -60,6 +60,7 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.htmllib import Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.view_utils import render_labels
+from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 
 import livestatus
 
@@ -5759,13 +5760,13 @@ class IconSelector(ValueSpec):
         html.popup_trigger(
             content,
             varprefix + '_icon_selector',
-            'icon_selector',
-            url_vars=[
-                ('value', value),
-                ('varprefix', varprefix),
-                ('allow_empty', '1' if self._allow_empty else '0'),
-                ('back', html.makeuri([])),
-            ],
+            MethodAjax(endpoint='icon_selector',
+                       url_vars=[
+                           ('value', value),
+                           ('varprefix', varprefix),
+                           ('allow_empty', '1' if self._allow_empty else '0'),
+                           ('back', html.makeuri([])),
+                       ]),
             resizable=True,
         )
 
@@ -5894,9 +5895,9 @@ class Color(ValueSpec):
 
         html.popup_trigger(indicator,
                            varprefix + '_popup',
+                           MethodColorpicker(varprefix, value),
                            cssclass="colorpicker",
-                           onclose=self._on_change,
-                           color_assignment=(varprefix, value))
+                           onclose=self._on_change)
 
     def from_html_vars(self, varprefix):
         color = html.request.var(varprefix + '_value')

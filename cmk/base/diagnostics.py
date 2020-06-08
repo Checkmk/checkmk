@@ -13,6 +13,10 @@ import json
 from pathlib import Path
 import tempfile
 import platform
+import urllib.parse
+import requests
+
+import livestatus
 
 from cmk.utils.i18n import _
 import cmk.utils.paths
@@ -25,6 +29,7 @@ import cmk.utils.site as site
 from cmk.utils.diagnostics import (
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
+    OPT_PERFORMANCE_GRAPHS,
     DiagnosticsOptionalParameters,
 )
 
@@ -88,6 +93,9 @@ class DiagnosticsDump:
         if parameters.get(OPT_OMD_CONFIG):
             optional_elements.append(OMDConfigDiagnosticsElement())
 
+        if not cmk_version.is_raw_edition() and parameters.get(OPT_PERFORMANCE_GRAPHS):
+            optional_elements.append(PerformanceGraphsDiagnosticsElement())
+
         return optional_elements
 
     def create(self):
@@ -116,7 +124,7 @@ class DiagnosticsDump:
         for element in self.elements:
             filepath = element.add_or_get_file(tmp_dump_folder)
             if filepath is None:
-                console.verbose("  %s: No information\n" % element.title)
+                console.verbose("  %s: %s\n" % (element.title, element.error))
                 continue
             out.output("  %s: %s\n" % (element.title, element.description))
             filepaths.append(filepath)
@@ -155,6 +163,13 @@ class DiagnosticsDump:
 
 
 class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
+    def __init__(self):
+        # Set an informative error message if an error occurs during
+        # collecting information in ABCDiagnosticsElement.add_or_get_file.
+        # In this case the filepath should be 'None' and this message is
+        # shown on CL output.
+        self.error = ""
+
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -260,3 +275,88 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def _collect_infos(self):
         # type: () -> site.OMDConfig
         return site.get_omd_config()
+
+
+#   ---other dumps----------------------------------------------------------
+
+
+class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
+    @property
+    def ident(self):
+        # type: () -> str
+        return "performance_graphs"
+
+    @property
+    def title(self):
+        # type: () -> str
+        return _("Performance Graphs of Checkmk Server")
+
+    @property
+    def description(self):
+        # type: () -> str
+        return _("CPU load and utilization, Number of threads, Kernel Performance, "
+                 "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
+                 "25 hours and 35 days")
+
+    def add_or_get_file(self, tmp_dump_folder):
+        # type: (Path) -> Optional[Path]
+        checkmk_server_name = self._get_checkmk_server_name()
+        if checkmk_server_name is None:
+            self.error = "No Checkmk server found"
+            return None
+
+        response = self._get_response(checkmk_server_name)
+
+        if response.status_code != 200:
+            self.error = "HTTP error - %d (%s)" % (response.status_code, response.text)
+            return None
+
+        if "<html>" in response.text.lower():
+            self.error = "Login failed - Invalid automation user or secret"
+            return None
+
+        # Verify if it's a PDF document: The header must begin with
+        # "%PDF-" (hex: "25 50 44 46 2d")
+        if response.content[:5].hex() != "255044462d":
+            self.error = "Verification of PDF document header failed"
+            return None
+
+        filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".pdf")
+        with filepath.open("wb") as f:
+            f.write(response.content)
+
+        return filepath
+
+    def _get_checkmk_server_name(self):
+        # type: () -> Optional[str]
+        query = "GET hosts\nColumns: host_name\nFilter: host_labels = 'cmk/check_mk_server' 'yes'\n"
+        result = livestatus.LocalConnection().query(query)
+        try:
+            return result[0][0]
+        except IndexError:
+            return None
+
+    def _get_response(self, checkmk_server_name):
+        # type: (str) -> requests.Response
+        automation_secret = self._get_automation_secret()
+
+        omd_config = site.get_omd_config()
+        url = "http://%s:%s/%s/check_mk/report.py?" % (
+            omd_config["CONFIG_APACHE_TCP_ADDR"],
+            omd_config["CONFIG_APACHE_TCP_PORT"],
+            cmk_version.omd_site(),
+        ) + urllib.parse.urlencode([
+            ("_username", "automation"),
+            ("_secret", automation_secret),
+            ("host", checkmk_server_name),
+            ("name", "host_performance_graphs"),
+        ])
+
+        return requests.post(url, verify=False)
+
+    def _get_automation_secret(self):
+        # type: () -> str
+        automation_secret_filepath = Path(
+            cmk.utils.paths.var_dir).joinpath("web/automation/automation.secret")
+        with automation_secret_filepath.open("r", encoding="utf-8") as f:
+            return f.read().strip()

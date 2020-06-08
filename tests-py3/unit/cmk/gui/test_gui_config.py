@@ -529,6 +529,7 @@ def test_registered_permissions():
             'report.instant_graph_collection',
             'report.instant_view',
             'report.service_availability',
+            'report.host_performance_graphs',
             'sidesnap.cmc_stats',
             'sidesnap.reports',
             'view.allhosts_deploy',

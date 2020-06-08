@@ -7,6 +7,11 @@
 import json
 from pathlib import Path
 import shutil
+import collections
+import requests
+import pytest  # type: ignore[import]
+
+import livestatus
 
 import cmk.utils.paths
 import cmk.utils.packaging as packaging
@@ -314,4 +319,78 @@ CONFIG_TMPFS='on'""")
     ]):
         assert content[key] == value
 
+    shutil.rmtree(str(etc_omd_dir))
+
+
+def test_diagnostics_element_performance_graphs():
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
+    assert diagnostics_element.ident == "performance_graphs"
+    assert diagnostics_element.title == "Performance Graphs of Checkmk Server"
+    assert diagnostics_element.description == (
+        "CPU load and utilization, Number of threads, Kernel Performance, "
+        "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
+        "25 hours and 35 days")
+
+
+@pytest.mark.parametrize(
+    "host_attrs, status_code, text, content, error, filepath_result",
+    [
+        # no Checkmk server
+        ({}, 123, "", b"", "HTTP error - 123 ()", False),
+        ({}, 200, "<html>foo bar</html>", b"", "Login failed - Invalid automation user or secret",
+         False),
+        ({}, 200, "", b"", "Verification of PDF document header failed", False),
+        # Checkmk server
+        ({
+            'cmk/check_mk_server': 'yes'
+        }, 123, "", b"", "HTTP error - 123 ()", False),
+        ({
+            'cmk/check_mk_server': 'yes'
+        }, 200, "<html>foo bar</html>", b"", "Login failed - Invalid automation user or secret",
+         False),
+        ({
+            'cmk/check_mk_server': 'yes'
+        }, 200, "", b"", "Verification of PDF document header failed", False),
+        ({
+            'cmk/check_mk_server': 'yes'
+        }, 200, "", b"%PDF-", "", True),
+    ])
+def test_diagnostics_element_performance_graphs_content(monkeypatch, tmp_path, host_attrs,
+                                                        status_code, text, content, error,
+                                                        filepath_result):
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
+
+    class FakeLocalConnection:
+        def query(self, query):
+            return [["host-name", host_attrs]]
+
+    monkeypatch.setattr(livestatus, "LocalConnection", FakeLocalConnection)
+
+    FakeResponse = collections.namedtuple("FakeResponse", ["status_code", "text", "content"])
+    monkeypatch.setattr(requests, "post",
+                        lambda *arg, **kwargs: FakeResponse(status_code, text, content))
+
+    automation_dir = Path(cmk.utils.paths.var_dir) / "web" / "automation"
+    automation_dir.mkdir(parents=True, exist_ok=True)
+    with automation_dir.joinpath("automation.secret").open("w") as f:
+        f.write("my-123-password")
+
+    etc_omd_dir = Path(cmk.utils.paths.omd_root) / "etc" / "omd"
+    etc_omd_dir.mkdir(parents=True, exist_ok=True)
+    with etc_omd_dir.joinpath("site.conf").open("w") as f:
+        f.write("""CONFIG_APACHE_TCP_ADDR='127.0.0.1'
+CONFIG_APACHE_TCP_PORT='5000'""")
+
+    tmppath = Path(tmp_path).joinpath("tmp")
+    tmppath.mkdir(parents=True, exist_ok=True)
+    filepath = diagnostics_element.add_or_get_file(tmppath)
+
+    if filepath_result:
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("performance_graphs.pdf")
+    else:
+        assert filepath is None
+    assert diagnostics_element.error == error
+
+    shutil.rmtree(str(automation_dir))
     shutil.rmtree(str(etc_omd_dir))

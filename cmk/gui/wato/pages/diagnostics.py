@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Tuple
 
 import cmk.utils.paths
 from cmk.utils.diagnostics import (
@@ -13,7 +13,9 @@ from cmk.utils.diagnostics import (
     serialize_wato_parameters,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
+    OPT_PERFORMANCE_GRAPHS,
 )
+import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -25,6 +27,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Filename,
     FixedValue,
+    ValueSpec,
 )
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.background_job import BackgroundProcessInterface
@@ -122,31 +125,47 @@ class ModeDiagnostics(WatoMode):
                 ("opt_info",
                  Dictionary(
                      title=_("Optional information"),
-                     elements=[
-                         (OPT_LOCAL_FILES,
-                          FixedValue(
-                              True,
-                              totext="",
-                              title=_("Local Files"),
-                              help=_(
-                                  "List of installed, unpacked, optional files below OMD_ROOT/local. "
-                                  "This also includes information about installed MKPs."),
-                          )),
-                         (OPT_OMD_CONFIG,
-                          FixedValue(
-                              True,
-                              totext="",
-                              title=_("OMD Config"),
-                              help=_("Apache mode and TCP address and port, Core, "
-                                     "Liveproxy daemon and livestatus TCP mode, "
-                                     "Event daemon config, Multiste authorisation, "
-                                     "NSCA mode, TMP filesystem mode"),
-                          )),
-                     ],
+                     elements=self._get_optional_information_elements(),
                  )),
             ],
             optional_keys=False,
         )
+
+    def _get_optional_information_elements(self):
+        # type: () -> List[Tuple[str, ValueSpec]]
+        elements = [
+            (OPT_LOCAL_FILES,
+             FixedValue(
+                 True,
+                 totext="",
+                 title=_("Local Files"),
+                 help=_("List of installed, unpacked, optional files below OMD_ROOT/local. "
+                        "This also includes information about installed MKPs."),
+             )),
+            (OPT_OMD_CONFIG,
+             FixedValue(
+                 True,
+                 totext="",
+                 title=_("OMD Config"),
+                 help=_("Apache mode and TCP address and port, Core, "
+                        "Liveproxy daemon and livestatus TCP mode, "
+                        "Event daemon config, Multiste authorisation, "
+                        "NSCA mode, TMP filesystem mode"),
+             )),
+        ]  # type: List[Tuple[str, ValueSpec]]
+
+        if not cmk_version.is_raw_edition():
+            elements.append(
+                (OPT_PERFORMANCE_GRAPHS,
+                 FixedValue(
+                     True,
+                     totext="",
+                     title=_("Performance Graphs of Checkmk Server"),
+                     help=_("CPU load and utilization, Number of threads, Kernel Performance, "
+                            "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
+                            "25 hours and 35 days"),
+                 )))
+        return elements
 
 
 @gui_background_job.job_registry.register

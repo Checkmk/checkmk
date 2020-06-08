@@ -23,6 +23,7 @@ from cmk.utils.log import console
 from cmk.utils.diagnostics import (
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
+    OPT_PERFORMANCE_GRAPHS,
     DiagnosticsOptionalParameters,
 )
 
@@ -1778,25 +1779,40 @@ def mode_create_diagnostics_dump(options):
     cmk.base.diagnostics.create_diagnostics_dump(options)
 
 
+def _get_diagnostics_dump_sub_options():
+    # type: () -> List[Option]
+    sub_options = [
+        Option(
+            long_option=OPT_LOCAL_FILES,
+            short_help=("Pack a list of installed, unpacked, optional files below $OMD_ROOT/local. "
+                        "This also includes information about installed MKPs."),
+        ),
+        Option(
+            long_option=OPT_OMD_CONFIG,
+            short_help="Pack content of 'etc/omd/site.conf'",
+        ),
+    ]
+
+    if not cmk_version.is_raw_edition():
+        sub_options.append(
+            Option(
+                long_option=OPT_PERFORMANCE_GRAPHS,
+                short_help=(
+                    "Pack performance graphs like CPU load and utilization of Checkmk Server"),
+            ))
+    return sub_options
+
+
 modes.register(
-    Mode(long_option="create-diagnostics-dump",
-         handler_function=mode_create_diagnostics_dump,
-         short_help="Create diagnostics dump",
-         long_help=[
-             "Create a dump containing information for diagnostic analysis "
-             "in the folder var/check_mk/diagnostics."
-         ],
-         needs_config=False,
-         needs_checks=False,
-         sub_options=[
-             Option(
-                 long_option=OPT_LOCAL_FILES,
-                 short_help=(
-                     "Pack a list of installed, unpacked, optional files below $OMD_ROOT/local. "
-                     "This also includes information about installed MKPs."),
-             ),
-             Option(
-                 long_option=OPT_OMD_CONFIG,
-                 short_help="Pack content of 'etc/omd/site.conf'",
-             ),
-         ]))
+    Mode(
+        long_option="create-diagnostics-dump",
+        handler_function=mode_create_diagnostics_dump,
+        short_help="Create diagnostics dump",
+        long_help=[
+            "Create a dump containing information for diagnostic analysis "
+            "in the folder var/check_mk/diagnostics."
+        ],
+        needs_config=False,
+        needs_checks=False,
+        sub_options=_get_diagnostics_dump_sub_options(),
+    ))

@@ -229,7 +229,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
         if (it->second->_time < since) {
             return false;  // time limit exceeded
         }
-        const auto *entry = it->second.get();
+        auto *entry = it->second.get();
         // TODO(sp): Remove ugly casts.
         LogRow lr{
             entry,

@@ -926,13 +926,14 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
 
         for site_id, snapshot_settings in sorted(self._site_snapshot_settings.items(),
                                                  key=lambda x: x[0]):
+
+            site_globals = get_site_globals(site_id, snapshot_settings.site_config)
+
             # Generate site specific global settings file
             if snapshot_settings.create_pre_17_snapshot:
-                create_site_globals_file(site_id, snapshot_settings.work_dir,
-                                         snapshot_settings.site_config)
+                create_site_globals_file(site_id, snapshot_settings.work_dir, site_globals)
             else:
-                save_site_global_settings(snapshot_settings.site_config,
-                                          custom_site_path=snapshot_settings.work_dir)
+                save_site_global_settings(site_globals, custom_site_path=snapshot_settings.work_dir)
 
             if not self._site_snapshot_settings[site_id].create_pre_17_snapshot:
                 create_distributed_wato_files(Path(snapshot_settings.work_dir),
@@ -1848,16 +1849,14 @@ def _create_distributed_wato_file_for_dcd(base_dir):
         f.write(u"dcd_is_wato_remote_site = True\n")
 
 
-def create_site_globals_file(site_id, tmp_dir, site_config):
+def create_site_globals_file(site_id, tmp_dir, site_globals):
     # type: (SiteId, str, SiteConfiguration) -> None
     site_globals_dir = os.path.join(tmp_dir, "site_globals")
     store.makedirs(site_globals_dir)
-
-    site_globals = _get_site_globals(site_id, site_config)
     store.save_object_to_file(os.path.join(site_globals_dir, "sitespecific.mk"), site_globals)
 
 
-def _get_site_globals(site_id, site_config):
+def get_site_globals(site_id, site_config):
     # type: (SiteId, SiteConfiguration) -> Dict
     site_globals = site_config.get("globals", {}).copy()
     site_globals.update({

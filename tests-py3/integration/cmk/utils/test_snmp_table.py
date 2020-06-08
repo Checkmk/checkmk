@@ -128,9 +128,14 @@ def snmpsim_fixture(site, snmp_data_dir, tmp_path_factory):
     logger.debug("Stopped snmpsimd.")
 
 
-@pytest.fixture(name="snmp_config")
-def snmp_config_fixture(request, snmpsim, backend):
-    return SNMPHostConfig(
+@pytest.fixture(name="backend",
+                params=[ClassicSNMPBackend, StoredWalkSNMPBackend, InlineSNMPBackend])
+def backend_fixture(request, snmp_data_dir):
+    backend = request.param
+    if backend is None:
+        return pytest.skip("CEE feature only")
+
+    config = SNMPHostConfig(
         is_ipv6_primary=False,
         ipaddress="127.0.0.1",
         hostname="localhost",
@@ -149,14 +154,6 @@ def snmp_config_fixture(request, snmpsim, backend):
         record_stats=False,
     )
 
-
-@pytest.fixture(name="backend",
-                params=[ClassicSNMPBackend, StoredWalkSNMPBackend, InlineSNMPBackend])
-def backend_fixture(request, snmp_config, snmp_data_dir):
-    backend = request.param
-    if backend is None:
-        return pytest.skip("CEE feature only")
-
     snmpwalks_dir = cmk.utils.paths.snmpwalks_dir
     # Point the backend to the test walks shipped with the test file in git
     cmk.utils.paths.snmpwalks_dir = str(snmp_data_dir / "cmk-walk")
@@ -164,10 +161,15 @@ def backend_fixture(request, snmp_config, snmp_data_dir):
     assert snmp_data_dir.exists()
     assert (snmp_data_dir / "cmk-walk").exists()
 
-    yield backend(snmp_config)
+    yield backend(config)
 
     # Restore global variable.
     cmk.utils.paths.snmpwalks_dir = snmpwalks_dir
+
+
+@pytest.fixture(name="snmp_config")
+def snmp_config_fixture(backend):
+    return backend.config
 
 
 @pytest.fixture(autouse=True)

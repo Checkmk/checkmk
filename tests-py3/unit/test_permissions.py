@@ -33,7 +33,7 @@ _PERMISSIONS = [
     ('agents/special/lib/*', is_not_executable, []),
     ('agents/check_mk_agent.*', is_executable, ['check_mk_agent.spec']),
     ('agents/plugins/*', is_executable,
-     ['README', 'mk_filestats.pyc', 'mk_jolokia.pyc', 'mk_docker.pyc']),
+     ['README', 'mk_filestats.pyc', 'mk_jolokia.pyc', 'mk_docker.pyc', "Makefile"]),
     ('checks/*', is_not_executable, []),
     ('checkman/*', is_not_executable, []),
     ('inventory/*', is_not_executable, []),

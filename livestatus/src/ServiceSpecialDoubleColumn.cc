@@ -47,7 +47,7 @@ double ServiceSpecialDoubleColumn::getValue(Row row) const {
                          svc_member != nullptr; svc_member = svc_member->next) {
                         service *tmp_svc = svc_member->service_ptr;
                         if (strncmp(tmp_svc->check_command_ptr->name,
-                                    "check-mk", 9) == 0) {
+                                    "check-mk", 8) == 0) {
                             return check_result_age /
                                    ((tmp_svc->check_interval == 0
                                          ? 1

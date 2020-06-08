@@ -8,6 +8,7 @@
 import os
 from typing import Dict, List, Optional
 
+import cmk.utils.cleanup
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import OID, DecodedString, HostAddress, HostName, SNMPHostConfig
@@ -76,6 +77,9 @@ def cleanup_host_caches():
     global _g_walk_cache
     _g_walk_cache = {}
     _clear_other_hosts_oid_cache(None)
+
+
+cmk.utils.cleanup.register_cleanup(cleanup_host_caches)
 
 
 def host_cache_contains(name):

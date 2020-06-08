@@ -1562,11 +1562,12 @@ class AutomationGetAgentOutput(Automation):
                         output += "[%s] %s\n" % (source.id(), source_output)
             else:
                 host_config = snmp_utils.create_snmp_host_config(hostname)
+                backend = factory.backend(host_config, use_cache=False)
 
                 lines = []
                 for walk_oid in snmp.oids_to_walk():
                     try:
-                        for oid, value in snmp.walk_for_export(host_config, walk_oid):
+                        for oid, value in snmp.walk_for_export(walk_oid, backend=backend):
                             raw_oid_value = "%s %s\n" % (oid, value)
                             lines.append(ensure_binary(raw_oid_value))
                     except Exception as e:

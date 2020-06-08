@@ -16,7 +16,7 @@ from six import ensure_binary, ensure_str
 import cmk.utils.debug
 import cmk.utils.snmp_cache as snmp_cache
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     ABCSNMPBackend,
@@ -28,12 +28,6 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.utils.cleanup
-from cmk.fetchers import factory
-
-try:
-    from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=ungrouped-imports
-except ImportError:
-    inline = None  # type: ignore[assignment]
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 SNMPWalkOptions = Dict[str, List[OID]]
@@ -100,9 +94,8 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True, 
     return decoded_value
 
 
-def walk_for_export(snmp_config, oid):
-    # type: (SNMPHostConfig, OID) -> SNMPRowInfoForStoredWalk
-    backend = factory.backend(snmp_config, use_cache=False)
+def walk_for_export(oid, *, backend):
+    # type: (OID, ABCSNMPBackend) -> SNMPRowInfoForStoredWalk
     return _convert_rows_for_stored_walk(backend.walk(oid=oid))
 
 
@@ -218,37 +211,32 @@ def do_snmptranslate(walk_filename):
                                    for translation, line in translated_lines) + "\n")
 
 
-def do_snmpwalk(options, host_configs):
-    # type: (SNMPWalkOptions, List[SNMPHostConfig]) -> None
-    if "oids" in options and "extraoids" in options:
-        raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
-
-    if not host_configs:
-        raise MKBailOut("Please specify host names to walk on.")
-
+def do_snmpwalk(snmp_config, options, *, backend):
+    # type: (SNMPHostConfig, SNMPWalkOptions, ABCSNMPBackend) -> None
     if not os.path.exists(cmk.utils.paths.snmpwalks_dir):
         os.makedirs(cmk.utils.paths.snmpwalks_dir)
 
-    for snmp_config in host_configs:
-        #TODO: What about SNMP management boards?
-        try:
-            _do_snmpwalk_on(snmp_config, options,
-                            cmk.utils.paths.snmpwalks_dir + "/" + snmp_config.hostname)
-        except Exception as e:
-            console.error("Error walking %s: %s\n" % (snmp_config.hostname, e))
-            if cmk.utils.debug.enabled():
-                raise
-        cmk.utils.cleanup.cleanup_globals()
+    #TODO: What about SNMP management boards?
+    try:
+        _do_snmpwalk_on(snmp_config,
+                        options,
+                        cmk.utils.paths.snmpwalks_dir + "/" + snmp_config.hostname,
+                        backend=backend)
+    except Exception as e:
+        console.error("Error walking %s: %s\n" % (snmp_config.hostname, e))
+        if cmk.utils.debug.enabled():
+            raise
+    cmk.utils.cleanup.cleanup_globals()
 
 
-def _do_snmpwalk_on(snmp_config, options, filename):
-    # type: (SNMPHostConfig, SNMPWalkOptions, str) -> None
+def _do_snmpwalk_on(snmp_config, options, filename, *, backend):
+    # type: (SNMPHostConfig, SNMPWalkOptions, str, ABCSNMPBackend) -> None
     console.verbose("%s:\n" % snmp_config.hostname)
 
     oids = oids_to_walk(options)
 
     with Path(filename).open("w", encoding="utf-8") as file:
-        for rows in _execute_walks_for_dump(snmp_config, oids):
+        for rows in _execute_walks_for_dump(snmp_config, oids, backend=backend):
             for oid, value in rows:
                 file.write("%s %s\n" % (oid, value))
             console.verbose("%d variables.\n" % len(rows))
@@ -256,12 +244,12 @@ def _do_snmpwalk_on(snmp_config, options, filename):
     console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))
 
 
-def _execute_walks_for_dump(snmp_config, oids):
-    # type: (SNMPHostConfig, List[OID]) -> Iterable[SNMPRowInfoForStoredWalk]
+def _execute_walks_for_dump(snmp_config, oids, *, backend):
+    # type: (SNMPHostConfig, List[OID], ABCSNMPBackend) -> Iterable[SNMPRowInfoForStoredWalk]
     for oid in oids:
         try:
             console.verbose("Walk on \"%s\"..." % oid)
-            yield walk_for_export(snmp_config, oid)
+            yield walk_for_export(oid, backend=backend)
         except Exception as e:
             console.error("Error: %s\n" % e)
             if cmk.utils.debug.enabled():
@@ -287,19 +275,11 @@ def oids_to_walk(options=None):
     return sorted(oids, key=lambda x: list(map(int, x.strip(".").split("."))))
 
 
-def do_snmpget(oid, host_configs):
-    # type: (OID, List[SNMPHostConfig]) -> None
-    assert host_configs
-    for snmp_config in host_configs:
-        #TODO what about SNMP management boards?
-        backend = factory.backend(snmp_config)
-        snmp_cache.initialize_single_oid_cache(snmp_config)
+def do_snmpget(snmp_config, oid, *, backend):
+    # type: (SNMPHostConfig, OID, ABCSNMPBackend) -> None
+    #TODO what about SNMP management boards?
+    snmp_cache.initialize_single_oid_cache(snmp_config)
 
-        value = get_single_oid(snmp_config, oid, backend=backend)
-        sys.stdout.write("%s (%s): %r\n" % (snmp_config.hostname, snmp_config.ipaddress, value))
-        cmk.utils.cleanup.cleanup_globals()
-
-
-cmk.utils.cleanup.register_cleanup(snmp_cache.cleanup_host_caches)
-if inline:
-    cmk.utils.cleanup.register_cleanup(inline.cleanup_inline_snmp_globals)
+    value = get_single_oid(snmp_config, oid, backend=backend)
+    sys.stdout.write("%s (%s): %r\n" % (snmp_config.hostname, snmp_config.ipaddress, value))
+    cmk.utils.cleanup.cleanup_globals()

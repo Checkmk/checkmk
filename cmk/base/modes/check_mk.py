@@ -16,7 +16,7 @@ import cmk.utils.paths
 import cmk.utils.log as log
 import cmk.utils.debug
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKBailOut
+from cmk.utils.exceptions import MKBailOut, MKGeneralException
 import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import TagValue, HostgroupName
 from cmk.utils.log import console
@@ -843,8 +843,14 @@ def mode_snmpwalk(options, hostnames):
         options["oids"] = _oids
     if _extra_oids:
         options["extraoids"] = _extra_oids
+    if "oids" in options and "extraoids" in options:
+        raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
 
-    snmp.do_snmpwalk(options, [snmp_utils.create_snmp_host_config(host) for host in hostnames])
+    if not hostnames:
+        raise MKBailOut("Please specify host names to walk on.")
+
+    for snmp_config in (snmp_utils.create_snmp_host_config(host) for host in hostnames):
+        snmp.do_snmpwalk(snmp_config, options, backend=snmp_factory.backend(snmp_config))
 
 
 modes.register(
@@ -903,7 +909,10 @@ def mode_snmpget(args):
         cache = config.get_config_cache()
         hostnames.extend(host for host in cache.all_active_realhosts()
                          if cache.get_host_config(host).is_snmp_host)
-    snmp.do_snmpget(oid, [snmp_utils.create_snmp_host_config(host) for host in hostnames])
+
+    assert hostnames
+    for snmp_config in (snmp_utils.create_snmp_host_config(host) for host in hostnames):
+        snmp.do_snmpget(snmp_config, oid, backend=snmp_factory.backend(snmp_config))
 
 
 modes.register(

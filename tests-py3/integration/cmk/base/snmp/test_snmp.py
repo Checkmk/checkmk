@@ -21,6 +21,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import SNMPHostConfig
 
 import cmk.base.snmp as snmp
+from cmk.fetchers import factory
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
 try:
@@ -302,5 +303,6 @@ def test_walk_for_export(snmp_config, oid, expected_table):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    table = snmp.walk_for_export(snmp_config, oid)
+    backend = factory.backend(snmp_config, use_cache=False)
+    table = snmp.walk_for_export(oid, backend=backend)
     assert table == expected_table

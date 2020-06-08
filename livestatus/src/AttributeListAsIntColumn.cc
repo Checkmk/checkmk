@@ -65,7 +65,7 @@ std::unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
 
 int32_t AttributeListAsIntColumn::getValue(
     Row row, const contact * /*auth_user*/) const {
-    if (auto p = columnData<unsigned long>(row)) {
+    if (const auto *p = columnData<unsigned long>(row)) {
         return static_cast<int32_t>(*p);
     }
     return 0;
@@ -74,7 +74,7 @@ int32_t AttributeListAsIntColumn::getValue(
 std::vector<std::string> AttributeListAsIntColumn::getAttributes(
     Row row) const {
     std::vector<std::string> attributes;
-    if (auto p = columnData<unsigned long>(row)) {
+    if (const auto *p = columnData<unsigned long>(row)) {
         modified_atttibutes values(*p);
         for (const auto &entry : known_attributes) {
             if (values[entry.second]) {

@@ -44,7 +44,7 @@ std::optional<std::string> ServiceMacroExpander::expand(
 
 std::unique_ptr<MacroExpander> OffsetStringServiceMacroColumn::getMacroExpander(
     Row row) const {
-    auto svc = columnData<service>(row);
+    const auto *svc = columnData<service>(row);
     return std::make_unique<CompoundMacroExpander>(
         std::make_unique<HostMacroExpander>(svc->host_ptr, _mc),
         std::make_unique<CompoundMacroExpander>(

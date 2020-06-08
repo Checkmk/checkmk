@@ -35,7 +35,8 @@ struct TimePeriodValue {
 
 std::int32_t TimePeriodValue::operator()(Row row) {
     extern TimeperiodsCache* g_timeperiods_cache;
-    if (auto tp = row.rawData<TableTimeperiods::IRow>()->getTimePeriod()) {
+    if (const auto* tp =
+            row.rawData<TableTimeperiods::IRow>()->getTimePeriod()) {
         return g_timeperiods_cache->inTimeperiod(tp) ? 1 : 0;
     }
     return 1;  // unknown timeperiod is assumed to be 24X7
@@ -44,14 +45,14 @@ std::int32_t TimePeriodValue::operator()(Row row) {
 TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
     addColumn(std::make_unique<StringLambdaColumn>(
         "name", "The name of the timeperiod", [](Row row) -> std::string {
-            if (auto tp = row.rawData<IRow>()->getTimePeriod()) {
+            if (const auto* tp = row.rawData<IRow>()->getTimePeriod()) {
                 return tp->name;
             }
             return {};
         }));
     addColumn(std::make_unique<StringLambdaColumn>(
         "alias", "The alias of the timeperiod", [](Row row) -> std::string {
-            if (auto tp = row.rawData<IRow>()->getTimePeriod()) {
+            if (const auto* tp = row.rawData<IRow>()->getTimePeriod()) {
                 return tp->alias;
             }
             return {};

@@ -28,7 +28,7 @@ HostMetricsColumn::HostMetricsColumn(const std::string& name,
 std::vector<std::string> HostMetricsColumn::getValue(
     Row row, const contact* /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
-    auto* hst = columnData<host>(row);
+    const auto* hst = columnData<host>(row);
     if (hst == nullptr || hst->name == nullptr) {
         return {};
     }

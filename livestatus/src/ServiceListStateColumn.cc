@@ -20,13 +20,13 @@
 int32_t ServiceListStateColumn::getValue(Row row,
                                          const contact *auth_user) const {
 #ifdef CMC
-    if (auto p = columnData<Host::services_t>(row)) {
+    if (const auto *p = columnData<Host::services_t>(row)) {
         return getValueFromServices(_mc, _logictype, p, auth_user);
     }
     return 0;
 #else
     servicesmember *mem = nullptr;
-    if (auto p = columnData<servicesmember *>(row)) {
+    if (const auto *p = columnData<servicesmember *>(row)) {
         mem = *p;
     }
     return getValueFromServices(_mc, _logictype, mem, auth_user);

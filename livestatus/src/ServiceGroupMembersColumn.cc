@@ -83,8 +83,8 @@ ServiceGroupMembersColumn::getMembers(Row row, const contact *auth_user) const {
     std::vector<Member> members;
 #ifdef CMC
     (void)_mc;  // HACK
-    if (auto p = columnData<Host::services_t>(row)) {
-        for (auto &svc : *p) {
+    if (const auto *p = columnData<Host::services_t>(row)) {
+        for (const auto &svc : *p) {
             if (auth_user == nullptr || svc->hasContact(auth_user)) {
                 members.emplace_back(
                     svc->host()->name(), svc->name(),
@@ -94,7 +94,7 @@ ServiceGroupMembersColumn::getMembers(Row row, const contact *auth_user) const {
         }
     }
 #else
-    if (auto p = columnData<servicesmember *>(row)) {
+    if (const auto *p = columnData<servicesmember *>(row)) {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
             if (auth_user == nullptr ||

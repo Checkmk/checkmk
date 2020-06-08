@@ -63,7 +63,7 @@ std::vector<std::string> DowntimeColumn::getValue(
 }
 
 std::vector<DowntimeData> DowntimeColumn::downtimes_for_row(Row row) const {
-    if (auto data = columnData<void>(row)) {
+    if (const auto *data = columnData<void>(row)) {
         return _is_service
                    ? _mc->downtimes_for_service(
                          reinterpret_cast<const MonitoringCore::Service *>(

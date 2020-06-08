@@ -9,7 +9,7 @@
 
 int32_t OffsetBoolColumn::getValue(Row row,
                                    const contact* /* auth_user */) const {
-    if (auto p = columnData<bool>(row)) {
+    if (const auto* p = columnData<bool>(row)) {
         return *p ? 1 : 0;
     }
     return 0;

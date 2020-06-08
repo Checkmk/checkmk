@@ -40,7 +40,7 @@ std::unique_ptr<Aggregator> CustomVarsDictColumn::createAggregator(
 }
 
 Attributes CustomVarsDictColumn::getValue(Row row) const {
-    if (auto p = columnData<void>(row)) {
+    if (const auto *p = columnData<void>(row)) {
         return _mc->customAttributes(p, _kind);
     }
     return {};

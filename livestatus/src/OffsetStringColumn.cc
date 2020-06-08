@@ -8,7 +8,7 @@
 #include "Row.h"
 
 std::string OffsetStringColumn::getValue(Row row) const {
-    if (auto p = columnData<char *>(row)) {
+    if (const auto *p = columnData<char *>(row)) {
         return *p == nullptr ? "" : *p;
     }
     return "";

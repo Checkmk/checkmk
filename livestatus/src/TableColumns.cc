@@ -35,7 +35,7 @@ std::string TableColumns::namePrefix() const { return "column_"; }
 void TableColumns::addTable(const Table &table) { _tables.push_back(&table); }
 
 void TableColumns::answerQuery(Query *query) {
-    for (auto table : _tables) {
+    for (const auto *const table : _tables) {
         table->any_column([&](const auto &c) {
             return !query->processDataset(Row(c.get()));
         });
@@ -61,7 +61,7 @@ std::string TableColumns::getValue(const Column *column,
 }
 
 std::string TableColumns::tableNameOf(const Column *column) const {
-    for (auto table : _tables) {
+    for (const auto *const table : _tables) {
         if (table->any_column(
                 [&](const auto &c) { return c.get() == column; })) {
             return table->name();

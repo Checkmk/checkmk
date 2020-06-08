@@ -50,8 +50,8 @@ public:
     // NOLINTNEXTLINE(fuchsia-trailing-return)
     GetAttr(Member contact::*m, Default d) : m_{m}, d_{std::move(d)} {}
     Default operator()(Row row) {
-        auto r = row.rawData<Table::IRow>();
-        if (auto ct =
+        const auto *r = row.rawData<Table::IRow>();
+        if (const auto *ct =
                 dynamic_cast<const TableContacts::IRow *>(r)->getContact()) {
             return ct->*m_;
         }
@@ -69,8 +69,8 @@ class GetAttr<Member *, Default> {
 public:
     GetAttr(Member *contact::*m, Default d) : m_{m}, d_{std::move(d)} {}
     Default operator()(Row row) {
-        auto r = row.rawData<Table::IRow>();
-        if (auto ct =
+        const auto *r = row.rawData<Table::IRow>();
+        if (const auto *ct =
                 dynamic_cast<const TableContacts::IRow *>(r)->getContact()) {
             return ct->*m_ == nullptr ? d_ : ct->*m_;
         }
@@ -88,8 +88,8 @@ public:
     // NOLINTNEXTLINE(fuchsia-trailing-return)
     GetTimePeriod(Member *contact::*m, bool d) : m_{m}, d_{d} {}
     bool operator()(Row row) {
-        auto r = row.rawData<Table::IRow>();
-        if (auto ct =
+        const auto *r = row.rawData<Table::IRow>();
+        if (const auto *ct =
                 dynamic_cast<const TableContacts::IRow *>(r)->getContact()) {
             return g_timeperiods_cache->inTimeperiod(ct->*m_);
         }
@@ -106,10 +106,10 @@ public:
     GetCustomAttribute(const MonitoringCore *const mc, const AttributeKind kind)
         : mc_{mc}, kind_{kind} {}
     Attributes operator()(Row row) {
-        auto r = row.rawData<Table::IRow>();
-        if (auto ct =
+        const auto *r = row.rawData<Table::IRow>();
+        if (const auto *ct =
                 dynamic_cast<const TableContacts::IRow *>(r)->getContact()) {
-            if (auto p = ct->custom_variables) {
+            if (const auto *p = ct->custom_variables) {
                 return mc_->customAttributes(&p, kind_);
             }
         }
@@ -176,8 +176,9 @@ void TableContacts::addColumns(Table *table, const std::string &prefix) {
         table->addColumn(std::make_unique<StringLambdaColumn>(
             prefix + b, "The additional field " + b,
             [i](Row row) -> std::string {
-                auto r = row.rawData<Table::IRow>();
-                if (auto ct = dynamic_cast<const IRow *>(r)->getContact()) {
+                const auto *r = row.rawData<Table::IRow>();
+                if (const auto *ct =
+                        dynamic_cast<const IRow *>(r)->getContact()) {
                     return ct->address[i] == nullptr ? ""s : ct->address[i];
                 }
                 return ""s;

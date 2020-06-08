@@ -8,7 +8,7 @@
 #include "Row.h"
 
 double OffsetDoubleColumn::getValue(Row row) const {
-    if (auto p = columnData<double>(row)) {
+    if (const auto *p = columnData<double>(row)) {
         return *p;
     }
     return 0;

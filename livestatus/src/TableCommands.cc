@@ -38,12 +38,12 @@ private:
 void TableCommands::addColumns(Table *table, const std::string &prefix) {
     table->addColumn(std::make_unique<StringLambdaColumn>(
         prefix + "name", "The name of the command", [](Row row) {
-            auto r = row.rawData<Table::IRow>();
+            const auto *r = row.rawData<Table::IRow>();
             return dynamic_cast<const IRow *>(r)->getCommand()._name;
         }));
     table->addColumn(std::make_unique<StringLambdaColumn>(
         prefix + "line", "The shell command line", [](Row row) {
-            auto r = row.rawData<Table::IRow>();
+            const auto *r = row.rawData<Table::IRow>();
             return dynamic_cast<const IRow *>(r)->getCommand()._command_line;
         }));
 }

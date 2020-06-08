@@ -97,8 +97,8 @@ std::string expandMacros(const std::string &raw,
 std::string OffsetStringMacroColumn::getValue(Row row) const {
     // TODO(sp): Use _mc!
     (void)_mc;
-    if (auto p = columnData<void>(row)) {
-        auto s = offset_cast<const char *>(p, _string_offset);
+    if (const auto *p = columnData<void>(row)) {
+        const auto *s = offset_cast<const char *>(p, _string_offset);
         return *s == nullptr ? "" : expandMacros(*s, getMacroExpander(row));
     }
     return "";

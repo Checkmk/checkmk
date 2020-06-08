@@ -107,7 +107,7 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
         }
     }
 #else
-    if (auto p = columnData<servicesmember *>(row)) {
+    if (const auto *const p = columnData<servicesmember *>(row)) {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
             if (auth_user == nullptr ||

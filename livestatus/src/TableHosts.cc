@@ -60,7 +60,7 @@ std::string TableHosts::namePrefix() const { return "host_"; }
 // static
 void TableHosts::addColumns(Table *table, const std::string &prefix,
                             int indirect_offset, int extra_offset) {
-    auto mc = table->core();
+    auto *mc = table->core();
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "name", "Host name",
         Column::Offsets{indirect_offset, extra_offset, -1,
@@ -704,7 +704,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [mc]() { return mc->mkInventoryPath(); },
         [](const Column &col,
            const Row &row) -> std::optional<std::filesystem::path> {
-            if (auto hst = col.columnData<host>(row)) {
+            if (const auto *hst = col.columnData<host>(row)) {
                 return hst->name;
             }
             return {};
@@ -716,7 +716,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [mc]() { return mc->mkInventoryPath(); },
         [](const Column &col,
            const Row &row) -> std::optional<std::filesystem::path> {
-            if (auto hst = col.columnData<host>(row)) {
+            if (const auto *hst = col.columnData<host>(row)) {
                 return std::string{hst->name} + ".gz";
             }
             return {};
@@ -728,7 +728,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [mc]() { return mc->structuredStatusPath(); },
         [](const Column &col,
            const Row &row) -> std::optional<std::filesystem::path> {
-            if (auto hst = col.columnData<host>(row)) {
+            if (const auto *hst = col.columnData<host>(row)) {
                 return hst->name;
             }
             return {};
@@ -745,7 +745,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [mc]() { return mc->mkLogwatchPath(); },
         [](const Column &col, const Row &row,
            const std::string &args) -> std::optional<std::filesystem::path> {
-            if (auto hst = col.columnData<host>(row)) {
+            if (const auto *hst = col.columnData<host>(row)) {
                 return std::filesystem::path{hst->name} / args;
             }
             return {};

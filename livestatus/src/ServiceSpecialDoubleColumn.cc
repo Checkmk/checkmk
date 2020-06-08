@@ -19,14 +19,14 @@ class Object;
 
 double ServiceSpecialDoubleColumn::getValue(Row row) const {
 #ifdef CMC
-    if (auto object = columnData<Object>(row)) {
+    if (const auto *object = columnData<Object>(row)) {
         switch (_type) {
             case Type::staleness:
                 return HostSpecialDoubleColumn::staleness(object);
         }
     }
 #else
-    if (auto svc = columnData<service>(row)) {
+    if (const auto *svc = columnData<service>(row)) {
         switch (_type) {
             case Type::staleness: {
                 extern int interval_length;

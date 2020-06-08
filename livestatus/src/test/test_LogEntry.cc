@@ -136,7 +136,7 @@ TEST(LogEntry, InitialHostStateWithoutLongOutput) {
 }
 
 TEST(LogEntry, InitialHostStateWithMultiLine) {
-    auto line =
+    const auto* line =
         R"([1551424305] INITIAL HOST STATE: huey;UP;HARD;7;Krasser Output;Laaanger\nLong\nOutput)";
     LogEntry e{42, line};
     EXPECT_EQ(42, e._lineno);

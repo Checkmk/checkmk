@@ -22,7 +22,7 @@ std::vector<std::string> HostGroupsColumn::getValue(
     std::vector<std::string> group_names;
 #ifdef CMC
     (void)_mc;  // HACK
-    if (auto object = columnData<Object>(row)) {
+    if (const auto *object = columnData<Object>(row)) {
         for (const auto &og : object->_groups) {
             if (og->isContactAuthorized(auth_user)) {
                 group_names.push_back(og->name());
@@ -30,9 +30,9 @@ std::vector<std::string> HostGroupsColumn::getValue(
         }
     }
 #else
-    if (auto p = columnData<objectlist *>(row)) {
+    if (const auto *p = columnData<objectlist *>(row)) {
         for (objectlist *list = *p; list != nullptr; list = list->next) {
-            auto hg = static_cast<hostgroup *>(list->object_ptr);
+            auto *hg = static_cast<hostgroup *>(list->object_ptr);
             if (is_authorized_for_host_group(_mc, hg, auth_user)) {
                 group_names.emplace_back(hg->group_name);
             }

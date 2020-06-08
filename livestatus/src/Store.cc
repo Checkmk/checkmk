@@ -291,7 +291,7 @@ void Store::answerCommandNagios(const ExternalCommand &command) {
     std::lock_guard<std::mutex> lg(_command_mutex);
     auto command_str = command.str();
     // The Nagios headers are (once again) not const-correct...
-    auto cmd = const_cast<char *>(command_str.c_str());
+    auto *cmd = const_cast<char *>(command_str.c_str());
 #ifdef NAGIOS4
     process_external_command1(cmd);
 #else

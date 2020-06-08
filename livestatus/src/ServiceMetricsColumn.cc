@@ -23,7 +23,7 @@ ServiceMetricsColumn::ServiceMetricsColumn(const std::string& name,
 std::vector<std::string> ServiceMetricsColumn::getValue(
     Row row, const contact* /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
-    auto* svc = columnData<service>(row);
+    const auto* svc = columnData<service>(row);
     if (svc == nullptr || svc->host_name == nullptr ||
         svc->description == nullptr) {
         return {};

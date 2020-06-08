@@ -190,7 +190,7 @@ void livestatus_cleanup_after_fork() {
 
 void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
-    auto logger = fl_core->loggerLivestatus();
+    auto *logger = fl_core->loggerLivestatus();
     auto last_update_status = std::chrono::system_clock::now();
     while (!fl_should_terminate) {
         do_statistics();
@@ -227,7 +227,7 @@ void *main_thread(void *data) {
 
 void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
-    auto logger = fl_core->loggerLivestatus();
+    auto *logger = fl_core->loggerLivestatus();
     while (!fl_should_terminate) {
         g_num_queued_connections--;
         g_livestatus_active_connections++;
@@ -296,7 +296,7 @@ void start_threads() {
         return;
     }
 
-    auto logger = fl_core->loggerLivestatus();
+    auto *logger = fl_core->loggerLivestatus();
     logger->setLevel(fl_livestatus_log_level);
     logger->setUseParentHandlers(false);
     try {
@@ -458,12 +458,12 @@ int broker_host(int event_type __attribute__((__unused__)),
 int broker_check(int event_type, void *data) {
     int result = NEB_OK;
     if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
-        auto c = static_cast<nebstruct_service_check_data *>(data);
+        auto *c = static_cast<nebstruct_service_check_data *>(data);
         if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
             counterIncrement(Counter::service_checks);
         }
     } else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
-        auto c = static_cast<nebstruct_host_check_data *>(data);
+        auto *c = static_cast<nebstruct_host_check_data *>(data);
         if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
             counterIncrement(Counter::host_checks);
         }
@@ -473,7 +473,7 @@ int broker_check(int event_type, void *data) {
 }
 
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
-    auto co = static_cast<nebstruct_comment_data *>(data);
+    auto *co = static_cast<nebstruct_comment_data *>(data);
     fl_core->registerComment(co);
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::comment);
@@ -481,7 +481,7 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 }
 
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
-    auto dt = static_cast<nebstruct_downtime_data *>(data);
+    auto *dt = static_cast<nebstruct_downtime_data *>(data);
     fl_core->registerDowntime(dt);
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::downtime);
@@ -502,7 +502,7 @@ int broker_log(int event_type __attribute__((__unused__)),
 
 // called twice (start/end) for each external command, even builtin ones
 int broker_command(int event_type __attribute__((__unused__)), void *data) {
-    auto sc = static_cast<nebstruct_external_command_data *>(data);
+    auto *sc = static_cast<nebstruct_external_command_data *>(data);
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
         counterIncrement(Counter::commands);
         if (sc->command_type == CMD_CUSTOM_COMMAND &&
@@ -535,14 +535,14 @@ void livestatus_log_initial_states() {
     extern scheduled_downtime *scheduled_downtime_list;
     // It's a bit unclear if we need to log downtimes of hosts *before*
     // their corresponding service downtimes, so let's play safe...
-    for (auto dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
+    for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
         if (dt->is_in_effect != 0 && dt->type == HOST_DOWNTIME) {
             Informational(fl_logger_nagios)
                 << "HOST DOWNTIME ALERT: " << dt->host_name << ";STARTED;"
                 << dt->comment;
         }
     }
-    for (auto dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
+    for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
         if (dt->is_in_effect != 0 && dt->type == SERVICE_DOWNTIME) {
             Informational(fl_logger_nagios)
                 << "SERVICE DOWNTIME ALERT: " << dt->host_name << ";"
@@ -554,7 +554,7 @@ void livestatus_log_initial_states() {
 
 int broker_event(int event_type __attribute__((__unused__)), void *data) {
     counterIncrement(Counter::neb_callbacks);
-    auto ts = static_cast<struct nebstruct_timed_event_struct *>(data);
+    auto *ts = static_cast<struct nebstruct_timed_event_struct *>(data);
     if (ts->event_type == EVENT_LOG_ROTATION) {
         if (g_thread_running == 1) {
             livestatus_log_initial_states();
@@ -568,7 +568,7 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
 }
 
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
-    auto ps = static_cast<struct nebstruct_process_struct *>(data);
+    auto *ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
             fl_core = new NagiosCore(fl_paths, fl_limits, fl_authorization,

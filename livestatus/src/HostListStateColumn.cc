@@ -20,7 +20,7 @@
 int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
     int32_t result = 0;
 #ifdef CMC
-    if (auto p = columnData<std::unordered_set<Host *>>(row)) {
+    if (const auto *p = columnData<std::unordered_set<Host *>>(row)) {
         for (auto hst : *p) {
             if (auth_user == nullptr || hst->hasContact(auth_user)) {
                 update(hst, auth_user, result);
@@ -28,7 +28,7 @@ int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
         }
     }
 #else
-    if (auto p = columnData<hostsmember *>(row)) {
+    if (const auto *p = columnData<hostsmember *>(row)) {
         for (hostsmember *mem = *p; mem != nullptr; mem = mem->next) {
             host *hst = mem->host_ptr;
             if (auth_user == nullptr ||

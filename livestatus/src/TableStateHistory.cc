@@ -416,9 +416,9 @@ void TableStateHistory::answerQuery(Query *query) {
         HostServiceKey key = nullptr;
         bool is_service = false;
         // TODO(sp): Remove ugly casts.
-        auto entry_host =
+        auto *entry_host =
             reinterpret_cast<host *>(core()->find_host(entry->_host_name));
-        auto entry_service = reinterpret_cast<service *>(core()->find_service(
+        auto *entry_service = reinterpret_cast<service *>(core()->find_service(
             entry->_host_name, entry->_service_description));
         switch (entry->_kind) {
             case LogEntryKind::none:
@@ -507,7 +507,7 @@ void TableStateHistory::answerQuery(Query *query) {
                         state->_notification_period =
                             state->_service->notificationPeriod()->name();
 #else
-                        auto np = state->_service->notification_period;
+                        const auto *np = state->_service->notification_period;
                         state->_notification_period = np == nullptr ? "" : np;
 #endif
                     } else if (state->_host != nullptr) {
@@ -515,7 +515,7 @@ void TableStateHistory::answerQuery(Query *query) {
                         state->_notification_period =
                             state->_host->notificationPeriod()->name();
 #else
-                        auto np = state->_host->notification_period;
+                        const auto *np = state->_host->notification_period;
                         state->_notification_period = np == nullptr ? "" : np;
 #endif
                     } else {
@@ -924,7 +924,7 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
 }
 
 bool TableStateHistory::isAuthorized(Row row, const contact *ctc) const {
-    auto entry = rowData<HostServiceState>(row);
+    const auto *entry = rowData<HostServiceState>(row);
     service *svc = entry->_service;
     host *hst = entry->_host;
     return (hst != nullptr || svc != nullptr) &&

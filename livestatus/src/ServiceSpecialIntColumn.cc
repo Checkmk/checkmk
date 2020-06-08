@@ -22,13 +22,13 @@ int32_t ServiceSpecialIntColumn::getValue(
     Row row, const contact* /* auth_user */) const {
 #ifdef CMC
     (void)_mc;
-    if (auto object = columnData<Object>(row)) {
+    if (const auto object = columnData<Object>(row)) {
         switch (_type) {
             case Type::real_hard_state: {
                 if (object->isCurrentStateOK()) {
                     return 0;
                 }
-                auto state = object->state();
+                const auto state = object->state();
                 return state->_state_type == StateType::hard
                            ? state->_current_state
                            : state->_last_hard_state;
@@ -38,7 +38,7 @@ int32_t ServiceSpecialIntColumn::getValue(
         }
     }
 #else
-    if (auto svc = columnData<service>(row)) {
+    if (const auto* const svc = columnData<service>(row)) {
         switch (_type) {
             case Type::real_hard_state:
                 if (svc->current_state == STATE_OK) {

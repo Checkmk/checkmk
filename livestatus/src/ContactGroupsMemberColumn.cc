@@ -17,14 +17,14 @@ std::vector<std::string> ContactGroupsMemberColumn::getValue(
     Row row, const contact* /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
 #ifdef CMC
-    if (auto cg = columnData<ContactGroup>(row)) {
+    if (const auto* cg = columnData<ContactGroup>(row)) {
         return cg->contactNames();
     }
     return {};
 #else
     std::vector<std::string> names;
-    if (auto cg = columnData<contactgroup>(row)) {
-        for (auto cm = cg->members; cm != nullptr; cm = cm->next) {
+    if (const auto* cg = columnData<contactgroup>(row)) {
+        for (auto* cm = cg->members; cm != nullptr; cm = cm->next) {
             names.emplace_back(cm->contact_ptr->name);
         }
     }

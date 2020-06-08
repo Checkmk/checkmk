@@ -9,7 +9,7 @@
 #include "Row.h"
 
 std::string LogEntryStringColumn::getValue(Row row) const {
-    if (auto p = columnData<LogEntry>(row)) {
+    if (const auto *const p = columnData<LogEntry>(row)) {
         return p->state_info();
     }
     return "";

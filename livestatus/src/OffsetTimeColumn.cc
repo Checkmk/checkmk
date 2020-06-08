@@ -11,7 +11,7 @@
 
 std::chrono::system_clock::time_point OffsetTimeColumn::getRawValue(
     Row row) const {
-    if (auto p = columnData<time_t>(row)) {
+    if (const auto *p = columnData<time_t>(row)) {
         return std::chrono::system_clock::from_time_t(*p);
     }
     return {};

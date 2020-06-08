@@ -65,7 +65,7 @@ std::vector<HostListColumn::Member> HostListColumn::getMembers(
         }
     }
 #else
-    if (auto p = columnData<hostsmember *>(row)) {
+    if (const auto *const p = columnData<hostsmember *>(row)) {
         for (const hostsmember *mem = *p; mem != nullptr; mem = mem->next) {
             host *hst = mem->host_ptr;
             if (auth_user == nullptr ||

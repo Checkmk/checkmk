@@ -182,14 +182,14 @@ std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     const RRDColumn::Table &table) const {
     switch (table) {
         case RRDColumn::Table::services: {
-            auto svc = static_cast<const service *>(object);
+            const auto *svc = static_cast<const service *>(object);
             return {rrdPath() / svc->host_name /
                         pnp_cleanup(std::string{svc->description} + "_" +
                                     name.string() + ".rrd"),
                     "1"};
         }
         case RRDColumn::Table::hosts: {
-            auto hst = static_cast<const host *>(object);
+            const auto *hst = static_cast<const host *>(object);
             return {rrdPath() / hst->name /
                         pnp_cleanup(std::string{"_HOST_"} + "_" +
                                     name.string() + ".rrd"),
@@ -244,9 +244,9 @@ std::string b16decode(const std::string &hex) {
 
 Attributes NagiosCore::customAttributes(const void *holder,
                                         AttributeKind kind) const {
-    auto h = *static_cast<const customvariablesmember *const *>(holder);
+    const auto *h = *static_cast<const customvariablesmember *const *>(holder);
     Attributes attrs;
-    for (auto cvm = h; cvm != nullptr; cvm = cvm->next) {
+    for (const auto *cvm = h; cvm != nullptr; cvm = cvm->next) {
         auto [k, name] = to_attribute_kind(cvm->variable_name);
         if (k == kind) {
             switch (kind) {

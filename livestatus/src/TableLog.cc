@@ -209,7 +209,7 @@ void TableLog::answerQuery(Query *query) {
     }
 
     while (true) {
-        auto entries =
+        const auto *entries =
             it->second->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
         if (!answerQueryReverse(entries, query, since, until)) {
             break;  // end of time range found
@@ -229,7 +229,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
         if (it->second->_time < since) {
             return false;  // time limit exceeded
         }
-        auto entry = it->second.get();
+        const auto *entry = it->second.get();
         // TODO(sp): Remove ugly casts.
         LogRow lr{
             entry,
@@ -247,7 +247,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
 }
 
 bool TableLog::isAuthorized(Row row, const contact *ctc) const {
-    auto lr = rowData<LogRow>(row);
+    const auto *lr = rowData<LogRow>(row);
     service *svc = lr->svc;
     host *hst = lr->hst;
 

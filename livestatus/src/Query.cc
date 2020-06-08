@@ -42,7 +42,7 @@ using namespace std::chrono_literals;
 
 namespace {
 std::string nextStringArgument(char **line) {
-    if (auto value = next_field(line)) {
+    if (auto *value = next_field(line)) {
         return value;
     }
     throw std::runtime_error("missing argument");
@@ -88,7 +88,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _logger(logger) {
     FilterStack filters;
     FilterStack wait_conditions;
-    for (auto &line : lines) {
+    for (const auto &line : lines) {
         auto stripped_line = mk::rstrip(line);
         if (stripped_line.empty()) {
             break;

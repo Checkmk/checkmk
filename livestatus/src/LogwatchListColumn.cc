@@ -55,11 +55,11 @@ std::filesystem::path LogwatchListColumn::getDirectory(Row row) const {
 
 std::string LogwatchListColumn::getHostName(Row row) const {
 #ifdef CMC
-    if (auto hst = columnData<Host>(row)) {
+    if (const auto *hst = columnData<Host>(row)) {
         return hst->name();
     }
 #else
-    if (auto hst = columnData<host>(row)) {
+    if (const auto *hst = columnData<host>(row)) {
         return hst->name;
     }
 #endif

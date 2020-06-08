@@ -135,56 +135,16 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, r
         onclose: onclose,
     });
 
-    var container = trigger_obj.parentNode;
-
-    let menu;
-    if (method.type === "colorpicker") {
-        menu = generate_colorpicker_body(trigger_obj, method.varprefix);
-    } else {
-        menu = document.createElement("div");
-        menu.setAttribute("id", "popup_menu");
-        menu.className = "popup_menu";
-
-        var wrapper = document.createElement("div");
-        wrapper.className = "wrapper";
-
-        var content = document.createElement("div");
-        content.className = "content";
-        wrapper.appendChild(content);
-        menu.appendChild(wrapper);
-    }
-
-    if (resizable)
-        utils.add_class(menu, "resizable");
-
-    container.appendChild(menu);
-    fix_popup_menu_position(event, menu);
+    const container = trigger_obj.parentNode;
+    const content = generate_menu(container, resizable);
 
     if (method.type === "colorpicker") {
-        /*The requirement for add_color_picker function to work is that the menu element is
-        appended to the container element prior to the function call. In consequence, the
-        add_color_picker function cannot not be called in the generate_colorpicker_body function.
-        Modifying the add_color_picker to take elements as arguments will also not work in the
-        current iteration due to the restrictions of the Colorpicker function. The Colorpicker
-        prerequisites the current window as it accesses multiple attributes such as the
-        offsetHeight of its slideElement
-        */
-        let rgb = trigger_obj.firstChild.style.backgroundColor;
+        const rgb = trigger_obj.firstChild.style.backgroundColor;
         if (rgb !== "") {
             method.value = rgb2hex(rgb);
         }
-        valuespecs.add_color_picker(method.varprefix, method.value);
-    }
-
-    if (resizable) {
-        // Add a handle because we can not customize the styling of the default resize handle using css
-        var resize = document.createElement("div");
-        resize.className = "resizer";
-        wrapper.appendChild(resize);
-    }
-
-    // update the menus contents using a webservice
-    if (method.type === "ajax") {
+        generate_colorpicker_body(content, method.varprefix, method.value);
+    } else if (method.type === "ajax") {
         content.innerHTML = "<img src=\"themes/facelift/images/icon_reload.png\" class=\"icon reloading\">";
         const url_vars = !method.url_vars ? "" : "?" + method.url_vars;
         ajax.get_url("ajax_popup_" + method.endpoint + ".py" + url_vars, handle_render_popup_contents, {
@@ -198,24 +158,39 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, r
     }
 }
 
-function generate_colorpicker_body(trigger_obj, varprefix)
-{
-    var menu = document.createElement("div");
+function generate_menu(container, resizable) {
+    // Generate the popup menu structure and return the content div
+    const menu = document.createElement("div");
     menu.setAttribute("id", "popup_menu");
     menu.className = "popup_menu";
 
-    var wrapper = document.createElement("div");
+    const wrapper = document.createElement("div");
     wrapper.className = "wrapper";
     menu.appendChild(wrapper);
 
-    var content = document.createElement("div");
+    const content = document.createElement("div");
     content.className = "content";
     wrapper.appendChild(content);
 
+    if (resizable) {
+        utils.add_class(menu, "resizable");
+        // Add a handle because we can not customize the styling of the default resize handle using css
+        const resize = document.createElement("div");
+        resize.className = "resizer";
+        wrapper.appendChild(resize);
+    }
+
+    container.appendChild(menu);
+    fix_popup_menu_position(event, menu);
+
+    return content;
+}
+
+function generate_colorpicker_body(content, varprefix, value) {
     var picker = document.createElement("div");
     picker.className = "cp-small";
     picker.setAttribute("id", varprefix + "_picker");
-    content.appendChild(picker)
+    content.appendChild(picker);
 
     var cp_input = document.createElement("div");
     cp_input.className = "cp-input";
@@ -227,7 +202,7 @@ function generate_colorpicker_body(trigger_obj, varprefix)
     input_field.setAttribute("type", "text");
     cp_input.appendChild(input_field);
 
-    return menu;
+    valuespecs.add_color_picker(varprefix, value);
 }
 
 function rgb2hex(rgb) {

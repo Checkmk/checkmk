@@ -236,7 +236,7 @@ function rgb2hex(rgb) {
     const matches = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
 
     let hex_string = "#";
-    for (let i=1; i < rgb.length; i++){
+    for (let i = 1; i < matches.length; i++){
         hex_string += ("0" + parseInt(matches[i], 10).toString(16)).slice(-2);
     }
     return hex_string;

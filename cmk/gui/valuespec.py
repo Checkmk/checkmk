@@ -3627,7 +3627,7 @@ class AbsoluteDate(ValueSpec):
                 else:
                     html.text_input(
                         varprefix + val[0],
-                        default_value=str(val[1]) if val[1] else "",
+                        default_value=str(val[1]) if val[1] is not None else "",
                         size=val[2],
                         cssclass="number",
                         submit=self._submit_form_name,

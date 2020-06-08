@@ -14,6 +14,7 @@ DomainType = Literal[
     'host',
     'host_group',
     'service_group',
+    'service_discovery',
     'user',
 ]  # yapf: disable
 

@@ -9,6 +9,7 @@ import json
 import os
 import time
 import sys
+from hashlib import sha256
 from typing import Tuple, List, NamedTuple
 
 import cmk.gui.config as config
@@ -61,6 +62,28 @@ StartDiscoveryRequest = NamedTuple("StartDiscoveryRequest", [
     ("folder", watolib.CREFolder),
     ("options", DiscoveryOptions),
 ])
+
+
+def checkbox_name(check_type, item):
+    """Generate HTML variable for service
+
+    This needs to be unique for each host. Since this text is used as
+    variable name, it must not contain any umlauts or other special characters that
+    are disallowed by html.parse_field_storage(). Since item may contain such
+    chars, we need to use some encoded form of it. Simple escaping/encoding like we
+    use for values of variables is not enough here.
+
+    Examples:
+
+        >>> checkbox_name("df", "/opt/omd/sites/testering/tmp")
+        '0735e04becbc2f9481ea8e0b54f1aa512d0b04e036cdfac5cc72238f6b39aaeb'
+
+    Returns:
+        A string representing the service checkbox
+
+    """
+    key = u"%s_%s" % (check_type, item)
+    return sha256(key.encode('utf-8')).hexdigest()
 
 
 def get_check_table(discovery_request):

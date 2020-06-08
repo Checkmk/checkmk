@@ -1,8 +1,7 @@
-FROM debian:buster
-# Tag 10 does not exist yet, need to use buster for now
+FROM debian:10
 
 SHELL ["/bin/bash", "-c"]
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
 RUN apt-get update \
     && apt-get install -y \

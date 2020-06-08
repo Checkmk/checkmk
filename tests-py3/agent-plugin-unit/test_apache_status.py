@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access,redefined-outer-name
+import sys
 import io
 import pytest  # type: ignore[import]
 from utils import import_module
@@ -19,6 +20,8 @@ def apache_status():
 
 @pytest.fixture
 def response():
+    if sys.version_info[0] == 2:
+        return io.BytesIO(RESPONSE)
     return io.StringIO(RESPONSE)
 
 

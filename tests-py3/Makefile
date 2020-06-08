@@ -21,7 +21,7 @@ ADDITIONAL_MYPY_ARGS :=
 	test-composition-docker test-composition-docker-debug test-composition \
 	test-format-python test-format-python3 \
 	test-unit-coverage-html \
-	test-pipenv-deps test-bandit test-agent-integration
+	test-pipenv-deps test-bandit
 
 help:
 	@echo "test-mypy                     - Run mypy tests"
@@ -45,7 +45,6 @@ help:
 	@echo "test-composition-docker-debug - Run test container for manual debugging"
 	@echo "test-pipenv-deps              - Run pipenv dependency issue test"
 	@echo "test-bandit                   - Run bandit (security) tests"
-	@echo "test-agent-integration        - Run agent (plugin) related integration tests"
 	@echo "test-agent-plugin-unit-py%-docker - Run Agent plugin tests in container (py version specific)"
 
 prepare-node-modules:
@@ -210,9 +209,6 @@ test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
-
-test-agent-integration:
-	$(PYTEST) -T agent-integration $(realpath agent-integration)
 
 clean:
 	rm -rf .mypy_cache

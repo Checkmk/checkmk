@@ -90,8 +90,8 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
     std::vector<Entry> entries;
 #ifdef CMC
     (void)_mc;  // HACK
-    if (auto mem = columnData<Host::services_t>(row)) {
-        for (auto &svc : *mem) {
+    if (const auto *mem = columnData<Host::services_t>(row)) {
+        for (const auto &svc : *mem) {
             if (auth_user == nullptr || svc->hasContact(auth_user)) {
                 entries.emplace_back(
                     svc->name(),

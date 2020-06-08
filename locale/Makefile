@@ -16,7 +16,7 @@ help:
 	@echo "update-[de|ro] - Aktualisiert die PO-Datei mit neuen Texten"
 
 setup:
-	sudo apt-get install gettext poedit python-polib
+	sudo apt-get install gettext poedit python3-polib
 
 all:
 	for lang in $(LANGUAGES) ; do \

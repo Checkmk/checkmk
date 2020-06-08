@@ -426,7 +426,7 @@ setup:
 	    valgrind \
 	    shellcheck \
 	    direnv \
-	    python-pip \
+	    python3-pip \
 	    python3.8-dev \
 	    python-setuptools \
 	    chrpath \

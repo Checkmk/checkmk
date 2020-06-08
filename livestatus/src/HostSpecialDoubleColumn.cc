@@ -10,6 +10,8 @@
 #include "Row.h"
 
 #ifdef CMC
+#include <ratio>
+
 #include "Object.h"
 #include "State.h"
 #include "Timeperiod.h"

@@ -123,7 +123,7 @@ std::list<std::string> getLines(InputBuffer &input) {
 }  // namespace
 
 void Store::logRequest(const std::string &line,
-                       const std::list<std::string> &lines) {
+                       const std::list<std::string> &lines) const {
     Informational log(logger());
     log << "request: " << line;
     if (logger()->isLoggable(LogLevel::debug)) {

@@ -38,7 +38,7 @@ struct NagiosPaths {
     std::string _mkeventd_socket;
     std::string _rrdcached_socket;
 
-    void dump(Logger *logger);
+    void dump(Logger *logger) const;
 };
 
 struct NagiosLimits {

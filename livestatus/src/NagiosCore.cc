@@ -21,7 +21,7 @@
 #include "contact_fwd.h"
 #include "pnp4nagios.h"
 
-void NagiosPaths::dump(Logger *logger) {
+void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "socket path = '" << _socket << "'";
     Notice(logger) << "pnp path = '" << _pnp << "'";
     Notice(logger) << "inventory path = '" << _mk_inventory << "'";

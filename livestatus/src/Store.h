@@ -154,7 +154,7 @@ private:
     uint32_t horizon() const;
 #else
     void logRequest(const std::string &line,
-                    const std::list<std::string> &lines);
+                    const std::list<std::string> &lines) const;
     bool answerGetRequest(const std::list<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
 

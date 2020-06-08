@@ -342,11 +342,11 @@ void LogEntry::classifyLogMessage() {
     _kind = LogEntryKind::none;
 }
 
-bool LogEntry::textStartsWith(const std::string &what) {
+bool LogEntry::textStartsWith(const std::string &what) const {
     return _message.compare(timestamp_prefix_length, what.size(), what) == 0;
 }
 
-bool LogEntry::textContains(const std::string &what) {
+bool LogEntry::textContains(const std::string &what) const {
     return _message.find(what, timestamp_prefix_length) != std::string::npos;
 }
 

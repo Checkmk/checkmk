@@ -138,8 +138,8 @@ private:
 
     void assign(Param par, const std::string &field);
     void classifyLogMessage();
-    bool textStartsWith(const std::string &what);
-    bool textContains(const std::string &what);
+    bool textStartsWith(const std::string &what) const;
+    bool textContains(const std::string &what) const;
 };
 
 #endif  // LogEntry_h

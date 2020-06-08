@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-CLANG_VERSION ?= 8
+CLANG_VERSION ?= 10
 
 CPPCHECK ?= cppcheck
 CPPCHECK_NEB_RESULT ?= cppcheck-result.xml

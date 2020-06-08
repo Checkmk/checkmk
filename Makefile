@@ -18,7 +18,7 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
 		      --exclude=__pycache__ --exclude=*.pyc
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -g -O3 -Wall -Wextra
-CLANG_VERSION      := 8
+CLANG_VERSION      := 10
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
@@ -403,18 +403,21 @@ setup:
 	    autoconf \
 	    bear \
 	    build-essential \
-	    clang-7 \
-	    clang-format-7 \
-	    clang-tidy-7 \
+	    clang-10 \
+	    clang-format-10 \
+	    clang-tidy-10 \
+	    clang-tools-10 \
+	    clangd-10 \
+	    libclang-10-dev \
+	    libclang-common-10-dev \
+	    libclang1-10 \
 	    doxygen \
 	    figlet \
 	    g++ \
-	    libclang-7-dev \
 	    libpcap-dev \
 	    librrd-dev \
 	    libxml2-dev \
 	    libpango1.0-dev \
-	    llvm-7-dev \
 	    libsasl2-dev \
 	    libldap2-dev \
 	    libkrb5-dev \

@@ -28,7 +28,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import g, html
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.utils import (
     wato_root_dir,
@@ -2784,13 +2784,6 @@ if not cmk_version.is_managed_edition():
 else:
     Folder = CMEFolder
     Host = CMEHost
-
-
-class SetOnceDict(dict):
-    def __setitem__(self, key, value):
-        if key in self:
-            raise ValueError("key %r already set" % (key,))
-        dict.__setitem__(self, key, value)
 
 
 @MemoizeCache

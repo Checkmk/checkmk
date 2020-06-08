@@ -106,6 +106,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.popups import PopupMethod, MethodAjax, MethodInline, MethodColorpicker
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
@@ -3074,29 +3075,18 @@ class html(ABCHTMLGenerator):
                              color_assignment=None):
         # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[Tuple[str, str]]) -> HTML
         if what:
-            method = {
-                'type': 'ajax',
-                'endpoint': what if what else None,
-                'url_vars': self.urlencode_vars(url_vars) if url_vars else None,
-            }
+            method = MethodAjax(what, url_vars)  # type: PopupMethod
         elif menu_content:
-            method = {
-                'type': 'inline',
-                'content': menu_content if menu_content else None,
-            }
+            method = MethodInline(menu_content)
         elif color_assignment:
             # FIXME: we have a special treatment for color pickers that we should get rid of
-            method = {
-                'type': 'colorpicker',
-                'varprefix': color_assignment[0],
-                'value': color_assignment[1],
-            }
+            method = MethodColorpicker(color_assignment[0], color_assignment[1])
         else:
             raise ValueError('Cannot determine the method to open popup')
 
         onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s);' % \
                     (json.dumps(ident),
-                     json.dumps(method),
+                     json.dumps(method.asdict()),
                      json.dumps(data if data else None),
                      json.dumps(onclose.replace("'", "\\'") if onclose else None),
                      json.dumps(resizable))

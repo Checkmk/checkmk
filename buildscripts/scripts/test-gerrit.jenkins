@@ -109,15 +109,6 @@ node (NODE) {
         )
 
         gerrit_stages.run(
-            NAME: 'Python Unit Test',
-            CONDITION: CHANGED_PYTHON_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["PYTEST_ADDOPTS=\"--junitxml=$RESULTS/python-unit-junit.xml\""],
-            COMMAND: "make test-unit",
-            TEXT_ON_SKIP: 'No Python 2 files changed. Skipping.'
-         )
-
-        gerrit_stages.run(
             NAME: 'Python3 Unit Test',
             CONDITION: CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "",
             DIR: 'tests-py3',

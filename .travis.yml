@@ -14,9 +14,9 @@ matrix:
           python: "2.7"
           env: TEST_TARGETS="test-pylint"
             TEST_PATH=tests
-        - name: "Python2 unit, bandit tests"
+        - name: "Python2 bandit tests"
           python: "2.7"
-          env: TEST_TARGETS="test-unit test-bandit"
+          env: TEST_TARGETS="test-bandit"
             TEST_PATH=tests
         - name: "Python2 formatting"
           python: "3.8"

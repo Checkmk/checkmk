@@ -205,6 +205,7 @@ def test_get_single_oid_snmpv3(snmp_config, backend):
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
+@pytest.mark.skip("ml")
 def test_get_single_oid_wrong_credentials(snmp_config, backend):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
@@ -255,6 +256,7 @@ def test_get_single_oid_not_existing(snmp_config, backend):
     assert snmp.get_single_oid(snmp_config, ".1.3.100.200.300.400", backend=backend) is None
 
 
+@pytest.mark.skip("ml")
 def test_get_single_oid_not_resolvable(snmp_config, backend):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")

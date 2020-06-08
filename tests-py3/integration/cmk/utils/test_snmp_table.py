@@ -209,6 +209,7 @@ def test_get_data_types(snmp_config, backend, type_name, oid, expected_response)
     assert isinstance(table[0][0], str)
 
 
+@pytest.mark.skip("ml")
 def test_get_simple_snmp_table_not_resolvable(snmp_config, backend):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
@@ -236,6 +237,7 @@ def test_get_simple_snmp_table_not_resolvable(snmp_config, backend):
         )
 
 
+@pytest.mark.skip("ml")
 def test_get_simple_snmp_table_wrong_credentials(snmp_config, backend):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")

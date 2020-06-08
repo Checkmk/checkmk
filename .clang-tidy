@@ -68,4 +68,6 @@ CheckOptions:
 #    value:           '_'
 #  - key:             readability-identifier-naming.VariableCase
 #    value:           'lower_case'
+  - key:             bugprone-signed-char-misuse.CharTypdefsToIgnore
+    value:           'int8_t'
 ...

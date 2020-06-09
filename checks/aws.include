@@ -142,7 +142,12 @@ def check_aws_limits(aws_service, params, parsed_region_data):
     perfdata = []
     for resource_key, resource_title, limit, amount, human_readable_func in parsed_region_data:
 
-        p_limit, warn, crit = params[resource_key]
+        try:
+            p_limit, warn, crit = params[resource_key]
+        except KeyError:
+            yield 1, "Unknown resource %r" % str(resource_key)
+            continue
+
         if p_limit is None:
             limit_ref = limit
         else:

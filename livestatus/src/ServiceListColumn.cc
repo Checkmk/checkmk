@@ -29,7 +29,6 @@
 #include "Row.h"
 
 #ifdef CMC
-#include <cstdint>
 #include <memory>
 #include <unordered_set>
 #include "Host.h"

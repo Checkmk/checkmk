@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import traceback
 import errno
 import abc
 from typing import List, Optional, Dict, Any
@@ -14,10 +15,12 @@ from pathlib import Path
 import tempfile
 import platform
 import urllib.parse
+import textwrap
 import requests
 
 import livestatus
 
+import cmk.utils.tty as tty
 from cmk.utils.i18n import _
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -33,7 +36,7 @@ from cmk.utils.diagnostics import (
     DiagnosticsOptionalParameters,
 )
 
-import cmk.base.obsolete_output as out
+import cmk.base.section as section
 
 SUFFIX = ".tar.gz"
 
@@ -42,15 +45,43 @@ def create_diagnostics_dump(parameters):
     # type: (Optional[DiagnosticsOptionalParameters]) -> None
     dump = DiagnosticsDump(parameters)
     dump.create()
-    out.output("Created diagnostics dump:\n")
-    out.output("  '%s'\n" % _get_short_filepath(dump.tarfile_path))
+    section.section_step("Created diagnostics dump", verbose=False)
+    console.info("%s\n", _format_filepath(dump.tarfile_path))
 
 
-def _get_short_filepath(filepath):
-    # type: (Path) -> Path
-    return filepath.relative_to(cmk.utils.paths.omd_root)
+#   .--format helper-------------------------------------------------------.
+#   |   __                            _     _          _                   |
+#   |  / _| ___  _ __ _ __ ___   __ _| |_  | |__   ___| |_ __   ___ _ __   |
+#   | | |_ / _ \| '__| '_ ` _ \ / _` | __| | '_ \ / _ \ | '_ \ / _ \ '__|  |
+#   | |  _| (_) | |  | | | | | | (_| | |_  | | | |  __/ | |_) |  __/ |     |
+#   | |_|  \___/|_|  |_| |_| |_|\__,_|\__| |_| |_|\___|_| .__/ \___|_|     |
+#   |                                                   |_|                |
+#   '----------------------------------------------------------------------'
+
+_GAP = 4 * " "
 
 
+def _format_filepath(filepath):
+    # type: (Path) -> str
+    return "%s%s" % (_GAP, str(filepath.relative_to(cmk.utils.paths.omd_root)))
+
+
+def _format_title(title):
+    # type: (str) -> str
+    return "%s%s%s%s:" % (_GAP, tty.green, title, tty.normal)
+
+
+def _format_description(description):
+    # type: (str) -> str
+    return textwrap.fill(
+        description,
+        width=52,
+        initial_indent=2 * _GAP,
+        subsequent_indent=2 * _GAP,
+    )
+
+
+#.
 #   .--dump----------------------------------------------------------------.
 #   |                         _                                            |
 #   |                      __| |_   _ _ __ ___  _ __                       |
@@ -106,9 +137,9 @@ class DiagnosticsDump:
 
     def _create_dump_folder(self):
         # type: () -> None
-        console.verbose("Create dump folder:\n")
+        section.section_step("Create dump folder")
+        console.verbose("%s\n", _format_filepath(self.dump_folder))
         self.dump_folder.mkdir(parents=True, exist_ok=True)
-        console.verbose("  '%s'\n" % _get_short_filepath(self.dump_folder))
 
     def _create_tarfile(self):
         # type: () -> None
@@ -119,14 +150,21 @@ class DiagnosticsDump:
 
     def _get_filepaths(self, tmp_dump_folder):
         # type: (Path) -> List[Path]
-        out.output("Collect diagnostics information:\n")
+        section.section_step("Collect diagnostics information", verbose=False)
         filepaths = []
         for element in self.elements:
-            filepath = element.add_or_get_file(tmp_dump_folder)
-            if filepath is None:
-                console.verbose("  %s: %s\n" % (element.title, element.error))
+            console.info("%s\n", _format_title(element.title))
+            try:
+                filepath = element.add_or_get_file(tmp_dump_folder)
+            except Exception:
+                section.section_error(traceback.format_exc(), verbose=False)
                 continue
-            out.output("  %s: %s\n" % (element.title, element.description))
+
+            if filepath is None:
+                section.section_error(element.error, verbose=False)
+                continue
+
+            console.info("%s\n", _format_description(element.description))
             filepaths.append(filepath)
         return filepaths
 
@@ -136,10 +174,10 @@ class DiagnosticsDump:
             [(dump.stat().st_mtime, dump) for dump in self.dump_folder.glob("*%s" % SUFFIX)],
             key=lambda t: t[0])[:-self._keep_num_dumps]
 
-        console.verbose("Cleanup dump folder (remove old dumps, keep the last %s dumps):\n" %
-                        self._keep_num_dumps)
+        section.section_step("Cleanup dump folder",
+                             add_info="keep last %d dumps" % self._keep_num_dumps)
         for _mtime, filepath in dumps:
-            console.verbose("  '%s'\n" % _get_short_filepath(filepath))
+            console.verbose("%s\n", _format_filepath(filepath))
             self._remove_file(filepath)
 
     def _remove_file(self, filepath):

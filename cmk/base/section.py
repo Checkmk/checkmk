@@ -20,11 +20,21 @@ def section_success(text):
     console.verbose("%sSUCCESS%s - %s\n", tty.green, tty.normal, text)
 
 
-def section_error(text):
-    # type: (str) -> None
-    console.verbose("%sERROR%s - %s\n", tty.red, tty.normal, text)
+def section_error(text, verbose=True):
+    # type: (str, bool) -> None
+    if verbose:
+        console.verbose("%sERROR%s - %s\n", tty.red, tty.normal, text)
+    else:
+        console.info("%sERROR%s - %s\n", tty.red, tty.normal, text)
 
 
-def section_step(text):
-    # type: (str) -> None
-    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, text.upper())
+def section_step(text, add_info="", verbose=True):
+    # type: (str, str, bool) -> None
+    if add_info:
+        # Additional information, not titlecased
+        add_info = " (%s)" % add_info
+
+    if verbose:
+        console.verbose("%s+%s %s%s\n", tty.yellow, tty.normal, text.upper(), add_info)
+    else:
+        console.info("%s+%s %s%s\n", tty.yellow, tty.normal, text.upper(), add_info)

@@ -759,4 +759,4 @@ def test_create_diagnostics_dump(execute):
     p = execute(["cmk", "--create-diagnostics-dump"])
     assert p.returncode == 0
     assert p.stderr == ""
-    assert p.stdout.startswith("Collect diagnostics information")
+    assert p.stdout.startswith("+ COLLECT DIAGNOSTICS INFORMATION")

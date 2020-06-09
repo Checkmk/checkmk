@@ -23,15 +23,18 @@
 
 import os
 import re
-import socket
 import sys
-import urllib2
 
-# We have to deal with socket timeouts. Python > 2.6
-# supports timeout parameter for the urllib2.urlopen method
-# but we are on a python 2.5 system here which seem to use the
-# default socket timeout.
-socket.setdefaulttimeout(5.0)
+if sys.version_info < (2, 6):
+    sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
+    sys.exit(1)
+
+if sys.version_info[0] == 2:
+    from urllib2 import Request, urlopen
+    from urllib2 import URLError, HTTPError
+else:
+    from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
+    from urllib.error import URLError, HTTPError  # pylint: disable=import-error,no-name-in-module
 
 
 def get_config():
@@ -146,21 +149,21 @@ def get_ssl_no_verify_context():
 
 def get_response(proto, cafile, address, portspec, page):
     url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
-    request = urllib2.Request(url, headers={"Accept": "text/plain"})
+    request = Request(url, headers={"Accept": "text/plain"})
     is_local = address in ("127.0.0.1", "[::1]", "localhost")
     # Try to fetch the status page for each server
     try:
         if proto == "https" and cafile:
-            return urllib2.urlopen(request, cafile=cafile)
+            return urlopen(request, cafile=cafile, timeout=5)
         elif proto == "https" and is_local:
-            return urllib2.urlopen(request, context=get_ssl_no_verify_context())
-        return urllib2.urlopen(request)
-    except urllib2.URLError as exc:
+            return urlopen(request, context=get_ssl_no_verify_context(), timeout=5)
+        return urlopen(request, timeout=5)
+    except URLError as exc:
         if 'unknown protocol' in str(exc):
             # HACK: workaround misconfigurations where port 443 is used for
             # serving non ssl secured http
             url = 'http://%s%s/server-status?auto' % (address, portspec)
-            return urllib2.urlopen(url)
+            return urlopen(url, timeout=5)
         raise
 
 
@@ -205,7 +208,7 @@ def main():
                 if not name:
                     name = get_instance_name(address, port, get_instance_name_map(config))
                 sys.stdout.write("%s|%s|%s|%s\n" % (address, port, name, line))
-        except urllib2.HTTPError as exc:
+        except HTTPError as exc:
             sys.stderr.write('HTTP-Error (%s%s): %s %s\n' % (address, portspec, exc.code, exc))
 
         except Exception as exc:  # pylint: disable=broad-except

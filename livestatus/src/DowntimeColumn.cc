@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DowntimeColumn.h"
-#include <cstdint>
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"

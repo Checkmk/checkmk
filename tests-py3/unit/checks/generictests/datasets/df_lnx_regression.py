@@ -276,7 +276,7 @@ checks = {
         (
             'all',
             {
-                'patterns': ['*']
+                'patterns': (['*'], []),
             },
             [
                 (
@@ -306,7 +306,7 @@ checks = {
         (
             'parts',
             {
-                'patterns': ['*oot', '/']
+                'patterns': (['*oot', '/'], []),
             },
             [
                 (

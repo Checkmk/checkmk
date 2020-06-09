@@ -4,17 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, List
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     ListChoice,
     ListOf,
+    ListOfStrings,
     Transform,
     CascadingDropdown,
     DropdownChoice,
     TextAscii,
     TextOrRegExpUnicode,
-    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
@@ -81,34 +82,86 @@ rulespec_registry.register(
     ))
 
 
+def _transform_filesystem_groups(grouping):
+    """
+    Old format:
+    [(group_name, include_pattern), (group_name, include_pattern), ...]
+    New format:
+    [{group_name: name,
+      patterns_include: [include_pattern, include_pattern, ...],
+      patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
+     {group_name: name,
+      patterns_include: [include_pattern, include_pattern, ...],
+      patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
+     ...]
+    """
+    if not grouping or isinstance(grouping[0], dict):
+        return grouping
+
+    grouping_dict = {}  # type: Dict[str, List[str]]
+    for group_name, pattern_inclde in grouping:
+        grouping_dict.setdefault(group_name, []).append(pattern_inclde)
+
+    return [{
+        'group_name': group_name,
+        'patterns_include': patterns_include,
+        'patterns_exclude': [],
+    } for group_name, patterns_include in grouping_dict.items()]
+
+
 def _valuespec_filesystem_groups():
-    return ListOf(
-        Tuple(
-            show_titles=True,
-            orientation="horizontal",
-            elements=[
-                TextAscii(title=_("Name of group"),),
-                TextAscii(
-                    title=_("Pattern for item (using * and ?)"),
-                    help=
-                    _("You can specify one or several globbing patterns containing "
-                      "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
-                      "The filesystems matching the patterns will be monitored "
-                      "like one big filesystem in a single service. Depending on the configuration in the "
-                      "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>Discovery parameters "
-                      " for filesystem checks</a>, the pattern matches the mount point or "
-                      "the combination of volume and mount point"),
-                ),
-            ]),
-        add_label=_("Add pattern"),
-        title=_('Filesystem grouping patterns'),
-        help=_('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '
-               'will create a single service for each filesystem. '
-               'By defining grouping '
-               'patterns you can handle groups of filesystems like one filesystem. '
-               'For each group you can define one or several patterns. '
-               'The filesystems matching one of the patterns '
-               'will be monitored like one big filesystem in a single service.'),
+    return Transform(
+        ListOf(
+            Dictionary(
+                optional_keys=False,
+                elements=[
+                    ('group_name', TextAscii(title=_("Group name"),)),
+                    (
+                        'patterns_include',
+                        ListOfStrings(
+                            title=_("Inclusion patterns"),
+                            orientation='horizontal',
+                            help=_("You can specify one or several globbing patterns containing "
+                                   "<tt>*</tt>, <tt>?</tt> and <tt>[...]</tt>, for example "
+                                   "<tt>/spool/tmpspace*</tt>. The filesystems matching the "
+                                   "patterns will be grouped together and monitored as one big "
+                                   "filesystem in a single service. Note that specifically for "
+                                   "the check <tt>df</tt>, the pattern matches either the mount "
+                                   "point or the combination of volume and mount point, "
+                                   "depending on the configuration in "
+                                   "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>"
+                                   "Discovery parameters for filesystem checks</a>.")),
+                    ),
+                    (
+                        'patterns_exclude',
+                        ListOfStrings(
+                            title=_("Exclusion patterns"),
+                            orientation='horizontal',
+                            help=_("You can specify one or several globbing patterns containing "
+                                   "<tt>*</tt>, <tt>?</tt> and <tt>[...]</tt>, for example "
+                                   "<tt>/spool/tmpspace*</tt>. The filesystems matching the "
+                                   "patterns will excluded from grouping and monitored "
+                                   "individually. Note that specifically for the check "
+                                   "<tt>df</tt>, the pattern matches either the mount point or "
+                                   "the combination of volume and mount point, depending on the "
+                                   "configuration in "
+                                   "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>"
+                                   "Discovery parameters for filesystem checks</a>.")),
+                    ),
+                ],
+            ),
+            add_label=_("Add group"),
+            title=_('Filesystem grouping patterns'),
+            help=_(
+                'By default, the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) will '
+                'create a single service for each filesystem. By defining grouping patterns, you '
+                'can handle groups of filesystems like one filesystem. For each group, you can '
+                'define one or several include and exclude patterns. The filesystems matching one '
+                'of the include patterns will be monitored like one big filesystem in a single '
+                'service. The filesystems matching one of the exclude patterns will be excluded '
+                'from the group and monitored individually.'),
+        ),
+        forth=_transform_filesystem_groups,
     )
 
 

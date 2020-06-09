@@ -34,7 +34,7 @@ discovery = {
                 'include_volume_name': True
             },
         ),
-    ]
+    ],
 }
 
 checks = {
@@ -120,6 +120,6 @@ checks = {
     ],
 }
 
-mock_host_conf = {'': [[('myGroup', 'GROUPME')]]}
+mock_host_conf = {'': [[('myGroup', 'GROUPME')]]}  # old-style rule spec
 
 mock_host_conf_merged = {'': {'include_volume_name': True}}

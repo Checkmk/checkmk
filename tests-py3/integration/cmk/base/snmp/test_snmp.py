@@ -147,8 +147,8 @@ def backend_fixture(request, snmp_data_dir):
         oid_range_limits=[],
         snmpv3_contexts=[],
         character_encoding=None,
-        is_usewalk_host=isinstance(backend, StoredWalkSNMPBackend),
-        is_inline_snmp_host=isinstance(backend, InlineSNMPBackend),
+        is_usewalk_host=backend is StoredWalkSNMPBackend,
+        is_inline_snmp_host=backend is InlineSNMPBackend,
         record_stats=False,
     )
 
@@ -185,6 +185,7 @@ def test_get_single_oid_ipv6(snmp_config, backend):
         is_ipv6_primary=True,
         ipaddress="::1",
     )
+    backend.config = snmp_config
 
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0", backend=backend)
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -200,17 +201,19 @@ def test_get_single_oid_snmpv3(snmp_config, backend):
         'authOnlyUser',
         'authOnlyUser',
     ))
+    backend.config = snmp_config
 
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0", backend=backend)
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-@pytest.mark.skip("ml")
 def test_get_single_oid_wrong_credentials(snmp_config, backend):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     snmp_config = snmp_config.update(credentials="dingdong")
+    backend.config = snmp_config
+
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0", backend=backend)
     assert result is None
 
@@ -256,12 +259,13 @@ def test_get_single_oid_not_existing(snmp_config, backend):
     assert snmp.get_single_oid(snmp_config, ".1.3.100.200.300.400", backend=backend) is None
 
 
-@pytest.mark.skip("ml")
 def test_get_single_oid_not_resolvable(snmp_config, backend):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     snmp_config = snmp_config.update(ipaddress="bla.local")
+    backend.config = snmp_config
+
     assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.7.0", backend=backend) is None
 
 

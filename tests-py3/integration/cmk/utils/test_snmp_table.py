@@ -149,8 +149,8 @@ def backend_fixture(request, snmp_data_dir):
         oid_range_limits=[],
         snmpv3_contexts=[],
         character_encoding=None,
-        is_usewalk_host=isinstance(backend, StoredWalkSNMPBackend),
-        is_inline_snmp_host=isinstance(backend, InlineSNMPBackend),
+        is_usewalk_host=backend is StoredWalkSNMPBackend,
+        is_inline_snmp_host=backend is InlineSNMPBackend,
         record_stats=False,
     )
 
@@ -209,26 +209,24 @@ def test_get_data_types(snmp_config, backend, type_name, oid, expected_response)
     assert isinstance(table[0][0], str)
 
 
-@pytest.mark.skip("ml")
 def test_get_simple_snmp_table_not_resolvable(snmp_config, backend):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     snmp_config = snmp_config.update(ipaddress="bla.local")
+    backend.config = snmp_config
+    oid_info = (
+        ".1.3.6.1.2.1.1",
+        ["1.0", "2.0", "5.0"],
+    )  # type: OIDWithColumns
 
     # TODO: Unify different error messages
     if snmp_config.is_inline_snmp_host:
         exc_match = "Failed to initiate SNMP"
-    elif not snmp_config.is_inline_snmp_host:
-        exc_match = "Unknown host"
     else:
-        raise NotImplementedError()
+        exc_match = "Unknown host"
 
     with pytest.raises(MKSNMPError, match=exc_match):
-        oid_info = (
-            ".1.3.6.1.2.1.1",
-            ["1.0", "2.0", "5.0"],
-        )  # type: OIDWithColumns
         snmp_table.get_snmp_table(
             snmp_config,
             check_plugin_name="",
@@ -237,26 +235,24 @@ def test_get_simple_snmp_table_not_resolvable(snmp_config, backend):
         )
 
 
-@pytest.mark.skip("ml")
 def test_get_simple_snmp_table_wrong_credentials(snmp_config, backend):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     snmp_config = snmp_config.update(credentials="dingdong")
+    backend.config = snmp_config
+    oid_info = (
+        ".1.3.6.1.2.1.1",
+        ["1.0", "2.0", "5.0"],
+    )  # type: OIDWithColumns
 
     # TODO: Unify different error messages
     if snmp_config.is_inline_snmp_host:
         exc_match = "SNMP query timed out"
-    elif not snmp_config.is_inline_snmp_host:
-        exc_match = "Timeout: No Response from"
     else:
-        raise NotImplementedError()
+        exc_match = "Timeout: No Response from"
 
     with pytest.raises(MKSNMPError, match=exc_match):
-        oid_info = (
-            ".1.3.6.1.2.1.1",
-            ["1.0", "2.0", "5.0"],
-        )  # type: OIDWithColumns
         snmp_table.get_snmp_table(
             snmp_config,
             check_plugin_name="",
@@ -268,6 +264,7 @@ def test_get_simple_snmp_table_wrong_credentials(snmp_config, backend):
 @pytest.mark.parametrize("bulk", [True, False])
 def test_get_simple_snmp_table_bulkwalk(snmp_config, backend, bulk):
     snmp_config = snmp_config.update(is_bulkwalk_host=bulk)
+    backend.config = snmp_config
     oid_info = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],

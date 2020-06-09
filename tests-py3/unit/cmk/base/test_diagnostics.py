@@ -102,8 +102,6 @@ def test_diagnostics_element_general_content(tmp_path):
     content = json.loads(filepath.open().read())
 
     assert sorted(content.keys()) == sorted(info_keys)
-    for key in info_keys:
-        assert bool(content[key])
 
 
 def test_diagnostics_element_local_files():

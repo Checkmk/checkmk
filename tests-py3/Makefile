@@ -188,7 +188,8 @@ test-agent-plugin-unit-py%-docker:
 	fi && \
 	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION="$*" -q "$(realpath agent-plugin-unit)")" && \
 	docker run \
-	    -e PYTEST_ADDOPTS \
+	    $(DOCKER_ADDOPTS) \
+	    -e "PYTEST_ADDOPTS" \
 	    -u $$(id -u):$$(id -g) \
 	    -v "$$TEST_PATH:/tests" \
 	    -v "$(realpath agent-plugin-unit)/utils.py:/tests/utils.py" \

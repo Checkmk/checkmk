@@ -167,11 +167,6 @@ def backend_fixture(request, snmp_data_dir):
     cmk.utils.paths.snmpwalks_dir = snmpwalks_dir
 
 
-@pytest.fixture(name="snmp_config")
-def snmp_config_fixture(backend):
-    return backend.config
-
-
 @pytest.fixture(autouse=True)
 def clear_cache(monkeypatch):
     monkeypatch.setattr(snmp_cache, "_g_single_oid_hostname", None)
@@ -192,14 +187,13 @@ def clear_cache(monkeypatch):
     ("Gauge32", ".1.3.6.1.2.1.6.9.0", "9"),
     ("TimeTicks", ".1.3.6.1.2.1.1.3.0", "449613886"),
 ])
-def test_get_data_types(snmp_config, backend, type_name, oid, expected_response):
-    response = snmp.get_single_oid(snmp_config, oid, backend=backend)
+def test_get_data_types(backend, type_name, oid, expected_response):
+    response = snmp.get_single_oid(oid, backend=backend)
     assert response == expected_response
     assert isinstance(response, str)
 
     oid_start, oid_end = oid.rsplit(".", 1)
     table = snmp_table.get_snmp_table(
-        snmp_config,
         check_plugin_name="",
         oid_info=(oid_start, [oid_end]),
         backend=backend,
@@ -209,52 +203,48 @@ def test_get_data_types(snmp_config, backend, type_name, oid, expected_response)
     assert isinstance(table[0][0], str)
 
 
-def test_get_simple_snmp_table_not_resolvable(snmp_config, backend):
-    if snmp_config.is_usewalk_host:
+def test_get_simple_snmp_table_not_resolvable(backend):
+    if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    snmp_config = snmp_config.update(ipaddress="bla.local")
-    backend.config = snmp_config
+    backend.config = backend.config.update(ipaddress="bla.local")
     oid_info = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],
     )  # type: OIDWithColumns
 
     # TODO: Unify different error messages
-    if snmp_config.is_inline_snmp_host:
+    if backend.config.is_inline_snmp_host:
         exc_match = "Failed to initiate SNMP"
     else:
         exc_match = "Unknown host"
 
     with pytest.raises(MKSNMPError, match=exc_match):
         snmp_table.get_snmp_table(
-            snmp_config,
             check_plugin_name="",
             oid_info=oid_info,
             backend=backend,
         )
 
 
-def test_get_simple_snmp_table_wrong_credentials(snmp_config, backend):
-    if snmp_config.is_usewalk_host:
+def test_get_simple_snmp_table_wrong_credentials(backend):
+    if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    snmp_config = snmp_config.update(credentials="dingdong")
-    backend.config = snmp_config
+    backend.config = backend.config.update(credentials="dingdong")
     oid_info = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],
     )  # type: OIDWithColumns
 
     # TODO: Unify different error messages
-    if snmp_config.is_inline_snmp_host:
+    if backend.config.is_inline_snmp_host:
         exc_match = "SNMP query timed out"
     else:
         exc_match = "Timeout: No Response from"
 
     with pytest.raises(MKSNMPError, match=exc_match):
         snmp_table.get_snmp_table(
-            snmp_config,
             check_plugin_name="",
             oid_info=oid_info,
             backend=backend,
@@ -262,15 +252,13 @@ def test_get_simple_snmp_table_wrong_credentials(snmp_config, backend):
 
 
 @pytest.mark.parametrize("bulk", [True, False])
-def test_get_simple_snmp_table_bulkwalk(snmp_config, backend, bulk):
-    snmp_config = snmp_config.update(is_bulkwalk_host=bulk)
-    backend.config = snmp_config
+def test_get_simple_snmp_table_bulkwalk(backend, bulk):
+    backend.config = backend.config.update(is_bulkwalk_host=bulk)
     oid_info = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],
     )  # type: OIDWithColumns
     table = snmp_table.get_snmp_table(
-        snmp_config,
         check_plugin_name="",
         oid_info=oid_info,
         backend=backend,
@@ -286,13 +274,12 @@ def test_get_simple_snmp_table_bulkwalk(snmp_config, backend, bulk):
     assert isinstance(table[0][0], str)
 
 
-def test_get_simple_snmp_table(snmp_config, backend):
+def test_get_simple_snmp_table(backend):
     oid_info = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],
     )  # type: OIDWithColumns
     table = snmp_table.get_snmp_table(
-        snmp_config,
         check_plugin_name="",
         oid_info=oid_info,
         backend=backend,
@@ -308,13 +295,12 @@ def test_get_simple_snmp_table(snmp_config, backend):
     assert isinstance(table[0][0], str)
 
 
-def test_get_simple_snmp_table_oid_end(snmp_config, backend):
+def test_get_simple_snmp_table_oid_end(backend):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
         ["1", "2", "3", OID_END],
     )  # type: OIDWithColumns
     table = snmp_table.get_snmp_table(
-        snmp_config,
         check_plugin_name="",
         oid_info=oid_info,
         backend=backend,
@@ -326,13 +312,12 @@ def test_get_simple_snmp_table_oid_end(snmp_config, backend):
     ]
 
 
-def test_get_simple_snmp_table_oid_string(snmp_config, backend):
+def test_get_simple_snmp_table_oid_string(backend):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
         ["1", "2", "3", OID_STRING],
     )  # type: OIDWithColumns
     table = snmp_table.get_snmp_table(
-        snmp_config,
         check_plugin_name="",
         oid_info=oid_info,
         backend=backend,
@@ -344,13 +329,12 @@ def test_get_simple_snmp_table_oid_string(snmp_config, backend):
     ]
 
 
-def test_get_simple_snmp_table_oid_bin(snmp_config, backend):
+def test_get_simple_snmp_table_oid_bin(backend):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
         ["1", "2", "3", OID_BIN],
     )  # type: OIDWithColumns
     table = snmp_table.get_snmp_table(
-        snmp_config,
         check_plugin_name="",
         oid_info=oid_info,
         backend=backend,
@@ -362,13 +346,12 @@ def test_get_simple_snmp_table_oid_bin(snmp_config, backend):
     ]
 
 
-def test_get_simple_snmp_table_oid_end_bin(snmp_config, backend):
+def test_get_simple_snmp_table_oid_end_bin(backend):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
         ["1", "2", "3", OID_END_BIN],
     )  # type: OIDWithColumns
     table = snmp_table.get_snmp_table(
-        snmp_config,
         check_plugin_name="",
         oid_info=oid_info,
         backend=backend,
@@ -380,7 +363,7 @@ def test_get_simple_snmp_table_oid_end_bin(snmp_config, backend):
     ]
 
 
-def test_get_simple_snmp_table_with_hex_str(snmp_config, backend):
+def test_get_simple_snmp_table_with_hex_str(backend):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
         [
@@ -389,7 +372,6 @@ def test_get_simple_snmp_table_with_hex_str(snmp_config, backend):
     )  # type: OIDWithColumns
 
     table = snmp_table.get_snmp_table(
-        snmp_config,
         check_plugin_name="",
         oid_info=oid_info,
         backend=backend,

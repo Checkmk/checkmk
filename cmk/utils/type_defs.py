@@ -199,6 +199,16 @@ class ABCSNMPBackend(metaclass=abc.ABCMeta):
         super(ABCSNMPBackend, self).__init__()
         self.config = snmp_config
 
+    @property
+    def hostname(self):
+        # type: () -> HostName
+        return self.config.hostname
+
+    @property
+    def address(self):
+        # type: () -> HostAddress
+        return self.config.ipaddress
+
     @abc.abstractmethod
     def get(self, oid, context_name=None):
         # type: (OID, Optional[ContextName]) -> Optional[RawValue]

@@ -51,7 +51,7 @@ class SNMPDataFetcher:
             # branch: List[ABCSNMPTree]
             check_info = []  # type: List[SNMPTable]
             for entry in oid_info:
-                check_info_part = get_snmp(self._snmp_config, section_name, entry)
+                check_info_part = get_snmp(section_name, entry)
                 check_info.append(check_info_part)
             info[section_name] = check_info
         return info

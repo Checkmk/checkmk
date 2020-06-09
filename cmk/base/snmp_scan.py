@@ -39,7 +39,6 @@ def _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan, *, b
     # type: (SNMPDetectAtom, SNMPHostConfig, str, bool, ABCSNMPBackend) -> bool
     oid, pattern, flag = atom
     value = snmp.get_single_oid(
-        host_config,
         oid,
         cp_name,
         do_snmp_scan=do_snmp_scan,
@@ -96,10 +95,7 @@ def _snmp_scan(host_config,
                                                         config.snmp_without_sys_descr):
         for oid, name in [(".1.3.6.1.2.1.1.1.0", "system description"),
                           (".1.3.6.1.2.1.1.2.0", "system object")]:
-            value = snmp.get_single_oid(host_config,
-                                        oid,
-                                        do_snmp_scan=do_snmp_scan,
-                                        backend=backend)
+            value = snmp.get_single_oid(oid, do_snmp_scan=do_snmp_scan, backend=backend)
             if value is None:
                 raise MKSNMPError(
                     "Cannot fetch %s OID %s. This might be OK for some bogus devices. "

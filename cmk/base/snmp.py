@@ -23,7 +23,6 @@ from cmk.utils.type_defs import (
     DecodedString,
     OID,
     RawValue,
-    SNMPHostConfig,
     SNMPRowInfo,
 )
 
@@ -46,8 +45,8 @@ SNMPWalkOptions = Dict[str, List[OID]]
 
 
 # Contextes can only be used when check_plugin_name is given.
-def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True, *, backend):
-    # type: (SNMPHostConfig, str, Optional[str], bool, ABCSNMPBackend) -> Optional[DecodedString]
+def get_single_oid(oid, check_plugin_name=None, do_snmp_scan=True, *, backend):
+    # type: (str, Optional[str], bool, ABCSNMPBackend) -> Optional[DecodedString]
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
@@ -66,7 +65,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True, 
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
     # SNMP contexts, all contextes will be queried until the first answer is received.
     console.vverbose("       Getting OID %s: " % oid)
-    for context_name in snmp_config.snmpv3_contexts_of(check_plugin_name):
+    for context_name in backend.config.snmpv3_contexts_of(check_plugin_name):
         try:
             value = backend.get(
                 oid=oid,
@@ -86,7 +85,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True, 
         console.vverbose("failed.\n")
 
     if value is not None:
-        decoded_value = snmp_config.ensure_str(value)  # type: Optional[DecodedString]
+        decoded_value = backend.config.ensure_str(value)  # type: Optional[DecodedString]
     else:
         decoded_value = value
 
@@ -211,32 +210,31 @@ def do_snmptranslate(walk_filename):
                                    for translation, line in translated_lines) + "\n")
 
 
-def do_snmpwalk(snmp_config, options, *, backend):
-    # type: (SNMPHostConfig, SNMPWalkOptions, ABCSNMPBackend) -> None
+def do_snmpwalk(options, *, backend):
+    # type: (SNMPWalkOptions, ABCSNMPBackend) -> None
     if not os.path.exists(cmk.utils.paths.snmpwalks_dir):
         os.makedirs(cmk.utils.paths.snmpwalks_dir)
 
     #TODO: What about SNMP management boards?
     try:
-        _do_snmpwalk_on(snmp_config,
-                        options,
-                        cmk.utils.paths.snmpwalks_dir + "/" + snmp_config.hostname,
+        _do_snmpwalk_on(options,
+                        cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname,
                         backend=backend)
     except Exception as e:
-        console.error("Error walking %s: %s\n" % (snmp_config.hostname, e))
+        console.error("Error walking %s: %s\n" % (backend.hostname, e))
         if cmk.utils.debug.enabled():
             raise
     cmk.utils.cleanup.cleanup_globals()
 
 
-def _do_snmpwalk_on(snmp_config, options, filename, *, backend):
-    # type: (SNMPHostConfig, SNMPWalkOptions, str, ABCSNMPBackend) -> None
-    console.verbose("%s:\n" % snmp_config.hostname)
+def _do_snmpwalk_on(options, filename, *, backend):
+    # type: (SNMPWalkOptions, str, ABCSNMPBackend) -> None
+    console.verbose("%s:\n" % backend.hostname)
 
     oids = oids_to_walk(options)
 
     with Path(filename).open("w", encoding="utf-8") as file:
-        for rows in _execute_walks_for_dump(snmp_config, oids, backend=backend):
+        for rows in _execute_walks_for_dump(oids, backend=backend):
             for oid, value in rows:
                 file.write("%s %s\n" % (oid, value))
             console.verbose("%d variables.\n" % len(rows))
@@ -244,8 +242,8 @@ def _do_snmpwalk_on(snmp_config, options, filename, *, backend):
     console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))
 
 
-def _execute_walks_for_dump(snmp_config, oids, *, backend):
-    # type: (SNMPHostConfig, List[OID], ABCSNMPBackend) -> Iterable[SNMPRowInfoForStoredWalk]
+def _execute_walks_for_dump(oids, *, backend):
+    # type: (List[OID], ABCSNMPBackend) -> Iterable[SNMPRowInfoForStoredWalk]
     for oid in oids:
         try:
             console.verbose("Walk on \"%s\"..." % oid)
@@ -275,11 +273,11 @@ def oids_to_walk(options=None):
     return sorted(oids, key=lambda x: list(map(int, x.strip(".").split("."))))
 
 
-def do_snmpget(snmp_config, oid, *, backend):
-    # type: (SNMPHostConfig, OID, ABCSNMPBackend) -> None
+def do_snmpget(oid, *, backend):
+    # type: (OID, ABCSNMPBackend) -> None
     #TODO what about SNMP management boards?
-    snmp_cache.initialize_single_oid_cache(snmp_config)
+    snmp_cache.initialize_single_oid_cache(backend.config)
 
-    value = get_single_oid(snmp_config, oid, backend=backend)
-    sys.stdout.write("%s (%s): %r\n" % (snmp_config.hostname, snmp_config.ipaddress, value))
+    value = get_single_oid(oid, backend=backend)
+    sys.stdout.write("%s (%s): %r\n" % (backend.hostname, backend.address, value))
     cmk.utils.cleanup.cleanup_globals()

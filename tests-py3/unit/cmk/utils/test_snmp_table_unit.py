@@ -91,10 +91,8 @@ def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     def get_all_snmp_tables(info):
         backend = SNMPTestBackend(SNMPConfig)
         if not isinstance(info, list):
-            return snmp_table.get_snmp_table(SNMPConfig, "unit-test", info, backend=backend)
-        return [
-            snmp_table.get_snmp_table(SNMPConfig, "unit-test", i, backend=backend) for i in info
-        ]
+            return snmp_table.get_snmp_table("unit-test", info, backend=backend)
+        return [snmp_table.get_snmp_table("unit-test", i, backend=backend) for i in info]
 
     assert get_all_snmp_tables(snmp_info) == expected_values
 
@@ -135,7 +133,7 @@ def test_sanitize_snmp_encoding(monkeypatch, encoding, columns, expected):
     config_cache = ts.apply(monkeypatch)
 
     snmp_config = config_cache.get_host_config("localhost").snmp_config("")
-    assert snmp_table._sanitize_snmp_encoding(snmp_config, columns) == expected
+    assert snmp_table._sanitize_snmp_encoding(columns, snmp_config) == expected
 
 
 def test_is_bulkwalk_host(monkeypatch):

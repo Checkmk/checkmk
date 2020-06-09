@@ -45,14 +45,14 @@ ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[DecodedValues]]
 
 
-def get_snmp_table(snmp_config, check_plugin_name, oid_info, *, backend):
-    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree], ABCSNMPBackend) -> SNMPTable
-    return _get_snmp_table(snmp_config, check_plugin_name, oid_info, False, backend=backend)
+def get_snmp_table(check_plugin_name, oid_info, *, backend):
+    # type: (CheckPluginName, Union[OIDInfo, ABCSNMPTree], ABCSNMPBackend) -> SNMPTable
+    return _get_snmp_table(check_plugin_name, oid_info, False, backend=backend)
 
 
-def get_snmp_table_cached(snmp_config, check_plugin_name, oid_info, *, backend):
-    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree], ABCSNMPBackend) -> SNMPTable
-    return _get_snmp_table(snmp_config, check_plugin_name, oid_info, True, backend=backend)
+def get_snmp_table_cached(check_plugin_name, oid_info, *, backend):
+    # type: (CheckPluginName, Union[OIDInfo, ABCSNMPTree], ABCSNMPBackend) -> SNMPTable
+    return _get_snmp_table(check_plugin_name, oid_info, True, backend=backend)
 
 
 SPECIAL_COLUMNS = [
@@ -65,8 +65,8 @@ SPECIAL_COLUMNS = [
 
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
-def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache, *, backend):
-    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree], bool, ABCSNMPBackend) -> SNMPTable
+def _get_snmp_table(check_plugin_name, oid_info, use_snmpwalk_cache, *, backend):
+    # type: (CheckPluginName, Union[OIDInfo, ABCSNMPTree], bool, ABCSNMPBackend) -> SNMPTable
     oid, suboids, targetcolumns = _make_target_columns(oid_info)
 
     index_column = -1
@@ -94,8 +94,7 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
                     "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN and OID_END_OCTET_STRING."
                 )
 
-            rowinfo = _get_snmpwalk(snmp_config,
-                                    check_plugin_name,
+            rowinfo = _get_snmpwalk(check_plugin_name,
                                     oid,
                                     fetchoid,
                                     column,
@@ -126,7 +125,7 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
                 new_first_column.append((o, ensure_binary(suboid) + b"." + col_val))
             columns[0] = fetchoid, new_first_column, value_encoding
 
-        info += _make_table(columns, snmp_config)
+        info += _make_table(columns, backend.config)
 
     return info
 
@@ -205,7 +204,7 @@ def _make_table(columns, snmp_config):
     # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
     # get python byte strings. But for Check_MK we need unicode strings now.
     # Convert them by using the standard Check_MK approach for incoming data
-    decoded_columns = _sanitize_snmp_encoding(snmp_config, sanitized_columns)
+    decoded_columns = _sanitize_snmp_encoding(sanitized_columns, snmp_config)
 
     return _construct_snmp_table_of_rows(decoded_columns)
 
@@ -243,29 +242,28 @@ def _key_oid_pairs(pair1):
     return _oid_to_intlist(pair1[0].lstrip('.'))
 
 
-def _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache, *,
-                  backend):
-    # type: (SNMPHostConfig, CheckPluginName, OID, OID, Column, bool, ABCSNMPBackend) -> SNMPRowInfo
+def _get_snmpwalk(check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache, *, backend):
+    # type: (CheckPluginName, OID, OID, Column, bool, ABCSNMPBackend) -> SNMPRowInfo
     if column in SPECIAL_COLUMNS:
         return []
 
     save_to_cache = isinstance(column, OIDCached)
     get_from_cache = save_to_cache and use_snmpwalk_cache
-    cached = _get_cached_snmpwalk(snmp_config.hostname, fetchoid) if get_from_cache else None
+    cached = _get_cached_snmpwalk(backend.hostname, fetchoid) if get_from_cache else None
     if cached is not None:
         return cached
-    rowinfo = _perform_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, backend=backend)
+    rowinfo = _perform_snmpwalk(check_plugin_name, oid, fetchoid, backend=backend)
     if save_to_cache:
-        _save_snmpwalk_cache(snmp_config.hostname, fetchoid, rowinfo)
+        _save_snmpwalk_cache(backend.hostname, fetchoid, rowinfo)
     return rowinfo
 
 
-def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid, *, backend):
-    # type: (SNMPHostConfig, CheckPluginName, OID, OID, ABCSNMPBackend) -> SNMPRowInfo
+def _perform_snmpwalk(check_plugin_name, base_oid, fetchoid, *, backend):
+    # type: (CheckPluginName, OID, OID, ABCSNMPBackend) -> SNMPRowInfo
     added_oids = set([])  # type: Set[OID]
     rowinfo = []  # type: SNMPRowInfo
 
-    for context_name in snmp_config.snmpv3_contexts_of(check_plugin_name):
+    for context_name in backend.config.snmpv3_contexts_of(check_plugin_name):
         rows = backend.walk(oid=fetchoid,
                             check_plugin_name=check_plugin_name,
                             table_base_oid=base_oid,
@@ -303,16 +301,16 @@ def _compute_fetch_oid(oid, suboid, column):
     return fetchoid
 
 
-def _sanitize_snmp_encoding(snmp_config, columns):
-    # type: (SNMPHostConfig, ResultColumnsSanitized) -> ResultColumnsDecoded
+def _sanitize_snmp_encoding(columns, snmp_config):
+    # type: (ResultColumnsSanitized, SNMPHostConfig) -> ResultColumnsDecoded
     return [
-        _decode_column(snmp_config, column, value_encoding)  #
+        _decode_column(column, value_encoding, snmp_config)  #
         for column, value_encoding in columns
     ]
 
 
-def _decode_column(snmp_config, column, value_encoding):
-    # type: (SNMPHostConfig, List[RawValue], SNMPValueEncoding) -> List[DecodedValues]
+def _decode_column(column, value_encoding, snmp_config):
+    # type: (List[RawValue], SNMPValueEncoding, SNMPHostConfig) -> List[DecodedValues]
     if value_encoding == "string":
         decode = snmp_config.ensure_str  # type: Callable[[bytes], DecodedValues]
     else:

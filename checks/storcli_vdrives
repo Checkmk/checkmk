@@ -25,20 +25,23 @@ def parse_storcli_vdrives(info):
 
     parsed = {}
 
+    controller_num = 0
     separator_count = 0
     for line in info:
         if line[0].startswith("-----"):
             separator_count += 1
         elif separator_count == 2:
-            item, raid_type, rawstate, access, consistent = line[:5]
-            parsed[item] = {
+            dg_vd, raid_type, rawstate, access, consistent = line[:5]
+            parsed["C%i.%s" % (controller_num, dg_vd)] = {
                 "raid_type": raid_type,
                 "state": raid_statenames.get(rawstate.lower(), rawstate),
                 "access": access,
                 "consistent": consistent,
             }
         if separator_count == 3:
-            break
+            # each controller has 3 separators, reset count and continue
+            separator_count = 0
+            controller_num += 1
 
     return parsed
 

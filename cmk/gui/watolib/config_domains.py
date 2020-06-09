@@ -225,7 +225,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         # Since this can be called from any WATO page it is not possible to report
         # errors to the user here. The self._update_trusted_cas() method logs the
         # errors - this must be enough for the moment.
-        self._update_trusted_cas(current_config)
+        if not site_specific and custom_site_path is None:
+            self._update_trusted_cas(current_config)
 
         if ConfigDomainLiveproxy.enabled():
             ConfigDomainLiveproxy().activate()

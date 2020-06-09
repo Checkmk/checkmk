@@ -1,0 +1,26 @@
+Title: storcli_pdisks, storcli_vdisks: Support multiple RAID controllers per system
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1612430338
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+When monitoring LSI MegaRAID controller via StorCLI, now all drives
+of all RAID controllers of a system do get discovered and added as a service.
+Previously, the discovery did only find the first controller of a system.
+
+To differentiate between the controllers, the item name is prepended by "Cn.",
+where n is the number of the controller.<br>
+E.g.:
+<ul>
+<li><tt>RAID Virtual Drive 0/0</tt> would become <tt>RAID Virtual Drive C0.0/0</tt>
+for controller 0</li>
+<li><tt>RAID PDisk EID:Slot-Device 13:9-19</tt> would become
+<tt>RAID PDisk EID:Slot-Device C1.13:9-19</tt> for controller 1</tt></li>
+</ul>
+As this Werk changes the item name, this is an incompatible change and will
+require re-discovering the services.

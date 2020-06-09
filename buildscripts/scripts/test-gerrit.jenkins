@@ -8,6 +8,9 @@ withFolderProperties{
     NODE = env.BUILD_NODE
 }
 
+// TODO: Enable supported versions step by step and check which we should really support
+def PYTHON_VERSIONS = [ "2.6", "2.7", "3.5", "3.6" ] //, "3.3", "3.4", "3.7", "3.8" ]
+
 node (NODE) {
     def WORKSPACE = pwd()
     def RESULTS = WORKSPACE + "/results"
@@ -144,29 +147,19 @@ node (NODE) {
             TEXT_ON_SKIP: ''
          )
 
-         gerrit_stages.run(
-            NAME: 'Agent Plugin Unit Tests 2.6',
-            CONDITION: CHANGED_AGENT_PLUGINS != "",
-            DIR: 'tests-py3',
-            ENV_VARS: [
-                "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-26-junit.xml",
-                "DOCKER_ADDOPTS=-v $RESULTS:$RESULTS"
-            ],
-            COMMAND: "make test-agent-plugin-unit-py2.6-docker",
-            TEXT_ON_SKIP: 'No agent files changed. Skipping.'
-         )
-
-         gerrit_stages.run(
-            NAME: 'Agent Plugin Unit Tests 2.7',
-            CONDITION: CHANGED_AGENT_PLUGINS != "",
-            DIR: 'tests-py3',
-            ENV_VARS: [
-                "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-27-junit.xml",
-                "DOCKER_ADDOPTS=-v $RESULTS:$RESULTS"
-            ],
-            COMMAND: "make test-agent-plugin-unit-py2.7-docker",
-            TEXT_ON_SKIP: 'No agent files changed. Skipping.'
-         )
+         PYTHON_VERSIONS.each { PYTHON_VERSION ->
+            gerrit_stages.run(
+               NAME: 'Agent Plugin Unit Tests ' + PYTHON_VERSION,
+               CONDITION: CHANGED_AGENT_PLUGINS != "",
+               DIR: 'tests-py3',
+               ENV_VARS: [
+                   "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-" + PYTHON_VERSION + "-junit.xml",
+                   "DOCKER_ADDOPTS=-v $RESULTS:$RESULTS"
+               ],
+               COMMAND: "make test-agent-plugin-unit-py" + PYTHON_VERSION + "-docker",
+               TEXT_ON_SKIP: 'No agent files changed. Skipping.'
+            )
+         }
 
          gerrit_stages.run(
             NAME: 'NEB/CMC Compile',

@@ -149,7 +149,12 @@ def check_aws_limits(aws_service, params, parsed):
         if human_readable_func is None:
             human_readable_func = lambda x: "%s" % x
 
-        p_limit, warn, crit = params[resource_key]
+        try:
+            p_limit, warn, crit = params[resource_key]
+        except KeyError:
+            yield 1, "Unknown resource %r" % str(resource_key)
+            continue
+
         if p_limit is None:
             limit_ref = limit
         else:

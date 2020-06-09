@@ -28,11 +28,13 @@ import cmk.utils.store as store
 from cmk.utils.log import console
 import cmk.utils.packaging as packaging
 import cmk.utils.site as site
+import cmk.utils.structured_data as structured_data
 
 from cmk.utils.diagnostics import (
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
+    OPT_CHECKMK_OVERVIEW,
     DiagnosticsOptionalParameters,
 )
 
@@ -124,6 +126,9 @@ class DiagnosticsDump:
         if parameters.get(OPT_OMD_CONFIG):
             optional_elements.append(OMDConfigDiagnosticsElement())
 
+        if parameters.get(OPT_CHECKMK_OVERVIEW):
+            optional_elements.append(CheckmkOverviewDiagnosticsElement())
+
         if not cmk_version.is_raw_edition() and parameters.get(OPT_PERFORMANCE_GRAPHS):
             optional_elements.append(PerformanceGraphsDiagnosticsElement())
 
@@ -151,11 +156,14 @@ class DiagnosticsDump:
     def _get_filepaths(self, tmp_dump_folder):
         # type: (Path) -> List[Path]
         section.section_step("Collect diagnostics information", verbose=False)
+
+        collectors = Collectors()
+
         filepaths = []
         for element in self.elements:
             console.info("%s\n", _format_title(element.title))
             try:
-                filepath = element.add_or_get_file(tmp_dump_folder)
+                filepath = element.add_or_get_file(tmp_dump_folder, collectors)
             except Exception:
                 section.section_error(traceback.format_exc(), verbose=False)
                 continue
@@ -187,6 +195,68 @@ class DiagnosticsDump:
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise
+
+
+#.
+#   .--collectors----------------------------------------------------------.
+#   |                        _ _           _                               |
+#   |               ___ ___ | | | ___  ___| |_ ___  _ __ ___               |
+#   |              / __/ _ \| | |/ _ \/ __| __/ _ \| '__/ __|              |
+#   |             | (_| (_) | | |  __/ (__| || (_) | |  \__ \              |
+#   |              \___\___/|_|_|\___|\___|\__\___/|_|  |___/              |
+#   |                                                                      |
+#   '----------------------------------------------------------------------
+
+
+class Collectors:
+    def __init__(self):
+        self._omd_config_collector = OMDConfigCollector()
+        self._checkmk_server_name_collector = CheckmkServerNameCollector()
+
+    def get_omd_config(self):
+        # type: () -> site.OMDConfig
+        return self._omd_config_collector.get_infos()
+
+    def get_checkmk_server_name(self):
+        # type: () -> Optional[str]
+        return self._checkmk_server_name_collector.get_infos()
+
+
+class ABCCollector(metaclass=abc.ABCMeta):
+    """Collects information which are used by several elements"""
+    def __init__(self):
+        self._has_collected = False
+        self._infos = None
+
+    def get_infos(self):
+        # type: () -> Any
+        if not self._has_collected:
+            self._infos = self._collect_infos()
+            self._has_collected = True
+        return self._infos
+
+    @abc.abstractmethod
+    def _collect_infos(self):
+        # type: () -> Any
+        raise NotImplementedError()
+
+
+class OMDConfigCollector(ABCCollector):
+    def _collect_infos(self):
+        # type: () -> site.OMDConfig
+        return site.get_omd_config()
+
+
+class CheckmkServerNameCollector(ABCCollector):
+    def _collect_infos(self):
+        # type: () -> Optional[str]
+        query = ("GET hosts\nColumns: host_name\n"
+                 "Filter: host_labels = 'cmk/check_mk_server' 'yes'\n")
+        result = livestatus.LocalConnection().query(query)
+        try:
+            return result[0][0]
+        except IndexError:
+            return None
 
 
 #.
@@ -224,21 +294,26 @@ class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def add_or_get_file(self, tmp_dump_folder):
-        # type: (Path) -> Optional[Path]
+    def add_or_get_file(self, tmp_dump_folder, collectors):
+        # type: (Path, Collectors) -> Optional[Path]
         raise NotImplementedError()
 
 
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
-    def add_or_get_file(self, tmp_dump_folder):
-        # type: (Path) -> Optional[Path]
+    def add_or_get_file(self, tmp_dump_folder, collectors):
+        # type: (Path, Collectors) -> Optional[Path]
         filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".json")
-        store.save_text_to_file(filepath, json.dumps(self._collect_infos()))
+        infos = self._collect_infos(collectors)
+        if not infos:
+            if not self.error:
+                self.error = "No information"
+            return None
+        store.save_text_to_file(filepath, json.dumps(infos))
         return filepath
 
     @abc.abstractmethod
-    def _collect_infos(self):
-        # type: () -> Dict[str, Any]
+    def _collect_infos(self, collectors):
+        # type: (Collectors) -> Dict[str, Any]
         raise NotImplementedError()
 
 
@@ -262,8 +337,8 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return _("OS, Checkmk version and edition, Time, Core, "
                  "Python version and paths, Architecture")
 
-    def _collect_infos(self):
-        # type: () -> Dict[str, Any]
+    def _collect_infos(self, collectors):
+        # type: (Collectors) -> Dict[str, Any]
         version_infos = cmk_version.get_general_version_infos()
         version_infos["arch"] = platform.machine()
         return version_infos
@@ -286,8 +361,8 @@ class LocalFilesDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return _("List of installed, unpacked, optional files below $OMD_ROOT/local. "
                  "This also includes information about installed MKPs.")
 
-    def _collect_infos(self):
-        # type: () -> Dict[str, Any]
+    def _collect_infos(self, collectors):
+        # type: (Collectors) -> Dict[str, Any]
         return packaging.get_all_package_infos()
 
 
@@ -310,12 +385,52 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                  "Event daemon config, Multiste authorisation, "
                  "NSCA mode, TMP filesystem mode")
 
-    def _collect_infos(self):
-        # type: () -> site.OMDConfig
-        return site.get_omd_config()
+    def _collect_infos(self, collectors):
+        # type: (Collectors) -> site.OMDConfig
+        return collectors.get_omd_config()
 
 
-#   ---other dumps----------------------------------------------------------
+class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self):
+        # type: () -> str
+        return "checkmk_overview"
+
+    @property
+    def title(self):
+        # type: () -> str
+        return _("Checkmk Overview of Checkmk Server")
+
+    @property
+    def description(self):
+        # type: () -> str
+        return _("Checkmk Agent, Number, version and edition of sites, Cluster host; "
+                 "Number of hosts, services, CMK Helper, Live Helper, "
+                 "Helper usage; State of daemons: Apache, Core, Crontag, "
+                 "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
+                 "(Agent plugin mk_inventory needs to be installed)")
+
+    def _collect_infos(self, collectors):
+        # type: (Collectors) -> Dict[str, Any]
+        checkmk_server_name = collectors.get_checkmk_server_name()
+        if checkmk_server_name is None:
+            self.error = "No Checkmk server found"
+            return {}
+
+        filepath = Path(cmk.utils.paths.inventory_output_dir + "/" + checkmk_server_name)
+        if not filepath.exists():
+            self.error = "No HW/SW inventory tree of '%s' found" % checkmk_server_name
+            return {}
+
+        tree = structured_data.StructuredDataTree().load_from(filepath)
+        node = tree.get_sub_container(["software", "applications", "check_mk"])
+        if node is None:
+            self.error = "No HW/SW inventory node 'Software > Applications > Checkmk'"
+            return {}
+        return node.get_raw_tree()
+
+
+#   ---cee dumps------------------------------------------------------------
 
 
 class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
@@ -336,14 +451,14 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
                  "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
                  "25 hours and 35 days")
 
-    def add_or_get_file(self, tmp_dump_folder):
-        # type: (Path) -> Optional[Path]
-        checkmk_server_name = self._get_checkmk_server_name()
+    def add_or_get_file(self, tmp_dump_folder, collectors):
+        # type: (Path, Collectors) -> Optional[Path]
+        checkmk_server_name = collectors.get_checkmk_server_name()
         if checkmk_server_name is None:
             self.error = "No Checkmk server found"
             return None
 
-        response = self._get_response(checkmk_server_name)
+        response = self._get_response(checkmk_server_name, collectors)
 
         if response.status_code != 200:
             self.error = "HTTP error - %d (%s)" % (response.status_code, response.text)
@@ -365,20 +480,11 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
         return filepath
 
-    def _get_checkmk_server_name(self):
-        # type: () -> Optional[str]
-        query = "GET hosts\nColumns: host_name\nFilter: host_labels = 'cmk/check_mk_server' 'yes'\n"
-        result = livestatus.LocalConnection().query(query)
-        try:
-            return result[0][0]
-        except IndexError:
-            return None
-
-    def _get_response(self, checkmk_server_name):
-        # type: (str) -> requests.Response
+    def _get_response(self, checkmk_server_name, collectors):
+        # type: (str, Collectors) -> requests.Response
         automation_secret = self._get_automation_secret()
 
-        omd_config = site.get_omd_config()
+        omd_config = collectors.get_omd_config()
         url = "http://%s:%s/%s/check_mk/report.py?" % (
             omd_config["CONFIG_APACHE_TCP_ADDR"],
             omd_config["CONFIG_APACHE_TCP_PORT"],

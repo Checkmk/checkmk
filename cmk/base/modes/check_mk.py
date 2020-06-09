@@ -18,10 +18,11 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
-    DiagnosticsOptionalParameters,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
+    OPT_CHECKMK_OVERVIEW,
+    DiagnosticsOptionalParameters,
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
@@ -1785,6 +1786,10 @@ def _get_diagnostics_dump_sub_options():
         Option(
             long_option=OPT_OMD_CONFIG,
             short_help="Pack content of 'etc/omd/site.conf'",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_OVERVIEW,
+            short_help="Pack HW/SW inventory node 'Software > Applications > Checkmk'",
         ),
     ]
 

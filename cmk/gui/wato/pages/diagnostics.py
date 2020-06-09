@@ -14,6 +14,7 @@ from cmk.utils.diagnostics import (
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
+    OPT_CHECKMK_OVERVIEW,
 )
 import cmk.utils.version as cmk_version
 
@@ -151,6 +152,17 @@ class ModeDiagnostics(WatoMode):
                         "Liveproxy daemon and livestatus TCP mode, "
                         "Event daemon config, Multiste authorisation, "
                         "NSCA mode, TMP filesystem mode"),
+             )),
+            (OPT_CHECKMK_OVERVIEW,
+             FixedValue(
+                 True,
+                 totext="",
+                 title=_("Checkmk Overview"),
+                 help=_("Checkmk Agent, Number, version and edition of sites, Cluster host; "
+                        "Number of hosts, services, CMK Helper, Live Helper, "
+                        "Helper usage; State of daemons: Apache, Core, Crontag, "
+                        "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
+                        "(Agent plugin mk_inventory needs to be installed)"),
              )),
         ]  # type: List[Tuple[str, ValueSpec]]
 

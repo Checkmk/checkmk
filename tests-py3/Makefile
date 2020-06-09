@@ -177,6 +177,7 @@ test-agent-plugin-unit-py2.6-docker: $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 agent-plugin-unit/py26/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
 	cp "$<" "$@"
+	sed -i '0,/^$$/{s/^$$/\n# Do not test generated 2.6 files\n# type: ignore\n&/}' "$@"
 	$(3TO2) -x str -n -w "$@" >/dev/null
 
 test-agent-plugin-unit-py%-docker:

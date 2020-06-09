@@ -31,4 +31,5 @@ all: $(PYTHON2_PLUGINS)
 %.py2: %.py
 	mkdir -p "$(dir $@)"
 	cp "$<" "$@"
+	sed -i '0,/^$$/{s/^$$/\n# Do not test generated 2.6 files\n# type: ignore\n&/}' "$@"
 	$(3TO2) -x str -n -w "$@" >/dev/null

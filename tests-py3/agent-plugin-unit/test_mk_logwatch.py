@@ -20,6 +20,28 @@ def text_type():
     return str
 
 
+def binary_type():
+    if sys.version_info[0] == 2:
+        return str  # pylint: disable=undefined-variable
+    return bytes
+
+
+def ensure_text(s, encoding='utf-8', errors='strict'):
+    if isinstance(s, binary_type()):
+        return s.decode(encoding, errors)
+    if isinstance(s, text_type()):
+        return s
+    raise TypeError("not expecting type '%s'" % type(s))
+
+
+def ensure_binary(s, encoding='utf-8', errors='strict'):
+    if isinstance(s, text_type()):
+        return s.encode(encoding, errors)
+    if isinstance(s, binary_type()):
+        return s
+    raise TypeError("not expecting type '%s'" % type(s))
+
+
 @pytest.fixture(scope="module")
 def mk_logwatch():
     return import_module("mk_logwatch")
@@ -351,26 +373,26 @@ def test_state_write(mk_logwatch, tmpdir, state_dict):
 
 
 STAR_FILES = [
-    ("/file.log", u"/file.log"),
-    ("/hard_link_to_file.log", u"/hard_link_to_file.log"),
-    ("/hard_linked_file.log", u"/hard_linked_file.log"),
-    ("/oh-no-\x89", u"/oh-no-\uFFFD"),  # unicode replace char
-    ("/symlinked_file.log", u"/symlinked_file.log"),
-    ("/wat\xe2\x80\xbd", u"/wat\u203D"),  # actual interobang
+    (b"/file.log", u"/file.log"),
+    (b"/hard_link_to_file.log", u"/hard_link_to_file.log"),
+    (b"/hard_linked_file.log", u"/hard_linked_file.log"),
+    (b"/oh-no-\x89", u"/oh-no-\uFFFD"),  # unicode replace char
+    (b"/symlinked_file.log", u"/symlinked_file.log"),
+    (b"/wat\xe2\x80\xbd", u"/wat\u203D"),  # actual interobang
 ]
 
 
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [
     (u"/*", STAR_FILES),
     (u"/**", STAR_FILES),
-    (u"/subdir/*", [("/subdir/another_symlinked_file.log", u"/subdir/another_symlinked_file.log")]),
+    (u"/subdir/*", [(b"/subdir/another_symlinked_file.log", u"/subdir/another_symlinked_file.log")
+                   ]),
     (u"/symlink_to_dir/*", [
-        ("/symlink_to_dir/yet_another_file.log", "/symlink_to_dir/yet_another_file.log")
+        (b"/symlink_to_dir/yet_another_file.log", u"/symlink_to_dir/yet_another_file.log")
     ]),
 ])
 def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, file_suffixes):
-    fake_fs_path_b = fake_filesystem
-    fake_fs_path_u = fake_fs_path_b.decode('utf8')
+    fake_fs_path_u = ensure_text(fake_filesystem)
     files = mk_logwatch.find_matching_logfiles(fake_fs_path_u + pattern_suffix)
 
     for actual, expected in zip(sorted(files), file_suffixes):
@@ -392,9 +414,9 @@ def test_ip_in_subnetwork(mk_logwatch):
 
 
 @pytest.mark.parametrize("buff,encoding,position", [
-    ('\xFE\xFF', 'utf_16_be', 2),
-    ('\xFF\xFE', 'utf_16', 2),
-    ('no encoding in this file!', locale.getpreferredencoding(), 0),
+    (b'\xFE\xFF', 'utf_16_be', 2),
+    (b'\xFF\xFE', 'utf_16', 2),
+    (b'no encoding in this file!', locale.getpreferredencoding(), 0),
 ])
 def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, position):
     monkeypatch.setattr(os, 'open', lambda *_args: None)
@@ -581,8 +603,8 @@ def fake_filesystem(tmpdir):
     root = [
         # name     | type  | content/target
         ("file.log", "file", None),
-        ("wat\xe2\x80\xbd", "file", None),
-        ("oh-no-\x89", "file", None),
+        (b"wat\xe2\x80\xbd", "file", None),
+        (b"oh-no-\x89", "file", None),
         ("symlink_to_file.log", "symlink", "symlinked_file.log"),
         ("subdir", "dir", [
             ("symlink_to_file.log", "symlink", "another_symlinked_file.log"),
@@ -599,7 +621,7 @@ def fake_filesystem(tmpdir):
     ]
 
     def create_recursively(dirpath, name, type_, value):
-        obj_path = os.path.join(dirpath, name)
+        obj_path = os.path.join(ensure_binary(dirpath), ensure_binary(name))
 
         if type_ == "file":
             with open(obj_path, 'w'):
@@ -612,7 +634,7 @@ def fake_filesystem(tmpdir):
                 create_recursively(obj_path, *spec)
             return
 
-        source = os.path.join(dirpath, value)
+        source = os.path.join(ensure_binary(dirpath), ensure_binary(value))
         if type_ == "symlink":
             os.symlink(source, obj_path)
         else:

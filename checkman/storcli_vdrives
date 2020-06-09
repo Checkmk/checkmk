@@ -10,7 +10,7 @@ description:
  entered in the script.
 
 item:
- The ID of the virtual drive.
+ The controller number and the ID of the virtual drive.
 
 inventory:
- One service is created for each found virtual drive.
+ One service is created for each found virtual drive on each controller.

@@ -1,0 +1,11 @@
+Title: Fix 100% CPU usage when CMC is started before network is ready
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.6.0p13
+Date: 1591684960
+Class: fix
+
+When the CMC is started before a network configuration is ready during restart
+of the Checkmk server, the CMC could end up hanging with 100% CPU usage.

@@ -10,8 +10,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 MIRROR_URL="https://ftp.gnu.org/gnu/"
 
-GCC_MAJOR="9"
-GCC_MINOR="3"
+GCC_MAJOR="10"
+GCC_MINOR="1"
 GCC_PATCHLEVEL="0"
 GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
 GCC_ARCHIVE_NAME="gcc-${GCC_VERSION}.tar.gz"

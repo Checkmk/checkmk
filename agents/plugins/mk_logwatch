@@ -430,7 +430,7 @@ class State(object):
 
         with open(self.filename, "wb") as stat_fh:
             for data in self._data.values():
-                stat_fh.write(b"%r\n" % data)
+                stat_fh.write(repr(data).encode("ascii") + b"\n")
 
     def get(self, key):
         return self._data.setdefault(key, {'file': key})

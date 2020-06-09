@@ -32,6 +32,7 @@ NOT_TESTED_YET = {
     'agent_salesforce',
     'agent_siemens_plc',
     'agent_storeonce',
+    'agent_storeonce4x',
     'agent_tinkerforge',
     'agent_ucs_bladecenter',
     'agent_vnx_quotas',

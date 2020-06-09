@@ -79,6 +79,7 @@ find -L \
     -name iwyu_tool -prune -o \
     -name chroot -prune -o \
     -name conftest.py -prune -o \
+    -name py26 -prune -o \
     $PRUNE \
     -type f -print | sort | while read F; do
     if [[ $F =~ "$TESTS_DIR/" ]] && [[ $F == *.py ]]; then

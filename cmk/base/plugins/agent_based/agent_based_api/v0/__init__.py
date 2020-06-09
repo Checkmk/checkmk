@@ -16,31 +16,7 @@ Version 0
 """
 # For an explanation of what is what see comments in __all__definition at the end
 
-from cmk.utils.type_defs import OIDCached, OIDBytes, OIDEnd
-
-from cmk.base.api.agent_based.utils import (
-    parse_string_table,
-    all_of,
-    any_of,
-    contains,
-    startswith,
-    endswith,
-    matches,
-    equals,
-    exists,
-    not_contains,
-    not_startswith,
-    not_endswith,
-    not_matches,
-    not_equals,
-    not_exists,
-    check_levels,
-    check_levels_predictive,
-    get_rate,
-    get_average,
-)
-
-from cmk.base.api.agent_based.value_store import get_value_store
+from cmk.lib.snmplib.type_defs import OIDBytes, OIDCached, OIDEnd
 
 from cmk.base.api.agent_based.checking_types import (
     IgnoreResults,
@@ -53,6 +29,28 @@ from cmk.base.api.agent_based.checking_types import (
     ServiceLabel,
 )
 from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.base.api.agent_based.utils import (
+    all_of,
+    any_of,
+    check_levels,
+    check_levels_predictive,
+    contains,
+    endswith,
+    equals,
+    exists,
+    get_average,
+    get_rate,
+    matches,
+    not_contains,
+    not_endswith,
+    not_equals,
+    not_exists,
+    not_matches,
+    not_startswith,
+    parse_string_table,
+    startswith,
+)
+from cmk.base.api.agent_based.value_store import get_value_store
 from cmk.base.discovered_labels import HostLabel
 
 from . import register, render, state

@@ -10,7 +10,8 @@ from typing import List, Tuple
 from six import iterbytes
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import OID, OIDFunction, ScanFunction, SNMPHostConfig
+
+from cmk.lib.snmplib.type_defs import OID, OIDFunction, ScanFunction, SNMPHostConfig
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

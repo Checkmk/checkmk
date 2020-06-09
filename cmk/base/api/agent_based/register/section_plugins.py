@@ -5,16 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a section plugin
 """
-from typing import Any, Generator, List, Optional, Union
 import functools
 import inspect
 import itertools
 from inspect import signature
+from typing import Any, Generator, List, Optional, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ABCSNMPTree, OIDSpec
-from cmk.base.discovered_labels import HostLabel
+
+from cmk.lib.snmplib.type_defs import ABCSNMPTree, OIDSpec
+
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
@@ -24,6 +25,7 @@ from cmk.base.api.agent_based.section_types import (
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
+from cmk.base.discovered_labels import HostLabel
 
 
 def _validate_parse_function(parse_function):

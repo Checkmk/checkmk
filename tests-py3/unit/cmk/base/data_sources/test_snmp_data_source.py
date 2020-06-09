@@ -13,7 +13,9 @@ from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import RawSNMPData, SNMPTable, SourceType
+from cmk.utils.type_defs import SourceType
+
+from cmk.lib.snmplib.type_defs import RawSNMPData, SNMPTable
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

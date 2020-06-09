@@ -7,25 +7,24 @@
 import abc
 import ast
 import time
-from typing import Callable, Dict, List, Optional, Set, cast
+from typing import Callable, cast, Dict, List, Optional, Set
 
 from mypy_extensions import NamedArg
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import (
+from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SourceType, SectionName
+
+from cmk.lib.snmplib.type_defs import (
     ABCSNMPTree,
-    CheckPluginName,
-    HostAddress,
-    HostName,
     PersistedSNMPSections,
     RawSNMPData,
-    SectionName,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPSectionContent,
     SNMPSections,
-    SourceType,
 )
+
+from cmk.fetchers import SNMPDataFetcher
 
 import cmk.base.config as config
 from cmk.base.api import PluginName
@@ -33,8 +32,6 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
-
-from cmk.fetchers import SNMPDataFetcher
 
 from .abstract import DataSource, verify_ipaddress
 from .host_sections import AbstractHostSections

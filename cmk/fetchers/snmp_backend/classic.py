@@ -14,13 +14,8 @@ from six import ensure_str
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    ABCSNMPBackend,
-    ContextName,
-    OID,
-    RawValue,
-    SNMPRowInfo,
-)
+
+from cmk.lib.snmplib.type_defs import ABCSNMPBackend, ContextName, OID, RawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 

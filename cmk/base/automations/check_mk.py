@@ -14,8 +14,8 @@ import shutil
 import subprocess
 import sys
 import time
-from typing import Any, Dict, Iterator, List, Optional, Tuple
 from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -24,8 +24,8 @@ import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-import cmk.utils.snmp_table as snmp_table
 from cmk.utils.check_utils import section_name_of
+from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
@@ -35,14 +35,13 @@ from cmk.utils.type_defs import (
     ServiceDetails,
     ServiceName,
     ServiceState,
-    SNMPCredentials,
-    SNMPHostConfig,
 )
 
-from cmk.utils.diagnostics import (
-    DiagnosticsCLParameters,
-    deserialize_cl_parameters,
-)
+import cmk.lib.snmplib.snmp_modes as snmp_modes
+import cmk.lib.snmplib.snmp_table as snmp_table
+from cmk.lib.snmplib.type_defs import SNMPCredentials, SNMPHostConfig
+
+from cmk.fetchers import factory
 
 import cmk.base.check_api as check_api
 import cmk.base.check_api_utils as check_api_utils
@@ -58,13 +57,11 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
-import cmk.base.snmp as snmp
 import cmk.base.snmp_utils as snmp_utils
-from cmk.base.automations import Automation, MKAutomationError, automations
+from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, ServiceLabel
-from cmk.fetchers import factory
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -1569,9 +1566,9 @@ class AutomationGetAgentOutput(Automation):
                 backend = factory.backend(host_config, use_cache=False)
 
                 lines = []
-                for walk_oid in snmp.oids_to_walk():
+                for walk_oid in snmp_modes.oids_to_walk():
                     try:
-                        for oid, value in snmp.walk_for_export(walk_oid, backend=backend):
+                        for oid, value in snmp_modes.walk_for_export(walk_oid, backend=backend):
                             raw_oid_value = "%s %s\n" % (oid, value)
                             lines.append(ensure_binary(raw_oid_value))
                     except Exception as e:

@@ -7,23 +7,16 @@
 """
 from typing import Any, Dict, List, Optional
 
-from cmk.utils.type_defs import ABCSNMPTree
+from cmk.lib.snmplib.type_defs import ABCSNMPTree
 
 from cmk.base import config
-
-from cmk.base.api.agent_based.checking_types import (
-    DiscoveryFunction,
-    CheckFunction,
-    management_board as management_board_enum,
-)
-
+from cmk.base.api.agent_based.checking_types import CheckFunction, DiscoveryFunction
+from cmk.base.api.agent_based.checking_types import management_board as management_board_enum
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
-
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
 )
-
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
     HostLabelFunction,

@@ -8,25 +8,19 @@ import os
 import subprocess
 import sys
 from contextlib import suppress
-from typing import Dict, Iterable, List, Optional, Tuple
 from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
+import cmk.utils.cleanup
 import cmk.utils.debug
-import cmk.utils.snmp_cache as snmp_cache
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    ABCSNMPBackend,
-    DecodedString,
-    OID,
-    RawValue,
-    SNMPRowInfo,
-)
 
-import cmk.utils.cleanup
+from . import snmp_cache
+from .type_defs import ABCSNMPBackend, DecodedString, OID, RawValue, SNMPRowInfo
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 SNMPWalkOptions = Dict[str, List[OID]]

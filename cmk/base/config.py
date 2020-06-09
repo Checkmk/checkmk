@@ -4,82 +4,91 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import OrderedDict
 import ast
+import contextlib
 import copy
 import inspect
+import itertools
 import marshal
 import numbers
 import os
 import py_compile
 import struct
 import sys
-import itertools
-import contextlib
-from typing import Any, Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple, Union, cast
-from pathlib import Path
+from collections import OrderedDict
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 from six import ensure_str
 
-import cmk.utils.version as cmk_version
+import cmk.utils
+import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
-from cmk.utils.regex import regex
-import cmk.utils.translations
-import cmk.utils.tags
-import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-import cmk.utils.store as store
-import cmk.utils
-from cmk.utils.check_utils import section_name_of
-from cmk.utils.labels import LabelManager
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-from cmk.utils.exceptions import MKGeneralException, MKTerminate
-from cmk.utils.encoding import ensure_str_with_fallback
 import cmk.utils.piggyback as piggyback
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
-from cmk.utils.type_defs import (
-    HostName,
-    ServiceName,
-    Item,
-    HostAddress,
-    CheckPluginName,
-    ActiveCheckPluginName,
-    TimeperiodName,
-    ServicegroupName,
-    Labels,
-    RulesetName,
-    ContactgroupName,
-    HostgroupName,
-    LabelSources,
-    TagValue,
-    Tags,
-    TagList,
-    TagGroups,
-    Ruleset,
-    CheckVariables,
-    ScanFunction,
-    SNMPCredentials,
-    SNMPHostConfig,
-    SNMPTiming,
-)
-from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
-    OIDBytes, OIDCached  # these are required in the modules' namespace to load the configuration!
-)
-import cmk.utils.cleanup
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
+import cmk.utils.store as store
+import cmk.utils.tags
+import cmk.utils.translations
+import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import section_name_of
+from cmk.utils.encoding import ensure_str_with_fallback
+from cmk.utils.exceptions import MKGeneralException, MKTerminate
+from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
-
-from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache
-import cmk.base.autochecks as autochecks
-import cmk.base.default_config as default_config
-import cmk.base.check_utils
-import cmk.base.check_api_utils as check_api_utils
-from cmk.base.check_utils import (
-    SectionName,
-    CheckParameters,
-    DiscoveredService,
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
+from cmk.utils.regex import regex
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
+from cmk.utils.type_defs import (
+    ActiveCheckPluginName,
+    CheckPluginName,
+    CheckVariables,
+    ContactgroupName,
+    HostAddress,
+    HostgroupName,
+    HostName,
+    Item,
+    Labels,
+    LabelSources,
+    Ruleset,
+    RulesetName,
+    ServicegroupName,
+    ServiceName,
+    TagGroups,
+    TagList,
+    Tags,
+    TagValue,
+    TimeperiodName,
 )
+
+from cmk.lib.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
+    OIDBytes, OIDCached, ScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming,
+)
+
+import cmk.base.autochecks as autochecks
+import cmk.base.check_api_utils as check_api_utils
+import cmk.base.check_utils
+import cmk.base.default_config as default_config
+from cmk.base.caching import config_cache as _config_cache
+from cmk.base.caching import runtime_cache as _runtime_cache
+from cmk.base.check_utils import CheckParameters, DiscoveredService, SectionName
+from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 try:
     from cmk.base.api import PluginName
     from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
@@ -99,11 +108,6 @@ except ImportError:
     pass
 
 # TODO: Prefix helper functions with "_".
-
-# This is mainly needed for pylint to detect all available
-# configuration options during static analysis. The defaults
-# are loaded later with load_default_config() again.
-from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 service_service_levels = []
 host_service_levels = []

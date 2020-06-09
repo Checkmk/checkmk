@@ -6,7 +6,7 @@
 
 from typing import Optional
 
-from cmk.utils.type_defs import ABCSNMPBackend, SNMPHostConfig
+from cmk.lib.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 

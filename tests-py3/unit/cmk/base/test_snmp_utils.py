@@ -6,7 +6,9 @@
 
 from typing import Optional
 
-from cmk.utils.type_defs import CheckPluginName, DecodedString, OID
+from cmk.utils.type_defs import CheckPluginName
+
+from cmk.lib.snmplib.type_defs import DecodedString, OID
 
 import cmk.base.snmp_utils as snmp_utils
 

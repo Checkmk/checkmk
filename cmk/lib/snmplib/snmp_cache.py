@@ -11,7 +11,9 @@ from typing import Dict, List, Optional
 import cmk.utils.cleanup
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import OID, DecodedString, HostAddress, HostName, SNMPHostConfig
+from cmk.utils.type_defs import HostAddress, HostName
+
+from .type_defs import DecodedString, OID, SNMPHostConfig
 
 # TODO: Replace this by generic caching
 _g_single_oid_hostname = None  # type: Optional[HostName]

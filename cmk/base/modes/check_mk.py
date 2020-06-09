@@ -6,58 +6,53 @@
 
 import os
 import sys
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
 from six import ensure_str
 
-import cmk.utils.version as cmk_version
-import cmk.utils.tty as tty
-import cmk.utils.paths
-import cmk.utils.log as log
 import cmk.utils.debug
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKBailOut, MKGeneralException
+import cmk.utils.log as log
+import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
-from cmk.utils.type_defs import TagValue, HostgroupName
-from cmk.utils.log import console
+import cmk.utils.store as store
+import cmk.utils.tty as tty
+import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
+    DiagnosticsOptionalParameters,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
-    DiagnosticsOptionalParameters,
 )
+from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.utils.log import console
+from cmk.utils.type_defs import HostAddress, HostgroupName, HostName, TagValue
+
+import cmk.lib.snmplib.snmp_modes as snmp_modes
 
 import cmk.fetchers.factory as snmp_factory
-import cmk.base.data_sources as data_sources
+
+import cmk.base.backup
+import cmk.base.check_api as check_api
+import cmk.base.check_utils
 import cmk.base.config as config
+import cmk.base.core
+import cmk.base.core_nagios
+import cmk.base.data_sources as data_sources
+import cmk.base.data_sources.abstract
+import cmk.base.diagnostics
 import cmk.base.discovery as discovery
+import cmk.base.dump_host
 import cmk.base.inventory as inventory
 import cmk.base.inventory_plugins as inventory_plugins
-import cmk.base.check_api as check_api
-import cmk.base.snmp as snmp
-import cmk.base.snmp_utils as snmp_utils
 import cmk.base.ip_lookup as ip_lookup
-import cmk.base.profiling as profiling
-import cmk.base.core
-import cmk.base.data_sources.abstract
-import cmk.base.core_nagios
-import cmk.base.parent_scan
-import cmk.base.dump_host
-import cmk.base.backup
-import cmk.base.packaging
 import cmk.base.localize
-import cmk.base.diagnostics
 import cmk.base.obsolete_output as out
-from cmk.utils.type_defs import HostName, HostAddress
-
-from cmk.base.modes import (
-    modes,
-    Mode,
-    Option,
-    keepalive_option,
-)
-import cmk.base.check_utils
+import cmk.base.packaging
+import cmk.base.parent_scan
+import cmk.base.profiling as profiling
+import cmk.base.snmp_utils as snmp_utils
 from cmk.base.core_factory import create_core
+from cmk.base.modes import keepalive_option, Mode, modes, Option
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for
@@ -811,7 +806,7 @@ modes.register(
 
 def mode_snmptranslate(walk_filename):
     # type: (str) -> None
-    snmp.do_snmptranslate(walk_filename)
+    snmp_modes.do_snmptranslate(walk_filename)
 
 
 modes.register(
@@ -856,7 +851,7 @@ def mode_snmpwalk(options, hostnames):
         raise MKBailOut("Please specify host names to walk on.")
 
     for snmp_config in (snmp_utils.create_snmp_host_config(host) for host in hostnames):
-        snmp.do_snmpwalk(options, backend=snmp_factory.backend(snmp_config))
+        snmp_modes.do_snmpwalk(options, backend=snmp_factory.backend(snmp_config))
 
 
 modes.register(
@@ -918,7 +913,7 @@ def mode_snmpget(args):
 
     assert hostnames
     for snmp_config in (snmp_utils.create_snmp_host_config(host) for host in hostnames):
-        snmp.do_snmpget(oid, backend=snmp_factory.backend(snmp_config))
+        snmp_modes.do_snmpget(oid, backend=snmp_factory.backend(snmp_config))
 
 
 modes.register(

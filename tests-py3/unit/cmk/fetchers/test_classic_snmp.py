@@ -8,8 +8,9 @@ import collections
 
 import pytest  # type: ignore[import]
 
+from cmk.lib.snmplib.type_defs import SNMPHostConfig
+
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
-from cmk.utils.type_defs import SNMPHostConfig
 
 
 @pytest.mark.parametrize("port,expected", [

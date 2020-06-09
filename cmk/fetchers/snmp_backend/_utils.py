@@ -7,7 +7,7 @@
 
 from six import ensure_binary
 
-from cmk.utils.type_defs import RawValue
+from cmk.lib.snmplib.type_defs import RawValue
 
 __all__ = ["strip_snmp_value"]
 

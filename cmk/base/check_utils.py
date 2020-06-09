@@ -8,14 +8,11 @@ from typing import Any, Dict, List, NoReturn, Tuple, TypeVar, Union
 
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostName,
-    Item,
+from cmk.utils.type_defs import CheckPluginName, HostName, Item, RawAgentData, SectionName
+
+from cmk.lib.snmplib.type_defs import (
     PersistedSNMPSections,
-    RawAgentData,
     RawSNMPData,
-    SectionName,
     SNMPSectionContent,
     SNMPSections,
 )

@@ -71,6 +71,7 @@ Global variables:
 
 # We import several modules here for the checks
 
+import calendar
 # TODO: Move imports directly to checks?
 import collections  # noqa: F401 # pylint: disable=unused-import
 import enum  # noqa: F401 # pylint: disable=unused-import
@@ -78,14 +79,12 @@ import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
 import math  # noqa: F401 # pylint: disable=unused-import
 import os
+# NOTE: We do not use pprint in this module, but it is part of the check API.
+import pprint  # noqa: F401 # pylint: disable=unused-import
 import re  # noqa: F401 # pylint: disable=unused-import
 import socket  # noqa: F401 # pylint: disable=unused-import
 import sys  # noqa: F401 # pylint: disable=unused-import
 import time
-# NOTE: We do not use pprint in this module, but it is part of the check API.
-import pprint  # noqa: F401 # pylint: disable=unused-import
-import calendar
-
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from six import ensure_str
@@ -101,48 +100,55 @@ import cmk.utils.render as render
 # check context.
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
-from cmk.utils.rulesets.tuple_rulesets import (
-    # TODO: Only used by logwatch check. Can we clean this up?
-    get_rule_options,
-    # These functions were used in some specific checks until 1.6. Don't add it to
-    # the future check API. It's kept here for compatibility reasons for now.
-    in_extraconf_hostlist,
-    hosttags_match_taglist,
+from cmk.utils.rulesets.tuple_rulesets import (  # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
+    get_rule_options, hosttags_match_taglist, in_extraconf_hostlist,
 )
+# The class 'as_float' has been moved; import it here under the old name
+from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import EvalableFloat as as_float
 from cmk.utils.type_defs import (
     HostName,
-    ServiceName,
-    CheckPluginName,
     MetricName,
-    ServiceState,
-    ServiceDetails,
     ServiceCheckResult,
-    OID_END,
-    OID_STRING,
+    ServiceDetails,
+    ServiceName,
+    ServiceState,
+)
+
+from cmk.lib.snmplib.type_defs import (
     OID_BIN,
+    OID_END,
     OID_END_BIN,
     OID_END_OCTET_STRING,
+    OID_STRING,
     OIDBytes,
     OIDCached,
 )
 
 import cmk.base.config as _config
-import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
-from cmk.base.snmp_utils import binstring_to_int
+import cmk.base.snmp_utils as _snmp_utils
 from cmk.base.check_api_utils import (
-    # Symbolic representations of states in plugin output
-    state_markers,
-    # Management board checks
-    MGMT_ONLY,  # Use host address/credentials when it's a SNMP HOST
-    HOST_PRECEDENCE,  # Check is only executed for mgmt board (e.g. Managegment Uptime)
-    HOST_ONLY,  # Check is only executed for real SNMP host (e.g. interfaces)
-    host_name,
-    service_description,
-    check_type,
-    Service,
+    HOST_ONLY  # Symbolic representations of states in plugin output; Management board checks; Check is only executed for real SNMP host (e.g. interfaces),
 )
+from cmk.base.check_api_utils import (
+    HOST_PRECEDENCE  # Check is only executed for mgmt board (e.g. Managegment Uptime),
+)
+from cmk.base.check_api_utils import (
+    MGMT_ONLY  # Use host address/credentials when it's a SNMP HOST,
+)
+from cmk.base.check_api_utils import (
+    check_type,
+    host_name,
+    Service,
+    service_description,
+    state_markers,
+)
+from cmk.base.discovered_labels import DiscoveredHostLabels as HostLabels
+from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels  # noqa: F401 # pylint: disable=unused-import
+from cmk.base.discovered_labels import HostLabel, ServiceLabel
+from cmk.base.snmp_utils import binstring_to_int
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]
@@ -175,15 +181,7 @@ core_state_names = _defines.short_service_state_names()
 BINARY = lambda x: OIDBytes(str(x))
 CACHED_OID = lambda x: OIDCached(str(x))
 
-from cmk.base.discovered_labels import (  # noqa: F401 # pylint: disable=unused-import
-    DiscoveredServiceLabels as ServiceLabels, ServiceLabel, DiscoveredHostLabels as HostLabels,
-    HostLabel,
-)
-
 network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
-
-# The class 'as_float' has been moved; import it here under the old name
-from cmk.utils.type_defs import EvalableFloat as as_float
 
 
 def saveint(i):

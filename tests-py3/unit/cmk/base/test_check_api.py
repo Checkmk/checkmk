@@ -12,7 +12,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import OIDBytes, OIDCached
+from cmk.lib.snmplib.type_defs import OIDBytes, OIDCached
 
 from cmk.base import check_api
 import cmk.base.config as config

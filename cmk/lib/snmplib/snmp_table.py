@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Any, Callable, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, cast, List, Optional, Set, Tuple, Union
 
 from six import ensure_binary
 
@@ -13,20 +13,20 @@ import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
+from cmk.utils.type_defs import CheckPluginName, HostName
+
+from .type_defs import (
+    ABCSNMPBackend,
+    ABCSNMPTree,
+    Column,
+    Columns,
+    DecodedValues,
     OID,
     OID_BIN,
     OID_END,
     OID_END_BIN,
     OID_END_OCTET_STRING,
     OID_STRING,
-    ABCSNMPBackend,
-    ABCSNMPTree,
-    CheckPluginName,
-    Column,
-    Columns,
-    DecodedValues,
-    HostName,
     OIDBytes,
     OIDCached,
     OIDInfo,

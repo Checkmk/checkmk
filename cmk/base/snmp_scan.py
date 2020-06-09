@@ -7,19 +7,22 @@
 import re
 from typing import Iterable, Set
 
-import cmk.utils.snmp_cache as snmp_cache
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ABCSNMPBackend, CheckPluginName, SNMPHostConfig
+from cmk.utils.type_defs import CheckPluginName
+
+import cmk.lib.snmplib.snmp_cache as snmp_cache
+import cmk.lib.snmplib.snmp_modes as snmp_modes
+from cmk.lib.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
+
+from cmk.fetchers import factory
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
-import cmk.base.snmp as snmp
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPDetectAtom, SNMPDetectSpec
-from cmk.fetchers import factory
 
 
 def _evaluate_snmp_detection(detect_spec, host_config, cp_name, do_snmp_scan, *, backend):
@@ -38,7 +41,7 @@ def _evaluate_snmp_detection(detect_spec, host_config, cp_name, do_snmp_scan, *,
 def _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan, *, backend):
     # type: (SNMPDetectAtom, SNMPHostConfig, str, bool, ABCSNMPBackend) -> bool
     oid, pattern, flag = atom
-    value = snmp.get_single_oid(
+    value = snmp_modes.get_single_oid(
         oid,
         cp_name,
         do_snmp_scan=do_snmp_scan,
@@ -95,7 +98,7 @@ def _snmp_scan(host_config,
                                                         config.snmp_without_sys_descr):
         for oid, name in [(".1.3.6.1.2.1.1.1.0", "system description"),
                           (".1.3.6.1.2.1.1.2.0", "system object")]:
-            value = snmp.get_single_oid(oid, do_snmp_scan=do_snmp_scan, backend=backend)
+            value = snmp_modes.get_single_oid(oid, do_snmp_scan=do_snmp_scan, backend=backend)
             if value is None:
                 raise MKSNMPError(
                     "Cannot fetch %s OID %s. This might be OK for some bogus devices. "

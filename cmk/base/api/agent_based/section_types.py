@@ -6,10 +6,9 @@
 """Types and classes used by the API for agent_based plugins
 """
 import collections
-
 from typing import Any, Callable, Generator, List, NamedTuple, Tuple, Union
 
-from cmk.utils.type_defs import OIDEnd, OIDSpec, SNMPTable, CompatibleOIDEnd, ABCSNMPTree
+from cmk.lib.snmplib.type_defs import ABCSNMPTree, CompatibleOIDEnd, OIDEnd, OIDSpec, SNMPTable
 
 from cmk.base.api import PluginName
 from cmk.base.check_utils import AgentSectionContent

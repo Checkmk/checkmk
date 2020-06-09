@@ -28,8 +28,9 @@ from cmk.utils.type_defs import (
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
-    SNMPHostConfig,
 )
+
+from cmk.lib.snmplib.type_defs import SNMPHostConfig
 
 from cmk.base.api import PluginName
 import cmk.base.check_api as check_api

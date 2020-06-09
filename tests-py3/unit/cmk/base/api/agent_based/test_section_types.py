@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import OID_END, OIDBytes, OIDCached, OIDEnd, OIDSpec
+from cmk.lib.snmplib.type_defs import OID_END, OIDBytes, OIDCached, OIDEnd, OIDSpec
 
 from cmk.base.api.agent_based.section_types import SNMPTree
 

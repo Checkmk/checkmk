@@ -13,12 +13,13 @@ from typing import Any, Callable, Generator, List, MutableMapping, Optional, Tup
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import SNMPTable
 
-from cmk.base.api.agent_based.checking_types import IgnoreResultsError, Metric, Result, state
-from cmk.base.api.agent_based.section_types import AgentSectionContent, SNMPDetectSpec
+from cmk.lib.snmplib.type_defs import SNMPTable
+
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.prediction
+from cmk.base.api.agent_based.checking_types import IgnoreResultsError, Metric, Result, state
+from cmk.base.api.agent_based.section_types import AgentSectionContent, SNMPDetectSpec
 
 RawSection = TypeVar('RawSection', List[SNMPTable], AgentSectionContent)
 

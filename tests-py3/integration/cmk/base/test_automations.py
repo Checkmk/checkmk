@@ -11,6 +11,7 @@ import re
 import os
 import ast
 import subprocess
+import freezegun  # type: ignore[import]
 import pytest  # type: ignore[import]
 
 from testlib.fixtures import web  # pylint: disable=unused-import
@@ -213,7 +214,8 @@ def test_automation_try_discovery_not_existing_host(test_cfg, site):
 
 def test_automation_try_discovery_host(test_cfg, site):
 
-    data = _execute_automation(site, "try-inventory", args=["modes-test-host"])
+    with freezegun.freeze_time("2020-06-01"):
+        data = _execute_automation(site, "try-inventory", args=["modes-test-host"])
     assert isinstance(data, dict)
     assert isinstance(data["output"], str)
     assert isinstance(data["check_table"], list)

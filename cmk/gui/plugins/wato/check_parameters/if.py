@@ -485,6 +485,17 @@ def _parameter_valuespec_if():
                      help=_("Setting levels on the used bandwidth is optional. If you do set "
                             "levels you might also consider using averaging."),
                  )),
+                ("average",
+                 Integer(
+                     title=_("Average values for used bandwidth"),
+                     help=_("By activating the computation of averages, the levels on "
+                            "traffic and speed are applied to the averaged value. That "
+                            "way you can make the check react only on long-time changes, "
+                            "not on one-minute events."),
+                     unit=_("minutes"),
+                     minvalue=1,
+                     default_value=15,
+                 )),
                 (
                     "nucasts",
                     Tuple(
@@ -569,17 +580,6 @@ def _parameter_valuespec_if():
                            Integer(title=_("Warning at"), unit=_("discards")),
                            Integer(title=_("Critical at"), unit=_("discards"))
                        ])),
-                ("average",
-                 Integer(
-                     title=_("Average values"),
-                     help=_("By activating the computation of averages, the levels on "
-                            "errors and traffic are applied to the averaged value. That "
-                            "way you can make the check react only on long-time changes, "
-                            "not on one-minute events."),
-                     unit=_("minutes"),
-                     minvalue=1,
-                     default_value=15,
-                 )),
                 ("match_same_speed",
                  DropdownChoice(title=_("Speed of interface groups (Netapp only)"),
                                 help=_("Choose the behaviour for different interface speeds in "

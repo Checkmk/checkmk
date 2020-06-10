@@ -37,8 +37,7 @@ node (NODE) {
 
         // Gather the list of changed python files
         def GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES_ABS}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        def CHANGED_PYTHON_FILES = sh(script: "scripts/find-python-files 2 | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
-        def CHANGED_PYTHON3_FILES = sh(script: "scripts/find-python-files 3 | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        def CHANGED_PYTHON_FILES = sh(script: "scripts/find-python-files 3 | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
         def CHANGED_PYLINT_RC_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/.pylintrc' - || true", returnStdout: true).toString().trim()
 
         // Gather the list of changed agent plugins
@@ -51,8 +50,7 @@ node (NODE) {
         // concantenated for pylint (See tests/pylint/test_pylint.py)
         def WORKDIR="${WORKSPACE}/tmp"
 
-        print "Changed python files: ${CHANGED_PYTHON_FILES}"
-        print "Changed python3 files: ${CHANGED_PYTHON3_FILES}"
+        print "Changed Python files: ${CHANGED_PYTHON_FILES}"
         print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
         print "Changed core files: ${CHANGED_CORE_FILES}"
 
@@ -63,21 +61,12 @@ node (NODE) {
         gerrit_stages.desc_add_row('Stage', 'Status')
 
         gerrit_stages.run(
-            NAME: 'Python2 Typing',
+            NAME: 'Python Typing',
             CONDITION: CHANGED_PYTHON_FILES != "",
             DIR: 'tests-py3',
             ENV_VARS: ["JUNIT_XML=--junit-xml ${RESULTS}/mypy.xml"],
-            COMMAND: 'make --quiet test-mypy',
-            TEXT_ON_SKIP: 'No Python 2 files changed. Skipping.'
-        )
-
-        gerrit_stages.run(
-            NAME: 'Python3 Typing',
-            CONDITION: CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "",
-            DIR: 'tests-py3',
-            ENV_VARS: ["JUNIT_XML=--junit-xml ${RESULTS}/mypy3.xml"],
             COMMAND: 'make --quiet test-mypy3',
-            TEXT_ON_SKIP: 'No Python 2/3 files changed. Skipping.'
+            TEXT_ON_SKIP: 'No Python files changed. Skipping.'
         )
 
         gerrit_stages.run(
@@ -85,48 +74,26 @@ node (NODE) {
             CONDITION: CHANGED_PYTHON_FILES != "",
             DIR: 'tests-py3',
             ENV_VARS: ["PYTHON_FILES=${CHANGED_PYTHON_FILES}"],
-            COMMAND: "make --quiet test-format-python &> ${RESULTS}/python-yapf.txt",
-            TEXT_ON_SKIP: 'No Python 2 files changed. Skipping.'
-        )
+            COMMAND: "make --quiet test-format-python3 &> ${RESULTS}/python-yapf.txt",
+            TEXT_ON_SKIP: 'No Python files changed. Skipping.'
+         )
 
         gerrit_stages.run(
-            NAME: 'Python3 Format',
-            CONDITION: CHANGED_PYTHON3_FILES != "",
+            NAME: 'Python Unit Test',
+            CONDITION: CHANGED_PYTHON_FILES != "",
             DIR: 'tests-py3',
-            ENV_VARS: ["PYTHON_FILES=${CHANGED_PYTHON3_FILES}"],
-            COMMAND: "make --quiet test-format-python3 &> ${RESULTS}/python3-yapf.txt",
-            TEXT_ON_SKIP: 'No Python 3 files changed. Skipping.'
-         )
+            ENV_VARS: ["PYTEST_ADDOPTS=--junitxml=$RESULTS/python3-unit-junit.xml"],
+            COMMAND: "make test-unit",
+            TEXT_ON_SKIP: 'No Python files changed. Skipping.'
+        )
 
         gerrit_stages.run(
             NAME: 'Python Linting',
             CONDITION: CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["WORKDIR=${WORKDIR}",'PYLINT_ARGS=--output-format=cmk_parseable'],
-            COMMAND: """
-                if [ -d "${WORKDIR}" ]; then rm -rf "${WORKDIR}"; fi \
-                && mkdir "${WORKDIR}" \
-                && make -C .. --what-if Pipfile.lock .venv && make test-pylint &> ${RESULTS}/pylint2.txt
-            """,
-            TEXT_ON_SKIP: 'Neither .pylintrc nor Python 2 files changed. Skipping.'
-        )
-
-        gerrit_stages.run(
-            NAME: 'Python3 Unit Test',
-            CONDITION: CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "",
-            DIR: 'tests-py3',
-            ENV_VARS: ["PYTEST_ADDOPTS=--junitxml=$RESULTS/python3-unit-junit.xml"],
-            COMMAND: "make test-unit",
-            TEXT_ON_SKIP: 'No Python 2/3 files changed. Skipping.'
-        )
-
-        gerrit_stages.run(
-            NAME: 'Python3 Linting',
-            CONDITION: CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON3_FILES != "",
             DIR: 'tests-py3',
             ENV_VARS: ["WORKDIR=${WORKDIR}",'PYLINT_ARGS=--output-format=cmk_parseable'],
-            COMMAND: "make test-pylint &> ${RESULTS}/pylint3.txt",
-            TEXT_ON_SKIP: 'Neither .pylintrc nor Python 3 files changed. Skipping.'
+            COMMAND: "make test-pylint &> ${RESULTS}/pylint.txt",
+            TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed. Skipping.'
         )
 
          gerrit_stages.run(
@@ -247,9 +214,9 @@ node (NODE) {
     } finally {
         stage("Analyse Issues") {
             def CLANG = scanForIssues tool: clang(pattern: "results/*-tidy.txt")
-            def GCC = scanForIssues tool: gcc(pattern: "results/*.iwyu.txt,results/neb-cmc-compile.txt,results/*neb-cmc.txt,results/*yapf.txt")
-            def PYLINT = scanForIssues tool: pyLint(pattern: "results/pylint*.txt")
-            def MYPY = scanForIssues tool: myPy(pattern: "results/mypy*.xml")
+            def GCC = scanForIssues tool: gcc(pattern: "results/*.iwyu.txt,results/neb-cmc-compile.txt,results/*neb-cmc.txt,results/python-yapf.txt")
+            def PYLINT = scanForIssues tool: pyLint(pattern: "results/pylint.txt")
+            def MYPY = scanForIssues tool: myPy(pattern: "results/mypy.xml")
             def CPPCHECK = scanForIssues tool: cppCheck(pattern: 'results/cppcheck-*.xml')
 
             publishIssues issues:[CLANG,GCC,PYLINT,MYPY,CPPCHECK], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]

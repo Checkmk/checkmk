@@ -281,7 +281,6 @@ class SnapshotCreator(SnapshotCreationBase):
 
         worker = multiprocessing.Process(target=myworker)
         worker.daemon = True
-        worker.start()
         self._worker_subprocesses.append(worker)
 
     def _setup_directories(self):
@@ -297,8 +296,35 @@ class SnapshotCreator(SnapshotCreationBase):
 
     def __exit__(self, exception_type, exception_value, tb):
         # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> None
-        for worker in self._worker_subprocesses:
-            worker.join()
+        max_workers = 10
+        try:
+            max_workers = max(1, multiprocessing.cpu_count() - 1)
+        except NotImplementedError:
+            pass
+
+        running_jobs = []  # type: List[multiprocessing.Process]
+        while self._worker_subprocesses or len(running_jobs) > 0:
+            # Housekeeping, remove finished jobs
+            for job in running_jobs[:]:
+                if job.is_alive():
+                    continue
+                job.join()
+                running_jobs.remove(job)
+
+            time.sleep(0.05)
+
+            # Continue if at max concurrent jobs
+            if len(running_jobs) == max_workers:
+                continue
+
+            # Start new jobs
+            while self._worker_subprocesses:
+                job = self._worker_subprocesses.pop(0)
+                job.start()
+                running_jobs.append(job)
+                if len(running_jobs) == max_workers:
+                    break
+
         self.output_statistics()
 
     def _prepare_generic_tar_files(self):

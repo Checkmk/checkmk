@@ -46,7 +46,7 @@ std::unique_ptr<Column> DynamicHostFileColumn::createColumn(
     }
     return std::make_unique<HostFileColumn>(
         name, _description, _offsets, _basepath,
-        [=](const Column &col, const Row &row) {
+        [this, f](const Column &col, const Row &row) {
             return _filepath(col, row, f);
         });
 }

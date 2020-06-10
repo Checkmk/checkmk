@@ -6,9 +6,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Dictionary,
     ListOfStrings,
     TextAscii,
     TextUnicode,
+    Transform,
 )
 
 from cmk.gui.plugins.wato import (
@@ -19,13 +21,35 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_fs_mount_options():
-    return ListOfStrings(
+    expected = ListOfStrings(
         title=_("Expected mount options"),
         help=_("Specify all expected mount options here. If the list of "
                "actually found options differs from this list, the check will go "
                "warning or critical. Just the option <tt>commit</tt> is being "
                "ignored since it is modified by the power saving algorithms."),
         valuespec=TextUnicode(),
+    )
+    ignore = ListOfStrings(
+        title=_("Mount options to ignore"),
+        help=_("Specify all mount options that should be ignored when inspecting "
+               "the list of actually found options. The options <tt>commit</tt>, "
+               "<tt>localalloc</tt>, <tt>subvol</tt>, <tt>subvolid</tt> are "
+               "ignored by default."),
+        valuespec=TextUnicode(),
+        default_value = ["commit=", "localalloc=", "subvol=", "subvolid="],
+    )
+
+    # The old parameterset was just a list of strings. We moved that list into a
+    # dictionary with the key 'expected'.
+    return Transform(
+        Dictionary(
+            title=_("Mount options"),
+            elements=[
+                ('expected', expected),
+                ('ignore', ignore),
+            ],
+        ),
+        forth = lambda params: params if isinstance(params, dict) else {'expected': params},
     )
 
 

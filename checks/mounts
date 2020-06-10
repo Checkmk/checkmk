@@ -29,17 +29,32 @@ def discovery_mounts(info):
         if dev not in devices:
             devices.append(dev)
             opts = sorted(options.split(","))
-            yield mountpoint.replace("\\040(deleted)", ""), opts
+            yield mountpoint.replace("\\040(deleted)", ""), {'expected': opts}
 
 
-def _should_ignore_option(option):
-    for ignored_option in ["commit=", "localalloc=", "subvol=", "subvolid="]:
+def _should_ignore_option(option, ignorelist):
+    for ignored_option in ignorelist:
         if option.startswith(ignored_option):
             return True
     return False
 
 
-def check_mounts(item, targetopts, info):
+def check_mounts(item, params, info):
+
+    # The original plugin had a parameter "targetopts" which was just a list
+    # of strings (expected mount options as determined during the discovery).
+    # Our modified plugin uses a dictionary as parameter with two elements:
+    #     'expected': same as the old "targetopts"
+    #     'ignore': list of strings (mount options to ignore)
+    # Both parameters can be overwritten using a WATO rule.
+    default_ignorelist = ["commit=", "localalloc=", "subvol=", "subvolid="]
+    if isinstance(params, dict):
+        targetopts = params.get('expected', [])
+        ignorelist = params.get('ignore', default_ignorelist)
+    else:
+        targetopts = params
+        ignorelist = default_ignorelist
+
     # Ignore options that are allowed to change
     for _dev, mountpoint, _fstype, options, _dump, _fsck in info:
         if item == mountpoint.replace("\\040(deleted)", ""):
@@ -51,11 +66,11 @@ def check_mounts(item, targetopts, info):
             # Now compute the exact difference.
 
             exceeding = [
-                opt for opt in opts if opt not in targetopts and not _should_ignore_option(opt)
+                opt for opt in opts if opt not in targetopts and not _should_ignore_option(opt, ignorelist)
             ]
 
             missing = [
-                opt for opt in targetopts if opt not in opts and not _should_ignore_option(opt)
+                opt for opt in targetopts if opt not in opts and not _should_ignore_option(opt, ignorelist)
             ]
 
             if not missing and not exceeding:

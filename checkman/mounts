@@ -12,6 +12,10 @@ description:
  the monitoring. Also excluded is the option {localalloc=} for recent
  kernels and OCFS2 filesystems.
 
+ It is also possible to configure further mount options that are to
+ be ignored by this check so that it won't go to the warning state
+ if these options appear or disappear.
+
  This check goes critical if the mount option {ro} appears. This
  might indicate IO errors have occurred, causing the filesystem
  to switch to read-only mode.

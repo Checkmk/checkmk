@@ -13,7 +13,7 @@ from cmk.gui.type_defs import SetOnceDict
 # runtime so that we can't have typos when interlinking responses.
 ENDPOINT_REGISTRY = SetOnceDict()
 
-PARAM_RE = re.compile(r"\{([a-z][a-z0-9]*)\}")
+PARAM_RE = re.compile(r"\{([a-z][a-z0-9_]*)\}")
 
 
 def _denilled(dict_):
@@ -201,6 +201,10 @@ def fill_out_path_template(orig_path, parameters):
 
         >>> param_spec = {'var': {'example': 'foo'}}
         >>> fill_out_path_template('/path/{var}', param_spec)
+        '/path/foo'
+
+        >>> param_spec = {'var_id': {'example': 'foo'}}
+        >>> fill_out_path_template('/path/{var_id}', param_spec)
         '/path/foo'
 
     Args:

@@ -125,6 +125,24 @@ def to_dict(schema):
     return ret
 
 
+def _transform_params(param_list):
+    """Transform a list of parameters to a dict addressable by name.
+
+    Args:
+        param_list:
+            A list of parameters.
+
+    Examples:
+
+        >>> _transform_params([{'name': 'foo'}, 'bar'])
+        {'foo': {'name': 'foo'}}
+
+    Returns:
+        A dict with the key being the parameters name and the value being the parameter.
+    """
+    return {param['name']: param for param in param_list if isinstance(param, dict)}
+
+
 # noinspection PyDefaultArgument
 def code_samples(
     path,
@@ -142,7 +160,8 @@ def code_samples(
                 code_templates.append(_build_code_templates())
 
     headers = []
-    for param in operation_spec.get('parameters', []):
+    parameters = operation_spec.get('parameters', [])
+    for param in parameters:
         if isinstance(param, dict) and param['in'] == 'header':
             headers.append(param)
 
@@ -153,6 +172,7 @@ def code_samples(
             request_method=method,
             request_schema=(resolve_schema_instance(request_schema)
                             if request_schema is not None else None),
+            endpoint_parameters=_transform_params(parameters),
             headers=headers,
         ).strip(),
     } for language, template in code_templates[0].items()]
@@ -195,7 +215,7 @@ def _build_code_templates():
     # These objects will be available in the templates
     tmpl_env.globals.update(
         spec=SPEC,
-        parameters=SPEC.components._parameters,
+        parameters=SPEC.components.to_dict().get('parameters', {}),
     )
 
     # NOTE: To add a new code-example, just add them to this OrderedDict. The examples will
@@ -209,7 +229,10 @@ def _build_code_templates():
 
 @jinja2.contextfilter
 def fill_out_parameters(ctx, val):
-    return fill_out_path_template(val, ctx['parameters'])
+    try:
+        return fill_out_path_template(val, ctx['endpoint_parameters'])
+    except KeyError:
+        return fill_out_path_template(val, ctx['parameters'])
 
 
 def indent(s, skip_lines=0, spaces=2):

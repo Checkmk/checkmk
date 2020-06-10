@@ -175,10 +175,10 @@ metric_info["if_out_bcast"] = {
 graph_info["packets_1"] = {
     "title": _("Packets"),
     "metrics": [
-        ("if_in_unicast", "area"),
-        ("if_in_non_unicast", "stack"),
-        ("if_out_unicast", "-area"),
-        ("if_out_non_unicast", "-stack"),
+        ("if_in_unicast", "line"),
+        ("if_in_non_unicast", "line"),
+        ("if_out_unicast", "-line"),
+        ("if_out_non_unicast", "-line"),
     ],
 }
 

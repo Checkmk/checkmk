@@ -677,31 +677,33 @@ def get_context_specs(visual, info_handler):
     single_info_keys = [key for key in info_keys if key in visual['single_infos']]
     multi_info_keys = [key for key in info_keys if key not in single_info_keys]
 
-    def visual_spec_single(info_key):
-        info = visual_info_registry[info_key]()
-        params = info.single_spec
-        optional = True
-        isopen = True
-        return Dictionary(
-            title=info.title,
-            form_isopen=isopen,
-            optional_keys=optional,
-            elements=params,
-        )
-
-    def visual_spec_multi(info_key):
-        info = visual_info_registry[info_key]()
-        filter_list = VisualFilterList([info_key], title=info.title, ignore=set(single_info_keys))
-        filter_names = filter_list.filter_names()
-        # Skip infos which have no filters available
-        return filter_list if filter_names else None
-
     # single infos first, the rest afterwards
     return [(info_key, visual_spec_single(info_key))
             for info_key in single_info_keys] + \
-           [(info_key, visual_spec_multi(info_key))
+           [(info_key, visual_spec_multi(info_key, single_info_keys))
             for info_key in multi_info_keys
-            if visual_spec_multi(info_key)]
+            if visual_spec_multi(info_key, single_info_keys)]
+
+
+def visual_spec_single(info_key):
+    info = visual_info_registry[info_key]()
+    params = info.single_spec
+    optional = True
+    isopen = True
+    return Dictionary(
+        title=info.title,
+        form_isopen=isopen,
+        optional_keys=optional,
+        elements=params,
+    )
+
+
+def visual_spec_multi(info_key, single_info_keys):
+    info = visual_info_registry[info_key]()
+    filter_list = VisualFilterList([info_key], title=info.title, ignore=set(single_info_keys))
+    filter_names = filter_list.filter_names()
+    # Skip infos which have no filters available
+    return filter_list if filter_names else None
 
 
 def process_context_specs(context_specs):
@@ -1449,15 +1451,19 @@ def single_infos_spec(single_infos):
 def verify_single_infos(visual, context):
     # type: (Visual, VisualContext) -> None
     """Check if all single infos from the element are known"""
-    single_info_keys = get_single_info_keys(visual["single_infos"])
-    missing_variables = set(single_info_keys).difference(context)
-
+    missing_variables = get_missing_single_infos(visual["single_infos"], context)
     if missing_variables:
         raise MKUserError(
             None,
             _("Missing context information: %s. You can either add this as a fixed "
               "setting, or call the with the missing HTTP variables.") %
             (", ".join(missing_variables)))
+
+
+def get_missing_single_infos(single_infos, context):
+    # type: (SingleInfos, VisualContext) -> Set[FilterName]
+    single_info_keys = get_single_info_keys(single_infos)
+    return set(single_info_keys).difference(context)
 
 
 def visual_title(what, visual):

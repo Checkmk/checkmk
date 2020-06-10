@@ -19,8 +19,8 @@ fi
 echo "Update site $SITE..."
 
 PYTHON3_PATHS=(
-    lib
     gui
+    snmplib
     utils
     ec
     notification_plugins

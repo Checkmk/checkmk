@@ -7,7 +7,7 @@
 """
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
 
-from cmk.lib.snmplib.type_defs import ABCSNMPTree, SNMPTable
+from cmk.snmplib.type_defs import ABCSNMPTree, SNMPTable
 
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,

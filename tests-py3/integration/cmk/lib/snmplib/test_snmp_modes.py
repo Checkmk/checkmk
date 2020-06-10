@@ -8,8 +8,8 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.lib.snmplib.snmp_cache as snmp_cache
-import cmk.lib.snmplib.snmp_modes as snmp_modes
+import cmk.snmplib.snmp_cache as snmp_cache
+import cmk.snmplib.snmp_modes as snmp_modes
 
 # "netsnmp" python module (used for inline SNMP) and snmp commands (used for
 # classic SNMP) are not available in the git environment. For the moment it

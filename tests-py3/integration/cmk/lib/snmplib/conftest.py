@@ -17,8 +17,8 @@ import cmk.utils.debug as debug
 import cmk.utils.log as log
 import cmk.utils.paths
 
-import cmk.lib.snmplib.snmp_cache as snmp_cache
-from cmk.lib.snmplib.type_defs import SNMPHostConfig
+import cmk.snmplib.snmp_cache as snmp_cache
+from cmk.snmplib.type_defs import SNMPHostConfig
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 

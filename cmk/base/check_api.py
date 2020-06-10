@@ -115,7 +115,7 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
-from cmk.lib.snmplib.type_defs import (
+from cmk.snmplib.type_defs import (
     OID_BIN,
     OID_END,
     OID_END_BIN,

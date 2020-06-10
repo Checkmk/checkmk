@@ -8,7 +8,7 @@ import collections
 
 import pytest  # type: ignore[import]
 
-from cmk.lib.snmplib.type_defs import SNMPHostConfig
+from cmk.snmplib.type_defs import SNMPHostConfig
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
 

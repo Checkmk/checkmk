@@ -13,9 +13,9 @@ from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import CheckPluginName
 
-import cmk.lib.snmplib.snmp_cache as snmp_cache
-import cmk.lib.snmplib.snmp_modes as snmp_modes
-from cmk.lib.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
+import cmk.snmplib.snmp_cache as snmp_cache
+import cmk.snmplib.snmp_modes as snmp_modes
+from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
 
 from cmk.fetchers import factory
 

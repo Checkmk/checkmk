@@ -14,7 +14,7 @@ from typing import Any, Generator, List, Optional, Union
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 
-from cmk.lib.snmplib.type_defs import ABCSNMPTree, OIDSpec
+from cmk.snmplib.type_defs import ABCSNMPTree, OIDSpec
 
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import (

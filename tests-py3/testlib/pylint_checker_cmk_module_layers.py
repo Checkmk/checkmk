@@ -27,7 +27,7 @@ def removeprefix(text, prefix):
 _COMPONENTS = (
     "cmk.base",
     "cmk.fetchers",
-    "cmk.lib",
+    "cmk.snmplib",
     "cmk.gui",
     "cmk.ec",
     "cmk.notification_plugins",
@@ -35,6 +35,7 @@ _COMPONENTS = (
     "cmk.update_config",
     "cmk.cee.dcd",
     "cmk.cee.mknotifyd",
+    "cmk.cee.snmp_backend",
     "cmk.cee.liveproxy",
     "cmk.cee.notification_plugins",
 )
@@ -132,7 +133,7 @@ class CMKModuleLayerChecker(BaseChecker):
             if not self._is_part_of_component(mod_name, file_path, component):
                 continue
 
-            if self._is_disallowed_lib_import(mod_name, component):
+            if self._is_disallowed_snmplib_import(mod_name, component):
                 return True
 
             if self._is_disallowed_fetchers_import(mod_name, component):
@@ -177,9 +178,9 @@ class CMKModuleLayerChecker(BaseChecker):
         """
         return not (component.startswith("cmk.fetchers") and mod_name.startswith("cmk.utils"))
 
-    def _is_disallowed_lib_import(self, mod_name, component):
-        """Disallow import of `lib` in `cmk.utils`."""
-        return not component.startswith("cmk.lib") and mod_name.startswith("cmk.utils")
+    def _is_disallowed_snmplib_import(self, mod_name, component):
+        """Disallow import of `snmplib` in `cmk.utils`."""
+        return not component.startswith("cmk.snmplib") and mod_name.startswith("cmk.utils")
 
     def _is_import_in_component(self, import_modname, component):
         return import_modname == component or import_modname.startswith(component + ".")
@@ -192,6 +193,4 @@ class CMKModuleLayerChecker(BaseChecker):
 
     def _is_utility_import(self, import_modname):
         """cmk and cmk.utils are allowed to be imported from all over the place"""
-        return import_modname in {
-            "cmk", "cmk.utils", "cmk.lib"
-        } or import_modname.startswith("cmk.utils.") or import_modname.startswith("cmk.lib")
+        return import_modname in {"cmk", "cmk.utils"} or import_modname.startswith("cmk.utils.")

@@ -27,7 +27,7 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostgroupName, HostName, TagValue
 
-import cmk.lib.snmplib.snmp_modes as snmp_modes
+import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.fetchers.factory as snmp_factory
 

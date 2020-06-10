@@ -9,8 +9,8 @@ from functools import partial
 from types import TracebackType
 from typing import Dict, List, Optional, Type
 
-import cmk.lib.snmplib.snmp_table as snmp_table
-from cmk.lib.snmplib.type_defs import ABCSNMPTree, RawSNMPData, SNMPHostConfig, SNMPTable
+import cmk.snmplib.snmp_table as snmp_table
+from cmk.snmplib.type_defs import ABCSNMPTree, RawSNMPData, SNMPHostConfig, SNMPTable
 
 from . import factory
 

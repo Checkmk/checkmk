@@ -15,8 +15,8 @@ from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginName
 
-import cmk.lib.snmplib.snmp_cache as snmp_cache
-from cmk.lib.snmplib.type_defs import ABCSNMPBackend, ContextName, OID, RawValue, SNMPRowInfo
+import cmk.snmplib.snmp_cache as snmp_cache
+from cmk.snmplib.type_defs import ABCSNMPBackend, ContextName, OID, RawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 

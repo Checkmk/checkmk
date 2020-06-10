@@ -14,7 +14,7 @@ from typing import Any, Callable, Generator, List, MutableMapping, Optional, Tup
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.lib.snmplib.type_defs import SNMPTable
+from cmk.snmplib.type_defs import SNMPTable
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.prediction

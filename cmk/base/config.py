@@ -76,7 +76,7 @@ from cmk.utils.type_defs import (
     TimeperiodName,
 )
 
-from cmk.lib.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
+from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
     OIDBytes, OIDCached, ScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming,
 )
 

@@ -7,7 +7,7 @@
 """
 from typing import Any, Dict, List, Optional
 
-from cmk.lib.snmplib.type_defs import ABCSNMPTree
+from cmk.snmplib.type_defs import ABCSNMPTree
 
 from cmk.base import config
 from cmk.base.api.agent_based.checking_types import CheckFunction, DiscoveryFunction

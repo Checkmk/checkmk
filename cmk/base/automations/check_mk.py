@@ -37,9 +37,9 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
-import cmk.lib.snmplib.snmp_modes as snmp_modes
-import cmk.lib.snmplib.snmp_table as snmp_table
-from cmk.lib.snmplib.type_defs import SNMPCredentials, SNMPHostConfig
+import cmk.snmplib.snmp_modes as snmp_modes
+import cmk.snmplib.snmp_table as snmp_table
+from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig
 
 from cmk.fetchers import factory
 

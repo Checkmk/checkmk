@@ -8,8 +8,8 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-import cmk.lib.snmplib.snmp_table as snmp_table
-from cmk.lib.snmplib.type_defs import ABCSNMPBackend, OID_END, OIDBytes, OIDEnd, SNMPHostConfig
+import cmk.snmplib.snmp_table as snmp_table
+from cmk.snmplib.type_defs import ABCSNMPBackend, OID_END, OIDBytes, OIDEnd, SNMPHostConfig
 
 import cmk.base.config as config
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees

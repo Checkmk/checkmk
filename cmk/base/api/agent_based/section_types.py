@@ -8,7 +8,7 @@
 import collections
 from typing import Any, Callable, Generator, List, NamedTuple, Tuple, Union
 
-from cmk.lib.snmplib.type_defs import ABCSNMPTree, CompatibleOIDEnd, OIDEnd, OIDSpec, SNMPTable
+from cmk.snmplib.type_defs import ABCSNMPTree, CompatibleOIDEnd, OIDEnd, OIDSpec, SNMPTable
 
 from cmk.base.api import PluginName
 from cmk.base.check_utils import AgentSectionContent

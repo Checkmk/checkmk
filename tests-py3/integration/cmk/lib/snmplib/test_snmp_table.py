@@ -8,9 +8,9 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.exceptions import MKSNMPError
 
-import cmk.lib.snmplib.snmp_modes as snmp_modes
-import cmk.lib.snmplib.snmp_table as snmp_table
-from cmk.lib.snmplib.type_defs import OID_BIN, OID_END, OID_END_BIN, OID_STRING, OIDWithColumns
+import cmk.snmplib.snmp_modes as snmp_modes
+import cmk.snmplib.snmp_table as snmp_table
+from cmk.snmplib.type_defs import OID_BIN, OID_END, OID_END_BIN, OID_STRING, OIDWithColumns
 
 
 # Found no other way to achieve this

@@ -9,7 +9,7 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import EvalableFloat
 
-from cmk.lib.snmplib.type_defs import OIDBytes, OIDSpec
+from cmk.snmplib.type_defs import OIDBytes, OIDSpec
 
 
 @pytest.mark.parametrize("value", [3, ("foo", "bar")])

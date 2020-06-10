@@ -10,7 +10,7 @@ from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, HostName, Item, RawAgentData, SectionName
 
-from cmk.lib.snmplib.type_defs import (
+from cmk.snmplib.type_defs import (
     PersistedSNMPSections,
     RawSNMPData,
     SNMPSectionContent,

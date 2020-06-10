@@ -8,7 +8,7 @@
 
 import pytest  # type: ignore[import]
 
-import cmk.lib.snmplib.snmp_modes as snmp_modes
+import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.base.check_api as check_api
 import cmk.base.config as config

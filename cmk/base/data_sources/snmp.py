@@ -14,7 +14,7 @@ from mypy_extensions import NamedArg
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SourceType, SectionName
 
-from cmk.lib.snmplib.type_defs import (
+from cmk.snmplib.type_defs import (
     ABCSNMPTree,
     PersistedSNMPSections,
     RawSNMPData,

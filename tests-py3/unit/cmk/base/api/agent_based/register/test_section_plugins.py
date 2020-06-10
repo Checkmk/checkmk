@@ -10,7 +10,7 @@ from typing import List
 
 import pytest  # type: ignore[import]
 
-from cmk.lib.snmplib.type_defs import ABCSNMPTree, OIDEnd
+from cmk.snmplib.type_defs import ABCSNMPTree, OIDEnd
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 import cmk.base.api.agent_based.section_types as section_types

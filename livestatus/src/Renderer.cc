@@ -65,7 +65,8 @@ void Renderer::output(const RowFragment &value) { _os << value._str; }
 
 void Renderer::output(char16_t value) {
     OStreamStateSaver s(_os);
-    _os << R"(\u)" << std::hex << std::setw(4) << std::setfill('0') << value;
+    _os << R"(\u)" << std::hex << std::setw(4) << std::setfill('0')
+        << static_cast<unsigned int>(value);
 }
 
 void Renderer::output(char32_t value) {

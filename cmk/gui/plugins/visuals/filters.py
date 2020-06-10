@@ -3024,7 +3024,7 @@ class FilterDiscoveryState(Filter):
         ]
         Filter.__init__(
             self,
-            "discovery_state",
+            "discovery",
             [o[0] for o in self.__options],
             [],
         )

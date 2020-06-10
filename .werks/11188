@@ -1,0 +1,11 @@
+Title: Fixed non functional "discovery state" filter
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p14
+Date: 1591790643
+Class: fix
+
+The filter "discovery state", used in views like "Unmonitored services", had no
+effect. From now on, the selected values are filtered correctly.

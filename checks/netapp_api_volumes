@@ -31,7 +31,9 @@ def parse_netapp_api_volumes(info):
 
 
 def _create_key(protocol, mode, field):
-    return "_".join([protocol, mode, field])
+    if protocol:
+        return "_".join([protocol, mode, field])
+    return "_".join([mode, field])
 
 
 def _check_single_netapp_api_volume(item, params, volume):
@@ -50,21 +52,14 @@ def _check_single_netapp_api_volume(item, params, volume):
         params,
     )
 
-    counter_wrapped = False
-    infotexts = []
     now = time.time()
     base = {}
+    metrics_map = {'write_ops': 'write_ops_s'}
 
-    perf_protocols = params.get("perfdata", [])
-    for protocol in ["", "nfs", "cifs", "san", "fcp", "iscsi"]:
-        if protocol not in perf_protocols:
-            continue
+    for protocol in params.get("perfdata", []):
         for mode in ["read", "write", "other"]:
-            for field, format_func in [
-                ("data", get_bytes_human_readable),
-                ("ops", lambda x: "%.2f 1/s" % x),
-                ("latency", lambda x: "%s: %.2f ms" % x),
-            ]:
+            for field in ["data", "ops", "latency"]:
+
                 key = _create_key(protocol, mode, field)
                 value = volume.get(key)
                 if value is None:
@@ -76,7 +71,6 @@ def _check_single_netapp_api_volume(item, params, volume):
                                      value,
                                      onwrap=RAISE)
                 except MKCounterWrapped:
-                    counter_wrapped = True
                     continue
 
                 # Quite hacky.. this base information is used later on by the "latency" field
@@ -115,15 +109,13 @@ def _check_single_netapp_api_volume(item, params, volume):
                         divisor = 1.0
                     else:
                         divisor = 1000.0
-                    delta = delta / (divisor * base[_create_key(protocol, mode, "ops")]
-                                    )  # fixed: true-division
-                if protocol == "":
-                    infotexts.append("%s: %s" % (key, format_func(delta)))
+                    delta /= divisor * base[_create_key(
+                        protocol,
+                        mode,
+                        "ops",
+                    )]  # fixed: true-division
 
-                perf.append((key, delta))
-
-    if not counter_wrapped:
-        info += ", " + ", ".join(infotexts)
+                perf.append((metrics_map.get(key, key), delta))
 
     return state, info, perf
 

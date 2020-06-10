@@ -749,7 +749,6 @@ check_metrics["check_mk-ibm_svc_mdiskgrp"] = df_translation
 check_metrics["check_mk-fast_lta_silent_cubes.capacity"] = df_translation
 check_metrics["check_mk-fast_lta_volumes"] = df_translation
 check_metrics["check_mk-libelle_business_shadow.archive_dir"] = df_translation
-check_metrics["check_mk-netapp_api_volumes"] = df_translation
 check_metrics["check_mk-netapp_api_luns"] = df_translation
 check_metrics["check_mk-netapp_api_qtree_quota"] = df_translation
 check_metrics["check_mk-emc_datadomain_fs"] = df_translation
@@ -765,22 +764,7 @@ check_metrics["check_mk-zpool"] = df_translation
 check_metrics["check_mk-vnx_quotas"] = df_translation
 check_metrics["check_mk-k8s_stats.fs"] = df_translation
 check_metrics["check_mk-fjdarye200_pools"] = df_translation
-df_netapp_perfvarnames = list(df_basic_perfvarnames)
-for protocol in ["nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
-    df_netapp_perfvarnames.append("%s_read_data" % protocol)
-    df_netapp_perfvarnames.append("%s_write_data" % protocol)
-    df_netapp_perfvarnames.append("%s_read_latency" % protocol)
-    df_netapp_perfvarnames.append("%s_write_latency" % protocol)
-    df_netapp_perfvarnames.append("%s_read_ops" % protocol)
-    df_netapp_perfvarnames.append("%s_write_ops" % protocol)
-# TODO: this special regex construct below, needs to be replaced by something managable
-# The current df_translation implementation is unable to automatically detect new parameters
 check_metrics["check_mk-netapp_api_volumes"] = {
-    "~(?!%s).*$" % "|".join(df_netapp_perfvarnames): {
-        "name": "fs_used",
-        "scale": MB,
-        "deprecated": "1.7.0i1"
-    },
     "fs_used": {
         "scale": MB
     },

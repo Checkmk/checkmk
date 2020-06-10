@@ -192,6 +192,12 @@ discovery = {
 freeze_time = '2020-06-10 13:50:21'
 
 
+def _create_key(protocol, mode, field):
+    if protocol:
+        return "_".join([protocol, mode, field])
+    return "_".join([mode, field])
+
+
 def mock_util(*args):
     item_state = {}
 
@@ -205,7 +211,7 @@ def mock_util(*args):
         for protocol in ["", "nfs", "cifs", "san", "fcp", "iscsi"]:
             for mode in ["read", "write", "other"]:
                 for field in ["data", "ops", "latency"]:
-                    key = "netapp_api_volumes.%s.%s" % (item, "_".join([protocol, mode, field]))
+                    key = "netapp_api_volumes.%s.%s" % (item, _create_key(protocol, mode, field))
                     item_state[key, None] = (1591789747, 0)
 
     return item_state[args]
@@ -221,7 +227,7 @@ checks = {
             [
                 (
                     0,
-                    '2.35% used (67.14 GB of 2.79 TB), trend: +45.21 GB / 24 hours, ',
+                    '2.35% used (67.14 GB of 2.79 TB), trend: +45.21 GB / 24 hours',
                     [('fs_used', 68750.97265625, 2341335.171875, 2634002.068359375, 0,
                       2926668.96484375), ('fs_size', 2926668.96484375),
                      ('fs_used_percent', 2.349120227880658), ('growth', 816618.6468930437),
@@ -246,7 +252,7 @@ checks = {
             [
                 (
                     0,
-                    '1.11% used (31.67 GB of 2.79 TB), trend: +21.32 GB / 24 hours, ',
+                    '1.11% used (31.67 GB of 2.79 TB), trend: +21.32 GB / 24 hours',
                     [('fs_used', 32429.234375, 2341335.171875, 2634002.068359375, 0,
                       2926668.96484375), ('fs_size', 2926668.96484375),
                      ('fs_used_percent', 1.1080595299486269), ('growth', 385191.89579323615),
@@ -300,13 +306,16 @@ checks = {
                     'GB / 24 hours - growing too fast (warn/crit at 100.00 MB/200.00 MB per 24.0 h)'
                     '(!!), growing too fast (warn/crit at 5.000%/10.000% per 24.0 h)(!!), time '
                     'left until disk full: 23 hours, Inodes Used: 0.04%, inodes available: 9.34 M/'
-                    '99.96%, ',
+                    '99.96%',
                     [('fs_used', 184455.7265625, 153600.0, 184320.0, 0, 307200.0),
                      ('fs_size', 307200.0), ('fs_used_percent', 60.04418182373047),
                      ('growth', 2190950.615204839),
                      ('trend', 124195.93898073, 100.0, 200.0, 0, 12800.0),
                      ('trend_hoursleft', 23.719475746763944),
                      ('inodes_used', 3414, 8404987.5, 8871931.25, 0.0, 9338875.0),
+                     ('read_data', 9716.487764641188), ('read_ops', 18.67761891668958),
+                     ('read_latency', 0.05978019446345899), ('write_data', 88.09100907341215),
+                     ('write_ops_s', 0.2686279901017322), ('write_latency', 0.17518730808597746),
                      ('nfs_read_data', 0.0), ('nfs_read_ops', 0.0), ('nfs_read_latency', 0.0),
                      ('nfs_write_data', 0.0), ('nfs_write_ops', 0.0), ('nfs_write_latency', 0.0),
                      ('cifs_read_data', 0.0), ('cifs_read_ops', 0.0), ('cifs_read_latency', 0.0),
@@ -346,13 +355,16 @@ checks = {
                     '0.06% used (670.75 MB of 1.00 TB), (warn/crit at 59.04%/63.59%), trend: '
                     '+451.63 MB / 24 hours - growing too fast (warn/crit at 100.00 MB/200.00 MB '
                     'per 24.0 h)(!!), time left until disk full: more than a year, Inodes Used: '
-                    '0.001%, inodes available: 31.88 M/100%, ',
+                    '0.001%, inodes available: 31.88 M/100%',
                     [('fs_used', 670.75390625, 619051.0158057379, 666776.0140495448, 0, 1048576.0),
                      ('fs_size', 1048576.0), ('fs_used_percent', 0.06396807730197906),
                      ('growth', 7967.162152873247),
                      ('trend', 451.6255079968184, 100.0, 200.0, 0, 43690.666666666664),
                      ('trend_hoursleft', 55687.124533336086),
                      ('inodes_used', 315, 28689026.400000002, 30282861.2, 0.0, 31876696.0),
+                     ('read_data', 111128.57093758593), ('read_ops', 18.929749793786087),
+                     ('read_latency', 0.1663962017502451), ('write_data', 187.43112455320318),
+                     ('write_ops_s', 0.5312070387682155), ('write_latency', 0.28390010351966877),
                      ('nfs_read_data', 0.0), ('nfs_read_ops', 0.0), ('nfs_read_latency', 0.0),
                      ('nfs_write_data', 0.0), ('nfs_write_ops', 0.0), ('nfs_write_latency', 0.0),
                      ('cifs_read_data', 101308.88342040143), ('cifs_read_ops', 0.22573549628814957),
@@ -380,7 +392,7 @@ checks = {
             [
                 (
                     0,
-                    '8.15% used (17.32 of 212.50 GB), trend: +11.66 GB / 24 hours, ',
+                    '8.15% used (17.32 of 212.50 GB), trend: +11.66 GB / 24 hours',
                     [('fs_used', 17738.44921875, 174080.0, 195840.0, 0, 217600.0),
                      ('fs_size', 217600.0),
                      ('fs_used_percent', 8.151860854204964), ('growth', 210695.9049353863),
@@ -401,7 +413,7 @@ checks = {
             [
                 (
                     0,
-                    '50.47% used (30.46 of 60.36 TB), trend: +20.51 TB / 24 hours, ',
+                    '50.47% used (30.46 of 60.36 TB), trend: +20.51 TB / 24 hours',
                     [('fs_used', 31942130.44140625, 50630282.453125, 56959067.759765625, 0,
                       63287853.06640625), ('fs_size', 63287853.06640625),
                      ('fs_used_percent', 50.471186639701976), ('growth', 379406113.5740308),

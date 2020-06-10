@@ -1,0 +1,7 @@
+Googletest doesn't provide releases anymore, it uses a "Abseil Live at Head
+philosophy" nowadays. To create a tar archive for a given hash use:
+
+( SHA=07d4a6e93d; git archive --prefix=googletest-$SHA/ --output=googletest-$SHA.tar.gz $SHA )
+
+Note: In an attempt to improve C++20 support, the latest version at 4fe018038f
+has been broken for C++20, see https://github.com/google/googletest/issues/2881.

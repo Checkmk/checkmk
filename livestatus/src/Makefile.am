@@ -35,6 +35,7 @@ GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 AM_CPPFLAGS = \
     -I.. \
     -isystem $(ASIO_INCLUDE) \
+    -DASIO_DISABLE_CONCEPTS \
     @RE2_CPPFLAGS@
 
 AM_LDFLAGS = \

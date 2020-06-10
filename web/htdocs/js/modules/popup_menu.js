@@ -50,6 +50,12 @@ function popup_context() {
     };
 
     popup.close = function() {
+        const popup = this.popup();
+        const container = this.container();
+        if (popup && container) {
+            container.removeChild(popup);
+        }
+
         if (this.id) {
             utils.del_event_handler("click", handle_popup_close);
         }
@@ -66,14 +72,7 @@ function popup_context() {
     return popup;
 }
 
-export function close_popup()
-{
-    const menu = active_popup.popup();
-    const container = active_popup.container();
-    if (menu) {
-        container.removeChild(menu);
-    }
-
+export function close_popup() {
     active_popup.close();
 }
 

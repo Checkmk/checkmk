@@ -212,6 +212,7 @@ def test_automation_try_discovery_not_existing_host(test_cfg, site):
     )
 
 
+@pytest.mark.skip("Skipped due to time calculation problems.")
 def test_automation_try_discovery_host(test_cfg, site):
 
     with freezegun.freeze_time("2020-06-01"):

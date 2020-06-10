@@ -8,7 +8,7 @@
 import abc
 import json
 import copy
-from typing import Optional, Any, Dict, Union, Tuple, List, Callable, cast
+from typing import Set, Optional, Any, Dict, Union, Tuple, List, Callable, cast
 import urllib.parse
 
 import cmk.utils.plugin_registry
@@ -291,6 +291,20 @@ class Dashlet(metaclass=abc.ABCMeta):
     def _dashlet_context_vars(self):
         # type: () -> HTTPVariables
         return visuals.get_context_uri_vars(self.context, self.single_infos())
+
+    def unconfigured_single_infos(self):
+        # type: () -> Set[str]
+        """Returns infos that are not set by the dashlet config"""
+        if not self.has_context():
+            return set()
+        return visuals.get_missing_single_infos(self.single_infos(), self._dashlet_spec["context"])
+
+    def missing_single_infos(self):
+        # type: () -> Set[str]
+        """Returns infos that are neither configured nor available through HTTP variables"""
+        if not self.has_context():
+            return set()
+        return visuals.get_missing_single_infos(self.single_infos(), self.context)
 
     def size(self):
         # type: () -> DashletSize

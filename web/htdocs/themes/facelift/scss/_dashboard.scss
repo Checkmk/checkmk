@@ -14,8 +14,8 @@ div#dashboard {
   margin: 0;
 }
 
-body.dashlet{
-  #data_container{
+body.dashlet {
+  #data_container {
     padding: 0;
     border: none;
   }
@@ -844,6 +844,35 @@ div.dashlet.single_metric {
 	&:hover {
 	  text-decoration: underline;
 	}
+      }
+    }
+  }
+}
+
+div#single_info_input_container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  background-color: rgba(0, 0, 0, 0.6);
+  transition: background-color .1s;
+
+  div#single_info_input {
+    position: relative;
+    display: block;
+    width: 400px;
+    margin-top: 100px;
+    margin-right: auto;
+    margin-left: auto;
+
+    table.nform tr td.legend {
+      width: 300px;
+      min-width: 200px;
+
+      div.title {
+        max-width: 180px;
       }
     }
   }

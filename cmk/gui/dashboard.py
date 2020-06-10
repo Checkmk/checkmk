@@ -7,7 +7,7 @@
 import time
 import copy
 import json
-from typing import Dict, Optional, NamedTuple, Tuple, Type, List, Union, Callable
+from typing import Set, Dict, Optional, NamedTuple, Tuple, Type, List, Union, Callable
 
 from six import ensure_str
 
@@ -495,6 +495,11 @@ def draw_dashboard(name):
     dashlet_javascripts(board)
     dashlet_styles(board)
 
+    # In case we have a dashboard / dashlet that requires context information that is not available
+    # yet, display a message to the user to insert the missing information.
+    missing_single_infos = set()
+    unconfigured_single_infos = set()
+
     refresh_dashlets = []  # Dashlets with automatic refresh, for Javascript
     dashlet_coords = []  # Dimensions and positions of dashlet
     on_resize_dashlets = {}  # javascript function to execute after ressizing the dashlet
@@ -505,6 +510,9 @@ def draw_dashboard(name):
         try:
             dashlet_type = get_dashlet_type(dashlet)
             dashlet_instance = dashlet_type(name, board, nr, dashlet)
+
+            unconfigured_single_infos.update(dashlet_instance.unconfigured_single_infos())
+            missing_single_infos.update(dashlet_instance.missing_single_infos())
 
             refresh = get_dashlet_refresh(dashlet_instance)
             if refresh:
@@ -531,7 +539,11 @@ def draw_dashboard(name):
         dashlet_container_end()
         dashlet_coords.append(get_dashlet_dimensions(dashlet_instance))
 
-    dashboard_edit_controls(name, board)
+    _dashboard_menu(name, board, bool(unconfigured_single_infos))
+
+    html.close_div()
+
+    _single_infos_dialog(missing_single_infos, unconfigured_single_infos)
 
     dashboard_properties = {
         "MAX": MAX,
@@ -665,13 +677,70 @@ def _fallback_dashlet_instance(name, board, dashlet_spec, dashlet_id):
     return dashlet_type(name, board, dashlet_id, dashlet_spec)
 
 
-def dashboard_edit_controls(name, board):
-    # type: (DashboardName, DashboardConfig) -> None
-    # Show the edit menu to all users which are allowed to edit dashboards
-    if not config.user.may("general.edit_dashboards"):
-        return
+# TODO: Use new generic popup dialogs once they are merged from the current UX rework
+def _single_infos_dialog(missing_single_infos, unconfigured_single_infos):
+    # type: (Set[str], Set[str]) -> None
+    html.open_div(id_="single_info_input_container", style="display:none")
+    html.open_div(id_="single_info_input")
+    html.begin_form("single_info_input", method="GET")
+
+    forms.header(_("Dashboard context"))
+
+    for info_key in unconfigured_single_infos:
+        info = visuals.visual_info_registry[info_key]()
+
+        for filter_name, valuespec in info.single_spec:
+            forms.section(valuespec.title())
+            valuespec.render_input(filter_name, None)
+
+    forms.section_close()
+
+    html.open_tr()
+    html.open_td(colspan=2)
+    html.button("_submit", _("Update"))
+    html.close_td()
+    html.close_tr()
+
+    forms.end()
+
+    html.hidden_fields()
+    html.end_form()
+    html.close_div()
+    html.close_div()
+
+    if missing_single_infos:
+        html.javascript("cmk.dashboard.show_single_infos_dialog()")
+
+
+def _dashboard_menu(name, board, has_unconfigured_single_infos):
+    # type: (DashboardName, DashboardConfig, bool) -> None
+    if not has_unconfigured_single_infos and not config.user.may("general.edit_dashboards"):
+        return  # hide empty menus
 
     html.open_ul(style="display:none;", class_=["menu"], id_="controls")
+
+    if has_unconfigured_single_infos:
+        html.open_li()
+        html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.show_single_infos_dialog()")
+        html.icon(title=_("Update context"), icon="trans")
+        html.write_text(_("Update context"))
+        html.close_a()
+        html.close_li()
+
+    if not config.user.may("general.edit_dashboards"):
+        # Show the edit menu to all users which are allowed to edit dashboards
+        _show_edit_entries(name, board)
+
+    html.close_ul()
+
+
+def _show_edit_entries(name, board):
+    # type: (DashboardName, DashboardConfig) -> None
+    html.icon_button(None,
+                     _('Edit the Dashboard'),
+                     'dashboard_controls',
+                     'controls_toggle',
+                     onclick='void(0)')
 
     if board['owner'] != config.user.id:
         # Not owned dashboards must be cloned before being able to edit. Do not switch to
@@ -699,7 +768,7 @@ def dashboard_edit_controls(name, board):
             html.open_li()
             html.open_a(href=menu_entry.url)
             html.icon(title=menu_entry.title, icon=menu_entry.icon_name)
-            html.write(menu_entry.title)
+            html.write_text(menu_entry.title)
             html.close_a()
             html.close_li()
         html.close_ul()
@@ -714,7 +783,7 @@ def dashboard_edit_controls(name, board):
                     (name, html.urlencode(html.makeuri([]))),
                     onmouseover="cmk.dashboard.hide_submenus();")
         html.icon(title="", icon="trans")
-        html.write(_('Properties'))
+        html.write_text(_('Properties'))
         html.close_a()
         html.close_li()
 
@@ -741,16 +810,6 @@ def dashboard_edit_controls(name, board):
         html.write(_('Edit Dashboard'))
         html.close_a()
         html.close_li()
-
-    html.close_ul()
-
-    html.icon_button(None,
-                     _('Edit the Dashboard'),
-                     'dashboard_controls',
-                     'controls_toggle',
-                     onclick='void(0)')
-
-    html.close_div()
 
 
 MenuEntry = NamedTuple("MenuEntry", [

@@ -1239,3 +1239,8 @@ export function register_event_handlers() {
         return false;
     });
 }
+
+export function show_single_infos_dialog() {
+    document.getElementById("single_info_input_container").style.display = "block";
+    toggle_dashboard_menu(false);
+}

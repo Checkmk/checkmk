@@ -815,13 +815,13 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"name\": \"OnCall\",\n  \
-          \        \"alias\": \"Not on Sundays.\"\n        }' \\\n    \"$API_URL/collections/contact_group\""
+          \ application/json\" \\\n    -d '{\n          \"alias\": \"Not on Sundays.\"\
+          ,\n          \"name\": \"OnCall\"\n        }' \\\n    \"$API_URL/collections/contact_group\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/contact_group\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='OnCall'\
-          \ \\\n    alias='Not on Sundays.'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Not\
+          \ on Sundays.' \\\n    name='OnCall'"
   /objects/contact_group/{name}:
     delete:
       description: ''
@@ -981,13 +981,13 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"name\": \"OnCall\",\n          \"alias\": \"Not\
-          \ on Sundays.\"\n        }' \\\n    \"$API_URL/objects/contact_group/pathname\""
+          \    -d '{\n          \"alias\": \"Not on Sundays.\",\n          \"name\"\
+          : \"OnCall\"\n        }' \\\n    \"$API_URL/objects/contact_group/pathname\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/contact_group/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    name='OnCall' \\\n    alias='Not on Sundays.'"
+          \ a20ceacf346041dc' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
   /collections/folder:
     get:
       description: ''
@@ -1075,15 +1075,15 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    -d '{\n          \"name\": \"production\",\n\
+          \          \"attributes\": {\n            \"foo\": \"bar\"\n          },\n\
           \          \"title\": \"Production Hosts\",\n          \"parent\": \"root\"\
-          ,\n          \"attributes\": {\n            \"foo\": \"bar\"\n         \
-          \ }\n        }' \\\n    \"$API_URL/collections/folder\""
+          \n        }' \\\n    \"$API_URL/collections/folder\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/folder\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='production'\
-          \ \\\n    title='Production Hosts' \\\n    parent='root' \\\n    attributes='{\"\
-          foo\": \"bar\"}'"
+          \ \\\n    attributes='{\"foo\": \"bar\"}' \\\n    title='Production Hosts'\
+          \ \\\n    parent='root'"
   /objects/folder/{ident}:
     delete:
       description: ''
@@ -1247,15 +1247,16 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"title\": \"Virtual Servers.\",\n          \"attributes\"\
-          : [\n            {\n              \"key\": \"foo\",\n              \"value\"\
-          : \"bar\"\n            }\n          ]\n        }' \\\n    \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
+          \    -d '{\n          \"attributes\": [\n            {\n              \"\
+          key\": \"foo\",\n              \"value\": \"bar\"\n            }\n     \
+          \     ],\n          \"title\": \"Virtual Servers.\"\n        }' \\\n   \
+          \ \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    title='Virtual Servers.' \\\n    attributes='[{\"\
-          key\": \"foo\", \"value\": \"bar\"}]'"
+          \ a20ceacf346041dc' \\\n    attributes='[{\"key\": \"foo\", \"value\": \"\
+          bar\"}]' \\\n    title='Virtual Servers.'"
   /objects/folder/{ident}/actions/move/invoke:
     post:
       description: ''
@@ -1370,16 +1371,16 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"nodes\": [\n           \
-          \ \"host1\",\n            \"host2\",\n            \"host3\"\n          ],\n\
-          \          \"folder\": \"root\",\n          \"hostname\": \"example.com\"\
-          ,\n          \"attributes\": {}\n        }' \\\n    \"$API_URL/collections/host\""
+          \ application/json\" \\\n    -d '{\n          \"hostname\": \"example.com\"\
+          ,\n          \"folder\": \"root\",\n          \"attributes\": {},\n    \
+          \      \"nodes\": [\n            \"host1\",\n            \"host2\",\n  \
+          \          \"host3\"\n          ]\n        }' \\\n    \"$API_URL/collections/host\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    nodes='[\"\
-          host1\", \"host2\", \"host3\"]' \\\n    folder='root' \\\n    hostname='example.com'\
-          \ \\\n    attributes='{}'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    hostname='example.com'\
+          \ \\\n    folder='root' \\\n    attributes='{}' \\\n    nodes='[\"host1\"\
+          , \"host2\", \"host3\"]'"
   /domain-types/host/collections/hosts:
     get:
       description: ''
@@ -1576,15 +1577,15 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"nodes\": [\n            \"host1\",\n           \
-          \ \"host2\",\n            \"host3\"\n          ],\n          \"attributes\"\
-          : {}\n        }' \\\n    \"$API_URL/objects/host/example.com\""
+          \    -d '{\n          \"attributes\": {},\n          \"nodes\": [\n    \
+          \        \"host1\",\n            \"host2\",\n            \"host3\"\n   \
+          \       ]\n        }' \\\n    \"$API_URL/objects/host/example.com\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    nodes='[\"host1\", \"host2\", \"host3\"]' \\\
-          \n    attributes='{}'"
+          \ a20ceacf346041dc' \\\n    attributes='{}' \\\n    nodes='[\"host1\", \"\
+          host2\", \"host3\"]'"
   /collections/host_group:
     post:
       description: ''
@@ -1634,13 +1635,13 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"name\": \"windows\",\n \
-          \         \"alias\": \"Windows Servers\"\n        }' \\\n    \"$API_URL/collections/host_group\""
+          \ application/json\" \\\n    -d '{\n          \"alias\": \"Windows Servers\"\
+          ,\n          \"name\": \"windows\"\n        }' \\\n    \"$API_URL/collections/host_group\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host_group\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='windows'\
-          \ \\\n    alias='Windows Servers'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Windows\
+          \ Servers' \\\n    name='windows'"
   /objects/host_group/{name}:
     delete:
       description: ''
@@ -1800,13 +1801,13 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"name\": \"windows\",\n          \"alias\": \"Windows\
-          \ Servers\"\n        }' \\\n    \"$API_URL/objects/host_group/pathname\""
+          \    -d '{\n          \"alias\": \"Windows Servers\",\n          \"name\"\
+          : \"windows\"\n        }' \\\n    \"$API_URL/objects/host_group/pathname\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host_group/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    name='windows' \\\n    alias='Windows Servers'"
+          \ a20ceacf346041dc' \\\n    alias='Windows Servers' \\\n    name='windows'"
   /collections/service_group:
     get:
       description: ''
@@ -1892,13 +1893,13 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"name\": \"environment\"\
-          ,\n          \"alias\": \"Environment Sensors\"\n        }' \\\n    \"$API_URL/collections/service_group\""
+          \ application/json\" \\\n    -d '{\n          \"alias\": \"Environment Sensors\"\
+          ,\n          \"name\": \"environment\"\n        }' \\\n    \"$API_URL/collections/service_group\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/service_group\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='environment'\
-          \ \\\n    alias='Environment Sensors'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Environment\
+          \ Sensors' \\\n    name='environment'"
   /objects/service_group/{name}:
     delete:
       description: ''
@@ -2058,14 +2059,13 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"name\": \"environment\",\n          \"alias\": \"\
-          Environment Sensors\"\n        }' \\\n    \"$API_URL/objects/service_group/pathname\""
+          \    -d '{\n          \"alias\": \"Environment Sensors\",\n          \"\
+          name\": \"environment\"\n        }' \\\n    \"$API_URL/objects/service_group/pathname\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/service_group/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    name='environment' \\\n    alias='Environment\
-          \ Sensors'"
+          \ a20ceacf346041dc' \\\n    alias='Environment Sensors' \\\n    name='environment'"
   /version:
     get:
       description: ''
@@ -2140,13 +2140,13 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"passphrase\": \"sw0rdfish\"\
-          ,\n          \"key_id\": \"asdf\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
+          \ application/json\" \\\n    -d '{\n          \"key_id\": \"asdf\",\n  \
+          \        \"passphrase\": \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    passphrase='sw0rdfish'\
-          \ \\\n    key_id='asdf'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    key_id='asdf'\
+          \ \\\n    passphrase='sw0rdfish'"
   /collections/agent:
     get:
       description: ''

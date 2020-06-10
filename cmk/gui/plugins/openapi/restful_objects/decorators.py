@@ -157,17 +157,8 @@ def endpoint_schema(
 
     primitive_parameters = reduce_to_primitives(parameters)
     del parameters
-    param_names = _names_of(primitive_parameters)
 
-    for path_param in PARAM_RE.findall(path):
-        if path_param not in param_names:
-            raise ValueError("Param %r, which is used in the HTTP path, was not specified." %
-                             (path_param,))
-
-    global_param_names = SPEC.components.to_dict().get('parameters', {}).keys()
-    for param in primitive_parameters:
-        if isinstance(param, str) and param not in global_param_names:
-            raise ValueError("Param %r, which is required, was specified nowhere." % (param,))
+    _verify_parameters(path, primitive_parameters)
 
     def _add_api_spec(func):
         module_obj = import_string(func.__module__)
@@ -283,6 +274,69 @@ def endpoint_schema(
         return wrap_with_validation(func, request_schema, response_schema)
 
     return _add_api_spec
+
+
+def _verify_parameters(path: str, parameters: List[PrimitiveParameter]):
+    """Verifies matching of parameters to the placeholders used in an URL-Template
+
+    This works both ways, ensuring that no parameter is supplied which is then not used and that
+    each template-variable in the URL-template has a corresponding parameter supplied,
+    either globally or locally.
+
+    Args:
+        path:
+            The URL-Template, for eample: '/user/{username}'
+
+        parameters:
+            A list of parameters. A parameter can either be a string referencing a
+            globally defined parameter by name, or a dict containing a full parameter.
+
+    Examples:
+
+        In case of success, this function will return nothing.
+
+          >>> _verify_parameters('/foo/{bar}', [{'name': 'bar', 'in': 'path'}])
+
+        Yet, when problems are found, ValueErrors are raised.
+
+          >>> _verify_parameters('/foo', [{'name': 'foo', 'in': 'path'}])
+          Traceback (most recent call last):
+          ...
+          ValueError: Param 'foo', which is specified as 'path', not used in path. Found params: []
+
+          >>> _verify_parameters('/foo/{bar}', [])
+          Traceback (most recent call last):
+          ...
+          ValueError: Param 'bar', which is used in the HTTP path, was not specified.
+
+          >>> _verify_parameters('/foo/{foobazbar}', ['foobazbar'])
+          Traceback (most recent call last):
+          ...
+          ValueError: Param 'foobazbar', assumed globally defined, was not found.
+
+    Returns:
+        Nothing.
+
+    Raises:
+        ValueError in case of a mismatch.
+
+    """
+    param_names = _names_of(parameters)
+    path_params = PARAM_RE.findall(path)
+    for path_param in path_params:
+        if path_param not in param_names:
+            raise ValueError("Param %r, which is used in the HTTP path, was not specified." %
+                             (path_param,))
+
+    for param in parameters:
+        if isinstance(param, dict) and param['in'] == 'path' and param['name'] not in path_params:
+            raise ValueError("Param %r, which is specified as 'path', not used in path. Found "
+                             "params: %r" % (param['name'], path_params))
+
+    global_param_names = SPEC.components.to_dict().get('parameters', {}).keys()
+    for param in parameters:
+        if isinstance(param, str) and param not in global_param_names:
+            raise ValueError("Param %r, assumed globally defined, was not found." % (param,))
 
 
 def _assign_to_tag_group(tag_group, name):

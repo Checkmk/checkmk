@@ -190,9 +190,7 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
 def container():
     # type: () -> None
     global g_section_open
-    if g_section_open:
-        html.close_td()
-        html.close_tr()
+    section_close()
     html.open_tr()
     html.open_td(colspan=2)
     g_section_open = True
@@ -212,9 +210,7 @@ def section(title=None,
             css=None):
     # type: (Union[None, HTML, str], Union[None, HTML, str, Tuple[str, bool, str]], Optional[str], bool, bool, bool, Optional[str]) -> None
     global g_section_open
-    if g_section_open:
-        html.close_td()
-        html.close_tr()
+    section_close()
     html.open_tr(id_=section_id, class_=[css], style="display:none;" if hide else None)
 
     if legend:
@@ -240,13 +236,18 @@ def section(title=None,
     g_section_open = True
 
 
+def section_close():
+    # type: () -> None
+    if g_section_open:
+        html.close_td()
+        html.close_tr()
+
+
 def end():
     # type: () -> None
     global g_header_open
     g_header_open = False
-    if g_section_open:
-        html.close_td()
-        html.close_tr()
+    section_close()
     html.end_foldable_container()
     html.tr(html.render_td('', colspan=2), class_=["bottom"])
     html.close_tbody()

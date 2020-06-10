@@ -160,7 +160,10 @@ class VisualTypeDashboards(VisualType):
                 }
 
             else:
-                raise MKGeneralException(_("Invalid graph type '%s'") % specification[0])
+                raise MKGeneralException(
+                    _("Graph specification '%s' is insuficient for Dashboard. "
+                      "Please save your graph as a custom graph first, then "
+                      'add that one to the dashboard.') % specification[0])
 
         permitted_dashboards = get_permitted_dashboards()
         dashboard = _load_dashboard_with_cloning(permitted_dashboards, target_visual_name)

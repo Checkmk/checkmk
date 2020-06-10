@@ -6,7 +6,7 @@ Date: 1591273420
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.6.0p13
+Version: 1.6.0p14
 
 During activate changes each site gets a distinct process to package its snapshot.
 If there were more sites than available CPUs on the system, the performance decreased

@@ -1,9 +1,9 @@
-Summary:        Check_MK
+Summary:        Checkmk
 Name:           check-mk-%{edition}-%{pkg_version}
 Version:        SET BY MAKEFILE
 Release:        SET BY MAKEFILE
 License:        GPL
-URL:            http://mathias-kettner.com
+URL:            https://checkmk.com
 Group:          Application/System
 Source:         check-mk-%{edition}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
@@ -20,27 +20,30 @@ Requires:
 %global debug_package %{nil}
 %global _build_id_links none
 
+# Avoid the annobin chaos on CentOS 8, part 1:
+# Do not inject -fplugin=annobin into compiler flags.
+%if 0%{?rhel} >= 8
+%undefine _annotated_build
+%endif
+
 %description
-Check_MK is a full featured system monitoring
-solution. This package ships with Check_MK, Nagios,
-the Nagios plugins, Livestatus, Multisite,
-PNP4Nagios, NagVis, and other addons. Please visit
-http://mathias-kettner.com/.
-
-%prep
-%setup -q -n check-mk-%{edition}-%{version}
-
-%build
-cd omd
-make -j 4
-make pack
+Checkmk - Best-in-class infrastructure & application monitoring
 
 %install
-mkdir -p $RPM_BUILD_ROOT
-tar xzf omd/check-mk-%{edition}-bin-%{version}.tar.gz -C $RPM_BUILD_ROOT
+# Avoid the annobin chaos on CentOS 8, part 2:
+# Empty the already existing spec file, it is referenced by various system stuff, e.g. Perl.
+if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then
+    rm -f /usr/lib/rpm/redhat/redhat-annobin-cc1
+    touch /usr/lib/rpm/redhat/redhat-annobin-cc1
+fi
+
+# This target compiles and installs everything needed into our DESTDIR
+make -C $REPO_PATH/omd DESTDIR=$RPM_BUILD_ROOT install
+
 # Remove all global symbolic links from package. They are shared
 # among all versions and must be handled in %post und %postun
 # in order to avoid RPM conflicts
+# TODO: Synchronize with omd/debian/rules
 rm -f $RPM_BUILD_ROOT/opt/omd/versions/default
 rm -f $RPM_BUILD_ROOT/omd
 rm -f $RPM_BUILD_ROOT/usr/bin/omd

@@ -1,34 +1,14 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import ast
 import os
-from typing import Dict  # pylint: disable=unused-import
-import six
+from typing import Dict
+from pathlib import Path
 
 import cmk.utils.store as store
 
@@ -40,10 +20,8 @@ import cmk.gui.background_job as background_job
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page
-from cmk.gui.exceptions import (
-    MKGeneralException,
-    HTTPRedirect,
-)
+from cmk.gui.escaping import escape_attribute
+from cmk.gui.exceptions import MKGeneralException, HTTPRedirect, MKUserError
 from cmk.gui.watolib import (
     automation_command_registry,
     AutomationCommand,
@@ -65,9 +43,9 @@ from cmk.gui.watolib import (
 #       to better location.
 
 
-class FetchAgentOutputRequest(object):
+class FetchAgentOutputRequest:
     def __init__(self, host, agent_type):
-        # type: (watolib.Host, str) -> None
+        # type: (watolib.CREHost, str) -> None
         self.host = host
         self.agent_type = agent_type
 
@@ -96,12 +74,14 @@ class FetchAgentOutputRequest(object):
 
 # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
-class AgentOutputPage(six.with_metaclass(abc.ABCMeta, Page)):
+class AgentOutputPage(Page, metaclass=abc.ABCMeta):
     def __init__(self):
+        # type: () -> None
         super(AgentOutputPage, self).__init__()
         self._from_vars()
 
     def _from_vars(self):
+        # type: () -> None
         config.user.need_permission("wato.download_agent_output")
 
         host_name = html.request.var("host")
@@ -120,8 +100,7 @@ class AgentOutputPage(six.with_metaclass(abc.ABCMeta, Page)):
         if not host:
             raise MKGeneralException(
                 _("Host is not managed by WATO. "
-                  "Click <a href=\"%s\">here</a> to go back.") %
-                html.escaper.escape_attribute(self._back_url))
+                  "Click <a href=\"%s\">here</a> to go back.") % escape_attribute(self._back_url))
         host.need_permission("read")
 
         self._request = FetchAgentOutputRequest(host=host, agent_type=ty)
@@ -135,6 +114,7 @@ class AgentOutputPage(six.with_metaclass(abc.ABCMeta, Page)):
 @page_registry.register_page("fetch_agent_output")
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self):
+        # type: () -> None
         html.header(_("%s: Download agent output") % self._request.host.name())
 
         html.begin_context_buttons()
@@ -151,6 +131,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         html.footer()
 
     def _action(self):
+        # type: () -> None
         if not html.transaction_valid():
             return
 
@@ -165,6 +146,7 @@ class PageFetchAgentOutput(AgentOutputPage):
                 ]))
 
     def _show_status(self):
+        # type: () -> None
         job_status = self._get_job_status()
 
         html.h3(_("Job status"))
@@ -197,7 +179,7 @@ class PageFetchAgentOutput(AgentOutputPage):
                                             ])
 
 
-class ABCAutomationFetchAgentOutput(six.with_metaclass(abc.ABCMeta, AutomationCommand)):
+class ABCAutomationFetchAgentOutput(AutomationCommand, metaclass=abc.ABCMeta):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
@@ -207,14 +189,17 @@ class ABCAutomationFetchAgentOutput(six.with_metaclass(abc.ABCMeta, AutomationCo
         # type: () -> FetchAgentOutputRequest
         config.user.need_permission("wato.download_agent_output")
 
-        return FetchAgentOutputRequest.deserialize(ast.literal_eval(
-            html.get_ascii_input("request")))
+        ascii_input = html.request.get_ascii_input("request")
+        if ascii_input is None:
+            raise MKUserError("request", _("The parameter \"%s\" is missing.") % "request")
+        return FetchAgentOutputRequest.deserialize(ast.literal_eval(ascii_input))
 
 
 @automation_command_registry.register
 class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._start_fetch() to execute the background job on a remote site"""
     def command_name(self):
+        # type: () -> str
         return "fetch-agent-output-start"
 
     def execute(self, request):
@@ -254,6 +239,7 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
 
     @classmethod
     def gui_title(cls):
+        # type: () -> str
         return _("Fetch agent output")
 
     def __init__(self, request):
@@ -265,7 +251,7 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
                                  self._request.agent_type)
         title = _("Fetching %s of %s / %s") % (self._request.agent_type, host.site_id(),
                                                host.name())
-        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title, deletable=False)
+        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title)
 
         self.set_function(self._fetch_agent_output)
 
@@ -295,15 +281,16 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
 @page_registry.register_page("download_agent_output")
 class PageDownloadAgentOutput(AgentOutputPage):
     def page(self):
+        # type: () -> None
         file_name = self.file_name(self._request)
         file_content = self._get_agent_output_file()
 
         html.set_output_format("text")
         html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % file_name
-        html.write(file_content)
+        html.write_binary(file_content)
 
     def _get_agent_output_file(self):
-        # type: () -> str
+        # type: () -> bytes
         if config.site_is_local(self._request.host.site_id()):
             return get_fetch_agent_output_file(self._request)
 
@@ -316,16 +303,19 @@ class PageDownloadAgentOutput(AgentOutputPage):
 @automation_command_registry.register
 class AutomationFetchAgentOutputGetFile(ABCAutomationFetchAgentOutput):
     def command_name(self):
+        # type: () -> str
         return "fetch-agent-output-get-file"
 
     def execute(self, request):
-        # type: (FetchAgentOutputRequest) -> str
+        # type: (FetchAgentOutputRequest) -> bytes
         return get_fetch_agent_output_file(request)
 
 
 def get_fetch_agent_output_file(request):
-    # type: (FetchAgentOutputRequest) -> str
+    # type: (FetchAgentOutputRequest) -> bytes
     job = FetchAgentOutputBackgroundJob(request)
-    filepath = os.path.join(job.get_work_dir(), AgentOutputPage.file_name(request))
-    with open(filepath) as f:
+    filepath = Path(job.get_work_dir(), AgentOutputPage.file_name(request))
+    # The agent output need to be treated as binary data since each agent section can have an
+    # individual encoding
+    with filepath.open("rb") as f:
         return f.read()

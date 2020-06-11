@@ -1,0 +1,12 @@
+Title: Interface bandwith: Add missing perf-O-meter for in/out measured in bits/s
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1578573024
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+

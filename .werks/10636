@@ -1,0 +1,13 @@
+Title: netapp_api_if: configuration of home-port attribute
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1575460336
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+ This change allows the user to configure the behaviour
+ when an interface is not on its home-port. The WATO feature
+ addition is unique to the netapp_api_if.

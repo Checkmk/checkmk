@@ -33,7 +33,7 @@ item:
  port has the number {"01"}.
 
 inventory:
- The inventory creates one service for each port that fulfills configurable conditions.
+ One service is created for each port that fulfills configurable conditions.
  Per default these are ports which are currently found {up} and are of types {6} (ethernetCsmacd),
  {32} (frameRelay) or {117} (gigabitEthernet). This check announces the port
  type of {6} for the FC ports. This is not exactly correct but makes the inventory

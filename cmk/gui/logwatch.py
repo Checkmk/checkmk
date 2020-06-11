@@ -1,31 +1,13 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import time
 import datetime
+from typing import Any, Dict, List, Optional
+
 import livestatus
 
 import cmk.gui.pages
@@ -35,6 +17,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
+from cmk.gui.type_defs import HTTPVariables
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -52,7 +35,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 def page_show():
     site = html.request.var("site")  # optional site hint
     host_name = html.request.var("host", "")
-    file_name = html.request.var("file", "")
+    file_name = html.request.get_unicode_input("file", "")
 
     # Fix problem when URL is missing certain illegal characters
     try:
@@ -214,9 +197,9 @@ def show_file(site, host_name, file_name):
         html.footer()
         return
 
-    elif log_chunks == []:
+    if log_chunks == []:
         html.end_context_buttons()
-        html.message(_("This logfile contains no unacknowledged messages."))
+        html.show_message(_("This logfile contains no unacknowledged messages."))
         html.footer()
         return
 
@@ -270,7 +253,7 @@ def ack_button(site=None, host_name=None, int_filename=None):
     else:
         label = _("Clear Logs")
 
-    urivars = [('_ack', '1')]
+    urivars = [('_ack', '1')]  # type: HTTPVariables
     if int_filename:
         urivars.append(("file", int_filename))
     html.context_button(label, html.makeactionuri(urivars), 'delete')
@@ -289,21 +272,21 @@ def do_log_ack(site, host_name, file_name):
         for int_filename in logfiles_of_host(site, host_name):
             file_display = form_file_to_ext(int_filename)
             logs_to_ack.append((site, host_name, int_filename, file_display))
-        ack_msg = _('all logfiles of host %s') % html.render_text(host_name)
+        ack_msg = _('all logfiles of host %s') % host_name
 
     elif host_name and file_name:  # one log on one host
         int_filename = form_file_to_int(file_name)
         logs_to_ack = [(site, host_name, int_filename, form_file_to_ext(int_filename))]
-        ack_msg = html.render_text(_('the log file %s on host %s') % (file_name, host_name))
+        ack_msg = _('the log file %s on host %s') % (file_name, host_name)
 
     else:
         for this_site, this_host, logs in all_logs():
             file_display = form_file_to_ext(file_name)
             if file_name in logs:
                 logs_to_ack.append((this_site, this_host, file_name, file_display))
-        ack_msg = html.render_text(_('log file %s on all hosts') % file_name)
+        ack_msg = _('log file %s on all hosts') % file_name
 
-    html.header(_("Acknowledge %s") % ack_msg)
+    html.header(_("Acknowledge %s") % html.render_text(ack_msg))
 
     html.begin_context_buttons()
     button_all_logfiles()
@@ -334,13 +317,15 @@ def do_log_ack(site, host_name, file_name):
         try:
             acknowledge_logfile(this_site, this_host, int_filename, display_name)
         except Exception as e:
-            html.show_error(_('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') % \
-                                      (display_name, this_host, e))
+            html.show_error(
+                _('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') %
+                (display_name, this_host, e))
             html.footer()
             return
 
-    html.message('<b>%s</b><p>%s</p>' %
-                 (_('Acknowledged %s') % ack_msg, _('Acknowledged all messages in %s.') % ack_msg))
+    html.show_message(
+        '<b>%s</b><p>%s</p>' %
+        (_('Acknowledged %s') % ack_msg, _('Acknowledged all messages in %s.') % ack_msg))
     html.footer()
 
 
@@ -366,9 +351,9 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
 
 
 def parse_file(site, host_name, file_name, hidecontext=False):
-    log_chunks = []
+    log_chunks = []  # type: List[Dict[str, Any]]
     try:
-        chunk = None
+        chunk = None  # type: Optional[Dict[str, Any]]
         lines = get_logfile_lines(site, host_name, file_name)
         if lines is None:
             return None
@@ -382,7 +367,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):
                 continue
 
             if line[:3] == '<<<':  # new chunk begins
-                log_lines = []
+                log_lines = []  # type: List[Dict[str, Any]]
                 chunk = {'lines': log_lines}
                 log_chunks.append(chunk)
 
@@ -487,9 +472,9 @@ nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()='
 def level_name(level):
     if level == 'W':
         return 'WARN'
-    elif level == 'C':
+    if level == 'C':
         return 'CRIT'
-    elif level == 'O':
+    if level == 'O':
         return 'OK'
     return 'OK'
 
@@ -497,9 +482,9 @@ def level_name(level):
 def level_state(level):
     if level == 'W':
         return 1
-    elif level == 'C':
+    if level == 'C':
         return 2
-    elif level == 'O':
+    if level == 'O':
         return 0
     return 0
 
@@ -560,7 +545,8 @@ def logfiles_of_host(site, host_name):
         raise MKGeneralException(
             _("The monitoring core of the target site '%s' has the version '%s'. That "
               "does not support fetching logfile information. Please upgrade "
-              "to a newer version.") % (site, sites.states().get(site)["program_version"]))
+              "to a newer version.") %
+            (site, sites.states().get(site, sites.SiteStatus({})).get("program_version", "???")))
     return file_names
 
 

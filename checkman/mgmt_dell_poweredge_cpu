@@ -9,7 +9,7 @@ description:
  {processorDeviceStatus}.
 
  The state of the check is {OK}, when the device returns a state of {OK}.
- The state of the cehck is {WARN}, when the device returns a state of {other},
+ The state of the check is {WARN}, when the device returns a state of {other},
  {unknown} or {nonCritical}. The state of the check is {CRIT} otherwise.
 
  No limits are set in the check.
@@ -18,4 +18,4 @@ item:
  The name of the location variable configured for the CPU
 
 inventory:
- All CPUs of the device are detected
+ One service is created for each CPU.

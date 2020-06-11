@@ -1,4 +1,4 @@
-title: Bluecat Adonis HA State
+title: Bluecat Adonis: HA State
 agents: snmp
 catalog: hw/network/bluecat
 license: GPL
@@ -10,5 +10,5 @@ description:
  The behavior can be changed using WATO.
 
 inventory:
- One service will be created
+ One service is created if the device is not in standalone mode.
 

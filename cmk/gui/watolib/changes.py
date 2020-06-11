@@ -1,48 +1,27 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
 import ast
 import errno
 import os
 import time
-from typing import Dict, List  # pylint: disable=unused-import
-import six
+from typing import Dict
+from pathlib import Path
 
-import pathlib2 as pathlib
+from six import ensure_binary, ensure_str
 
 import cmk.utils
 import cmk.utils.store as store
 
 import cmk.gui.utils
-import cmk.gui.config as config
-from cmk.gui.config import SiteId, SiteConfiguration  # pylint: disable=unused-import
+from cmk.gui import config, escaping
+from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 import cmk.gui.watolib.git
@@ -51,16 +30,10 @@ import cmk.gui.watolib.sidebar_reload
 from cmk.gui.plugins.watolib import config_domain_registry
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
-audit_log_path = pathlib.Path(var_dir, "log", "audit.log")
+audit_log_path = Path(var_dir, "log", "audit.log")
 
 
 def log_entry(linkinfo, action, message, user_id=None):
-    # Using attrencode here is against our regular rule to do the escaping
-    # at the last possible time: When rendering. But this here is the last
-    # place where we can distinguish between HTML() encapsulated (already)
-    # escaped / allowed HTML and strings to be escaped.
-    message = html.attrencode(message).strip()
-
     # TODO: Create a more generic referencing
     # linkinfo identifies the object operated on. It can be a Host or a Folder
     # or a text.
@@ -70,7 +43,7 @@ def log_entry(linkinfo, action, message, user_id=None):
     else:
         link = linkinfo
 
-    write_tokens = (
+    write_tokens_tuple = (
         time.strftime("%s"),
         link or "-",
         user_id or config.user.id or "-",
@@ -78,8 +51,7 @@ def log_entry(linkinfo, action, message, user_id=None):
         message.replace("\n", "\\n"),
     )
 
-    # TODO: once we know all of these are unicode, remove this line
-    write_tokens = (t if isinstance(t, six.text_type) else t.encode("utf-8") for t in write_tokens)
+    write_tokens = (ensure_str(t) for t in write_tokens_tuple)
 
     store.makedirs(audit_log_path.parent)
     with audit_log_path.open(mode="a", encoding='utf-8') as f:
@@ -90,8 +62,13 @@ def log_entry(linkinfo, action, message, user_id=None):
 def log_audit(linkinfo, action, message, user_id=None):
     if config.wato_use_git:
         if isinstance(message, HTML):
-            message = html.strip_tags(message.value)
+            message = escaping.strip_tags(message.value)
         cmk.gui.watolib.git.add_message(message)
+    # Using escape_attribute here is against our regular rule to do the escaping
+    # at the last possible time: When rendering. But this here is the last
+    # place where we can distinguish between HTML() encapsulated (already)
+    # escaped / allowed HTML and strings to be escaped.
+    message = escaping.escape_text(message).strip()
     log_entry(linkinfo, action, message, user_id)
 
 
@@ -117,7 +94,7 @@ def add_change(action_name,
                                        domains, sites)
 
 
-class ActivateChangesWriter(object):
+class ActivateChangesWriter:
     def add_change(self, action_name, text, obj, add_user, need_sync, need_restart, domains, sites):
         # Default to a core only change
         if domains is None:
@@ -154,7 +131,7 @@ class ActivateChangesWriter(object):
         # at the last possible time: When rendering. But this here is the last
         # place where we can distinguish between HTML() encapsulated (already)
         # escaped / allowed HTML and strings to be escaped.
-        text = html.attrencode(text)
+        text = escaping.escape_text(text)
 
         SiteChanges(site_id).save_change({
             "id": change_id,
@@ -169,14 +146,15 @@ class ActivateChangesWriter(object):
         })
 
 
-class SiteChanges(object):
+class SiteChanges:
     """Manage persisted changes of a single site"""
     def __init__(self, site_id):
         super(SiteChanges, self).__init__()
         self._site_id = site_id
 
     def _site_changes_path(self):
-        return os.path.join(var_dir, "replication_changes_%s.mk" % self._site_id)
+        # type: () -> Path
+        return Path(var_dir) / ("replication_changes_%s.mk" % self._site_id)
 
     # TODO: Implement this locking as context manager
     def load(self, lock=False):
@@ -192,15 +170,16 @@ class SiteChanges(object):
 
         changes = []
         try:
-            for entry in open(path).read().split("\0"):
-                if entry:
-                    changes.append(ast.literal_eval(entry))
+            with path.open("rb") as f:
+                for entry in f.read().split(b"\0"):
+                    if entry:
+                        changes.append(ast.literal_eval(ensure_str(entry)))
         except IOError as e:
             if e.errno == errno.ENOENT:
                 pass
             else:
                 raise
-        except:
+        except Exception:
             if lock:
                 store.release_lock(path)
             raise
@@ -209,7 +188,8 @@ class SiteChanges(object):
 
     def save(self, changes):
         # First truncate the file
-        open(self._site_changes_path(), "w")
+        with self._site_changes_path().open("wb"):
+            pass
 
         for change_spec in changes:
             self.save_change(change_spec)
@@ -219,12 +199,12 @@ class SiteChanges(object):
         try:
             store.aquire_lock(path)
 
-            with open(path, "a+") as f:
-                f.write(repr(change_spec) + "\0")
+            with path.open("ab+") as f:
+                f.write(ensure_binary(repr(change_spec)) + b"\0")
                 f.flush()
                 os.fsync(f.fileno())
 
-            os.chmod(path, 0o660)
+            path.chmod(0o660)
 
         except Exception as e:
             raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))
@@ -234,7 +214,7 @@ class SiteChanges(object):
 
     def clear(self):
         try:
-            os.unlink(self._site_changes_path())
+            self._site_changes_path().unlink()
         except OSError as e:
             if e.errno == errno.ENOENT:
                 pass  # Not existant -> OK
@@ -254,6 +234,6 @@ def activation_sites():
     return {
         site_id: site
         for site_id, site in config.user.authorized_sites(
-            unfiltered_sites=config.configured_sites()).iteritems()
+            unfiltered_sites=config.configured_sites()).items()
         if config.site_is_local(site_id) or site.get("replication")
     }

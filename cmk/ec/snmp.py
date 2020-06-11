@@ -1,58 +1,44 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
+from logging import Logger
+from pathlib import Path
+from typing import Any, Callable, Dict, Optional, Tuple
 
 # Needed for receiving traps
-import pysnmp.debug
-import pysnmp.entity.config
-import pysnmp.entity.engine
-import pysnmp.entity.rfc3413.ntfrcv
-import pysnmp.proto.api
-import pysnmp.proto.errind
+import pysnmp.debug  # type: ignore[import]
+import pysnmp.entity.config  # type: ignore[import]
+import pysnmp.entity.engine  # type: ignore[import]
+import pysnmp.entity.rfc3413.ntfrcv  # type: ignore[import]
+import pysnmp.proto.api  # type: ignore[import]
+import pysnmp.proto.errind  # type: ignore[import]
 
 # Needed for trap translation
-import pysnmp.smi.builder
-import pysnmp.smi.view
-import pysnmp.smi.rfc1902
-import pysnmp.smi.error
-import pyasn1.error
+import pysnmp.smi.builder  # type: ignore[import]
+import pysnmp.smi.view  # type: ignore[import]
+import pysnmp.smi.rfc1902  # type: ignore[import]
+import pysnmp.smi.error  # type: ignore[import]
+import pyasn1.error  # type: ignore[import]
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
 
+from .settings import Settings
 
-class SNMPTrapEngine(object):
+
+class SNMPTrapEngine:
 
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
     def __init__(self, settings, config, logger, callback):
-        super(SNMPTrapEngine, self).__init__()
+        # type: (Settings, Dict[str, Any], Logger, Callable) -> None
+        super().__init__()
         self._logger = logger
         if settings.options.snmptrap_udp is None:
             return
@@ -72,6 +58,7 @@ class SNMPTrapEngine(object):
 
     @staticmethod
     def _auth_proto_for(proto_name):
+        # type: (str) -> Tuple[int, ...]
         if proto_name == "md5":
             return pysnmp.entity.config.usmHMACMD5AuthProtocol
         if proto_name == "sha":
@@ -80,6 +67,7 @@ class SNMPTrapEngine(object):
 
     @staticmethod
     def _priv_proto_for(proto_name):
+        # type: (str) -> Tuple[int, ...]
         if proto_name == "DES":
             return pysnmp.entity.config.usmDESPrivProtocol
         if proto_name == "AES":
@@ -87,6 +75,7 @@ class SNMPTrapEngine(object):
         raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
 
     def _initialize_snmp_credentials(self, config):
+        # type: (Dict[str, Any]) -> None
         user_num = 0
         for spec in config["snmp_credentials"]:
             credentials = spec["credentials"]
@@ -137,6 +126,7 @@ class SNMPTrapEngine(object):
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
 
     def process_snmptrap(self, message, sender_address):
+        # type: (bytes, Any) -> None
         """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
         and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
         self._logger.log(VERBOSE, "Trap received from %s:%d. Checking for acceptance now.",
@@ -178,9 +168,10 @@ class SNMPTrapEngine(object):
                          variables["transportAddress"][0], msg)
 
 
-class SNMPTrapTranslator(object):
+class SNMPTrapTranslator:
     def __init__(self, settings, config, logger):
-        super(SNMPTrapTranslator, self).__init__()
+        # type: (Settings, Dict[str, Any], Logger) -> None
+        super().__init__()
         self._logger = logger
         translation_config = config["translate_snmptraps"]
         if translation_config is False:
@@ -200,6 +191,7 @@ class SNMPTrapTranslator(object):
 
     @staticmethod
     def _construct_resolver(logger, mibs_dir, load_texts):
+        # type: (Logger, Path, bool) -> Optional[pysnmp.smi.view.MibViewController]
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 
@@ -254,7 +246,7 @@ class SNMPTrapTranslator(object):
 
         def do_translate(oid, value):
             # Disable mib_var[0] type detection
-            # pylint: disable=no-member
+
             mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid),
                                                     value).resolveWithMib(self._mib_resolver)
 

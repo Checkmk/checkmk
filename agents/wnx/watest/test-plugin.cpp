@@ -137,6 +137,18 @@ static void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
     }
 }
 
+TEST(PluginTest, Entry) {
+    PluginMap pm;
+    InsertEntry(pm, "a1", 5, true, 0);
+    auto entry = GetEntrySafe(pm, "a1");
+    ASSERT_TRUE(entry != nullptr);
+    EXPECT_TRUE(entry->cmd_line_.empty());
+    EXPECT_TRUE(entry->cmdLine().empty());
+    entry->setCmdLine(L"aaa");
+    EXPECT_EQ(entry->cmd_line_, L"aaa");
+    EXPECT_EQ(entry->cmdLine(), L"aaa");
+}
+
 TEST(PluginTest, TimeoutCalc) {
     using namespace cma::provider;
     {
@@ -237,6 +249,7 @@ TEST(PluginTest, JobStartSTop) {
     fs::path temp_folder = cma::cfg::GetTempDir();
 
     CreatePluginInTemp(temp_folder / "a.cmd", 120, "a");
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
 
     auto [pid, job, process] =
         cma::tools::RunStdCommandAsJob((temp_folder / "a.cmd").wstring());
@@ -352,7 +365,64 @@ TEST(PluginTest, ConfigFolders) {
     }
 }
 
+namespace cfg {
+TEST(PluginTest, PluginInfoCheck) {
+    cma::cfg::PluginInfo e_empty;
+    EXPECT_EQ(e_empty.async(), false);
+    EXPECT_EQ(e_empty.timeout(), kDefaultPluginTimeout);
+    EXPECT_EQ(e_empty.retry(), 0);
+    EXPECT_FALSE(e_empty.defined());
+    EXPECT_EQ(e_empty.cacheAge(), 0);
+    EXPECT_TRUE(e_empty.user().empty());
+    EXPECT_TRUE(e_empty.group().empty());
+
+    cma::cfg::PluginInfo e(10, 2, 1);
+    EXPECT_TRUE(e.defined());
+    EXPECT_EQ(e.async_, true);
+    EXPECT_EQ(e.timeout_, 10);
+    EXPECT_EQ(e.retry_, 1);
+    EXPECT_EQ(e.cache_age_, 2);
+
+    EXPECT_EQ(e.async(), true);
+    EXPECT_EQ(e.timeout(), 10);
+    EXPECT_EQ(e.retry(), 1);
+    EXPECT_EQ(e.cacheAge(), 2);
+    EXPECT_TRUE(e_empty.user().empty());
+    EXPECT_TRUE(e_empty.group().empty());
+
+    e.extend("g", "u");
+    EXPECT_EQ(e.user(), "u");
+    EXPECT_EQ(e.group(), "g");
+    EXPECT_EQ(e.user_, "u");
+    EXPECT_EQ(e.group_, "g");
+}
+}  // namespace cfg
 TEST(PluginTest, ApplyConfig) {
+    {
+        cma::PluginEntry pe("c:\\a\\x.cmd");
+        ASSERT_TRUE(pe.iu_.first.empty());
+        ASSERT_TRUE(pe.iu_.second.empty());
+        pe.fillInternalUser();
+        ASSERT_TRUE(pe.iu_.first.empty());
+        ASSERT_TRUE(pe.iu_.second.empty());
+        pe.group_ = "Users";
+        pe.fillInternalUser();
+        ASSERT_TRUE(!pe.iu_.first.empty());
+        ASSERT_TRUE(!pe.iu_.second.empty());
+        pe.group_.clear();
+        pe.fillInternalUser();
+        ASSERT_TRUE(pe.iu_.first.empty());
+        ASSERT_TRUE(pe.iu_.second.empty());
+        pe.group_ = "Users";
+        pe.user_ = "u p";
+        pe.fillInternalUser();
+        ASSERT_TRUE(pe.iu_.first == L"cmk_TST_Users");
+        ASSERT_TRUE(!pe.iu_.second.empty());
+        pe.group_.clear();
+        pe.fillInternalUser();
+        ASSERT_TRUE(pe.iu_.first == L"u");
+        ASSERT_TRUE(pe.iu_.second == L"p");
+    }
     cma::PluginEntry pe("c:\\a\\x.cmd");
     EXPECT_EQ(pe.failures(), 0);
     pe.failures_ = 2;
@@ -371,10 +441,16 @@ TEST(PluginTest, ApplyConfig) {
         EXPECT_EQ(pe.retry(), 1);
         EXPECT_EQ(pe.timeout(), 10);
         EXPECT_EQ(pe.cacheAge(), cma::cfg::kMinimumCacheAge);
+        EXPECT_TRUE(pe.user().empty());
+        EXPECT_TRUE(pe.group().empty());
 
         pe.failures_ = 2;
         EXPECT_EQ(pe.failures(), 2);
         EXPECT_EQ(pe.failed(), true);
+        e.extend("g", "u");
+        pe.applyConfigUnit(e, false);
+        EXPECT_EQ(pe.user(), "u");
+        EXPECT_EQ(pe.group(), "g");
     }
 
     // heck that async configured entry reset to sync with data drop
@@ -629,7 +705,7 @@ TEST(PluginTest, FilesAndFolders) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
-    cma::OnStart(cma::AppType::test);
+    cma::OnStartTest();
     {
         EXPECT_EQ(groups::localGroup.foldersCount(), 1);
         EXPECT_EQ(groups::plugins.foldersCount(), 2);
@@ -750,11 +826,17 @@ static const std::vector<cma::cfg::Plugins::ExeUnit> x2_async_low_cache_age = {
     {"*", "run: no\n"},                                                       //
 };
 
-static const std::vector<cma::cfg::Plugins::ExeUnit> x3_cmd = {
+static const std::vector<cma::cfg::Plugins::ExeUnit> x3_cmd_with_group_user = {
     //
     {"???-?.cmd",
-     "async: yes\ntimeout: 10\ncache_age: 0\nretry_count: 5\nrun: yes\n"},  //
-    {"*", "run: no\n"},                                                     //
+     "async: yes\n"
+     "timeout: 10\n"
+     "cache_age: 0\n"
+     "retry_count: 5\n"
+     "group: g\n"
+     "user: u\n"
+     "run: yes\n"},      //
+    {"*", "run: no\n"},  //
 };
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> x4_all = {
@@ -927,7 +1009,7 @@ TEST(PluginTest, GeneratePluginEntry) {
         EXPECT_EQ(e->retry(), 9);
 
         // Update
-        UpdatePluginMap(pm, false, pv_short, x3_cmd, false);
+        UpdatePluginMap(pm, false, pv_short, x3_cmd_with_group_user, false);
         EXPECT_EQ(pm.size(), 1);
         e = GetEntrySafe(pm, "c:\\z\\x\\asd-d.cmd");
         ASSERT_NE(nullptr, e);
@@ -936,6 +1018,8 @@ TEST(PluginTest, GeneratePluginEntry) {
         EXPECT_EQ(e->timeout(), 10);
         EXPECT_EQ(e->cacheAge(), 0);
         EXPECT_EQ(e->retry(), 5);
+        EXPECT_EQ(e->user(), "u");
+        EXPECT_EQ(e->group(), "g");
 
         UpdatePluginMap(pm, false, pv_main, x4_all, false);
         EXPECT_EQ(pm.size(), 4);
@@ -2034,6 +2118,52 @@ TEST(PluginTest, SyncLocal) {
     }
 }
 
+PluginDescVector plugins_file_group = {{1, "local0_s.cmd", "local0_s"}};
+
+std::vector<cma::cfg::Plugins::ExeUnit> plugins_file_group_param = {
+    //       Async  Timeout CacheAge              Retry  Run
+    // clang-format off
+    {"*.cmd",
+     "async: no\ntimeout: 10\ncache_age: 120\nretry_count: 3\nrun: yes\ngroup: Users\n"},
+    {"*",     "run: no"},
+    // clang-format on
+};
+
+// Check that plugin is started from the valid user in group
+TEST(PluginTest, SyncPluginsGroup) {
+    using namespace cma::cfg;
+    using namespace wtools;
+    namespace fs = std::filesystem;
+    using namespace std::chrono;
+    cma::OnStart(cma::AppType::test);
+    auto files = PrepareFilesAndStructures(plugins_file_group,
+                                           R"(@echo 2 name %username%)",
+                                           provider::PluginType::normal);
+
+    std::error_code ec;
+    ON_OUT_OF_SCOPE(for (auto& f : files) fs::remove(f, ec););
+
+    PluginMap pm;  // load from the groups::plugin
+    UpdatePluginMap(pm, true, files, plugins_file_group_param, false);
+
+    // async part should provide nothing
+    for (const auto& f : files) {
+        auto ready = GetEntrySafe(pm, f.u8string());
+        ASSERT_NE(nullptr, ready);
+
+        auto accu = ready->getResultsSync(L"");
+
+        ASSERT_TRUE(!accu.empty());
+        // something in result and running
+        std::string a = TestConvertToString(accu);
+        ASSERT_TRUE(!a.empty());
+
+        auto base_table = cma::tools::SplitString(a, G_EndOfString);
+        ASSERT_TRUE(base_table.size() == 2);
+        ASSERT_TRUE(base_table[1] == "2 name cmk_TST_Users");
+    }
+}
+
 TEST(PluginTest, EmptyPlugins) {
     using namespace cma::cfg;
     using namespace wtools;
@@ -2085,7 +2215,7 @@ TEST(PluginTest, EmptyPlugins) {
         plugins.updateSectionStatus();
         auto result = plugins.generateContent(section::kLocal, true);
         ASSERT_FALSE(result.empty());
-        EXPECT_EQ(result, "<<<local>>>\n<<<>>>\n");
+        EXPECT_EQ(result, "<<<local:sep(0)>>>\n<<<>>>\n");
     }
 }
 
@@ -2213,7 +2343,7 @@ TEST(CmaMain, MiniBoxStartMode) {
          {TheMiniBox::StartMode::job, TheMiniBox::StartMode::updater}) {
         TheMiniBox mb;
 
-        auto started = mb.start(L"x", path, mode);
+        auto started = mb.startStd(L"x", path, mode);
         ASSERT_TRUE(started);
 
         auto pid = mb.getProcessId();
@@ -2237,13 +2367,15 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
     auto [source, target] = tst::CreateInOut();
-    auto path = target / "a.bat";
+    auto file = target / "a.bat";
 
-    CreateComplicatedPluginInTemp(path, "aaa");
+    CreateComplicatedPluginInTemp(file, "aaa");
     {
         TheMiniBox mb;
 
-        auto started = mb.start(L"x", path, TheMiniBox::StartMode::job);
+        auto exec = ConstructCommandToExec(file);
+
+        auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
         ASSERT_TRUE(started);
 
         auto pid = mb.getProcessId();
@@ -2264,11 +2396,12 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
 
     // this code is for testing vbs scripts, not usable
     if (1) {
-        auto path = target / "a.vbs";
-        CreateVbsPluginInTemp(path, "aaa");
+        auto file = target / "a.vbs";
+        CreateVbsPluginInTemp(file, "aaa");
+        auto exec = ConstructCommandToExec(file);
         TheMiniBox mb;
 
-        auto started = mb.start(L"x", path, TheMiniBox::StartMode::job);
+        auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
         ASSERT_TRUE(started);
 
         auto pid = mb.getProcessId();
@@ -2289,8 +2422,9 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
 
     {
         TheMiniBox mb;
+        auto exec = ConstructCommandToExec(file);
 
-        auto started = mb.start(L"x", path, TheMiniBox::StartMode::job);
+        auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
         ASSERT_TRUE(started);
 
         auto pid = mb.getProcessId();
@@ -2467,3 +2601,90 @@ TEST(PluginTest, Hacking) {
 }
 
 }  // namespace cma
+
+namespace cma::provider {
+
+// this test is primitive and check only reset of cmdline to empty string
+// can be tested only with intergration tests
+TEST(PluginTest, ModulesCmdLine) {
+    using namespace cma::cfg;
+    using namespace wtools;
+    namespace fs = std::filesystem;
+
+    cma::OnStartTest();
+    std::vector<Plugins::ExeUnit> exe_units = {
+        //
+        {"*.cmd",
+         "async: no\ntimeout: 10\ncache_age: 500\nretry_count: 3\nrun: yes\n"},  //
+        {"*.py",
+         "async: no\ntimeout: 10\ncache_age: 500\nretry_count: 3\nrun: yes\n"},  //
+        {"*", "run: no\n"},  //
+
+    };
+
+    fs::path temp_folder = cma::cfg::GetTempDir();
+
+    PathVector vp = {
+        (temp_folder / "a.cmd").u8string(),  //
+        (temp_folder / "b.py").u8string(),   //
+    };
+    CreatePluginInTemp(vp[0], 5, "a");
+    CreatePluginInTemp(vp[1], 0, "b");
+
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+
+    PluginMap pm;  // load from the groups::plugin
+    UpdatePluginMap(pm, false, vp, exe_units, false);
+    ASSERT_EQ(pm.size(), 2);
+    for (auto& [name, entry] : pm) {
+        EXPECT_TRUE(entry.cmdLine().empty());
+        entry.setCmdLine(L"111");
+    }
+    cma::srv::ServiceProcessor sp;
+    auto& mc = sp.getModuleCommander();
+    mc.LoadDefault();
+    ASSERT_TRUE(mc.isModuleScript("this.py"))
+        << "we should have configured python module";
+    PluginsProvider::UpdatePluginMapCmdLine(pm, &sp);
+
+    for (auto& [name, entry] : pm) {
+        EXPECT_TRUE(entry.cmdLine().empty());
+    }
+}
+TEST(PluginTest, AllowedExtensions) {
+    using namespace cma::cfg;
+    using namespace wtools;
+    namespace fs = std::filesystem;
+
+    cma::OnStartTest();
+    auto yaml = cma::cfg::GetLoadedConfig();
+    yaml = YAML::Load(
+        "global:\n"
+        "  enabled: yes\n"
+        "  execute: ['x', 'y']\n"
+        "modules:\n"
+        "  enabled: yes\n"
+        "  table:\n"
+        "    - name: aaaa\n"
+        "      exts: ['.a.x', 'b']\n"
+        "      exec: zzz\n"
+
+    );
+
+    ON_OUT_OF_SCOPE(OnStartTest());
+
+    cma::srv::ServiceProcessor sp;
+    auto& mc = sp.getModuleCommander();
+    mc.LoadDefault();
+    PluginsProvider pp;
+    pp.registerOwner(&sp);
+    auto exts = pp.gatherAllowedExtensions();
+    std::vector<std::string> expected = {"a.x", "b", "x", "y"};
+    EXPECT_EQ(exts, expected);
+
+    PluginsProvider pp2;
+    exts = pp2.gatherAllowedExtensions();
+    expected = {"x", "y"};
+    EXPECT_EQ(exts, expected);
+}
+}  // namespace cma::provider

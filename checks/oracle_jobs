@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # <<<oracle_jobs>>>
 # IODBSZ1 SYS SM$CLEAN_AUTO_SPLIT_MERGE SCHEDULED 0 763 TRUE 24.04.13 00:00:00,600000 EUROPE/VIENNA - SUCCEEDED
@@ -60,8 +40,10 @@ factory_settings["oracle_jobs_defaults"] = {
 
 def inventory_oracle_jobs(info):
     for line in info:
+        if len(line) <= 2:
+            continue
         # old format < RDBMS 12.1
-        if len(line) >= 3 and len(line) <= 10:
+        elif 3 <= len(line) <= 10:
             yield "%s.%s.%s" % (line[0], line[1], line[2]), {}
         else:
             # new format: sid.pdb_name.job_owner.job_name
@@ -79,6 +61,15 @@ def check_oracle_jobs(item, params, info):
     for line in info:
         service_found = False
 
+        if len(line) < 2:
+            # ignore wrong/corrupted lines
+            continue
+
+        elif line[1].startswith(' Debug '):
+            # Skip invalid lines from Agent
+            continue
+
+        # we need to check against valid lines before the following comparisonq
         if line[0] == sid:
             data_found = True
 
@@ -102,8 +93,9 @@ def check_oracle_jobs(item, params, info):
             sid, job_owner, job_name, job_state, job_runtime, _job_run_count, \
             job_enabled, job_nextrun, job_schedule, job_last_state = line
 
-        else:
+        elif len(line) > 8:
             # really old plugins without job_owner...
+            # The > 8 is expected, due to missing field seperator.
             # this should be removed in a future release!
 
             # sid.job_name
@@ -119,6 +111,10 @@ def check_oracle_jobs(item, params, info):
             job_nextrun = " ".join(line[7:-3])
             job_schedule = line[-2]
             job_last_state = line[-1]
+
+        else:
+            # invalid line/format from agent
+            continue
 
         if   (lineformat == 3 and itemname == job_name and itemowner == job_owner and itempdb == job_pdb and itemsid == sid) \
            or(lineformat == 2 and itemname == job_name and itemowner == job_owner and itemsid == sid) \

@@ -18,6 +18,36 @@
 
 namespace cma::provider {
 
+static void CheckString(std::string& x) {
+    EXPECT_TRUE(!x.empty());
+    ASSERT_EQ(x.back(), '\n');
+    x.pop_back();
+}
+
+static void CheckTableMissing(std::vector<std::string>& table,
+                              std::string_view name, FileInfo::Mode mode) {
+    ASSERT_TRUE(table.size() >= 2);
+    EXPECT_EQ(table[0], name.data());
+    EXPECT_EQ(table[1], FileInfo::kMissing.data());
+    if (mode == FileInfo::Mode::legacy) {
+        ASSERT_TRUE(table.size() == 3);
+        EXPECT_TRUE(std::atoll(table[2].c_str()) > 0LL);
+    }
+}
+
+static void CheckTablePresent(std::vector<std::string>& table,
+                              std::string_view name, FileInfo::Mode mode) {
+    auto shift =
+        mode == FileInfo::Mode::modern ? 1 : 0;  // modern: we have OK column
+
+    ASSERT_EQ(table.size(), 3 + shift);
+    EXPECT_EQ(table[0], name);
+    if (shift) EXPECT_EQ(table[1], FileInfo::kOk);
+
+    EXPECT_TRUE(std::stoll(table[1 + shift]) > 0);
+    EXPECT_TRUE(std::stoll(table[2 + shift]) > 0);
+}
+
 std::filesystem::path BuildTestUNC() {
     auto comp = cma::tools::win::GetEnv("COMPUTERNAME");
     if (comp.empty()) {
@@ -264,8 +294,11 @@ TEST(FileInfoTest, CheckOutput) {
     auto fileinfo_node = cfg[groups::kFileInfo];
     ASSERT_TRUE(fileinfo_node.IsDefined());
     ASSERT_TRUE(fileinfo_node.IsMap());
-    auto str = fmt::format("['{}\\*.txt', '{}\\*.cmd', 'c:\\aaaaa.asdd']",
-                           a.u8string(), b.u8string());
+    std::string name_without_glob = "c:\\aaaaa.asdd";
+    std::string name_with_glob = "c:\\Windows\\*.sdfcfdf";
+    auto str =
+        fmt::format("['{}\\*.txt', '{}\\*.cmd', '{}', '{}']", a.u8string(),
+                    b.u8string(), name_without_glob, name_with_glob);
     fileinfo_node[vars::kFileInfoPath] = YAML::Load(str);
     ASSERT_TRUE(fileinfo_node[vars::kFileInfoPath].IsSequence());
     {
@@ -275,17 +308,21 @@ TEST(FileInfoTest, CheckOutput) {
 
         ASSERT_TRUE(!out.empty());
         auto table = cma::tools::SplitString(out, "\n");
-        ASSERT_EQ(table.size(), 5);
+        ASSERT_EQ(table.size(), 6);
         EXPECT_TRUE(std::atoll(table[0].c_str()) > 0LL);
         table.erase(table.begin());
 
         auto missing = table.back();
         auto values = cma::tools::SplitString(missing, "|");
-        ASSERT_TRUE(values.size() == 3);
+        CheckTableMissing(values, name_with_glob, fi.mode_);
         std::error_code ec;
         EXPECT_FALSE(fs::exists(values[0], ec));
-        EXPECT_TRUE(values[1] == FileInfo::kMissing);
-        EXPECT_TRUE(std::atoll(values[2].c_str()) > 0LL);
+        table.pop_back();
+
+        missing = table.back();
+        values = cma::tools::SplitString(missing, "|");
+        CheckTableMissing(values, name_without_glob, fi.mode_);
+        EXPECT_FALSE(fs::exists(values[0], ec));
         table.pop_back();
 
         for (auto line : table) {
@@ -314,7 +351,7 @@ TEST(FileInfoTest, CheckOutput) {
 
         ASSERT_TRUE(!out.empty());
         auto table = cma::tools::SplitString(out, "\n");
-        ASSERT_EQ(table.size(), 8);
+        ASSERT_EQ(table.size(), 9);
         EXPECT_TRUE(std::atoll(table[0].c_str()) > 0);
         table.erase(table.begin());
         EXPECT_EQ(table[0], "[[[header]]]");
@@ -326,10 +363,15 @@ TEST(FileInfoTest, CheckOutput) {
 
         auto missing = table.back();
         auto values = cma::tools::SplitString(missing, "|");
-        ASSERT_TRUE(values.size() == 2);
+        CheckTableMissing(values, name_with_glob, fi.mode_);
         std::error_code ec;
         EXPECT_FALSE(fs::exists(values[0], ec));
-        EXPECT_TRUE(values[1] == FileInfo::kMissing);
+        table.pop_back();
+
+        missing = table.back();
+        values = cma::tools::SplitString(missing, "|");
+        CheckTableMissing(values, name_without_glob, fi.mode_);
+        EXPECT_FALSE(fs::exists(values[0], ec));
         table.pop_back();
 
         for (auto line : table) {
@@ -420,7 +462,7 @@ TEST(FileInfoTest, Reality) {
     {
         // Glob REcursive
         fs::path public_folder_path =
-            cma::tools::win::GetSomeSystemFolderA(FOLDERID_Public);
+            cma::tools::win::GetSomeSystemFolder(FOLDERID_Public);
         std::error_code ec;
         ASSERT_TRUE(fs::exists(public_folder_path, ec));
         auto files =
@@ -439,7 +481,7 @@ TEST(FileInfoTest, Reality) {
     // Desktop.ini
     {
         fs::path public_folder_path =
-            cma::tools::win::GetSomeSystemFolderA(FOLDERID_Public);
+            cma::tools::win::GetSomeSystemFolder(FOLDERID_Public);
         std::error_code ec;
         ASSERT_TRUE(fs::exists(public_folder_path, ec));
         auto files = details::FindFilesByMask(
@@ -452,7 +494,7 @@ TEST(FileInfoTest, Reality) {
     // Desktop.ini recursive
     {
         fs::path public_folder_path =
-            cma::tools::win::GetSomeSystemFolderA(FOLDERID_Public);
+            cma::tools::win::GetSomeSystemFolder(FOLDERID_Public);
         std::error_code ec;
         ASSERT_TRUE(fs::exists(public_folder_path, ec));
         auto files = details::FindFilesByMask(
@@ -506,147 +548,98 @@ TEST(FileInfoTest, Reality) {
     }
 }
 
-TEST(FileInfoTest, MakeFileInfoMiss) {
-    {
-        auto x =
-            details::MakeFileInfoStringMissing("aaa", FileInfo::Mode::legacy);
-        EXPECT_TRUE(!x.empty());
-        ASSERT_EQ(x.back(), '\n');
-        x.pop_back();
+TEST(FileInfoTest, MakeFileInfoMissing) {
+    static constexpr std::string_view names[] = {"aaa.aaa",
+                                                 "c:\\Windows\\notepad.EXEs"};
+    static constexpr FileInfo::Mode modes[] = {FileInfo::Mode::legacy,
+                                               FileInfo::Mode::modern};
 
-        auto table = cma::tools::SplitString(x, "|");
-        EXPECT_EQ(table.size(), 3);
-        EXPECT_EQ(table[0], "aaa");
-        EXPECT_TRUE(table[1] == FileInfo::kMissing);
-        EXPECT_TRUE(std::stoll(table[2]) > 0);
-    }
+    for (auto& n : names) {
+        for (auto m : modes) {
+            SCOPED_TRACE(
+                fmt::format("'{}' mode is {}", n, static_cast<int>(m)));
+            auto x = details::MakeFileInfoStringMissing(n.data(), m);
+            CheckString(x);
 
-    {
-        auto x =
-            details::MakeFileInfoStringMissing("aaa", FileInfo::Mode::modern);
-        EXPECT_TRUE(!x.empty());
-        ASSERT_EQ(x.back(), '\n');
-        x.pop_back();
-
-        auto table = cma::tools::SplitString(x, "|");
-        EXPECT_EQ(table.size(), 2);
-        EXPECT_EQ(table[0], "aaa");
-        EXPECT_TRUE(table[1] == FileInfo::kMissing);
+            auto table = cma::tools::SplitString(x, "|");
+            CheckTableMissing(table, n, m);
+        }
     }
 }
 
-TEST(FileInfoTest, MakeFileInfoPres) {
-    const std::string fname = "c:\\Windows\\notepad.exe";
-    {
-        auto x =
-            details::MakeFileInfoStringPresented(fname, FileInfo::Mode::legacy);
-        EXPECT_TRUE(!x.empty());
-        ASSERT_EQ(x.back(), '\n');
-        x.pop_back();
+TEST(FileInfoTest, MakeFileInfoPresented) {
+    // EXPECTED strings
+    // "fname|ok|500|153334455\n"
+    // "fname|500|153334455\n"
+
+    const std::string fname = "c:\\Windows\\noTepad.exE";
+    FileInfo::Mode modes[] = {FileInfo::Mode::legacy, FileInfo::Mode::modern};
+
+    for (auto mode : modes) {
+        SCOPED_TRACE(fmt::format("Mode is {}", static_cast<int>(mode)));
+        static const std::string name = "c:\\Windows\\notepad.EXE";
+        auto x = details::MakeFileInfoStringPresented(name, mode);
+        CheckString(x);
 
         auto table = cma::tools::SplitString(x, "|");
-        EXPECT_EQ(table.size(), 3);
-        EXPECT_EQ(table[0], fname);
-        EXPECT_TRUE(std::stoll(table[1]) > 0);
-        EXPECT_TRUE(std::stoll(table[2]) > 0);
-    }
-
-    {
-        auto x =
-            details::MakeFileInfoStringPresented(fname, FileInfo::Mode::modern);
-        EXPECT_TRUE(!x.empty());
-        ASSERT_EQ(x.back(), '\n');
-        x.pop_back();
-
-        auto table = cma::tools::SplitString(x, "|");
-        EXPECT_EQ(table.size(), 4);
-        EXPECT_EQ(table[0], fname);
-        EXPECT_EQ(table[1], FileInfo::kOk);
-        EXPECT_TRUE(std::stoll(table[2]) > 0);
-        EXPECT_TRUE(std::stoll(table[3]) > 0);
+        CheckTablePresent(table, name, mode);
     }
 }
 
 TEST(FileInfoTest, MakeFileInfo) {
     namespace fs = std::filesystem;
-    {
-        auto ret = details::GetOsPathWithCase(L"c:\\Windows\\notepad.EXE");
-        EXPECT_EQ(ret.wstring(), L"C:\\Windows\\notepad.exe");
-    }  // namespace fs=std::filesystem;
 
+    // check that file is present
     {
-        auto x = details::MakeFileInfoString("c:\\Windows\\notepad.EXE",
-                                             FileInfo::Mode::legacy);
-        EXPECT_TRUE(!x.empty());
-        ASSERT_EQ(x.back(), '\n');
-        x.pop_back();
+        auto ret1 = details::GetOsPathWithCase(L"c:\\Windows\\notepad.EXE");
+        EXPECT_EQ(ret1.wstring(), L"C:\\Windows\\notepad.exe");
 
-        auto table = cma::tools::SplitString(x, "|");
-        EXPECT_EQ(table.size(), 3);
-        EXPECT_EQ(table[0], "C:\\Windows\\notepad.exe");
-        EXPECT_TRUE(std::stoll(table[1]) > 0);
-        EXPECT_TRUE(std::stoll(table[2]) > 0);
+        auto ret2 = details::GetOsPathWithCase(L"c:\\WIndows\\ZZ\\notepad.EXE");
+        EXPECT_EQ(ret2.wstring(), L"C:\\Windows\\ZZ\\notepad.EXE");
     }
 
-    // "fname|ok|500|153334455\n"
-    {
-        auto x = details::MakeFileInfoString("c:\\Windows\\notepad.EXE",
-                                             FileInfo::Mode::modern);
-        EXPECT_TRUE(!x.empty());
-        ASSERT_EQ(x.back(), '\n');
-        x.pop_back();
+    static constexpr std::string_view names[] = {
+        "aaa", "C:\\Windows\\notepad.EXEs", "C:\\Windows\\*.EXEs"};
+    static constexpr FileInfo::Mode modes[] = {FileInfo::Mode::legacy,
+                                               FileInfo::Mode::modern};
 
-        auto table = cma::tools::SplitString(x, "|");
-        EXPECT_EQ(table.size(), 4);
-        EXPECT_EQ(table[0], "C:\\Windows\\notepad.exe");
-        EXPECT_EQ(table[1], FileInfo::kOk);
-        EXPECT_TRUE(std::stoll(table[2]) > 0);
-        EXPECT_TRUE(std::stoll(table[3]) > 0);
+    for (auto& n : names) {
+        for (auto m : modes) {
+            SCOPED_TRACE(
+                fmt::format("'{}' mode is {}", n, static_cast<int>(m)));
+
+            auto x = details::MakeFileInfoString(n.data(), m);
+            CheckString(x);
+
+            auto table = cma::tools::SplitString(x, "|");
+            CheckTableMissing(table, n, m);
+        }
     }
 
-    // "fname|stat failed\n" not possible to test
+    static constexpr std::string_view names_2[] = {"C:\\Windows\\notepad.exe"};
+    for (auto& n : names_2) {
+        for (auto m : modes) {
+            SCOPED_TRACE(
+                fmt::format("'{}' mode is {}", n, static_cast<int>(m)));
+
+            auto x = details::MakeFileInfoString(n.data(), m);
+            CheckString(x);
+
+            auto table = cma::tools::SplitString(x, "|");
+            CheckTablePresent(table, n, m);
+        }
+    }
+
     if (0) {
         auto x = details::MakeFileInfoString(
             "we do not know how to test this case in Windows",
             FileInfo::Mode::modern);
 
-        EXPECT_TRUE(!x.empty());
-        ASSERT_EQ(x.back(), '\n');
-        x.pop_back();
+        CheckString(x);
 
         auto table = cma::tools::SplitString(x, "|");
-        EXPECT_EQ(table.size(), 4);
-        EXPECT_EQ(table[0], "C:\\Windows\\notepad.exe");
-        EXPECT_EQ(table[1], FileInfo::kOk);
-        EXPECT_TRUE(std::stoll(table[2]) > 0);
-        EXPECT_TRUE(std::stoll(table[3]) > 0);
-    }
-
-    {
-        auto x = details::MakeFileInfoString("c:\\Windows\\notepad.EXEs",
-                                             FileInfo::Mode::legacy);
-        EXPECT_TRUE(!x.empty());
-        ASSERT_EQ(x.back(), '\n');
-        x.pop_back();
-
-        auto table = cma::tools::SplitString(x, "|");
-        EXPECT_EQ(table.size(), 3);
-        EXPECT_EQ(table[0], "C:\\Windows\\notepad.EXEs");
-        EXPECT_TRUE(table[1] == FileInfo::kMissing);
-        EXPECT_TRUE(std::stoll(table[2]) != 0);
-    }
-
-    {
-        auto x = details::MakeFileInfoString("c:\\Windows\\notepad.EXEs",
-                                             FileInfo::Mode::modern);
-        EXPECT_TRUE(!x.empty());
-        ASSERT_EQ(x.back(), '\n');
-        x.pop_back();
-
-        auto table = cma::tools::SplitString(x, "|");
-        EXPECT_EQ(table.size(), 2);
-        EXPECT_EQ(table[0], "C:\\Windows\\notepad.EXEs");
-        EXPECT_TRUE(table[1] == FileInfo::kMissing);
+        CheckTablePresent(table, "C:\\Windows\\notepad.exe",
+                          FileInfo::Mode::modern);
     }
 }
 

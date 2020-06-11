@@ -1,4 +1,4 @@
-title: VMWare ESX host systems: Uptime
+title: VMWare ESX Host Systems: Uptime
 agents: vsphere
 catalog: os/misc
 license: GPL
@@ -8,5 +8,4 @@ description:
  system.
 
 inventory:
- One check per system is created if the agent has a section {<<<uptime>>>}.
-
+ One service is created for each system.

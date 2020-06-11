@@ -1,4 +1,4 @@
-title: Safenet HSM: NTLS operation status
+title: Safenet HSM: NTLS Operation Status
 agents: snmp
 catalog: hw/network/safenet
 license: GPL
@@ -8,4 +8,4 @@ description:
  Running is treated as OK, Down as critical.
 
 inventory:
- One check per device is created.
+ One service is created for each device.

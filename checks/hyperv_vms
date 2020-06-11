@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output from agent:
 # <<<hyperv_vms>>>
@@ -66,6 +46,35 @@
 #    }
 # }
 
+# these default values were suggested by Aldi Sued
+factory_settings["hyperv_vms_default_levels"] = {
+    'FastSaved': 0,
+    'FastSavedCritical': 2,
+    'FastSaving': 0,
+    'FastSavingCritical': 2,
+    'Off': 1,
+    'OffCritical': 2,
+    'Other': 3,
+    'Paused': 0,
+    'PausedCritical': 2,
+    'Pausing': 0,
+    'PausingCritical': 2,
+    'Reset': 1,
+    'ResetCritical': 2,
+    'Resuming': 0,
+    'ResumingCritical': 2,
+    'Running': 0,
+    'RunningCritical': 2,
+    'Saved': 0,
+    'SavedCritical': 2,
+    'Saving': 0,
+    'SavingCritical': 2,
+    'Starting': 0,
+    'StartingCritical': 2,
+    'Stopping': 1,
+    'StoppingCritical': 2
+}
+
 
 def parse_hyperv_vms(info):
     parsed = {}
@@ -104,19 +113,40 @@ def inventory_hyperv_vms(parsed):
     return [(vm_name, {'state': vm["state"]}) for (vm_name, vm) in parsed.items()]
 
 
-def check_hyperv_vms(item, params, parsed):
-    if item in parsed:
-        vm = parsed[item]
-        if vm["state"] == params['state']:
-            state = 0
-            message = "State is %s (%s)" % (vm["state"], vm["state_msg"])
+@get_parsed_item_data
+def check_hyperv_vms(_item, params, vm):
+
+    # compare against discovered VM state
+    if params.get("compare_discovery"):
+
+        discovery_state = params.get('state')
+
+        # this means that the check is executed as a manual check
+        if discovery_state is None:
+            service_state = 3
+            message = "State is %s (%s), discovery state is not available" % (vm["state"],
+                                                                              vm["state_msg"])
+        elif vm["state"] == discovery_state:
+            service_state = 0
+            message = "State %s (%s) matches discovery" % (vm["state"], vm["state_msg"])
         else:
-            message = "State has changed from %s to %s (%s)" % (
-                params['state'],\
-                vm["state"],
-                vm["state_msg"])
-            state = 2
-        return state, message
+            service_state = 2
+            message = "State %s (%s) does not match discovery (%s)" % (vm["state"], vm["state_msg"],
+                                                                       params['state'])
+
+    # service state defined in rule
+    else:
+        service_state = params.get(vm["state"])
+
+        # as a precaution, if in the future there are new VM states we do not know about
+        if service_state is None:
+            service_state = 3
+            message = "Unknown state %s (%s)" % (vm["state"], vm["state_msg"])
+
+        else:
+            message = "State is %s (%s)" % (vm["state"], vm["state_msg"])
+
+    yield service_state, message
 
 
 check_info["hyperv_vms"] = {
@@ -124,4 +154,6 @@ check_info["hyperv_vms"] = {
     "check_function": check_hyperv_vms,
     "inventory_function": inventory_hyperv_vms,
     "service_description": "VM %s",
+    "group": "hyperv_vms",
+    "default_levels_variable": "hyperv_vms_default_levels"
 }

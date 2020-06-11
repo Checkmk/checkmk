@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # <<<openhardwaremonitor:sep(44)>>>
 # Index,Name,Parent,SensorType,Value
@@ -144,7 +124,7 @@ def parse_openhardwaremonitor(info):
 
 def _create_openhardwaremonitor_full_name(parent, name):
     def dict_replace(input_, replacements):
-        pattern = regex(r'\b(' + '|'.join(replacements.keys()) + r')\b')
+        pattern = regex(r'\b(' + '|'.join(replacements) + r')\b')
         return pattern.sub(lambda x: replacements[x.group()], input_)
 
     parent = dict_replace(parent, {"intelcpu": "cpu", "amdcpu": "cpu", "genericcpu": "cpu"})
@@ -164,7 +144,7 @@ def _openhardwaremonitor_expect_order(*args):
 
 
 def inventory_openhardwaremonitor(sensor_type, parsed):
-    return [(key, {}) for key in parsed.get(sensor_type, {}).keys()]
+    return [(key, {}) for key in parsed.get(sensor_type, {})]
 
 
 def check_openhardwaremonitor(sensor_type, item, params, parsed):
@@ -227,7 +207,7 @@ check_info['openhardwaremonitor'] = {
 def check_openhardwaremonitor_temperature(item, params, parsed):
     if not 'levels' in params:
         found = False
-        for key in params.iterkeys():
+        for key in params:
             if key in item:
                 params = params[key]
                 found = True
@@ -336,7 +316,7 @@ def inventory_openhardwaremonitor_smart(parsed):
 
 
 def check_openhardwaremonitor_smart(item, params, parsed):
-    for sensor_type, readings in openhardwaremonitor_smart_readings.iteritems():
+    for sensor_type, readings in openhardwaremonitor_smart_readings.items():
         for reading in readings:
             reading_name = "%s %s" % (item, reading['name'])
 

@@ -18,4 +18,4 @@ item:
  The SDS identifier.
 
 inventory:
- One service per SDS is created.
+ One service is created for each SDS.

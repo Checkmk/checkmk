@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 #TODO refactoring: use parse-function
 
@@ -137,7 +117,7 @@ def parse_brocade_mlx_module_mem(info):
 def inventory_brocade_mlx_module_mem(info):
     parsed = parse_brocade_mlx_module_mem(info)
     inventory = []
-    for k, v in parsed.iteritems():
+    for k, v in parsed.items():
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
         descr = v["descr"]
@@ -149,17 +129,26 @@ def inventory_brocade_mlx_module_mem(info):
 
 def check_brocade_mlx_module_mem(item, params, info):
     parsed = parse_brocade_mlx_module_mem(info)
-    if item not in parsed:
-        yield 3, '%s not found in agent output' % item
+    data = parsed.get(item)
+    if data is None:
         return
 
-    data = parsed[item]
     state_readable = data['state_readable']
     if state_readable.lower() != "running":
-        yield 3, "Module is not running (Current State: %s)" % state_readable
-        return
+        return 3, "Module is not running (Current State: %s)" % state_readable
 
-    yield check_memory_multiitem(params, data)
+    warn, crit = params.get("levels", (None, None))
+    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    try:
+        return check_memory_element(
+            "Usage",
+            data["mem_total"] - data["mem_avail"],
+            data["mem_total"],
+            (mode, (warn, crit)),
+            metric_name="mem_used",
+        )
+    except KeyError:
+        return None
 
 
 check_info["brocade_mlx.module_mem"] = {
@@ -170,7 +159,7 @@ check_info["brocade_mlx.module_mem"] = {
     "snmp_scan_function": brocade_mlx_scan,
     "has_perfdata": True,
     "group": "memory_multiitem",
-    "includes": ["memory.include"],
+    "includes": ["mem.include"],
 }
 
 #.

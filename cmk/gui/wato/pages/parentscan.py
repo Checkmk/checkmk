@@ -1,38 +1,18 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
 import collections
+from typing import NamedTuple, List
 
 import cmk.utils.store as store
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-import cmk.gui.utils as utils
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -44,9 +24,28 @@ from cmk.gui.plugins.wato import (
     get_hosts_from_checkboxes,
 )
 
-ParentScanTask = collections.namedtuple("ParentScanTask", ["site_id", "folder_path", "host_name"])
-ParentScanResult = collections.namedtuple("ParentScanResult",
-                                          ["existing_gw_host_name", "ip", "dns_name"])
+ParentScanTask = collections.namedtuple("ParentScanTask", [
+    "site_id",
+    "folder_path",
+    "host_name",
+])
+ParentScanResult = collections.namedtuple("ParentScanResult", [
+    "existing_gw_host_name",
+    "ip",
+    "dns_name",
+])
+
+ParentScanSettings = NamedTuple("ParentScanSettings", [
+    ("where", str),
+    ("alias", str),
+    ("recurse", bool),
+    ("select", str),
+    ("timeout", int),
+    ("probes", int),
+    ("max_ttl", int),
+    ("force_explicit", bool),
+    ("ping_probes", int),
+])
 
 
 # TODO: This job should be executable multiple times at once
@@ -59,13 +58,12 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         return _("Parent scan")
 
     def __init__(self):
-        kwargs = {}
-        kwargs["title"] = _("Parent scan")
-        kwargs["lock_wato"] = False
-        kwargs["deletable"] = False
-        kwargs["stoppable"] = False
-
-        super(ParentScanBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+        super(ParentScanBackgroundJob, self).__init__(
+            self.job_prefix,
+            title=_("Parent scan"),
+            lock_wato=False,
+            stoppable=False,
+        )
 
     def _back_url(self):
         return watolib.Folder.current().url()
@@ -91,6 +89,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         job_interface.send_result_message(_("Parent scan finished"))
 
     def _initialize_statistics(self):
+        # type: () -> None
         self._num_hosts_total = 0
         self._num_gateways_found = 0
         self._num_directly_reachable_hosts = 0
@@ -101,6 +100,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         self._num_errors = 0
 
     def _process_task(self, task, settings):
+        # type: (ParentScanTask, ParentScanSettings) -> None
         self._num_hosts_total += 1
 
         try:
@@ -119,15 +119,18 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
                 self._logger.exception(msg)
 
     def _execute_parent_scan(self, task, settings):
-        params = map(str, [
-            settings["timeout"],
-            settings["probes"],
-            settings["max_ttl"],
-            settings["ping_probes"],
-        ])
+        # type: (ParentScanTask, ParentScanSettings) -> List
+        params = list(
+            map(str, [
+                settings.timeout,
+                settings.probes,
+                settings.max_ttl,
+                settings.ping_probes,
+            ]))
         return watolib.check_mk_automation(task.site_id, "scan-parents", params + [task.host_name])
 
     def _process_parent_scan_results(self, task, settings, gateways):
+        # type: (ParentScanTask, ParentScanSettings, List) -> None
         gateway = ParentScanResult(*gateways[0][0]) if gateways[0][0] else None
         state, skipped_gateways, error = gateways[0][1:]
 
@@ -269,24 +272,23 @@ class ModeParentScan(WatoMode):
         self._complete_folder = self._all
 
         # Ignored during initial form display
-        # TODO: Make dedicated class or class members
-        self._settings = {
-            "where": html.request.var("where"),
-            "alias": html.get_unicode_input("alias", "").strip() or None,
-            "recurse": html.get_checkbox("recurse"),
-            "select": html.request.var("select"),
-            "timeout": utils.saveint(html.request.var("timeout")) or 8,
-            "probes": utils.saveint(html.request.var("probes")) or 2,
-            "max_ttl": utils.saveint(html.request.var("max_ttl")) or 10,
-            "force_explicit": html.get_checkbox("force_explicit"),
-            "ping_probes": utils.saveint(html.request.var("ping_probes")) or 0,
-        }
+        self._settings = ParentScanSettings(
+            where=html.request.get_ascii_input_mandatory("where", "subfolder"),
+            alias=html.request.get_unicode_input_mandatory("alias", "").strip(),
+            recurse=html.get_checkbox("recurse") or False,
+            select=html.request.get_ascii_input_mandatory("select", "noexplicit"),
+            timeout=html.request.get_integer_input_mandatory("timeout", 8),
+            probes=html.request.get_integer_input_mandatory("probes", 2),
+            max_ttl=html.request.get_integer_input_mandatory("max_ttl", 10),
+            force_explicit=html.get_checkbox("force_explicit") or False,
+            ping_probes=html.request.get_integer_input_mandatory("ping_probes", 5),
+        )
         self._job = ParentScanBackgroundJob()
 
     def action(self):
         try:
             html.check_transaction()
-            config.user.save_file("parentscan", self._settings)
+            config.user.save_file("parentscan", dict(self._settings._asdict()))
 
             self._job.set_function(self._job.do_execute, self._settings, self._get_tasks())
             self._job.start()
@@ -309,15 +311,15 @@ class ModeParentScan(WatoMode):
         """only scan checked hosts in current folder, no recursion"""
         tasks = []
         for host in get_hosts_from_checkboxes():
-            if self._include_host(host, self._settings["select"]):
+            if self._include_host(host, self._settings.select):
                 tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
 
     def _get_folder_tasks(self):
         """all host in this folder, probably recursively"""
         tasks = []
-        for host in self._recurse_hosts(watolib.Folder.current(), self._settings["recurse"],
-                                        self._settings["select"]):
+        for host in self._recurse_hosts(watolib.Folder.current(), self._settings.recurse,
+                                        self._settings.select):
             tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
 
@@ -327,7 +329,7 @@ class ModeParentScan(WatoMode):
     def _include_host(self, host, select):
         if select == 'noexplicit' and host.has_explicit_attribute("parents"):
             return False
-        elif select == 'no':
+        if select == 'no':
             if host.effective_attribute("parents"):
                 return False
         return True
@@ -339,14 +341,14 @@ class ModeParentScan(WatoMode):
                 entries.append(host)
 
         if recurse:
-            for subfolder in folder.all_subfolders().values():
+            for subfolder in folder.subfolders():
                 entries += self._recurse_hosts(subfolder, recurse, select)
         return entries
 
     def page(self):
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():
-            html.message(
+            html.show_message(
                 _("Parent scan currently running in <a href=\"%s\">background</a>.") %
                 self._job.detail_url())
             return
@@ -375,7 +377,7 @@ class ModeParentScan(WatoMode):
 
         forms.header(_("Settings for Parent Scan"))
 
-        self._settings = config.user.load_file(
+        self._settings = ParentScanSettings(**config.user.load_file(
             "parentscan", {
                 "where": "subfolder",
                 "alias": _("Created by parent scan"),
@@ -386,18 +388,18 @@ class ModeParentScan(WatoMode):
                 "ping_probes": 5,
                 "max_ttl": 10,
                 "force_explicit": False,
-            })
+            }))
 
         # Selection
         forms.section(_("Selection"))
         if self._complete_folder:
-            html.checkbox("recurse", self._settings["recurse"], label=_("Include all subfolders"))
+            html.checkbox("recurse", self._settings.recurse, label=_("Include all subfolders"))
             html.br()
-        html.radiobutton("select", "noexplicit", self._settings["select"] == "noexplicit",
+        html.radiobutton("select", "noexplicit", self._settings.select == "noexplicit",
                          _("Skip hosts with explicit parent definitions (even if empty)") + "<br>")
-        html.radiobutton("select", "no", self._settings["select"] == "no",
+        html.radiobutton("select", "no", self._settings.select == "no",
                          _("Skip hosts hosts with non-empty parents (also if inherited)") + "<br>")
-        html.radiobutton("select", "ignore", self._settings["select"] == "ignore",
+        html.radiobutton("select", "ignore", self._settings.select == "ignore",
                          _("Scan all hosts") + "<br>")
 
         # Performance
@@ -408,7 +410,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Timeout for responses") + ":")
         html.close_td()
         html.open_td()
-        html.number_input("timeout", self._settings["timeout"], size=2)
+        html.text_input("timeout", str(self._settings.timeout), size=2, cssclass="number")
         html.write_text(_("sec"))
         html.close_td()
         html.close_tr()
@@ -418,7 +420,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Number of probes per hop") + ":")
         html.close_td()
         html.open_td()
-        html.number_input("probes", self._settings["probes"], size=2)
+        html.text_input("probes", str(self._settings.probes), size=2, cssclass="number")
         html.close_td()
         html.close_tr()
 
@@ -427,7 +429,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Maximum distance (TTL) to gateway") + ":")
         html.close_td()
         html.open_td()
-        html.number_input("max_ttl", self._settings["max_ttl"], size=2)
+        html.text_input("max_ttl", str(self._settings.max_ttl), size=2, cssclass="number")
         html.close_td()
         html.close_tr()
 
@@ -441,7 +443,7 @@ class ModeParentScan(WatoMode):
               "the number of PING probes to 0."))
         html.close_td()
         html.open_td()
-        html.number_input("ping_probes", self._settings.get("ping_probes", 5), size=2)
+        html.text_input("ping_probes", str(self._settings.ping_probes), size=2, cssclass="number")
         html.close_td()
         html.close_tr()
         html.close_table()
@@ -450,7 +452,7 @@ class ModeParentScan(WatoMode):
         forms.section(_("Configuration"))
         html.checkbox(
             "force_explicit",
-            self._settings["force_explicit"],
+            deflt=self._settings.force_explicit,
             label=_(
                 "Force explicit setting for parents even if setting matches that of the folder"))
 
@@ -460,22 +462,22 @@ class ModeParentScan(WatoMode):
         html.open_ul()
 
         html.radiobutton(
-            "where", "subfolder", self._settings["where"] == "subfolder",
+            "where", "subfolder", self._settings.where == "subfolder",
             _("in the subfolder <b>%s/Parents</b>") % watolib.Folder.current_disk_folder().title())
 
         html.br()
         html.radiobutton(
-            "where", "here", self._settings["where"] == "here",
+            "where", "here", self._settings.where == "here",
             _("directly in the folder <b>%s</b>") % watolib.Folder.current_disk_folder().title())
         html.br()
-        html.radiobutton("where", "there", self._settings["where"] == "there",
+        html.radiobutton("where", "there", self._settings.where == "there",
                          _("in the same folder as the host"))
         html.br()
-        html.radiobutton("where", "nowhere", self._settings["where"] == "nowhere",
+        html.radiobutton("where", "nowhere", self._settings.where == "nowhere",
                          _("do not create gateway hosts"))
         html.close_ul()
         html.write_text(_("Alias for created gateway hosts") + ": ")
-        html.text_input("alias", self._settings["alias"])
+        html.text_input("alias", default_value=self._settings.alias)
 
         forms.end()
 

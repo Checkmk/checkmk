@@ -16,5 +16,5 @@ item:
  The phase designation
 
 inventory:
- One service per phase is created.
+ One service is created for each phase.
 

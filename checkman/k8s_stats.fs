@@ -1,4 +1,4 @@
-title: Kubernetes node and cluster level filesystem usage
+title: Kubernetes: Node and Cluster Level Filesystem Usage
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL
@@ -9,4 +9,4 @@ item:
  The logical disk partition filesystem.
 
 inventory:
- One service per filesystem
+ One service is created for each filesystem.

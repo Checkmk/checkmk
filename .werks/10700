@@ -1,0 +1,15 @@
+Title: "Tags using this auxiliary tag" was not listing the referencing tag IDs
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1576750702
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+On the WATO tag configuration page, the auxiliary tags have a column to display
+all tags that are referencing this auxiliary tag. Instead of showing the list
+of tags, it showed only the ID of the current auxiliary tag. This issue affected
+all 1.6 releases.

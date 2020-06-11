@@ -1,0 +1,17 @@
+Title: Site filter in slave site only holds itself as filter target
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1574758018
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Site filter within a customer assigned remote site is quite redundant as
+the site only has access to itself, thus never actively used. However, the
+filter available targets where poorly listed.
+
+When configuring reports, this site filter aids to establish context for
+the report and a poor listing of the single available site(itself) led to
+empty results.

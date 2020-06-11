@@ -7,24 +7,36 @@ description:
  This checks displays the amount of connected access points on the controller.
  Per default the check only displays the information for each Access Point.
  The operational state is evaluated as following:
- 'unknown': Unknown,
- 'enabled': OK,
- 'disabled': Warning,
- 'no license': Warning,
- 'enabled WN license': OK,
- 'power down': Warning,
+
+ - 'unknown': Unknown,
+
+ - 'enabled': OK,
+
+ - 'disabled': Warning,
+
+ - 'no license': Warning,
+
+ - 'enabled WN license': OK,
+
+ - 'power down': Warning,
 
  The availability state is evaluated as following:
- 'power off': Warning,
- 'offline': Warning,
- 'online': OK,
- 'failed': Critical,
- 'in test': Warning,
- 'not installed': Warning,
+
+ - 'power off': Warning,
+
+ - 'offline': Warning,
+
+ - 'online': OK,
+
+ - 'failed': Critical,
+
+ - 'in test': Warning,
+
+ - 'not installed': Warning,
 
 item:
  The name of the access point.
 
 inventory:
- One check for each access point which is successfully connected.
+ One service is created for each access point which is successfully connected.
 

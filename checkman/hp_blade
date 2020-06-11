@@ -12,4 +12,4 @@ description:
  a status of "Other" which triggers an UNKNOWN status.
 
 inventory:
- One check per enclosure is created automatically.
+ One service is created fir each enclosure.

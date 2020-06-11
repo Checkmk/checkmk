@@ -7,7 +7,7 @@ description:
  This check monitors the state of jenkins jobs. Beside the display name and the
  state of the job it gives informations about the job score and the time since
  the last successful build. It also outputs informations about the last build,
- like the time the build was triggered, the build id, duration and result.
+ like the time the build was triggered, the build ID, duration and result.
 
  For performance reasons, the number of recognized jobs is limited to three
  nested folder levels.
@@ -17,4 +17,4 @@ item:
  the folder path followed by the job name, e.g. {"FOLDER1/FOLDER2/JOBNAME"}.
 
 inventory:
- One service per job will be created
+ One service is created for each job.

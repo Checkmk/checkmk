@@ -1,0 +1,16 @@
+Title: Azure Checkplugins: Go to stale state if info is missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1574666732
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Previously a service resulting from one of the Azure checkplugins went to
+UNKOWN if the corresponding data was not found in the agent output, as is
+common for many checkmk services.
+Unfortunately, this happens too often to be usefull, as the Azure API appears
+to not allways report the full data. Now the affected services go to a stale
+state instead.

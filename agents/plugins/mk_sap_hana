@@ -1,32 +1,11 @@
 #!/bin/bash
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # SAP HANA Plugin for Check_MK Agent on Linux
 # Copyright Gerd Stolz - SVA - 2016
 # (c) 2017 Heinlein Support GmbH, Robert Sander <r.sander@heinlein-support.de>
-
 
 display_usage () {
     cat <<USAGE
@@ -258,6 +237,12 @@ SYSTEM_VALUE FROM  M_INIFILE_CONTENTS WHERE  FILE_NAME IN ('indexserver.ini',
 QUERY
 }
 
+function query_sap_hana_ess_migration () {
+    cat << QUERY
+select value from _SYS_STATISTICS.STATISTICS_PROPERTIES where key = 'internal.installation.state'
+QUERY
+}
+
 
 function query_sap_hana_memrate () {
     local hostname="$1"
@@ -390,6 +375,124 @@ function sap_hana_replication_status () {
     echo "$result"
 }
 
+function sap_hana_connect() {
+    local sid="$1"
+    local instance="$2"
+    local instance_user="$3"
+    local hostname="$4"
+    local landscape="$5"
+    local status="$6"
+
+    local port
+    local host_role
+
+    # Get major version
+    major=$(echo "$status" | grep "Version" | awk -F";" '{print $3}' | awk -F"." '{print $1}')
+
+    # We have differnt ports for HANA 1.0 and HANA 2.0
+    if [ "$major" == "1" ];then
+        port="3${instance}15"
+    elif [ "$major" == "2" ];then
+        port="3${instance}13"
+    else
+        echo "Cannot determine port due to unknown HANA version."
+        return
+    fi
+
+    host_role=$(sap_hana_role_from_landscape "$landscape" "$hostname")
+
+    # The following logic was taken from SUP-1436
+    if [ "$host_role" = "worker" ];then
+        resp=$(su - "${instance_user}" -c "/hana/shared/${sid}/hdbclient/odbcreg ${hostname}:${port} ${sid} ${USER_CONNECT} ${PASSWORD_CONNECT}")
+    else
+        resp="retcode: 1"
+    fi
+
+    echo "$resp" | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g"
+}
+
+function sap_hana_role_from_landscape() {
+    local landscape="$1"
+    local hostname="$2"
+
+    # We expect the info for "Host actual role" *always* in column 15 (see SUP-1436)
+    local col_host_actual_role=15
+    local col_hosts=1
+    local row_hosts_start=5
+    local cur_row=1
+
+    local cur_host_actual_role
+    local landscape
+
+    while read -r line; do
+
+        if [[ "${line:0:1}" != "|" ]]; then
+            # End of table reached
+            break
+        fi
+
+        # Remove leading "|" in order to get indexes starting from 1
+        line=$(echo "$line" | sed -e "s/^|//")
+
+        if [ $cur_row -ge $row_hosts_start ]; then
+
+            cur_hostname=$(echo "$line" | awk -F "|" '{print $col}' col=$col_hosts | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+            if [ "$cur_hostname" =  "$hostname" ]; then
+                cur_host_actual_role=$(echo "$line" | awk -F "|" '{print $col}' col=$col_host_actual_role | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+                echo "$cur_host_actual_role"
+                break
+            fi
+        fi
+        cur_row=$((cur_row+1))
+    done <<< "$landscape"
+}
+
+function sap_hana_host_from_landscape() {
+    local landscape=$1
+
+    local col_hosts=1
+    local row_hosts_start=5
+    local cur_row=1
+
+    local cur_hostname
+    local cur_IP
+
+    while read -r line; do
+
+        if [[ "${line:0:1}" != "|" ]]; then
+            # End of table reached
+            break
+        fi
+
+        # Remove leading "|" in order to get indexes starting from 1
+        line=$(echo "$line" | sed -e "s/^|//")
+
+        if [ $cur_row -ge $row_hosts_start ]; then
+
+            cur_hostname=$(echo "$line" | awk -F "|" '{print $col}' col=$col_hosts | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+            if [[ -z "$cur_hostname" ]]; then
+                continue
+            fi
+
+            cur_IP=$(nslookup "$cur_hostname" | grep "Address" | grep -v "#" | awk '{print $2}')
+
+            if [[ -z "$cur_IP" ]]; then
+                continue
+            fi
+
+            # Return *only* hostname with active IP
+            if ip a | grep -q "$cur_IP"; then
+                echo "$cur_hostname"
+                break
+            fi
+
+        fi
+        cur_row=$((cur_row+1))
+    done <<< "$landscape"
+
+}
 
 #.
 #   .--do query------------------------------------------------------------.
@@ -406,77 +509,92 @@ function do_query () {
     local SID="$1"
     local INSTANCE="$2"
     local INSTANCE_USER="$3"
+    local HOSTNAME
     local INSTANCE_NAME="[[${SID} ${INSTANCE}]]"
+    local SAP_LANDSCAPE
+
+    SAP_LANDSCAPE=$(su - "${INSTANCE_USER}" -c "python /usr/sap/${SID}/HDB${INSTANCE}/exe/python_support/landscapeHostConfiguration.py")
 
     if [ -z "$HOSTNAME" ]; then
-        HOSTNAME=$(hostname -f)
+        HOSTNAME=$(sap_hana_host_from_landscape "$SAP_LANDSCAPE")
     else
         HOSTNAME=$(hostname)
     fi
 
-    echo "<<<sap_hana_status:sep(59)>>>"
-    if ! status_output=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_status)"); then
-        # For single instances we could execute the line above, however,
-        # this will create problems when we want to cluster the check,
-        # so we now exit nothing if an instance isn't running.
-        return
+    if status_output=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_status)"); then
+        # We only execute all SQL queries in case the SQL DB is open & responding.
+        # Otherwise only execute sections which are using other interfaces (e.g. python or odbcreg).
+        # This accelerates the plugin execution tremendously as we do not have to wait for all the sql timeouts.
+
+        echo "<<<sap_hana_status:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        echo "$status_output"
+
+        echo "<<<sap_hana_backup:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_snapshots)"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_complete)"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_log)"
+
+        echo "<<<sap_hana_diskusage:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_diskusage)"
+
+        echo "<<<sap_hana_data_volume:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_data_volume "$HOSTNAME")"
+
+        echo "<<<sap_hana_license:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_license)"
+
+        echo "<<<sap_hana_ess:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_started "$HOSTNAME")"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_active)"
+
+        echo "<<<sap_hana_ess_migration:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_migration)"
+
+        echo "<<<sap_hana_memrate:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_memrate "$HOSTNAME")"
+
+        echo "<<<sap_hana_events:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_open)"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_disabled_alerts)"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_high_alerts)"
+
+        echo "<<<sap_hana_proc:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_proc "$HOSTNAME")"
+
+        echo "<<<fileinfo:sep(59)>>>"
+        date +%s
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_fileinfo "$SID" "$INSTANCE" "$HOSTNAME")"
+
+        # echo "<<<sap_hana_threads:sep(59)>>>"
+        # echo $INSTANCE_NAME
+        # mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_threads_max "$HOSTNAME")"
+        # mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_threads_service_name "$HOSTNAME")"
+
+        echo "<<<logwatch>>>"
+        echo "[[[SAP HANA Alerts for ${SID} ${INSTANCE}]]]"
+        sap_hana_check_alerts "$SID" "$INSTANCE" "$INSTANCE_USER"
     fi
-    echo "$INSTANCE_NAME"
-    echo "$status_output"
-
-    echo "<<<sap_hana_backup:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_snapshots)"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_complete)"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_log)"
-
-    echo "<<<sap_hana_diskusage:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_diskusage)"
-
-    echo "<<<sap_hana_data_volume:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_data_volume "$HOSTNAME")"
-
-    echo "<<<sap_hana_license:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_license)"
 
     echo "<<<sap_hana_replication_status>>>"
     echo "$INSTANCE_NAME"
     sap_hana_replication_status "$SID" "$INSTANCE" "$INSTANCE_USER"
 
-    echo "<<<sap_hana_ess:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_started "$HOSTNAME")"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_active)"
+    if [ -v PASSWORD_CONNECT ] && [ -v USER_CONNECT ]; then
+        echo "<<<sap_hana_connect:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        sap_hana_connect "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$status_output"
+    fi
 
-    echo "<<<sap_hana_memrate:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_memrate "$HOSTNAME")"
-
-    echo "<<<sap_hana_events:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_open)"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_disabled_alerts)"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_high_alerts)"
-
-    echo "<<<sap_hana_proc:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_proc "$HOSTNAME")"
-
-    # echo "<<<sap_hana_threads:sep(59)>>>"
-    # echo $INSTANCE_NAME
-    # mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_threads_max "$HOSTNAME")"
-    # mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_threads_service_name "$HOSTNAME")"
-
-    echo "<<<fileinfo:sep(59)>>>"
-    date +%s
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_fileinfo "$SID" "$INSTANCE" "$HOSTNAME")"
-
-    echo "<<<logwatch>>>"
-    echo "[[[SAP HANA Alerts for ${SID} ${INSTANCE}]]]"
-    sap_hana_check_alerts "$SID" "$INSTANCE" "$INSTANCE_USER"
 }
 
 

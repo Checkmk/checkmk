@@ -1,4 +1,4 @@
-title: Safenet HSM: NTLS clients
+title: Safenet HSM: NTLS Clients
 agents: snmp
 catalog: hw/network/safenet
 license: GPL
@@ -7,4 +7,4 @@ description:
  This check monitors the number of connected clients
 
 inventory:
- One check per device is created.
+ One service is created for each device.

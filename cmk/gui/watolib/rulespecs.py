@@ -1,40 +1,20 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """The rulespecs are the ruleset specifications registered to WATO."""
 
 import abc
 import re
-from typing import Text, Dict, List, Type, Optional, Any, Callable  # pylint: disable=unused-import
-from typing import Tuple as TypingTuple  # pylint: disable=unused-import
-import six
+from typing import Union, Dict, List, Type, Optional, Any, Callable, Tuple as _Tuple
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.globals import html
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.utils.html import HTML
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.valuespec import (
     Dictionary,
     Transform,
@@ -51,23 +31,23 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
 
-class RulespecBaseGroup(six.with_metaclass(abc.ABCMeta, object)):
+class RulespecBaseGroup(metaclass=abc.ABCMeta):
     """Base class for all rulespec group types"""
     @abc.abstractproperty
     def name(self):
-        # type: () -> Text
+        # type: () -> str
         """Unique internal key of this group"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Human readable title of this group"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def help(self):
-        # type: () -> Text
+        # type: () -> Optional[str]
         """Helpful description of this group"""
         raise NotImplementedError()
 
@@ -78,63 +58,71 @@ class RulespecBaseGroup(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def choice_title(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
 
 class RulespecGroup(RulespecBaseGroup):
     @abc.abstractproperty
     def name(self):
-        # type: () -> Text
+        # type: () -> str
         """Unique internal key of this group"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Human readable title of this group"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         """Helpful description of this group"""
         raise NotImplementedError()
 
     @property
     def is_sub_group(self):
+        # type: () -> bool
         return False
 
     @property
     def choice_title(self):
+        # type: () -> str
         return self.title
 
 
-class RulespecSubGroup(six.with_metaclass(abc.ABCMeta, RulespecBaseGroup)):
+class RulespecSubGroup(RulespecBaseGroup, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def main_group(self):
+        # type: () -> Type[RulespecGroup]
         """A reference to the main group class"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def sub_group_name(self):
+        # type: () -> str
         """The internal name of the sub group"""
         raise NotImplementedError()
 
     @property
     def name(self):
+        # type: () -> str
         return "/".join([self.main_group().name, self.sub_group_name])
 
     @property
     def choice_title(self):
+        # type: () -> str
         return u"&nbsp;&nbsp;⌙ %s" % self.title
 
     @property
     def help(self):
+        # type: () -> None
         return None  # Sub groups currently have no help text
 
     @property
     def is_sub_group(self):
+        # type: () -> bool
         return True
 
 
@@ -146,27 +134,34 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
         }  # type: Dict[Type[RulespecGroup], List[Type[RulespecSubGroup]]]
 
     def plugin_base_class(self):
+        # type: () -> Type[RulespecBaseGroup]
         return RulespecBaseGroup
 
     def plugin_name(self, plugin_class):
+        # type: (Type[RulespecBaseGroup]) -> str
         return plugin_class().name
 
     def registration_hook(self, plugin_class):
+        # type: (Type[RulespecBaseGroup]) -> None
         group = plugin_class()
         if not group.is_sub_group:
+            assert issubclass(plugin_class, RulespecGroup)
             self._main_groups.append(plugin_class)
         else:
+            assert issubclass(plugin_class, RulespecSubGroup)
+            assert isinstance(group, RulespecSubGroup)
             self._sub_groups_by_main_group.setdefault(group.main_group, []).append(plugin_class)
 
     def get_group_choices(self, mode):
+        # type: (str) -> List[_Tuple[str, str]]
         """Returns all available ruleset groups to be used in dropdown choices"""
-        choices = []
+        choices = []  # type: List[_Tuple[str, str]]
 
         main_groups = [g_class() for g_class in self.get_main_groups()]
         for main_group in sorted(main_groups, key=lambda g: g.title):
             if mode == "static_checks" and main_group.name != "static":
                 continue
-            elif mode != "static_checks" and main_group.name == "static":
+            if mode != "static_checks" and main_group.name == "static":
                 continue
 
             choices.append((main_group.name, main_group.choice_title))
@@ -196,8 +191,9 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
         return [name for name in self._entries if name == group_name]
 
     def get_host_rulespec_group_names(self):
+        # type: () -> List[str]
         """Collect all rulesets that apply to hosts, except those specifying new active or static checks"""
-        names = []
+        names = []  # type: List[str]
         hidden_groups = ("static", "checkparams", "activechecks")
         hidden_main_groups = ("monconf", "agents", "agent")
         for g_class in self.values():
@@ -376,7 +372,7 @@ def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
 
 
 def _validate_function_args(arg_infos, hint):
-    # type: (List[TypingTuple[Any, bool, bool]], str) -> None
+    # type: (List[_Tuple[Any, bool, bool]], str) -> None
     for idx, (arg, is_callable, none_allowed) in enumerate(arg_infos):
         if not none_allowed and arg is None:
             raise MKGeneralException(_("Invalid None argument at for %s idx %d") % (hint, idx))
@@ -385,30 +381,30 @@ def _validate_function_args(arg_infos, hint):
                 _("Invalid expected callable for %s at idx %d: %r") % (hint, idx, arg))
 
 
-class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
+class Rulespec(metaclass=abc.ABCMeta):
     NO_FACTORY_DEFAULT = []  # type: list
     # means this ruleset is not used if no rule is entered
     FACTORY_DEFAULT_UNUSED = []  # type: list
 
     def __init__(
-            self,
-            name,
-            group,
-            title,
-            valuespec,
-            match_type,
-            item_type,
-            item_spec,
-            item_name,
-            item_help,
-            is_optional,
-            is_deprecated,
-            is_for_services,
-            is_binary_ruleset,
-            factory_default,
-            help_func,
+        self,
+        name,
+        group,
+        title,
+        valuespec,
+        match_type,
+        item_type,
+        item_spec,
+        item_name,
+        item_help,
+        is_optional,
+        is_deprecated,
+        is_for_services,
+        is_binary_ruleset,
+        factory_default,
+        help_func,
     ):
-        # type: (str, Type[RulespecBaseGroup], Optional[Callable[[], Text]], Callable[[], ValueSpec], str, Optional[str], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], Optional[Callable[[], Text]], bool, bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecBaseGroup], Optional[Callable[[], str]], Callable[[], ValueSpec], str, Optional[str], Optional[Callable[[], ValueSpec]], Optional[Callable[[], str]], Optional[Callable[[], str]], bool, bool, bool, bool, Any, Optional[Callable[[], str]]) -> None
         super(Rulespec, self).__init__()
 
         arg_infos = [
@@ -428,7 +424,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
             (is_binary_ruleset, False, False),
             (factory_default, False, True),
             (help_func, True, True),
-        ]  # type: List[TypingTuple[Any, bool, bool]]
+        ]  # type: List[_Tuple[Any, bool, bool]]
         _validate_function_args(arg_infos, name)
 
         self._name = name
@@ -464,7 +460,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def title(self):
-        # type: () -> Text
+        # type: () -> Optional[str]
         if self._title:
             return self._title()
 
@@ -472,7 +468,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def help(self):
-        # type: () -> Text
+        # type: () -> Union[None, str, HTML]
         if self._help:
             return self._help()
 
@@ -503,7 +499,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def item_name(self):
-        # type: () -> Optional[Text]
+        # type: () -> Optional[str]
         if self._item_name:
             return self._item_name()
 
@@ -517,7 +513,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def item_help(self):
-        # type: () -> Optional[Text]
+        # type: () -> Union[None, str, HTML]
         if self._item_help:
             return self._item_help()
 
@@ -528,7 +524,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def item_enum(self):
-        # type: () -> Optional[List[TypingTuple[str, Text]]]
+        # type: () -> Optional[List[_Tuple[str, str]]]
         item_spec = self.item_spec
         if item_spec is None:
             return None
@@ -540,17 +536,17 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def group_name(self):
-        # type: () -> Text
+        # type: () -> str
         return self._group().name
 
     @property
     def main_group_name(self):
-        # type: () -> Text
+        # type: () -> str
         return self.group_name.split("/")[0]
 
     @property
     def sub_group_name(self):
-        # type: () -> Text
+        # type: () -> str
         return self.group_name.split("/")[1] if "/" in self.group_name else ""
 
     @property
@@ -579,19 +575,19 @@ class HostRulespec(Rulespec):
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
-            self,
-            name,
-            group,
-            valuespec,
-            title=None,
-            match_type="first",
-            is_optional=False,
-            is_deprecated=False,
-            is_binary_ruleset=False,
-            factory_default=Rulespec.NO_FACTORY_DEFAULT,
-            help_func=None,
+        self,
+        name,
+        group,
+        valuespec,
+        title=None,
+        match_type="first",
+        is_optional=False,
+        is_deprecated=False,
+        is_binary_ruleset=False,
+        factory_default=Rulespec.NO_FACTORY_DEFAULT,
+        help_func=None,
     ):
-        # type: (str, Type[Any], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[Any], Callable[[], ValueSpec], Optional[Callable[[], str]], str, bool, bool, bool, Any, Optional[Callable[[], str]]) -> None
         super(HostRulespec, self).__init__(
             name=name,
             group=group,
@@ -618,23 +614,23 @@ class ServiceRulespec(Rulespec):
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
-            self,
-            name,
-            group,
-            valuespec,
-            title=None,
-            match_type="first",
-            item_type=None,
-            item_name=None,
-            item_spec=None,
-            item_help=None,
-            is_optional=False,
-            is_deprecated=False,
-            is_binary_ruleset=False,
-            factory_default=Rulespec.NO_FACTORY_DEFAULT,
-            help_func=None,
+        self,
+        name,
+        group,
+        valuespec,
+        title=None,
+        match_type="first",
+        item_type=None,
+        item_name=None,
+        item_spec=None,
+        item_help=None,
+        is_optional=False,
+        is_deprecated=False,
+        is_binary_ruleset=False,
+        factory_default=Rulespec.NO_FACTORY_DEFAULT,
+        help_func=None,
     ):
-        # type: (str, Type[RulespecBaseGroup], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecBaseGroup], Callable[[], ValueSpec], Optional[Callable[[], str]], str, Optional[str], Optional[Callable[[], str]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], str]], bool, bool, bool, Any, Optional[Callable[[], str]]) -> None
         super(ServiceRulespec, self).__init__(
             name=name,
             group=group,
@@ -658,17 +654,17 @@ class ServiceRulespec(Rulespec):
 class BinaryHostRulespec(HostRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
-            self,
-            name,
-            group,
-            title=None,
-            match_type="first",
-            is_optional=False,
-            is_deprecated=False,
-            factory_default=Rulespec.NO_FACTORY_DEFAULT,
-            help_func=None,
+        self,
+        name,
+        group,
+        title=None,
+        match_type="first",
+        is_optional=False,
+        is_deprecated=False,
+        factory_default=Rulespec.NO_FACTORY_DEFAULT,
+        help_func=None,
     ):
-        # type: (str, Type[RulespecBaseGroup], Optional[Callable[[], Text]], str, bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecBaseGroup], Optional[Callable[[], str]], str, bool, bool, Any, Optional[Callable[[], str]]) -> None
         super(BinaryHostRulespec, self).__init__(
             name=name,
             group=group,
@@ -698,21 +694,21 @@ class BinaryHostRulespec(HostRulespec):
 class BinaryServiceRulespec(ServiceRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
-            self,
-            name,
-            group,
-            title=None,
-            match_type="first",
-            item_type=None,
-            item_name=None,
-            item_spec=None,
-            item_help=None,
-            is_optional=False,
-            is_deprecated=False,
-            factory_default=Rulespec.NO_FACTORY_DEFAULT,
-            help_func=None,
+        self,
+        name,
+        group,
+        title=None,
+        match_type="first",
+        item_type=None,
+        item_name=None,
+        item_spec=None,
+        item_help=None,
+        is_optional=False,
+        is_deprecated=False,
+        factory_default=Rulespec.NO_FACTORY_DEFAULT,
+        help_func=None,
     ):
-        # type: (str, Type[RulespecBaseGroup], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecBaseGroup], Optional[Callable[[], str]], str, Optional[str], Optional[Callable[[], str]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], str]], bool, bool, Any, Optional[Callable[[], str]]) -> None
         super(BinaryServiceRulespec, self).__init__(
             name=name,
             group=group,
@@ -744,15 +740,15 @@ class BinaryServiceRulespec(ServiceRulespec):
 
 
 def _get_manual_check_parameter_rulespec_instance(
-        group,
-        check_group_name,
-        title=None,
-        parameter_valuespec=None,
-        item_spec=None,
-        is_optional=None,
-        is_deprecated=None,
+    group,
+    check_group_name,
+    title=None,
+    parameter_valuespec=None,
+    item_spec=None,
+    is_optional=None,
+    is_deprecated=None,
 ):
-    # type: (Type[Any], str, Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], ValueSpec]], bool, bool) -> ManualCheckParameterRulespec
+    # type: (Type[Any], str, Optional[Callable[[], str]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], ValueSpec]], bool, bool) -> ManualCheckParameterRulespec
     # There may be no RulespecGroup declaration for the static checks.
     # Create some based on the regular check groups (which should have a definition)
     try:
@@ -786,22 +782,22 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
-            self,
-            check_group_name,
-            group,
-            parameter_valuespec,
-            title=None,
-            match_type=None,
-            item_type=None,
-            item_name=None,
-            item_spec=None,
-            item_help=None,
-            is_optional=False,
-            is_deprecated=False,
-            factory_default=Rulespec.NO_FACTORY_DEFAULT,
-            create_manual_check=True,
+        self,
+        check_group_name,
+        group,
+        parameter_valuespec,
+        title=None,
+        match_type=None,
+        item_type=None,
+        item_name=None,
+        item_spec=None,
+        item_help=None,
+        is_optional=False,
+        is_deprecated=False,
+        factory_default=Rulespec.NO_FACTORY_DEFAULT,
+        create_manual_check=True,
     ):
-        # type: (str, Type[RulespecBaseGroup], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, Any, bool) -> None
+        # type: (str, Type[RulespecBaseGroup], Callable[[], ValueSpec], Optional[Callable[[], str]], str, Optional[str], Optional[Callable[[], str]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], str]], bool, bool, Any, bool) -> None
         # Mandatory keys
         self._check_group_name = check_group_name
         name = "checkgroup_parameters:%s" % self._check_group_name
@@ -861,16 +857,16 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
-            self,
-            check_group_name,
-            group,
-            parameter_valuespec,
-            title=None,
-            match_type=None,
-            is_optional=False,
-            is_deprecated=False,
-            factory_default=Rulespec.NO_FACTORY_DEFAULT,
-            create_manual_check=True,
+        self,
+        check_group_name,
+        group,
+        parameter_valuespec,
+        title=None,
+        match_type=None,
+        is_optional=False,
+        is_deprecated=False,
+        factory_default=Rulespec.NO_FACTORY_DEFAULT,
+        create_manual_check=True,
     ):
         self._check_group_name = check_group_name
         name = "checkgroup_parameters:%s" % self._check_group_name
@@ -934,18 +930,26 @@ class ManualCheckParameterRulespec(HostRulespec):
     """Base class for all rulespecs managing manually configured checks
 
     These have to be named static_checks:<name-of-checkgroup>"""
-    def __init__(self,
-                 group,
-                 check_group_name,
-                 parameter_valuespec=None,
-                 title=None,
-                 item_spec=None,
-                 is_optional=False,
-                 is_deprecated=False):
+
+    # Required because of Rulespec.NO_FACTORY_DEFAULT
+    def __init__(  # pylint: disable=dangerous-default-value
+        self,
+        group,
+        check_group_name,
+        parameter_valuespec=None,
+        title=None,
+        item_spec=None,
+        is_optional=False,
+        is_deprecated=False,
+        name=None,
+        match_type="all",
+        factory_default=Rulespec.NO_FACTORY_DEFAULT,
+    ):
 
         # Mandatory keys
         self._check_group_name = check_group_name
-        name = "static_checks:%s" % self._check_group_name
+        if name is None:
+            name = "static_checks:%s" % self._check_group_name
 
         arg_infos = [
             # (arg, is_callable, none_allowed)
@@ -958,12 +962,13 @@ class ManualCheckParameterRulespec(HostRulespec):
             group=group,
             name=name,
             title=title,
+            match_type=match_type,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            factory_default=factory_default,
 
             # Explicit set
             valuespec=self._rulespec_valuespec,
-            match_type="all",
         )
 
         # Optional keys
@@ -1037,55 +1042,54 @@ def register_rule(
         deprecated=False,
         **kwargs):
 
-    factory_default = kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT)
-
-    if isinstance(group, six.string_types):
-        group = get_rulegroup(group).__class__
-
+    base_class = _rulespec_class_for(varname, valuespec is not None, itemtype is not None)
     class_kwargs = {
         "name": varname,
-        "group": group,
+        "group": get_rulegroup(group).__class__ if isinstance(group, str) else group,
         "match_type": match,
-        "factory_default": factory_default,
+        "factory_default": kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT),
         "is_optional": optional,
         "is_deprecated": deprecated,
     }
-
     if valuespec is not None:
         class_kwargs["valuespec"] = lambda: valuespec
-
-    if varname.startswith("static_checks:"):
-        base_class = ManualCheckParameterRulespec
-    elif varname.startswith("checkgroup_parameters:"):
-        base_class = CheckParameterRulespecWithItem if itemtype is not None else CheckParameterRulespecWithoutItem
-    elif valuespec is None:
-        base_class = BinaryServiceRulespec if itemtype is not None else BinaryHostRulespec
-    else:
-        base_class = ServiceRulespec if itemtype is not None else HostRulespec
-
     if varname.startswith("static_checks:") or varname.startswith("checkgroup_parameters:"):
         class_kwargs["check_group_name"] = varname.split(":", 1)[1]
-
     if title is not None:
         class_kwargs["title"] = lambda: title
-
-    for name, value, lambda_enclosed in [
-        ("help_func", help, True),
-        ("item_type", itemtype, False),
-        ("item_spec", itemspec, True),
-        ("item_name", itemname, True),
-        ("item_help", itemhelp, True),
-    ]:
-        if value is not None:
-            if lambda_enclosed:
-                class_kwargs[name] = lambda v=value: v
-            else:
-                class_kwargs[name] = value
-
+    if itemtype is not None:
+        class_kwargs["item_type"] = itemtype
+    if help is not None:
+        class_kwargs["help_func"] = lambda v=help: v
+    if itemspec is not None:
+        class_kwargs["item_spec"] = lambda v=itemspec: v
+    if itemname is not None:
+        class_kwargs["item_name"] = lambda v=itemname: v
+    if itemhelp is not None:
+        class_kwargs["item_help"] = lambda v=itemhelp: v
     if not itemname and itemtype == "service":
         class_kwargs["item_name"] = lambda: _("Service")
 
     rulespec_registry.register(base_class(**class_kwargs))
+
+
+# NOTE: mypy's typing rules for ternaries seem to be a bit broken, so we have
+# to nest ifs in a slightly ugly way.
+def _rulespec_class_for(varname, has_valuespec, has_itemtype):
+    # type: (str, bool, bool) -> Type[Rulespec]
+    if varname.startswith("static_checks:"):
+        return ManualCheckParameterRulespec
+    if varname.startswith("checkgroup_parameters:"):
+        if has_itemtype:
+            return CheckParameterRulespecWithItem
+        return CheckParameterRulespecWithoutItem
+    if has_valuespec:
+        if has_itemtype:
+            return ServiceRulespec
+        return HostRulespec
+    if has_itemtype:
+        return BinaryServiceRulespec
+    return BinaryHostRulespec
 
 
 class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
@@ -1095,10 +1099,6 @@ class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
 
     def plugin_base_class(self):
         return Rulespec
-
-    def plugin_name(self, instance):
-        # type: (Rulespec) -> str
-        return instance.name
 
     def get_by_group(self, group_name):
         # type: (str) -> List[Rulespec]
@@ -1120,7 +1120,8 @@ class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
         return list(set(gc.group_name for gc in self.values()))
 
     def register(self, instance):
-        # type: (Rulespec) -> None
+        # type: (Any) -> Any
+        # not-yet-a-type: (Rulespec) -> None
         if not isinstance(instance, Rulespec):
             raise MKGeneralException(_("Tried to register incompatible rulespec: %r") % instance)
 
@@ -1135,7 +1136,7 @@ class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
 
                 super(RulespecRegistry, self).register(manual_instance)
 
-        super(RulespecRegistry, self).register(instance)
+        return super(RulespecRegistry, self).register(instance)
 
     def register_without_manual_check_rulespec(self, instance):
         # type: (Rulespec) -> None
@@ -1155,9 +1156,11 @@ class CheckTypeGroupSelection(ElementSelection):
 
     def get_elements(self):
         checks = check_mk_local_automation("get-check-information")
-        elements = dict([(cn, "%s - %s" % (cn, c["title"]))
-                         for (cn, c) in checks.items()
-                         if c.get("group") == self._checkgroup])
+        elements = {
+            cn: "%s - %s" % (cn, c["title"])
+            for (cn, c) in checks.items()
+            if c.get("group") == self._checkgroup
+        }
         return elements
 
     def value_to_text(self, value):
@@ -1201,7 +1204,10 @@ class TimeperiodValuespec(ValueSpec):
         html.hidden_field(self.tp_current_mode, "%d" % is_active)
 
         vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
-        toggle_url = html.makeuri(vars_copy.items())
+
+        url_vars = []  # type: HTTPVariables
+        url_vars += vars_copy.items()
+        toggle_url = html.makeuri(url_vars)
 
         if is_active:
             value = self._get_timeperiod_value(value)

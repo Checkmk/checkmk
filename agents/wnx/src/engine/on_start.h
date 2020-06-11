@@ -1,7 +1,11 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 // tools to control starting operations
 
 #pragma once
+#include <filesystem>
 #include <string>
 #include <string_view>
 
@@ -29,6 +33,25 @@ inline bool OnStartTest() { return OnStart(AppType::test); }
 void OnExit();  // #VIP will stop WMI and all services(in the future)
 
 bool ConfigLoaded();
+
+class UninstallAlert {
+public:
+    UninstallAlert() = default;
+    UninstallAlert(const UninstallAlert&) = delete;
+    UninstallAlert(UninstallAlert&&) = delete;
+    UninstallAlert& operator=(const UninstallAlert&) = delete;
+    UninstallAlert& operator=(UninstallAlert&&) = delete;
+    bool isSet() const noexcept {
+        return set_;
+    }                       // check during exit from the service
+    void clear() noexcept;  // test only
+    void set() noexcept;    // set when command is got from the
+                            // transport
+private:
+    bool set_ = false;
+};
+
+extern UninstallAlert G_UninstallALert;
 
 std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
     std::wstring_view environment_variable);

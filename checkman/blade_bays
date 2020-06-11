@@ -15,5 +15,4 @@ item:
  (e.g. {Midplane}).
 
 inventory:
- All bays with the state 1 (present and OK) are automatically
- inventorized.
+ One service is created for each bay with the state 1 (present and OK).

@@ -1,4 +1,4 @@
-title: Number of total IOs on OpenVMS
+title: OpenVMS: Number of Total IOs
 agents: openvms
 catalog: os/storage
 license: GPL
@@ -8,5 +8,5 @@ description:
  on an OpenVMS host. The check is always OK.
 
 inventory:
- One check per OpenVMS host will be created.
+ One service is created for each OpenVMS host.
 

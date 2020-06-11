@@ -1,0 +1,14 @@
+Title: azure_agent_info: Add option to pin down monitored resources
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1574674404
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+Since werk 10475 services no longer go to UNKNOWN if data is missing.
+If you want to strictly monitor the resources found for monitoring,
+you can now enable resource pinning in the WATO rule "Azure Agent Info".
+A rediscovery is required for the "Azure agent info" service.

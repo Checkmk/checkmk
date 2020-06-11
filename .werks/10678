@@ -1,0 +1,18 @@
+Title: Windows Agent fileinfo generates output entries for glob patterns in all cases
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1578582613
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Previously, if Windows Agent couldn't find files matching to an entry with a 
+glob pattern of <tt>fileinfo</tt> section, then the Agent wrote nothing and 
+Check MK monitoring site may wrongly decide, that the service doesn't exist.
+
+Now <tt>fileinfo</tt> generates such entries always. If no files match to  
+a glob pattern in config, then the Agent creates a line with keyword 
+<tt>missing</tt>.
+

@@ -1,0 +1,13 @@
+Title: statgrab_mem,aix_memory,docker_container_mem,ps,solaris_mem,emc_ecs_mem,mem.used: Fix some wrong levels in the graphs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1576093594
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+If levels were specified for the amount of free space,
+the values of the warn and crit parameters have been
+displayed as negative values in the graphs. This has been fixed.

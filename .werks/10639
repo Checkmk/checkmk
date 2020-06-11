@@ -1,0 +1,14 @@
+Title: agent_prometheus: Addition of Prometheus Special Agent to Checkmk
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1575616970
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 1.7.0i1
+
+ This change introduces the underlying structure of the Prometheus
+ Special Agent into Checkmk. It provides connection functionality
+ along with preparation for subsequent service generation resulting
+ from Prometheus metrics.

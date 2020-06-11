@@ -1,28 +1,7 @@
 #!/usr/local/bin/bash
-# Check_MK Agent for FreeBSD
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 #         Florian Heigl <florian.heigl@gmail.com>
@@ -259,7 +238,7 @@ fi
 # To install: pkg install megacli
 if which MegaCli >/dev/null ; then
     echo '<<<megaraid_pdisks>>>'
-    MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry'
+    MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Predictive Failure Count'
     echo '<<<megaraid_ldisks>>>'
     MegaCli -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
     echo '<<<megaraid_bbu>>>'
@@ -281,41 +260,6 @@ if which ntpq > /dev/null 2>&1 ; then
    ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
 
-
-# Checks for cups monitoring
-#if which lpstat > /dev/null 2>&1; then
-#  echo '<<<cups_queues>>>'
-#  lpstat -p
-#  echo '---'
-#  for i in $(lpstat -p | grep -E "^(printer|Drucker)" | awk '{print $2}' | grep -v "@"); do
-#    lpstat -o "$i"
-#  done
-#fi
-
-# Heartbeat monitoring
-#if which cl_status > /dev/null 2>&1; then
-#  # Different handling for heartbeat clusters with and without CRM
-#  # for the resource state
-#  if [ -S /var/run/heartbeat/crm/cib_ro ]; then
-#    echo '<<<heartbeat_crm>>>'
-#    crm_mon -1 -r | grep -v ^$ | sed 's/^\s/_/g'
-#  else
-#    echo '<<<heartbeat_rscstatus>>>'
-#    cl_status rscstatus
-#  fi
-#
-#  echo '<<<heartbeat_nodes>>>'
-#  for NODE in $(cl_status listnodes); do
-#    if [ $NODE != $HOSTNAME ]; then
-#      STATUS=$(cl_status nodestatus $NODE)
-#      echo -n "$NODE $STATUS"
-#      for LINK in $(cl_status listhblinks $NODE 2>/dev/null); do
-#        echo -n " $LINK $(cl_status hblinkstatus $NODE $LINK)"
-#      done
-#      echo
-#    fi
-#  done
-#fi
 
 # Number of TCP connections in the various states
 echo '<<<tcp_conn_stats>>>'
@@ -427,7 +371,7 @@ foreach (@patterns) {
 
 
 # Local checks
-echo '<<<local>>>'
+echo '<<<local:sep(0)>>>'
 if cd $LOCALDIR ; then
     for skript in $(ls) ; do
         if [ -f "$skript" -a -x "$skript" ] ; then

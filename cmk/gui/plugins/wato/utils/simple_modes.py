@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """These modes implement a complete set of modes for managing a set of standard objects
 
 Together with WatoSimpleConfigFile() as store class this implements
@@ -34,23 +14,18 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import Optional, List, Type, Union, Text, Tuple  # pylint: disable=unused-import
-import six
+from typing import Optional, List, Type, Union, Tuple, Dict
 
-from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
+from cmk.gui.table import table_element, Table
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.utils.valuespecs import (
-    DocumentationURL,
-    RuleComment,
-)
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
-from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile  # pylint: disable=unused-import
+from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
     ID,
     FixedValue,
@@ -58,10 +33,12 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextUnicode,
     Checkbox,
+    DocumentationURL,
+    RuleComment,
 )
 
 
-class SimpleModeType(six.with_metaclass(abc.ABCMeta, object)):
+class SimpleModeType(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def type_name(self):
         # type: () -> str
@@ -129,7 +106,7 @@ class SimpleModeType(six.with_metaclass(abc.ABCMeta, object)):
         return None
 
 
-class SimpleWatoModeBase(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class SimpleWatoModeBase(WatoMode, metaclass=abc.ABCMeta):
     """Base for specific WATO modes of different types
 
     This is essentially a base class for the SimpleListMode/SimpleEditMode
@@ -147,7 +124,7 @@ class SimpleWatoModeBase(six.with_metaclass(abc.ABCMeta, WatoMode)):
         super(SimpleWatoModeBase, self).__init__()
 
     def _add_change(self, action, entry, text):
-        # type: (str, dict, str) -> None
+        # type: (str, Dict, str) -> None
         """Add a WATO change entry for this object type modifications"""
         watolib.add_change("%s-%s" % (action, self._mode_type.type_name()),
                            text,
@@ -170,7 +147,7 @@ class SimpleListMode(SimpleWatoModeBase):
         raise NotImplementedError()
 
     def _handle_custom_action(self, action):
-        # type: (str) -> Optional[Union[bool, Tuple[Optional[str], Text]]]
+        # type: (str) -> Union[None, bool, Tuple[Optional[str], str]]
         """Gives the mode the option to implement custom actions
 
         This function is called when the action phase is triggered. The action name is given
@@ -183,7 +160,7 @@ class SimpleListMode(SimpleWatoModeBase):
         raise MKUserError("_action", _("The action '%s' is not implemented") % action)
 
     def _new_context_button_label(self):
-        # type: () -> Text
+        # type: () -> str
         return _("New %s") % self._mode_type.name_singular()
 
     def buttons(self):
@@ -196,30 +173,30 @@ class SimpleListMode(SimpleWatoModeBase):
         if not html.transaction_valid():
             return
 
-        if not html.request.has_var("_action"):
+        action_var = html.request.get_str_input("_action")
+        if action_var is None:
             return
 
-        if html.request.var("_action") != "delete":
-            return self._handle_custom_action(html.request.var("_action"))
+        if action_var != "delete":
+            return self._handle_custom_action(action_var)
 
         confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
         if confirm is False:
             return False
-
-        elif not confirm:
+        if not confirm:
             return
-
         html.check_transaction()  # invalidate transid
 
         entries = self._store.load_for_modification()
 
-        ident = html.get_ascii_input("_delete")
+        ident = html.request.get_ascii_input("_delete")
         if ident not in entries:
             raise MKUserError("_delete",
                               _("This %s does not exist.") % self._mode_type.name_singular())
 
         if ident not in self._store.filter_editable_entries(entries):
-            raise MKUserError("_delete", \
+            raise MKUserError(
+                "_delete",
                 _("You are not allowed to delete this %s.") % self._mode_type.name_singular())
 
         self._validate_deletion(ident, entries[ident])
@@ -233,7 +210,6 @@ class SimpleListMode(SimpleWatoModeBase):
 
     def _validate_deletion(self, ident, entry):
         """Override this to implement custom validations"""
-        pass
 
     def _delete_confirm_message(self):
         return _("Do you really want to delete this %s?") % self._mode_type.name_singular()
@@ -275,7 +251,7 @@ class SimpleListMode(SimpleWatoModeBase):
                          _("Delete this %s") % self._mode_type.name_singular(), "delete")
 
 
-class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
+class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
     """Base class for edit modes"""
     @abc.abstractmethod
     def _vs_individual_elements(self):
@@ -283,7 +259,7 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
         raise NotImplementedError()
 
     def _from_vars(self):
-        ident = html.get_ascii_input("ident")
+        ident = html.request.get_ascii_input("ident")
         if ident is not None:
             try:
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[ident]
@@ -292,11 +268,11 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
                                   _("This %s does not exist.") % self._mode_type.name_singular())
 
             self._new = False
-            self._ident = ident
+            self._ident = ident  # type: Optional[str]
             self._entry = entry
             return
 
-        clone = html.get_ascii_input("clone")
+        clone = html.request.get_ascii_input("clone")
         if clone is not None:
             try:
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[clone]
@@ -418,7 +394,8 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
             raise MKUserError("ident", _("This ID is already in use. Please choose another one."))
 
         if not self._new and self._ident not in self._store.filter_editable_entries(entries):
-            raise MKUserError("ident", \
+            raise MKUserError(
+                "ident",
                 _("You are not allowed to edit this %s.") % self._mode_type.name_singular())
 
         entries[self._ident] = self._entry

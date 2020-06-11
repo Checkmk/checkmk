@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # The following two are needed both in the factory settings for
 # the single check, as well as in the summary check.
@@ -59,7 +39,7 @@ def _azure_vms_get_status(resource, desired_type):
     return "unknown", ""
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_virtualmachines(_item, params, resource):
 
     map_provisioning_states = params.get("map_provisioning_states", {})
@@ -135,15 +115,14 @@ def discover_azure_virtualmachines_summary(parsed):
 
 
 def check_azure_virtualmachines_summary(_summary, params, parsed):
-
-    fixed_resources_list = sorted(parsed.values())
+    fixed_resources_list = parsed.values()
     provisionings = [_azure_vms_get_status(r, 'ProvisioningState')[0] for r in fixed_resources_list]
     powers = [_azure_vms_get_status(r, 'PowerState')[0] for r in fixed_resources_list]
     groups = [r.get("group") for r in fixed_resources_list]
 
     levels_provisioning = params.get("levels_provisioning", {})
     state, txt = 0, []
-    for prov_state in sorted(set(provisionings + _AZURE_VM_STATES_PROV.keys())):
+    for prov_state in sorted(set(provisionings + list(_AZURE_VM_STATES_PROV))):
         count = provisionings.count(prov_state)
         prov_state_levels = levels_provisioning.get(prov_state, {})
         state_p, msg_p = _azure_vms_check_levels(count, prov_state, prov_state_levels)
@@ -154,7 +133,7 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
 
     levels_power = params.get("levels_power", {})
     state, txt = 0, []
-    for pow_state in sorted(set(powers + _AZURE_VM_STATES_POWER.keys())):
+    for pow_state in sorted(set(powers + list(_AZURE_VM_STATES_POWER))):
         count = powers.count(pow_state)
         pow_state_levels = levels_power.get(pow_state, {})
         state_p, msg_p = _azure_vms_check_levels(count, pow_state, pow_state_levels)
@@ -171,7 +150,7 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
     # long output
     templ = "%s: Provisioning %s, VM %s, Resource group: %s\n"
     names = (r.get("name") for r in fixed_resources_list)
-    vms = zip(names, provisionings, powers, groups)
+    vms = sorted(zip(names, provisionings, powers, groups))
     for vmach in vms:
         yield 0, templ % vmach
 

@@ -1,37 +1,20 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef Renderer_h
 #define Renderer_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <iosfwd>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "data_encoding.h"
 class CSVSeparators;
 class Logger;
@@ -163,8 +146,8 @@ public:
         }
     }
 
-    Renderer &renderer() const { return _renderer; }
-    EmitBeginEnd emitBeginEnd() const { return _emitBeginEnd; }
+    [[nodiscard]] Renderer &renderer() const { return _renderer; }
+    [[nodiscard]] EmitBeginEnd emitBeginEnd() const { return _emitBeginEnd; }
 
 private:
     Renderer &_renderer;
@@ -199,7 +182,7 @@ public:
         }
     }
 
-    Renderer &renderer() const { return _query.renderer(); }
+    [[nodiscard]] Renderer &renderer() const { return _query.renderer(); }
 
     void output(const RowFragment &value) {
         separate();
@@ -237,6 +220,7 @@ public:
                 _list.renderer().separateListElements();
             }
         }
+        ~BeginEnd() = default;
 
     private:
         ListRenderer &_list;
@@ -249,7 +233,7 @@ public:
 
     ~ListRenderer() { renderer().endList(); }
 
-    Renderer &renderer() const { return _row.renderer(); }
+    [[nodiscard]] Renderer &renderer() const { return _row.renderer(); }
 
     template <typename T>
     void output(T value) {
@@ -274,6 +258,7 @@ public:
                 _sublist.renderer().separateSublistElements();
             }
         }
+        ~BeginEnd() = default;
 
     private:
         SublistRenderer &_sublist;
@@ -286,7 +271,7 @@ public:
 
     ~SublistRenderer() { renderer().endSublist(); }
 
-    Renderer &renderer() const { return _list.renderer(); }
+    [[nodiscard]] Renderer &renderer() const { return _list.renderer(); }
 
     template <typename T>
     void output(T value) {
@@ -311,6 +296,7 @@ public:
                 _dict.renderer().separateDictElements();
             }
         }
+        ~BeginEnd() = default;
 
     private:
         DictRenderer &_dict;
@@ -323,7 +309,7 @@ public:
 
     ~DictRenderer() { renderer().endDict(); }
 
-    Renderer &renderer() const { return _row.renderer(); }
+    [[nodiscard]] Renderer &renderer() const { return _row.renderer(); }
 
     void output(const std::string &key, const std::string &value) {
         BeginEnd be(*this);

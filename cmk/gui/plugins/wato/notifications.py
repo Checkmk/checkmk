@@ -1,32 +1,12 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
 from cmk.gui.i18n import _
@@ -35,6 +15,7 @@ from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
+    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     EmailAddress,
@@ -78,7 +59,7 @@ def transform_forth_html_mail_url_prefix(p):
     if not isinstance(p, dict):
         return ("manual", p)
 
-    k, v = p.items()[0]
+    k, v = list(p.items())[0]
     if k == "automatic":
         return "%s_%s" % (k, v)
 
@@ -86,7 +67,132 @@ def transform_forth_html_mail_url_prefix(p):
 
 
 def local_site_url():
-    return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/",
+    return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/"
+
+
+def _vs_add_common_mail_elements(elements):
+    header = [
+        ("from",
+         Transform(
+             Dictionary(
+                 title="From",
+                 elements=[
+                     ("address", EmailAddress(
+                         title=_("Email address"),
+                         size=40,
+                         allow_empty=False,
+                     )),
+                     ("display_name",
+                      TextUnicode(
+                          title=_("Display name"),
+                          size=40,
+                          allow_empty=False,
+                      )),
+                 ],
+                 help=_("The email address and visible name used in the From header "
+                        "of notifications messages. If no email address is specified "
+                        "the default address is <tt>OMD_SITE@FQDN</tt> is used. If the "
+                        "environment variable <tt>OMD_SITE</tt> is not set it defaults "
+                        "to <tt>checkmk</tt>."),
+             ),
+             forth=lambda x: x if isinstance(x, dict) else {'address': x},
+         )),
+        ("reply_to",
+         Transform(
+             Dictionary(
+                 title="Reply to",
+                 elements=[
+                     ("address", EmailAddress(
+                         title=_("Email address"),
+                         size=40,
+                         allow_empty=False,
+                     )),
+                     ("display_name",
+                      TextUnicode(
+                          title=_("Display name"),
+                          size=40,
+                          allow_empty=False,
+                      )),
+                 ],
+                 required_keys=["address"],
+                 help=_("The email address and visible name used in the Reply-To header "
+                        "of notifications messages."),
+             ),
+             forth=lambda x: x if isinstance(x, dict) else {'address': x},
+         )),
+        ("host_subject",
+         TextUnicode(
+             title=_("Subject for host notifications"),
+             help=_("Here you are allowed to use all macros that are defined in the "
+                    "notification context."),
+             default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
+             size=64,
+         )),
+        ("service_subject",
+         TextUnicode(
+             title=_("Subject for service notifications"),
+             help=_("Here you are allowed to use all macros that are defined in the "
+                    "notification context."),
+             default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+             size=64,
+         )),
+    ]
+
+    footer = [
+        ('bulk_sort_order',
+         DropdownChoice(
+             choices=[
+                 ('oldest_first', _('Oldest first')),
+                 ('newest_first', _('Newest first')),
+             ],
+             help=_(
+                 "With this option you can specify, whether the oldest (default) or "
+                 "the newest notification should get shown at the top of the notification mail."),
+             title=_("Notification sort order for bulk notifications"),
+             default_value="oldest_first",
+         )),
+        ("disable_multiplexing",
+         FixedValue(
+             True,
+             title=_("Send seperate notifications to every recipient"),
+             totext=_("A seperate notification is send to every recipient. Recipients "
+                      "cannot see which other recipients were notified."),
+             help=_("Per default only one notification is generated for all recipients. "
+                    "Therefore, all recipients can see who was notified and reply to "
+                    "all other recipients."),
+         )),
+    ]
+
+    return header + elements + footer
+
+
+def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
+
+    return Transform(CascadingDropdown(
+        title=_("URL prefix for links to Check_MK"),
+        help=_("If you use <b>Automatic HTTP/s</b>, the URL prefix for host "
+               "and service links within the notification is filled "
+               "automatically. If you specify an URL prefix here, then "
+               "several parts of the notification are armed with hyperlinks "
+               "to your Check_MK GUI. In both cases, the recipient of the "
+               "notification can directly visit the host or service in "
+               "question in Check_MK. Specify an absolute URL including the "
+               "<tt>.../check_mk/</tt>."),
+        choices=[
+            ("automatic_http", _("Automatic HTTP")),
+            ("automatic_https", _("Automatic HTTPs")),
+            ("manual", _("Specify URL prefix"),
+             TextAscii(
+                 regex="^(http|https)://.*/check_mk/$",
+                 regex_error=_("The URL must begin with <tt>http</tt> or "
+                               "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                 size=64,
+                 default_value=default_choice,
+             )),
+        ],
+        default_value=default_value),
+                     forth=transform_forth_html_mail_url_prefix,
+                     back=transform_back_html_mail_url_prefix)
 
 
 @notification_parameter_registry.register
@@ -98,37 +204,13 @@ class NotificationParameterMail(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             # must be called at run time!!
-            elements=self._parameter_elements,)
+            elements=self._parameter_elements,
+        )
 
     def _parameter_elements(self):
-        elements = [
-            ("from", EmailAddress(
-                title=_("From: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("reply_to", EmailAddress(
-                title=_("Reply-To: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("host_subject",
-             TextUnicode(
-                 title=_("Subject for host notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                 size=64,
-             )),
-            ("service_subject",
-             TextUnicode(
-                 title=_("Subject for service notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                 size=64,
-             )),
+        elements = _vs_add_common_mail_elements([
             ("elements",
              ListChoice(
                  title=_("Information to be displayed in the email body"),
@@ -156,34 +238,10 @@ class NotificationParameterMail(NotificationParameter):
                  rows="auto",
              )),
             ("url_prefix",
-             Transform(CascadingDropdown(
-                 title=_("URL prefix for links to Check_MK"),
-                 help=_("If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                        "host and service links within the notification mail "
-                        "is filled automatically. "
-                        "If you specify an URL prefix here, then several parts of the "
-                        "email body are armed with hyperlinks to your Check_MK GUI. In both cases "
-                        "the recipient of the email can directly visit the host or "
-                        "service in question in Check_MK. Specify an absolute URL including "
-                        "the <tt>.../check_mk/</tt>"),
-                 choices=[
-                     ("automatic_http", _("Automatic HTTP")),
-                     ("automatic_https", _("Automatic HTTPs")),
-                     ("manual", _("Specify URL prefix"),
-                      TextAscii(
-                          regex="^(http|https)://.*/check_mk/$",
-                          regex_error=_("The URL must begin with <tt>http</tt> or "
-                                        "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                          size=64,
-                          default_value="http://" + socket.gethostname() + "/" +
-                          (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
-                      )),
-                 ],
-                 default_value=html.request.is_ssl_request and "automatic_https" or
-                 "automatic_http",
-             ),
-                       forth=transform_forth_html_mail_url_prefix,
-                       back=transform_back_html_mail_url_prefix)),
+             _get_url_prefix_specs(
+                 "http://" + socket.gethostname() + "/" +
+                 (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
+                 html.request.is_ssl_request and "automatic_https" or "automatic_http")),
             ("no_floating_graphs",
              FixedValue(
                  True,
@@ -193,33 +251,11 @@ class NotificationParameterMail(NotificationParameter):
                         "nearby. You can enable this option to show the graphs among each "
                         "other."),
              )),
-            ('bulk_sort_order',
-             DropdownChoice(
-                 choices=[
-                     ('oldest_first', _('Oldest first')),
-                     ('newest_first', _('Newest first')),
-                 ],
-                 help=_(
-                     "With this option you can specify, whether the oldest (default) or "
-                     "the newest notification should get shown at the top of the notification mail."
-                 ),
-                 title=_("Notification sort order for bulk notifications"),
-                 default_value="oldest_first",
-             )),
-            ("disable_multiplexing",
-             FixedValue(
-                 True,
-                 title=_("Send seperate notifications to every recipient"),
-                 totext=_("A seperate notification is send to every recipient. Recipients "
-                          "cannot see which other recipients were notified."),
-                 help=_("Per default only one notification is generated for all recipients. "
-                        "Therefore, all recipients can see who was notified and reply to "
-                        "all other recipients."),
-             )),
-        ]
+        ])
 
-        if not cmk.is_raw_edition():
-            elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option  # pylint: disable=no-member
+        if not cmk_version.is_raw_edition():
+            import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module
+            elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
         return elements
 
@@ -233,6 +269,7 @@ class NotificationParameterSlack(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix"],
             elements=[
                 ("webhook_url",
@@ -253,33 +290,41 @@ class NotificationParameterSlack(NotificationParameter):
                                    choices=passwordstore_choices,
                                ))],
                  )),
-                ("url_prefix",
-                 Transform(CascadingDropdown(
-                     title=_("URL prefix for links to Check_MK"),
-                     help=_(
-                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                         "host and service links within the notification mail "
-                         "is filled automatically. "
-                         "If you specify an URL prefix here, then several parts of the "
-                         "slack message are armed with hyperlinks to your Check_MK GUI. In both cases "
-                         "the recipient of the message can directly visit the host or "
-                         "service in question in Check_MK. Specify an absolute URL including "
-                         "the <tt>.../check_mk/</tt>"),
-                     choices=[
-                         ("automatic_http", _("Automatic HTTP")),
-                         ("automatic_https", _("Automatic HTTPs")),
-                         ("manual", _("Specify URL prefix"),
-                          TextAscii(
-                              regex="^(http|https)://.*/check_mk/$",
-                              regex_error=_("The URL must begin with <tt>http</tt> or "
-                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                              size=64,
-                              default_value=local_site_url,
-                          )),
-                     ],
-                 ),
-                           forth=transform_forth_html_mail_url_prefix,
-                           back=transform_back_html_mail_url_prefix)),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+            ],
+        )
+
+
+@notification_parameter_registry.register
+class NotificationParameterCiscoWebexTeams(NotificationParameter):
+    @property
+    def ident(self):
+        return "cisco_webex_teams"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            optional_keys=["url_prefix", "proxy_url"],
+            elements=[
+                ("webhook_url",
+                 CascadingDropdown(
+                     title=_("Webhook-URL"),
+                     help=
+                     _("Webhook URL. Setup Cisco Webex Teams Webhook " +
+                       "<a href=\"https://apphub.webex.com/teams/applications/incoming-webhooks-cisco-systems\" target=\"_blank\">here</a>"
+                       "<br />This URL can also be collected from the Password Store from Check_MK."
+                      ),
+                     choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,
+                                                                        allow_empty=False)),
+                              ("store", _("URL from password store"),
+                               DropdownChoice(
+                                   sorted=True,
+                                   choices=passwordstore_choices,
+                               ))],
+                 )),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("proxy_url", HTTPProxyReference()),
             ],
         )
 
@@ -293,6 +338,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix"],
             elements=[
                 ("webhook_url",
@@ -304,8 +350,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                        "<br />This URL can also be collected from the Password Store from Check_MK."
                       ),
                      choices=[("webhook_url", _("REST Endpoint URL"),
-                               HTTPUrl(size=80,
-                                       allow_empty=False,
+                               HTTPUrl(allow_empty=False,
                                        regex=r"^https://alert\.victorops\.com/integrations/.+",
                                        regex_error=_(
                                            "The Webhook-URL must begin with "
@@ -316,33 +361,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                                    choices=passwordstore_choices,
                                ))],
                  )),
-                ("url_prefix",
-                 Transform(CascadingDropdown(
-                     title=_("URL prefix for links to Check_MK"),
-                     help=_(
-                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                         "host and service links within the notification mail "
-                         "is filled automatically. "
-                         "If you specify an URL prefix here, then several parts of the "
-                         "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
-                         "the recipient of the message can directly visit the host or "
-                         "service in question in Check_MK. Specify an absolute URL including "
-                         "the <tt>.../check_mk/</tt>"),
-                     choices=[
-                         ("automatic_http", _("Automatic HTTP")),
-                         ("automatic_https", _("Automatic HTTPs")),
-                         ("manual", _("Specify URL prefix"),
-                          TextAscii(
-                              regex="^(http|https)://.*/check_mk/$",
-                              regex_error=_("The URL must begin with <tt>http</tt> or "
-                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                              size=64,
-                              default_value=local_site_url,
-                          )),
-                     ],
-                 ),
-                           forth=transform_forth_html_mail_url_prefix,
-                           back=transform_back_html_mail_url_prefix)),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -356,6 +375,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix"],
             hidden_keys=["webhook_url"],
             elements=[
@@ -371,33 +391,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
                 ("webhook_url",
                  FixedValue("https://events.pagerduty.com/v2/enqueue",
                             title=_("API Endpoint from PagerDuty V2"))),
-                ("url_prefix",
-                 Transform(CascadingDropdown(
-                     title=_("URL prefix for links to Check_MK"),
-                     help=_(
-                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                         "host and service links within the notification mail "
-                         "is filled automatically. "
-                         "If you specify an URL prefix here, then several parts of the "
-                         "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
-                         "the recipient of the message can directly visit the host or "
-                         "service in question in Check_MK. Specify an absolute URL including "
-                         "the <tt>.../check_mk/</tt>"),
-                     choices=[
-                         ("automatic_http", _("Automatic HTTP")),
-                         ("automatic_https", _("Automatic HTTPs")),
-                         ("manual", _("Specify URL prefix"),
-                          TextAscii(
-                              regex="^(http|https)://.*/check_mk/$",
-                              regex_error=_("The URL must begin with <tt>http</tt> or "
-                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                              size=64,
-                              default_value=local_site_url,
-                          )),
-                     ],
-                 ),
-                           forth=transform_forth_html_mail_url_prefix,
-                           back=transform_back_html_mail_url_prefix)),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -410,33 +404,7 @@ class NotificationParameterASCIIMail(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(elements=[
-            ("from", EmailAddress(
-                title=_("From: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("reply_to", EmailAddress(
-                title=_("Reply-To: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("host_subject",
-             TextUnicode(
-                 title=_("Subject for host notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                 size=64,
-             )),
-            ("service_subject",
-             TextUnicode(
-                 title=_("Subject for service notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                 size=64,
-             )),
+        elements = _vs_add_common_mail_elements([
             ("common_body",
              TextAreaUnicode(
                  title=_("Body head for both host and service notifications"),
@@ -473,30 +441,9 @@ Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
 """,
              )),
-            ('bulk_sort_order',
-             DropdownChoice(
-                 choices=[
-                     ('oldest_first', _('Oldest first')),
-                     ('newest_first', _('Newest first')),
-                 ],
-                 help=_(
-                     "With this option you can specify, whether the oldest (default) or "
-                     "the newest notification should get shown at the top of the notification mail."
-                 ),
-                 title=_("Notification sort order for bulk notifications"),
-                 default_value="oldest_first",
-             )),
-            ("disable_multiplexing",
-             FixedValue(
-                 True,
-                 title=_("Send seperate notifications to every recipient"),
-                 totext=_("A seperate notification is send to every recipient. Recipients "
-                          "cannot see which other recipients were notified."),
-                 help=_("Per default only one notification is generated for all recipients. "
-                        "Therefore, all recipients can see who was notified and reply to "
-                        "all other recipients."),
-             )),
-        ],)
+        ])
+        return Dictionary(title=_("Create notification with the following parameters"),
+                          elements=elements)
 
 
 @notification_parameter_registry.register
@@ -508,6 +455,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=[
                 'priority', 'resolution', 'host_summary', 'service_summary', 'ignore_ssl',
                 'timeout', 'label'
@@ -610,7 +558,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                  )),
                 ("resolution",
                  TextAscii(
-                     title=_("Activate resolution with following resolution transistion ID"),
+                     title=_("Activate resolution with following resolution transition ID"),
                      help=_("The numerical JIRA resolution transition ID. "
                             "11 - 'To Do', 21 - 'In Progress', 31 - 'Done'"),
                      size=3,
@@ -634,6 +582,7 @@ class NotificationParameterServiceNow(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             required_keys=['url', 'username', 'password', 'caller'],
             elements=[
                 ("url",
@@ -643,11 +592,14 @@ class NotificationParameterServiceNow(NotificationParameter):
                      allow_empty=False,
                  )),
                 ("proxy_url", HTTPProxyReference()),
-                ("username", TextAscii(
-                    title=_("Username"),
-                    size=40,
-                    allow_empty=False,
-                )),
+                ("username",
+                 TextAscii(
+                     title=_("Username"),
+                     help=_("The user, used for login, has to have at least the "
+                            "role 'itil' in servicenow."),
+                     size=40,
+                     allow_empty=False,
+                 )),
                 ("password", PasswordFromStore(
                     title=_("Password of the user"),
                     allow_empty=False,
@@ -656,7 +608,13 @@ class NotificationParameterServiceNow(NotificationParameter):
                  TextAscii(
                      title=_("Caller ID"),
                      help=_("Caller is the user on behalf of whom the incident is being reported "
-                            "within servicenow. Please enter the name of the caller here."),
+                            "within servicenow. Please enter the name of the caller here. "
+                            "It is recommended to user the same user as used for login. "
+                            "Otherwise, your ACL rules in servicenow must be "
+                            "adjusted, so that the user who is used for login "
+                            "can create/edit/resolve incidents on behalf of the "
+                            "caller. Please have a look at servicenow "
+                            "documentation for details."),
                  )),
                 ("host_short_desc",
                  TextAscii(
@@ -811,6 +769,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             required_keys=[
                 'password',
             ],
@@ -821,6 +780,16 @@ class NotificationParameterOpsgenie(NotificationParameter):
                              "subscription you can use global or team integration api "
                              "keys."),
                      allow_empty=False,
+                 )),
+                ("url",
+                 TextAscii(
+                     title=_("Domain (only used for european accounts)"),
+                     help=_("If you have an european account, please set the "
+                            "domain of your opsgenie. Specify an absolute URL like "
+                            "https://my.app.eu.opsgenie.com "),
+                     regex="^https://.*",
+                     regex_error=_("The URL must begin with <tt>https</tt>."),
+                     size=64,
                  )),
                 ("owner",
                  TextUnicode(
@@ -945,22 +914,25 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(elements=[
-            ("facility",
-             DropdownChoice(
-                 title=_("Syslog Facility to use"),
-                 help=_("The notifications will be converted into syslog messages with "
-                        "the facility that you choose here. In the Event Console you can "
-                        "later create a rule matching this facility."),
-                 choices=mkeventd.syslog_facilities,
-             )),
-            ("remote",
-             IPv4Address(
-                 title=_("IP Address of remote Event Console"),
-                 help=_("If you set this parameter then the notifications will be sent via "
-                        "syslog/UDP (port 514) to a remote Event Console or syslog server."),
-             )),
-        ],)
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            elements=[
+                ("facility",
+                 DropdownChoice(
+                     title=_("Syslog Facility to use"),
+                     help=_("The notifications will be converted into syslog messages with "
+                            "the facility that you choose here. In the Event Console you can "
+                            "later create a rule matching this facility."),
+                     choices=mkeventd.syslog_facilities,
+                 )),
+                ("remote",
+                 IPv4Address(
+                     title=_("IP Address of remote Event Console"),
+                     help=_("If you set this parameter then the notifications will be sent via "
+                            "syslog/UDP (port 514) to a remote Event Console or syslog server."),
+                 )),
+            ],
+        )
 
 
 @notification_parameter_registry.register
@@ -972,7 +944,8 @@ class NotificationParameterSpectrum(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
-            optional_keys=None,
+            title=_("Create notification with the following parameters"),
+            optional_keys=False,
             elements=[
                 ("destination",
                  IPv4Address(title=_("Destination IP"),
@@ -999,6 +972,7 @@ class NotificationParameterPushover(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix", "proxy_url", "priority", "sound"],
             elements=[
                 ("api_key",

@@ -1,4 +1,4 @@
-title: LSI MegaRAID: State of physical disks (via MegaCLI)
+title: LSI MegaRAID: State of Physical Disks (via MegaCLI)
 agents: linux
 catalog: os/storage
 license: GPL
@@ -20,4 +20,4 @@ item:
  example {"0/4"} for enclosure {0} and slot {4}.
 
 inventory:
- One service is created for each found disk.
+ One service is created for each disk.

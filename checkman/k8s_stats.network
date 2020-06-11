@@ -1,4 +1,4 @@
-title: Kubernetes node and cluster level network usage
+title: Kubernetes: Node and Cluster Level Network Usage
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL
@@ -11,4 +11,4 @@ item:
  The network interface that is monitored
 
 inventory:
- One service per network interface
+ One service is created for each network interface.

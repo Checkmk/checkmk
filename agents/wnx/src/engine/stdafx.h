@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 //
 // THIS is pre-compiled header for Engine Project
 //
@@ -15,7 +19,6 @@
 // settings for the LWA
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #define SI_SUPPORT_IOSTREAMS
-#define USE_EXPERIMENTAL_FILESYSTEM  // #TODO recheck with 2019
 
 #include "asio.h"  // we are hacking asio to prevent keeping handle
 #include "common/cfg_info.h"

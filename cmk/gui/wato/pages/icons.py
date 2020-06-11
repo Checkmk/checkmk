@@ -1,34 +1,16 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import six
+import io
+
+from PIL import Image, PngImagePlugin  # type: ignore[import]
 
 import cmk.utils.paths
-import cmk.utils.store
+import cmk.utils.store as store
 
 import cmk.gui.config as config
 from cmk.gui.table import table_element
@@ -42,6 +24,7 @@ from cmk.gui.valuespec import (
     Dictionary,
 )
 
+from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -76,22 +59,26 @@ class ModeIcons(WatoMode):
         return s.available_icons(only_local=True)
 
     def _vs_upload(self):
-        return Dictionary(title=_('Icon'),
-                          optional_keys=False,
-                          render="form",
-                          elements=[('icon',
-                                     ImageUpload(
-                                         title=_('Icon'),
-                                         allow_empty=False,
-                                         max_size=(80, 80),
-                                         validate=self._validate_icon,
-                                     )),
-                                    ('category',
-                                     DropdownChoice(
-                                         title=_('Category'),
-                                         choices=config.wato_icon_categories,
-                                         no_preselect=True,
-                                     ))])
+        return Dictionary(
+            title=_('Icon'),
+            optional_keys=False,
+            render="form",
+            elements=[
+                ('icon',
+                 ImageUpload(
+                     title=_('Icon'),
+                     allow_empty=False,
+                     max_size=(80, 80),
+                     validate=self._validate_icon,
+                 )),
+                ('category',
+                 DropdownChoice(
+                     title=_('Category'),
+                     choices=config.wato_icon_categories,
+                     no_preselect=True,
+                 )),
+            ],
+        )
 
     def _validate_icon(self, value, varprefix):
         file_name = value[0]
@@ -104,6 +91,7 @@ class ModeIcons(WatoMode):
                   'choose another name for your icon.'))
 
     def action(self):
+        # type: () -> ActionResult
         if html.request.has_var("_delete"):
             icon_name = html.request.var("_delete")
             if icon_name in self._load_custom_icons():
@@ -115,7 +103,7 @@ class ModeIcons(WatoMode):
                 elif c is False:
                     return ""
                 else:
-                    return
+                    return None
 
         elif html.request.has_var("_do_upload"):
             vs_upload = self._vs_upload()
@@ -123,20 +111,20 @@ class ModeIcons(WatoMode):
             vs_upload.validate_value(icon_info, '_upload_icon')
             self._upload_icon(icon_info)
 
+        return None
+
     def _upload_icon(self, icon_info):
         # Add the icon category to the PNG comment
-        from PIL import Image, PngImagePlugin
-        from StringIO import StringIO
-        im = Image.open(StringIO(icon_info['icon'][2]))
+        im = Image.open(io.BytesIO(icon_info['icon'][2]))
         im.info['Comment'] = icon_info['category']
         meta = PngImagePlugin.PngInfo()
-        for k, v in im.info.iteritems():
-            if isinstance(v, (six.binary_type, six.text_type)):
+        for k, v in im.info.items():
+            if isinstance(v, (bytes, str)):
                 meta.add_text(k, v, 0)
 
         # and finally save the image
         dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.utils.paths.omd_root
-        cmk.utils.store.makedirs(dest_dir)
+        store.makedirs(dest_dir)
         try:
             file_name = os.path.basename(icon_info['icon'][0])
             im.save(dest_dir + '/' + file_name, 'PNG', pnginfo=meta)
@@ -145,6 +133,7 @@ class ModeIcons(WatoMode):
             raise MKUserError(None, _('Unable to upload icon: %s') % e)
 
     def page(self):
+        # type: () -> None
         html.h3(_("Upload Icon"))
         html.p(_("Allowed are single PNG image files with a maximum size of 80x80 px."))
 

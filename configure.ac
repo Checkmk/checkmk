@@ -1,26 +1,6 @@
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -36,27 +16,15 @@ AC_REQUIRE_AUX_FILE([compile])
 AC_REQUIRE_AUX_FILE([config.guess])
 AC_REQUIRE_AUX_FILE([config.sub])
 
-# Old (pre-1.6.0) versions of librrd were not thread-safe, so one has to use the
-# thread-safe variant librrd_th explicitly. This in itself is already tragic
-# enough, but to make things worse, you can't write a compile-time check to
-# distinguish these versions. :-/ So we default to the assumption that librrd is
-# thread-safe (which is the case within OMD) and the user of e.g. a standalone
-# version of Livestatus on an old system has to use the configure flag below.
-# Not really nice, but we can't really do much about that.
-AC_ARG_ENABLE([rrd-is-thread-safe],
-    AS_HELP_STRING([--disable-rrd-is-thread-safe], [Use librrd_th instead of librrd]))
-AS_IF([test "x$enable_rrd_is_thread_safe" != "xno"], [RRDLIB_TO_CHECK=rrd],
-      [RRDLIB_TO_CHECK=rrd_th])
-
 # Checks for programs.
-AC_PROG_CC([gcc-9 clang-8 gcc-8 clang-7 gcc-7 clang-6.0 clang-5.0 gcc clang])
+AC_PROG_CC([gcc-10 clang-10 gcc-9 clang-9 clang-8 gcc-8 clang-7 gcc-7 clang-6.0 clang-5.0 gcc clang])
 AC_PROG_CC_C99([], [])
 if test "x$ac_cv_prog_cc_c99" = xno; then
   AC_MSG_ERROR([Need a C99-compliant C compiler])
 fi
-AC_PROG_CXX([g++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++])
+AC_PROG_CXX([g++-10 clang++-10 g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++])
 AC_DEFINE_UNQUOTED([BUILD_CXX], ["`$CXX --version | head -n1`"], [C++ compiler])
-AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
+AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
 AC_PROG_RANLIB
 # automake 1.12 seems to require this, but automake 1.11 doesn't recognize it. :-P
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
@@ -65,19 +33,6 @@ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(socket, shutdown)
-
-# Passing through the right RRD library is a bit tricky: We can't simply put
-# -lrrd_th or -lrrd globally into LIBS. The problem is that our SUID programs
-# icmpsender and icmpreceiver would be linked with that option, too, but because
-# of security reasons the dynamic linker will ignore our LD_LIBRARY_PATH => no
-# RRD library found or even the wrong one... :-/
-RRDLIB=
-old_LIBS=$LIBS
-AC_SEARCH_LIBS([rrd_xport], [$RRDLIB_TO_CHECK],
-    [test "$ac_cv_search_rrd_xport" = "none required" || RRDLIB="$ac_cv_search_rrd_xport"],
-    [AC_MSG_ERROR([unable to find the rrd_xport function])])
-LIBS=$old_LIBS
-AC_SUBST(RRDLIB)
 
 # Checks for header files.
 AC_HEADER_DIRENT
@@ -162,7 +117,7 @@ AC_TYPE_UINT64_T
 AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
-AC_CHECK_FUNCS([accept4 memmove select socket strerror strtoul])
+AC_CHECK_FUNCS([memmove select socket strerror strtoul])
 
 AC_ARG_WITH(nagios4,AC_HELP_STRING([--with-nagios4],[enabled compilation for nagios 4]), [
     CPPFLAGS="${CFLAGS} -DNAGIOS4"

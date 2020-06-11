@@ -1,34 +1,18 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import six
+from typing import Callable, Optional, TypeVar, Union
+import urllib.parse
+
 from cmk.utils.defines import short_service_state_name
 
+import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.sites as sites
+from cmk.gui.type_defs import HTTPVariables
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.valuespec import MonitoringState
@@ -112,7 +96,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
     if config.user.may("mkeventd.seeall"):
         return  # Don't remove anything. The user may see everything
 
-    user_groups = set(config.user.contact_groups())
+    user_groups = set(config.user.contact_groups)
 
     def is_contact(row):
         return bool(user_groups.intersection(row["host_contact_groups"]))
@@ -140,7 +124,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
                 row[key] = 0.0
             elif isinstance(row[key], str):
                 row[key] = ""
-            elif isinstance(row[key], six.text_type):
+            elif isinstance(row[key], str):
                 row[key] = u""
 
 
@@ -305,12 +289,10 @@ class PainterEventId(Painter):
     def ident(self):
         return "event_id"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("ID of the event")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("ID")
 
     @property
@@ -327,12 +309,10 @@ class PainterEventCount(Painter):
     def ident(self):
         return "event_count"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Count (number of recent occurrances)")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Cnt.")
 
     @property
@@ -349,12 +329,10 @@ class PainterEventText(Painter):
     def ident(self):
         return "event_text"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Text/Message of the event")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Message")
 
     @property
@@ -362,7 +340,7 @@ class PainterEventText(Painter):
         return ['event_text']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["event_text"]).replace("\x01", "<br>"))
+        return "", escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
 
 
 @painter_registry.register
@@ -371,12 +349,10 @@ class PainterEventMatchGroups(Painter):
     def ident(self):
         return "event_match_groups"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Match Groups")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Match")
 
     @property
@@ -399,12 +375,10 @@ class PainterEventFirst(Painter):
     def ident(self):
         return "event_first"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Time of first occurrence of this serial")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("First")
 
     @property
@@ -425,12 +399,10 @@ class PainterEventLast(Painter):
     def ident(self):
         return "event_last"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Time of last occurrance")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Last")
 
     @property
@@ -451,12 +423,10 @@ class PainterEventComment(Painter):
     def ident(self):
         return "event_comment"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Comment to the event")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Comment")
 
     @property
@@ -473,12 +443,10 @@ class PainterEventSl(Painter):
     def ident(self):
         return "event_sl"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Service-Level")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Level")
 
     @property
@@ -496,12 +464,10 @@ class PainterEventHost(Painter):
     def ident(self):
         return "event_host"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Hostname")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Host")
 
     @property
@@ -520,12 +486,10 @@ class PainterEventIpaddress(Painter):
     def ident(self):
         return "event_ipaddress"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Original IP-Address")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Orig. IP")
 
     @property
@@ -542,12 +506,10 @@ class PainterEventHostInDowntime(Painter):
     def ident(self):
         return "event_host_in_downtime"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Host in downtime during event creation")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Dt.")
 
     @property
@@ -564,12 +526,10 @@ class PainterEventOwner(Painter):
     def ident(self):
         return "event_owner"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Owner of event")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("owner")
 
     @property
@@ -586,12 +546,10 @@ class PainterEventContact(Painter):
     def ident(self):
         return "event_contact"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Contact Person")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Contact")
 
     @property
@@ -608,12 +566,10 @@ class PainterEventApplication(Painter):
     def ident(self):
         return "event_application"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Application / Syslog-Tag")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Application")
 
     @property
@@ -630,12 +586,10 @@ class PainterEventPid(Painter):
     def ident(self):
         return "event_pid"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Process ID")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("PID")
 
     @property
@@ -646,18 +600,25 @@ class PainterEventPid(Painter):
         return ("", "%s" % row["event_pid"])
 
 
+# TODO: Rethink the typing of syslog_facilites/syslog_priorities.
+T = TypeVar('T')
+
+
+def _deref(x):
+    # type: (Union[T, Callable[[], T]]) -> T
+    return x() if callable(x) else x
+
+
 @painter_registry.register
 class PainterEventPriority(Painter):
     @property
     def ident(self):
         return "event_priority"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Syslog-Priority")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Prio")
 
     @property
@@ -665,7 +626,7 @@ class PainterEventPriority(Painter):
         return ['event_priority']
 
     def render(self, row, cell):
-        return ("", dict(mkeventd.syslog_priorities)[row["event_priority"]])
+        return ("", dict(_deref(mkeventd.syslog_priorities))[row["event_priority"]])
 
 
 @painter_registry.register
@@ -674,12 +635,10 @@ class PainterEventFacility(Painter):
     def ident(self):
         return "event_facility"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Syslog-Facility")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Facility")
 
     @property
@@ -687,7 +646,7 @@ class PainterEventFacility(Painter):
         return ['event_facility']
 
     def render(self, row, cell):
-        return ("", dict(mkeventd.syslog_facilities)[row["event_facility"]])
+        return ("", dict(_deref(mkeventd.syslog_facilities))[row["event_facility"]])
 
 
 @painter_registry.register
@@ -696,12 +655,10 @@ class PainterEventRuleId(Painter):
     def ident(self):
         return "event_rule_id"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Rule-ID")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Rule")
 
     @property
@@ -722,12 +679,10 @@ class PainterEventState(Painter):
     def ident(self):
         return "event_state"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("State (severity) of event")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("State")
 
     @property
@@ -746,12 +701,10 @@ class PainterEventPhase(Painter):
     def ident(self):
         return "event_phase"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Phase of event (open, counting, etc.)")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Phase")
 
     @property
@@ -792,45 +745,40 @@ def render_event_phase_icons(row):
 
 
 def render_delete_event_icons(row):
-    if config.user.may("mkeventd.delete"):
-        urlvars = []
-
-        # Found no cleaner way to get the view. Sorry.
-        # TODO: This needs to be cleaned up with the new view implementation.
-        if html.request.has_var("name") and html.request.has_var("id"):
-            ident = int(html.request.var("id"))
-
-            import cmk.gui.dashboard as dashboard
-            dashboard.load_dashboards()
-            view = dashboard.get_dashlet(html.request.var("name"), ident)
-
-            # These actions are not performed within the dashlet. Assume the title url still
-            # links to the source view where the action can be performed.
-            title_url = view.get("title_url")
-            if title_url:
-                from urlparse import urlparse, parse_qsl
-                url = urlparse(title_url)
-                filename = url.path
-                urlvars += parse_qsl(url.query)
-        else:
-            # Regular view
-            view = get_permitted_views()[(html.request.var("view_name"))]
-            filename = None
-
-        urlvars += [
-            ("filled_in", "actions"),
-            ("actions", "yes"),
-            ("_do_actions", "yes"),
-            ("_row_id", row_id(view, row)),
-            ("_delete_event", _("Archive Event")),
-            ("_show_result", "0"),
-        ]
-        url = html.makeactionuri(urlvars,
-                                 filename=filename,
-                                 delvars=["selection", "show_checkboxes"])
-        return html.render_icon_button(url, _("Archive this event"), "archive_event")
-    else:
+    if not config.user.may("mkeventd.delete"):
         return ''
+    urlvars = []  # type: HTTPVariables
+
+    # Found no cleaner way to get the view. Sorry.
+    # TODO: This needs to be cleaned up with the new view implementation.
+    if html.request.has_var("name") and html.request.has_var("id"):
+        ident = html.request.get_integer_input_mandatory("id")
+
+        import cmk.gui.dashboard as dashboard
+        view = dashboard.get_dashlet(html.request.get_str_input_mandatory("name"), ident)
+
+        # These actions are not performed within the dashlet. Assume the title url still
+        # links to the source view where the action can be performed.
+        title_url = view.get("title_url")
+        if title_url:
+            parsed_url = urllib.parse.urlparse(title_url)
+            filename = parsed_url.path  # type: Optional[str]
+            urlvars += urllib.parse.parse_qsl(parsed_url.query)
+    else:
+        # Regular view
+        view = get_permitted_views()[(html.request.get_str_input_mandatory("view_name"))]
+        filename = None
+
+    urlvars += [
+        ("filled_in", "actions"),
+        ("actions", "yes"),
+        ("_do_actions", "yes"),
+        ("_row_id", row_id(view, row)),
+        ("_delete_event", _("Archive Event")),
+        ("_show_result", "0"),
+    ]
+    url = html.makeactionuri(urlvars, filename=filename, delvars=["selection", "show_checkboxes"])
+    return html.render_icon_button(url, _("Archive this event"), "archive_event")
 
 
 @painter_registry.register
@@ -839,12 +787,10 @@ class PainterEventIcons(Painter):
     def ident(self):
         return "event_icons"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Event Icons")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Icons")
 
     @property
@@ -865,12 +811,10 @@ class PainterEventHistoryIcons(Painter):
     def ident(self):
         return "event_history_icons"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Event Icons")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Icons")
 
     @property
@@ -891,12 +835,10 @@ class PainterEventContactGroups(Painter):
     def ident(self):
         return "event_contact_groups"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Contact groups defined in rule")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Rule contact groups")
 
     @property
@@ -907,7 +849,7 @@ class PainterEventContactGroups(Painter):
         cgs = row.get("event_contact_groups")
         if cgs is None:
             return "", ""
-        elif cgs:
+        if cgs:
             return "", ", ".join(cgs)
         return "", "<i>" + _("none") + "</i>"
 
@@ -918,12 +860,10 @@ class PainterEventEffectiveContactGroups(Painter):
     def ident(self):
         return "event_effective_contact_groups"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Contact groups effective (Host or rule contact groups)")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Contact groups")
 
     @property
@@ -942,7 +882,7 @@ class PainterEventEffectiveContactGroups(Painter):
 
         if cgs is None:
             return "", ""
-        elif cgs:
+        if cgs:
             return "", ", ".join(sorted(cgs))
         return "", "<i>" + _("none") + "</i>"
 
@@ -956,12 +896,10 @@ class PainterHistoryLine(Painter):
     def ident(self):
         return "history_line"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Line number in log file")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Line")
 
     @property
@@ -978,12 +916,10 @@ class PainterHistoryTime(Painter):
     def ident(self):
         return "history_time"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Time of entry in logfile")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Time")
 
     @property
@@ -1004,12 +940,10 @@ class PainterHistoryWhat(Painter):
     def ident(self):
         return "history_what"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Type of event action")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Action")
 
     @property
@@ -1027,8 +961,7 @@ class PainterHistoryWhatExplained(Painter):
     def ident(self):
         return "history_what_explained"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Explanation for event action")
 
     @property
@@ -1045,12 +978,10 @@ class PainterHistoryWho(Painter):
     def ident(self):
         return "history_who"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("User who performed action")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Who")
 
     @property
@@ -1067,12 +998,10 @@ class PainterHistoryAddinfo(Painter):
     def ident(self):
         return "history_addinfo"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Additional Information")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Info")
 
     @property
@@ -1190,7 +1119,7 @@ class CommandECUpdateEvent(ECCommand):
         return PermissionECUpdateEvent
 
     def render(self, what):
-        html.open_table(border=0, cellpadding=0, cellspacing=3)
+        html.open_table(border="0", cellpadding="0", cellspacing="3")
         if config.user.may("mkeventd.update_comment"):
             html.open_tr()
             html.open_td()
@@ -1221,11 +1150,13 @@ class CommandECUpdateEvent(ECCommand):
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var('_mkeventd_update'):
             if config.user.may("mkeventd.update_comment"):
-                comment = html.get_unicode_input("_mkeventd_comment").strip().replace(";", ",")
+                comment = html.request.get_unicode_input_mandatory(
+                    "_mkeventd_comment").strip().replace(";", ",")
             else:
                 comment = ""
             if config.user.may("mkeventd.update_contact"):
-                contact = html.get_unicode_input("_mkeventd_contact").strip().replace(":", ",")
+                contact = html.request.get_unicode_input_mandatory(
+                    "_mkeventd_contact").strip().replace(":", ",")
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
@@ -1427,7 +1358,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_archive_events_of_hosts"):
             if cmdtag == "HOST":
-                tag = "host"
+                tag = "host"  # type: Optional[str]
             elif cmdtag == "SVC":
                 tag = "service"
             else:
@@ -2019,7 +1950,7 @@ multisite_builtin_views['ec_events_mobile'] = {
     'painters': [
         ('event_id', 'ec_event_mobile', None),
         ('event_state', None, None),
-        ('event_host', 'ec_events_of_host', None),
+        ('event_host', None, None),
         ('event_application', None, None),
         ('event_text', None, None),
         ('event_last', None, None),

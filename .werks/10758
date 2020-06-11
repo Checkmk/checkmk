@@ -1,0 +1,17 @@
+Title: redis_info.persistence: New check to monitor Redis persistence
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1578566575
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+With this check you can monitor Redis instances. The check gets input from
+the redis-cli command "info" and the resulting "Persistence" section. It
+outputs the state of the last RDB (Redis Database Backup) save and AOF (Append
+Only File) rewrite operation. Furthermore the time of the last successful RDB
+save and the number of changes since the last dump.
+
+Needs the agent plugin "mk_redis" to be installed.

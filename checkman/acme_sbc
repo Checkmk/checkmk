@@ -4,9 +4,12 @@ catalog: hw/network/acme
 license: GPL
 distribution: check_mk
 description:
- This is a simple check which checks the health status in percent.
- The percent value is reported by the devices and reflects the status of cluster
- and harware. If the status not is at 100 %, a {CRIT} is raised.
+ This check monitors the health status in percent.
+
+ The percent value is reported by the devices and reflects
+ the status of cluster and harware.
+
+ If the health status not is at 100% the service status goes {CRIT}.
 
 inventory:
- One check will be created.
+ One serivce is created.

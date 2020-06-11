@@ -1,4 +1,4 @@
-title: EMC VNX Storage: Storage pools deduplication
+title: EMC VNX Storage: Storage Pools Deduplication
 agents: emc
 catalog: hw/storagehw/emc
 license: GPL
@@ -14,4 +14,4 @@ item:
  Pool name
 
 inventory:
- Creates one service per pool.
+ One service is created for each pool.

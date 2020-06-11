@@ -1,4 +1,4 @@
-title: EMC Isilon: Temperature sensors
+title: EMC Isilon: Temperature Sensors
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL
@@ -10,4 +10,4 @@ item:
  The name of the sensor without the prefix {Temp}, e.g. {Front Panel}
 
 inventory:
- Creates one service per sensor
+ One service is created for each sensor.

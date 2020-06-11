@@ -1,0 +1,19 @@
+Title: Dashboard/Reports: Improve single object selection
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1577726512
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Improve the usability of dashboard and report creation. The first step when
+creating such a new object is to select whether or not it should show the
+information of a single object, for example a single host. The dialog has
+now been changed like this:
+
+<ul>
+<li>The possible choices are displayed in a dual list choice element</li>
+<li>The choices are now primarily sorted by the common use</li>
+</ul>

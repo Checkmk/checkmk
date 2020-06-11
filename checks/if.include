@@ -1,28 +1,12 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+IF_CHECK_DEFAULT_PARAMETERS = {
+    "errors": (0.01, 0.1),
+}
 
 # Functions and definitions used by if and if64
 if_inventory_porttypes = [
@@ -35,9 +19,6 @@ if_inventory_pad_portnumbers = True
 if_inventory_monitor_speed = True
 if_inventory_monitor_state = True
 inventory_if_rules = []
-factory_settings["if_default_levels"] = {
-    "errors": (0.01, 0.1),
-}
 
 # Grouping of if ports
 #if_groups = [
@@ -49,7 +30,7 @@ factory_settings["if_default_levels"] = {
 if_groups = []
 # Obsolete variable, but needed as contained in autochecks of
 # older checks. We need to keep this up for a few years...
-if_default_error_levels = factory_settings["if_default_levels"]["errors"]
+if_default_error_levels = IF_CHECK_DEFAULT_PARAMETERS["errors"]
 if_default_traffic_levels = None, None
 if_default_average = None
 if_disable_if64_hosts = []  # Binary host list for disabling if64 on some broken devices
@@ -138,8 +119,7 @@ def need_if64adm():
 
 def fix_if_64_highspeed(info):
     for line in info:
-        # TODO: Use six.string_types when this is a module.
-        if isinstance(line[3], six.string_types):  # not yet converted
+        if isinstance(line[3], str):  # not yet converted
             line[3] = saveint(line[3]) * 1000000
 
 
@@ -151,7 +131,7 @@ def fix_if_64_highspeed(info):
 # Stupid fix: Remove all 0 bytes. Hope this causes no problems.
 def cleanup_if_strings(s):
     if s and s != '':
-        return "".join([c for c in s if c not in nagios_illegal_chars + chr(0)]).strip()
+        return "".join([c for c in s if c != chr(0)]).strip()
     return s
 
 
@@ -163,10 +143,6 @@ def tryint(x):
         return int(x)
     except (TypeError, ValueError):
         return x
-
-
-# make sure, that configuration variable is present in precompiled host checks
-check_config_variables.append("nagios_illegal_chars")
 
 
 # Name of state (lookup SNMP enum)
@@ -579,6 +555,18 @@ def _convert_old_if_group_params(params):
     return params
 
 
+def _get_counter_name(node, name, item, group=None):
+    if node is None:
+        counter_name = "if.%s.%s" % (name, item)
+    else:
+        counter_name = "if.%s.%s.%s" % (node, name, item)
+
+    if group is not None:
+        counter_name += ".%s" % group
+
+    return counter_name
+
+
 def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", timestamp=None):
     if timestamp is None:
         this_time = time.time()
@@ -699,11 +687,11 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
             ("outdisc", interface.ifOutDiscards),
             ("outerr", interface.ifOutErrors),
         ]:
+
+            counter_name = _get_counter_name(node, name, item, group=if_member_item)
+
             try:
-                get_rate("if.%s.%s.%s" % (name, item, if_member_item),
-                         this_time,
-                         saveint(counter),
-                         onwrap=RAISE)
+                get_rate(counter_name, this_time, saveint(counter), onwrap=RAISE)
             except MKCounterWrapped:
                 wrapped = True
                 # continue, other counters might wrap as well
@@ -786,6 +774,14 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
                                   timestamp=this_time)
 
 
+def _get_rate(counter, counter_name, timestamp, input_is_rate):
+    if input_is_rate:
+        if counter:
+            return counter
+        return 0.
+    return get_rate(counter_name, timestamp, saveint(counter), onwrap=RAISE)
+
+
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
 # One case of winperf_if appeared to indicate that in that case Errors = Discards.
 def check_if_common_single(item,
@@ -795,7 +791,8 @@ def check_if_common_single(item,
                            has_nodeinfo=False,
                            group_members=None,
                            group_name="Group",
-                           timestamp=None):
+                           timestamp=None,
+                           input_is_rate=False):
 
     if timestamp is None:
         this_time = time.time()
@@ -811,6 +808,7 @@ def check_if_common_single(item,
     map_operstates = dict(params.get("map_operstates", []))
     average = params.get("average")
     unit = "Bit" if params.get("unit") in ["Bit", "bit"] else "B"
+    average_bmcast = params.get("average_bm")
     cluster_items = {}
 
     # error checking might be turned off
@@ -819,15 +817,10 @@ def check_if_common_single(item,
     err_out_warn, err_out_crit = params.get("errors_out", (err_warn, err_crit))
 
     # broadcast storm detection is turned off by default
-    if "nucasts" in params:
-        nucast_warn, nucast_crit = params["nucasts"]
-    else:
-        nucast_warn, nucast_crit = None, None
-
-    if "discards" in params:
-        disc_warn, disc_crit = params["discards"]
-    else:
-        disc_warn, disc_crit = None, None
+    nucast_warn, nucast_crit = params.get("nucasts", (None, None))
+    disc_warn, disc_crit = params.get("discards", (None, None))
+    mcast_warn, mcast_crit = params.get("multicast", (None, None))
+    bcast_warn, bcast_crit = params.get("broadcast", (None, None))
 
     # Convert the traffic related levels to a common format
     general_traffic_levels = if_get_traffic_levels(params)
@@ -945,11 +938,11 @@ def check_if_common_single(item,
                                                      assumed_speed_in, assumed_speed_out)
 
         # Speed in bytes
-        speed_b_in = (assumed_speed_in // 3) if assumed_speed_in else ref_speed
-        speed_b_out = (assumed_speed_out // 3) if assumed_speed_out else ref_speed
+        speed_b_in = (assumed_speed_in // 8) if assumed_speed_in else ref_speed
+        speed_b_out = (assumed_speed_out // 8) if assumed_speed_out else ref_speed
 
         #
-        # All internal values within ths check after this point are bytes, not bits!
+        # All internal values within this check after this point are bytes, not bits!
         #
 
         # When the interface is reported as down, there is no need to try to handle,
@@ -967,6 +960,8 @@ def check_if_common_single(item,
         for name, counter, warn, crit, mmin, mmax in [
             ("in", interface.ifInOctets, traffic_levels[('in', 'upper', 'warn')],
              traffic_levels[('in', 'upper', 'crit')], 0, speed_b_in),
+            ("inmcast", interface.inmcast, mcast_warn, mcast_crit, None, None),
+            ("inbcast", interface.inbcast, bcast_warn, bcast_crit, None, None),
             ("inucast", interface.inucast, None, None, None, None),
             ("innucast", saveint(interface.inmcast) + saveint(interface.inbcast), nucast_warn,
              nucast_crit, None, None),
@@ -974,6 +969,8 @@ def check_if_common_single(item,
             ("inerr", interface.ifInErrors, err_in_warn, err_in_crit, None, None),
             ("out", interface.ifOutOctets, traffic_levels[('out', 'upper', 'warn')],
              traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
+            ("outmcast", interface.outmcast, mcast_warn, mcast_crit, None, None),
+            ("outbcast", interface.outbcast, bcast_warn, bcast_crit, None, None),
             ("outucast", interface.outucast, None, None, None, None),
             ("outnucast", saveint(interface.outmcast) + saveint(interface.outbcast), nucast_warn,
              nucast_crit, None, None),
@@ -981,21 +978,12 @@ def check_if_common_single(item,
             ("outerr", interface.ifOutErrors, err_out_warn, err_out_crit, None, None),
         ]:
 
+            counter_name = _get_counter_name(node, name, item)
+
             try:
-                if node is None:
-                    rate = get_rate("if.%s.%s" % (name, item),
-                                    this_time,
-                                    saveint(counter),
-                                    onwrap=RAISE)
-                    if force_counter_wrap:
-                        raise MKCounterWrapped("Forced counter wrap")
-                else:  # clustered check needs one counter per variable, item AND NODE
-                    rate = get_rate("if.%s.%s.%s" % (node, name, item),
-                                    this_time,
-                                    saveint(counter),
-                                    onwrap=RAISE)
-                    if force_counter_wrap:
-                        raise MKCounterWrapped("Forced counter wrap")
+                rate = _get_rate(counter, counter_name, timestamp, input_is_rate)
+                if force_counter_wrap:
+                    raise MKCounterWrapped("Forced counter wrap")
                 rates.append(rate)
                 perfdata.append((name, rate, warn, crit, mmin, mmax))
             except MKCounterWrapped:
@@ -1013,14 +1001,18 @@ def check_if_common_single(item,
             perfdata.append(("outqlen", saveint(interface.ifOutQLen)))
 
             def format_value(value):
+                # TODO: one of these uses 1000 as base, the other 1024.
+                # That is nasty, clean it up.
                 if unit == "Bit":
                     return get_nic_speed_human_readable(value * 8)
                 return "%s/s" % get_bytes_human_readable(value)
 
             # loop over incoming and outgoing traffic
-            for what, traffic, urate, nurate, discrate, errorrate, speed in [
-                ("in", rates[0], rates[1], rates[2], rates[3], rates[4], speed_b_in),
-                ("out", rates[5], rates[6], rates[7], rates[8], rates[9], speed_b_out),
+            for what, traffic, mrate, brate, urate, nurate, discrate, errorrate, speed in [
+                ("in", rates[0], rates[1], rates[2], rates[3], rates[4], rates[5], rates[6],
+                 speed_b_in),
+                ("out", rates[7], rates[8], rates[9], rates[10], rates[11], rates[12], rates[13],
+                 speed_b_out)
             ]:
                 if (what, 'predictive') in traffic_levels:
                     params = traffic_levels[(what, 'predictive')]
@@ -1063,27 +1055,48 @@ def check_if_common_single(item,
                         assumed_info = "/" + format_value(speed)
                     infotext += " (%.1f%%%s)" % (perc_used, assumed_info)
 
-                # check percentage of error packets
+                # check error, broadcast, multicast and non-unicast packets and discards
                 pacrate = urate + nurate + errorrate
                 if pacrate > 0.0:  # any packets transmitted?
-                    errperc = 100.0 * errorrate / pacrate
-                    if errperc > 0:
-                        if isinstance(err_crit, float):  # percentual levels
-                            result = check_levels(errperc,
-                                                  dsname, (err_warn, err_crit),
-                                                  statemarkers=True,
-                                                  human_readable_func=get_percent_human_readable,
-                                                  infoname=what + "-errors")
-                        elif isinstance(err_crit, int):  # absolute levels
-                            result = check_levels(errorrate,
-                                                  dsname, (err_warn, err_crit),
-                                                  statemarkers=True,
-                                                  human_readable_func=lambda x: "%d" % x,
-                                                  infoname=what + "-errors packets")
-                        state = max(state, result[0])
-                        infotext += ", " + result[1]
+                    for value, params_warn, params_crit, text in [
+                        (errorrate, err_warn, err_crit, "errors"),
+                        (mrate, mcast_warn, mcast_crit, "multicast"),
+                        (brate, bcast_warn, bcast_crit, "broadcast"),
+                    ]:
 
-                # check rate of non-unicast packets and discards
+                        calc_avg = False
+
+                        infotxt = "%s-%s" % (what, text)
+                        if average_bmcast is not None and text != "errors":
+                            calc_avg = True
+                            value_avg = get_average("if.%s.%s.%s.avg" % (what, text, item),
+                                                    this_time, value, average_bmcast)
+                            value = value_avg
+
+                        perc_value = 100.0 * value / pacrate
+                        if perc_value > 0:
+                            if isinstance(params_crit, float):  # percentual levels
+                                if calc_avg:
+                                    infotxt += " average %dmin" % average_bmcast
+                                result = check_levels(
+                                    perc_value,
+                                    dsname if text == "errors" else text,
+                                    (params_warn, params_crit),
+                                    statemarkers=True,
+                                    human_readable_func=get_percent_human_readable,
+                                    infoname=infotxt)
+                            elif isinstance(params_crit, int):  # absolute levels
+                                infotxt += " packets"
+                                if calc_avg:
+                                    infotxt += " average %dmin" % average_bmcast
+                                result = check_levels(perc_value,
+                                                      dsname, (params_warn, params_crit),
+                                                      statemarkers=True,
+                                                      human_readable_func=lambda x: "%d" % x,
+                                                      infoname=infotxt)
+                            state = max(state, result[0])
+                            infotext += ", " + result[1]
+
                 for _txt, _rate, _warn, _crit in [("non-unicast packets", nurate, nucast_warn,
                                                    nucast_crit),
                                                   ("discards", discrate, disc_warn, disc_crit)]:

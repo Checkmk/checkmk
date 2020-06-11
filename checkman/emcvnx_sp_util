@@ -10,8 +10,5 @@ description:
  The upper default levels are set to (50%, 60%).
  These levels are configurable.
 
-item:
- None.
-
 inventory:
  One service is created.

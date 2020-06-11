@@ -1,4 +1,4 @@
-title: IBM servers: Physical Disks
+title: IBM Servers: Physical Disks
 agents: snmp
 catalog: hw/server/ibm
 license: GPL
@@ -23,4 +23,4 @@ item:
  dual monitoring one of them needs to be disabled using {disabled_checks}.
 
 inventory:
- All disks are automatically inventorized.
+ One service is created for each disk.

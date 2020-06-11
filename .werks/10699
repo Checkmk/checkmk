@@ -1,0 +1,13 @@
+Title: Filtering "Alert Statistics" view resulted in empty page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1576678511
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+While the "Alert statistics" view could be initially rendered, it always showed
+an empty page after submitting any filter.

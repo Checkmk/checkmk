@@ -13,7 +13,7 @@ description:
  {UNKN} on every other state.
 
 inventory:
- Creates one check for every PNode in the HNAS system.
+ One service is created for each PNode in the HNAS system.
 
 item:
  If SNMP returns a name of the PNode, the item is build up combining the ID

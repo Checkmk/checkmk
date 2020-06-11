@@ -1,26 +1,7 @@
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 #
 
 include defines.make
@@ -33,16 +14,17 @@ LIBDIR             := $(PREFIX)/lib/$(NAME)
 DISTNAME           := $(NAME)-$(VERSION)
 DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
-                      --exclude=.gitignore --exclude=*.swp --exclude=.f12
+                      --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
+		      --exclude=__pycache__ --exclude=*.pyc
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -g -O3 -Wall -Wextra
-CLANG_VERSION      := 8
+CLANG_VERSION      := 10
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
-export IWYU_TOOL   := iwyu_tool
-ARTIFACT_STORAGE   := http://nexus:8081
+export IWYU_TOOL   := $(realpath scripts/iwyu_tool)
+ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 PIPENV2            := scripts/run-pipenv 2
 PIPENV3            := scripts/run-pipenv 3
 
@@ -57,13 +39,6 @@ DIST_DEPS          := $(CONFIG_DEPS) \
 LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
                       src/{Makefile.am,{,test/}*.{cc,h}} standalone/config_files.m4
-
-FILES_TO_FORMAT_WINDOWS := \
-                      $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
-                      $(wildcard $(addprefix agents/windows/,*.cc *.h)) \
-                      $(wildcard $(addprefix agents/windows/sections/,*.cc *.h)) \
-                      $(wildcard $(addprefix agents/windows/test/,*.cc *.h)) \
-                      $(wildcard $(addprefix agents/windows/test/sections,*.cc *.h)) \
 
 FILES_TO_FORMAT_LINUX := \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
@@ -93,12 +68,15 @@ THEME_JSON_FILES   := $(addprefix web/htdocs/themes/,$(addsuffix /theme.json,$(T
 THEME_IMAGE_DIRS   := $(addprefix web/htdocs/themes/,$(addsuffix /images,$(THEMES)))
 THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 
+OPENAPI_DOC        := web/htdocs/openapi/api-documentation.html
+OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
+
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-windows format-linux format-python format-shell \
-        GTAGS headers help install \
+        format-linux format-python format-python2 format-python3 \
+	format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel .venv .venv-2.7 .venv-3.7
+        am--refresh skel .venv .venv-2.7 .venv-3.8 openapi openapi-doc
 
 
 help:
@@ -143,7 +121,6 @@ dist: $(DISTNAME).tar.gz config.h.in $(DIST_DEPS)
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
-	$(MAKE) -C enterprise agents/windows/plugins/cmk-update-agent.exe
 endif
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -154,7 +131,7 @@ endif
 		fi ; \
 	    done ; \
 	else \
-	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,build-32,src} agents/windows/{build64,build} enterprise/agents/winbuild; do \
+	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,build-32,src} enterprise/agents/plugins/{build,build-32,src} enterprise/agents/winbuild; do \
 		EXCLUDES+=" --exclude $$F" ; \
 	    done ; \
 	fi ; \
@@ -180,32 +157,20 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog
+$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog agents/windows/plugins/mk_logwatch.exe agents/windows/plugins/mk_jolokia.exe
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
 	$(MAKE) -C agents build
+	$(MAKE) -C doc/plugin-api apidoc html
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
-	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update
-	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update-legacy
 	gzip $(DISTNAME)/bin.tar
-	$(PIPENV2) run python -m compileall cmk ; \
-	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
+	tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
 	    --exclude "cee" \
 	    --exclude "cee.py*" \
 	    --exclude "cme" \
 	    --exclude "cme.py*" \
-	    cmk/* ; \
-	  rm cmk/*.pyc
-	$(PIPENV2) run python -m compileall cmk_base ; \
-	  tar czf $(DISTNAME)/base.tar.gz \
-	    $(TAROPTS) \
-	    --exclude "cee" \
-	    --exclude "cee.py*" \
-	    --exclude "cme" \
-	    --exclude "cme.py*" \
-	    cmk_base/* ; \
-	  rm cmk_base/*.pyc
+	    cmk/*
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)
@@ -214,6 +179,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web \
       app \
+      htdocs/openapi \
       htdocs/css \
       htdocs/images \
       htdocs/jquery \
@@ -226,15 +192,20 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C mk-livestatus-$(VERSION) $$(cd mk-livestatus-$(VERSION) ; ls -A )
 	rm -rf mk-livestatus-$(VERSION)
 
-	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
-	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
+	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude plugin-api $$(cd doc ; ls)
+	tar rf $(DISTNAME)/doc.tar $(TAROPTS) \
+	    -C doc \
+	    --transform "s/^plugin-api\/build/plugin-api/" \
+	    plugin-api/build/html
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12
 	gzip $(DISTNAME)/doc.tar
 
+	make -C agents/plugins
 	cd agents ; tar czf ../$(DISTNAME)/agents.tar.gz $(TAROPTS) \
 		--exclude check_mk_agent.spec \
 		--exclude special/lib \
+		--exclude plugins/Makefile \
 		cfg_examples \
 		plugins \
 		sap \
@@ -248,14 +219,14 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		mk-job* \
 		waitmax \
 		windows/cfg_examples \
-		windows/check_mk_agent*.{exe,msi} \
-		windows/check_mk.example.ini \
+		windows/check_mk_agent-64.exe \
+		windows/check_mk_agent.exe \
+		windows/check_mk_agent.msi \
+		windows/python-3.8.zip \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \
 		windows/mrpe \
 		windows/plugins
-	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
-	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog standalone.make $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION
 	tar czf $(DISTNAME).tar.gz $(TAROPTS) $(DISTNAME)
@@ -265,16 +236,22 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
 
+agents/windows/plugins/%.exe:
+	@echo "ERROR: The build artifact $@ is missing. Needs to be created by CI system first."
+	@echo "In case you want to proceed without these files, you may simply execute \"touch $@\""
+	@echo "to create a package without that file."
+	exit 1
+
 omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 	$(MAKE) -C omd openhardwaremonitor-dist
 
 omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
 
 .werks/werks: $(WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV2) run scripts/precompile-werks.py .werks .werks/werks cre
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV3) run scripts/precompile-werks.py .werks .werks/werks cre
 
 ChangeLog: .werks/werks
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV2) run scripts/create-changelog.py ChangeLog .werks/werks
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV3) run scripts/create-changelog.py ChangeLog .werks/werks
 
 packages:
 	$(MAKE) -C agents packages
@@ -286,7 +263,10 @@ omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz:
 	mkdir -p mk-livestatus-$(VERSION)
 	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac m4 mk-livestatus-$(VERSION)
-	cd mk-livestatus-$(VERSION) && autoreconf --install --include=m4 && rm -rf autom4te.cache
+	cd mk-livestatus-$(VERSION) && \
+	    autoreconf --install --include=m4 && \
+	    rm -rf autom4te.cache && \
+	    touch ar-lib compile config.guess config.sub install-sh missing depcomp
 	tar czf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 
@@ -301,9 +281,8 @@ setversion:
 	$(MAKE) -C omd NEW_VERSION=$(NEW_VERSION) setversion
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' configure.ac ; \
-	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' bin/mkbackup ; \
-	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/__init__.py bin/mkbench bin/livedump; \
-	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
+	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' bin/mkbackup ; \
+	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/mkbench bin/livedump; \
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	$(MAKE) -C docker NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
@@ -312,6 +291,23 @@ endif
 
 headers:
 	doc/helpers/headrify
+
+
+$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py") $(shell find cmk/gui/cee/plugins/openapi -name "*.py")
+	@export PYTHONPATH=${REPO_PATH} ; \
+	export TMPFILE=$$(mktemp);  \
+	$(PIPENV3) run python -m cmk.gui.openapi > $$TMPFILE && \
+	mv $$TMPFILE $@
+
+
+$(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules/.bin/redoc-cli
+	node_modules/.bin/redoc-cli bundle -o $(OPENAPI_DOC) $(OPENAPI_SPEC) && \
+		sed -i 's/\s\+$$//' $(OPENAPI_DOC) && \
+		echo >> $(OPENAPI_DOC)  # fix trailing whitespaces and end of file newline
+
+openapi: $(OPENAPI_SPEC)
+openapi-doc: $(OPENAPI_DOC)
+
 
 optimize-images:
 	@if type pngcrush >/dev/null 2>&1; then \
@@ -327,7 +323,25 @@ optimize-images:
 # TODO: The --unsafe-perm was added because the CI executes this as root during
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
-node_modules: package.json package-lock.json
+#
+# NOTE 1: What we actually want are grouped targets, but this would require GNU
+# make >= 4.3, so we use the common workaround of an intermediate target.
+#
+# NOTE 2: NPM people have a totally braindead idea about reproducible builds
+# which almost all other people consider a bug, so we have to touch our target
+# files. Read https://github.com/npm/npm/issues/20439 and be amazed...
+#
+# NOTE 3: NPM sometimes terminates with a very unhelpful "npm ERR! cb() never
+# called!" message, where the underlying reason seems to be quite obscure, see
+# https://npm.community/t/crash-npm-err-cb-never-called/858.
+.INTERMEDIATE: .ran-npm
+node_modules/.bin/webpack: .ran-npm
+node_modules/.bin/redoc-cli: .ran-npm
+.ran-npm: package.json package-lock.json
+	@echo "npm version: $$(npm --version)"
+	@echo "node version: $$(node --version)"
+	@echo "open file descriptor limit (soft): $$(ulimit -Sn)"
+	@echo "open file descriptor limit (hard): $$(ulimit -Hn)"
 	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
 	    REGISTRY=--registry=${ARTIFACT_STORAGE}/repository/npm-proxy/ ; \
             export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
@@ -337,11 +351,18 @@ node_modules: package.json package-lock.json
 	    echo "Installing from public registry" ; \
         fi ; \
 	npm install --audit=false --unsafe-perm $$REGISTRY
+	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli
 
-web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
+web/htdocs/js/%_min.js: node_modules/.bin/webpack webpack.config.js $(JAVASCRIPT_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
-web/htdocs/themes/%/theme.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
+web/htdocs/themes/%/theme.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+
+# This target is used to generate a css file for the virtual appliance. It is
+# called from the cma git's Makefile and the built css file is moved to
+# ~/git/cma/skel/usr/share/cma/webconf/htdocs/
+web/htdocs/themes/facelift/cma_facelift.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
@@ -350,7 +371,7 @@ web/htdocs/themes/%/theme.css: node_modules webpack.config.js postcss.config.js 
 # GNU standards here (see "Standard Targets for Users",
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
-	make -C omd clean
+	$(MAKE) -C omd clean
 	rm -rf clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       omd/packages/mk-livestatus/mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
@@ -361,6 +382,8 @@ clean:
 
 mrproper:
 	git clean -d --force -x \
+	    --exclude="**/.vscode"\
+	    --exclude="**/.idea"\
 	    --exclude='\.werks/.last'\
 	    --exclude='\.werks/.my_ids'
 
@@ -368,39 +391,51 @@ mrclean:
 	git clean -d --force -x \
 	    --exclude='\.werks/.last' \
 	    --exclude='\.werks/.my_ids' \
+	    --exclude="Pipfile" \
+	    --exclude="Pipfile.lock" \
 	    --exclude=".venv*" \
+	    --exclude="**/.vscode"\
+	    --exclude="**/.idea"\
 	    --exclude="virtual-envs/*/.venv/"
 
 setup:
+# librrd-dev is still needed by the python rrd package we build in our virtual environment
 	sudo apt-get install \
 	    aptitude \
 	    autoconf \
 	    bear \
 	    build-essential \
-	    clang-7 \
-	    clang-format-7 \
-	    clang-tidy-7 \
+	    clang-10 \
+	    clang-format-10 \
+	    clang-tidy-10 \
+	    clang-tools-10 \
+	    clangd-10 \
+	    libclang-10-dev \
+	    libclang-common-10-dev \
+	    libclang1-10 \
 	    doxygen \
 	    figlet \
 	    g++ \
-	    libclang-7-dev \
 	    libpcap-dev \
 	    librrd-dev \
-	    llvm-7-dev \
+	    libxml2-dev \
+	    libpango1.0-dev \
 	    libsasl2-dev \
 	    libldap2-dev \
 	    libkrb5-dev \
-	    libmysqlclient-dev \
+	    libmariadb-dev-compat \
 	    pngcrush \
 	    valgrind \
+	    shellcheck \
 	    direnv \
-	    python-pip \
-	    python3.7-dev \
+	    python3-pip \
+	    python3.8-dev \
+	    python-setuptools \
 	    chrpath \
 	    enchant \
 	    ksh \
 	    p7zip-full
-	sudo -H pip install -U pipenv
+	sudo -H pip install -U pipenv wheel
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup
@@ -476,7 +511,7 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
-iwyu: config.h
+iwyu: config.status
 	$(MAKE) -C livestatus/src iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu
@@ -485,7 +520,7 @@ endif
 # Not really perfect rules, but better than nothing
 analyze: config.h
 	$(MAKE) -C livestatus clean
-	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
+	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++2a"
 
 # GCC-like output on stderr intended for human consumption.
 cppcheck: config.h
@@ -506,22 +541,31 @@ format: format-python format-c format-shell
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-format-c: format-windows format-linux
-
-format-windows:
-	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_WINDOWS)
+format-c: format-linux
 
 format-linux:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
-format-python:
+format-python: format-python3 format-python2
+
+format-python2:
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
-	PYTHON_FILES=$${PYTHON_FILES-$$(tests/find-python-files)} ; \
-	$(PIPENV2) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 2)} ; \
+	$(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+
+format-python3:
+# Explicitly specify --style [FILE] to prevent costly searching in parent directories
+# for each file specified via command line
+#
+# Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
+# for the moment to get the performance boost this option brings.
+	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files 3; else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i
+
 
 format-shell:
 	sudo docker run --rm -v "$(realpath .):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
@@ -535,19 +579,19 @@ ifeq ($(ENTERPRISE),yes)
 endif
 
 .venv-2.7:
-	make -C virtual-envs/2.7 .venv
-	make -C virtual-envs/3.7 .venv
+	$(MAKE) -C virtual-envs/2.7 .venv
+	$(MAKE) -C virtual-envs/3.8 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
 	ln -s virtual-envs/2.7/{Pipfile,Pipfile.lock,.venv} .
 
-.venv-3.7:
-	make -C virtual-envs/2.7 .venv
-	make -C virtual-envs/3.7 .venv
+.venv-3.8:
+	$(MAKE) -C virtual-envs/2.7 .venv
+	$(MAKE) -C virtual-envs/3.8 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
-	ln -s virtual-envs/3.7/{Pipfile,Pipfile.lock,.venv} .
+	ln -s virtual-envs/3.8/{Pipfile,Pipfile.lock,.venv} .
 
-# This alias is for compatibility: The target .venv should refer to 2.7 for the moment
-.venv: .venv-2.7
+# This alias is for compatibility: The target .venv should refer to 3.8 for the moment
+.venv: .venv-3.8
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

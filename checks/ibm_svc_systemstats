@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Note: This file is almost identical with ibm_svc_systemstats. We should
 # create an include file for sharing common code!
@@ -78,19 +58,19 @@ def ibm_svc_systemstats_parse(info):
     for stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms",
                          "vdisk_w_ms"):
-            if "VDisks" not in parsed.keys():
+            if "VDisks" not in parsed:
                 parsed["VDisks"] = {}
             stat_name = stat_name.replace("vdisk_", "")
             parsed["VDisks"][stat_name] = int(stat_current)
         if stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io", "mdisk_r_ms",
                          "mdisk_w_ms"):
-            if "MDisks" not in parsed.keys():
+            if "MDisks" not in parsed:
                 parsed["MDisks"] = {}
             stat_name = stat_name.replace("mdisk_", "")
             parsed["MDisks"][stat_name] = int(stat_current)
         if stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io", "drive_r_ms",
                          "drive_w_ms"):
-            if "Drives" not in parsed.keys():
+            if "Drives" not in parsed:
                 parsed["Drives"] = {}
             stat_name = stat_name.replace("drive_", "")
             parsed["Drives"][stat_name] = int(stat_current)
@@ -114,7 +94,7 @@ def inventory_ibm_svc_systemstats_diskio(info):
 def check_ibm_svc_systemstats_diskio(item, _no_params, info):
     parsed = ibm_svc_systemstats_parse(info)
 
-    if item not in parsed.keys():
+    if item not in parsed:
         return 3, "%s not found in agent output" % item
 
     read_bytes = parsed[item]['r_mb'] * 1024 * 1024
@@ -151,7 +131,7 @@ def inventory_ibm_svc_systemstats_iops(info):
 def check_ibm_svc_systemstats_iops(item, _no_params, info):
     parsed = ibm_svc_systemstats_parse(info)
 
-    if item not in parsed.keys():
+    if item not in parsed:
         return 3, "%s not found in agent output" % item
 
     read_iops = parsed[item]['r_io']
@@ -186,7 +166,7 @@ def inventory_ibm_svc_systemstats_disk_latency(info):
 def check_ibm_svc_systemstats_disk_latency(item, params, info):
     parsed = ibm_svc_systemstats_parse(info)
 
-    if item not in parsed.keys():
+    if item not in parsed:
         yield 3, "%s not found in agent output" % item
         return
 

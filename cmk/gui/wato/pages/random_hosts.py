@@ -1,32 +1,16 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """This module allows the creation of large numbers of random hosts
 for test and development."""
 
+from typing import List, Tuple, Dict
+
 import random
+
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -59,9 +43,9 @@ class ModeRandomHosts(WatoMode):
         if not html.check_transaction():
             return "folder"
 
-        count = int(html.request.var("count"))
-        folders = int(html.request.var("folders"))
-        levels = int(html.request.var("levels"))
+        count = html.request.get_integer_input_mandatory("count")
+        folders = html.request.get_integer_input_mandatory("folders")
+        levels = html.request.get_integer_input_mandatory("levels")
         created = self._create_random_hosts(watolib.Folder.current(), count, folders, levels)
         return "folder", _("Created %d random hosts.") % created
 
@@ -70,14 +54,14 @@ class ModeRandomHosts(WatoMode):
         forms.header(_("Create Random Hosts"))
         forms.section(_("Number to create"))
         html.write_text("%s: " % _("Hosts to create in each folder"))
-        html.number_input("count", 10)
+        html.text_input("count", default_value="10", cssclass="number")
         html.set_focus("count")
         html.br()
         html.write_text("%s: " % _("Number of folders to create in each level"))
-        html.number_input("folders", 10)
+        html.text_input("folders", default_value="10", cssclass="number")
         html.br()
         html.write_text("%s: " % _("Levels of folders to create"))
-        html.number_input("levels", 1)
+        html.text_input("levels", default_value="1", cssclass="number")
 
         forms.end()
         html.button("start", _("Start!"), "submit")
@@ -86,7 +70,7 @@ class ModeRandomHosts(WatoMode):
 
     def _create_random_hosts(self, folder, count, folders, levels):
         if levels == 0:
-            hosts_to_create = []
+            hosts_to_create = []  # type: List[Tuple[HostName, Dict, None]]
             while len(hosts_to_create) < count:
                 host_name = "random_%010d" % int(random.random() * 10000000000)
                 hosts_to_create.append((host_name, {"ipaddress": "127.0.0.1"}, None))

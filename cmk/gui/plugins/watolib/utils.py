@@ -1,48 +1,32 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import os
 import pprint
-from typing import Optional, Type, Text, List  # pylint: disable=unused-import
-import six
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Type
+
+from six import ensure_str
 
 import cmk.utils.store as store
-
 import cmk.utils.plugin_registry
+
+from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec
 
 
 def wato_fileheader():
+    # type: () -> str
     return "# Created by WATO\n# encoding: utf-8\n\n"
 
 
-class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
+class ABCConfigDomain(metaclass=abc.ABCMeta):
     needs_sync = True
     needs_activation = True
     always_activate = False
@@ -58,6 +42,7 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
 
     @classmethod
     def get_always_activate_domain_idents(cls):
+        # type: () -> List[ConfigDomainName]
         return [d.ident for d in config_domain_registry.values() if d.always_activate]
 
     @classmethod
@@ -70,7 +55,7 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
 
     @classmethod
     def get_all_default_globals(cls):
-        settings = {}
+        settings = {}  # type: Dict[str, Any]
         for domain in ABCConfigDomain.enabled_domains():
             settings.update(domain().default_globals())
         return settings
@@ -87,15 +72,20 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
     def activate(self):
         raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
 
-    def load(self, site_specific=False):
-        filename = self.config_file(site_specific)
-        settings = {}
+    def load(self, site_specific=False, custom_site_path=None):
+        filename = Path(self.config_file(site_specific))
+        if custom_site_path:
+            filename = Path(custom_site_path) / filename.relative_to(cmk.utils.paths.omd_root)
 
-        if not os.path.exists(filename):
+        settings = {}  # type: Dict[str, Any]
+
+        if not filename.exists():
             return {}
 
         try:
-            exec (open(filename).read(), settings, settings)
+            # TODO: Can be changed to text IO with Python 3
+            with filename.open("rb") as f:
+                exec(f.read(), settings, settings)
 
             # FIXME: Do not modify the dict while iterating over it.
             for varname in list(settings.keys()):
@@ -106,11 +96,14 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
         except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
 
-    def load_site_globals(self):
-        return self.load(site_specific=True)
+    def load_site_globals(self, custom_site_path=None):
+        return self.load(site_specific=True, custom_site_path=custom_site_path)
 
-    def save(self, settings, site_specific=False):
+    def save(self, settings, site_specific=False, custom_site_path=None):
         filename = self.config_file(site_specific)
+        if custom_site_path:
+            filename = os.path.join(custom_site_path,
+                                    os.path.relpath(filename, cmk.utils.paths.omd_root))
 
         output = wato_fileheader()
         for varname, value in settings.items():
@@ -119,8 +112,8 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
         store.makedirs(os.path.dirname(filename))
         store.save_file(filename, output)
 
-    def save_site_globals(self, settings):
-        self.save(settings, site_specific=True)
+    def save_site_globals(self, settings, custom_site_path=None):
+        self.save(settings, site_specific=True, custom_site_path=custom_site_path)
 
     @abc.abstractmethod
     def default_globals(self):
@@ -148,7 +141,7 @@ class ConfigDomainRegistry(cmk.utils.plugin_registry.ClassRegistry):
 config_domain_registry = ConfigDomainRegistry()
 
 
-class SampleConfigGenerator(six.with_metaclass(abc.ABCMeta, object)):
+class SampleConfigGenerator(metaclass=abc.ABCMeta):
     @classmethod
     def ident(cls):
         # type: () -> str
@@ -200,19 +193,19 @@ sample_config_generator_registry = SampleConfigGeneratorRegistry()
 #   '----------------------------------------------------------------------'
 
 
-class ConfigVariableGroup(object):
+class ConfigVariableGroup:
     # TODO: The identity of a configuration variable group should be a pure
     # internal unique key and it should not be localized. The title of a
     # group was always used as identity. Check all call sites and introduce
     # internal IDs in case it is sure that we can change it without bad side
     # effects.
     def ident(self):
-        # type: () -> Text
+        # type: () -> str
         """Unique internal key of this group"""
         return self.title()
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Human readable title of this group"""
         raise NotImplementedError()
 
@@ -238,14 +231,14 @@ class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
 config_variable_group_registry = ConfigVariableGroupRegistry()
 
 
-class ConfigVariable(object):
+class ConfigVariable:
     def group(self):
         # type () -> Type[ConfigVariableGroup]
         """Returns the class of the configuration variable group this configuration variable belongs to"""
         raise NotImplementedError()
 
     def ident(self):
-        # type: () -> Text
+        # type: () -> str
         """Returns the internal identifier of this configuration variable"""
         raise NotImplementedError()
 
@@ -312,12 +305,12 @@ def register_configvar(group,
 
     # New API is to hand over the class via domain argument. But not all calls have been
     # migrated. Perform the translation here.
-    if isinstance(domain, six.string_types):
+    if isinstance(domain, str):
         domain = ABCConfigDomain.get_class(domain)
 
     # New API is to hand over the class via group argument
-    if isinstance(group, six.string_types):
-        group = config_variable_group_registry[group]
+    if isinstance(group, str):
+        group = config_variable_group_registry[ensure_str(group)]
 
     cls = type(
         "LegacyConfigVariable%s" % varname.title(), (ConfigVariable,), {

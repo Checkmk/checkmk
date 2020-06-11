@@ -1,0 +1,21 @@
+title: MongoDB Replica Set: Primary Election
+agents: linux
+catalog: app/mongodb
+license: GPL
+distribution: check_mk
+description:
+ This check monitors if the primary of a replica set changed.
+
+ Replica sets can trigger an election in response to:
+
+ - adding a new node to the replica set
+
+ - initiating a replica set
+
+ - performing replica set maintenance using methods such as rs.stepDown() or rs.reconfig()
+
+ - secondary members losing connectivity to the primary for more than the configured timeout (10 seconds by default).
+
+
+inventory:
+ One service is created named 'MongoDB Primary Election'.

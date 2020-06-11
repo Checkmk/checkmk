@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Check_MK-Agent-Plugin - Apache Server Status
 #
@@ -43,15 +23,18 @@
 
 import os
 import re
-import socket
 import sys
-import urllib2
 
-# We have to deal with socket timeouts. Python > 2.6
-# supports timeout parameter for the urllib2.urlopen method
-# but we are on a python 2.5 system here which seem to use the
-# default socket timeout.
-socket.setdefaulttimeout(5.0)
+if sys.version_info < (2, 6):
+    sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
+    sys.exit(1)
+
+if sys.version_info[0] == 2:
+    from urllib2 import Request, urlopen
+    from urllib2 import URLError, HTTPError
+else:
+    from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
+    from urllib.error import URLError, HTTPError  # pylint: disable=import-error,no-name-in-module
 
 
 def get_config():
@@ -71,8 +54,21 @@ def get_config():
         "ssl_ports": [443],
     }
     if os.path.exists(config_file):
-        exec (open(config_file).read(), config)
+        exec(open(config_file).read(), config)
     return config
+
+
+def get_instance_name(host, port_nr, conf):
+    """
+    Get Instance name either from config
+    or from detected sites
+    """
+    search = "%s:%s" % (host, port_nr)
+    if search in conf['custom']:
+        return conf['custom'][search]
+    if 'omd_sites' in conf:
+        return conf['omd_sites'].get(search, host)
+    return ""
 
 
 def try_detect_servers(ssl_ports):
@@ -153,22 +149,36 @@ def get_ssl_no_verify_context():
 
 def get_response(proto, cafile, address, portspec, page):
     url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
-    request = urllib2.Request(url, headers={"Accept": "text/plain"})
+    request = Request(url, headers={"Accept": "text/plain"})
     is_local = address in ("127.0.0.1", "[::1]", "localhost")
     # Try to fetch the status page for each server
     try:
         if proto == "https" and cafile:
-            return urllib2.urlopen(request, cafile=cafile)
+            return urlopen(request, cafile=cafile, timeout=5)
         elif proto == "https" and is_local:
-            return urllib2.urlopen(request, context=get_ssl_no_verify_context())
-        return urllib2.urlopen(request)
-    except urllib2.URLError, exc:
+            return urlopen(request, context=get_ssl_no_verify_context(), timeout=5)
+        return urlopen(request, timeout=5)
+    except URLError as exc:
         if 'unknown protocol' in str(exc):
             # HACK: workaround misconfigurations where port 443 is used for
             # serving non ssl secured http
             url = 'http://%s%s/server-status?auto' % (address, portspec)
-            return urllib2.urlopen(url)
+            return urlopen(url, timeout=5)
         raise
+
+
+def get_instance_name_map(cfg):
+    instance_name_map = {'custom': cfg.get("CUSTOM_ADDRESS_OVERWRITE", {})}
+    if cfg.get('ENABLE_OMD_SITE_DETECTION') and os.path.exists('/usr/bin/omd'):
+        for line in os.popen('omd sites').readlines():
+            sitename = line.split()[0]
+            path = "/opt/omd/sites/%s/etc/apache/listen-port.conf" % sitename
+            with open(path) as site_cfg_handle:
+                site_raw_conf = site_cfg_handle.readlines()
+                site_conf = site_raw_conf[-2].strip().split()[1]
+                instance_name_map.setdefault('omd_sites', {})
+                instance_name_map['omd_sites'][site_conf] = sitename
+    return instance_name_map
 
 
 def main():
@@ -195,12 +205,13 @@ def main():
                 if line.lstrip()[0] == '<':
                     # Seems to be html output. Skip this server.
                     break
-
+                if not name:
+                    name = get_instance_name(address, port, get_instance_name_map(config))
                 sys.stdout.write("%s|%s|%s|%s\n" % (address, port, name, line))
-        except urllib2.HTTPError, exc:
+        except HTTPError as exc:
             sys.stderr.write('HTTP-Error (%s%s): %s %s\n' % (address, portspec, exc.code, exc))
 
-        except Exception, exc:  # pylint: disable=broad-except
+        except Exception as exc:  # pylint: disable=broad-except
             sys.stderr.write('Exception (%s%s): %s\n' % (address, portspec, exc))
 
     return 0

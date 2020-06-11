@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -32,7 +32,7 @@ default_config = {
     "cleanup_abandoned_host_files": 2592000,
 }
 
-plugins = {}
+plugins = {}  # type: dict
 
 
 def error(s):
@@ -57,7 +57,7 @@ def read_config():
     globals().update(default_config)
 
     try:
-        exec (open(config_file).read(), globals(), globals())
+        exec(open(config_file).read(), globals(), globals())
     except IOError:
         pass  # ignore non existant config
     except Exception as e:
@@ -81,7 +81,7 @@ def print_config():
         verbose("  Not cleaning up files by free space left.")
     else:
         verbose("  Cleanup files till %s are free while not deleting files "
-                "older than %d seconds" % (fmt_bytes(min_free_bytes), min_file_age))
+                "older than %d seconds" % (fmt_bytes(min_free_bytes), min_file_age or 0))
 
 
 def resolve_paths():
@@ -120,7 +120,7 @@ def load_plugins():
             path = base_dir + '/' + f
             verbose('Loading plugin: %s' % path)
             try:
-                exec (open(path).read(), plugins[f], plugins[f])
+                exec(open(path).read(), plugins[f], plugins[f])
             except Exception as e:
                 error('Exception while loading plugin "%s": %s' % (path, e))
 
@@ -136,8 +136,8 @@ def collect_file_infos():
 
 
 def get_free_space():
-    # FIXME: Take eventual root reserved space into account
-    for l in subprocess.check_output(['df', '-P', '-B1', omd_root]).split("\n"):
+    # FIXME: Take possible root reserved space into account
+    for l in subprocess.check_output(['df', '-P', '-B1', omd_root], encoding="utf-8").split("\n"):
         if l[0] == '/':
             _vol, _size_bytes, _used_bytes, free_bytes, _used_perc, _mp = l.split()
             return int(free_bytes)
@@ -200,6 +200,7 @@ def cleanup_aged():
 
 
 def oldest_candidate(file_infos):
+    assert min_file_age is not None
     if file_infos:
         # Sort by modification time
         sorted_infos = sorted(file_infos.items(), key=lambda i: i[1][1])
@@ -291,6 +292,8 @@ def cleanup_host_directory(site_hosts, base_path):
         if host_dir not in site_hosts:
             unrelated_dirs.append(host_dir)
 
+    assert cleanup_abandoned_host_files is not None
+
     # Then find the latest modified file for each directory. When the latest
     # modified file is older than the threshold, delete all files including
     # the host base directory.
@@ -308,7 +311,7 @@ def cleanup_host_directory(site_hosts, base_path):
 
 
 def newest_modification_time_in_dir(dir_path):
-    mtime = 0
+    mtime = 0.0
     for entry in os.listdir(dir_path):
         path = dir_path + "/" + entry
         mtime = max(os.stat(path).st_mtime, mtime)
@@ -319,9 +322,9 @@ def get_configured_hosts():
     host_names = set([])
 
     distr_wato_filepath = os.path.expanduser("~/etc/check_mk/conf.d/distributed_wato.mk")
-    file_vars = {}
+    file_vars = {}  # type: dict
     if os.path.exists(distr_wato_filepath):
-        exec (open(distr_wato_filepath).read(), file_vars, file_vars)
+        exec(open(distr_wato_filepath).read(), file_vars, file_vars)
 
     if file_vars.get("is_wato_slave_site", False):
         host_names.update(
@@ -356,7 +359,7 @@ if __name__ == "__main__":
 
     try:
         main()
-    except SystemExit:
+    except SystemExit:  # pylint: disable=try-except-raise
         raise
-    except:
+    except Exception:
         terminate('Unexpected exception: %s' % traceback.format_exc())

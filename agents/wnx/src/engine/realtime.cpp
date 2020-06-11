@@ -3,6 +3,7 @@
 
 #include "realtime.h"
 
+#include <fmt/format.h>
 #include <time.h>
 
 #include <chrono>
@@ -12,7 +13,6 @@
 #include "asio.h"
 #include "cfg.h"
 #include "encryption.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "providers/df.h"
 #include "providers/mem.h"
@@ -209,9 +209,10 @@ static void UpdateCounterByEc(size_t& counter, std::error_code& ec) {
 
 // #TODO overcomplicated function, to be re-factored
 void Device::mainThread() noexcept {
+    using namespace std::literals;
     std::unique_lock lk(lock_);
     auto port = port_;
-    auto ip_address = ip_address_;
+    auto ip_address = ""s;  // set to invalid value, prevents race
     auto passphrase = passphrase_;
     lk.unlock();
 
@@ -296,6 +297,6 @@ void Device::mainThread() noexcept {
     } catch (std::exception& e) {
         XLOG::l("Exception in RT thread: '{}'", e.what());
     }
-}  // namespace cma::rt
+}
 
 }  // namespace cma::rt

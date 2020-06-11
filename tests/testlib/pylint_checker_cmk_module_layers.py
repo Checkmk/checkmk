@@ -1,21 +1,31 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Checker to prevent disallowed imports of modules
 
 See chapter "Module hierarchy" in coding_guidelines_python in wiki
 for further information.
 """
 
-import os.path
-from pylint.checkers import BaseChecker, utils  # type: ignore
-from pylint.interfaces import IAstroidChecker  # type: ignore
-from testlib import cmk_path
+import os
+from pylint.checkers import BaseChecker, utils  # type: ignore[import]
+from pylint.interfaces import IAstroidChecker  # type: ignore[import]
+from testlib.utils import cmk_path
 
 
 def register(linter):
     linter.register_checker(CMKModuleLayerChecker(linter))
 
 
+# https://www.python.org/dev/peps/pep-0616/
+def removeprefix(text, prefix):
+    return text[len(prefix):] if text.startswith(prefix) else text
+
+
 _COMPONENTS = (
-    "cmk_base",
+    "cmk.base",
     "cmk.gui",
     "cmk.ec",
     "cmk.notification_plugins",
@@ -29,8 +39,8 @@ _COMPONENTS = (
 
 _EXPLICIT_FILE_TO_COMPONENT = {
     "web/app/index.wsgi": "cmk.gui",
-    "bin/update_rrd_fs_names.py": "cmk_base",
-    "bin/check_mk": "cmk_base",
+    "bin/update_rrd_fs_names.py": "cmk.base",
+    "bin/check_mk": "cmk.base",
     "bin/cmk-update-config": "cmk.update_config",
     "bin/mkeventd": "cmk.ec",
     "enterprise/bin/liveproxyd": "cmk.cee.liveproxy",
@@ -72,7 +82,7 @@ class CMKModuleLayerChecker(BaseChecker):
             return  # No validation in tests
 
         # Pylint fails to detect the correct module path here. Instead of realizing that the file
-        # cmk_base/automations/cee.py is cmk_base.automations.cee it thinks the module is "cee".
+        # cmk/base/automations/cee.py is cmk.base.automations.cee it thinks the module is "cee".
         # We can silently ignore these files because the linked files at enterprise/... are checked.
         if os.path.islink(file_path):
             return  # Ignore symlinked files instead of checking them twice, ignore this
@@ -85,29 +95,45 @@ class CMKModuleLayerChecker(BaseChecker):
                              args=(import_modname, mod_name))
 
     def _get_module_name_of_file(self, node, file_path):
-        """Fixup managed and enterprise module names
-
-        astroid does not produce correct module names, because it does not know
-        that we link/copy our CEE/CME parts to the cmk.* module in the site.
-        Fake the final module name here.
+        """Fixup module names
         """
-        if file_path.startswith("enterprise/cmk") or file_path.startswith("managed/cmk"):
-            return self._get_module_path_from_shadowed_file_path(file_path)
-        return node.root().name
+        # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
+        module_name = removeprefix(node.root().name, "flycheck_")
 
-    # Only works for our enterprise / managed directories
-    def _get_module_path_from_shadowed_file_path(self, file_path):
-        without_ext = file_path[:-3]
-        parts = without_ext.split("/")[1:]
-        return ".".join(parts)
+        for segments in [
+            ("cmk", "base", "plugins", "agent_based", "utils", ""),
+            ("cmk", "base", "plugins", "agent_based", ""),
+        ]:
+            if file_path.startswith('/'.join(segments)):
+                return '.'.join(segments) + module_name
+
+        # Fixup managed and enterprise module names
+        # astroid does not produce correct module names, because it does not know
+        # that we link/copy our CEE/CME parts to the cmk.* module in the site.
+        # Fake the final module name here.
+        for component in ["base", "gui"]:
+            for prefix in [
+                    "cmk/%s/cee/" % component,
+                    "cmk/%s/cme/" % component,
+                    "enterprise/cmk/%s/cee/" % component,
+                    "managed/cmk/%s/cme/" % component,
+            ]:
+                if file_path.startswith(prefix):
+                    return "cmk.%s.%s" % (component, module_name)
+
+        if module_name.startswith("cee.") or module_name.startswith("cme."):
+            return "cmk.%s" % module_name
+        return module_name
 
     def _is_import_allowed(self, file_path, mod_name, import_modname):
         for component in _COMPONENTS:
-            if self._is_part_of_component(mod_name, file_path, component):
-                if self._is_import_in_component(import_modname, component):
-                    return True
+            if not self._is_part_of_component(mod_name, file_path, component):
+                continue
 
-            elif self._is_import_in_cee_component_part(mod_name, import_modname, component):
+            if self._is_import_in_component(import_modname, component):
+                return True
+
+            if self._is_import_in_cee_component_part(mod_name, import_modname, component):
                 return True
 
         return self._is_utility_import(import_modname)
@@ -121,8 +147,8 @@ class CMKModuleLayerChecker(BaseChecker):
             return explicit_component == component
 
         # The check and bakery plugins are all compiled together by tests/pylint/test_pylint.py.
-        # They clearly belong to the cmk_base component.
-        if component == "cmk_base" and mod_name.startswith("cmk_pylint"):
+        # They clearly belong to the cmk.base component.
+        if component == "cmk.base" and mod_name.startswith("cmk_pylint"):
             return True
 
         if component == "cmk.notification_plugins" and file_path.startswith("notifications/"):

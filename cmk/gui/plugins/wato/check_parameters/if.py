@@ -1,35 +1,17 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from typing import Any, List, Tuple as _Tuple, Union
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
-    defines,
     Dictionary,
+    DictionaryEntry,
     DropdownChoice,
     DualListChoice,
     Integer,
@@ -40,11 +22,11 @@ from cmk.gui.valuespec import (
     Optional,
     OptionalDropdownChoice,
     Percentage,
-    RadioChoice,
     RegExp,
     TextAscii,
     Transform,
     Tuple,
+    defines,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
@@ -58,7 +40,8 @@ from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
 def transform_if(v):
-    new_traffic = []
+    new_traffic = [
+    ]  # type: List[_Tuple[str, _Tuple[str, _Tuple[str, _Tuple[Union[int, float], Any]]]]]
 
     if 'traffic' in v and not isinstance(v['traffic'], list):
         warn, crit = v['traffic']
@@ -241,7 +224,7 @@ vs_elements_if_groups_matches = [
      Transform(
          DropdownChoice(
              title=_("Select interface port type"),
-             choices=defines.interface_port_types(),
+             choices=ListChoice.dict_choices(defines.interface_port_types()),
              help=_("Only interfaces with the given port type are put into this group. "
                     "For example 53 (propVirtual)."),
          ),
@@ -253,7 +236,7 @@ vs_elements_if_groups_matches = [
          title=_("Restrict interface items"),
          help=_("Only interface with these item names are put into this group."),
      )),
-]
+]  # type: List[DictionaryEntry]
 
 vs_elements_if_groups_group = [
     ("group_name",
@@ -278,6 +261,8 @@ vs_elements_if_groups_group = [
 
 
 def _valuespec_if_groups():
+    node_name_elements = [("node_name", TextAscii(title=_("Node name")))
+                         ]  # type: List[DictionaryEntry]
     return Transform(Alternative(
         title=_('Network interface groups'),
         help=
@@ -304,9 +289,8 @@ def _valuespec_if_groups():
                                           ListOf(
                                               title=_("Patterns for each node"),
                                               add_label=_("Add pattern"),
-                                              valuespec=Dictionary(elements=[
-                                                  ("node_name", TextAscii(title=_("Node name")))
-                                              ] + vs_elements_if_groups_matches,
+                                              valuespec=Dictionary(elements=node_name_elements +
+                                                                   vs_elements_if_groups_matches,
                                                                    required_keys=["node_name"]),
                                               allow_empty=False,
                                           ))],
@@ -419,7 +403,7 @@ def _parameter_valuespec_if():
                  ListOf(
                      Tuple(orientation="horizontal",
                            elements=[
-                               DropdownChoice(choices=defines.interface_oper_states()),
+                               ListChoice(choices=defines.interface_oper_states()),
                                MonitoringState()
                            ]),
                      title=_('Map operational states'),
@@ -463,7 +447,7 @@ def _parameter_valuespec_if():
                                       label=_("Bits per second"),
                                       size=12))),
                 ("unit",
-                 RadioChoice(
+                 DropdownChoice(
                      title=_("Measurement unit"),
                      help=_("Here you can specifiy the measurement unit of the network interface"),
                      default_value="byte",
@@ -513,6 +497,72 @@ def _parameter_valuespec_if():
                             Integer(title=_("Critical at"), unit=_("pkts / sec")),
                         ]),
                 ),
+                ("multicast",
+                 Alternative(title=_("Multicast packet rates"),
+                             help=_(
+                                 "These levels make the check go warning or critical whenever the "
+                                 "<b>percentual packet rate</b> or the <b>absolute packet "
+                                 "rate</b> of the monitored interface reaches the given "
+                                 "bounds. The percentual packet rate is computed by "
+                                 "dividing the number of multicast packets by the number "
+                                 "of unicast packets."),
+                             elements=[
+                                 Tuple(title=_("Percentual levels for multicast packets"),
+                                       elements=[
+                                           Percentage(title=_("Warning at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=10.0,
+                                                      display_format='%.3f'),
+                                           Percentage(title=_("Critical at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=20.0,
+                                                      display_format='%.3f')
+                                       ]),
+                                 Tuple(title=_("Absolute levels for multicast packets"),
+                                       elements=[
+                                           Integer(title=_("Warning at"), unit=_("pkts / sec")),
+                                           Integer(title=_("Critical at"), unit=_("pkts / sec"))
+                                       ])
+                             ])),
+                ("broadcast",
+                 Alternative(title=_("Broadcast packet rates"),
+                             help=_(
+                                 "These levels make the check go warning or critical whenever the "
+                                 "<b>percentual packet rate</b> or the <b>absolute packet "
+                                 "rate</b> of the monitored interface reaches the given "
+                                 "bounds. The percentual packet rate is computed by "
+                                 "dividing the number of broadcast packets by the number "
+                                 "of unicast packets."),
+                             elements=[
+                                 Tuple(title=_("Percentual levels for broadcast packets"),
+                                       elements=[
+                                           Percentage(title=_("Warning at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=10.0,
+                                                      display_format='%.3f'),
+                                           Percentage(title=_("Critical at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=20.0,
+                                                      display_format='%.3f')
+                                       ]),
+                                 Tuple(title=_("Absolute levels for broadcast packets"),
+                                       elements=[
+                                           Integer(title=_("Warning at"), unit=_("pkts / sec")),
+                                           Integer(title=_("Critical at"), unit=_("pkts / sec"))
+                                       ])
+                             ])),
+                ("average_bm",
+                 Integer(
+                     title=_("Average values for broad- and multicast packet rates"),
+                     help=_(
+                         "By activating the computation of averages, the levels on "
+                         "broad- and multicast packet rates are applied to "
+                         "the averaged value. That way you can make the check react only on long-time "
+                         "changes, not on one-minute events."),
+                     unit=_("minutes"),
+                     minvalue=1,
+                     default_value=15,
+                 )),
                 ("discards",
                  Tuple(title=_("Absolute levels for discards rates"),
                        elements=[
@@ -541,6 +591,18 @@ def _parameter_valuespec_if():
                                     ("check_and_crit", _("Check and CRIT")),
                                     ("check_and_display", _("Check and display only")),
                                     ("dont_show_and_check", _("Don't show and check")),
+                                ])),
+                ("home_port",
+                 DropdownChoice(title=_("Is-Home state (Netapp only)"),
+                                help=_("Choose the behaviour when the current port is not the "
+                                       "home port of the respective interface. The default is "
+                                       "\"Check and Display\". This feature is currently only "
+                                       "supported by the check netapp_api_if."),
+                                choices=[
+                                    ("check_and_warn", _("Check and WARN")),
+                                    ("check_and_crit", _("Check and CRIT")),
+                                    ("check_and_display", _("Check and display only")),
+                                    ("dont_show_and_check", _("Don't show home port info")),
                                 ])),
             ],
         ),

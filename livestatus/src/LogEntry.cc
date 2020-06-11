@@ -1,32 +1,16 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "LogEntry.h"
+
 #include <cstdlib>
+#include <cstring>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
+
 #include "StringUtils.h"
 
 // 0123456789012345678901234567890
@@ -358,11 +342,11 @@ void LogEntry::classifyLogMessage() {
     _kind = LogEntryKind::none;
 }
 
-bool LogEntry::textStartsWith(const std::string &what) {
+bool LogEntry::textStartsWith(const std::string &what) const {
     return _message.compare(timestamp_prefix_length, what.size(), what) == 0;
 }
 
-bool LogEntry::textContains(const std::string &what) {
+bool LogEntry::textContains(const std::string &what) const {
     return _message.find(what, timestamp_prefix_length) != std::string::npos;
 }
 
@@ -413,4 +397,122 @@ ServiceState LogEntry::parseServiceState(const std::string &str) {
 HostState LogEntry::parseHostState(const std::string &str) {
     auto it = fl_host_state_types.find(extractStateType(str));
     return it == fl_host_state_types.end() ? HostState::up : it->second;
+}
+
+namespace {
+std::string parens(const std::string &fun, const std::string &arg) {
+    return fun + " (" + arg + ")";
+}
+
+// TODO(sp) Centralized these mappings and their inverses...
+std::string to_host_state(int state) {
+    switch (state) {
+        case 0:
+            return "UP";
+        case 1:
+            return "DOWN";
+        case 2:
+            return "UNREACHABLE";
+        default:
+            return "FUNNY_HOST_STATE_" + std::to_string(state);
+    }
+}
+
+std::string to_service_state(int state) {
+    switch (state) {
+        case 0:
+            return "OK";
+        case 1:
+            return "WARNING";
+        case 2:
+            return "CRITICAL";
+        case 3:
+            return "UNKNOWN";
+        default:
+            return "FUNNY_HOST_STATE_" + std::to_string(state);
+    }
+}
+
+std::string to_exit_code(int state) {
+    switch (state) {
+        case 0:
+            return "SUCCESS";
+        case 1:
+            return "TEMPORARY_FAILURE";
+        case 2:
+            return "PERMANENT_FAILURE";
+        default:
+            return "FUNNY_EXIT_CODE_" + std::to_string(state);
+    }
+}
+}  // namespace
+
+std::string LogEntry::state_info() const {
+    switch (_kind) {
+        case LogEntryKind::state_host_initial:
+        case LogEntryKind::state_host:
+        case LogEntryKind::alert_host:
+            return parens(_state_type, to_host_state(_state));
+
+        case LogEntryKind::state_service_initial:
+        case LogEntryKind::state_service:
+        case LogEntryKind::alert_service:
+            return parens(_state_type, to_service_state(_state));
+
+        case LogEntryKind::none:
+            if (strcmp(_type, "HOST NOTIFICATION RESULT") == 0 ||
+                strcmp(_type, "SERVICE NOTIFICATION RESULT") == 0 ||
+                strcmp(_type, "HOST NOTIFICATION PROGRESS") == 0 ||
+                strcmp(_type, "SERVICE NOTIFICATION PROGRESS") == 0 ||
+                strcmp(_type, "HOST ALERT HANDLER STOPPED") == 0 ||
+                strcmp(_type, "SERVICE ALERT HANDLER STOPPED") == 0) {
+                return parens("EXIT_CODE", to_exit_code(_state));
+            }
+            if (strcmp(_type, "HOST NOTIFICATION") == 0) {
+                if (_state_type == "UP" ||    //
+                    _state_type == "DOWN" ||  //
+                    _state_type == "UNREACHABLE") {
+                    return parens("NOTIFY", _state_type);
+                }
+                if (mk::starts_with(_state_type, "ALERTHANDLER (")) {
+                    return parens("EXIT_CODE", to_exit_code(_state));
+                }
+                return _state_type;
+            }
+            if (strcmp(_type, "SERVICE NOTIFICATION") == 0) {
+                if (_state_type == "OK" ||        //
+                    _state_type == "WARNING" ||   //
+                    _state_type == "CRITICAL" ||  //
+                    _state_type == "UNKNOWN") {
+                    return parens("NOTIFY", _state_type);
+                }
+                if (mk::starts_with(_state_type, "ALERTHANDLER (")) {
+                    return parens("EXIT_CODE", to_exit_code(_state));
+                }
+                return _state_type;
+            }
+            if (strcmp(_type, "PASSIVE HOST CHECK") == 0) {
+                return parens("PASSIVE", to_host_state(_state));
+            }
+            if (strcmp(_type, "PASSIVE SERVICE CHECK") == 0) {
+                return parens("PASSIVE", to_service_state(_state));
+            }
+            return "";
+
+        case LogEntryKind::downtime_alert_host:
+        case LogEntryKind::downtime_alert_service:
+        case LogEntryKind::flapping_host:
+        case LogEntryKind::flapping_service:
+        case LogEntryKind::acknowledge_alert_host:
+        case LogEntryKind::acknowledge_alert_service:
+            return _state_type;
+
+        case LogEntryKind::timeperiod_transition:
+        case LogEntryKind::core_starting:
+        case LogEntryKind::core_stopping:
+        case LogEntryKind::log_version:
+        case LogEntryKind::log_initial_states:
+            return "";
+    }
+    return "";  // unreachable, make the compiler happy
 }

@@ -1,0 +1,13 @@
+title: RabbitMQ: Cluster
+agents: rabbitmq
+catalog: app/rabbitmq
+license: GPL
+distribution: check_mk
+description:
+ This check shows details of a RabbitMQ cluster. The service output
+ gives information about the cluster name and the RabbitMQ and Erlang version.
+
+ Needs the datasource "Check state of RabbitMQ" to be configured.
+
+inventory:
+ One service {"RabbitMQ Cluster"} is created.

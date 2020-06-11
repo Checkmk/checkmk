@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import time
 
@@ -44,7 +24,7 @@ from cmk.gui.permissions import (
 )
 
 g_acknowledgement_time = {}
-g_modified_time = 0
+g_modified_time = 0.0
 g_columns = ["time", "contact_name", "type", "host_name", "service_description", "comment"]
 
 
@@ -77,7 +57,8 @@ def load_plugins(force):
 
 def acknowledge_failed_notifications(timestamp):
     g_acknowledgement_time[config.user.id] = timestamp
-    save_acknowledgements()
+    config.user.acknowledged_notifications = int(g_acknowledgement_time[config.user.id])
+    set_modified_time()
 
 
 def set_modified_time():
@@ -85,26 +66,18 @@ def set_modified_time():
     g_modified_time = time.time()
 
 
-def save_acknowledgements():
-    config.user.save_file("acknowledged_notifications", int(g_acknowledgement_time[config.user.id]))
-    set_modified_time()
-
-
 def acknowledged_time():
     if g_acknowledgement_time.get(config.user.id) is None or\
             config.user.file_modified("acknowledged_notifications") > g_modified_time:
-        load_acknowledgements()
+        g_acknowledgement_time[config.user.id] = config.user.acknowledged_notifications
+        set_modified_time()
+        if g_acknowledgement_time[config.user.id] == 0:
+            # when this timestamp is first initialized, save the current timestamp as the acknowledge
+            # date. This should considerably reduce the number of log files that have to be searched
+            # when retrieving the list
+            acknowledge_failed_notifications(time.time())
+
     return g_acknowledgement_time[config.user.id]
-
-
-def load_acknowledgements():
-    g_acknowledgement_time[config.user.id] = config.user.load_file("acknowledged_notifications", 0)
-    set_modified_time()
-    if g_acknowledgement_time[config.user.id] == 0:
-        # when this timestamp is first initialized, save the current timestamp as the acknowledge
-        # date. This should considerably reduce the number of log files that have to be searched
-        # when retrieving the list
-        acknowledge_failed_notifications(time.time())
 
 
 def load_failed_notifications(before=None, after=None, stat_only=False, extra_headers=None):
@@ -141,14 +114,14 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
             horizon = 86400
         query.append("Filter: time > %d" % (int(time.time()) - horizon))
 
-    query = "\n".join(query)
+    query_txt = "\n".join(query)
 
     if extra_headers is not None:
-        query += extra_headers
+        query_txt += extra_headers
 
     if stat_only:
         try:
-            result = sites.live().query_summed_stats(query)
+            result = sites.live().query_summed_stats(query_txt)
         except MKLivestatusNotFoundError:
             result = [0]  # Normalize the result when no site answered
 
@@ -159,14 +132,12 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
 
         return result
 
-    else:
-        return sites.live().query(query)
+    return sites.live().query(query_txt)
 
 
 def render_notification_table(failed_notifications):
     with table_element() as table:
-        header = dict([(name, idx) for idx, name in enumerate(g_columns)])
-
+        header = {name: idx for idx, name in enumerate(g_columns)}
         for row in failed_notifications:
             table.row()
             table.text_cell(_("Time"),
@@ -184,8 +155,9 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
 
     if failed_notifications:
         html.open_div(class_="really")
-        html.write_text(_("Do you really want to acknowledge all failed notifications up to %s?") %\
-                   cmk.utils.render.date_and_time(acktime))
+        html.write_text(
+            _("Do you really want to acknowledge all failed notifications up to %s?") %
+            cmk.utils.render.date_and_time(acktime))
         html.begin_form("confirm", method="GET", action=prev_url)
         html.hidden_field('acktime', acktime)
         html.button('_confirm', _("Yes"))
@@ -199,16 +171,10 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
 
 @cmk.gui.pages.register("clear_failed_notifications")
 def page_clear():
-    acktime = html.request.var('acktime')
-    if acktime is None:
-        acktime = time.time()
-    else:
-        acktime = float(acktime)
-
+    acktime = html.request.get_float_input_mandatory('acktime', time.time())
     prev_url = html.get_url_input('prev_url', '')
     if html.request.var('_confirm'):
         acknowledge_failed_notifications(acktime)
-        html.reload_sidebar()
 
         if config.user.authorized_login_sites():
             # This local import is needed for the moment
@@ -218,3 +184,5 @@ def page_clear():
 
     failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
     render_page_confirm(acktime, prev_url, failed_notifications)
+    if html.request.var('_confirm'):
+        html.reload_sidebar()

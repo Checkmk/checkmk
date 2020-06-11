@@ -17,4 +17,4 @@ item:
  The humdity sensor identifier.
 
 inventory:
- One service per sensor is created.
+ One service is created for each sensor.

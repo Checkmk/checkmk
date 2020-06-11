@@ -1,4 +1,4 @@
-title: BEA Weblogic: Requests to JVM instances
+title: BEA Weblogic: Requests to JVM Instances
 agents: linux
 catalog: app/java
 license: GPL
@@ -15,4 +15,4 @@ item:
  The name of the application server instance as configured by the agent
 
 inventory:
- One check is created for each JVM instance sent by the agent.
+ One service is created for each JVM instance sent by the agent.

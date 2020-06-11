@@ -1,40 +1,22 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import re
-import sys
 import ast
-import time
-import email
 import base64
+import email
+from email.message import Message
 import getopt
-import poplib
-import socket
 import imaplib
+import os
+import poplib
+import re
+import socket
+import sys
+import time
+from typing import Dict, Optional, Pattern, Tuple, Union
 
 import cmk.utils.password_store
 
@@ -125,21 +107,19 @@ class ForwardToECError(Exception):
 
 
 def connect(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl):
+    # type: (str, int, str, str, str) -> None
     global g_M
-    global opt_debug
-    global fetch_proto
-
     try:
         if fetch_proto == 'POP3':
-            fetch_class = poplib.POP3_SSL if fetch_ssl else poplib.POP3
-            g_M = fetch_class(fetch_server, fetch_port)
+            g_M = poplib.POP3_SSL(fetch_server, fetch_port) if fetch_ssl else poplib.POP3(
+                fetch_server, fetch_port)
             g_M.user(fetch_user)
             g_M.pass_(fetch_pass)
         else:
-            fetch_class = imaplib.IMAP4_SSL if fetch_ssl else imaplib.IMAP4
-            g_M = fetch_class(fetch_server, fetch_port)
+            g_M = imaplib.IMAP4_SSL(fetch_server, fetch_port) if fetch_ssl else imaplib.IMAP4(
+                fetch_server, fetch_port)
             g_M.login(fetch_user, fetch_pass)
-            g_M.select('INBOX', readonly=False)  # select INBOX
+            g_M.select('INBOX', readonly=False)
     except Exception as e:
         if opt_debug:
             raise
@@ -148,26 +128,24 @@ def connect(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl):
 
 
 def fetch_mails(match_subject):
-    global g_M
-    global opt_debug
-    global fetch_proto
-
+    # type: (Optional[Pattern[str]]) -> Dict[int, Message]
     mails = {}
     try:
         # Get mails from mailbox
-        if fetch_proto == 'POP3':
+        if isinstance(g_M, poplib.POP3):
             num_messages = len(g_M.list()[1])
             for i in range(num_messages):
                 index = i + 1
                 lines = g_M.retr(index)[1]
-                mails[i] = email.message_from_string("\n".join(lines))
-        else:
+                mails[i] = email.message_from_bytes(b"\n".join(lines))
+        elif isinstance(g_M, imaplib.IMAP4):
             retcode, messages = g_M.search(None, 'NOT', 'DELETED')
             if retcode == 'OK' and messages[0].strip():
                 for num in messages[0].split(' '):
                     try:
                         data = g_M.fetch(num, '(RFC822)')[1]
-                        mails[num] = email.message_from_string(data[0][1])
+                        if isinstance(data[0], tuple):
+                            mails[num] = email.message_from_bytes(data[0][1])
                     except Exception as e:
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
                                         (num, parse_exception(e), messages))
@@ -189,22 +167,18 @@ def fetch_mails(match_subject):
 
 
 def cleanup_mailbox(forwarded, cleanup_messages):
-    global g_M
-    global opt_debug
-    global fetch_proto
-
     if not g_M:
         return  # do not deal with mailbox when none sent yet
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
         for index in forwarded:
-            if fetch_proto == 'POP3':
+            if isinstance(g_M, poplib.POP3):
                 if cleanup_messages == 'delete':
                     response = g_M.dele(index + 1)
-                if not response.startswith("+OK"):
-                    raise Exception("Response from server: [%s]" % response)
-            else:
+                if not response.startswith(b"+OK"):
+                    raise Exception("Response from server: [%r]" % response)
+            elif isinstance(g_M, imaplib.IMAP4):
                 if cleanup_messages != 'delete':
                     # The user wants the message to be moved to the folder
                     # refered by the string stored in "cleanup_messages"
@@ -226,7 +200,7 @@ def cleanup_mailbox(forwarded, cleanup_messages):
                 if ty != 'OK':
                     raise Exception("Response from server: [%s]" % data)
 
-        if fetch_proto == 'IMAP':
+        if isinstance(g_M, imaplib.IMAP4):
             g_M.expunge()
     except Exception as e:
         if opt_debug:
@@ -235,14 +209,9 @@ def cleanup_mailbox(forwarded, cleanup_messages):
 
 
 def close_mailbox():
-    global g_M
-    global fetch_proto
-
-    if not g_M:
-        return  # do not deal with mailbox when none sent yet
-    if fetch_proto == 'POP3':
+    if isinstance(g_M, poplib.POP3):
         g_M.quit()
-    else:
+    elif isinstance(g_M, imaplib.IMAP4):
         g_M.close()
         g_M.logout()
 
@@ -314,9 +283,9 @@ def forward_to_ec(conn_timeout, messages, forwarded, cleanup_messages, forward_m
     # c) remote via udp
     # d) remote via tcp
     if not forward_method:
-        forward_method = os.getenv('OMD_ROOT') + "/tmp/run/mkeventd/eventsocket"
+        forward_method = os.getenv('OMD_ROOT', '') + "/tmp/run/mkeventd/eventsocket"
     elif forward_method == 'spool:':
-        forward_method += os.getenv('OMD_ROOT') + "/var/mkeventd/spool"
+        forward_method += os.getenv('OMD_ROOT', '') + "/var/mkeventd/spool"
 
     socket.setdefaulttimeout(conn_timeout)
 
@@ -333,7 +302,7 @@ def forward_to_ec(conn_timeout, messages, forwarded, cleanup_messages, forward_m
                     sock.send(message + "\n")
                 sock.close()
 
-            elif not forward_method.startswith('spool:'):  # pylint: disable=no-member
+            elif not forward_method.startswith('spool:'):
                 # write into local event pipe
                 # Important: When the event daemon is stopped, then the pipe
                 # is *not* existing! This prevents us from hanging in such
@@ -341,7 +310,7 @@ def forward_to_ec(conn_timeout, messages, forwarded, cleanup_messages, forward_m
                 # instead of the pipe!
                 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 sock.connect(forward_method)
-                sock.send('\n'.join(messages) + '\n')
+                sock.send(b'\n'.join(messages) + b'\n')
                 sock.close()
 
             else:
@@ -366,13 +335,13 @@ def forward_to_ec(conn_timeout, messages, forwarded, cleanup_messages, forward_m
             (e, len(messages)))
 
 
-g_M = None
+# TODO: Nuke these global variables, just pass them around...
+g_M = None  # type: Union[None, poplib.POP3, imaplib.IMAP4]
 opt_debug = False
 fetch_proto = 'IMAP'
 
 
 def parse_arguments(sys_args):
-    global g_M
     global opt_debug
     global fetch_proto
 
@@ -422,7 +391,7 @@ def parse_arguments(sys_args):
     forward_ec = False
     forward_facility = 16  # default to "mail" (2 << 3)
     forward_app = None
-    forward_method = None  # local event console
+    forward_method = None  # type: Union[None, str, Tuple[str, ...]]
     forward_host = ''
     match_subject = None
     body_limit = 1000
@@ -500,17 +469,14 @@ def parse_arguments(sys_args):
 
 
 def main(sys_args=None):
-    global g_M
-    global opt_debug
-    global fetch_proto
-
     fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, conn_timeout,\
         cleanup_messages, forward_ec, forward_facility, forward_app, forward_method,\
         forward_host, match_subject, body_limit = parse_arguments(sys_args)
 
     # Enable showing protocol messages of imap for debugging
     if fetch_proto == 'IMAP' and opt_debug:
-        imaplib.Debug = 4
+        # Bug in mypy's typeshed.
+        imaplib.Debug = 4  # type: ignore[attr-defined]
 
     try:
         connect(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl)

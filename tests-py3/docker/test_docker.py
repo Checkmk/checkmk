@@ -1,39 +1,20 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
 
 import sys
 import os
 import subprocess
-import pytest
-import docker
-from requests.exceptions import ConnectionError
+import pytest  # type: ignore[import]
+import requests.exceptions
+import docker  # type: ignore[import]
 
 import testlib
+import testlib.utils
 
 build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
@@ -41,9 +22,11 @@ branch_name = os.environ.get("BRANCH", "master")
 
 
 def build_version():
-    return testlib.CMKVersion(version=testlib.CMKVersion.DAILY,
-                              edition=testlib.CMKVersion.CEE,
-                              branch=branch_name)
+    return testlib.CMKVersion(
+        version_spec=testlib.CMKVersion.DAILY,
+        edition=testlib.CMKVersion.CEE,
+        branch=branch_name,
+    )
 
 
 @pytest.fixture(scope="session")
@@ -67,16 +50,33 @@ def _prepare_build():
 def _build(request, client, version, add_args=None):
     _prepare_build()
 
+    print("Starting helper container for build secrets")
+    secret_container = client.containers.run(
+        image="busybox",
+        command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
+        detach=True,
+        remove=True,
+        volumes={
+            testlib.utils.get_cmk_download_credentials_file(): {
+                "bind": "/files/secret",
+                "mode": "ro"
+            }
+        },
+    )
+    request.addfinalizer(lambda: secret_container.remove(force=True))
+
     print("Building docker image: %s" % _image_name(version))
     try:
-        image, build_logs = client.images.build(path=build_path,
-                                                tag=_image_name(version),
-                                                buildargs={
-                                                    "CMK_VERSION": version.version,
-                                                    "CMK_EDITION": version.edition(),
-                                                    "CMK_DL_CREDENTIALS": ":".join(
-                                                        testlib.get_cmk_download_credentials()),
-                                                })
+        image, build_logs = client.images.build(
+            path=build_path,
+            tag=_image_name(version),
+            network_mode="container:%s" % secret_container.id,
+            buildargs={
+                "CMK_VERSION": version.version,
+                "CMK_EDITION": version.edition(),
+                "CMK_DL_CREDENTIALS": ":".join(testlib.utils.get_cmk_download_credentials()),
+            },
+        )
     except docker.errors.BuildError as e:
         sys.stdout.write("= Build log ==================\n")
         for entry in e.build_log:
@@ -127,8 +127,9 @@ def _build(request, client, version, add_args=None):
     # 2019-04-10: 940 -> 950
     # 2019-07-12: 950 -> 1040 (python3)
     # 2019-07-27: 1040 -> 1054 (numpy)
-    assert attrs["Size"] < 1110955410.0, \
-        "Docker image size increased: Please verify that this is intended"
+    # 2019-11-15: Temporarily disabled because of Python2 => Python3 transition
+    #    assert attrs["Size"] < 1110955410.0, \
+    #        "Docker image size increased: Please verify that this is intended"
 
     assert len(attrs["RootFS"]["Layers"]) == 6
 
@@ -154,7 +155,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
             # In case the given version is not the current branch version, don't
             # try to build it. Download it instead!
             _image = _pull(client, version)
-    except ConnectionError as e:
+    except requests.exceptions.ConnectionError as e:
         raise Exception(
             "Failed to access docker socket (Permission denied). You need to be member of the "
             "docker group to get access to the socket (e.g. use \"make -C docker setup\") to "
@@ -277,7 +278,8 @@ def test_start_with_custom_command(request, client, version):
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(request, client, version):
-    pkg_path = os.path.join(build_path, version.package_name_of_distro("stretch"))
+    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "stretch")
+    pkg_path = os.path.join(build_path, package_name)
     try:
         with open(pkg_path, "w") as f:
             f.write("")
@@ -356,7 +358,7 @@ def test_update(request, client, version):
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
     old_version = testlib.CMKVersion(
-        version="1.5.0p5",
+        version_spec="1.5.0p5",
         branch="1.5.0",
         edition=testlib.CMKVersion.CRE,
     )
@@ -366,8 +368,7 @@ def test_update(request, client, version):
                     client,
                     version=old_version,
                     name=container_name,
-                    volumes=["/omd/sites"],
-                    tmpfs=["/omd/sites/cmk/tmp"])
+                    volumes=["/omd/sites"])
     assert c_orig.exec_run(["touch", "pre-update-marker"], user="cmk",
                            workdir="/omd/sites/cmk")[0] == 0
 

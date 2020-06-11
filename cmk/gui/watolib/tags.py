@@ -1,34 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with host tags"""
 
-import os
 import errno
-from pathlib2 import Path
-import six
+from pathlib import Path
+
+from six import ensure_str
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -47,7 +27,7 @@ class TagConfigFile(WatoSimpleConfigFile):
     the pre 1.6 tag configuration from hosttags.mk
 
     When saving the configuration it also writes out the tags.mk for
-    the cmk_base world.
+    the cmk.base world.
     """
     def __init__(self):
         file_path = Path(multisite_dir()) / "tags.mk"
@@ -59,7 +39,7 @@ class TagConfigFile(WatoSimpleConfigFile):
         return super(TagConfigFile, self)._load_file(lock=lock)
 
     def _pre_16_hosttags_path(self):
-        return Path(multisite_dir()).joinpath("hosttags.mk")
+        return Path(multisite_dir(), "hosttags.mk")
 
     def _load_pre_16_config(self, lock):
         legacy_cfg = store.load_mk_file(str(self._pre_16_hosttags_path()), {
@@ -73,14 +53,13 @@ class TagConfigFile(WatoSimpleConfigFile):
         return cmk.utils.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
                                                     legacy_cfg["wato_aux_tags"])
 
-    # TODO: Move the hosttag export to a hook
     def save(self, cfg):
         super(TagConfigFile, self).save(cfg)
         self._save_base_config(cfg)
 
         # Cleanup pre 1.6 config files (tags were just saved with new path)
         try:
-            self._pre_16_hosttags_path().unlink()  # pylint: disable=no-member
+            self._pre_16_hosttags_path().unlink()
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise
@@ -226,21 +205,13 @@ def _extend_user_modified_tag_groups(host_tags):
 # taggroup_choice() for this tag group.
 #
 def _export_hosttags_to_php(cfg):
-    php_api_dir = cmk.utils.paths.var_dir + "/wato/php-api/"
-    path = php_api_dir + '/hosttags.php'
+    php_api_dir = Path(cmk.utils.paths.var_dir) / "wato/php-api"
+    path = php_api_dir / 'hosttags.php'
     store.mkdir(php_api_dir)
 
     tag_config = cmk.utils.tags.TagConfig()
     tag_config.parse_config(cfg)
     tag_config += cmk.utils.tags.BuiltinTagConfig()
-
-    # need an extra lock file, since we move the auth.php.tmp file later
-    # to auth.php. This move is needed for not having loaded incomplete
-    # files into php.
-    tempfile = path + '.tmp'
-    lockfile = path + '.state'
-    open(lockfile, 'a')
-    store.aquire_lock(lockfile)
 
     # Transform WATO internal data structures into easier usable ones
     hosttags_dict = {}
@@ -253,9 +224,7 @@ def _export_hosttags_to_php(cfg):
 
     auxtags_dict = dict(tag_config.aux_tag_list.get_choices())
 
-    # First write a temp file and then do a move to prevent syntax errors
-    # when reading half written files during creating that new file
-    open(tempfile, 'w').write('''<?php
+    content = u'''<?php
 // Created by WATO
 global $mk_hosttags, $mk_auxtags;
 $mk_hosttags = %s;
@@ -301,13 +270,12 @@ function all_taggroup_choices($object_tags) {
 }
 
 ?>
-''' % (_format_php(hosttags_dict), _format_php(auxtags_dict)))
-    # Now really replace the destination file
-    os.rename(tempfile, path)
-    store.release_lock(lockfile)
-    os.unlink(lockfile)
+''' % (_format_php(hosttags_dict), _format_php(auxtags_dict))
+
+    store.save_text_to_file(path, content)
 
 
+# TODO: Fix copy-n-paste with cmk.gui.watolib.auth_pnp.
 def _format_php(data, lvl=1):
     s = ''
     if isinstance(data, (list, tuple)):
@@ -317,14 +285,12 @@ def _format_php(data, lvl=1):
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, dict):
         s += 'array(\n'
-        for key, val in data.iteritems():
+        for key, val in data.items():
             s += '    ' * lvl + _format_php(key, lvl + 1) + ' => ' + _format_php(val,
                                                                                  lvl + 1) + ',\n'
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, str):
-        s += '\'%s\'' % data.replace('\'', '\\\'')
-    elif isinstance(data, six.text_type):
-        s += '\'%s\'' % data.encode('utf-8').replace('\'', '\\\'')
+        s += '\'%s\'' % ensure_str(data).replace('\'', '\\\'')
     elif isinstance(data, bool):
         s += data and 'true' or 'false'
     elif data is None:

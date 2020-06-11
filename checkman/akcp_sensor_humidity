@@ -1,15 +1,31 @@
-title: AKCP Sensor Humidity
+title: AKCP sensorProbe: Humidity
 agents: snmp
 catalog: hw/environment/akcp
 license: GPL
 distribution: check_mk
 description:
- This check monitors the humidity of sensors attached
- to AKCP SensorProbe.
+ This check monitors the humidity of sensors attached to AKCP SensorProbe.
+
+ This check has configureable upper and lower limits for {WARN} (35, 60)
+ and {CRIT} (30, 65).
+
+ The service goes {WARN} if the warning levels are passed.
+
+ The service goes {CRIT}
+
+ - if the critical levels are passed
+
+ - the sensor is offline
+
+ - the sensor state is "no status"
+
+ - the sensor state is "sensor error"
+
+ The check uses the SPAGENT-MIB.
 
 item:
  The description of the sensor as string as specified by the user during board configuration.
 
 inventory:
- All available humidity sensors are automatically inventorized.
+ One service is created for each available humidity sensor if the sensor is online.
 

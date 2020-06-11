@@ -22,9 +22,9 @@ description:
  as free.
 
 item:
- The name of the staging pool.
+ The name of the instance (optional) and the name of the staging pool seperated by a {{/}}
 
 
 inventory:
- The check creates one item per staging pool found.
+ One service is created for each staging pool.
 

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+function install(){
+    echo "Checkmk now ships its own prediction engine and does not"
+    echo "need any extrenal dependencies. Refer to werk 10767."
+    echo ""
+    echo "If you are updating from an earlier version, this script"
+    echo "is here to help you uninstall. Please use:"
+    echo "$0 --uninstall"
+}
+
+function uninstall(){
+    echo "Removing Forecast Graphs dependencies"
+    pip install pip-autoremove
+    local/lib/python/bin/pip-autoremove fbprophet  pystan -y
+    pip uninstall -y pip-autoremove
+
+    omd restart apache
+}
+
+DOC="Install script for Forecast Graphs dependencies
+usage: $0 [OPTION]
+
+OPTION:
+                        default: Install dependencies
+  -u, --uninstall       Remove installed dependencies
+  -h, --help            Show this help
+"
+case $1 in
+    -u|--uninstall)
+        uninstall
+        ;;
+    -h|--help)
+        echo "$DOC"
+        ;;
+
+    *)
+        install
+esac

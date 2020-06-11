@@ -1,0 +1,14 @@
+Title: Allow filesystems in /var/lib/docker/ to be monitored
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1572964472
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+This is an extension to werk 6630. We do not want to discover container
+filesystems, but in some cases true Filesystems are indeed mounted under
+/var/lib/docker/, in such case a manual check needs to be configured.

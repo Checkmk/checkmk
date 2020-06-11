@@ -1,35 +1,17 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Editor for global settings in main.mk and modes for these global
 settings"""
 
 import abc
+from typing import Optional, Union
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.valuespec import Checkbox, Transform
@@ -121,8 +103,7 @@ class GlobalSettingsMode(WatoMode):
                         raise MKGeneralException(
                             "The configuration variable <tt>%s</tt> is unknown to "
                             "your local Check_MK installation" % varname)
-                    else:
-                        continue
+                    continue
 
                 if not config_variable.in_global_settings():
                     continue
@@ -155,7 +136,7 @@ class GlobalSettingsMode(WatoMode):
                     title_text,
                     href=edit_url,
                     class_="modified" if varname in self._current_settings else None,
-                    title=html.strip_tags(help_text))
+                    title=escaping.strip_tags(help_text))
 
                 if varname in self._current_settings:
                     value = self._current_settings[varname]
@@ -177,14 +158,14 @@ class GlobalSettingsMode(WatoMode):
                 forms.section(title, simple=simple)
 
                 if varname in self._current_settings:
-                    modified_cls = "modified"
-                    title = _("This option has been modified.")
+                    modified_cls = "modified"  # type: Optional[str]
+                    value_title = _("This option has been modified.")  # type: Optional[str]
                 elif varname in self._global_settings:
                     modified_cls = "modified globally"
-                    title = _("This option has been modified in global settings.")
+                    value_title = _("This option has been modified in global settings.")
                 else:
                     modified_cls = None
-                    title = None
+                    value_title = None
 
                 if is_a_checkbox(valuespec):
                     html.open_div(class_=["toggle_switch_container", modified_cls])
@@ -193,17 +174,17 @@ class GlobalSettingsMode(WatoMode):
                         help_txt=_("Immediately toggle this setting"),
                         href=html.makeactionuri([("_action", "toggle"), ("_varname", varname)]),
                         class_=modified_cls,
-                        title=title,
+                        title=value_title,
                     )
                     html.close_div()
 
                 else:
-                    html.a(HTML(to_text), href=edit_url, class_=modified_cls, title=title)
+                    html.a(HTML(to_text), href=edit_url, class_=modified_cls, title=value_title)
 
             if header_is_painted:
                 forms.end()
         if not at_least_one_painted and search:
-            html.message(_('Did not find any global setting matching your search.'))
+            html.show_message(_('Did not find any global setting matching your search.'))
         html.close_div()
 
 
@@ -213,7 +194,7 @@ class EditGlobalSettingMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        self._varname = html.get_ascii_input("varname")
+        self._varname = html.request.get_ascii_input_mandatory("varname")
         try:
             self._config_variable = config_variable_registry[self._varname]()
             self._valuespec = self._config_variable.valuespec()
@@ -241,7 +222,7 @@ class EditGlobalSettingMode(WatoMode):
                       "back to its default value?"))
                 if c is False:
                     return ""
-                elif c is None:
+                if c is None:
                     return None
             elif not html.check_transaction():
                 return
@@ -251,7 +232,8 @@ class EditGlobalSettingMode(WatoMode):
             except KeyError:
                 pass
 
-            msg = _("Resetted configuration variable %s to its default.") % self._varname
+            msg = _("Resetted configuration variable %s to its default."
+                   ) % self._varname  # type: Union[HTML, str]
         else:
             new_value = self._valuespec.from_html_vars("ve")
             self._valuespec.validate_value(new_value, "ve")
@@ -362,7 +344,8 @@ class ModeEditGlobals(GlobalSettingsMode):
                                 watolib.folder_preserving_link([("mode", "read_only")]),
                                 "read_only")
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
+            import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module,import-outside-toplevel
             cmk.gui.cme.plugins.wato.managed.cme_global_settings_buttons()
 
     def action(self):
@@ -403,7 +386,7 @@ class ModeEditGlobals(GlobalSettingsMode):
             if action == "_reset":
                 return "globalvars", msg
             return "globalvars"
-        elif c is False:
+        if c is False:
             return ""
 
     def page(self):
@@ -487,6 +470,6 @@ def is_a_checkbox(vs):
     """Checks if a valuespec is a Checkbox"""
     if isinstance(vs, Checkbox):
         return True
-    elif isinstance(vs, Transform):
+    if isinstance(vs, Transform):
         return is_a_checkbox(vs._valuespec)
     return False

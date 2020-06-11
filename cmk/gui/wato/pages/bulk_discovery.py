@@ -1,33 +1,13 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """When the user wants to scan the services of multiple hosts at once
 this mode is used."""
 
 import copy
-from typing import List  # pylint: disable=unused-import
+from typing import List, Tuple, cast
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -77,10 +57,15 @@ class ModeBulkDiscovery(WatoMode):
             vs_bulk_discovery().validate_value(bulk_discover_params, "bulkinventory")
             self._bulk_discovery_params.update(bulk_discover_params)
 
-        self._recurse, self._only_failed, self._only_failed_invcheck, \
-            self._only_ok_agent = self._bulk_discovery_params["selection"]
-        self._use_cache, self._do_scan, self._bulk_size = \
-            self._bulk_discovery_params["performance"]
+        # The cast is needed for the moment, because mypy does not understand our data structure here
+        (self._recurse, self._only_failed, self._only_failed_invcheck,
+         self._only_ok_agent) = cast(Tuple[bool, bool, bool, bool],
+                                     self._bulk_discovery_params["selection"])
+
+        # The cast is needed for the moment, because mypy does not understand our data structure here
+        (self._use_cache, self._do_scan,
+         self._bulk_size) = cast(Tuple[bool, bool, int], self._bulk_discovery_params["performance"])
+
         self._mode = self._bulk_discovery_params["mode"]
         self._error_handling = self._bulk_discovery_params["error_handling"]
 
@@ -115,7 +100,7 @@ class ModeBulkDiscovery(WatoMode):
 
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():
-            html.message(
+            html.show_message(
                 _("Bulk discovery currently running in <a href=\"%s\">background</a>.") %
                 self._job.detail_url())
             return
@@ -138,7 +123,9 @@ class ModeBulkDiscovery(WatoMode):
             msgs.append(
                 _("You have selected <b>%d</b> hosts for bulk discovery.") %
                 len(self._get_hosts_to_discover()))
-            selection = self._bulk_discovery_params["selection"]
+            # The cast is needed for the moment, because mypy does not understand our data structure here
+            selection = cast(Tuple[bool, bool, bool, bool],
+                             self._bulk_discovery_params["selection"])
             self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
         msgs.append(
@@ -208,7 +195,7 @@ class ModeBulkDiscovery(WatoMode):
             if not self._only_failed or host.discovery_failed():
                 entries.append((host_name, folder))
         if self._recurse:
-            for subfolder in folder.all_subfolders().values():
+            for subfolder in folder.subfolders():
                 entries += self._recurse_hosts(subfolder)
         return entries
 

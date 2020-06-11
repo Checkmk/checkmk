@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
+SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
@@ -11,21 +11,23 @@ sudo cp -v logout.php $ROOT/share/omd/htdocs/logout.php
 sudo rm -vf $ROOT/share/man/man8/omd.8.gz
 sudo cp -v omd.8 $ROOT/share/man/man8/omd.8
 sudo gzip $ROOT/share/man/man8/omd.8
-( cd hooks; \
-  for hook in *; do \
-      sudo cp -v $hook $ROOT/lib/omd/hooks/$hook ; \
-      sudo chmod +x $ROOT/lib/omd/hooks/$hook ; \
-  done )
+(
+    cd hooks
+    for hook in *; do
+        sudo cp -v $hook $ROOT/lib/omd/hooks/$hook
+        sudo chmod +x $ROOT/lib/omd/hooks/$hook
+    done
+)
 sudo mkdir -p $ROOT/lib/omd/scripts/post-create
 sudo mkdir -p $ROOT/lib/omd/scripts/post-update
 sudo cp -v omd.service $ROOT/share/omd
 sudo cp -v omd.bin $ROOT/bin/omd
-sudo cp -rv omdlib $ROOT/lib/python
+sudo cp -rv omdlib $ROOT/lib/python3
 
 OLD_VERSION=$(readlink $ROOT/version)
 OLD_VERSION=${OLD_VERSION##*/}
 echo $OLD_VERSION
 
 echo "Keeping version number in 'omd' at $OLD_VERSION"
-sudo sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" $ROOT/lib/python/omdlib/__init__.py
-sudo sed -i 's|#!/omd/versions/.*/bin/python|#!/omd/versions/'$OLD_VERSION'/bin/python|g' $ROOT/bin/omd
+sudo sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" $ROOT/lib/python3/omdlib/__init__.py
+sudo sed -i 's|#!/omd/versions/.*/bin/python3|#!/omd/versions/'$OLD_VERSION'/bin/python3|g' $ROOT/bin/omd

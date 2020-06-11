@@ -1,0 +1,8 @@
+check-mk-###EDITION###-###PKG_VERSION### (0.###DISTRO_CODE###) ###DISTRO_CODE###; urgency=medium
+
+  * Since Checkmk releases all use the version number in the package
+    name there will never be a package update. For this reason we do
+    not create a changelog here. Have a look at the official release
+    notes.
+
+ -- Checkmk team <feedback@checkmk.com>  ###NOW###

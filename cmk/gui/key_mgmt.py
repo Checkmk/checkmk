@@ -1,32 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import pprint
 import time
+from typing import Any, Dict
+from pathlib import Path
 
 # This is needed for at least CentOS 5.5
 # TODO: Drop this until all supported platforms have newer versions available.
@@ -34,7 +16,7 @@ import time
 # safe here and tell pylint about that.
 # pylint: disable=wrong-import-position
 os.environ["CRYPTOGRAPHY_ALLOW_OPENSSL_098"] = "1"
-from OpenSSL import crypto
+from OpenSSL import crypto  # type: ignore[import]
 
 import cmk.utils.render
 import cmk.utils.store as store
@@ -54,30 +36,32 @@ from cmk.gui.valuespec import (
 from cmk.gui.exceptions import MKUserError
 
 
-class KeypairStore(object):
+class KeypairStore:
     def __init__(self, path, attr):
-        self._path = path
+        # type: (str, str) -> None
+        self._path = Path(path)
         self._attr = attr
         super(KeypairStore, self).__init__()
 
     def load(self):
-        filename = self._path
-        if not os.path.exists(filename):
+        if not self._path.exists():
             return {}
 
-        variables = {self._attr: {}}
-        exec (open(filename).read(), variables, variables)
+        variables = {self._attr: {}}  # type: Dict[str, Any]
+        # TODO: Can be changed to text IO with Python 3
+        with self._path.open("rb") as f:
+            exec(f.read(), variables, variables)
         return variables[self._attr]
 
     def save(self, keys):
-        store.mkdir(os.path.dirname(self._path))
+        store.makedirs(self._path.parent)
         store.save_mk_file(self._path, "%s.update(%s)" % (self._attr, pprint.pformat(keys)))
 
     def choices(self):
         choices = []
-        for key in self.load().itervalues():
+        for key in self.load().values():
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-            digest = cert.digest("md5")
+            digest = cert.digest("md5").decode("ascii")
             choices.append((digest, key["alias"]))
 
         return sorted(choices, key=lambda x: x[1])
@@ -85,13 +69,13 @@ class KeypairStore(object):
     def get_key_by_digest(self, digest):
         for key_id, key in self.load().items():
             other_cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-            other_digest = other_cert.digest("md5")
+            other_digest = other_cert.digest("md5").decode("ascii")
             if other_digest == digest:
                 return key_id, key
         raise KeyError()
 
 
-class PageKeyManagement(object):
+class PageKeyManagement:
     edit_mode = "edit_key"
     upload_mode = "upload_key"
     download_mode = "download_key"
@@ -125,7 +109,10 @@ class PageKeyManagement(object):
 
     def action(self):
         if self._may_edit_config() and html.request.has_var("_delete"):
-            key_id = int(html.request.var("_delete"))
+            key_id_as_str = html.request.var("_delete")
+            if key_id_as_str is None:
+                raise Exception("cannot happen")
+            key_id = int(key_id_as_str)
             if key_id not in self.keys:
                 return
 
@@ -175,11 +162,14 @@ class PageKeyManagement(object):
                 table.cell(_("Description"), html.render_text(key["alias"]))
                 table.cell(_("Created"), cmk.utils.render.date(key["date"]))
                 table.cell(_("By"), html.render_text(key["owner"]))
-                table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5")))
+                table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5").decode("ascii")))
 
 
-class PageEditKey(object):
+class PageEditKey:
     back_mode = "keys"
+
+    def __init__(self):
+        self._minlen = None
 
     def load(self):
         raise NotImplementedError()
@@ -217,8 +207,9 @@ class PageEditKey(object):
 
         cert = create_self_signed_cert(pkey)
         return {
-            "certificate": crypto.dump_certificate(crypto.FILETYPE_PEM, cert),
-            "private_key": crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey, "AES256", passphrase),
+            "certificate": crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
+            "private_key": crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey, "AES256",
+                                                  passphrase.encode("utf-8")).decode("ascii"),
             "alias": alias,
             "owner": config.user.id,
             "date": time.time(),
@@ -249,6 +240,7 @@ class PageEditKey(object):
                      help=self._passphrase_help(),
                      allow_empty=False,
                      is_stored_plain=False,
+                     minlen=self._minlen,
                  )),
             ],
             optional_keys=False,
@@ -259,7 +251,7 @@ class PageEditKey(object):
         raise NotImplementedError()
 
 
-class PageUploadKey(object):
+class PageUploadKey:
     back_mode = "keys"
 
     def load(self):
@@ -293,7 +285,7 @@ class PageUploadKey(object):
     def _get_uploaded(self, cert_spec, key):
         if key in cert_spec:
             if cert_spec[key][0] == "upload":
-                return cert_spec[key][1][2]
+                return cert_spec[key][1][2].decode("ascii")
             return cert_spec[key][1]
 
     def _upload_key(self, key_file, value):
@@ -305,10 +297,10 @@ class PageUploadKey(object):
 
         certificate = crypto.load_certificate(crypto.FILETYPE_PEM, key_file)
 
-        this_digest = certificate.digest("md5")
+        this_digest = certificate.digest("md5").decode("ascii")
         for key_id, key in keys.items():
             other_cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-            other_digest = other_cert.digest("md5")
+            other_digest = other_cert.digest("md5").decode("ascii")
             if other_digest == this_digest:
                 raise MKUserError(
                     None,
@@ -319,7 +311,8 @@ class PageUploadKey(object):
         def parse_asn1_generalized_time(timestr):
             return time.strptime(timestr, "%Y%m%d%H%M%SZ")
 
-        created = time.mktime(parse_asn1_generalized_time(certificate.get_notBefore()))
+        created = time.mktime(
+            parse_asn1_generalized_time(certificate.get_notBefore().decode("ascii")))
 
         # Check for valid passphrase
         decrypt_private_key(key_file, value["passphrase"])
@@ -380,7 +373,7 @@ class PageUploadKey(object):
         raise NotImplementedError()
 
 
-class PageDownloadKey(object):
+class PageDownloadKey:
     back_mode = "keys"
 
     def load(self):
@@ -397,7 +390,10 @@ class PageDownloadKey(object):
             keys = self.load()
 
             try:
-                key_id = int(html.request.var("key"))
+                key_id_str = html.request.var("key")
+                if key_id_str is None:
+                    raise Exception("cannot happen")  # is this really the case?
+                key_id = int(key_id_str)
             except ValueError:
                 raise MKUserError(None, _("You need to provide a valid key id."))
 
@@ -418,15 +414,14 @@ class PageDownloadKey(object):
         html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
             key_id, key)
         html.response.headers["Content-type"] = "application/x-pem-file"
-        html.write(key["private_key"])
-        html.write(key["certificate"])
+        html.write_text(key["private_key"])
+        html.write_text(key["certificate"])
 
     def _file_name(self, key_id, key):
         raise NotImplementedError()
 
     def page(self):
-        html.write(
-            "<p>%s</p>" %
+        html.p(
             _("To be able to download the key, you need to unlock the key by entering the "
               "passphrase. This is only done to verify that you are allowed to download the key. "
               "The key will be downloaded in encrypted form."))
@@ -470,6 +465,7 @@ def create_self_signed_cert(pkey):
 
 def decrypt_private_key(encrypted_private_key, passphrase):
     try:
-        return crypto.load_privatekey(crypto.FILETYPE_PEM, encrypted_private_key, passphrase)
+        return crypto.load_privatekey(crypto.FILETYPE_PEM, encrypted_private_key,
+                                      passphrase.encode("utf-8"))
     except crypto.Error:
         raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))

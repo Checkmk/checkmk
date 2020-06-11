@@ -1,4 +1,4 @@
-title: McAfee Email gateway: SMTP statistics
+title: McAfee Email Gateway: SMTP Statistics
 agents: snmp
 catalog: app/mcafee
 license: GPL

@@ -1,33 +1,15 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Mode for displaying and modifying the rule based host and service
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-import cmk
+from typing import List, Tuple, Optional
+
+from six import ensure_str
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -36,6 +18,8 @@ import cmk.gui.view_utils
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.watolib.rulesets import Ruleset, Rule
+from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
@@ -54,8 +38,8 @@ from cmk.gui.plugins.wato.utils.context_buttons import (
 
 @mode_registry.register
 class ModeObjectParameters(WatoMode):
-    _PARAMETERS_UNKNOWN = []
-    _PARAMETERS_OMIT = []
+    _PARAMETERS_UNKNOWN = []  # type: List
+    _PARAMETERS_OMIT = []  # type: List
 
     @classmethod
     def name(cls):
@@ -66,14 +50,14 @@ class ModeObjectParameters(WatoMode):
         return ["hosts", "rulesets"]
 
     def _from_vars(self):
-        self._hostname = html.get_ascii_input("host")  # may be empty in new/clone mode
+        self._hostname = html.request.get_ascii_input_mandatory("host")
         self._host = watolib.Folder.current().host(self._hostname)
         if self._host is None:
             raise MKUserError("host", _('The given host does not exist.'))
         self._host.need_permission("read")
 
         # TODO: Validate?
-        self._service = html.get_unicode_input("service")
+        self._service = html.request.get_unicode_input("service")
 
     def title(self):
         title = _("Parameters of") + " " + self._hostname
@@ -151,6 +135,8 @@ class ModeObjectParameters(WatoMode):
         self._show_labels(host_info["labels"], "host", host_info["label_sources"])
 
     def _show_service_info(self, all_rulesets):
+        assert self._service is not None
+
         serviceinfo = watolib.check_mk_automation(self._host.site_id(), "analyse-service",
                                                   [self._hostname, self._service])
         if not serviceinfo:
@@ -255,9 +241,15 @@ class ModeObjectParameters(WatoMode):
                                           known_settings=serviceinfo["parameters"])
 
         elif origin == "classic":
-            rule_nr = serviceinfo["rule_nr"]
-            rules = all_rulesets.get("custom_checks").get_rules()
-            rule_folder, rule_index, _rule = rules[rule_nr]
+            ruleset = all_rulesets.get("custom_checks")
+            origin_rule_result = self._get_custom_check_origin_rule(ruleset, self._hostname,
+                                                                    self._service)
+            if origin_rule_result is None:
+                raise MKUserError(
+                    None,
+                    _("Failed to determine origin rule of %s / %s") %
+                    (self._hostname, self._service))
+            rule_folder, rule_index, _rule = origin_rule_result
 
             url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
                                                   ('varname', "custom_checks"),
@@ -287,6 +279,24 @@ class ModeObjectParameters(WatoMode):
 
         self._show_labels(serviceinfo.get("labels", {}), "service",
                           serviceinfo.get("label_sources", {}))
+
+    def _get_custom_check_origin_rule(self, ruleset, hostname, svc_desc):
+        # type: (Ruleset, str, str) -> Optional[Tuple[CREFolder, int, Rule]]
+        # We could use the outcome of _setting instead of the outcome of
+        # the automation call in the future
+        _setting, rules = ruleset.analyse_ruleset(self._hostname,
+                                                  svc_desc_or_item=None,
+                                                  svc_desc=None)
+
+        for rule_folder, rule_index, rule in rules:
+            if rule.is_disabled():
+                continue
+            if rule.value["service_description"] != self._service:
+                continue
+
+            return rule_folder, rule_index, rule
+
+        return None
 
     def _show_labels(self, labels, object_type, label_sources):
         forms.section(_("Effective labels"))
@@ -342,8 +352,8 @@ class ModeObjectParameters(WatoMode):
                 ('rule_folder', rule.folder.path()),
                 ('rulenr', rule.index()),
                 ('host', self._hostname),
-                ('item', watolib.mk_repr(svc_desc_or_item) if svc_desc_or_item else ''),
-                ('service', watolib.mk_repr(svc_desc) if svc_desc else ''),
+                ('item', ensure_str(watolib.mk_repr(svc_desc_or_item)) if svc_desc_or_item else ''),
+                ('service', ensure_str(watolib.mk_repr(svc_desc)) if svc_desc else ''),
             ])
 
         varname = rulespec.name
@@ -353,8 +363,8 @@ class ModeObjectParameters(WatoMode):
             ('mode', 'edit_ruleset'),
             ('varname', varname),
             ('host', self._hostname),
-            ('item', watolib.mk_repr(svc_desc_or_item)),
-            ('service', watolib.mk_repr(svc_desc)),
+            ('item', ensure_str(watolib.mk_repr(svc_desc_or_item))),
+            ('service', ensure_str(watolib.mk_repr(svc_desc))),
         ])
 
         forms.section(html.render_a(rulespec.title, url))
@@ -398,7 +408,7 @@ class ModeObjectParameters(WatoMode):
         # patterns are configured in logwatch_rules. We do not have access to the actual
         # patterns here but just to the useless "None". In order not to complicate things
         # we simply display nothing here.
-        elif varname == "logwatch_rules":
+        if varname == "logwatch_rules":
             pass
 
         elif known_settings is not self._PARAMETERS_UNKNOWN:

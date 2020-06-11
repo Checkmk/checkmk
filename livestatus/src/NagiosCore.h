@@ -1,41 +1,26 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef NagiosCore_h
 #define NagiosCore_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <cstddef>
+#include <filesystem>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "Metric.h"
 #include "MonitoringCore.h"
+#include "RRDColumn.h"
 #include "Store.h"
 #include "Triggers.h"
 #include "auth.h"
-#include "contact_fwd.h"
 #include "data_encoding.h"
 #include "nagios.h"
 class InputBuffer;
@@ -47,12 +32,13 @@ struct NagiosPaths {
     std::string _pnp;
     std::string _mk_inventory;
     std::string _structured_status;
+    std::filesystem::path _crash_reports_path;
     std::string _mk_logwatch;
     std::string _logfile;
     std::string _mkeventd_socket;
     std::string _rrdcached_socket;
 
-    void dump(Logger *logger);
+    void dump(Logger *logger) const;
 };
 
 struct NagiosLimits {
@@ -98,14 +84,20 @@ public:
 
     bool mkeventdEnabled() override;
 
-    std::string mkeventdSocketPath() override;
-    std::string mkLogwatchPath() override;
-    std::string mkInventoryPath() override;
-    std::string structuredStatusPath() override;
-    std::string pnpPath() override;
-    std::string historyFilePath() override;
-    std::string logArchivePath() override;
-    std::string rrdcachedSocketPath() override;
+    std::filesystem::path mkeventdSocketPath() const override;
+    std::filesystem::path mkLogwatchPath() const override;
+    std::filesystem::path mkInventoryPath() const override;
+    std::filesystem::path structuredStatusPath() const override;
+    std::filesystem::path crashReportPath() const override;
+    std::filesystem::path pnpPath() const override;
+    std::filesystem::path rrdPath() const;
+    std::filesystem::path historyFilePath() const override;
+    std::filesystem::path logArchivePath() const override;
+    std::filesystem::path rrdcachedSocketPath() const override;
+
+    MetricLocation metricLocation(const void *object,
+                                  const Metric::MangledName &name,
+                                  const RRDColumn::Table &table) const override;
 
     Encoding dataEncoding() override;
     size_t maxResponseSize() override;

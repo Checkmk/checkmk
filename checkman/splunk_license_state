@@ -9,8 +9,7 @@ description:
  until the license will expire.
 
 inventory:
- One service for each license will be created
+ One service is created for each license.
 
 item:
- one item named "Splunk License License_name" will be created
-
+ The name of the license

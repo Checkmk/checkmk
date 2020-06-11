@@ -1,0 +1,12 @@
+diff -Nur heirloom-pkgtools-070227.orig/mk.config heirloom-pkgtools-070227/mk.config
+--- heirloom-pkgtools-070227.orig/mk.config	2007-02-27 21:13:42.000000000 +0100
++++ heirloom-pkgtools-070227/mk.config	2017-05-10 12:47:54.521739823 +0200
+@@ -61,7 +61,7 @@
+ #
+ # Compiler flags.
+ #
+-CFLAGS=-O
++CFLAGS=-O -fcommon
+ 
+ #
+ # C preprocessor flags.

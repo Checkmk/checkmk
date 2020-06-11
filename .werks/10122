@@ -1,0 +1,14 @@
+Title: Fixed performance regression for event console history queries.
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1575992674
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 1.7.0i1
+
+The event console history queries had a rather serious performance
+regression in 1.6.0: For common queries, the EC tries to pre-filter the
+history via egrep before doing further filtering itself.  This pre-filtering
+was broken due to a typo and has been repaired now.

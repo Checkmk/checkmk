@@ -1,31 +1,13 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef Logger_h
 #define Logger_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <atomic>
 #include <cerrno>
 #include <chrono>
@@ -65,13 +47,13 @@ public:
         , _time_point(std::chrono::system_clock::now()) {}
     virtual ~LogRecord() = default;
 
-    LogLevel getLevel() const { return _level; }
+    [[nodiscard]] LogLevel getLevel() const { return _level; }
     void setLevel(LogLevel level) { _level = level; }
 
-    std::string getMessage() const { return _message; }
+    [[nodiscard]] std::string getMessage() const { return _message; }
     void setMessage(const std::string &message) { _message = message; }
 
-    std::chrono::system_clock::time_point getTimePoint() const {
+    [[nodiscard]] std::chrono::system_clock::time_point getTimePoint() const {
         return _time_point;
     }
     void setTimePoint(std::chrono::system_clock::time_point time_point) {
@@ -104,7 +86,7 @@ public:
     virtual ~Handler() { setFormatter(std::unique_ptr<Formatter>()); }
     virtual void publish(const LogRecord &record) = 0;
 
-    Formatter *getFormatter() const { return _formatter; }
+    [[nodiscard]] Formatter *getFormatter() const { return _formatter; }
     void setFormatter(std::unique_ptr<Formatter> formatter) {
         delete _formatter;
         _formatter = formatter.release();
@@ -154,19 +136,19 @@ public:
 
     virtual ~Logger() = default;
 
-    bool isLoggable(LogLevel level) const;
+    [[nodiscard]] bool isLoggable(LogLevel level) const;
 
-    virtual std::string getName() const = 0;
+    [[nodiscard]] virtual std::string getName() const = 0;
 
-    virtual Logger *getParent() const = 0;
+    [[nodiscard]] virtual Logger *getParent() const = 0;
 
-    virtual LogLevel getLevel() const = 0;
+    [[nodiscard]] virtual LogLevel getLevel() const = 0;
     virtual void setLevel(LogLevel level) = 0;
 
-    virtual Handler *getHandler() const = 0;
+    [[nodiscard]] virtual Handler *getHandler() const = 0;
     virtual void setHandler(std::unique_ptr<Handler> handler) = 0;
 
-    virtual bool getUseParentHandlers() const = 0;
+    [[nodiscard]] virtual bool getUseParentHandlers() const = 0;
     virtual void setUseParentHandlers(bool useParentHandlers) = 0;
 
     virtual void emitContext(std::ostream &os) const = 0;
@@ -179,17 +161,17 @@ public:
     ConcreteLogger(const std::string &name, Logger *parent);
     ~ConcreteLogger() override;
 
-    std::string getName() const override;
+    [[nodiscard]] std::string getName() const override;
 
-    Logger *getParent() const override;
+    [[nodiscard]] Logger *getParent() const override;
 
-    LogLevel getLevel() const override;
+    [[nodiscard]] LogLevel getLevel() const override;
     void setLevel(LogLevel level) override;
 
-    Handler *getHandler() const override;
+    [[nodiscard]] Handler *getHandler() const override;
     void setHandler(std::unique_ptr<Handler> handler) override;
 
-    bool getUseParentHandlers() const override;
+    [[nodiscard]] bool getUseParentHandlers() const override;
     void setUseParentHandlers(bool useParentHandlers) override;
 
     void emitContext(std::ostream &os) const override;
@@ -208,17 +190,17 @@ class LoggerDecorator : public Logger {
 public:
     explicit LoggerDecorator(Logger *logger);
 
-    std::string getName() const override;
+    [[nodiscard]] std::string getName() const override;
 
-    Logger *getParent() const override;
+    [[nodiscard]] Logger *getParent() const override;
 
-    LogLevel getLevel() const override;
+    [[nodiscard]] LogLevel getLevel() const override;
     void setLevel(LogLevel level) override;
 
-    Handler *getHandler() const override;
+    [[nodiscard]] Handler *getHandler() const override;
     void setHandler(std::unique_ptr<Handler> handler) override;
 
-    bool getUseParentHandlers() const override;
+    [[nodiscard]] bool getUseParentHandlers() const override;
     void setUseParentHandlers(bool useParentHandlers) override;
 
     void emitContext(std::ostream &os) const override;

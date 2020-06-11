@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -54,9 +34,10 @@ class NagVisMaps(SidebarSnapin):
 
     @classmethod
     def refresh_regularly(cls):
-        return True
+        return False
 
     def show(self):
+        html.div(_("Loading maps..."), class_="loading")
         html.javascript("cmk.sidebar.fetch_nagvis_snapin_contents()")
 
     def page_handlers(self):
@@ -112,12 +93,14 @@ class NagVisMaps(SidebarSnapin):
     def _sub_state_class(self, map_cfg):
         if map_cfg["summary_in_downtime"]:
             return "stated"
-        elif map_cfg["summary_problem_has_been_acknowledged"]:
+        if map_cfg["summary_problem_has_been_acknowledged"]:
             return "statea"
+        return None
 
     def _stale_class(self, map_cfg):
         if map_cfg["summary_stale"]:
             return "stale"
+        return None
 
     def _state_title(self, map_cfg):
         title = map_cfg["summary_state"]
@@ -142,7 +125,7 @@ class NagVisMaps(SidebarSnapin):
         html.close_ul()
 
     def _show_tree_nodes(self, maps, children):
-        for map_name, map_cfg in maps.iteritems():
+        for map_name, map_cfg in maps.items():
             html.open_li()
             if map_name in children:
                 html.begin_foldable_container(treename="nagvis",

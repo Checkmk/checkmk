@@ -1,4 +1,4 @@
-title: Infoblox devices: Node services
+title: Infoblox Devices: Node Services
 agents: snmp
 catalog: hw/network/infoblox
 license: GPL
@@ -17,4 +17,4 @@ item:
  The service name.
 
 inventory:
- One service for each service is created.
+ One service is created for each node service.

@@ -1,4 +1,4 @@
-title: JVM ehcache statistics: on-disk cache usage
+title: JVM Ehcache Statistics: On-disk Cache Usage
 agents: linux
 catalog: app/java
 license: GPL
@@ -10,6 +10,10 @@ description:
 
  These metrics are purely informational, there are currently no warn/crit levels.
 
+item:
+ The name of the application server instance as configured by the agent followed
+ by the cache
+
 inventory:
- One service per cache is created.
+ One service is created for each cache.
 

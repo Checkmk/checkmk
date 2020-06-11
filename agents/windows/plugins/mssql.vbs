@@ -383,7 +383,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     RS.Close
 
     ' First only read all databases in this instance and save it to the db names dict
-    RS.Open "EXEC sp_databases", CONN
+    RS.Open "SELECT NAME AS DATABASE_NAME FROM sys.databases", CONN
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then

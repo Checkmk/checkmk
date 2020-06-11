@@ -1,0 +1,19 @@
+Title: lnx_if: Discover speed from /sys/class/net/INTERFACE/speed if ethtool missing
+Class: feature
+Compatible: incomp
+Component: core
+Date: 1576237816
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+Previously if ethtool is missing then we do not get any information about
+interface speed. Now we collect speed information from
+{{/sys/class/net/INTERFACE/speed}} in this case.
+
+You have to install the newest {{check_mk_agent}}.
+
+The speed is remembered during discovery and if the speed changes the interface
+service report WARN. Thus you have to rediscover the related services in order
+to get the correct speed information.

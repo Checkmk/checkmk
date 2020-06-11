@@ -1,0 +1,12 @@
+Title: Fix missing new line in ESX agent which may break various sections and services may go UNKNOWN
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1579011722
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+

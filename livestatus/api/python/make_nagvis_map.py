@@ -1,35 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # This is an example for a usage of Livestatus: it creates
 # a NagVis map using actual live data from a running Nagios
 # system. Most things are hardcoded here but this might by
 # a useful example for coding your own stuff...
 
-from __future__ import print_function
 import livestatus
 
 g_y = 50
@@ -59,20 +38,20 @@ def render_hostgroup(name, alias):
     # Name des Serverraums
     make_label(alias, x_hostgroup, g_y, x_therm - x_hostgroup - 20)
 
-    def display_servicegroup(name, x):
-        if live.query_value("GET servicegroups\nStats: name = %s\n" % name) == 1:
+    def display_servicegroup(sg_name, x):
+        if live.query_value("GET servicegroups\nStats: name = %s\n" % sg_name) == 1:
             print("""
 define servicegroup {
             servicegroup_name = %s
             x=%d
             y=%d
-}""" % (name, x, g_y))
+}""" % (sg_name, x, g_y))
 
             # Einzelauflistung der Thermometer
             num = 0
             shift = 16
             for host, service in live.query(
-                    "GET services\nFilter: groups >= %s\nColumns: host_name description" % name):
+                    "GET services\nFilter: groups >= %s\nColumns: host_name description" % sg_name):
                 num += 1
                 print("""
 define service {
@@ -112,8 +91,8 @@ hostgroups = [
     ("ik026", "IK-026"),
     ("etage", "Etagenverteiler"),
 ]
-for name, alias in hostgroups:
-    render_hostgroup(name, alias)
+for hg_name, hg_alias in hostgroups:
+    render_hostgroup(hg_name, hg_alias)
 
 make_label("Temperaturen", x_therm, y_title, 250)
 make_label("USV-Status", x_usv, y_title, 160)

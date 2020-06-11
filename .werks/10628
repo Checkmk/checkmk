@@ -1,0 +1,11 @@
+Title: mk_inventory.linux: adds IPv6 routing information
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1576572256
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+The inventory for linux devices now also queries routes information for IPv6.

@@ -3,6 +3,7 @@
 
 #include "service_processor.h"
 
+#include <sensapi.h>
 #include <shlobj_core.h>
 
 #include <chrono>
@@ -11,11 +12,13 @@
 #include "commander.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "common/wtools_service.h"
+#include "common/yaml.h"
 #include "external_port.h"
 #include "realtime.h"
 #include "tools/_process.h"
 #include "upgrade.h"
-#include "yaml-cpp/yaml.h"
+#include "windows_service_api.h"
 
 namespace cma::srv {
 extern bool global_stop_signaled;  // semi-hidden global variable for global
@@ -255,6 +258,7 @@ void ServiceProcessor::preStartBinaries() {
     ohm_started_ = conditionallyStartOhm();
 
     auto& plugins = plugins_provider_.getEngine();
+    plugins.registerOwner(this);
     plugins.preStart();
     plugins.detachedStart();
 
@@ -481,6 +485,8 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
     auto ipv6 = groups::global.ipv6();
     auto port = groups::global.port();
     auto uniq_cfg_id = GetCfg().uniqId();
+    ProcessServiceConfiguration(kServiceName);
+
     while (1) {
         using namespace std::chrono;
 
@@ -504,22 +510,58 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
             XLOG::l.t("Stop request is set");
             break;  // signaled stop
         }
+
+        if (SERVICE_DISABLED ==
+            wtools::WinService::ReadUint32(cma::srv::kServiceName,
+                                           wtools::WinService::kRegStart)) {
+            XLOG::l("Service is disabled in config, leaving...");
+
+            cma::tools::RunDetachedCommand(std::string("net stop ") +
+                                           wtools::ConvertToUTF8(kServiceName));
+            break;
+        }
+
         restartBinariesIfCfgChanged(uniq_cfg_id);
     }
     XLOG::l.t("main Wait Loop END");
     return Signal::quit;
 }
 
+namespace {
+
+void WaitForNetwork(std::chrono::seconds period) {
+    using namespace std::chrono;
+    DWORD networks = NETWORK_ALIVE_LAN | NETWORK_ALIVE_WAN;
+    for (int i = 0; i < period.count(); i += 2) {
+        auto ret = ::IsNetworkAlive(&networks);
+        auto error = ::GetLastError();
+        if (error == 0 && ret == TRUE) {
+            XLOG::l.i("The network is available");
+            break;
+        }
+
+        XLOG::l.i("Check network failed [{}] {}", error, ret);
+        std::this_thread::sleep_for(2s);
+    }
+}
+}  // namespace
+
 // <HOSTING THREAD>
 // ex_port may be nullptr(command line test, for example)
 // makes a mail slot + starts IO on TCP
 void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
-    using namespace std::chrono;
     // Periodically checks if the service is stopping.
     // mail slot name selector "service" or "not service"
+    using namespace std::chrono;
+    using namespace cma::cfg;
     auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
                                           : cma::cfg::kTestingMailSlot;
 
+    if (cma::IsService()) {
+        auto wait_period = GetVal(groups::kSystem, vars::kWaitNetwork,
+                                  defaults::kServiceWaitNetwork);
+        WaitForNetwork(seconds{wait_period});
+    }
 #if 0
     // ARtificial memory allocator in thread
     std::vector<std::string> z;
@@ -551,6 +593,13 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
 
         // preparation if any
         ReloadConfigInServiceMode();
+
+        // module commander loading(and install if service)
+        if (cma::IsService()) {
+            mc_.InstallDefault(cma::cfg::modules::InstallMode::normal);
+        } else
+            mc_.LoadDefault();
+
         preStartBinaries();
         // *******************
 
@@ -675,7 +724,8 @@ bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
             std::string cmd(static_cast<const char*>(dt->data()),
                             static_cast<size_t>(dt->length()));
             std::string peer(cma::commander::kMainPeer);
-            cma::commander::RunCommand(peer, cmd);
+            auto rcp = cma::commander::ObtainRunCommandProcessor();
+            if (rcp) rcp(peer, cmd);
 
             break;
         }

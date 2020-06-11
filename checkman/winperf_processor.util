@@ -1,4 +1,4 @@
-title: CPU utilization on Windows systems
+title: Windows: CPU Utilization
 agents: windows
 catalog: os/kernel
 license: GPL
@@ -15,6 +15,5 @@ description:
  or {notification_delay} might also be useful here.
 
 inventory:
- A check of this type is automatically created for all Windows
- hosts.
+ One service is created for each Windows host.
 

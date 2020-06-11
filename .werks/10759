@@ -1,0 +1,18 @@
+Title: agent_jira, jira_workflow, jira_custom_svc: New special agent and checks to gather statistics from Jira instances
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1578913898
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+With this special agent and checks, it's possible to query given projects and
+there workflows. This will result in one service per project and workflow that
+outputs the number of issues. Furthermore, you can define custom Jira Query
+Language (JQL) searches with different options on the result. Therefore, you
+have to define a service description for the resulting check and what result
+you expect (the count of found issues or the summed up or average values of a
+given numeric field). It's also possible to limit the number of processed
+results.

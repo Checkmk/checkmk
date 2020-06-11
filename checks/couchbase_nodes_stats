@@ -1,32 +1,12 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 check_info['couchbase_nodes_stats'] = {
     'parse_function': parse_couchbase_lines,
-    'includes': ['couchbase.include', 'cpu_util.include', 'memory.include'],
+    'includes': ['couchbase.include', 'cpu_util.include', 'mem.include'],
 }
 
 
@@ -51,21 +31,33 @@ factory_settings["memory_default_levels"] = {"levels": (150.0, 200.0)}
 
 @get_parsed_item_data
 def check_couchbase_nodes_mem(_item, params, data):
+
     try:
-        mem_total = data['mem_total'] / 1024.
-        mem_free = data['mem_free'] / 1024.
-        swap_total = data['swap_total'] / 1024.
-        swap_used = data['swap_used'] / 1024.
+        mem_total = data['mem_total']
+        mem_free = data['mem_free']
+        swap_total = data['swap_total']
+        swap_used = data['swap_used']
     except KeyError:
         return None
 
-    return check_memory_multiitem(
-        params, {
-            'MemTotal': mem_total,
-            'MemFree': mem_free,
-            'SwapTotal': swap_total,
-            'SwapFree': swap_total - swap_used,
-        })
+    warn_ram, crit_ram = params.get("levels", (None, None))
+    mode_ram = "abs_used" if isinstance(warn_ram, int) else "perc_used"
+
+    yield check_memory_element(
+        "RAM",
+        mem_total - mem_free,
+        mem_total,
+        (mode_ram, (warn_ram, crit_ram)),
+        metric_name="mem_used",
+    )
+
+    yield check_memory_element(
+        "Swap",
+        swap_used,
+        swap_total,
+        None,
+        metric_name="swap_used",
+    )
 
 
 check_info['couchbase_nodes_stats.mem'] = {

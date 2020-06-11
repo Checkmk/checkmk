@@ -1,4 +1,4 @@
-title: AVTECH Room Alert 32E: Sensor humidity
+title: AVTECH Room Alert 32E: Sensor Humidity
 agents: snmp
 catalog: hw/environment/avtech
 license: GPL
@@ -16,6 +16,5 @@ item:
  connected sensor.
 
 inventory:
- One service for the internal sensor and one
- service for each sensor that delivers temperature
- data.
+ One service for the internal sensor and
+ one service for each sensor that delivers humidity data.

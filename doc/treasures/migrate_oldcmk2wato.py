@@ -1,31 +1,13 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-import os, pprint, sys, operator
+import operator
+import os
+import pprint
+import sys
 
 
 def usage():
@@ -116,7 +98,7 @@ unconverted_data = ""  # complete  unconverted sections
 
 # host tags stuff
 if os.path.exists(hosttags_file):
-    exec (open(hosttags_file).read(), globals(), host_tags_info)
+    exec(open(hosttags_file).read(), globals(), host_tags_info)
 
 map_tag_to_taggroup = {}
 map_tag_to_auxtags = {}
@@ -230,7 +212,6 @@ def get_hosts_mk(file_vars):
             add_wato_parameter(hostname, "ipaddress", all_ipaddresses[hostname])
 
     # Alias
-    alias_info = []
     for entry in file_vars["extra_host_conf"].get("alias", []):
         for hostname in entry[1]:
             add_wato_parameter(hostname, "alias", entry[0])
@@ -346,6 +327,7 @@ def create_wato_folder(filename, file_vars):
                 tags = []
                 hosts, name, match, user = rest
             else:
+                global partial_unconverted_data
                 partial_unconverted_data += "%s: Unable to convert process rule %r" % (filename,
                                                                                        entry)
 
@@ -374,7 +356,7 @@ def create_wato_folder(filename, file_vars):
                 groups[group_name].append((tags, hosts, state, pattern))
             # Second run - create useful rules
             for group_name, values in groups.items():
-                tags, hosts, state, patterns = values[0]
+                tags, hosts, state, _patterns = values[0]
 
                 pattern_info = []
                 for value in values:
@@ -440,7 +422,7 @@ for filename in os.listdir("."):
             "ALL_SERVICES": "$ALL_SERVICES$",  # Placeholder
             "ANY_USER": "$ANY_USER$",  # Placeholder
         }
-        exec (open(filename).read(), globals(), file_vars)
+        exec(open(filename).read(), globals(), file_vars)
         all_file_vars[filename] = file_vars
     except Exception as e:
         print("Error parsing file %s: %s" % (filename, e))
@@ -505,7 +487,7 @@ wato_host_tags += [\n\
     "wato_aux_tags": pprint.pformat(host_tags_info["wato_aux_tags"]),
     "extra_host_tags": "\n".join(extra_host_tags)
 }
-file(os.path.expanduser("~/hosttags.mk"), "w").write(hosttags_content)
+open(os.path.expanduser("~/hosttags.mk"), "w").write(hosttags_content)
 print("")
 
 # Write all configuration (hosts.mk/rules.mk) files

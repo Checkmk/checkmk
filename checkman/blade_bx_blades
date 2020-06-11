@@ -1,4 +1,4 @@
-title: Primergy BX600 Blade Server: Blade status
+title: Primergy BX600 Blade Server: Blade Status
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
@@ -14,6 +14,4 @@ item:
  The blade ID
 
 inventory:
- All blades are found which do not report status {not-present}
-
- For all other blades one item per blade is found.
+ One service is created for each blade which does not report status {not-present}

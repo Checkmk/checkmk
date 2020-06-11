@@ -1,28 +1,7 @@
-/*
-+------------------------------------------------------------------+
-|             ____ _               _        __  __ _  __           |
-|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-|           | |___| | | |  __/ (__|   <    | |  | | . \            |
-|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-|                                                                  |
-| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-+------------------------------------------------------------------+
-
-This file is part of Check_MK.
-The official homepage is at http://mathias-kettner.de/check_mk.
-
-check_mk is free software;  you can redistribute it and/or modify it
-under the  terms of the  GNU General Public License  as published by
-the Free Software Foundation in version 2.  check_mk is  distributed
-in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-tails.  You should have received  a copy of the  GNU  General Public
-License along with GNU Make; see the file  COPYING.  If  not,  write
-to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-Boston, MA 02110-1301 USA.
-*/
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 /* Styles used by the dashboard only */
 body.dashboard {
@@ -202,6 +181,10 @@ div.dashlet {
 
 .dashlet .dashlet_inner.background {
   background-color: $dashlet-bg-color;
+
+  &:first-child {
+    border-radius: $dashlet-title-border-radius;
+  }
 }
 
 div.dashlet > div.title span a,
@@ -292,9 +275,14 @@ body.main.dashlet {
 
 div[id^=dashlet] div.dashlet_inner > div {
   border: 1px solid $color-table-border;
-  border-top: none;
+  border-radius: $dashlet-title-border-radius;
   box-sizing: border-box;
   transition: .15s ease-in-out;
+}
+
+div[id^=dashlet] div.title + div.dashlet_inner > div {
+  border-top: none;
+  border-radius: 0;
 }
 
 iframe[id^=dashlet_iframe] {
@@ -415,6 +403,25 @@ div.dashlet.edit {
 
     &:hover {
       background-image: url(images/dashlet_edit_hi.png);
+    }
+  }
+
+  /* dashlet clone button */
+  .clone {
+    position: absolute;
+    top: 4px;
+    right: 34px;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    /* background-color: rgba(0, 0, 0, 0.7); */
+    background-image: url(images/dashlet_clone_lo.png);
+    border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+
+    &:hover {
+      background-image: url(images/dashlet_clone_hi.png);
     }
   }
 
@@ -747,9 +754,97 @@ div#dashboard.grid {
   border: none;
   box-shadow: none;
 }
+
 .dashlet.pnpgraph .container {
   background-color: $dashlet-inner-bg-color;
 }
+
 .dashlet.pnpgraph div.title a {
   color: $primary-font-color;
+}
+
+div.dashlet.single_metric {
+  /* When no dashlet title (div.title) is rendered, div.dashlet_inner is the
+     first child of div.dashlet */
+  div.dashlet_inner:first-child {
+    &:not(.background) div.metric {
+      border: none;
+    }
+
+    div.metric {
+      padding: 4px;
+    }
+  }
+
+  div.dashlet_inner div.metric {
+    height: inherit;
+    padding: 0 4px 4px;
+
+    table.metric_content {
+      width: 100%;
+      height: 100%;
+      margin: 0 auto;
+      table-layout: fixed;
+
+      td {
+	padding: 0;
+	text-align: center;
+	border-radius: 16px;
+      }
+
+      td.metric_value {
+	position: relative;
+	height: 100%;
+	margin: 0 auto;
+	text-align: center;
+	border-radius: 16px;
+
+	a {
+	  text-decoration: none;
+	  white-space: nowrap;
+	}
+
+	&.state0, &.state0 > a, &.state0 > a:link {
+	  color: $black;
+	}
+
+	&.state-color-font, &.no-state-color {
+	  &, > a {
+	    color: $color-text !important;
+	    background-color: transparent !important;
+	  }
+	}
+
+	&.state-color-font {
+	  &.state0, &.state0 > a, &.state0 > a:link {
+	    color: $color-state-success-background !important;
+	  }
+
+	  &.state1, &.state1 > a, &.state1 > a:link {
+	    color: $color-state-1-background !important;
+	  }
+
+	  &.state2, &.state2 > a, &.state2 > a:link {
+	    color: $color-state-2-background !important;
+	  }
+
+	  &.state3, &.state3 > a, &.state3 > a:link {
+	    color: $color-state-3-background !important;
+	  }
+	}
+      }
+
+      div.no_metric_match {
+	margin: 8px 0;
+      }
+
+      a {
+	text-decoration: none;
+
+	&:hover {
+	  text-decoration: underline;
+	}
+      }
+    }
+  }
 }

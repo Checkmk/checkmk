@@ -1,4 +1,4 @@
-title: Dell iDRAC: Status of power supply unit (PSU)
+title: Dell iDRAC: Status of Power Supply Unit (PSU)
 agents: snmp
 catalog: hw/server/dell
 license: GPL
@@ -10,4 +10,7 @@ description:
  "non-recoverable" and {OK} if no problem is detected.
 
 item:
- One service for each PSU will be created
+ Index of the power unit
+
+inventory:
+ One service is created for each power supply.

@@ -1,3 +1,7 @@
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 LANGUAGES := de ro
 SHELL 	  := /bin/bash -e -o pipefail
 PIPENV3   := ../scripts/run-pipenv 3
@@ -12,7 +16,7 @@ help:
 	@echo "update-[de|ro] - Aktualisiert die PO-Datei mit neuen Texten"
 
 setup:
-	sudo apt-get install gettext poedit python-polib
+	sudo apt-get install gettext poedit python3-polib
 
 all:
 	for lang in $(LANGUAGES) ; do \

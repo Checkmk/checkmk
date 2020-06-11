@@ -1,59 +1,39 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
-def cisco_sensor_item(trial_string, fall_back):
-    trial_string = trial_string.lstrip()  # remove leading spaces which might be provided via SNMP
-
+def cisco_sensor_item(description, sensor_id):
     # trial_string can be:
     # Empty
     # A single string
     # A string seperated by commas with status information
     # -> Depends on the device model
     try:
-        # Try to handle all cases found in mkzeug/walks
-        splitted = [x.strip() for x in trial_string.split(',')]
+        splitted = [x.strip() for x in description.split(',')]
         if len(splitted) == 1:
-            item = trial_string
-        # If the last part contains # or Power, take the complete string
+            item = description
         elif '#' in splitted[-1] or 'Power' in splitted[-1]:
             item = " ".join(splitted)
-        # If second last part start with Status, remove that part
+        elif splitted[-1].startswith("PS"):
+            item = " ".join([splitted[0], splitted[-1].split(" ")[0]])
         elif splitted[-2].startswith("PS"):
             item = " ".join(splitted[:-2] + splitted[-2].split(" ")[:-1])
         elif splitted[-2].startswith("Status"):
             item = " ".join(splitted[:-2])
-        # Take anything, but without last part
         else:
             item = " ".join(splitted[:-1])
-        # Maye there a multiple Items, but always the same string.
-        # Try to prevent that by adding the fall_back number to the end
+
+        # Different sensors may have identical descriptions. To prevent
+        # duplicate items the sensor_id is appended. This leads to
+        # redundant information sensors are enumerated with letters like
+        # e.g. "PSA" and "PSB", but to be backwards compatible we do not
+        # modify this behaviour.
         if not item[-1].isdigit():
-            item += " " + fall_back
-        # Replace unwanted chars and return
+            item += " " + sensor_id
+
         return item.replace('#', ' ')
     except Exception:
-        return fall_back
+        return sensor_id

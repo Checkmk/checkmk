@@ -1,4 +1,4 @@
-title: HP Procurve Switches: CPU load
+title: HP Procurve Switches: CPU Load
 agents: snmp
 catalog: hw/network/hp
 license: GPL
@@ -13,5 +13,5 @@ description:
  for the CPU load are reached.
 
 inventory:
- On each switch which supports this MIB one service {CPU} is being created.
+ One service is created on each switch.
 

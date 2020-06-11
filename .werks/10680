@@ -1,0 +1,13 @@
+Title: Windows Agent section systemtime adds '\n' at the end of the output
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1579016649
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+This fix provides compatibility with special agents, like the agent for 
+VMWare VSphere

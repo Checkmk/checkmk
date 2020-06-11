@@ -1,4 +1,4 @@
-title: Kubernetes persistent volumes
+title: Kubernetes: Persistent Volumes
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL
@@ -8,7 +8,7 @@ description:
  The check returns {OK} if a volume is bound otherwise {CRIT}.
 
 inventory:
- One service per persistent volume is created.
+ One service is created for each persistent volume.
 
 item:
  The name of the persistent volume.

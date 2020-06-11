@@ -1,0 +1,18 @@
+Title: WATO backups: Fix file path traversal vulnerability
+Class: security
+Compatible: compat
+Component: wato
+Date: 1574431239
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The backup target directory was not validated correctly which made it possible
+for an attacker that has access to WATO backups to compromise the site.
+
+Using this vulnerability it was possible to write backup files to directories
+that are writable by the site user.
+
+Thanks to Robin `ypid` Schneider.

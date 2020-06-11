@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
 def parse_aws_s3(info):  # pylint: disable=function-redefined
@@ -40,7 +20,10 @@ def parse_aws_s3(info):  # pylint: disable=function-redefined
         storage_key, size_key = row['Id'].split("_")[-2:]
         inst = bucket.setdefault(size_key, {})
         try:
-            inst.setdefault(storage_key, row['Values'][0])
+            # if the entry exists, the first value is the numerical value of the metric and the
+            # second one is the period, which is None here since these are not statistics of type
+            # "Sum"
+            inst.setdefault(storage_key, row['Values'][0][0])
         except (IndexError, ValueError):
             pass
     return parsed
@@ -60,7 +43,7 @@ def parse_aws_s3(info):  # pylint: disable=function-redefined
 def check_aws_s3_objects(item, params, metrics):
     bucket_sizes = metrics['BucketSizeBytes']
     storage_infos = []
-    for storage_type, value in bucket_sizes.iteritems():
+    for storage_type, value in bucket_sizes.items():
         storage_infos.append("%s: %s" % (storage_type, get_bytes_human_readable(value)))
     sum_size = sum(bucket_sizes.values())
     yield check_levels(sum_size,
@@ -111,7 +94,7 @@ def check_aws_s3_summary(item, params, parsed):
     sum_size = 0
     largest_bucket = None
     largest_bucket_size = 0
-    for bucket_name, bucket in parsed.iteritems():
+    for bucket_name, bucket in parsed.items():
         bucket_size = sum(bucket['BucketSizeBytes'].values())
         sum_size += bucket_size
         if bucket_size >= largest_bucket_size:

@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.mkeventd
@@ -20,7 +26,7 @@ from cmk.gui.valuespec import (
     Age,
     FixedValue,
     Alternative,
-    EmailAddressUnicode,
+    EmailAddress,
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.user_scripts import (
@@ -107,7 +113,7 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
 
     # Email
     email = user_attrs.get("email")
-    vs_email = EmailAddressUnicode()
+    vs_email = EmailAddress()
     vs_email.validate_value(email, "email")
 
     # Idle timeout
@@ -210,7 +216,6 @@ def get_vs_flexible_notifications():
                                 "match_sl"
                             ],
                             columns=1,
-                            headers=True,
                             elements=[
                                 (
                                     "plugin",

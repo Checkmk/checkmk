@@ -1,31 +1,14 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Verify or find out a hosts agent related configuration"""
 
 import json
+from typing import List
+
+from six import ensure_str
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -37,6 +20,7 @@ from cmk.gui.globals import html
 from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
 from cmk.gui.pages import page_registry, AjaxPage
 
+from cmk.gui.valuespec import DictionaryEntry
 from cmk.gui.valuespec import (
     TextAscii,
     DropdownChoice,
@@ -48,6 +32,7 @@ from cmk.gui.valuespec import (
     FixedValue,
 )
 
+from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -78,10 +63,7 @@ class ModeDiagHost(WatoMode):
         ]
 
     def _from_vars(self):
-        self._hostname = html.request.var("host")
-        if not self._hostname:
-            raise MKGeneralException(_('The hostname is missing.'))
-
+        self._hostname = html.request.get_ascii_input_mandatory("host")
         self._host = watolib.Folder.current().host(self._hostname)
         self._host.need_permission("read")
 
@@ -101,15 +83,16 @@ class ModeDiagHost(WatoMode):
         html.context_button(_("Services"), self._host.services_url(), "services")
 
     def action(self):
+        # type: () -> ActionResult
         if not html.check_transaction():
-            return
+            return None
 
         if html.request.var('_try'):
             try:
                 self._validate_diag_html_vars()
             except MKUserError as e:
                 html.add_user_error(e.varname, e)
-            return
+            return None
 
         if html.request.var('_save'):
             # Save the ipaddress and/or community
@@ -129,13 +112,15 @@ class ModeDiagHost(WatoMode):
                 new["snmp_community"] = new["snmp_v3_credentials"]
             elif "snmp_community" in new:
                 return_message.append(_("SNMP credentials"))
-            return_message = _("Updated attributes: ") + ", ".join(return_message)
+
+            msg = _("Updated attributes: ") + ", ".join(return_message)
 
             self._host.update_attributes(new)
             html.request.del_vars()
             html.request.set_var("host", self._hostname)
             html.request.set_var("folder", watolib.Folder.current().path())
-            return "edit_host", return_message
+            return "edit_host", msg
+        return None
 
     def _validate_diag_html_vars(self):
         vs_host = self._vs_host()
@@ -200,7 +185,7 @@ class ModeDiagHost(WatoMode):
 
     def _show_diagnose_output(self):
         if not html.request.var('_try'):
-            html.message(
+            html.show_message(
                 _('You can diagnose the connection to a specific host using this dialog. '
                   'You can either test whether your current configuration is still working '
                   'or investigate in which ways a host can be reached. Simply configure the '
@@ -243,39 +228,48 @@ class ModeDiagHost(WatoMode):
                              json.dumps(html.transaction_manager.fresh_transid())))
 
     def _vs_host(self):
-        return Dictionary(required_keys=['hostname'],
-                          elements=[
-                              ('hostname', FixedValue(
-                                  self._hostname,
-                                  title=_('Hostname'),
-                              )),
-                              ('ipaddress',
-                               HostAddress(
-                                   title=_("IPv4 Address"),
-                                   allow_empty=False,
-                                   allow_ipv6_address=False,
-                               )),
-                              ('snmp_community',
-                               Password(title=_("SNMPv1/2 community"), allow_empty=False)),
-                              ('snmp_v3_credentials',
-                               cmk.gui.plugins.wato.SNMPCredentials(default_value=None,
-                                                                    only_v3=True)),
-                          ])
+        return Dictionary(
+            required_keys=['hostname'],
+            elements=[
+                ('hostname', FixedValue(
+                    self._hostname,
+                    title=_('Hostname'),
+                )),
+                ('ipaddress',
+                 HostAddress(
+                     title=_("IPv4 Address"),
+                     allow_empty=False,
+                     allow_ipv6_address=False,
+                 )),
+                ('snmp_community', Password(
+                    title=_("SNMPv1/2 community"),
+                    allow_empty=False,
+                )),
+                ('snmp_v3_credentials',
+                 cmk.gui.plugins.wato.SNMPCredentials(
+                     default_value=None,
+                     only_v3=True,
+                 )),
+            ],
+        )
 
     def _vs_rules(self):
         if config.user.may('wato.add_or_modify_executables'):
-            ds_option = [
-                ('datasource_program', TextAscii(
-                    title = _("Datasource Program (<a href=\"%s\">Rules</a>)") % \
-                        watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'datasource_programs')]),
-                    help = _("For agent based checks Check_MK allows you to specify an alternative "
-                             "program that should be called by Check_MK instead of connecting the agent "
-                             "via TCP. That program must output the agent's data on standard output in "
-                             "the same format the agent would do. This is for example useful for monitoring "
-                             "via SSH.") + monitoring_macro_help() + " "
-                         + _("This option can only be used with the permission \"Can add or modify executables\"."),
-                ))
-            ]
+            ds_option = [(
+                'datasource_program',
+                TextAscii(
+                    title=_("Datasource Program (<a href=\"%s\">Rules</a>)") %
+                    watolib.folder_preserving_link([('mode', 'edit_ruleset'),
+                                                    ('varname', 'datasource_programs')]),
+                    help=
+                    _("For agent based checks Check_MK allows you to specify an alternative "
+                      "program that should be called by Check_MK instead of connecting the agent "
+                      "via TCP. That program must output the agent's data on standard output in "
+                      "the same format the agent would do. This is for example useful for monitoring "
+                      "via SSH.") + monitoring_macro_help() + " " +
+                    _("This option can only be used with the permission \"Can add or modify executables\"."
+                     ),
+                ))]  # type: List[DictionaryEntry]
         else:
             ds_option = []
 
@@ -286,7 +280,7 @@ class ModeDiagHost(WatoMode):
                     minvalue = 1,
                     maxvalue = 65535,
                     default_value = 6556,
-                    title = _("Check_MK Agent Port (<a href=\"%s\">Rules</a>)") % \
+                    title = _("Check_MK Agent Port (<a href=\"%s\">Rules</a>)") %
                         watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'agent_ports')]),
                     help = _("This variable allows to specify the TCP port to "
                              "be used to connect to the agent on a per-host-basis.")
@@ -359,7 +353,7 @@ class ModeAjaxDiagHost(AjaxPage):
             raise MKGeneralException(_('Invalid test.'))
 
         # TODO: Use ModeDiagHost._vs_rules() for processing/validation?
-        args = [""] * 13
+        args = [u""] * 13  # type: List[str]
         for idx, what in enumerate([
                 'ipaddress',
                 'snmp_community',
@@ -368,39 +362,44 @@ class ModeAjaxDiagHost(AjaxPage):
                 'snmp_retries',
                 'tcp_connect_timeout',
         ]):
-            args[idx] = request.get(what, "")
+            args[idx] = request.get(what, u"")
 
         if config.user.may('wato.add_or_modify_executables'):
             args[6] = request.get("datasource_program", "")
 
         if request.get("snmpv3_use"):
             snmpv3_use = {
-                "0": "noAuthNoPriv",
-                "1": "authNoPriv",
-                "2": "authPriv",
-            }.get(request.get("snmpv3_use"))
+                u"0": u"noAuthNoPriv",
+                u"1": u"authNoPriv",
+                u"2": u"authPriv",
+            }.get(request.get("snmpv3_use", u""), u"")
+
             args[7] = snmpv3_use
-            if snmpv3_use != "noAuthNoPriv":
+            if snmpv3_use != u"noAuthNoPriv":
                 snmpv3_auth_proto = {
-                    DropdownChoice.option_id("md5"): "md5",
-                    DropdownChoice.option_id("sha"): "sha"
-                }.get(request.get("snmpv3_auth_proto"))
+                    str(DropdownChoice.option_id("md5")): u"md5",
+                    str(DropdownChoice.option_id("sha")): u"sha"
+                }.get(request.get("snmpv3_auth_proto", u""), u"")
+
                 args[8] = snmpv3_auth_proto
-                args[9] = request.get("snmpv3_security_name")
-                args[10] = request.get("snmpv3_security_password")
+                args[9] = request.get("snmpv3_security_name", u"")
+                args[10] = request.get("snmpv3_security_password", u"")
+
                 if snmpv3_use == "authPriv":
                     snmpv3_privacy_proto = {
-                        DropdownChoice.option_id("DES"): "DES",
-                        DropdownChoice.option_id("AES"): "AES"
-                    }.get(request.get("snmpv3_privacy_proto"))
+                        str(DropdownChoice.option_id("DES")): u"DES",
+                        str(DropdownChoice.option_id("AES")): u"AES"
+                    }.get(request.get("snmpv3_privacy_proto", u""), u"")
+
                     args[11] = snmpv3_privacy_proto
-                    args[12] = request.get("snmpv3_privacy_password")
+
+                    args[12] = request.get("snmpv3_privacy_password", u"")
             else:
-                args[9] = request.get("snmpv3_security_name")
+                args[9] = request.get("snmpv3_security_name", u"")
 
         result = watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
         return {
             "next_transid": html.transaction_manager.fresh_transid(),
             "status_code": result[0],
-            "output": result[1],
+            "output": ensure_str(result[1], errors="replace"),
         }

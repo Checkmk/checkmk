@@ -1,4 +1,4 @@
-title: CPS UPS Device: Remaining battery capacity
+title: CPS UPS Device: Remaining Battery Capacity
 agents: snmp
 catalog: hw/power/cps
 license: GPL
@@ -7,7 +7,7 @@ description:
  The check monitors the battery temperature of CPS UPS devices.
 
 inventory:
- One check per device is created.
+ One service is created for each device.
 
 item:
- The string "Battery"
+ The fixed statement {{Battery}}

@@ -1,4 +1,4 @@
-title: Dell OpenManage: Processor health
+title: Dell OpenManage: Processor Health
 agents: snmp
 catalog: hw/server/dell
 license: GPL
@@ -13,8 +13,8 @@ description:
 
 
 item:
- The numeric id of the processor reported by its position in the mib
+ The numeric ID of the processor reported by its position in the mib
 
 inventory:
- One check is created for each processor
+ One service is created for each processor.
 

@@ -1,4 +1,4 @@
-title: Broadcom Bonding network interface on windows
+title: Windows: Broadcom Bonding Network Interface
 agents: windows
 catalog: os/networking
 license: GPL
@@ -10,8 +10,8 @@ description:
  gets WARN.
 
 item:
- The name of the bonding interface, etc {Bond_10.4}.
+ The name of the bonding interface
 
 inventory:
- One check per {active} bonding interface will be created.
+ One service is created for each {active} bonding interface.
 

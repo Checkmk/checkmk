@@ -1,30 +1,18 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.aws_constants as aws_types
+
+default_running_ondemand_instances = [
+    (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWSEC2InstTypes
+]
+
+default_running_ondemand_instance_families = [
+    ("%s_vcpu" % inst_fam, (None, 80.0, 90.0)) for inst_fam in aws_types.AWSEC2InstFamilies
+]
 
 factory_settings['aws_ec2_limits_default_levels'] = {
     'vpc_elastic_ip_addresses': (None, 80.0, 90.0),
@@ -36,36 +24,41 @@ factory_settings['aws_ec2_limits_default_levels'] = {
     'active_spot_fleet_requests': (None, 80.0, 90.0),
     'spot_fleet_total_target_capacity': (None, 80.0, 90.0),
     'running_ondemand_instances_total': (None, 80.0, 90.0),
-    'running_ondemand_instances': [
-        (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWSEC2InstTypes
-    ],
+    'running_ondemand_instances': default_running_ondemand_instances,
+    'running_ondemand_instances_vcpus': default_running_ondemand_instance_families,
 }
 
 
 def _transform_ec2_limits(params):
-    transformed = {}
-    for k, v in params.iteritems():
+    # Check default reset
+    def instance_limits(limits):
+        return {'running_ondemand_instances_%s' % inst_type: levels for inst_type, levels in limits}
+
+    transformed = instance_limits(default_running_ondemand_instances)
+    transformed.update(instance_limits(default_running_ondemand_instance_families))
+
+    for k, v in params.items():
         if isinstance(v, tuple):
             transformed[k] = v
         elif isinstance(v, list):
-            transformed.update(
-                {'running_ondemand_instances_%s' % inst_type: levels for inst_type, levels in v})
+            transformed.update(instance_limits(v))
     return transformed
 
 
-def check_aws_ec2_limits(item, params, parsed):
+@get_parsed_item_data
+def check_aws_ec2_limits(item, params, region_data):
     # params look like:
     # {'vpc_sec_group_rules': (50, 80.0, 90.0),
     #  'running_ondemand_instances': [('a1.4xlarge', (20, 80.0, 90.0))]}
     params = _transform_ec2_limits(params)
-    return check_aws_limits("ec2", params, parsed)
+    return check_aws_limits("ec2", params, region_data)
 
 
 check_info['aws_ec2_limits'] = {
     'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover_single,
+    'inventory_function': discover(),
     'check_function': check_aws_ec2_limits,
-    'service_description': 'AWS/EC2 Limits',
+    'service_description': 'AWS/EC2 Limits %s',
     'includes': ['aws.include'],
     'group': 'aws_ec2_limits',
     'default_levels_variable': 'aws_ec2_limits_default_levels',

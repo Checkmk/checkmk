@@ -1,36 +1,54 @@
-SHELL    := /bin/bash -e
-PIPENV3  := ../scripts/run-pipenv 3
-PYTEST   := $(PIPENV3) run py.test -vv
-MYPY     := ../scripts/run-mypy
-# TODO: Use find-python-files helper to check same files as other tests?
-MYPY_FILES_TO_CHECK := \
-	$(realpath $(addprefix ../cmk/ec/,defaults.py export.py main.py settings.py)) \
-	$(realpath $(wildcard ../cmk/cee/dcd/*.py)) \
-	$(realpath $(wildcard ../cmk/cee/dcd/connectors/*.py)) \
-	$(realpath $(wildcard ../cmk/*.py)) \
-	$(realpath $(wildcard ../cmk/utils/*.py)) \
-	$(realpath $(wildcard ../cmk/notification_plugins/*.py)) \
-	$(realpath $(wildcard ../cmk/special_agents/*.py)) \
-	$(realpath $(wildcard ../cmk_base/*.py)) \
-	$(wildcard $(realpath ..)/cmk_base/cee/*.py) \
-	$(wildcard $(realpath ..)/cmk_base/automations/*.py) \
-	$(wildcard $(realpath ..)/cmk_base/modes/*.py) \
-	$(wildcard $(realpath ..)/cmk_base/data_sources/*.py) \
-	$(realpath $(addprefix ../cmk/gui/,dashboard.py exceptions.py globals.py htmllib.py \
-	                                   i18n.py sidebar.py sites.py table.py visuals.py permissions.py)) \
-	$(realpath $(addprefix ../cmk/gui/watolib/,rulespecs.py)) \
-	$(realpath $(addprefix ../cmk/gui/plugins/userdb/,htpasswd.py utils.py)) \
-	$(realpath $(wildcard ../cmk/gui/plugins/wato/utils/*.py))
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-.PHONY: help test-docker test-pylint test-unit \
-	test-mypy test-mypy-raw clean
+SHELL := /bin/bash -e
+SCRIPTS := ../scripts
+FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
+PIPENV3 := $(SCRIPTS)/run-pipenv 3
+PYTEST := $(PIPENV3) run py.test -vv
+YAPF := $(PIPENV3) run yapf
+3TO2 := $(PIPENV3) run 3to2
+BANDIT := $(PIPENV3) run bandit
+MYPY := $(SCRIPTS)/run-mypy
+ADDITIONAL_MYPY_ARGS :=
+
+.PHONY: help prepare-node-modules test-docker test-pylint test-unit \
+	test-mypy test-mypy-raw test-mypy3 test-mypy3-raw \
+	clean test-packaging test-gui-crawl test-gui-crawl-docker \
+	test-integration test-integration-docker \
+	test-integration-docker-debug \
+	test-composition-docker test-composition-docker-debug test-composition \
+	test-format-python test-format-python3 \
+	test-unit-coverage-html \
+	test-pipenv-deps test-bandit
 
 help:
-	@echo "test-mypy                 - Run mypy tests"
-	@echo "test-mypy-raw             - Run mypy tests with raw edition config"
-	@echo "test-docker               - Run docker tests"
-	@echo "test-pylint               - Run pylint based tests"
-	@echo "test-unit                 - Run unit tests"
+	@echo "test-mypy                     - Run mypy tests"
+	@echo "test-mypy-raw                 - Run mypy tests with raw edition config"
+	@echo "test-mypy3                    - Run mypy tests for Python 3"
+	@echo "test-mypy3-raw                - Run mypy tests for Python 3 with raw edition config"
+	@echo "test-format-python            - Run Python 2 formatting tests"
+	@echo "test-format-python3           - Run Python 3 formatting tests"
+	@echo "test-docker                   - Run docker tests"
+	@echo "test-pylint                   - Run pylint based tests"
+	@echo "test-unit                     - Run unit tests"
+	@echo "test-unit-coverage-html       - Create HTML coverage report for unit tests"
+	@echo "test-packaging                - Run packaging tests"
+	@echo "test-gui-crawl                - Run GUI crawl locally"
+	@echo "test-gui-crawl-docker         - Run GUI crawl in container"
+	@echo "test-integration              - Run integration tests locally"
+	@echo "test-integration-docker       - Run integration tests in container"
+	@echo "test-integration-docker-debug - Run test container for manual debugging"
+	@echo "test-composition              - Run composition tests locally"
+	@echo "test-composition-docker       - Run composition tests in container"
+	@echo "test-composition-docker-debug - Run test container for manual debugging"
+	@echo "test-pipenv-deps              - Run pipenv dependency issue test"
+	@echo "test-bandit                   - Run bandit (security) tests"
+	@echo "test-agent-plugin-unit-py%-docker - Run Agent plugin tests in container (py version specific)"
+
+prepare-node-modules:
+	$(MAKE) -C .. node_modules/.bin/webpack
 
 test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
@@ -42,11 +60,157 @@ test-pylint:
 test-unit:
 	$(PYTEST) -T unit unit
 
+test-unit-coverage-html:
+	$(PYTEST) \
+	    --cov=cmk \
+	    --cov-report=html \
+	    --cov-config=.coveragerc_unit \
+	    --no-cov-on-fail \
+	    -T unit unit
+
+test-mypy3:
+	$(FIND_PYTHON_FILES) 3 | \
+	`: filter out plugins, they are not real modules` \
+	grep -v $$(realpath '../checks') | \
+	grep -v $$(realpath '../inventory') | \
+	if test -d ../enterprise; then \
+	    grep -v $$(realpath '../agents')/bakery; \
+	else \
+	    cat; \
+	fi | xargs -n 1500 $(MYPY) $(ADDITIONAL_MYPY_ARGS)
+
+test-mypy3-raw:
+	$(MAKE) test-mypy3 ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
+
+MYPY2_FILES=$(shell \
+    $(FIND_PYTHON_FILES) 2 | \
+    `: filter out plugins, they are not real modules` \
+    grep -v $$(realpath '../agents/plugins') | \
+    grep -v $$(realpath '../checks') | \
+    grep -v $$(realpath '../doc/skeleton_check') | \
+    grep -v $$(realpath '../doc/predictive') | \
+    grep -v $$(realpath '../doc/bi-example-oracle.mk') | \
+    grep -v $$(realpath '../doc/bi-example.mk') | \
+    if test -d ../enterprise; then \
+        grep -v $$(realpath '../agents')/bakery | \
+        grep -v $$(realpath '../enterprise/agents/plugins'); \
+    else \
+        cat; \
+    fi | \
+    grep -v $$(realpath '../inventory') | \
+    `: We should really check these, but currently there are too many errors. :-/` \
+    grep -v $$(realpath '../active_checks') | \
+    grep -v $$(realpath '../agents/special') | \
+    grep -v $$(realpath '../agents/windows') | \
+    grep -v $$(realpath '../agents/wnx') | \
+    grep -v $$(realpath '../doc/treasures') | \
+    grep -v $$(realpath '../livestatus/api/python') | \
+    grep -v $$(realpath '../notifications/sms') | \
+    grep -v $$(realpath '../omd/packages') | \
+    grep -v $$(realpath '../tests')) | \
+    `: This is currently a base+GUI and py2/py3 mix. Reenable when GUI is py3` \
+    grep -v $$(realpath '../bin/cmk-update-config')
+
 test-mypy:
-	$(MYPY) --config-file=$(realpath ../mypy.ini) $(MYPY_FILES_TO_CHECK)
+	$(MYPY) $(MYPY2_FILES)
 
 test-mypy-raw:
-	$(MYPY) --config-file=$(realpath ../mypy-raw.ini) $(MYPY_FILES_TO_CHECK)
+	$(MYPY) --config-file=$(realpath ../mypy-raw.ini)  $(MYPY2_FILES)
+
+test-format-python: ../.style.yapf
+# Explicitly specify --style [FILE] to prevent costly searching in parent directories
+# for each file specified via command line
+#
+# There are some mixed up lines on stdout caused by the --parallel option.
+# Nevertheless, we keep that option to get a big performance boost. GitHub issue
+# opened for this problem: https://github.com/google/yapf/issues/644.
+	@PYTHON_FILES=$${PYTHON_FILES-$$($(FIND_PYTHON_FILES) 2)} ; \
+	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
+	grep '^+++ .*(reformatted)$$' | \
+	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
+	exit $${PIPESTATUS[0]}
+
+test-format-python3: ../.style.yapf
+# Explicitly specify --style [FILE] to prevent costly searching in parent directories
+# for each file specified via command line
+#
+# There are some mixed up lines on stdout caused by the --parallel option.
+# Nevertheless, we keep that option to get a big performance boost. GitHub issue
+# opened for this problem: https://github.com/google/yapf/issues/644.
+	@if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES) 3; else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(YAPF) --parallel --style ../.style.yapf --verbose --diff | \
+	grep '^+++ .*(reformatted)$$' | \
+	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
+	exit $${PIPESTATUS[0]}
+
+test-packaging:
+	$(PYTEST) -T packaging packaging
+
+test-gui-crawl: prepare-node-modules
+	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
+
+test-gui-crawl-docker:
+	$(PIPENV3) run scripts/run-dockerized.py "test-gui-crawl"
+
+test-integration: prepare-node-modules
+	CI=true $(PIPENV3) run scripts/run-integration-test.py $(realpath integration)
+
+test-integration-docker:
+	$(PIPENV3) run scripts/run-dockerized.py "test-integration"
+
+test-integration-docker-debug test-composition-docker-debug: prepare-node-modules
+	$(PIPENV3) run scripts/run-dockerized.py debug
+
+test-composition-docker:
+	$(PIPENV3) run scripts/run-dockerized.py "test-composition"
+
+test-composition: prepare-node-modules
+	$(PYTEST) -p no:cov -T composition $(realpath composition)
+
+# Since the unit tests (that are written for Python 3) are executed with Python 2.6, we need to
+# convert them, just like it is done for the agent plugins (see agents/plugins/Makefile)
+AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
+AGENT_PLUGIN_UNIT_TEST_FILES_PY26 := $(subst agent-plugin-unit,agent-plugin-unit/py26,$(AGENT_PLUGIN_UNIT_TEST_FILES))
+
+test-agent-plugin-unit-py2.6-docker: $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
+
+agent-plugin-unit/py26/test_%.py: agent-plugin-unit/test_%.py
+	mkdir -p "$(dir $@)"
+	cp "$<" "$@"
+	sed -i '0,/^$$/{s/^$$/\n# Do not test generated 2.6 files\n# type: ignore\n&/}' "$@"
+	$(3TO2) -x str -n -w "$@" >/dev/null
+
+test-agent-plugin-unit-py%-docker:
+	make -C ../agents/plugins
+	if [ "$*" = "2.6" ]; then \
+	    TEST_PATH="$(realpath agent-plugin-unit)/py26" ; \
+	else \
+	    TEST_PATH="$(realpath agent-plugin-unit)" ; \
+	fi && \
+	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION="$*" -q "$(realpath agent-plugin-unit)")" && \
+	docker run \
+	    $(DOCKER_ADDOPTS) \
+	    -e "PYTEST_ADDOPTS" \
+	    -u $$(id -u):$$(id -g) \
+	    -v "$$TEST_PATH:/tests" \
+	    -v "$(realpath agent-plugin-unit)/utils.py:/tests/utils.py" \
+	    -v "$(realpath agent-plugin-unit)/datasets:/tests/datasets" \
+	    -v "$(realpath ../agents/plugins):/plugins" \
+	    $$IMAGE_HASH \
+	    python$* -m pytest --ignore=tests/py26/ "/tests"
+
+test-pipenv-deps:
+	$(PIPENV3) check
+
+bandit.ini:
+	( echo -n -e "[bandit]\ntargets: "; \
+	  $(FIND_PYTHON_FILES) 3 | tr '\n' ',' | sed 's/,$$//'; \
+	  echo ) > bandit.ini
+
+test-bandit: bandit.ini
+# Currently only care about high severity reported issues. Once this is reached,
+# go and enable the medium/low checks.
+	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
 
 clean:
 	rm -rf .mypy_cache

@@ -8,5 +8,4 @@ description:
  comminicating with the monitoring unit.
 
 inventory:
- One check per blade center is created automatically if a
- media tray is present.
+ One service is created for each blade center if a media tray is present.

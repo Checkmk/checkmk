@@ -1,6 +1,6 @@
-title: Skype For Business - Data Proxy
+title: Skype for Business: Data Proxy
 agents: windows
-catalog: os/services
+catalog: app/skype
 license: GPL
 distribution: check_mk
 description:
@@ -11,5 +11,5 @@ description:
  being throttled.
 
 inventory:
- One item will be discovered for each server.
+ One service is created for each server.
 

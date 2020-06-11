@@ -1,4 +1,4 @@
-title: Cisco UCS: Total memory
+title: Cisco UCS: Total Memory
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

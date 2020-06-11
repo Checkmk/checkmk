@@ -1,0 +1,12 @@
+Title: mssql_transactionlogs, mssql_datafiles: Do not apply percentual levels if the reference size is zero
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1578480808
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+

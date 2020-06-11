@@ -8,4 +8,4 @@ description:
  check is similar to the regular uptime check.
 
 inventory:
- Only one service is created
+ One service is created.

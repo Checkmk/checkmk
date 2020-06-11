@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # --VOLUME INFORMATION--
 #
@@ -133,7 +113,7 @@ def parse_rstcli(info):
 
 
 def inventory_rstcli(parsed):
-    return [(name, None) for name in parsed.keys()]
+    return [(name, None) for name in parsed]
 
 
 # Help! There is no documentation, what are the possible values?
@@ -142,12 +122,11 @@ rstcli_states = {
 }
 
 
-def check_rstcli(item, params, parsed):
-    if item in parsed:
-        volume = parsed[item]
-        return rstcli_states.get(volume['State']), "RAID %s, %d disks (%s), state %s" % \
-            (volume['Raid Level'], int(volume['Num Disks']),
-             volume['Size'], volume['State'])
+@get_parsed_item_data
+def check_rstcli(_item, _no_params, volume):
+    return rstcli_states.get(volume['State'], 3), "RAID %s, %d disks (%s), state %s" % \
+        (volume['Raid Level'], int(volume['Num Disks']),
+         volume['Size'], volume['State'])
 
 
 check_info["rstcli"] = {
@@ -159,18 +138,13 @@ check_info["rstcli"] = {
 
 
 def inventory_rstcli_pdisks(parsed):
-    for key, volume in parsed.iteritems():
+    for key, volume in parsed.items():
         for disk in volume['Disks']:
             yield "%s/%s" % (key, disk['ID']), None
 
 
-def check_rstcli_pdisks(item, params, parsed):
-    reg = regex(r"(.*)/([0-9\-]*)")
-    match = reg.match(item)
-    if not match:
-        return 3, "unsupported item name"
-
-    volume, disk_id = match.group(1), match.group(2)
+def check_rstcli_pdisks(item, _no_params, parsed):
+    volume, disk_id = item.rsplit('/', 1)
 
     disks = parsed.get(volume, {}).get('Disks', [])
     for disk in disks:

@@ -1,0 +1,21 @@
+Title: Fix processing of custom global settings
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1575904885
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+When working with GUI plugins that are registering custom
+global settings by creating a plugin for the default setting
+below <tt>local/share/check_mk/web/plugins/config</tt> and
+a global setting declaration for WATO below
+<tt>local/share/check_mk/web/plugins/wato</tt>, the edit
+dialog of the global setting did not work in all cases as
+expected.
+
+Some times a <tt>KeyError: '<setting-name>'</tt> exception
+was shown in the GUI.

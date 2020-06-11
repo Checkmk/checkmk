@@ -1,4 +1,4 @@
-title: HP devices: Module States
+title: HP Devices: Module States
 agents: snmp
 catalog: hw/network/hp
 license: GPL
@@ -17,4 +17,4 @@ item:
  The module name from ENTITY-MIB.
 
 inventory:
- One service per module is created.
+ One service is created for each module.

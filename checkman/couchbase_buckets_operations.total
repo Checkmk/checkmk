@@ -1,4 +1,4 @@
-title: Total operations of all couchbase buckets
+title: Couchbase Buckets: Total Operations
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -11,6 +11,3 @@ description:
 
 inventory:
  One service is created.
-
-item:
- None.

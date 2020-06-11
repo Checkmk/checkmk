@@ -1,0 +1,20 @@
+Title: send notifications chronologically
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1579867437
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Due to a bug in the notification spooler new spoolfiles were processed before
+old spoolfiles. This may lead to suprising results. If e.g. a host goes DOWN
+and UP in a short time interval the UP notification may arrive before the
+DOWN notification.
+
+Now the notification spooler processes the notifications in the order of
+occurance, i.e. the DOWN notification will be sent before the UP notification.
+
+SUP-1708

@@ -1,119 +1,72 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "HostFileColumn.h"
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <cerrno>
-#include <cstring>
-#include <ostream>
+
+#include <filesystem>
+#include <sstream>
 #include <utility>
+
 #include "Logger.h"
 #include "Row.h"
 
-#ifdef CMC
-#include "Host.h"
-#else
-#include "nagios.h"
-#endif
+HostFileColumn::HostFileColumn(
+    const std::string& name, const std::string& description,
+    const Column::Offsets& offsets,
+    std::function<std::filesystem::path()> basepath,
+    std::function<std::optional<std::filesystem::path>(const Column&,
+                                                       const Row&)>
+        filepath)
+    : BlobColumn(name, description, offsets)
+    , _basepath(std::move(basepath))
+    , _filepath(std::move(filepath)) {}
 
-HostFileColumn::HostFileColumn(const std::string& name,
-                               const std::string& description,
-                               int indirect_offset, int extra_offset,
-                               int extra_extra_offset, int offset,
-                               std::function<std::string()> get_base_dir,
-                               std::string suffix)
-    : BlobColumn(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset)
-    , _get_base_dir(std::move(get_base_dir))
-    , _suffix(std::move(suffix)) {}
+[[nodiscard]] std::filesystem::path HostFileColumn::basepath() const {
+    return _basepath();
+}
+
+[[nodiscard]] std::optional<std::filesystem::path> HostFileColumn::filepath(
+    const Row& row) const {
+    return _filepath(*this, row);
+}
+
+[[nodiscard]] std::optional<std::filesystem::path> HostFileColumn::abspath(
+    const Row& row) const {
+    if (auto f = filepath(row)) {
+        return basepath() / *f;
+    }
+    return {};
+}
 
 std::unique_ptr<std::vector<char>> HostFileColumn::getValue(Row row) const {
-    auto base_dir = _get_base_dir();
-    if (base_dir.empty()) {
-        return nullptr;  // Path is not configured
-    }
-
-#ifdef CMC
-    auto hst = columnData<Host>(row);
-    if (hst == nullptr) {
+    if (!std::filesystem::exists(basepath())) {
+        // The basepath is not configured.
         return nullptr;
     }
-    std::string host_name = hst->name();
-#else
-    auto hst = columnData<host>(row);
-    if (hst == nullptr) {
+    auto path = abspath(row);
+    if (!path) {
         return nullptr;
     }
-    std::string host_name = hst->name;
-#endif
-
-    std::string path = base_dir + "/" + host_name + _suffix;
-    int fd = open(path.c_str(), O_RDONLY);
-    if (fd == -1) {
-        // It is OK when inventory/logwatch files do not exist.
-        if (errno != ENOENT) {
-            generic_error ge("cannot open " + path);
-            Warning(logger()) << ge;
-        }
+    if (!std::filesystem::is_regular_file(*path)) {
+        Warning(logger()) << *path << " is not a regular file";
         return nullptr;
     }
-
-    struct stat st;
-    if (fstat(fd, &st) == -1) {
-        generic_error ge("cannot stat " + path);
+    auto file_size = std::filesystem::file_size(*path);
+    std::ifstream ifs;
+    ifs.open(*path, std::ifstream::in | std::ifstream::binary);
+    if (!ifs.is_open()) {
+        generic_error ge("cannot open " + path->string());
         Warning(logger()) << ge;
         return nullptr;
     }
-    if (!S_ISREG(st.st_mode)) {
-        Warning(logger()) << path << " is not a regular file";
+    using iterator = std::istreambuf_iterator<char>;
+    auto buffer = std::make_unique<std::vector<char>>(file_size);
+    buffer->assign(iterator{ifs}, iterator{});
+    if (buffer->size() != file_size) {
+        Warning(logger()) << "premature EOF reading " << *path;
         return nullptr;
     }
-
-    size_t bytes_to_read = st.st_size;
-    auto result = std::make_unique<std::vector<char>>(bytes_to_read);
-    char* buffer = &(*result)[0];
-    while (bytes_to_read > 0) {
-        ssize_t bytes_read = read(fd, buffer, bytes_to_read);
-        if (bytes_read == -1) {
-            if (errno != EINTR) {
-                generic_error ge("could not read " + path);
-                Warning(logger()) << ge;
-                close(fd);
-                return nullptr;
-            }
-        } else if (bytes_read == 0) {
-            Warning(logger()) << "premature EOF reading " << path;
-            close(fd);
-            return nullptr;
-        } else {
-            bytes_to_read -= bytes_read;
-            buffer += bytes_read;
-        }
-    }
-
-    close(fd);
-    return result;
+    return buffer;
 }

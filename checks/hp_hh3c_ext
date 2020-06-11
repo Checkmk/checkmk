@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
 def parse_hp_hh3c_ext(info):
@@ -33,7 +13,7 @@ def parse_hp_hh3c_ext(info):
         name = entity_info.get(index, (None, None))
 
         # mem_size measured in 'bytes' (hh3cEntityExtMemSize)
-        # check_memory_multiitem needs values in bytes, not percent
+        # check_memory_elements needs values in bytes, not percent
         mem_total = int(mem_size)
         mem_used = 0.01 * int(mem_usage) * mem_total
 
@@ -60,7 +40,7 @@ def parse_hp_hh3c_ext(info):
 
 
 def inventory_hp_hh3c_ext(parsed):
-    for k, v in parsed.iteritems():
+    for k, v in parsed.items():
         # The invalid value is 65535.
         # We assume: If mem_total <= 0, this module is not installed or
         # does not provide reasonable data or is not a real sensor.
@@ -117,7 +97,7 @@ check_info['hp_hh3c_ext'] = {
 
 
 def inventory_hp_hh3c_ext_states(parsed):
-    for k, v in parsed.iteritems():
+    for k, v in parsed.items():
         if v["mem_total"] > 0:
             # We assume: if mem_total > 0 then
             # this module is installed and provides
@@ -172,7 +152,7 @@ check_info['hp_hh3c_ext.states'] = {
 
 
 def inventory_hp_hh3c_ext_cpu(parsed):
-    for k, v in parsed.iteritems():
+    for k, v in parsed.items():
         if v["mem_total"] > 0:
             # We assume: if mem_total > 0 then
             # this module is installed and provides
@@ -211,7 +191,7 @@ factory_settings['hp_hh3c_ext_mem_default_levels'] = {
 
 
 def inventory_hp_hh3c_ext_mem(parsed):
-    for name, attrs in parsed.iteritems():
+    for name, attrs in parsed.items():
         if attrs["mem_total"] > 0:
             # We assume: if mem_total > 0 then
             # this module is installed and provides
@@ -219,17 +199,24 @@ def inventory_hp_hh3c_ext_mem(parsed):
             yield name, {}
 
 
-def check_hp_hh3c_ext_mem(item, params, parsed):
-    if item not in parsed:
-        return
-    return check_memory_multiitem(params, parsed[item])
+@get_parsed_item_data
+def check_hp_hh3c_ext_mem(item, params, data):
+    warn, crit = params.get("levels", (None, None))
+    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    return check_memory_element(
+        "Usage",
+        data["mem_used"],
+        data["mem_total"],
+        (mode, (warn, crit)),
+        metric_name="memused",
+    )
 
 
 check_info['hp_hh3c_ext.mem'] = {
     'inventory_function': inventory_hp_hh3c_ext_mem,
     'check_function': check_hp_hh3c_ext_mem,
     'service_description': 'Memory %s',
-    'includes': ['memory.include'],
+    'includes': ['mem.include'],
     'group': 'memory_multiitem',
     'has_perfdata': True,
     'default_levels_variable': 'hp_hh3c_ext_mem_default_levels',

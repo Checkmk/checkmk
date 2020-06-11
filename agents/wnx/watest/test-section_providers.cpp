@@ -26,6 +26,21 @@ namespace cma::provider {
 
 static const std::string section_name{cma::section::kUseEmbeddedName};
 
+class Empty : public Synchronous {
+public:
+    Empty() : Synchronous("empty") {}
+    std::string makeBody() override { return "****"; }
+};
+
+TEST(SectionProviders, Basic) {
+    Empty e;
+
+    EXPECT_TRUE(e.getHostSp() == nullptr);
+    cma::srv::ServiceProcessor sp;
+    e.host_sp_ = &sp;
+    EXPECT_EQ(e.getHostSp(), &sp);
+}
+
 TEST(SectionProviders, Construction) {
     PluginsProvider plugins;
     EXPECT_EQ(plugins.getUniqName(), cma::section::kPlugins);
@@ -92,6 +107,7 @@ TEST(SectionProviders, BasicSystemTime) {
     auto& e4 = system_time_provider.getEngine();
     auto system_time = e4.generateContent(section_name);
     ASSERT_TRUE(!system_time.empty());
+    EXPECT_EQ(system_time.back(), '\n');
     auto result = cma::tools::SplitString(system_time, "\n");
     EXPECT_EQ(result.size(), 2);
     EXPECT_EQ(result[0], "<<<systemtime>>>");
@@ -241,7 +257,7 @@ TEST(SectionHeaders, All) {
     EXPECT_EQ(ret, "<<<>>>\n");
 
     ret = cma::section::MakeLocalHeader();
-    EXPECT_EQ(ret, "<<<local>>>\n");
+    EXPECT_EQ(ret, "<<<local:sep(0)>>>\n");
 }
 
 }  // namespace cma::provider

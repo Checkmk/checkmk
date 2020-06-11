@@ -1,0 +1,11 @@
+Title: tplink_cpu, tplink_mem, tplink_poe, tplink_poe_summary: New checks for TP-LINK switches
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1576599019
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+New checks that show cpu utilization, memory utilization, PoE status of interfaces and PoE power consumption for TP-LINK switches.

@@ -1,5 +1,5 @@
-title: Brocade FibreChannel Switches: SFP temperature
-catalog: hw/storagehw/brocade
+title: Brocade FibreChannel Switches: SFP Temperature
+catalog: hw/environment/brocade
 agents: snmp
 license: GPL
 distribution: check_mk
@@ -17,6 +17,6 @@ item:
  off.
 
 inventory:
-  The inventory creates checks for all operational ports. What this exactly means
+  One service is created for each operational port. What this exactly means
   can be configured (see CONFIGURATION VARIABLES).
 

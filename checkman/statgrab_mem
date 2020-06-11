@@ -1,4 +1,4 @@
-title: Usage of physical and virtual RAM
+title: Usage of Physical and Virtual RAM
 agents: hpux, solaris
 catalog: os/kernel
 license: GPL
@@ -22,5 +22,5 @@ description:
  machine. Under HP-UX you also need to activate the hpux_statgrab agent plugin.
 
 inventory:
-  Finds one service on every machine with statgrab: The memory used.
+ One service is created on every machine with statgrab.
 

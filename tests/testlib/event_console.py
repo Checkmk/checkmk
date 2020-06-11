@@ -1,9 +1,17 @@
-import time
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import socket
+import time
+from typing import Any, Dict
+
 from testlib.web_session import CMKWebSession
 
 
-class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
+class CMKEventConsole(object):
     def __init__(self, site):
         super(CMKEventConsole, self).__init__()
         self.site = site
@@ -11,9 +19,9 @@ class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
         self.web_session = CMKWebSession(site)
 
     def _config(self):
-        cfg = {}
+        cfg = {}  # type: Dict[str, Any]
         content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
-        exec (content, {}, cfg)
+        exec(content, {}, cfg)
         return cfg
 
     def _gather_status_port(self):
@@ -94,7 +102,7 @@ class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
         return event
 
 
-class CMKEventConsoleStatus(object):  # pylint: disable=useless-object-inheritance
+class CMKEventConsoleStatus(object):
     def __init__(self, address):
         self._address = address
 
@@ -108,7 +116,7 @@ class CMKEventConsoleStatus(object):  # pylint: disable=useless-object-inheritan
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)
 
-        response_text = ""
+        response_text = b""
         while True:
             chunk = sock.recv(8192)
             response_text += chunk

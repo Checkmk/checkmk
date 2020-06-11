@@ -8,4 +8,4 @@ description:
  interprets off as CRIT, on as OK and all other states as UNKNOWN.
 
 inventory:
- One check per device is created.
+ One service is created for each device.

@@ -1,4 +1,4 @@
-title: McAfee Email gateway: Bridge status and traffic
+title: McAfee Email Gateway: Bridge Status and Traffic
 agents: snmp
 catalog: app/mcafee
 license: GPL

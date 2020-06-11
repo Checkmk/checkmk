@@ -1,0 +1,13 @@
+Title: Netapp CPU utilization graph with correct vertical scaling
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1575298185
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Netapp CPU utilization graph had a vertical scaling correspoinding to the
+number of CPUs and not 100%, this is now fixed.

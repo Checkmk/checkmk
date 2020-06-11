@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
+SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
@@ -24,6 +24,7 @@ sudo rsync -arxR \
       htdocs/css \
       htdocs/images \
       htdocs/jquery \
+      htdocs/openapi \
       $(for i in ${JAVASCRIPT_MINI}; do echo ${i#web/}; done) \
       $(for i in ${JAVASCRIPT_MINI}; do echo ${i#web/}.map; done) \
       htdocs/sounds \

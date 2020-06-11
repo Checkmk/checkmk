@@ -1,4 +1,4 @@
-title: McAfee Anti-Virus Signature Date
+title: McAfee Anti-Virus: Signature Date
 agents: windows
 catalog: app/mcafee
 license: GPL
@@ -13,5 +13,5 @@ description:
  Levels for warning and critical state can be set.
 
 inventory:
- One check is created for each windows host.
+ One service is created for each windows host.
 

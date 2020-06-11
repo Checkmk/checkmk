@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # This module implements generic functionality of the Check_MK backup
 # system. It is used to configure the site and system backup.
@@ -33,14 +13,15 @@
 import abc
 import errno
 import glob
+import json
 import os
+from pathlib import Path
 import shutil
 import signal
 import socket
 import subprocess
 import time
-import json
-import six
+from typing import Any, List, Optional, Tuple
 
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -63,6 +44,7 @@ from cmk.gui.valuespec import (
     SchedulePeriod,
     ListOf,
     Timeofday,
+    ValueSpec,
 )
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
 from cmk.gui.i18n import _
@@ -114,19 +96,26 @@ def is_cma():
     return os.path.exists("/etc/cma/cma.conf")
 
 
+def is_canonical(directory):
+    if not directory.endswith("/"):
+        directory += "/"
+    return (os.path.isabs(directory) and
+            os.path.commonprefix([os.path.realpath(directory) + '/', directory]) == directory)
+
+
 # TODO: Locking!
-class Config(object):
+class Config:
     def __init__(self, file_path):
         self._file_path = file_path
 
     def load(self):
-        return store.load_data_from_file(self._file_path, {
+        return store.load_object_from_file(self._file_path, default={
             "targets": {},
             "jobs": {},
         })
 
     def save(self, config):
-        store.save_data_to_file(self._file_path, config)
+        store.save_object_to_file(self._file_path, config)
 
 
 #.
@@ -140,7 +129,7 @@ class Config(object):
 #   '----------------------------------------------------------------------'
 
 
-class BackupEntity(object):
+class BackupEntity:
     def __init__(self, ident, config):
         self._ident = ident
         self._config = {}
@@ -163,15 +152,16 @@ class BackupEntity(object):
         self._config = config
 
 
-class BackupEntityCollection(object):
+class BackupEntityCollection:
     def __init__(self, config_file_path, cls, config_attr):
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
         self._cls = cls
         self._config_attr = config_attr
-        self.objects = dict([
-            (ident, cls(ident, config)) for ident, config in self._config[config_attr].items()
-        ])
+        self.objects = {
+            ident: cls(ident, config)  #
+            for ident, config in self._config[config_attr].items()
+        }
 
     def get(self, ident):
         return self.objects[ident]
@@ -190,9 +180,10 @@ class BackupEntityCollection(object):
         self.objects[obj.ident()] = obj
 
     def save(self):
-        self._config[self._config_attr] = dict([
-            (ident, obj.to_config()) for ident, obj in self.objects.items()
-        ])
+        self._config[self._config_attr] = {
+            ident: obj.to_config()  #
+            for ident, obj in self.objects.items()
+        }
         Config(self._config_path).save(self._config)
 
 
@@ -212,7 +203,7 @@ class BackupEntityCollection(object):
 
 
 # Abstract class for backup jobs (Job) and restore job (RestoreJob)
-class MKBackupJob(object):
+class MKBackupJob:
     @classmethod
     def state_name(cls, state):
         return {
@@ -223,11 +214,13 @@ class MKBackupJob(object):
         }[state]
 
     def state_file_path(self):
+        # type: () -> Path
         raise NotImplementedError()
 
     def cleanup(self):
+        # type: () -> None
         try:
-            os.unlink(self.state_file_path())
+            self.state_file_path().unlink()
         except OSError as e:
             if e.errno == errno.ENOENT:
                 pass
@@ -236,7 +229,8 @@ class MKBackupJob(object):
 
     def state(self):
         try:
-            state = json.load(open(self.state_file_path()))
+            with self.state_file_path().open(encoding="utf-8") as f:
+                state = json.load(f)
         except IOError as e:
             if e.errno == errno.ENOENT:  # not existant
                 state = {
@@ -255,16 +249,18 @@ class MKBackupJob(object):
             state.update({
                 "state": "finished",
                 "finished": max(state["started"],
-                                os.stat(self.state_file_path()).st_mtime),
+                                self.state_file_path().stat().st_mtime),
                 "success": False,
             })
 
         return state
 
     def was_started(self):
-        return os.path.exists(self.state_file_path())
+        # type: () -> bool
+        return self.state_file_path().exists()
 
     def is_running(self):
+        # type: () -> bool
         if not self.was_started():
             return False
 
@@ -278,7 +274,10 @@ class MKBackupJob(object):
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
                              stdin=open(os.devnull),
+                             encoding="utf-8",
                              env=env)
+        if p.stdout is None:
+            raise Exception("cannot happen")
         output = p.stdout.read()
         if p.wait() != 0:
             raise MKGeneralException(_("Failed to start the job: %s") % output)
@@ -298,7 +297,7 @@ class MKBackupJob(object):
             else:
                 raise
 
-        wait = 5  # sec
+        wait = 5.0  # sec
         while os.path.exists("/proc/%d" % state["pid"]) and wait > 0:
             time.sleep(0.5)
             wait -= 0.5
@@ -344,12 +343,13 @@ class Job(MKBackupJob, BackupEntity):
         return "-".join([p.replace("-", "+") for p in parts])
 
     def state_file_path(self):
+        # type: () -> Path
         if not is_site():
-            path = "/var/lib/mkbackup"
+            path = Path("/var/lib/mkbackup")
         else:
-            path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+            path = Path(os.environ["OMD_ROOT"], "var/check_mk/backup")
 
-        return "%s/%s.state" % (path, self.ident())
+        return path / ("%s.state" % self.ident())
 
     def _start_command(self):
         return [mkbackup_path(), "backup", "--background", self.ident()]
@@ -511,23 +511,23 @@ class Jobs(BackupEntityCollection):
         self.save_cronjobs()
 
     def save_cronjobs(self):
-        with open(self._cronjob_path, "w") as f:
+        with Path(self._cronjob_path).open("w", encoding="utf-8") as f:
             self._write_cronjob_header(f)
             for job in self.objects.values():
                 cron_config = job.cron_config()
                 if cron_config:
-                    f.write("%s\n" % "\n".join(cron_config))
+                    f.write(u"%s\n" % "\n".join(cron_config))
 
         self._apply_cron_config()
 
     def _write_cronjob_header(self, f):
-        f.write("# Written by mkbackup configuration\n")
+        f.write(u"# Written by mkbackup configuration\n")
 
     def _apply_cron_config(self):
         pass
 
 
-class PageBackup(object):
+class PageBackup:
     def title(self):
         raise NotImplementedError()
 
@@ -577,14 +577,13 @@ class PageBackup(object):
         if action == "delete" and self._may_edit_config():
             return self._delete_job(job)
 
-        elif action == "start":
+        if action == "start":
             return self._start_job(job)
 
-        elif action == "stop":
+        if action == "stop":
             return self._stop_job(job)
 
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def _delete_job(self, job):
         if job.is_running():
@@ -611,7 +610,7 @@ class PageBackup(object):
         self.jobs().show_list(editable=self._may_edit_config())
 
 
-class PageEditBackupJob(object):
+class PageEditBackupJob:
     def __init__(self):
         super(PageEditBackupJob, self).__init__()
         job_ident = html.request.var("job")
@@ -626,7 +625,7 @@ class PageEditBackupJob(object):
                 raise MKUserError("_job", _("This job is currently running."))
 
             self._new = False
-            self._ident = job_ident
+            self._ident = job_ident  # type: Optional[str]
             self._job_cfg = job.to_config()
             self._title = _("Edit backup job: %s") % job.title()
         else:
@@ -804,16 +803,19 @@ class PageEditBackupJob(object):
         html.end_form()
 
 
-class PageAbstractBackupJobState(object):
+class PageAbstractBackupJobState:
     def __init__(self):
         super(PageAbstractBackupJobState, self).__init__()
-        self._job = None
-        self._ident = None
+        self._job = None  # type: Optional[MKBackupJob]
+        self._ident = None  # type: Optional[str]
 
     def jobs(self):
         raise NotImplementedError()
 
     def title(self):
+        # Our class hierarchy is totally screwed up here...
+        if not isinstance(self._job, BackupEntity):
+            raise Exception("incorrect job state: no backup entity")
         return _("Job state: %s") % self._job.title()
 
     def buttons(self):
@@ -830,12 +832,14 @@ class PageAbstractBackupJobState(object):
         return "ajax_backup_job_state.py?job=%s" % self._ident
 
     def show_job_details(self):
+        if self._job is None:
+            raise Exception("uninitialized PageAbstractBackupJobState")
         job = self._job
         state = job.state()
 
         html.open_table(class_=["data", "backup_job"])
 
-        css = "state0"
+        css = "state0"  # type: Optional[str]
         state_txt = job.state_name(state["state"])
         if state["state"] == "finished":
             if not state["success"]:
@@ -928,6 +932,7 @@ class Target(BackupEntity):
         return self.type_class()(self.type_params())
 
     def show_backup_list(self, only_type):
+        # type: (str) -> None
         with table_element(sortable=False, searchable=False) as table:
 
             for backup_ident, info in sorted(self.backups().items()):
@@ -1027,7 +1032,7 @@ class Targets(BackupEntityCollection):
         target.type().validate_local_directory(path, varprefix)
 
 
-class PageBackupTargets(object):
+class PageBackupTargets:
     def title(self):
         raise NotImplementedError()
 
@@ -1061,7 +1066,7 @@ class PageBackupTargets(object):
             if confirm is False:
                 return False
 
-            elif confirm:
+            if confirm:
                 targets.remove(target)
                 targets.save()
                 return None, _("The target has been deleted.")
@@ -1082,7 +1087,7 @@ class PageBackupTargets(object):
         return True
 
 
-class PageEditBackupTarget(object):
+class PageEditBackupTarget:
     def __init__(self):
         super(PageEditBackupTarget, self).__init__()
         target_ident = html.request.var("target")
@@ -1094,7 +1099,7 @@ class PageEditBackupTarget(object):
                 raise MKUserError("target", _("This backup target does not exist."))
 
             self._new = False
-            self._ident = target_ident
+            self._ident = target_ident  # type: Optional[str]
             self._target_cfg = target.to_config()
             self._title = _("Edit backup target: %s") % target.title()
         else:
@@ -1143,11 +1148,13 @@ class PageEditBackupTarget(object):
                     allow_empty=False,
                     size=64,
                 )),
-                ("remote",
-                 CascadingDropdown(
-                     title=_("Destination"),
-                     choices=ABCBackupTargetType.choices,
-                 )),
+                (
+                    "remote",
+                    CascadingDropdown(
+                        title=_("Destination"),
+                        # Like everyone reading this, mypy is totally confused by our ValueSpecs... :-P
+                        choices=ABCBackupTargetType.choices,  # type: ignore[arg-type]
+                    )),
             ],
             optional_keys=[],
             render="form",
@@ -1218,23 +1225,25 @@ class SystemBackupTargetsReadOnly(Targets):
 #   '----------------------------------------------------------------------'
 
 
-class ABCBackupTargetType(six.with_metaclass(abc.ABCMeta, object)):
+class ABCBackupTargetType(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         raise NotImplementedError()
 
     @classmethod
     def choices(cls):
+        # type: (Any) -> List[Tuple[str, str, ValueSpec]]
         choices = []
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        for type_class in cls.__subclasses__():  # pylint: disable=no-member
+        # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)
+        for type_class in cls.__subclasses__():
             choices.append((type_class.ident, type_class.title(), type_class.valuespec()))
         return sorted(choices, key=lambda x: x[1])
 
     @classmethod
     def get_type(cls, type_ident):
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        for type_class in cls.__subclasses__():  # pylint: disable=no-member
+        for type_class in cls.__subclasses__():
             if type_class.ident == type_ident:
                 return type_class
 
@@ -1291,6 +1300,9 @@ class BackupTargetLocal(ABCBackupTargetType):
 
     @classmethod
     def validate_local_directory(cls, value, varprefix):
+        if not is_canonical(value):
+            raise MKUserError(varprefix, _("You have to provide a canonical path."))
+
         if is_cma() and not value.startswith("/mnt/"):
             raise MKUserError(
                 varprefix,
@@ -1306,7 +1318,8 @@ class BackupTargetLocal(ABCBackupTargetType):
         # Check write access for the site user
         try:
             test_file_path = os.path.join(value, "write_test_%d" % time.time())
-            open(test_file_path, "w")
+            with open(test_file_path, "wb"):
+                pass
             os.unlink(test_file_path)
         except IOError:
             if is_cma():
@@ -1314,12 +1327,11 @@ class BackupTargetLocal(ABCBackupTargetType):
                     varprefix,
                     _("Failed to write to the configured directory. The target directory needs "
                       "to be writable."))
-            else:
-                raise MKUserError(
-                    varprefix,
-                    _("Failed to write to the configured directory. The site user needs to be able to "
-                      "write the target directory. The recommended way is to make it writable by the "
-                      "group \"omd\"."))
+            raise MKUserError(
+                varprefix,
+                _("Failed to write to the configured directory. The site user needs to be able to "
+                  "write the target directory. The recommended way is to make it writable by the "
+                  "group \"omd\"."))
 
     # TODO: Duplicate code with mkbackup
     def backups(self):
@@ -1347,7 +1359,8 @@ class BackupTargetLocal(ABCBackupTargetType):
 
     # TODO: Duplicate code with mkbackup
     def _load_backup_info(self, path):
-        info = json.load(open(path))
+        with Path(path).open(encoding="utf-8") as f:
+            info = json.load(f)
 
         # Load the backup_id from the second right path component. This is the
         # base directory of the mkbackup.info file. The user might have moved
@@ -1403,7 +1416,7 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
         html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
 
     def _key_in_use(self, key_id, key):
-        for job in self.jobs().objects.itervalues():
+        for job in self.jobs().objects.values():
             job_key_id = job.key_ident()
             if job_key_id is not None and key_id == job_key_id:
                 return True
@@ -1507,9 +1520,10 @@ class RestoreJob(MKBackupJob):
         return _("Restore")
 
     def state_file_path(self):
+        # type: () -> Path
         if not is_site():
-            return "/var/lib/mkbackup/restore.state"
-        return "/tmp/restore-%s.state" % os.environ["OMD_SITE"]
+            return Path("/var/lib/mkbackup/restore.state")
+        return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])
 
     def complete(self):
         self.cleanup()
@@ -1526,7 +1540,7 @@ class RestoreJob(MKBackupJob):
         super(RestoreJob, self).start(env)
 
 
-class PageBackupRestore(object):
+class PageBackupRestore:
     def __init__(self):
         self._load_target()
         super(PageBackupRestore, self).__init__()
@@ -1581,17 +1595,16 @@ class PageBackupRestore(object):
         if action == "delete":
             return self._delete_backup(backup_ident)
 
-        elif action == "complete":
+        if action == "complete":
             return self._complete_restore(backup_ident)
 
-        elif action == "start":
+        if action == "start":
             return self._start_restore(backup_ident)
 
-        elif action == "stop":
+        if action == "stop":
             return self._stop_restore(backup_ident)
 
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def _delete_backup(self, backup_ident):
         if self._restore_is_running():
@@ -1600,6 +1613,8 @@ class PageBackupRestore(object):
                 _("A restore is currently running. You can only delete "
                   "backups while no restore is running."))
 
+        if self._target is None:
+            raise Exception("no backup target")
         if backup_ident not in self._target.backups():
             raise MKUserError(None, _("This backup does not exist."))
 
@@ -1610,7 +1625,7 @@ class PageBackupRestore(object):
         if confirm is False:
             return False
 
-        elif confirm:
+        if confirm:
             html.check_transaction()  # invalidate transid
             self._target.remove_backup(backup_ident)
             return None, _("The backup has been deleted.")
@@ -1622,6 +1637,8 @@ class PageBackupRestore(object):
         return RestoreJob(self._target_ident, None).is_running()
 
     def _start_restore(self, backup_ident):
+        if self._target is None:
+            raise Exception("no backup target")
         backup_info = self._target.get_backup(backup_ident)
         if backup_info["config"]["encrypt"] is not None:
             return self._start_encrypted_restore(backup_ident, backup_info)
@@ -1702,7 +1719,7 @@ class PageBackupRestore(object):
         if confirm is False:
             return False
 
-        elif confirm:
+        if confirm:
             html.check_transaction()  # invalidate transid
             RestoreJob(self._target_ident, backup_ident).start()
             return None, _("The restore has been started.")
@@ -1716,7 +1733,7 @@ class PageBackupRestore(object):
         if confirm is False:
             return False
 
-        elif confirm:
+        if confirm:
             html.check_transaction()  # invalidate transid
             RestoreJob(self._target_ident, backup_ident).stop()
             return None, _("The restore has been stopped.")

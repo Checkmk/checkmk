@@ -1,10 +1,9 @@
-title: Generic Printer: Alerts reported
+title: Generic Printer: Alerts Reported
 agents: snmp
 catalog: hw/printer
 license: GPL
 distribution: check_mk
 description:
-
  This check monitors the alerts reported by printers supporting the
  {PRINTER-MIB}. The check generates one service per device.  For every
  active printer alert group ({prtAlertGroup}) it determines the alert code
@@ -16,5 +15,5 @@ description:
  any possible improvements or shortcomings of the table, feel free to contact us.
 
 inventory:
- One check is being created for each device.
+ One service is created for each device.
 

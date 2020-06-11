@@ -10,5 +10,4 @@ description:
  {CRIT} otherwise.
 
 inventory:
- Creates exactly one check for each Top Sense device called
- Overall Status.
+ One service is created for each Top Sense device.

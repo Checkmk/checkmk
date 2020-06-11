@@ -1,0 +1,315 @@
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+
+// Styling for cmk_tabs.js
+div.cmk_tab {
+  nav.main-navigation {
+    overflow: hidden;
+
+    a {
+      display: inline-block;
+      font-size: 1rem;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    ul {
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      position: relative;
+      float: left;
+      min-width: 10rem;
+      font-weight: bold;
+      line-height: 2rem;
+      text-align: center;
+      border-bottom: 2px solid transparent;
+      transition: border-bottom 0.5s;
+    }
+
+    li.active {
+      z-index: 10;
+      border-bottom: 2px solid $success;
+    }
+  }
+
+  div.main-content {
+    position: relative;
+    z-index: 20;
+    height: 100%;
+    min-height: 2.5rem;
+    padding: 0.2rem;
+    margin: 0;
+    border: 1px solid $color-table-border;
+    border-radius: 5;
+
+    .cmk_tab_element {
+      display: none;
+    }
+
+    .cmk_tab_element.active {
+      display: unset;
+    }
+  }
+}
+
+.bar_chart {
+  a {
+    outline: none;
+  }
+
+  rect.bar.bar_chart {
+    fill: $bar-fill-color;
+    stroke: rgba(0, 0, 0, .2);
+
+    &:hover {
+      fill: $bar-hover-fill-color;
+      stroke: rgb(0, 0, 0);
+    }
+  }
+
+  rect.bar.bar_chart.barbar_chart {
+    fill: $barbar-fill-color;
+    stroke: rgba(0, 0, 0, .3);
+
+    &:hover {
+      fill: $barbar-hover-fill-color;
+      stroke: rgb(0, 0, 0);
+    }
+  }
+}
+
+div.cmk_figure {
+  div.loading_img {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    background-image: url("images/load_graph.png");
+  }
+
+  div.tooltip {
+    position: absolute;
+    z-index: 1;
+    padding: 5px;
+    pointer-events: none;
+    background-color: rgba($bg-color-secondary, .87);
+    border: $tooltip-border;
+    border-radius: 5px;
+
+    td {
+      font-size: 11px;
+    }
+  }
+
+  div.legend {
+    position: absolute;
+    top: 5px;
+    right: 6px;
+    padding: 5px;
+    background-color: $timeseries-legend-bg-color;
+    border: $tooltip-border;
+    border-radius: 5px;
+
+    div.legend_item {
+      display: flex;
+
+      div.color_code {
+        width: 12px;
+        height: 12px;
+        margin-right: 4px;
+      }
+    }
+  }
+
+  &.average_scatterplot {
+    div.tooltip {
+      max-width: 300px;
+      min-width: 11px;
+      min-height: 10px;
+      overflow: hidden;
+
+      table {
+        border-collapse: collapse;
+
+        tr {
+          max-width: 450px;
+          min-width: 450px;
+        }
+
+        td {
+          padding: 2px;
+        }
+
+        tr:first-child td {
+          max-width: 250px;
+          min-width: 250px;
+          text-align: left;
+        }
+
+        td:first-child {
+          padding-right: 12px;
+        }
+
+        tr:nth-child(2) {
+          max-width: 50px;
+          min-width: 50px;
+          padding-right: 12px;
+        }
+
+        tr.mean + tr.median {
+          td {
+            padding-bottom: 4px;
+          }
+
+          + tr td {
+            padding-top: 4px;
+            padding-bottom: 4px;
+          }
+        }
+
+        tr.scatterpoint + tr, tr.median + tr {
+          border-top: 1px solid $color-text;
+
+          td { padding-top: 4px; }
+        }
+
+        tr.mean td:nth-child(2) { color: $dc-graph-color-1; }
+        tr.median td:nth-child(2) { color: $dc-graph-color-2; }
+        tr.top_matches td:nth-child(2) { color: rgb(255, 40, 40); }
+        tr.bottom_matches td:nth-child(2) { color: rgb(31, 150, 240); }
+      }
+
+      div.collapser {
+        position: absolute;
+        top: 4px;
+        right: 6px;
+        width: 12px;
+        height: 12px;
+        pointer-events: auto;
+
+        img {
+          height: 12px;
+          transform: rotate(90deg);
+        }
+
+        &.active {
+          img {
+            transform: rotate(180deg);
+          }
+
+          + table tr:not(.scatterpoint):not(.date) {
+            display: none;
+          }
+        }
+      }
+    }
+
+    path.line { stroke-width: 2px; }
+    path.mean_line { stroke: $dc-graph-color-1; }
+    path.median_line { stroke: $dc-graph-color-2; }
+    path.pin { stroke: $color-text; }
+    path.host.hilite { stroke: rgb(70, 130, 180); }
+
+    circle.scatterdot {
+      fill: $dc-graph-color-0;
+
+      &.hilite {
+        fill: $scatterdot-hilite-color;
+      }
+    }
+  }
+}
+
+circle.scatterdot { fill: $dc-graph-color-0; }
+
+
+
+// Styling for dc_table.js
+div.dc_table .options {
+  display: flow-root;
+  min-height: 1rem;
+  margin: 1.5rem;
+  font-size: 1rem;
+
+  .filters {
+    float: left;
+
+    label {
+      padding: 0 0.5rem;
+    }
+
+    label:first-child {
+      padding: 0 0.5rem 0 0;
+    }
+  }
+
+  .filter_graphs {
+    .dc-chart .axis line,
+    .dc-chart .axis path {
+      stroke: $color-table-border;
+    }
+
+    .main-content {
+      svg {
+        stroke: $info;
+        stroke-width: 0.5;
+      }
+    }
+  }
+
+  .paging {
+    float: right;
+    line-height: 2.25rem;
+    text-align: right;
+
+    label {
+      padding-right: 0.5rem;
+      vertical-align: middle;
+    }
+
+    .buttons {
+      float: right;
+
+      input {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 0;
+      }
+
+      input:first-child {
+        border-bottom-left-radius: 4px;
+        border-top-left-radius: 4px;
+      }
+
+      input:last-child {
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+
+      input:hover:not(:disabled) {
+        background: $button-background-hover;
+      }
+
+      input:disabled {
+        color: $grey-2;
+      }
+
+      input:active,
+      input:focus {
+        border: none;
+        box-shadow: 0;
+      }
+
+      input::-moz-focus-inner {
+        border: none;
+      }
+    }
+  }
+}

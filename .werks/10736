@@ -1,0 +1,12 @@
+Title: k8s_resources.pods: don't count finished pods
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1576660363
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Succeeded and failed pods are no longer included in
+the displayed Pod count.

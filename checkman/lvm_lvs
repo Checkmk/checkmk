@@ -1,12 +1,13 @@
-title: LVM: Logical volumes
+title: LVM: Logical Volumes
 agents: linux
 catalog: os/storage
 license: GPL
 distribution: check_mk
 description:
-
  This check monitors the usage of LVM logical volumes.
 
 item:
+ Name of the volume group assigned plus the size of the volume or the name of the volume seperated by a {{/}}
 
 inventory:
+ One service is created for each logical volume.

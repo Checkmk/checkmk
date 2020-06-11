@@ -1,4 +1,4 @@
-title: Memory pool usage of a JVM
+title: Java Virtual Machine: Memory Pool Usage
 agents: linux
 catalog: app/java
 license: GPL
@@ -13,8 +13,9 @@ description:
  Java Virtual Machine.
 
 item:
- The name of the application server instance as configured by the agent.
+ The name of the application server instance followed by the statement {{Memory Pool}}
+ and the name of the memory pool.
 
 inventory:
- One check is created for each Jolokia instance sent by the agent.
+ One service is created for each Jolokia instance sent by the agent.
 

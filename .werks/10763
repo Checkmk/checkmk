@@ -1,0 +1,14 @@
+Title: Opsgenie: Fixed authentication error on european accounts
+Class: fix
+Compatible: incomp
+Component: notifications
+Date: 1579624722
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+If you use an european account, the notification plugin fails with an
+authentication error. To prevent this, you can now configure the domain in the
+associated notification rule.

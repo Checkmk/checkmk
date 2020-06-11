@@ -1,0 +1,13 @@
+Title: Dashboard/Reports: Editors were showing to many context object types
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1577648912
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The editor for e.g. dashboard or report elements was showing too many types of
+filter contexts (e.g. comments, ...) where either none or only a specific set
+of object types should be shown.

@@ -1,4 +1,4 @@
-title: Disk IO on Windows systems
+title: Windows: Disk IO
 agents: windows
 catalog: os/storage
 license: GPL
@@ -18,6 +18,5 @@ description:
  A future implementation might change this.
 
 inventory:
- A check of this type is automatically created for all Windows
- hosts.
+ One service is created for each Windows host.
 

@@ -1,4 +1,4 @@
-title: Traffic of network interfaces on OpenVMS
+title: OpenVMS: Traffic of Network Interfaces
 agents: openvms
 catalog: os/networking
 license: GPL
@@ -10,3 +10,9 @@ description:
 
   This check is compatible to {if}. Please refer to that man page for
   further details about check configuration.
+
+item:
+ The port of the interface
+
+inventory:
+ One service is created for each port.

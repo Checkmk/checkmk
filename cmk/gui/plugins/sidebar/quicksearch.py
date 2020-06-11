@@ -1,45 +1,30 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import re
 import traceback
-import six
+from typing import Any, Dict, List, Set, Tuple
 
 import livestatus
 
 import cmk.utils.plugin_registry
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
 
+import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKException
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
+from cmk.gui.exceptions import HTTPRedirect
+from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
 
 
 @snapin_registry.register
@@ -54,9 +39,11 @@ class QuicksearchSnapin(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("Interactive search field for direct access to hosts, services, host- and "\
-                 "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "\
-                 "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag")
+        return _(
+            "Interactive search field for direct access to hosts, services, host- and "
+            "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "
+            "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag"
+        )
 
     def show(self):
         html.open_div(id_="mk_side_search",
@@ -76,20 +63,22 @@ class QuicksearchSnapin(SidebarSnapin):
         return ["user", "admin", "guest"]
 
     def page_handlers(self):
+        # type: () -> PageHandlers
         return {
             "ajax_search": self._ajax_search,
             "search_open": self._page_search_open,
         }
 
     def _ajax_search(self):
-        q = _maybe_strip(html.get_unicode_input('q'))
+        # type: () -> None
+        q = _maybe_strip(html.request.get_unicode_input('q'))
         if not q:
             return
 
         try:
             generate_results(q)
         except MKException as e:
-            html.show_error(e)
+            html.show_error("%s" % e)
         except Exception as e:
             logger.exception("error generating quicksearch results")
             if config.debug:
@@ -97,6 +86,7 @@ class QuicksearchSnapin(SidebarSnapin):
             html.show_error(traceback.format_exc())
 
     def _page_search_open(self):
+        # type: () -> None
         q = _maybe_strip(html.request.var('q'))
         if not q:
             return
@@ -109,13 +99,8 @@ class QuicksearchSnapin(SidebarSnapin):
 # and then tries to verify it is a regex
 def _to_regex(s):
     s = s.replace('*', '.*')
-    try:
-        re.compile(s)
-    except re.error:
-        raise MKGeneralException(
-            _('You search statement is not valid. You need to provide a regular '
-              'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
-              'if you like to search for a single backslash.'))
+    cmk.gui.utils.validate_regex(s, varname=None)
+
     return s
 
 
@@ -123,10 +108,10 @@ class TooManyRowsError(MKException):
     pass
 
 
-class LivestatusSearchBase(object):
+class LivestatusSearchBase:
     def _build_url(self, url_params):
         new_params = url_params[:]
-        return html.makeuri(new_params, delvars="q", filename="view.py")
+        return html.makeuri(new_params, delvars=["q"], filename="view.py")
 
 
 # Handles exactly one livestatus query
@@ -140,6 +125,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         self._livestatus_command = None  # Computed livestatus query
         self._rows = []  # Raw data from livestatus
         self._elements = []  # Postprocessed rows
+        self._queried_livestatus_columns = []  # type: List[str]
 
     def get_filter_behaviour(self):
         return self._filter_behaviour
@@ -162,7 +148,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
     def get_match_topic(self):
         if len(self._used_filters.keys()) > 1:
             return "Multi-Filter"
-        shortname = self._used_filters.keys()[0]
+        shortname = list(self._used_filters.keys())[0]
         return self._get_plugin_with_shortname(shortname).get_match_topic()
 
     def _get_plugin_with_shortname(self, shortname):
@@ -198,9 +184,10 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             self._rows.pop()  # Remove limit+1nth element
 
     def _generate_livestatus_command(self):
+        # type: () -> None
         self._determine_livestatus_table()
         columns_to_query = set(self._get_livestatus_default_columns())
-        livestatus_filter_domains = {}  # Filters sorted by domain
+        livestatus_filter_domains = {}  # type: Dict[str, List[str]]
 
         self._used_search_plugins = self._get_used_search_plugins()
 
@@ -269,12 +256,13 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         self._livestatus_table = table_to_query
 
     def _get_livestatus_default_columns(self):
+        # type: () -> List[str]
         return {
             "services": ["description", "host_name"],
             "hosts": ["name"],
             "hostgroups": ["name"],
             "servicegroups": ["name"],
-        }[self._livestatus_table]
+        }.get(self._livestatus_table, [])  # TODO: Is the default correct/necessary?
 
     def get_search_url_params(self):
         exact_match = self.num_rows() == 1
@@ -303,8 +291,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
         # Feed each row to the filters and let them add additional text/url infos
         for row in self._rows:
-            entry = {"text_tokens": []}
-            url_params = []
+            entry = {"text_tokens": []}  # type: Dict[str, Any]
+            url_params = []  # type: List[Tuple[str, str]]
             skip_site = False
             for filter_shortname in self._used_filters:
                 plugin = self._get_plugin_with_shortname(filter_shortname)
@@ -334,20 +322,20 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         if exact_match:
             if self._livestatus_table == "hosts":
                 return "host"
-            elif self._livestatus_table == "services":
+            if self._livestatus_table == "services":
                 return "allservices"
-            elif self._livestatus_table == "hostgroups":
+            if self._livestatus_table == "hostgroups":
                 return "hostgroup"
-            elif self._livestatus_table == "servicegroups":
+            if self._livestatus_table == "servicegroups":
                 return "servicegroup"
         else:
             if self._livestatus_table == "hosts":
                 return "searchhost"
-            elif self._livestatus_table == "services":
+            if self._livestatus_table == "services":
                 return "searchsvc"
-            elif self._livestatus_table == "hostgroups":
+            if self._livestatus_table == "hostgroups":
                 return "hostgroups"
-            elif self._livestatus_table == "servicegroups":
+            if self._livestatus_table == "servicegroups":
                 return "svcgroups"
 
     def _generate_display_texts(self):
@@ -366,7 +354,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         if self._livestatus_table in ["hostgroups", "servicegroups"]:
             # Discard redundant hostgroups
             new_elements = []
-            used_groups = set()
+            used_groups = set()  # type: Set[str]
             for element in self._elements:
                 if element["display_text"] in used_groups:
                     continue
@@ -388,7 +376,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
                     element["display_text"] += " <b>%s</b>" % hostname
 
     def _element_texts_unique(self):
-        used_texts = set()
+        # type: () -> bool
+        used_texts = set()  # type: Set[str]
         for entry in self._elements:
             if entry["display_text"] in used_texts:
                 return False
@@ -406,7 +395,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
         try:
             self._query_data()
         except TooManyRowsError as e:
-            html.show_warning(e)
+            html.show_warning(str(e))
 
         self._evaluate_results()
         self._render_dropdown_elements()
@@ -418,7 +407,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
             pass
 
         # Generate a search page for the topmost search_object with results
-        url_params = []
+        url_params = []  # type: List[Tuple[str, str]]
         for search_object in self._search_objects:
             if search_object.num_rows() > 0:
                 url_params.extend(search_object.get_search_url_params())
@@ -448,7 +437,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
             found_filters.append((match.group(1), match.start()))
 
         if found_filters:
-            filter_spec = {}
+            filter_spec = {}  # type: Dict[str, List[str]]
             current_string = self._query
             for filter_type, offset in found_filters[-1::-1]:
                 filter_text = _to_regex(current_string[offset + len(filter_type):]).strip()
@@ -501,13 +490,11 @@ class LivestatusQuicksearch(LivestatusSearchBase):
         for search_object in self._search_objects:
             if not search_object.num_rows():
                 continue
-            elements = search_object.get_elements()
-            elements.sort(key=lambda x: x["display_text"])
             if show_match_topics:
                 match_topic = search_object.get_match_topic()
                 html.div(_("Results for %s") % match_topic, class_="topic")
 
-            for entry in elements:
+            for entry in sorted(search_object.get_elements(), key=lambda x: x["display_text"]):
                 html.a(entry["display_text"],
                        id="result_%s" % self._query,
                        href=entry["url"],
@@ -546,7 +533,7 @@ def generate_search_results(query):
 
 # TODO: Simplify code by making static things like _filter_shortname class members
 # and it's getters class methods
-class QuicksearchMatchPlugin(six.with_metaclass(abc.ABCMeta, object)):
+class QuicksearchMatchPlugin(metaclass=abc.ABCMeta):
     def __init__(self, supported_livestatus_tables, preferred_livestatus_table, filter_shortname):
         self._filter_shortname = filter_shortname
         self._supported_livestatus_tables = supported_livestatus_tables
@@ -653,7 +640,7 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
 
     def get_matches(self, for_view, row, livestatus_table, used_filters, rows=None):
         supported_views = {
-            ### View name    url fieldname,                  key in row
+            # View name    url fieldname,                  key in row
             # Group domains (hostgroups, servicegroups)
             "hostgroup": ["hostgroup", "name"],
             "hostgroups": ["hostgroup_regex", "name"],
@@ -734,7 +721,7 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
     def get_match_topic(self):
         if self._livestatus_field == "name":
             return _("Hostname")
-        elif self._livestatus_field == "address":
+        if self._livestatus_field == "address":
             return _("Hostaddress")
         return _("Hostalias")
 
@@ -815,6 +802,12 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
                 lookup_dict[grouped_tag.id] = tag_group.id
         return lookup_dict
 
+    def _get_auxtag_dict(self):
+        lookup_dict = {}
+        for tag_id in config.tags.aux_tag_list.get_tag_ids():
+            lookup_dict[tag_id] = tag_id
+        return lookup_dict
+
     def get_match_topic(self):
         return _("Hosttag")
 
@@ -856,18 +849,30 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
 
         url_infos = []
         hosttag_to_group_dict = self._get_hosttag_dict()
+        auxtag_to_group_dict = self._get_auxtag_dict()
 
         for idx, entry in enumerate(used_filters.get(self.get_filter_shortname())):
-            if ":" not in entry and entry in hosttag_to_group_dict:
+            if ":" not in entry:
                 # Be compatible to pre 1.6 filtering for some time (no
                 # tag-group:tag-value, but tag-value only)
-                tag_key, tag_value = hosttag_to_group_dict[entry], entry
+                if entry in hosttag_to_group_dict:
+                    tag_key, tag_value = hosttag_to_group_dict[entry], entry
+                elif entry in auxtag_to_group_dict:
+                    tag_key, tag_value = auxtag_to_group_dict[entry], entry
+                else:
+                    continue
             else:
                 tag_key, tag_value = entry.split(":", 1)
 
-            url_infos.append(("host_tag_%d_grp" % idx, tag_key))
-            url_infos.append(("host_tag_%d_op" % idx, "is"))
-            url_infos.append(("host_tag_%d_val" % idx, tag_value))
+            # here we check which *_to_group_dict containes the tag_key
+            # we do not care about the actual data
+            # its purpose is to decide which 'url info' to use
+            if tag_key in hosttag_to_group_dict:
+                url_infos.append(("host_tag_%d_grp" % idx, tag_key))
+                url_infos.append(("host_tag_%d_op" % idx, "is"))
+                url_infos.append(("host_tag_%d_val" % idx, tag_value))
+            elif tag_key in auxtag_to_group_dict:
+                url_infos.append(("host_auxtags_%d" % idx, tag_key))
 
         return "", url_infos
 

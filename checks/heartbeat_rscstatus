@@ -1,53 +1,49 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
-# Status can be "local", "foreign", "all" or "none"
-#
-# Example outputs from agent:
 # <<<heartbeat_rscstatus>>>
 # all
+#
+# Status can be "local", "foreign", "all" or "none"
 
 
-def inventory_heartbeat_rscstatus(info):
-    return [(None, '"%s"' % line[0]) for line in info if line[0] != '']
+def parse_heartbeat_rscstatus(info):
+    try:
+        return info[0][0]
+    except IndexError:
+        return
 
 
-def check_heartbeat_rscstatus(item, expected_state, info):
-    if len(info) > 0 and len(info[0]) > 0:
-        if (isinstance(expected_state, list) and
-                info[0][0] in expected_state) or info[0][0] == expected_state:
-            return (0, "Current state: %s" % (info[0][0]))
-        return (2, "Current state: %s (Expected: %s)" % (info[0][0], expected_state))
-    return (3, "Got no information from agent")
+def inventory_heartbeat_rscstatus(heartbeat_rsc_status):
+    if heartbeat_rsc_status is not None:
+        yield None, {"discovered_state": heartbeat_rsc_status}
+
+
+def check_heartbeat_rscstatus(_no_item, params, heartbeat_rsc_status):
+    if heartbeat_rsc_status is None:
+        return
+
+    if not isinstance(params, dict):
+        # old params comes styled with double qoutes
+        params = {"discovered_state": params.replace("\"", "")}
+
+    expected_state = params.get("discovered_state")
+    if "expected_state" in params:
+        expected_state = params["expected_state"]
+
+    if expected_state == heartbeat_rsc_status:
+        yield 0, "Current state: %s" % heartbeat_rsc_status
+    else:
+        yield 2, "Current state: %s (Expected: %s)" % (heartbeat_rsc_status, expected_state)
 
 
 check_info["heartbeat_rscstatus"] = {
+    'parse_function': parse_heartbeat_rscstatus,
     'check_function': check_heartbeat_rscstatus,
     'inventory_function': inventory_heartbeat_rscstatus,
     'service_description': 'Heartbeat Ressource Status',
+    'group': 'heartbeat_rscstatus',
 }

@@ -1,12 +1,14 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Create/Update/Remove GLPI Ticket
 # Bulk: No
 
-from socket import socket, AF_UNIX, SOCK_STREAM, SHUT_WR
-import os
+import ast
 import logging
-import time
+import os
 import re
+from socket import socket, AF_UNIX, SOCK_STREAM, SHUT_WR
+import time
 
 log = logging.getLogger("ticket_log")
 
@@ -177,8 +179,7 @@ class Incident(object):
         match = re.search(r"\[Incident ID: ([^;\]]*)", comment)
         if match:
             return match.group(1)
-        else:
-            return None
+        return None
 
     def close(self):
         if self.__source == Incident.Source.Notification:
@@ -192,8 +193,7 @@ class Incident(object):
         self.__id = identifier
         if self.__source == Incident.Source.EventConsole:
             return self.__store_incident_id_ec()
-        else:
-            return self.__store_incident_id_notification()
+        return self.__store_incident_id_notification()
 
     def event_type(self):
         return self.__type
@@ -267,12 +267,11 @@ class Renderer(object):
                 'host': incident.host(),
                 'state': self.__render_state(incident.state())
             }
-        else:
-            return "Service %(service)s on host %(host)s is %(state)s!" % {
-                'service': incident.service(),
-                'host': incident.host(),
-                'state': self.__render_state(incident.state())
-            }
+        return "Service %(service)s on host %(host)s is %(state)s!" % {
+            'service': incident.service(),
+            'host': incident.host(),
+            'state': self.__render_state(incident.state())
+        }
 
     def render_message(self, incident):
         if incident.what() == Incident.What.Host:
@@ -325,15 +324,7 @@ class LiveStatus(object):
     def query_obj(self, lql):
         lql = lql + "\nOutputFormat: python\n"
         obj_string = "\n".join(list(self.query(lql)))
-
-        if not obj_string:
-            return []
-        else:
-            try:
-                import ast
-                return ast.literal_eval(obj_string)
-            except ImportError:
-                return eval(obj_string)
+        return ast.literal_eval(obj_string) if obj_string else []
 
     def execute(self, lql):
         sock = socket(AF_UNIX, SOCK_STREAM)
@@ -418,7 +409,7 @@ class TicketInterface(object):
 
 class InterfaceGLPI(TicketInterface):
 
-    from xmlrpclib import ServerProxy, Error, ProtocolError, ResponseError, Fault  # nosec
+    from xmlrpc.client import ServerProxy, Error, ProtocolError, ResponseError, Fault  # nosec
 
     urgency_map = {
         TicketInterface.Urgency.Low: 1,
@@ -464,7 +455,7 @@ class InterfaceGLPI(TicketInterface):
         if self.__session:
             self.__server.glpi.doLogout({'session': self.__session})
 
-    def create_ticket(self, title, message, urgency):
+    def create_ticket(self, title, message, urgency, ticket_id):
         # typo in glpi webservices api: "urgancy"
         response = self.__server.glpi.createTicket({
             'session': self.__session,
@@ -475,22 +466,21 @@ class InterfaceGLPI(TicketInterface):
         log.debug("create ticket response: %s", response)
         return response['id']
 
-    """
-    def __resolve_id(self, ticket_id):
-        response = self.__server.listTickets({
-            'recipient': self.__own_name,    # only tickets reported through this account
-            'status': 'notclosed'
-        })
+    # def __resolve_id(self, ticket_id):
+    #     response = self.__server.listTickets({
+    #         'recipient': self.__own_name,    # only tickets reported through this account
+    #         'status': 'notclosed'
+    #     })
 
-        for ticket in response:
-            # title and name of a ticket are the same thing, the naming is not consistent
-            # in the API
-            if ticket['name'].endswith(self.__format_ticket_id(ticket_id)):
-                return ticket['id']
-    """
+    #     for ticket in response:
+    #         # title and name of a ticket are the same thing, the naming is not consistent
+    #         # in the API
+    #         if ticket['name'].endswith(self.__format_ticket_id(ticket_id)):
+    #             return ticket['id']
+
     def add_ticket_comment(self, ticket_id, message):
         log.info("sess %s, tick %s, cont %s", self.__session, ticket_id, message)
-        response = self.__server.glpi.addTicketFollowup({
+        self.__server.glpi.addTicketFollowup({
             'session': self.__session,
             'ticket': ticket_id,
             'content': message
@@ -532,15 +522,17 @@ def import_settings(base_dir):
     }
 
     if os.path.isfile(defaults_cfg):
-        exec (open(defaults_cfg).read(), settings, settings)
+        exec(open(defaults_cfg).read(), settings, settings)
     if os.path.isfile(ticket_cfg):
-        exec (open(ticket_cfg).read(), settings, settings)
+        exec(open(ticket_cfg).read(), settings, settings)
 
     # execfile put all tho globals into settings, including modules.
     # This doesn't acually hurt but let's clean up a bit anyway
-    return dict((key, value)
-                for key, value in settings.iteritems()
-                if isinstance(value, str) or isinstance(value, int) or isinstance(value, bool))
+    return {
+        key: value  #
+        for key, value in settings.items()
+        if isinstance(value, (bool, int, str))
+    }
 
 
 def init_logging(base_dir, settings):
@@ -637,7 +629,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
+    except Exception:
         if log is not None:
             log.exception("Unhandled exception")
         else:

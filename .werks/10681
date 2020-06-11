@@ -1,0 +1,24 @@
+Title: Bakery can configure Checkmk Windows agent service
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1579525929
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+Previously the service of the Checkmk Windows agent have been installed 
+using default Windows settings for the Windows service.
+
+The new ruleset in Bakery <tt>Checkmk Windows agent service settings</tt> 
+gives the possibility to configure some parameters of the service during 
+installation. 
+
+At the time the Bakery can change next parameters: 'Restart on crash', 
+'Action on error' and 'Service start type'.
+
+The same functionality in Raw Edition can be achieved using the Agent 
+configuration file. 
+
+

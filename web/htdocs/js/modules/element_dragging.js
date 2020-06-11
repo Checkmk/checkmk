@@ -1,26 +1,6 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails.  You should have received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 import * as utils from "utils";
 
@@ -92,6 +72,9 @@ function position_dragging_object(event)
         // TODO: Does not work with all tables! See comment in finalize_dragging()
         if (previous && previous.children && previous.children[0].tagName == "TH")
             return null;
+        // Do not move above the action rows of tables rendered with "table.py"
+        if (previous && utils.has_class(previous, "actions"))
+            return null;
 
         return previous;
     };
@@ -153,14 +136,16 @@ function finalize_dragging()
 
     var index = Array.prototype.slice.call(elements).indexOf(dragging);
 
-    // TODO: This currently makes the draggig work with tables having:
+    // This currently makes the draggig work with tables having:
     // - no header
     // - one header line
-    // Known things that don't work:
-    // - second header (actions in tables)
-    // - footer (like in WATO host list)
     var has_header = elements[0].children[0].tagName == "TH";
     if (has_header)
+        index -= 1;
+
+    // - possible existing "table.py" second header (actions in tables)
+    var has_action_row = elements.length > 1 && utils.has_class(elements[1], "actions");
+    if (has_action_row)
         index -= 1;
 
     g_element_dragging.drop_handler(index);

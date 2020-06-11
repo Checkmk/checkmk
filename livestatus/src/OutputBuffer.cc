@@ -1,32 +1,17 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "OutputBuffer.h"
+
 #include <unistd.h>
+
+#include <cerrno>
 #include <chrono>
 #include <cstddef>
 #include <iomanip>
+
 #include "Logger.h"
 #include "Poller.h"
 
@@ -70,21 +55,22 @@ void OutputBuffer::writeData(std::ostringstream &os) {
     const char *buffer = static_cast<Hack *>(os.rdbuf())->base();
     size_t bytes_to_write = os.tellp();
     while (!shouldTerminate() && bytes_to_write > 0) {
-        Poller poller;
-        poller.addFileDescriptor(_fd, PollEvents::out);
-        int retval = poller.poll(100ms);
-        if (retval > 0 && poller.isFileDescriptorSet(_fd, PollEvents::out)) {
-            ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
-            if (bytes_written == -1) {
-                generic_error ge("could not write " +
-                                 std::to_string(bytes_to_write) +
-                                 " bytes to client socket");
-                Informational(_logger) << ge;
-                break;
+        if (!Poller{}.wait(100ms, _fd, PollEvents::out, _logger)) {
+            if (errno == ETIMEDOUT) {
+                continue;
             }
-            buffer += bytes_written;
-            bytes_to_write -= bytes_written;
+            break;
         }
+        ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
+        if (bytes_written == -1) {
+            generic_error ge("could not write " +
+                             std::to_string(bytes_to_write) +
+                             " bytes to client socket");
+            Informational(_logger) << ge;
+            break;
+        }
+        buffer += bytes_written;
+        bytes_to_write -= bytes_written;
     }
 }
 
@@ -96,3 +82,5 @@ void OutputBuffer::setError(ResponseCode code, const std::string &message) {
         _response_code = code;
     }
 }
+
+std::string OutputBuffer::getError() const { return _error_message; }

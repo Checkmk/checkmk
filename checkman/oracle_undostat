@@ -1,4 +1,4 @@
-title: Check Undo Retention of Oracle Instances
+title: Oracle Instance: Undo Retention
 agents: linux, aix, hp/ux, Solaris
 catalog: app/oracle
 license: GPL
@@ -25,11 +25,14 @@ description:
  The state for this event could be configured with nospaceerrcnt_state.
  There is no real usable value for the minimum amount of space errors.
 
- This check needs the Check_MK {mk_oracle}-plugin installed in
+ This check needs the Checkmk {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 
 item:
  The SID of the database in uppercase (as appearing in the process
  name of the pmon_... process).
+
+inventory:
+ One service is created for each running database.
 

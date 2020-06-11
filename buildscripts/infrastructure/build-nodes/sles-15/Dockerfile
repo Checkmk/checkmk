@@ -1,8 +1,10 @@
-FROM nexus.lan.tribe29.com:4000/sles-15-base
+FROM registry.suse.com/suse/sle15:15.0
 
 SHELL ["/bin/bash", "-c"]
+ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
-RUN zypper addrepo -G http://nexus:8081/repository/sles15 sles15 \
+ARG ARTIFACT_STORAGE
+RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     && zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
@@ -48,7 +50,6 @@ RUN zypper addrepo -G http://nexus:8081/repository/sles15 sles15 \
     rpcbind \
     rpm-build \
     rpm-devel \
-    rrdtool-devel \
     samba-client \
     sqlite3-devel \
     tar \
@@ -56,11 +57,38 @@ RUN zypper addrepo -G http://nexus:8081/repository/sles15 sles15 \
     tk-devel \
     unzip \
     wget \
+    chrpath \
+    joe \
+    iputils \
+    vim \
     && zypper clean -a
 
-COPY bw-build-gnu-toolchain.sh /usr/sbin
-RUN bw-build-gnu-toolchain.sh -b
-RUN cd /opt \
-    && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
-    && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
-    && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/
+# Install our standard tool chain for building
+# - gnu-toolchain is needed for compiling all the C++ stuff
+# - cmake is needed for e.g. building re2
+# - openssl is needed by Python 3.7+
+# - python is needed by our build / test chain
+ARG NEXUS_ARCHIVES_URL
+ARG NEXUS_USERNAME
+ARG NEXUS_PASSWORD
+ARG DISTRO
+ARG BRANCH_VERSION
+ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+
+COPY scripts/* /opt/
+RUN /opt/install-gnu-toolchain.sh
+RUN /opt/install-cmake.sh
+RUN /opt/install-openssl.sh
+RUN /opt/install-python2.sh
+RUN /opt/install-python.sh
+RUN /opt/install-pipenv.sh
+RUN /opt/install-nodejs.sh
+RUN /opt/install-freetds.sh
+
+# Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
+# jobs will be executed as this user in the container
+RUN groupadd -g 1000 jenkins \
+    && useradd -m -u 1001 -g 1000 -s /bin/bash jenkins
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 #pragma once
 // registry access
 #define WIN32_LEAN_AND_MEAN
@@ -25,6 +29,11 @@ std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept;
 
 std::filesystem::path ExtractPathFromServiceName(
     std::wstring_view service_name) noexcept;
+
+enum class CleanMode { none, smart, all };
+
+CleanMode GetCleanDataFolderMode();
+bool CleanDataFolder(CleanMode mode);
 
 class Folders {
 public:
@@ -108,7 +117,7 @@ public:
 private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
-    std::filesystem::path makeDefaultDataFolder(
+    static std::filesystem::path makeDefaultDataFolder(
         std::wstring_view AgentDataFolder, CreateMode mode);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
@@ -124,6 +133,11 @@ private:
     FRIEND_TEST(CmaCfg, LogFileLocation);
 #endif
 };
+
+std::vector<std::wstring_view> AllDirTable();
+std::vector<std::wstring_view> RemovableDirTable();
+
+int CreateTree(const std::filesystem::path& base_path) noexcept;
 
 }  // namespace cma::cfg::details
 
@@ -142,7 +156,7 @@ class ConfigInfo {
     struct YamlData {
         YamlData(const std::filesystem::path& Path,
                  std::filesystem::file_time_type Timestamp)
-            : path_(Path), bad_(false) {}
+            : path_(Path) {}
 
         void loadFile() {
             checkStatus();
@@ -201,8 +215,8 @@ class ConfigInfo {
         }
 
         std::filesystem::file_time_type last_loaded_time_;
-        bool exists_;
-        bool bad_;
+        bool exists_ = false;
+        bool bad_ = true;
         std::filesystem::file_time_type timestamp_;
     };
 
@@ -369,7 +383,7 @@ public:
     static bool smartMerge(YAML::Node Target, YAML::Node Src, Combine combine);
 
     // THIS IS ONLY FOR TESTING
-    bool loadDirect(const std::filesystem::path& FullPath);
+    bool loadDirect(const std::filesystem::path& file);
 
     uint64_t uniqId() const noexcept { return uniq_id_; }
 

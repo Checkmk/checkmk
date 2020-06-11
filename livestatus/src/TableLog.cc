@@ -1,28 +1,10 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "TableLog.h"
+
 #include <bitset>
 #include <cstdint>
 #include <map>
@@ -31,9 +13,11 @@
 #include <optional>
 #include <stdexcept>
 #include <utility>
+
 #include "Column.h"
 #include "LogCache.h"
 #include "LogEntry.h"
+#include "LogEntryStringColumn.h"
 #include "Logfile.h"
 #include "MonitoringCore.h"
 #include "OffsetIntColumn.h"
@@ -54,77 +38,114 @@
 #include "nagios.h"
 #endif
 
-struct LogRow {
+namespace {
+
+class LogRow :
+#ifndef CMC
+    public TableContacts::IRow,
+#endif
+    public TableCommands::IRow {
+public:
+    LogRow(LogEntry *entry_, host *hst_, service *svc_, const contact *ctc_,
+           Command command_)
+        : entry{entry_}
+        , hst{hst_}
+        , svc{svc_}
+        , ctc{ctc_}
+        , command{std::move(command_)} {};
+
+#ifndef CMC
+    [[nodiscard]] const contact *getContact() const override { return ctc; }
+#endif
+    [[nodiscard]] Command getCommand() const override { return command; }
+
     LogEntry *entry;
     host *hst;
     service *svc;
-    // cppcheck is too dumb to see usage in the DANGEROUS_OFFSETOF macro
-    // cppcheck-suppress unusedStructMember
     const contact *ctc;
     Command command;
 };
+
+}  // namespace
 
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
     auto entry_offset = DANGEROUS_OFFSETOF(LogRow, entry);
     addColumn(std::make_unique<OffsetTimeColumn>(
-        "time", "Time of the log event (UNIX timestamp)", entry_offset, -1, -1,
-        DANGEROUS_OFFSETOF(LogEntry, _time)));
+        "time", "Time of the log event (UNIX timestamp)",
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _time)}));
     addColumn(std::make_unique<OffsetIntColumn>(
-        "lineno", "The number of the line in the log file", entry_offset, -1,
-        -1, DANGEROUS_OFFSETOF(LogEntry, _lineno)));
+        "lineno", "The number of the line in the log file",
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _lineno)}));
     addColumn(std::make_unique<OffsetIntColumn>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
-        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _class)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _class)}));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "message", "The complete message line including the timestamp",
-        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _message)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _message)}));
     addColumn(std::make_unique<OffsetStringColumn>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
-        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _type)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _type)}));
     addColumn(std::make_unique<OffsetStringColumn>(
-        "options", "The part of the message after the ':'", entry_offset, -1,
-        -1, DANGEROUS_OFFSETOF(LogEntry, _options)));
+        "options", "The part of the message after the ':'",
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _options)}));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "comment", "A comment field used in various message types",
-        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _comment)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _comment)}));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "plugin_output",
         "The output of the check, if any is associated with the message",
-        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _plugin_output)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _plugin_output)}));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "long_plugin_output",
         "The complete output of the check, if any is associated with the message",
-        entry_offset, -1, -1,
-        DANGEROUS_OFFSETOF(LogEntry, _long_plugin_output)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _long_plugin_output)}));
     addColumn(std::make_unique<OffsetIntColumn>(
-        "state", "The state of the host or service in question", entry_offset,
-        -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state)));
+        "state", "The state of the host or service in question",
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _state)}));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "state_type", "The type of the state (varies on different log classes)",
-        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state_type)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _state_type)}));
+    addColumn(std::make_unique<LogEntryStringColumn>(
+        "state_info", "Additional information about the state",
+        Column::Offsets{entry_offset, -1, -1, 0}));
     addColumn(std::make_unique<OffsetIntColumn>(
-        "attempt", "The number of the check attempt", entry_offset, -1, -1,
-        DANGEROUS_OFFSETOF(LogEntry, _attempt)));
+        "attempt", "The number of the check attempt",
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _attempt)}));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
-        entry_offset, -1, -1,
-        DANGEROUS_OFFSETOF(LogEntry, _service_description)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _service_description)}));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "host_name",
         "The name of the host the log entry is about (might be empty)",
-        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _host_name)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _host_name)}));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "contact_name",
         "The name of the contact the log entry is about (might be empty)",
-        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _contact_name)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _contact_name)}));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "command_name",
         "The name of the command of the log entry (e.g. for notifications)",
-        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _command_name)));
+        Column::Offsets{entry_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(LogEntry, _command_name)}));
 
     // join host and service tables
     TableHosts::addColumns(this, "current_host_",
@@ -132,10 +153,13 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     TableServices::addColumns(this, "current_service_",
                               DANGEROUS_OFFSETOF(LogRow, svc),
                               false /* no hosts table */);
+#ifdef CMC
     TableContacts::addColumns(this, "current_contact_",
                               DANGEROUS_OFFSETOF(LogRow, ctc));
-    TableCommands::addColumns(this, "current_command_",
-                              DANGEROUS_OFFSETOF(LogRow, command));
+#else
+    TableContacts::addColumns(this, "current_contact_");
+#endif
+    TableCommands::addColumns(this, "current_command_");
 }
 
 std::string TableLog::name() const { return "log"; }
@@ -185,7 +209,7 @@ void TableLog::answerQuery(Query *query) {
     }
 
     while (true) {
-        auto entries =
+        const auto *entries =
             it->second->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
         if (!answerQueryReverse(entries, query, since, until)) {
             break;  // end of time range found
@@ -205,7 +229,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
         if (it->second->_time < since) {
             return false;  // time limit exceeded
         }
-        auto entry = it->second.get();
+        auto *entry = it->second.get();
         // TODO(sp): Remove ugly casts.
         LogRow lr{
             entry,
@@ -215,7 +239,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
             reinterpret_cast<const contact *>(
                 core()->find_contact(entry->_contact_name)),
             core()->find_command(entry->_command_name)};
-        if (!query->processDataset(Row(&lr))) {
+        if (!query->processDataset(Row{dynamic_cast<Table::IRow *>(&lr)})) {
             return false;
         }
     }
@@ -223,7 +247,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
 }
 
 bool TableLog::isAuthorized(Row row, const contact *ctc) const {
-    auto lr = rowData<LogRow>(row);
+    const auto *lr = rowData<LogRow>(row);
     service *svc = lr->svc;
     host *hst = lr->hst;
 

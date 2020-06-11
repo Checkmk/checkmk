@@ -1,4 +1,4 @@
-title: BEA Weblogic: Number of JVM sessions
+title: BEA Weblogic: Number of JVM Sessions
 agents: linux
 catalog: app/java
 license: GPL
@@ -20,7 +20,7 @@ item:
  This name is probably dependant on running a loadbalanced install or not.
 
 inventory:
- One check is created for each selvet running inside a weblogic
+ One service is created for each selvet running inside a weblogic
  instance sent by the agent.
 
 

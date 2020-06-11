@@ -1,0 +1,13 @@
+Title: agent_azure: recover from missing metrics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1574679498
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Previously the special agent did not return any metric if one
+or more of the required metrics were not present. It now recovers
+from those errors and return as many metrics as we can get.

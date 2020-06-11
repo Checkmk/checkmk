@@ -1,0 +1,13 @@
+Title: agent_ucs_bladecenter: Always output faultinst section
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1578554174
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+If no fault instances were found, the section and the associated checks
+"ucs_bladecenter_faultinst" were missing. This has been fixed.

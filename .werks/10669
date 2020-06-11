@@ -1,0 +1,11 @@
+Title: mtr: Fixed applying levels configured in WATO which had no effect
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1578468571
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+

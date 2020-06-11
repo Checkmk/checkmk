@@ -11,8 +11,9 @@ description:
  The check is informational only and returns always {OK}.
 
 inventory:
- Creates two checks, one for every Detector.
+ Two services are created.
+ One service for every detector.
 
 item:
- The ID of the detector.
+ One of the two numbers {{1}} or {{2}}
 

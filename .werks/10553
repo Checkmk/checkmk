@@ -1,0 +1,26 @@
+Title: Extended Checkmk crash reporting
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1574758507
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 1.7.0i1
+
+The crash reporting functionality of Checkmk has been extended. In previous versions
+of Checkmk it was possible to report only GUI and check plugin related crashes to the
+Checkmk team.
+
+With this change Checkmk is able to collect crashes from all components of Checkmk.
+These crashes can be displayed in the central user interface in distributed setups.
+
+You can access the crashes using the view <tt>Views > Other > Crash reports</tt>.
+This view shows you a list of all captured crashes. You can open the details of
+a crash by clicking on the crash ID and send them to the Checkmk team or download
+the crash package.
+
+These crash reports are stored locally in each site below <tt>var/check_mk/crashes</tt>.
+
+There is a cleanup mechanism in place which removes all crashes except the last 20
+per component.

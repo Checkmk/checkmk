@@ -1,41 +1,27 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """LDAP configuration and diagnose page"""
 
-import cmk.gui.pages
+import cmk.utils.version as cmk_version
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 from cmk.gui.table import table_element
-import cmk.gui.plugins.userdb.ldap_connector
+from cmk.gui.plugins.userdb.ldap_connector import (
+    LDAPUserConnector,
+    LDAPAttributePluginGroupsToRoles,
+    LDAPConnectionValuespec,
+)
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.plugins.userdb.utils import load_connection_config, save_connection_config
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -46,10 +32,10 @@ from cmk.gui.plugins.wato import (
     wato_confirm,
 )
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
-    managed = None  # type: ignore
+    managed = None  # type: ignore[assignment]
 
 
 class LDAPMode(WatoMode):
@@ -81,9 +67,9 @@ class ModeLDAPConfig(LDAPMode):
                             "new")
 
     def action(self):
-        connections = userdb.load_connection_config(lock=True)
+        connections = load_connection_config(lock=True)
         if html.request.has_var("_delete"):
-            index = int(html.request.var("_delete"))
+            index = html.request.get_integer_input_mandatory("_delete")
             connection = connections[index]
             c = wato_confirm(
                 _("Confirm deletion of LDAP connection"),
@@ -93,7 +79,7 @@ class ModeLDAPConfig(LDAPMode):
                 self._add_change("delete-ldap-connection",
                                  _("Deleted LDAP connection %s") % (connection["id"]))
                 del connections[index]
-                userdb.save_connection_config(connections)
+                save_connection_config(connections)
             elif c is False:
                 return ""
             else:
@@ -103,19 +89,19 @@ class ModeLDAPConfig(LDAPMode):
             if not html.check_transaction():
                 return
 
-            from_pos = html.get_integer_input("_move")
-            to_pos = html.get_integer_input("_index")
+            from_pos = html.request.get_integer_input_mandatory("_move")
+            to_pos = html.request.get_integer_input_mandatory("_index")
             connection = connections[from_pos]
             self._add_change(
                 "move-ldap-connection",
                 _("Changed position of LDAP connection %s to %d") % (connection["id"], to_pos))
             del connections[from_pos]  # make to_pos now match!
             connections[to_pos:to_pos] = [connection]
-            userdb.save_connection_config(connections)
+            save_connection_config(connections)
 
     def page(self):
         with table_element() as table:
-            for index, connection in enumerate(userdb.load_connection_config()):
+            for index, connection in enumerate(load_connection_config()):
                 table.row()
 
                 table.cell(_("Actions"), css="buttons")
@@ -140,7 +126,7 @@ class ModeLDAPConfig(LDAPMode):
 
                 table.cell(_("ID"), connection["id"])
 
-                if cmk.is_managed_edition():
+                if cmk_version.is_managed_edition():
                     table.cell(_("Customer"), managed.get_customer_name(connection))
 
                 table.cell(_("Description"))
@@ -165,9 +151,9 @@ class ModeEditLDAPConnection(LDAPMode):
         return ["global"]
 
     def _from_vars(self):
-        self._connection_id = html.request.var("id")
+        self._connection_id = html.request.get_ascii_input("id")
         self._connection_cfg = {}
-        self._connections = userdb.load_connection_config(lock=html.is_transaction())
+        self._connections = load_connection_config(lock=html.is_transaction())
 
         if self._connection_id is None:
             clone_id = html.request.var("clone")
@@ -214,6 +200,8 @@ class ModeEditLDAPConnection(LDAPMode):
             self._connection_cfg["id"] = self._connection_id
             self._connections[self._connection_nr] = self._connection_cfg
 
+        assert self._connection_id is not None
+
         if self._new:
             log_what = "new-ldap-connection"
             log_text = _("Created new LDAP connection")
@@ -222,13 +210,12 @@ class ModeEditLDAPConnection(LDAPMode):
             log_text = _("Changed LDAP connection %s") % self._connection_id
         self._add_change(log_what, log_text)
 
-        userdb.save_connection_config(self._connections)
+        save_connection_config(self._connections)
         config.user_connections = self._connections  # make directly available on current page
         if html.request.var("_save"):
             return "ldap_config"
-        else:
-            # Fix the case where a user hit "Save & Test" during creation
-            html.request.set_var('id', self._connection_id)
+        # Fix the case where a user hit "Save & Test" during creation
+        html.request.set_var('id', self._connection_id)
 
     def page(self):
         html.open_div(id_="ldap")
@@ -250,7 +237,7 @@ class ModeEditLDAPConnection(LDAPMode):
         html.open_td(style="padding-left:10px;vertical-align:top")
         html.h2(_('Diagnostics'))
         if not html.request.var('_test') or not self._connection_id:
-            html.message(
+            html.show_message(
                 HTML(
                     '<p>%s</p><p>%s</p>' %
                     (_('You can verify the single parts of your ldap configuration using this '
@@ -263,6 +250,8 @@ class ModeEditLDAPConnection(LDAPMode):
                        'LDAP Documentation</a>.'))))
         else:
             connection = userdb.get_connection(self._connection_id)
+            assert isinstance(connection, LDAPUserConnector)
+
             for address in connection.servers():
                 html.h3("%s: %s" % (_('Server'), address))
                 with table_element('test', searchable=False) as table:
@@ -272,7 +261,7 @@ class ModeEditLDAPConnection(LDAPMode):
                             state, msg = test_func(connection, address)
                         except Exception as e:
                             state = False
-                            msg = _('Exception: %s') % html.render_text(e)
+                            msg = _('Exception: %s') % html.render_text("%s" % e)
                             logger.exception("error testing LDAP %s for %s", title, address)
 
                         if state:
@@ -313,7 +302,7 @@ class ModeEditLDAPConnection(LDAPMode):
         connection.connect(enforce_new=True, enforce_server=address)
         if connection.user_base_dn_exists():
             return (True, _('The User Base DN could be found.'))
-        elif connection.has_bind_credentials_configured():
+        if connection.has_bind_credentials_configured():
             return (False,
                     _('The User Base DN could not be found. Maybe the provided '
                       'user (provided via bind credentials) has no permission to '
@@ -379,15 +368,22 @@ class ModeEditLDAPConnection(LDAPMode):
         params = active_plugins['groups_to_roles']
         connection.connect(enforce_new=True, enforce_server=address)
 
-        plugin = cmk.gui.plugins.userdb.ldap_connector.LDAPAttributePluginGroupsToRoles()
+        plugin = LDAPAttributePluginGroupsToRoles()
         ldap_groups = plugin.fetch_needed_groups_for_groups_to_roles(connection, params)
 
         num_groups = 0
-        for role_id, group_distinguished_names in active_plugins['groups_to_roles'].items():
-            if not isinstance(group_distinguished_names, list):
-                group_distinguished_names = [group_distinguished_names]
+        for role_id, group_specs in active_plugins['groups_to_roles'].items():
+            if not isinstance(group_specs, list):
+                group_specs = [group_specs]
 
-            for dn, _search_connection_id in group_distinguished_names:
+            for group_spec in group_specs:
+                if isinstance(group_spec, str):
+                    dn = group_spec  # be compatible to old config without connection spec
+                elif not isinstance(group_spec, tuple):
+                    continue  # skip non configured ones (old valuespecs allowed None)
+                else:
+                    dn = group_spec[0]
+
                 if dn.lower() not in ldap_groups:
                     return False, _('Could not find the group specified for role %s') % role_id
 
@@ -395,5 +391,4 @@ class ModeEditLDAPConnection(LDAPMode):
         return True, _('Found all %d groups.') % num_groups
 
     def _valuespec(self):
-        return cmk.gui.plugins.userdb.ldap_connector.LDAPConnectionValuespec(
-            self._new, self._connection_id)
+        return LDAPConnectionValuespec(self._new, self._connection_id)

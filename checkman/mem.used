@@ -1,4 +1,4 @@
-title: Usage of physical and virtual RAM
+title: Usage of Physical and Virtual RAM
 agents: linux
 catalog: os/kernel
 license: GPL
@@ -27,7 +27,7 @@ description:
  affected by such internals of memory management is the total amount of
  {virtual} memory used up by processes (not by disk buffers).
 
- Check_MK lets you define levels in percentage of the physically installed RAM
+ Checkmk lets you define levels in percentage of the physically installed RAM
  or as absolute values in MB. The default levels are at 150% and 200%. That
  means that this check gets critical if the memory used by processes is
  twice the size of your RAM.
@@ -35,12 +35,8 @@ description:
  Hint: If you want to monitor swapping, you probably better measure major
  pagefaults. Please look at the check {kernel}.
 
-item:
- {None}
-
 inventory:
- {mem.used} creates one check on each host that provides
- the section {<<<mem>>>}. If that section also outputs
- information about the Windows page file, then the check
- {<<<mem.win>>>} is being used instead.
+ One service is created on each host that provides the section {<<<mem>>>}.
+ If that section also outputs information about the Windows page file,
+ then the check {<<<mem.win>>>} creates a service instead.
 

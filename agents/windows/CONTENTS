@@ -1,4 +1,3 @@
-
 # This file is read by the WATO page "Unpackaged Agents". It assigns
 # titles to the various files in this directory or hides them.
 .depend                           (hide)
@@ -49,13 +48,12 @@ Thread.h                          (hide)
 WinApi.cc                         (hide)
 WinApi.h                          (hide)
 WinApiAdaptor.h                   (hide)
-baked_container.msi               (hide)
 build-agent                       (hide)
-check_mk.example.ini              Example agent configuration file(legacy)
 check_mk.user.yml                 Example agent configuration file
 check_mk_agent-64.exe             Agent for Windows 64 Bit
 check_mk_agent.cc                 (hide)
 check_mk_agent.exe                Agent for Windows 32 Bit
+python-3.8.zip                    Windows Agent Python module
 check_mk_agent.msi                (hide)
 config.h.in                       (hide)
 configure.ac                      (hide)

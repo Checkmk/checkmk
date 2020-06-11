@@ -1,34 +1,15 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # List of modules for main menu and WATO snapin. These modules are
 # defined in a plugin because they contain cmk.gui.i18n strings.
 # fields: mode, title, icon, permission, help
 
-import cmk
+import time
+import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
 
@@ -474,6 +455,36 @@ class MainModuleAnalyzeConfig(MainModule):
 
 
 @main_module_registry.register
+class MainModuleDiagnostics(MainModule):
+    @property
+    def mode_or_url(self):
+        return "diagnostics"
+
+    @property
+    def title(self):
+        return _("Diagnostics")
+
+    @property
+    def icon(self):
+        loc_time = time.localtime()
+        if loc_time.tm_hour == 13 and loc_time.tm_min == 37:
+            return "d146n0571c5"
+        return "diagnostics"
+
+    @property
+    def permission(self):
+        return "diagnostics"
+
+    @property
+    def description(self):
+        return _("Collect information of Checkmk sites for diagnostic analysis.")
+
+    @property
+    def sort_index(self):
+        return 91
+
+
+@main_module_registry.register
 class MainModulePatternEditor(MainModule):
     @property
     def mode_or_url(self):
@@ -555,5 +566,5 @@ class MainModuleDownloadAgents(MainModule):
 
 # Register the builtin agent download page on the top level of WATO only when the agent bakery
 # does not exist (e.g. when using CRE)
-if cmk.is_raw_edition():
+if cmk_version.is_raw_edition():
     main_module_registry.register(MainModuleDownloadAgents)

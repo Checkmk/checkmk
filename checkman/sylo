@@ -1,4 +1,4 @@
-title: State of the sylo daemon
+title: State of the Sylo Daemon
 agents: linux
 catalog: os/services
 license: GPL
@@ -15,4 +15,4 @@ description:
  logs as rates.
 
 inventory:
- Each host which provides the section in the check_mk agent gets one Sylo service.
+ One service is created on each host which provides the section in the check_mk agent.

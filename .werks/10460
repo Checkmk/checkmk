@@ -1,0 +1,16 @@
+Title: Show an error in the tactical overview if sites are not connected
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1573743937
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+If a remote site is not connected in a distributed setup the hosts,
+services and events of that site are not taken into account in the
+tactical overview of the master site. To indicate that information
+is missing the tactical overview now displays an error if sites are
+not connected. The error is displayed below the rows of the tactical
+overview similar to failed notifiactions.

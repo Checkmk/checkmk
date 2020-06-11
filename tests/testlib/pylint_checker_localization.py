@@ -1,13 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Checker for incorrect string translation functions."""
 
 import re
 import six
 
-import astroid
+import astroid  # type: ignore[import]
 
-from pylint.checkers import BaseChecker, utils
-from pylint.interfaces import IAstroidChecker
-"""Checker for incorrect string translation functions."""
+from pylint.checkers import BaseChecker, utils  # type: ignore[import]
+from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 
 
 def register(linter):
@@ -23,19 +27,18 @@ def register(linter):
 
 
 def is_constant_string(first):
-    return isinstance(first, astroid.Const) and isinstance(first.value, six.string_types)
+    return isinstance(first, astroid.Const) and isinstance(first.value, str)
 
 
 def parent_is_HTML(node):
     if str(node.parent) == "Call()":
         # Case HTML(_("sth"))
         return isinstance(node.parent.func, astroid.Name) and node.parent.func.name == "HTML"
-    elif str(node.parent) == "BinOp()" and str(node.parent.parent) == "Call()":
+    if str(node.parent) == "BinOp()" and str(node.parent.parent) == "Call()":
         # Case HTML(_("sth %s usw") % "etc")
         return isinstance(node.parent.parent.func,
                           astroid.Name) and node.parent.parent.func.name == "HTML"
-    else:
-        return False
+    return False
 
 
 def all_tags_are_unescapable(first):
@@ -45,9 +48,8 @@ def all_tags_are_unescapable(first):
     escapable = [tag in escapable_tags for tag in tags]
     if not tags:
         return True, []
-    else:
-        return all(tag in escapable_tags for tag in tags),\
-            [tag for tag, able in zip(tags, escapable) if not able]
+    return (all(tag in escapable_tags for tag in tags),
+            [tag for tag, able in zip(tags, escapable) if not able])
 
 
 #
@@ -145,9 +147,8 @@ class TranslationStringConstantsChecker(TranslationBaseChecker):
         if is_constant_string(first):
             # The first argument is a constant string! This is good!
             return True
-        else:
-            self.add_message(self.MESSAGE_ID, args=node.func.name, node=node)
-            return False
+        self.add_message(self.MESSAGE_ID, args=node.func.name, node=node)
+        return False
 
 
 class EscapingProtectionChecker(TranslationBaseChecker):
@@ -187,7 +188,7 @@ class EscapingProtectionChecker(TranslationBaseChecker):
                 self.add_message(self.MESSAGE_ID, args=message, node=node)
                 return False
             # Case 2
-            elif not all_unescapable and parent_is_HTML(node):
+            if not all_unescapable and parent_is_HTML(node):
                 if [x for x in tags if x != "img"]:
                     message = "OK! Is protected by HTML(...)!\n"
                     message += "'''%s'''\n----> %s" % (first.value, ", ".join(tags))

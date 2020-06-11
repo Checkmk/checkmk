@@ -1,42 +1,20 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
-import six
+from abc import abstractmethod
+from typing import Any, Dict, Mapping, Type, TypeVar
+
+_VT = TypeVar('_VT')
+
 
 # TODO: Refactor all plugins to one way of telling the registry it's name.
 #       for example let all use a static/class method .name().
 #       We could standardize this by making all plugin classes inherit
 #       from a plugin base class instead of "object".
-
-# TODO: Decide which base class to implement
-# (https://docs.python.org/2/library/collections.html) and cleanup
-
-
-class ABCRegistry(six.with_metaclass(abc.ABCMeta, object)):
+class ABCRegistry(Mapping[str, _VT]):
     """The management object for all available plugins of a component.
 
     The snapins are loaded by importing cmk.gui.plugins.[component]. These plugins
@@ -46,52 +24,51 @@ class ABCRegistry(six.with_metaclass(abc.ABCMeta, object)):
 
     """
     def __init__(self):
+        # type: () -> None
         super(ABCRegistry, self).__init__()
-        self._entries = {}
+        self._entries = {}  # type: Dict[str, _VT]
 
     # TODO: Make staticmethod (But abc.abstractstaticmethod not available. How to make this possible?)
-    @abc.abstractmethod
+    @abstractmethod
     def plugin_base_class(self):
+        # type: () -> Type
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def plugin_name(self, plugin_class):
+        # type: (Type) -> str
         raise NotImplementedError()
 
     def registration_hook(self, plugin_class):
+        # type: (Type) -> None
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def register(self, plugin_class):
+        # type: (Type) -> Type
         raise NotImplementedError()
 
-    def __contains__(self, text):
-        return text in self._entries
-
-    def __delitem__(self, key):
-        del self._entries[key]
+    def unregister(self, name):
+        # type: (str) -> None
+        del self._entries[name]
 
     def __getitem__(self, key):
-        return self._entries[key]
+        return self._entries.__getitem__(key)
 
     def __len__(self):
-        return len(self._entries)
+        return self._entries.__len__()
 
-    def values(self):
-        return self._entries.values()
-
-    def items(self):
-        return self._entries.items()
-
-    def keys(self):
-        return self._entries.keys()
-
-    def get(self, key, deflt=None):
-        return self._entries.get(key, deflt)
+    def __iter__(self):
+        return self._entries.__iter__()
 
 
+# Abstract methods:
+#
+# def plugin_base_class(self) -> Type
+# def plugin_name(self, plugin_class: Type) -> Type
 class ClassRegistry(ABCRegistry):
     def register(self, plugin_class):
+        # type: (Type) -> Type
         """Register a class with the registry, can be used as a decorator"""
         if not issubclass(plugin_class, self.plugin_base_class()):
             raise TypeError('%s is not a subclass of %s' %
@@ -101,11 +78,19 @@ class ClassRegistry(ABCRegistry):
         return plugin_class
 
 
+# Abstract methods:
+#
+# def plugin_base_class(self) -> Type
 class InstanceRegistry(ABCRegistry):
     def register(self, instance):  # pylint: disable=arguments-differ
+        # type: (Any) -> Any
+        if not isinstance(instance, self.plugin_base_class()):
+            raise ValueError('%r is not an instance of %s' %
+                             (instance, self.plugin_base_class().__name__))
         self.registration_hook(instance)
         self._entries[self.plugin_name(instance)] = instance
         return instance
 
     def plugin_name(self, instance):  # pylint: disable=arguments-differ
+        # type: (Any) -> str
         return instance.name

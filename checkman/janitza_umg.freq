@@ -9,8 +9,8 @@ description:
  very similar.
 
 item:
- consecutive numbers.
+ The fixed statement {{1}}
 
 inventory:
- Creates exactly one item.
+ One service is created.
 

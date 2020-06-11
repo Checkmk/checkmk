@@ -1,0 +1,17 @@
+Title: Bakery controls cleanup of Windows Agent's Program Data directory on uninstall
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1574410466
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+Three modes of the cleanup during Uninstall are available
+
+* none - does nothing. This is behavior of the Windows Agent 1.6
+* smart - Windows Agent will remove own folders and files
+* all - whole Windows Agent Program Data directory will be cleaned
+
+Default mode is smart.

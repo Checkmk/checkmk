@@ -1,4 +1,4 @@
-title: Intel Rapid Storage Technologie: State of physical disks in raids
+title: Intel Rapid Storage Technologie: State of Physical Disks in Raids
 agents: windows
 catalog: os/storage
 license: GPL
@@ -18,7 +18,7 @@ description:
  {https://downloadcenter.intel.com/download/24310/Intel-Rapid-Storage-Technology-Command-Line-Interface-RST-CLI}
 
 item:
- A combination of the raid volume and the drive ID within that volume.
+ The name of the raid volume and the drive ID seperated by a {{/}}
 
 inventory:
  One service is created for each disk.

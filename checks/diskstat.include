@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 diskstat_inventory_mode = "rule"  # "summary", "single", "legacy"
 
@@ -66,7 +46,7 @@ def with_unused_counter_removal(plugin_name):
             this_time = time.time()
 
             age_counters = [(this_time - value[0], ident)
-                            for (ident, value) in get_all_item_states().iteritems()
+                            for (ident, value) in get_all_item_states().items()
                             if is_plugin_counter_with_age(ident, value)]
 
             if age_counters:
@@ -288,11 +268,12 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     summed_up = [0] * 13
     matching = 0
 
-    for line in info:
-        if item == 'SUMMARY' and line[0] is not None:
-            return 3, "summary mode not supported in a cluster"
+    has_multiple_nodes = len(set(line[0] for line in info)) > 1
+    if item == 'SUMMARY' and has_multiple_nodes:
+        return 3, "summary mode not supported in a cluster"
 
-        elif item == 'SUMMARY' and ' ' in line[1]:
+    for line in info:
+        if item == 'SUMMARY' and ' ' in line[1]:
             continue  # skip non-physical disks
 
         elif item == 'SUMMARY' or line[1] == item:
@@ -382,7 +363,7 @@ def diskstat_select_disk(disks, item):
             for device, disk in disks.items():
                 # If all disks are idle the summarized dict would have no keys
                 # So we take care that at least all keys of this disk are set
-                for key in disk.keys():
+                for key in disk:
                     if key != "node":
                         summarized.setdefault(key, 0.0)
 
@@ -467,7 +448,7 @@ def check_diskstat_dict(item, params, disks):
         yield check_levels(util,
                            "disk_utilization",
                            params.get("utilization"),
-                           human_readable_func=get_percent_human_readable,
+                           human_readable_func=lambda x: get_percent_human_readable(x * 100.0),
                            scale=0.01,
                            statemarkers=False,
                            infoname=prefix + "Utilization")
@@ -555,7 +536,7 @@ def check_diskstat_dict(item, params, disks):
 
     # Send everything as performance data now. Sort keys alphabetically
     perfdata = []
-    for key in sorted(disk.keys()):
+    for key in sorted(disk):
         value = disk[key]
         if isinstance(value, (int, float)):
             # Currently the levels are not shown in the perfdata

@@ -1,29 +1,12 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "Query.h"
+
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <chrono>
 #include <cmath>
@@ -32,6 +15,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+
 #include "Aggregator.h"
 #include "AndingFilter.h"
 #include "ChronoUtils.h"
@@ -58,7 +42,7 @@ using namespace std::chrono_literals;
 
 namespace {
 std::string nextStringArgument(char **line) {
-    if (auto value = next_field(line)) {
+    if (auto *value = next_field(line)) {
         return value;
     }
     throw std::runtime_error("missing argument");
@@ -104,7 +88,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _logger(logger) {
     FilterStack filters;
     FilterStack wait_conditions;
-    for (auto &line : lines) {
+    for (const auto &line : lines) {
         auto stripped_line = mk::rstrip(line);
         if (stripped_line.empty()) {
             break;
@@ -462,7 +446,7 @@ void Query::parseColumnsLine(char *line) {
                 << "replacing non-existing column '" << column_name
                 << "' with null column, reason: " << e.what();
             column = std::make_shared<NullColumn>(
-                column_name, "non-existing column", -1, -1, -1, 0);
+                column_name, "non-existing column", Column::Offsets{});
         }
         _columns.push_back(column);
         _all_columns.insert(column);
@@ -556,7 +540,7 @@ void Query::parseWaitTimeoutLine(char *line) {
 }
 
 void Query::parseWaitTriggerLine(char *line) {
-    _wait_trigger = _table.core()->triggers().find(nextStringArgument(&line));
+    _wait_trigger = Triggers::find(nextStringArgument(&line));
 }
 
 void Query::parseWaitObjectLine(char *line) {
@@ -607,6 +591,8 @@ bool Query::process() {
                        _separators, _data_encoding);
     doWait();
     QueryRenderer q(*renderer, EmitBeginEnd::on);
+    // TODO(sp) The construct below is horrible, refactor this!
+    // cppcheck-suppress danglingLifetime
     _renderer_query = &q;
     start(q);
     _table.answerQuery(this);
@@ -699,6 +685,7 @@ bool Query::processDataset(Row row) {
                 aggr->consume(row, _auth_user, timezoneOffset());
             }
         } else {
+            assert(_renderer_query);  // Missing call to `process()`.
             RowRenderer r(*_renderer_query);
             for (const auto &column : _columns) {
                 column->output(row, r, _auth_user, _timezone_offset);

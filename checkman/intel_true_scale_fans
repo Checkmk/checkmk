@@ -1,4 +1,4 @@
-title: Intel True Fabric Scale Switches: Fans status and speed
+title: Intel True Fabric Scale Switches: Fans Status and Speed
 agents: snmp
 catalog: hw/network/intel
 license: GPL
@@ -16,4 +16,4 @@ item:
  The fan ID.
 
 inventory:
- One service for each fan is created.
+ One service is created for each fan.

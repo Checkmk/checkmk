@@ -1,6 +1,6 @@
 Title: if: Moved last change field to status data tree; otherwise the inventory history may be polluted
 Class: fix
-Compatible: compat
+Compatible: incomp
 Component: inv
 Date: 1571302576
 Edition: cre
@@ -9,4 +9,11 @@ Level: 1
 State: unknown
 Version: 1.7.0i1
 
+If you want to display the field {{last change}} in the interface table you
+have to enable {{Do status data inventory}} in the ruleset
+{{Do hardware/software inventory}}.
 
+Note:
+If {{Do status data inventory}} is enabled then the {{Check_MK}} services
+calculate the status data tree every interval; the performance will be reduced
+a bit.

@@ -1,5 +1,8 @@
-#!/usr/bin/python
-# encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Fetches the current state of all services of a host via Multisite and
 # outputs an <<<mrpe>>> section reflecting these states. This script is
@@ -32,8 +35,13 @@
 # "$OMD_ROOT/local/lib/multisite_to_mrpe --secret dasistgeheim --url http://localhost/remote/check_mk/ <HOST>"
 #
 
-from __future__ import print_function
-import os, sys, getopt, time, urllib, subprocess
+import getopt
+import os
+import subprocess
+import sys
+from typing import NoReturn
+
+import urllib.parse
 
 omd_site = os.getenv("OMD_SITE")
 omd_root = os.getenv("OMD_ROOT")
@@ -45,6 +53,7 @@ def convert_from_multisite(response):
 
 
 def bail_out(reason):
+    # type: (str) -> NoReturn
     sys.stderr.write(reason + "\n")
     sys.exit(1)
 
@@ -140,11 +149,11 @@ if opt_secret:
     verbose("Secret:           " + opt_secret)
 else:
     verbose("Authentication:   HTTP BasicAuth")
-    verbose("Password:         " + opt_password)
+    verbose("Password:         " + ("" if opt_password is None else opt_password))
 
 
-def make_url(base, variables):
-    return base + "?" + urllib.urlencode(variables)
+def make_url(base, vs):
+    return base + "?" + urllib.parse.urlencode(vs)
 
 
 variables = [
@@ -173,15 +182,20 @@ try:
     arguments.append(url)
     verbose("Calling:          " + " ".join(arguments))
 
-    process = subprocess.Popen(arguments, executable='curl', stdout=subprocess.PIPE)
-    answer, stderrdata = process.communicate()
+    process = subprocess.Popen(
+        arguments,
+        executable='curl',
+        stdout=subprocess.PIPE,
+        encoding="utf-8",
+    )
+    answer, _stderr = process.communicate()
     result = process.wait()
     print(result)
     if answer.startswith("ERROR:"):
         bail_out("Error response from remote Multisite: %s" % answer[7:])
     try:
         parsed = eval(answer)
-    except:
+    except Exception:
         bail_out("Invalid response from Multisite: %s\n" % answer)
 
     services = convert_from_multisite(eval(answer))
@@ -195,7 +209,11 @@ sys.stdout.write('<<<mrpe>>>\n')
 for service in services:
     state = {"OK": 0, "WARN": 1, "CRIT": 2, "UNKNOWN": 3}.get(service['service_state'])
     if state is not None:  # skip pending services
-        sys.stdout.write(
-            "(%s) %s %d %s|%s\n" %
-            (service["svc_check_command"].replace(" ", "_"), service["service_description"].replace(
-                " ", "_"), state, service["svc_plugin_output"], service["svc_perf_data"]))
+        msg = "(%s) %s %d %s|%s\n" % (
+            service["svc_check_command"].replace(" ", "_"),
+            service["service_description"].replace(" ", "_"),
+            state,
+            service["svc_plugin_output"],
+            service["svc_perf_data"],
+        )
+        sys.stdout.write(msg)

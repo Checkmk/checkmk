@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import json
 
@@ -30,7 +10,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 import cmk.gui.sites as sites
 
-from . import SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
 
 
 @snapin_registry.register
@@ -53,116 +33,10 @@ class Speedometer(SidebarSnapin):
     def show(self):
         html.open_div(class_="speedometer")
         html.img(html.theme_url("images/speedometer.png"), id_="speedometerbg")
-        html.canvas('', width=228, height=136, id_="speedometer")
+        html.canvas('', width="228", height="136", id_="speedometer")
         html.close_div()
 
-        html.javascript("""
-function show_speed(percentage) {
-    var canvas = document.getElementById('speedometer');
-    if (!canvas)
-        return;
-
-    var context = canvas.getContext('2d');
-    if (!context)
-        return;
-
-    if (percentage > 100.0)
-        percentage = 100.0;
-
-    var orig_x = 116;
-    var orig_y = 181;
-    var angle_0   = 232.0;
-    var angle_100 = 307.0;
-    var angle = angle_0 + (angle_100 - angle_0) * percentage / 100.0;
-    var angle_rad = angle / 360.0 * Math.PI * 2;
-    var length = 120;
-    var end_x = orig_x + (Math.cos(angle_rad) * length);
-    var end_y = orig_y + (Math.sin(angle_rad) * length);
-
-    context.clearRect(0, 0, 228, 136);
-    context.beginPath();
-    context.moveTo(orig_x, orig_y);
-    context.lineTo(end_x, end_y);
-    context.closePath();
-    context.shadowOffsetX = 2;
-    context.shadowOffsetY = 2;
-    context.shadowBlur = 2;
-    context.strokeStyle = "#000000";
-    context.stroke();
-}
-
-function speedometer_show_speed(last_perc, program_start, scheduled_rate)
-{
-    var url = "sidebar_ajax_speedometer.py" +
-                           "?last_perc=" + last_perc +
-                           "&scheduled_rate=" + scheduled_rate +
-                           "&program_start=" + program_start;
-
-    cmk.ajax.call_ajax(url, {
-        response_handler: function(handler_data, response_body) {
-            try {
-                var data = JSON.parse(response_body);
-
-                oDiv = document.getElementById('speedometer');
-
-                // Terminate reschedule when the speedometer div does not exist anymore
-                // (e.g. the snapin has been removed)
-                if (!oDiv)
-                    return;
-
-                oDiv.title = data.title
-                oDiv = document.getElementById('speedometerbg');
-                oDiv.title = data.title
-
-                move_needle(data.last_perc, data.percentage); // 50 * 100ms = 5s = refresh time
-            } catch(ie) {
-                // Ignore errors during re-rendering. Proceed with reschedule...
-                var data = handler_data;
-            }
-
-            setTimeout(function(data) {
-                return function() {
-                    speedometer_show_speed(data.percentage, data.program_start, data.scheduled_rate);
-                };
-            }(data), 5000);
-        },
-        error_handler    : function(handler_data, status_code, error_msg) {
-            setTimeout(function(data) {
-                return function() {
-                    return speedometer_show_speed(data.percentage, data.program_start, data.scheduled_rate);
-                };
-            }(handler_data), 5000);
-        },
-        method           : "GET",
-        handler_data     : {
-            "percentage"     : last_perc,
-            "last_perc"      : last_perc,
-            "program_start"  : program_start,
-            "scheduled_rate" : scheduled_rate
-        }
-    });
-}
-
-var g_needle_timeout = null;
-
-function move_needle(from_perc, to_perc)
-{
-    var new_perc = from_perc * 0.9 + to_perc * 0.1;
-
-    show_speed(new_perc);
-
-    if (g_needle_timeout != null)
-        clearTimeout(g_needle_timeout);
-
-    g_needle_timeout = setTimeout(function(new_perc, to_perc) {
-        return function() {
-            move_needle(new_perc, to_perc);
-        };
-    }(new_perc, to_perc), 50);
-}
-
-speedometer_show_speed(0, 0, 0);
-""")
+        html.javascript("cmk.sidebar.speedometer_show_speed(0, 0, 0);")
 
     @classmethod
     def allowed_roles(cls):
@@ -179,9 +53,10 @@ speedometer_show_speed(0, 0, 0);
             # Try to get values from last call in order to compute
             # driftig speedometer-needle and to reuse the scheduled
             # check reate.
-            last_perc = float(html.request.var("last_perc"))
-            scheduled_rate = float(html.request.var("scheduled_rate"))
-            last_program_start = int(html.request.var("program_start"))
+            # TODO: Do we need a get_float_input_mandatory?
+            last_perc = float(html.request.get_str_input_mandatory("last_perc"))
+            scheduled_rate = float(html.request.get_str_input_mandatory("scheduled_rate"))
+            last_program_start = html.request.get_integer_input_mandatory("program_start")
 
             # Get the current rates and the program start time. If there
             # are more than one site, we simply add the start times.
@@ -218,12 +93,11 @@ speedometer_show_speed(0, 0, 0);
             last_perc = 0.0
             title = _("No performance data: %s") % e
 
-        data = {
-            "scheduled_rate": scheduled_rate,
-            "program_start": program_start,
-            "percentage": percentage,
-            "last_perc": last_perc,
-            "title": title,
-        }
-
-        html.write(json.dumps(data))
+        html.write(
+            json.dumps({
+                "scheduled_rate": scheduled_rate,
+                "program_start": program_start,
+                "percentage": percentage,
+                "last_perc": last_perc,
+                "title": title,
+            }))

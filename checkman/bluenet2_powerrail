@@ -12,7 +12,7 @@ description:
  There are no default levels set.
 
 inventory:
- One service per phase is created.
+ One service is created for each phase.
 
 item:
  The phase identifier.

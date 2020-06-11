@@ -1,40 +1,27 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "NagiosCore.h"
+
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <utility>
+
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
 #include "Logger.h"
 #include "StringUtils.h"
+#include "contact_fwd.h"
+#include "pnp4nagios.h"
 
-void NagiosPaths::dump(Logger *logger) {
+void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "socket path = '" << _socket << "'";
     Notice(logger) << "pnp path = '" << _pnp << "'";
     Notice(logger) << "inventory path = '" << _mk_inventory << "'";
@@ -162,23 +149,56 @@ bool NagiosCore::mkeventdEnabled() {
     return false;
 }
 
-std::string NagiosCore::mkeventdSocketPath() { return _paths._mkeventd_socket; }
-std::string NagiosCore::mkLogwatchPath() { return _paths._mk_logwatch; }
-std::string NagiosCore::mkInventoryPath() { return _paths._mk_inventory; }
-std::string NagiosCore::structuredStatusPath() {
+std::filesystem::path NagiosCore::mkeventdSocketPath() const {
+    return _paths._mkeventd_socket;
+}
+std::filesystem::path NagiosCore::mkLogwatchPath() const {
+    return _paths._mk_logwatch;
+}
+std::filesystem::path NagiosCore::mkInventoryPath() const {
+    return _paths._mk_inventory;
+}
+std::filesystem::path NagiosCore::structuredStatusPath() const {
     return _paths._structured_status;
 }
-std::string NagiosCore::pnpPath() { return _paths._pnp; }
-std::string NagiosCore::historyFilePath() {
+std::filesystem::path NagiosCore::crashReportPath() const {
+    return _paths._crash_reports_path;
+}
+std::filesystem::path NagiosCore::pnpPath() const { return _paths._pnp; }
+std::filesystem::path NagiosCore::rrdPath() const { return pnpPath(); }
+std::filesystem::path NagiosCore::historyFilePath() const {
     extern char *log_file;
     return log_file;
 }
-std::string NagiosCore::logArchivePath() {
+std::filesystem::path NagiosCore::logArchivePath() const {
     extern char *log_archive_path;
     return log_archive_path;
 }
-std::string NagiosCore::rrdcachedSocketPath() {
+std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     return _paths._rrdcached_socket;
+}
+[[nodiscard]] MetricLocation NagiosCore::metricLocation(
+    const void *object, const Metric::MangledName &name,
+    const RRDColumn::Table &table) const {
+    switch (table) {
+        case RRDColumn::Table::services: {
+            const auto *svc = static_cast<const service *>(object);
+            return {rrdPath() / svc->host_name /
+                        pnp_cleanup(std::string{svc->description} + "_" +
+                                    name.string() + ".rrd"),
+                    "1"};
+        }
+        case RRDColumn::Table::hosts: {
+            const auto *hst = static_cast<const host *>(object);
+            return {rrdPath() / hst->name /
+                        pnp_cleanup(std::string{"_HOST_"} + "_" +
+                                    name.string() + ".rrd"),
+                    "1"};
+        }
+        case RRDColumn::Table::objects:
+            throw std::runtime_error("invalid parameter");
+    }
+    return {};  // make GCC happy :-)
 }
 
 Encoding NagiosCore::dataEncoding() { return _data_encoding; }
@@ -224,9 +244,9 @@ std::string b16decode(const std::string &hex) {
 
 Attributes NagiosCore::customAttributes(const void *holder,
                                         AttributeKind kind) const {
-    auto h = *static_cast<const customvariablesmember *const *>(holder);
+    const auto *h = *static_cast<const customvariablesmember *const *>(holder);
     Attributes attrs;
-    for (auto cvm = h; cvm != nullptr; cvm = cvm->next) {
+    for (const auto *cvm = h; cvm != nullptr; cvm = cvm->next) {
         auto [k, name] = to_attribute_kind(cvm->variable_name);
         if (k == kind) {
             switch (kind) {

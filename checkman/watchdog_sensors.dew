@@ -1,4 +1,4 @@
-title: GEIST watchdog: Dew point Sensor
+title: GEIST Watchdog: Dew Point Sensor
 agents: snmp
 catalog: hw/environment/geist
 license: GPL
@@ -7,7 +7,7 @@ description:
  This check monitors the dew point in the area of this sensor.
 
 item:
- One item per sensor will be created.
+ Name of the watchdog device
 
 inventory:
- All available dew point sensors are automatically inventorized.
+ One service is created for each available dew point sensor.

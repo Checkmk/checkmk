@@ -1,4 +1,4 @@
-title: LVM: Volume groups
+title: LVM: Volume Groups
 agents: linux
 catalog: os/storage
 license: GPL
@@ -10,6 +10,8 @@ description:
 
  You need to install the agent plugin {lvm}.
 
+item:
+ Name of the volume group
 
 inventory:
-  One item is generated per volume group
+ One service is created for each volume group.

@@ -1,0 +1,29 @@
+Title: Report headers: Improve handling of titles with dynamic lengths
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1584191660
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 1.7.0i1
+
+In previous versions of Checkmk the title of reports could only be set to a
+fixed size. Especially with generic reports, like host or service reports, this
+is a problem because the titles can be of different lengths and can even exceed
+the width of the document.
+
+The "One line of text" report element has now a new configuration option
+"Shrink too long texts", which is disabled by default. Once you enable this
+option, the text size will be estimated before adding it to the document.
+
+In the moment the text is too long, the system tries to wrap the text and
+reduce the font size at the same time. In many cases the text is inserted in
+such a way that it fits. There are still cases where the text still cannot be
+made to fit properly, but for the most common cases this should be a good
+enough fit.
+
+We have changed the default "host" report template to use the new setting for
+the title of the page. In case your reports are based on your own template
+and want to use the new option, you will have to enable the option in the
+report elements of your report template.

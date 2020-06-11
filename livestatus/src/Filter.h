@@ -1,31 +1,13 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef Filter_h
 #define Filter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <chrono>
 #include <cstdint>
@@ -35,6 +17,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+
 #include "contact_fwd.h"
 class Column;
 class Filter;
@@ -50,7 +33,7 @@ public:
 
     explicit Filter(Kind kind) : _kind(kind) {}
     virtual ~Filter();
-    Kind kind() const { return _kind; }
+    [[nodiscard]] Kind kind() const { return _kind; }
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;
     virtual std::unique_ptr<Filter> partialFilter(
@@ -61,34 +44,34 @@ public:
     // corresponding meet/join operations. Perhaps we can even get rid of the
     // std::optional by making the lattice bounded, i.e. by providing bottom/top
     // values.
-    virtual std::optional<std::string> stringValueRestrictionFor(
+    [[nodiscard]] virtual std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
-    virtual std::optional<int32_t> greatestLowerBoundFor(
+    [[nodiscard]] virtual std::optional<int32_t> greatestLowerBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const;
-    virtual std::optional<int32_t> leastUpperBoundFor(
+    [[nodiscard]] virtual std::optional<int32_t> leastUpperBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const;
-    virtual std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
-        const std::string &column_name,
-        std::chrono::seconds timezone_offset) const;
+    [[nodiscard]] virtual std::optional<std::bitset<32>>
+    valueSetLeastUpperBoundFor(const std::string &column_name,
+                               std::chrono::seconds timezone_offset) const;
 
-    virtual std::unique_ptr<Filter> copy() const = 0;
-    virtual std::unique_ptr<Filter> negate() const = 0;
+    [[nodiscard]] virtual std::unique_ptr<Filter> copy() const = 0;
+    [[nodiscard]] virtual std::unique_ptr<Filter> negate() const = 0;
 
     /// Checks for a *syntactic* tautology.
-    virtual bool is_tautology() const = 0;
+    [[nodiscard]] virtual bool is_tautology() const = 0;
 
     /// Checks for a *syntactic* contradiction.
-    virtual bool is_contradiction() const = 0;
+    [[nodiscard]] virtual bool is_contradiction() const = 0;
 
     /// Combining the returned filters with *or* yields a filter equivalent to
     /// the current one.
-    virtual Filters disjuncts() const = 0;
+    [[nodiscard]] virtual Filters disjuncts() const = 0;
 
     /// Combining the returned filters with *and* yields a filter equivalent to
     /// the current one.
-    virtual Filters conjuncts() const = 0;
+    [[nodiscard]] virtual Filters conjuncts() const = 0;
 
     friend std::ostream &operator<<(std::ostream &os, const Filter &filter) {
         return filter.print(os);

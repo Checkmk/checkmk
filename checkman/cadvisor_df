@@ -1,0 +1,17 @@
+title: cAdvisor Pods/Containers: Filesystem Stats
+agents: prometheus
+catalog: containerization/cadvisor
+license: GPL
+distribution: check_mk
+description:
+
+ This check measures the filesystem stats of containers
+ and/or pods.
+
+ This check obtains its metrics values through Prometheus. In order to allow
+ generation of cAdvisor related df services, the user needs to enable
+ the cAdvisor option under the Prometheus Datasource Programs ruleset.
+ This check uses the same mechanisms as the df check.
+
+inventory:
+ One service is created for each filesystem.

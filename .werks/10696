@@ -1,0 +1,18 @@
+Title: Fix rule analyzation issues on service object parameter page
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1576509403
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Two issues on the object parameter page have been fixed:
+
+The links to the rules that are used to create "Classical active and passive
+Monitoring checks" services on the WATO "Parameters of service" page could
+be wrong in case there were disabled rules on top of the rule list.
+
+The effective settings of rulesets could be displayed with a wrong value.

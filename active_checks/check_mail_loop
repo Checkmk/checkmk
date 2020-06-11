@@ -1,47 +1,34 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import email
-import email.utils
 import email.mime.text
+import email.utils
 import getopt
 import imaplib
 import os
-import ast
 import poplib
 import random
 import re
 import smtplib
 import socket
+import ssl
 import sys
 import time
+from typing import Union
 
 import cmk.utils.password_store
 
 cmk.utils.password_store.replace_passwords()
+
+# The documentations of imaplib and poplib do not give any information about the encodings of their
+# outputs (e.g. of imaplib.IMAP4.search). From the source codes, it seems to be either ASCII or
+# UTF-8, so this should work.
+ENCODING = 'utf-8'
 
 
 def parse_exception(exc):
@@ -156,7 +143,6 @@ def save_expected_mails(expected_mails, status_path):
 
 
 def add_starttls_support(self, conn_timeout):
-    import ssl  # pylint: disable=import-outside-toplevel
     name = "STARTTLS"
     typ, dat = self._simple_command(name)
     if typ != 'OK':
@@ -168,7 +154,7 @@ def add_starttls_support(self, conn_timeout):
 
     cap = 'CAPABILITY'
     self._simple_command(cap)
-    if not cap in self.untagged_responses:
+    if cap not in self.untagged_responses:
         raise self.error('no CAPABILITY response from server')
     self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
 
@@ -185,8 +171,8 @@ def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, ima
         mails = {}
         if fetch_proto == 'POP3':
             # Get mails from POP3 mailbox
-            fetch_class = poplib.POP3_SSL if fetch_ssl else poplib.POP3
-            g_M = fetch_class(fetch_server, fetch_port)
+            g_M = poplib.POP3_SSL(fetch_server, fetch_port) if fetch_ssl else poplib.POP3(
+                fetch_server, fetch_port)
             g_M.user(fetch_user)
             g_M.pass_(fetch_pass)
 
@@ -195,30 +181,23 @@ def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, ima
             for i in range(num_messages):
                 index = i + 1
                 lines = g_M.retr(index)[1]
-                mails[i] = email.message_from_string("\n".join(lines))
+                mails[i] = email.message_from_bytes(b"\n".join(lines))
 
         else:
             # Get mails from IMAP mailbox
-            fetch_class = imaplib.IMAP4_SSL if fetch_ssl else imaplib.IMAP4
-
-            if imap_tls:
-                # starttls in imaplib is only available with python >= 3.2
-                # we are going to implement our own version
-                imaplib.Commands.update({"STARTTLS": ("NONAUTH")})
-                g_M = imaplib.IMAP4(fetch_server, fetch_port)
-                add_starttls_support(g_M, conn_timeout)
-            else:
-                g_M = fetch_class(fetch_server, fetch_port)
+            g_M = imaplib.IMAP4_SSL(fetch_server, fetch_port) if fetch_ssl else imaplib.IMAP4(
+                fetch_server, fetch_port)
 
             g_M.login(fetch_user, fetch_pass)
             g_M.select('INBOX', readonly=False)  # select INBOX
             retcode, raw_messages = g_M.search(None, 'NOT', 'DELETED')
-            messages = raw_messages[0].strip()
+            messages = raw_messages[0].decode(ENCODING).strip()
             if retcode == 'OK' and messages:
                 for num in messages.split():
                     try:
                         _type, data = g_M.fetch(num, '(RFC822)')
-                        mails[num] = email.message_from_string(data[0][1])
+                        if isinstance(data[0], tuple):
+                            mails[num] = email.message_from_bytes(data[0][1])
                     except Exception as e:
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
                                         (num, parse_exception(e), messages))
@@ -236,7 +215,8 @@ def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, ima
                 # extract received time
                 rx = msg.get('Received')
                 if rx:
-                    rx_ts = email.utils.mktime_tz(email.utils.parsedate_tz(rx.split(';')[-1]))
+                    parsed = email.utils.parsedate_tz(rx.split(';')[-1])
+                    rx_ts = int(time.time()) if parsed is None else email.utils.mktime_tz(parsed)
                 else:
                     # use current time as fallback where no Received header could be found
                     rx_ts = int(time.time())
@@ -328,11 +308,12 @@ def check_mails(warning, critical, expected_mails, fetched_mails):
                 num_pending += 1
 
     if num_received == 1:
-        output.insert(0, 'Mail received within %d seconds' % duration)
+        output.insert(0, 'Mail received within %d seconds' % (0 if duration is None else duration))
         perfdata.append(('duration', duration, warning or '', critical or ''))
     elif num_received > 1:
-        output.insert(0,
-                      'Received %d mails within average of %d seconds' % (num_received, duration))
+        output.insert(
+            0, 'Received %d mails within average of %d seconds' %
+            (num_received, (0 if duration is None else duration)))
         perfdata.append(('duration', duration, warning or '', critical or ''))
     else:
         output.insert(0, 'Did not receive any new mail')
@@ -353,17 +334,18 @@ def cleanup_mailbox(obsolete_mails, fetched_mails):
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
-        for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(obsolete_mails.values()):
-            if fetch_proto == 'POP3':
-                response = g_M.dele(mail_index + 1)
+        for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(
+                obsolete_mails.values()):
+            if isinstance(g_M, poplib.POP3):
+                response = g_M.dele(mail_index + 1).decode(ENCODING)
                 if not response.startswith("+OK"):
                     raise Exception("Response from server: [%s]" % response)
-            else:
+            elif isinstance(g_M, imaplib.IMAP4):
                 response = g_M.store(mail_index, '+FLAGS', '\\Deleted')[0]
                 if response != 'OK':
                     raise Exception("Response from server: [%s]" % response)
 
-        if fetch_proto == 'IMAP':
+        if isinstance(g_M, imaplib.IMAP4):
             g_M.expunge()
 
     except Exception as e:
@@ -373,22 +355,20 @@ def cleanup_mailbox(obsolete_mails, fetched_mails):
 
 
 def close_mailbox():
-    if not g_M:
-        return  # do not deal with mailbox when none sent yet
-    if fetch_proto == 'POP3':
+    if isinstance(g_M, poplib.POP3):
         g_M.quit()
-    else:
+    elif isinstance(g_M, imaplib.IMAP4):
         g_M.close()
         g_M.logout()
 
 
-g_M = None
+# TODO: Nuke these global variables, just pass them around...
+g_M = None  # type: Union[None, poplib.POP3, imaplib.IMAP4]
 opt_debug = False
 fetch_proto = 'IMAP'
 
 
 def parse_arguments(sys_args):
-    global g_M
     global opt_debug
     global fetch_proto
 
@@ -563,7 +543,8 @@ def main(sys_args=None):
 
     # Enable showing protocol messages of imap for debugging
     if fetch_proto == 'IMAP' and opt_debug:
-        imaplib.Debug = 4
+        # Bug in mypy's typeshed.
+        imaplib.Debug = 4  # type: ignore[attr-defined]
 
     try:
         expected_mails = load_expected_mails(status_path)

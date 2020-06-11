@@ -1,3 +1,6 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 // provides basic api to start and stop service
 
@@ -129,7 +132,7 @@ private:
 // this is proposed API
 std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     const std::wstring& NameSpace, const std::wstring& Object,
-    const std::vector<std::wstring> Columns, std::wstring_view separator);
+    const std::vector<std::wstring>& Columns, std::wstring_view separator);
 
 std::string WmiCachedDataHelper(std::string& cache_data,
                                 const std::string& wmi_data, char separator);

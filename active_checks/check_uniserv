@@ -1,39 +1,72 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
 import socket
+import re
 
 
 def parse_response(data):
-    parsed = dict([x.split('=') for x in data.split(";")][:-1])
-    if parsed['type'] == '1':
+    try:
+        parsed = dict([x.split('=') for x in data.split(";")][:-1])
+        response_type = parsed['type']
+    except (ValueError, KeyError):
+        sys.stdout.write("Invalid data: %s\n" % data)
+        sys.exit(3)
+
+    if response_type == '1':
         sys.stdout.write("Invalid response: %s\n" % data)
         sys.exit(3)
     return parsed
+
+
+def send_and_receive(sock, request_str):
+    encoding = "utf-8"
+    sock.send(request_str.encode(encoding))
+    answer = sock.recv(1024)
+    return parse_response(answer.decode(encoding))
+
+
+def check_job(job, s, sid, street, street_nr, city, regex):
+    if job == "VERSION":
+        sendstring = "version:session=" + sid + "\n"
+        data = send_and_receive(s, sendstring)
+        try:
+            version = data['version_str']
+        except KeyError:
+            return 3, 'Unknown version'
+        return 0, "Version: %s" % version
+
+    if job == "ADDRESS":
+        sendstring = "exec:session=%s;request_type=check_address;in_str=%s;in_hno=%s;in_city=%s\n" % (
+            sid,
+            street,
+            street_nr,
+            city,
+        )
+        _data = send_and_receive(s, sendstring)
+
+        sendstring = "fetch:session=" + sid + ";out_zip=?;out_city=?\n"
+        data = send_and_receive(s, sendstring)
+
+        try:
+            city_zip = data['out_zip']
+            city_name = data['out_city']
+        except KeyError:
+            return 3, 'Unknown zip or city'
+
+        state = 0
+        infotext = "Address: %s %s" % (city_zip, city_name)
+        if not re.match(regex, data['out_city']):
+            infotext += " but expects %s" % regex
+            state = 2
+
+        return state, infotext
+
+    return 3, "Unknown job"
 
 
 def parse_arguments(sys_args):
@@ -68,7 +101,6 @@ def parse_arguments(sys_args):
 
 
 def main(sys_args=None):
-    BUFFER_SIZE = 1024
 
     host, tcp_port, service, job, street, street_nr, city, regex = parse_arguments(sys_args)
 
@@ -76,43 +108,12 @@ def main(sys_args=None):
     s.connect((host, tcp_port))
 
     sendstring = "open:service=" + service + ";servicehost=" + host + "\n"
-    s.send(sendstring)
-
-    data = parse_response(s.recv(BUFFER_SIZE))
-    if not data.get('session'):
+    data = send_and_receive(s, sendstring)
+    sid = data.get('session')
+    if not sid:
         return 3, "Error getting SID. Response was: %s\n" % data
 
-    sid = data.get('session')
-
-    if job == "VERSION":
-        sendstring = "version:session=" + sid + "\n"
-        s.send(sendstring)
-        data = parse_response(s.recv(BUFFER_SIZE))
-        state = 0
-        infotext = "Version is " + data['version_str']
-    elif job == "ADDRESS":
-        import re
-        sendstring = "exec:session=%s;request_type=check_address;in_str=%s;in_hno=%s;in_city=%s\n" % (
-            sid,
-            street,
-            street_nr,
-            city,
-        )
-        s.send(sendstring)
-        data = parse_response(s.recv(BUFFER_SIZE))
-
-        sendstring = "fetch:session=" + sid + ";out_zip=?;out_city=?\n"
-        s.send(sendstring)
-        data = parse_response(s.recv(BUFFER_SIZE))
-
-        state = 0
-        infotext = "Address is %s %s" % (data['out_zip'], data['out_city'])
-        if not re.match(regex, data['out_city']):
-            infotext += " But excpects %s" % regex
-            state = 2
-    else:
-        state = 3
-        infotext = "JOB not known"
+    state, infotext = check_job(job, s, sid, street, street_nr, city, regex)
 
     s.send("close:session=" + sid + "\n")
     s.close()

@@ -8,5 +8,5 @@ description:
  Available Informations: Cluster name, Nodes (count), Data nodes (count)
 
 inventory:
- The check creates one service
+ One service is created.
 

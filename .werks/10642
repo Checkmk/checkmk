@@ -1,0 +1,13 @@
+Title: heartbeat_rscstatus: Added option to configure the expected state
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1575564136
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+It is now possible to configure the expected state via WATO. The discovered
+state will be compared with the expected state and the service gets CRIT, if
+these two values differ.

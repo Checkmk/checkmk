@@ -1,33 +1,14 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
 __version__ = "1.7.0i1"
 
 # TODO:
+# - Do not create half-initialized objects, poisoning all use sites with dynamic
+#   checks against None.
 # - Create a more detailed report out of the test results. For example
 #   graph the different values together with the timeline of the different
 #   test cases.
@@ -52,34 +33,39 @@ __version__ = "1.7.0i1"
 #   |                            |_|                                       |
 #   '----------------------------------------------------------------------'
 
-import errno
-import os
-import re
 import ast
-import sys
-import glob
-import time
+import collections
+import ctypes
+import ctypes.util
+import errno
 import getopt
+import glob
+import logging
+import multiprocessing
+import os
 import pprint
+import re
 import select
 import shutil
 import signal
 import socket
-import logging
+import subprocess
+import sys
 import tempfile
 import threading
+import time
 import traceback
-import subprocess
-import collections
-import multiprocessing
-import six
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
-import psutil
-import npyscreen
+from psutil._common import sdiskusage  # type: ignore[import]
+from psutil._pslinux import svmem, sdiskio  # type: ignore[import]
+import psutil  # type: ignore[import]
+import npyscreen  # type: ignore[import]  # pylint: disable=import-error
 
 import livestatus
 
 from cmk.utils.render import fmt_bytes
+from cmk.utils.exceptions import MKGeneralException, MKTerminate
 
 #.
 #   .--Helpers-------------------------------------------------------------.
@@ -97,14 +83,15 @@ from cmk.utils.render import fmt_bytes
 # Changes the process name and process command line on of the running process
 # This works at least with Python 2.x on Linux
 def set_cmdline(cmdline):
-    import ctypes
-    import ctypes.util
-    libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library('c'))
+    libc_path = ctypes.util.find_library('c')
+    if libc_path is None:
+        raise MKGeneralException("Huh? libc not found???")
+    libc = ctypes.cdll.LoadLibrary(libc_path)
 
     argv = ctypes.POINTER(ctypes.c_char_p)()
     argc = ctypes.c_int()
     ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
-    cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value
+    cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value  # type: ignore[arg-type]
     new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, '\0'))
 
     # replace the command line, which is available via /proc/<pid>/cmdline.
@@ -132,14 +119,6 @@ def fmt_timespan(seconds):
 
 def fmt_datetime(seconds):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(seconds))
-
-
-class MKGeneralException(Exception):
-    pass
-
-
-class MKTerminate(MKGeneralException):
-    pass
 
 
 class MKSkipTestCase(MKGeneralException):
@@ -215,7 +194,7 @@ def ip_int_from_string(ip_str):
 
 
 def string_from_ip_int(ip_int):
-    octets = []
+    octets = []  # type: List[str]
     for _ in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
@@ -270,7 +249,7 @@ def run_performance_test(num_hosts, num_helpers):
         analyzer.stop()
 
 
-class Test(object):
+class Test:
     STATE_INITIALIZING = "initializing"
     STATE_RUNNING = "running"
     STATE_STOPPED = "stopped"
@@ -297,8 +276,8 @@ class Test(object):
         self.version = __version__
         self.state = Test.STATE_INITIALIZING
         self._measurements = []
-        self.result = None
-        self.result_msg = None
+        self.result = None  # type: Optional[str]
+        self.result_msg = None  # type: Optional[str]
         self.system_info = SystemInfo()
 
         if id_ is None:
@@ -377,12 +356,9 @@ class Test(object):
             self.add_measurement(m)
 
     def _get_test_id(self):
-        parts = [
-            self.system_info.omd_version,
-            self.system_info.core,
-            "%d" % time.time(),
-        ]
-        return "_".join(parts)
+        omd_version = "unknownVersion" if self.system_info.omd_version is None else self.system_info.omd_version
+        core = "unknownCore" if self.system_info.core is None else self.system_info.core
+        return "_".join([omd_version, core, "%d" % time.time()])
 
     def set_state(self, state, result=None, result_msg=None):
         self.state = state
@@ -405,7 +381,8 @@ class Test(object):
         return bool(self._measurements)
 
     def get_measurements_by_test_case(self):
-        by_test_case = collections.OrderedDict()
+        by_test_case = collections.OrderedDict(
+        )  # type: collections.OrderedDict[TestAgentBasedStandardHosts, List[Measurement]]
         for m in self._measurements:
             if m.test_case:
                 l = by_test_case.setdefault(m.test_case, [])
@@ -457,7 +434,7 @@ class TestRunner(threading.Thread):
         self.name = "test-runner"
         self._stop = threading.Event()
         self.test = Test()
-        self.test_case = None
+        self.test_case = None  # type: Optional[TestAgentBasedStandardHosts]
 
         # Helper vars needed for test case generator
         self._num_hosts = num_hosts
@@ -510,6 +487,7 @@ class TestRunner(threading.Thread):
         self.save()
 
     def _set_test_case_state(self, state, result=None, result_msg=None):
+        assert self.test_case is not None
         self.test_case.set_state(state, result, result_msg)
         self.save()
 
@@ -521,17 +499,20 @@ class TestRunner(threading.Thread):
         with open("%s/etc/rrdcached.conf" % omd_root(), "w") as f:
             f.write("TIMEOUT=300\n" "RANDOM_DELAY=10\n" "FLUSH_TIMEOUT=7200\n" "WRITE_THREADS=4\n")
 
-        p = subprocess.Popen(["omd", "restart", "rrdcached"],
-                             close_fds=True,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
-        stdout = p.communicate()[0]
+        p = subprocess.Popen(
+            ["omd", "restart", "rrdcached"],
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        )
+        stdout, _stderr = p.communicate()
         if p.returncode != 0:
             raise MKGeneralException("Failed to restart rrdcached: %s" % stdout)
 
     def _run_test(self):
         for test_case in self._generate_test_cases():
-            if self._stop.isSet():
+            if self._stop.is_set():
                 break
 
             self.test.test_cases.append(test_case)
@@ -563,7 +544,7 @@ class TestRunner(threading.Thread):
                                 result_msg = "Skipped: %s" % e
                                 break  # Will iterate to next step (till test case end)
 
-                            if self._stop.isSet():
+                            if self._stop.is_set():
                                 result = TestCase.RESULT_ABORTED
                                 result_msg = "Test runner was stopped"
                                 return
@@ -609,7 +590,8 @@ class TestRunner(threading.Thread):
         self._num_helpers += 40
 
     def _generate_test_cases(self):
-        while not self._stop.isSet():
+        # type: () -> Iterable[TestAgentBasedStandardHosts]
+        while not self._stop.is_set():
             yield TestAgentBasedStandardHosts(self,
                                               num_hosts=self._num_hosts,
                                               planned_duration=15 * 60,
@@ -671,6 +653,7 @@ class TestRunner(threading.Thread):
         # Initial scheduling of the CMC spreads the service checks for a maximum of
         # 5 * check_interval. So we should terminate the test only after some initialization
         # time.
+        assert self.test_case is not None
         if self.test_case.duration() < 450:
             return
 
@@ -679,6 +662,7 @@ class TestRunner(threading.Thread):
                                             m.site_stats["average_latency_cmk"])
 
     def _check_lower_thresholds(self, m):
+        assert self.test_case is not None
         if self.test_case.duration() < 30:
             return  # Check for lower thresholds after X seconds
 
@@ -719,7 +703,7 @@ class TestRunner(threading.Thread):
         self._stop.set()
 
     def shall_stop(self):
-        return self._stop.isSet()
+        return self._stop.is_set()
 
     def _cleanup_host_files(self, cleanup_rrds=False):
         for path in glob.glob("%s/var/check_mk/autochecks/*" % omd_root()):
@@ -754,7 +738,7 @@ class Analyzer(threading.Thread):
     def run(self):
         #self._runner.test.info("Analyzer started")
         try:
-            while not self._stop.isSet() and not self._runner.test.is_stopped():
+            while not self._stop.is_set() and not self._runner.test.is_stopped():
                 self._measure()
                 time.sleep(1)
         except Exception:
@@ -782,26 +766,26 @@ class Analyzer(threading.Thread):
         self._stop.set()
 
 
-class Start(object):
+class Start:
     pass
 
 
-class Wait(object):
+class Wait:
     def __init__(self, duration):
         self.until = time.time() + duration
 
 
-class SystemInfo(object):
+class SystemInfo:
     def __init__(self):
         super(SystemInfo, self).__init__()
-        self.cpu_count = None
-        self.cpu_info = None
-        self.memory = None
-        self.block_device = None
-        self.linux_distro = None
-        self.omd_version = None
-        self.omd_site = None
-        self.core = None
+        self.cpu_count = 0
+        self.cpu_info = {}  # type: Dict[str, Any]
+        self.memory = 0.0
+        self.block_device = ""
+        self.linux_distro = ""
+        self.omd_version = ""
+        self.omd_site = ""
+        self.core = ""
 
     def collect(self):
         # Number of logical CPUs
@@ -815,7 +799,7 @@ class SystemInfo(object):
         self.core = self._get_monitoring_core()
 
     def serialize(self):
-        return dict([(k, v) for k, v in self.__dict__.items() if k[0] != "_"])
+        return {k: v for k, v in self.__dict__.items() if k[0] != "_"}
 
     def deserialize(self, raw):
         self.__dict__.update(raw)
@@ -844,7 +828,7 @@ class SystemInfo(object):
         return None
 
     def _get_cpu_info(self):
-        node = {}
+        node = {}  # type: Dict[str, Any]
         num_threads_total = 0
         sockets = set([])
         for l in open("/proc/cpuinfo"):
@@ -894,7 +878,7 @@ class SystemInfo(object):
 DiskIO = collections.namedtuple("DiskIO", ["read_bytes", "write_bytes"])
 
 
-class Measurement(object):
+class Measurement:
     @classmethod
     def summary(cls, measurements):
         average_keys = [
@@ -912,6 +896,7 @@ class Measurement(object):
             for m in measurements:
                 values.append(getattr(m, k))
 
+            averaged = None  # type: Union[None, Tuple[float, ...], Dict[str, Union[str, float]]]
             if values:
                 if isinstance(values[0], tuple):
                     # averages of equal length tuples
@@ -926,13 +911,11 @@ class Measurement(object):
 
                     if real_values:
                         for key, value in real_values[0].items():
-                            if isinstance(value, six.text_type):
+                            if isinstance(value, str):
                                 averaged[key] = value
                             else:
                                 averaged[key] = float(sum([v[key] for v in real_values
                                                           ])) / num_values
-            else:
-                averaged = None
 
             average.set_value(k, averaged)
 
@@ -942,15 +925,15 @@ class Measurement(object):
         super(Measurement, self).__init__()
         self._runner = runner
 
-        self.test_case = None
+        self.test_case = None  # type: Optional[TestAgentBasedStandardHosts]
         self.disk_counters = None
         self.site_state = None
 
-        self.time = None
-        self.cpu_load = None
-        self.memory = None
-        self.disk_usage = None
-        self.disk_io = None
+        self.time = None  # type: Optional[float]
+        self.cpu_load = None  # type: Optional[Tuple[float, float, float]]
+        self.memory = None  # type: Optional[svmem]
+        self.disk_usage = None  # type: Optional[sdiskusage]
+        self.disk_io = None  # type: Optional[sdiskio]
         self.site_stats = None
 
     def measure(self, last=None):
@@ -977,6 +960,7 @@ class Measurement(object):
     def save(self):
         test_dir = self._runner.test.dir()
 
+        assert self.time is not None
         path = os.path.join(test_dir, "%d.data" % self.time)
         with tempfile.NamedTemporaryFile("w",
                                          dir=os.path.dirname(path),
@@ -1009,9 +993,6 @@ class Measurement(object):
     def set_value(self, k, val):
         """Set an attribute of the measurement. Cares about converting tuples
         to the correct namedtuples."""
-        from psutil._common import sdiskusage
-        from psutil._pslinux import svmem, sdiskio
-
         if k == "memory":
             val = svmem(*val)
         elif k == "disk_usage":
@@ -1131,10 +1112,9 @@ class AgentListener(multiprocessing.Process):
                 try:
                     readable = select.select(self._sockets, [], [], 0.2)[0]
                 except select.error as e:
-                    if e[0] == 4:
-                        continue
-                    else:
+                    if e.args[0] != errno.EINTR:
                         raise
+                    continue
 
                 for s in readable:
                     time.sleep(0.5)
@@ -1165,11 +1145,9 @@ class AgentListener(multiprocessing.Process):
             counters[ident] = now, 0
             return  # just initialied. Don't increase
 
-        else:
-            last_update, last_value = counters[ident]
-            duration = now - last_update
-
-            counters[ident] = now, last_value + (duration * per_sec)
+        last_update, last_value = counters[ident]
+        duration = now - last_update
+        counters[ident] = now, last_value + (duration * per_sec)
 
     def _section_kernel(self, host_id):
         self._update_counter(host_id, "kernel_ctxt", per_sec=5000)
@@ -1178,18 +1156,18 @@ class AgentListener(multiprocessing.Process):
 
         # hundreds of a second
         num_cpus = 4
-        for i in [""] + range(num_cpus):
+        for i in [""] + list(map(str, range(num_cpus))):
             self._update_counter(host_id, "kernel_cpu%s_user" % i, per_sec=0.10)
             self._update_counter(host_id, "kernel_cpu%s_nice" % i, per_sec=0.05)
             self._update_counter(host_id, "kernel_cpu%s_system" % i, per_sec=0.10)
             self._update_counter(host_id, "kernel_cpu%s_idle" % i, per_sec=0.30)
             self._update_counter(host_id, "kernel_cpu%s_iowait" % i, per_sec=0.05)
 
-        counters = {k: v for k, (_t, v) in self._counters[host_id].iteritems()}
+        counters = {k: v for k, (_t, v) in self._counters[host_id].items()}
         counters["now"] = time.time()
 
         cpu_output = ""
-        for i in [""] + range(num_cpus):
+        for i in [""] + list(map(str, range(num_cpus))):
             cpu_output += "cpu%s %d %d %d %d %d 0 0 0 0 0\n" % \
                 (i,
                  counters["kernel_cpu%s_user" % i],
@@ -1325,7 +1303,7 @@ processes %(kernel_processes)d
 procs_running 1
 procs_blocked 0
 softirq 3526225 0 845354 2 177933 55525 0 6372 577174 0 1863865
-""" % counters
+""" % counters  # noqa: E501
 
         return section + cpu_output
 
@@ -2421,7 +2399,7 @@ thermal_zone1 - BAT0 35000
 [[[/var/log/kern.log]]]
 [[[/var/log/auth.log]]]
 [[[/var/log/syslog]]]
-"""
+"""  # noqa: E101,W191
 
 #.
 #   .--Test Cases----------------------------------------------------------.
@@ -2436,8 +2414,8 @@ thermal_zone1 - BAT0 35000
 #   '----------------------------------------------------------------------'
 
 
-class TestCase(object):
-    STATE_INITIALIZING = "initializing"
+class TestCase:
+    STATE_INITIALIZING = "initializing"  # noqa: E101
     STATE_RUNNING = "running"
     STATE_STOPPED = "stopped"
 
@@ -2466,12 +2444,12 @@ class TestCase(object):
     def duration(self):
         if self.started_at is None:
             return 0
-        elif self.finished_at is None:
+        if self.finished_at is None:
             return time.time() - self.started_at
         return self.finished_at - self.started_at
 
     def serialize(self):
-        d = dict([(k, v) for k, v in self.__dict__.items() if k[0] != "_"])
+        d = {k: v for k, v in self.__dict__.items() if k[0] != "_"}
         d["__class_name__"] = self.__class__.__name__
         return d
 
@@ -2697,14 +2675,17 @@ class TestAgentBasedStandardHosts(TestCase):
             shutil.copy(src_file, "%s/%s.mk" % (autochecks_dir, host_name))
 
     def _discover_services_of_host(self, host_name):
-        p = subprocess.Popen(["cmk", "-II", host_name],
-                             stdin=open(os.devnull),
-                             close_fds=True,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
+        p = subprocess.Popen(
+            ["cmk", "-II", host_name],
+            stdin=open(os.devnull),
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        )
 
         try:
-            stdout = p.communicate()[0]
+            stdout, _stderr = p.communicate()
         except KeyboardInterrupt:
             try:
                 p.terminate()
@@ -2788,15 +2769,18 @@ class TestAgentBasedStandardHosts(TestCase):
     # To create the RRDs, simply perform one check and wait for the RRDs to be created
     def _create_rrds_of_host(self, host_name):
         # Do 2 iterations to initialize the rrds that base on counter values
-        for _i in xrange(2):
-            p = subprocess.Popen(["cmk", "-v", host_name],
-                                 stdin=open(os.devnull),
-                                 close_fds=True,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT)
+        for _i in range(2):
+            p = subprocess.Popen(
+                ["cmk", "-v", host_name],
+                stdin=open(os.devnull),
+                close_fds=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+            )
 
             try:
-                stdout = p.communicate()[0]
+                stdout, _stderr = p.communicate()
             except KeyboardInterrupt:
                 try:
                     p.terminate()
@@ -2809,8 +2793,8 @@ class TestAgentBasedStandardHosts(TestCase):
 
             time.sleep(2)
 
-        num_rrds, wait_sec = None, 10
-        while num_rrds is None or num_rrds < 30:
+        num_rrds, wait_sec = 0, 10
+        while num_rrds < 20:
             if wait_sec == 0:
                 raise MKGeneralException("Did not create RRDs for '%s' "
                                          "after 10 seconds" % host_name)
@@ -2828,13 +2812,16 @@ class TestAgentBasedStandardHosts(TestCase):
     def _activate_changes(self):
         if self._test:
             self._test.info("  Activating changes")
-        p = subprocess.Popen(["cmk", "-R"],
-                             close_fds=True,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
+        p = subprocess.Popen(
+            ["cmk", "-R"],
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        )
 
         try:
-            stdout = p.communicate()[0]
+            stdout, _stderr = p.communicate()
         except KeyboardInterrupt:
             try:
                 p.terminate()
@@ -2855,7 +2842,7 @@ class TestAgentBasedStandardHosts(TestCase):
     # to tell us the state of the helpers, we need to detect this somehow.
     # -> Find all helper processes and check the open file descriptors.
     def _wait_for_cmk_helpers_ready(self):
-        num_not_ready, _loadavg_5_before = None, os.getloadavg()[1]
+        num_not_ready, _loadavg_5_before = None, os.getloadavg()[1]  # noqa: F841
         while num_not_ready is None or num_not_ready > 0:
             if self._runner.shall_stop():
                 break
@@ -2868,7 +2855,8 @@ class TestAgentBasedStandardHosts(TestCase):
 
             try:
                 matched_pids = subprocess.check_output(
-                    ["pgrep", "-u", site_id(), "-f", "python.*cmk --keepalive$"]).split("\n")
+                    ["pgrep", "-u", site_id(), "-f",
+                     "python.*cmk --keepalive$"]).decode("utf-8").split("\n")
             except subprocess.CalledProcessError as e:
                 self._test.error("  Found no helper yet (%s)" % e.returncode)
                 continue
@@ -2931,6 +2919,7 @@ def run_report(test_id):
     sys.stdout.write(" Date         : %s\n" % fmt_datetime(test.first_measurement().time))
     sys.stdout.write(" State        : %s\n" % test.state_text())
 
+    assert test.result is not None
     result_txt = test.result
     if test.result == "failed":
         result_txt += " (%s)" % test.result_msg
@@ -3126,8 +3115,8 @@ class ConsoleRenderer(npyscreen.NPSApp):
         self._runner = runner
 
         # GUI widgets
-        self._window = None
-        self._help = None
+        self._window = None  # type: Optional[Window]
+        self._help = None  # type: Optional[HelpText]
 
     def main(self):
         npyscreen.setTheme(npyscreen.Themes.ElegantTheme)
@@ -3176,6 +3165,7 @@ class ConsoleRenderer(npyscreen.NPSApp):
 
     def while_waiting(self):
         self._general.update()
+        assert self._window is not None
         self._window.display(clear=True)
 
 

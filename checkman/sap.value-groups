@@ -1,4 +1,4 @@
-title: SAP Single Value Monitoring Groups
+title: SAP R/3: Single Value Groups (deprecated)
 agents: linux
 catalog: app/sap
 license: GPL
@@ -14,7 +14,11 @@ description:
  in case of Critical values also these.
 
 item:
-  The Name of the Group
+  The name of the group
 
 inventory:
- The check does not inventory all available values by default.
+ By default no services are created.
+ You can add groups to the option {sap_value_groups}.
+
+ If a hostname matches to one of the groups one service is created for the group
+ (if it's not already existing).

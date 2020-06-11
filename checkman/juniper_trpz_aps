@@ -1,4 +1,4 @@
-title: Number of online access points
+title: Juniper Devices: Number of Online Access Points
 agents: snmp
 catalog: hw/network/juniper
 license: GPL
@@ -13,5 +13,5 @@ description:
  per node.
 
 inventory:
- One service for the number of access points
+ One service is created for the number of access points.
 

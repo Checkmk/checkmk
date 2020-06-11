@@ -16,4 +16,4 @@ description:
   ibm_storage_ts.library are probably not independent.
 
 inventory:
-  Exactly one item is discovered.
+ One service is created.

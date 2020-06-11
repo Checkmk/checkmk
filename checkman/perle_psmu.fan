@@ -1,6 +1,6 @@
-title: Perle Mediaconverter: Fan status
+title: Perle Mediaconverter: Fan Status
 agents: snmp
-catalog: hw/app/perle
+catalog: hw/network/perle
 license: GPL
 distribution: check_mk
 description:
@@ -13,4 +13,4 @@ item:
  The fan identifier.
 
 inventory:
- One service per fan is created.
+ One service is created for each fan.

@@ -1,4 +1,4 @@
-title: HP Proliant Servers: Physical CPU state
+title: HP Proliant Servers: Physical CPU State
 agents: snmp
 catalog: hw/server/hp
 license: GPL
@@ -12,6 +12,8 @@ description:
 
  The check monitors the physical state of the single CPUs not the load.
 
+item:
+ The CPU unit index
+
 inventory:
- One check is automatically created if each CPU entry which is provided
- in the SNMP output.
+ One service is created for each CPU entry.

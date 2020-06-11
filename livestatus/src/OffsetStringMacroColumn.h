@@ -1,34 +1,18 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef OffsetStringMacroColumn_h
 #define OffsetStringMacroColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <memory>
 #include <optional>
 #include <string>
+
+#include "Column.h"
 #include "StringColumn.h"
 #include "nagios.h"
 class MonitoringCore;
@@ -38,7 +22,7 @@ class MacroExpander {
 public:
     virtual ~MacroExpander() = default;
     virtual std::optional<std::string> expand(const std::string &str) = 0;
-    std::optional<std::string> from_ptr(const char *str);
+    static std::optional<std::string> from_ptr(const char *str);
 };
 
 // poor man's monad...
@@ -74,18 +58,19 @@ private:
 
 class OffsetStringMacroColumn : public StringColumn {
 public:
+    // TODO(ml): 5 offsets!
     OffsetStringMacroColumn(const std::string &name,
-                            const std::string &description, int indirect_offset,
-                            int extra_offset, int extra_extra_offset,
+                            const std::string &description,
+                            const Column::Offsets &offsets,
                             const MonitoringCore *mc, int offset)
-        : StringColumn(name, description, indirect_offset, extra_offset,
-                       extra_extra_offset, 0)
+        : StringColumn(name, description, offsets)
         , _mc(mc)
         , _string_offset(offset) {}
 
-    std::string getValue(Row row) const override;
+    [[nodiscard]] std::string getValue(Row row) const override;
 
-    virtual std::unique_ptr<MacroExpander> getMacroExpander(Row row) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<MacroExpander> getMacroExpander(
+        Row row) const = 0;
 
 protected:
     const MonitoringCore *const _mc;

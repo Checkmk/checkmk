@@ -1,20 +1,20 @@
-﻿#
-# Hyper-V VM state
-#
-# Script must executed with local administrator credentials!
-#
-# This script gathers a few information about VM integration services,
-# checkpoints and replication. All other information about the system
-# health are gathered by the operating system agents on both, host and
-# guest servers
-#
-# Version: 1.0
-#
-# Date: 2015-08-01
-#
-# Author: A. Exner, ACP
+﻿####
+## Hyper-V VM state
+####
+## Script must executed with local administrator credentials!
+##
+## This script gathers a few information about VM integration services,
+## checkpoints and replication. All other information about the system
+## health are gathered by the operating system agents on both, host and
+## guest servers
+##
+## Version: 1.0
+##
+## Date: 2015-08-01
+##
+## Author: A. Exner, ACP
 
-# Script parameters:
+## Script parameters:
 
 $OutputFile = "c:\scripts\VM-State.txt" # Path and filename for file output
 $WriteFileOutput = $false

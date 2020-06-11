@@ -1,35 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
 import cmk.utils.render
 import cmk.gui.utils as utils
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from . import (
+from cmk.gui.plugins.views.perfometers import (
     perfometers,
     render_perfometer,
     perfometer_linear,
@@ -59,9 +38,9 @@ def number_human_readable(n, precision=1, unit="B"):
     f = "%." + str(precision) + "f"
     if abs(n) > base * base * base:
         return (f + "G%s") % (n / (base * base * base), unit)  # fixed: true-division
-    elif abs(n) > base * base:
+    if abs(n) > base * base:
         return (f + "M%s") % (n / (base * base), unit)  # fixed: true-division
-    elif abs(n) > base:
+    if abs(n) > base:
         return (f + "k%s") % (n / base, unit)  # fixed: true-division
     return (f + "%s") % (n, unit)
 
@@ -550,7 +529,7 @@ perfometers["check_mk-juniper_screenos_cpu"] = perfometer_cpu_utilization
 
 
 def perfometer_ps_perf(row, check_command, perf_data):
-    perf_dict = dict([(p[0], float(p[1])) for p in perf_data])
+    perf_dict = {p[0]: float(p[1]) for p in perf_data}
     try:
         perc = perf_dict["pcpu"]
         return "%.1f%%" % perc, perfometer_linear(perc, "#30ff80")
@@ -692,7 +671,7 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
         return "", ""  # Printer does not supply a max value
 
     # If there is no 100% given, calculate the percentage
-    if maxi != 100.0 and maxi != 0.0:
+    if maxi not in (0.0, 100.0):
         left = left * 100.0 / maxi
 
     s = row['service_description'].lower()
@@ -753,7 +732,7 @@ def perfometer_fileinfo(row, check_command, perf_data):
         h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
     h += '</div>'
-    return " / ".join(texts), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 def perfometer_fileinfo_groups(row, check_command, perf_data):
@@ -762,12 +741,12 @@ def perfometer_fileinfo_groups(row, check_command, perf_data):
     for i, color, base, scale, verbfunc in [
         (2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v),  # count
         (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
-    ]:  #age_newest
+    ]:  # age_newest
         val = float(perf_data[i][1])
         h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
     h += '</div>'
-    return " / ".join(texts), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 perfometers["check_mk-fileinfo"] = perfometer_fileinfo
@@ -784,8 +763,9 @@ def perfometer_mssql_tablespaces(row, check_command, perf_data):
     indexes_perc = indexes / reserved * 100  # fixed: true-division
     unused_perc = unused / reserved * 100  # fixed: true-division
 
-    data = [(data_perc, "#80c0ff"), (indexes_perc, "#00ff80"), (unused_perc, "#f0b000")]
-    return "%.1f%%" % (data_perc + indexes_perc), render_perfometer(data)
+    return ("%.1f%%" % (data_perc + indexes_perc),
+            render_perfometer([(data_perc, "#80c0ff"), (indexes_perc, "#00ff80"),
+                               (unused_perc, "#f0b000")]))
 
 
 perfometers["check_mk-mssql_tablespaces"] = perfometer_mssql_tablespaces
@@ -829,13 +809,11 @@ def perfometer_hpux_tunables(row, check_command, perf_data):
 
 
 perfometers["check_mk-hpux_tunables.nproc"] = perfometer_hpux_tunables
-perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.maxfiles_lim"] = perfometer_hpux_tunables
 # this one still doesn't load. I need more test data to find out why.
 perfometers["check_mk-hpux_tunables.semmni"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.semmns"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.shmseg"] = perfometer_hpux_tunables
-perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
 
 
@@ -861,7 +839,7 @@ def perfometer_vms_system_ios(row, check_command, perf_data):
     h += perfometer_logarithmic(buffered, 10000, 3, "#38b0cf")
     h += perfometer_logarithmic(direct, 10000, 3, "#38808f")
     h += '</div>'
-    return "%.0f / %.0f" % (direct, buffered), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return "%.0f / %.0f" % (direct, buffered), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 perfometers["check_mk-vms_system.ios"] = perfometer_vms_system_ios
@@ -1054,7 +1032,7 @@ def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
     used = float(perf_data[1][1])
     if used == 0 and licensed == 0:
         return "0 of 0 used", perfometer_linear(100, get_themed_perfometer_bg_color())
-    elif licensed == 0:
+    if licensed == 0:
         return "completely unlicensed", perfometer_linear(100, "silver")
 
     perc_used = used * 100.0 / licensed
@@ -1141,24 +1119,22 @@ def perfometer_raritan_pdu_inlet(row, check_command, perf_data):
     value = float(perf_data[0][1])
     unit = perf_data[0][2]
     display_str = perf_data[0][1] + " " + unit
-
     if cap.startswith("rmsCurrent"):
         return display_str, perfometer_logarithmic(value, 1, 2, display_color)
-    elif cap.startswith("unbalancedCurrent"):
+    if cap.startswith("unbalancedCurrent"):
         return display_str, perfometer_linear(value, display_color)
-    elif cap.startswith("rmsVoltage"):
+    if cap.startswith("rmsVoltage"):
         return display_str, perfometer_logarithmic(value, 500, 2, display_color)
-    elif cap.startswith("activePower"):
+    if cap.startswith("activePower"):
         return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    elif cap.startswith("apparentPower"):
+    if cap.startswith("apparentPower"):
         return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    elif cap.startswith("powerFactor"):
+    if cap.startswith("powerFactor"):
         return display_str, perfometer_linear(value * 100, display_color)
-    elif cap.startswith("activeEnergy"):
+    if cap.startswith("activeEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
-    elif cap.startswith("apparentEnergy"):
+    if cap.startswith("apparentEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
-
     return "unimplemented", perfometer_linear(0, get_themed_perfometer_bg_color())
 
 

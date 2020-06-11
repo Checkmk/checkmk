@@ -1,0 +1,24 @@
+Title: Linux agent: Fix possible encoding issues of Python plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1575275555
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+In previous versions the agent was not setting the encoding information in the
+environment, making Python plugins fail with <tt>UnicodeEncodeError</tt>
+exceptions when executed through the agent.
+
+Confusingly, the same command has often worked in interactive debugging, since
+the interactive shells of the users have set the encoding correctly
+
+The Linux agent is now setting <tt>LC_ALL</tt> to C.utf8 (in case the locale is
+available on the monitored system) instead of only <tt>LC_ALL=C</tt>.
+
+When the encoding is not set in the environment, Python will encode all the output
+written to stdout/stderr with <tt>ANSI_X3.4-1968</tt>. This will fail when there
+are non-ASCII characters in the output. Once the encoding is set, Python can detect
+it and encode all output using UTF-8.

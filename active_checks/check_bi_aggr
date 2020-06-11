@@ -1,40 +1,22 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import getopt
 import os
 import sys
 import time
 import traceback
-import urllib
+import urllib.parse
 import ast
+import subprocess
+from pathlib import Path
 
 import requests
-import urllib3  # type: ignore
-from pathlib2 import Path
+from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
+import urllib3  # type: ignore[import]
 
 import cmk.utils.password_store
 
@@ -147,7 +129,7 @@ if use_automation_user:
     username = "automation"
     secret_file_path = Path(cmk.utils.paths.var_dir) / "web" / username / "automation.secret"
     try:
-        with secret_file_path.open(encoding="utf-8") as f:  # pylint: disable=no-member
+        with secret_file_path.open(encoding="utf-8") as f:
             password = f.read()
     except IOError:
         sys.stderr.write('Unable to read credentials for "automation" user.\n')
@@ -165,32 +147,34 @@ if track_downtime and not hostname:
 
 
 def init_auth():
-    auth_obj = None
-    if username and password:
-        if auth_mode == 'kerberos':
-            from requests_kerberos import HTTPKerberosAuth  # type: ignore
+    if not username or not password:
+        return None
+    if auth_mode == 'kerberos':
+        kinit = subprocess.Popen(
+            ["kinit", username],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+        )
+        stdout, stderr = kinit.communicate(input=("%s\n" % password))
+        kinit.wait()
+        if kinit.returncode or stderr:
+            sys.stderr.write("Error getting Kerberos Ticket:\n")
+            sys.stderr.write("stdout: %s\nstderr: %s\nrc: %s" % (stdout, stderr, kinit.returncode))
+            sys.exit(1)
+        return HTTPKerberosAuth(principal=username)
+    if auth_mode == 'digest':
+        return requests.auth.HTTPDigestAuth(username, password)
+    if auth_mode == 'basic':
+        return requests.auth.HTTPBasicAuth(username, password)
+    raise Exception('invalid auth_mode %s' % auth_mode)
 
-            from subprocess import Popen, PIPE
-            kinit = Popen(["kinit", username], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-            output, errors = kinit.communicate("%s\n" % password)
-            kinit.wait()
-            if kinit.returncode or errors:
-                sys.stderr.write("Error getting Kerberos Ticket:\n")
-                sys.stderr.write("stdout: %s\nstderr: %s\nrc: %s" %
-                                 (output, errors, kinit.returncode))
-                sys.exit(1)
-
-            auth_obj = HTTPKerberosAuth(principal=username)
-        elif auth_mode == 'digest':
-            auth_obj = requests.auth.HTTPDigestAuth(username, password)
-        else:
-            auth_obj = requests.auth.HTTPBasicAuth(username, password)
-    return auth_obj
 
 url = "%s/check_mk/view.py" \
       "?view_name=aggr_single_api" \
       "&aggr_name=%s&output_format=python" % \
-      (base_url.rstrip('/'), urllib.quote(aggr_name))
+      (base_url.rstrip('/'), urllib.parse.quote(aggr_name))
 
 auth = None
 if auth_mode in ['basic', 'digest', 'kerberos']:
@@ -232,7 +216,7 @@ if len(obj) == 1:
                      aggr_name)
     sys.exit(3)
 
-if not isinstance(obj, list):
+if not (isinstance(obj, list) and isinstance(obj[0], list) and isinstance(obj[1], list)):
     sys.stdout.write('ERROR: Invalid response: %s\n' % (raw_response.replace("\n", "")))
     sys.exit(3)
 

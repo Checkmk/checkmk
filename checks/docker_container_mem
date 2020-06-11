@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
 def _parse_docker_container_mem_plugin(info):
@@ -54,35 +34,32 @@ def parse_docker_container_mem(info):
     else:
         parsed = _parse_docker_container_mem_plugin(info)
 
-    # Populate a dictionary in the format check_memory() form mem.include expects.
-    # The values are scaled to kB
-    mem = {
-        "SwapTotal": 0,
-        "SwapFree": 0,
-    }
-
     # Calculate used memory like docker does (https://github.com/moby/moby/issues/10824)
     usage_kb = (parsed["usage_in_bytes"] - parsed["cache"]) / 1024.0
 
+    # Populate a dictionary in the format check_memory() form mem.include expects.
+    # The values are scaled to kB
+    mem = {}
     # Extract the real memory limit for the container. There is either the
     # maximum amount of memory available or a configured limit for the
     # container (cgroup).
     mem["MemTotal"] = min(parsed["MemTotal"], parsed["limit_in_bytes"]) / 1024.0
     mem["MemFree"] = mem["MemTotal"] - usage_kb
-    mem["Caches"] = parsed["cache"] / 1024.0
+    mem["Cached"] = parsed["cache"] / 1024.0
 
     return mem
 
 
 def check_docker_container_mem(_no_item, params, parsed):
-    return check_memory(params, parsed)
+    for subresult in check_memory(params, parsed):
+        yield subresult
 
 
 check_info["docker_container_mem"] = {
     "parse_function": parse_docker_container_mem,
     "inventory_function": discover_single,
     "check_function": check_docker_container_mem,
-    "service_description": "Memory used",
+    "service_description": "Memory",
     "has_perfdata": True,
     "group": "memory",
     "default_levels_variable": "memory_default_levels",

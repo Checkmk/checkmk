@@ -1,4 +1,4 @@
-title: pfSense Interface
+title: pfSense: Blocked Packets
 agents: snmp
 catalog: app/pfsense
 license: GPL
@@ -8,7 +8,7 @@ description:
  interfaces of pfSense firewalls.
 
 inventory:
- One service per interface will be created.
+ One service is created for each interface.
 
 item:
  The description of the interface as provided by the device.

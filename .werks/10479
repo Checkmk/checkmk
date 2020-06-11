@@ -1,0 +1,12 @@
+Title: Azure Plugins: Fix rendering of metric values
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1575213680
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Previously some metrics of the Azure plugins where not rendered
+in a human friendly way. This has been fixed.

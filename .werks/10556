@@ -1,0 +1,18 @@
+Title: Fix adding host/service label filters to views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1574867244
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+When trying to add host or service label filters to views,
+this resulted in an error message like this when displaying
+the filter again after saving the view:
+
+C+:
+Failed to parse labels: No JSON object could be decoded
+C-:

@@ -1,0 +1,20 @@
+Title: cisco_power: discover unique items in one edge case
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1574771202
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+For some sensor descriptions the cisco_power check discovered items
+that were not unique. One description was e.g. "Sw1, PSA Normal"
+which was translated into the item "Sw1". Another sensor that used
+the description "Sw1, PSB Normal" was then aliased to "Sw1" as well.
+Such items can now be differentiated. The example sensors would now
+be mapped to the items "Sw1 PSA {ID}" and "Sw1 PSB {ID}" where {ID}
+is the ID of the sensor.
+
+The affected services have to be rediscovered.

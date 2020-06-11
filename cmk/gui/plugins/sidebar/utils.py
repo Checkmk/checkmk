@@ -1,133 +1,127 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for module internals and the plugins"""
 
 import abc
 import traceback
 import json
-import six
+from typing import Optional, Any, Dict, List, Tuple, Type
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.sites import SiteId
 import cmk.gui.pages
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
+from cmk.gui.htmllib import Choices
+from cmk.gui.type_defs import RoleName, PermissionName
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
     declare_permission,
 )
 
+# TODO: Actually this is cmk.gui.sidebar.CustomSnapins, but we run into a hell
+# of cycles and untyped dependencies. So for now this is just a reminder.
+CustomSnapins = Any
+
 # Constants to be used in snapins
 snapin_width = 230
 
-search_plugins = []
+search_plugins = []  # type: List
+
+PageHandlers = Dict[str, "cmk.gui.pages.PageHandlerFunc"]
 
 
 @permission_section_registry.register
 class PermissionSectionSidebarSnapins(PermissionSection):
     @property
     def name(self):
+        # type: () -> str
         return "sidesnap"
 
     @property
     def title(self):
+        # type: () -> str
         return _("Sidebar snapins")
 
     @property
     def do_sort(self):
+        # type: () -> bool
         return True
 
 
 # TODO: Transform methods to class methods
-class SidebarSnapin(six.with_metaclass(abc.ABCMeta, object)):
+class SidebarSnapin(metaclass=abc.ABCMeta):
     """Abstract base class for all sidebar snapins"""
     @classmethod
     @abc.abstractmethod
     def type_name(cls):
+        # type: () -> str
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
     def title(cls):
+        # type: () -> str
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
     def description(cls):
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractmethod
     def show(self):
+        # type: () -> None
         raise NotImplementedError()
 
     @classmethod
     def refresh_regularly(cls):
+        # type: () -> bool
         return False
 
     @classmethod
     def refresh_on_restart(cls):
-        return False
-
-    @classmethod
-    def is_customizable(cls):
-        """Whether or not a snapin type can be used for custom snapins"""
+        # type: () -> bool
         return False
 
     @classmethod
     def is_custom_snapin(cls):
+        # type: () -> bool
         """Whether or not a snapin type is a customized snapin"""
         return False
 
     @classmethod
     def permission_name(cls):
+        # type: () -> PermissionName
         return "sidesnap.%s" % cls.type_name()
 
     @classmethod
     def allowed_roles(cls):
+        # type: () -> List[RoleName]
         return ["admin", "user", "guest"]
 
     def styles(self):
+        # type: () -> Optional[str]
         return None
 
     def page_handlers(self):
+        # type: () -> PageHandlers
         return {}
 
 
-class CustomizableSidebarSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
+class CustomizableSidebarSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
     """Parent for all user configurable sidebar snapins
 
     Subclass this class in case you want to implement a sidebar snapin type that can
     be customized by the user"""
-    @classmethod
-    def is_customizable(cls):
-        """Whether or not a snapin type can be used for custom snapins"""
-        return True
-
     @classmethod
     @abc.abstractmethod
     def vs_parameters(cls):
@@ -141,6 +135,8 @@ class CustomizableSidebarSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
         raise NotImplementedError()
 
 
+# TODO: We should really use the InstanceRegistry here... :-/ Using the
+# ClassRegistry obfuscates the code and makes typing a nightmare.
 class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
     """The management object for all available plugins."""
     def plugin_base_class(self):
@@ -150,6 +146,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
         return plugin_class.type_name()
 
     def registration_hook(self, plugin_class):
+        # type: (Type[SidebarSnapin]) -> None
         declare_permission(
             "sidesnap.%s" % self.plugin_name(plugin_class),
             plugin_class.title(),
@@ -161,21 +158,26 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
             cmk.gui.pages.register_page_handler(path, page_func)
 
     def get_customizable_snapin_types(self):
+        # type: () -> List[Tuple[str, CustomizableSidebarSnapin]]
         return [(snapin_type_id, snapin_type)
                 for snapin_type_id, snapin_type in self.items()
-                if snapin_type.is_customizable() and not snapin_type.is_custom_snapin()]
+                if (issubclass(snapin_type, CustomizableSidebarSnapin) and
+                    not snapin_type.is_custom_snapin())]
 
     def register_custom_snapins(self, custom_snapins):
+        # type: (List[CustomSnapins]) -> None
         """Extends the snapin registry with the ones configured in the site (for the current user)"""
         self._clear_custom_snapins()
         self._add_custom_snapins(custom_snapins)
 
     def _clear_custom_snapins(self):
+        # type: () -> None
         for snapin_type_id, snapin_type in self.items():
             if snapin_type.is_custom_snapin():
-                del self[snapin_type_id]
+                self.unregister(snapin_type_id)
 
     def _add_custom_snapins(self, custom_snapins):
+        # type: (List[CustomSnapins]) -> None
         for custom_snapin in custom_snapins:
             base_snapin_type_id = custom_snapin._["custom_snapin"][0]
 
@@ -184,11 +186,18 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
             except KeyError:
                 continue
 
-            if not base_snapin_type.is_customizable():
+            # TODO: This is just our assumption, can we enforce this via
+            # typing? Probably not in the current state of affairs where things
+            # which should be instances are classes... :-/
+            if not issubclass(base_snapin_type, SidebarSnapin):
+                raise ValueError("invalid snapin type %r" % base_snapin_type)
+
+            if not issubclass(base_snapin_type, CustomizableSidebarSnapin):
                 continue
 
+            # TODO: The stuff below is completely untypeable... :-P * * *
             @self.register
-            class CustomSnapin(base_snapin_type):
+            class CustomSnapin(base_snapin_type):  # type: ignore[valid-type,misc]
                 _custom_snapin = custom_snapin
 
                 @classmethod
@@ -211,7 +220,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
                 def parameters(cls):
                     return cls._custom_snapin._["custom_snapin"][1]
 
-            _it_is_really_used = CustomSnapin  # help pylint (unused-variable)
+            _it_is_really_used = CustomSnapin  # noqa: F841
 
 
 snapin_registry = SnapinRegistry()
@@ -236,9 +245,12 @@ def render_link(text, url, target="main", onclick=None):
     # [3] relative.py
     if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
         url = config.url_prefix() + "check_mk/" + url
-    return html.render_a(text, href=url, class_="link", target=target or '',\
-                         onfocus = "if (this.blur) this.blur();",\
-                         onclick = onclick or None)
+    return html.render_a(text,
+                         href=url,
+                         class_="link",
+                         target=target or '',
+                         onfocus="if (this.blur) this.blur();",
+                         onclick=onclick or None)
 
 
 def link(text, url, target="main", onclick=None):
@@ -273,7 +285,7 @@ def write_snapin_exception(e):
 
 
 def heading(text):
-    html.write("<h3>%s</h3>\n" % html.attrencode(text))
+    html.write("<h3>%s</h3>\n" % escaping.escape_attribute(text))
 
 
 # TODO: Better change to context manager?
@@ -302,6 +314,7 @@ def nagioscgilink(text, target):
 
 
 def snapin_site_choice(ident, choices):
+    # type: (SiteId, List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]
     sites = config.user.load_file("sidebar_sites", {})
     site = sites.get(ident, "")
     if site == "":
@@ -312,11 +325,13 @@ def snapin_site_choice(ident, choices):
     if len(choices) <= 1:
         return None
 
-    choices = [
+    dropdown_choices = [
         ("", _("All sites")),
-    ] + choices
+    ]  # type: Choices
+    dropdown_choices += choices
+
     onchange = "cmk.sidebar.set_snapin_site(event, %s, this)" % json.dumps(ident)
-    html.dropdown("site", choices, deflt=site, onchange=onchange)
+    html.dropdown("site", dropdown_choices, deflt=site, onchange=onchange)
 
     return only_sites
 
@@ -334,8 +349,8 @@ def visuals_by_topic(permitted_visuals, default_order=None):
             _("Problems"),
         ]
 
-    s = sorted([(_u(visual.get("topic") or
-                    _("Other")), _u(visual.get("title")), name, 'painters' in visual)
+    s = sorted([(_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name, 'painters'
+                 in visual)
                 for name, visual in permitted_visuals
                 if not visual["hidden"] and not visual.get("mobile")])
 

@@ -20,5 +20,5 @@ item:
  The ID of a Volume plus it's label, separated by a space, e. g. 1025 data
 
 inventory:
- Finds one item per Volume.
+ One service is created for each volume.
 

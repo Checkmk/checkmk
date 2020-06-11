@@ -18,5 +18,4 @@ item:
  The number of the fan
 
 inventory:
- there are six fan positions in the device. Fans are inventorized only
- if their status is not "Off".
+ One service is created for each fan (6 per device) if their status is not "Off".

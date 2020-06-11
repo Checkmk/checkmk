@@ -1,4 +1,4 @@
-title: Kentix Alarmmanager Pro: Smoke detection
+title: Kentix Alarmmanager Pro: Smoke Detection
 agents: snmp
 catalog: hw/environment/kentix
 license: GPL
@@ -14,7 +14,7 @@ description:
  The status can be OK, WARN, CRIT.
 
 item:
- The sensor name of the device.
+ The name of the sensor.
 
 inventory:
- One service per sensor is created.
+ One service is created for each sensor.

@@ -1,58 +1,69 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+from email.utils import formataddr
+from html import escape as html_escape
 import os
+from quopri import encodestring
 import re
+import socket
 import subprocess
 import sys
-from html import escape as html_escape  # type: ignore
-from typing import (  # pylint: disable=unused-import
-    AnyStr, Dict, List, Optional, Text, Tuple)
+from typing import Dict, List, Tuple
 
 import requests
 
 from cmk.utils.notify import find_wato_folder
+import cmk.utils.paths
 import cmk.utils.password_store
 
 
 def collect_context():
-    # type: () -> Dict[str, Text]
+    # type: () -> Dict[str, str]
     return {
-        var[7:]: value.decode("utf-8")
-        for (var, value) in os.environ.items()
+        var[7:]: value  #
+        for var, value in os.environ.items()
         if var.startswith("NOTIFY_")
     }
 
 
 def format_link(template, url, text):
-    # type: (AnyStr, AnyStr, AnyStr) -> AnyStr
+    # type: (str, str, str) -> str
     return template % (url, text) if url else text
 
 
+def format_address(display_name, email_address):
+    # type: (str, str) -> str
+    """
+    Returns an email address with an optional display name suitable for an email header like From or Reply-To.
+    The function handles the following cases:
+
+      * If an empty display name is given, only the email address is returned.
+      * If a display name is given a, string of the form "display_name <email_address>" is returned.
+      * If the display name contains non ASCII characters, it is converted to an encoded word (see RFC2231).
+      * If the display_name contains special characters like e.g. '.' the display string is enclosed in quotes.
+      * If the display_name contains backslashes or quotes, a backslash is prepended before these characters.
+    """
+    if not email_address:
+        return ''
+
+    try:
+        display_name.encode('ascii')
+    except UnicodeEncodeError:
+        display_name = u'=?utf-8?q?%s?=' % encodestring(
+            display_name.encode('utf-8')).decode('ascii')
+    return formataddr((display_name, email_address))
+
+
+def default_from_address():
+    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
+
+
 def _base_url(context):
-    # type: (Dict[str, AnyStr]) -> AnyStr
+    # type: (Dict[str, str]) -> str
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
@@ -68,13 +79,13 @@ def _base_url(context):
 
 
 def host_url_from_context(context):
-    # type: (Dict[str, AnyStr]) -> AnyStr
+    # type: (Dict[str, str]) -> str
     base = _base_url(context)
     return base + context['HOSTURL'] if base else ''
 
 
 def service_url_from_context(context):
-    # type: (Dict[str, AnyStr]) -> AnyStr
+    # type: (Dict[str, str]) -> str
     base = _base_url(context)
     return base + context['SERVICEURL'] if base and context['WHAT'] == 'SERVICE' else ''
 
@@ -103,9 +114,11 @@ def html_escape_context(context):
         'PARAMETER_HOST_SUBJECT',
         'PARAMETER_SERVICE_SUBJECT',
         'PARAMETER_FROM',
+        'PARAMETER_FROM_DISPLAY_NAME',
         'PARAMETER_REPLY_TO',
+        'PARAMETER_REPLY_TO_DISPLAY_NAME',
     }
-    for variable, value in context.iteritems():
+    for variable, value in context.items():
         if variable not in unescaped_variables:
             context[variable] = html_escape(value)
 
@@ -162,22 +175,40 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
 
 
 def send_mail_sendmail(m, target, from_address):
-    cmd = ["/usr/sbin/sendmail"]
+    cmd = [_sendmail_path()]
     if from_address:
         cmd += ['-F', from_address, "-f", from_address]
-    cmd += ["-i", target.encode("utf-8")]
+    cmd += ["-i", target]
 
     try:
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        p = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            encoding="utf-8",
+        )
     except OSError:
         raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
-    p.communicate(m.as_string())
+    p.communicate(input=m.as_string())
     if p.returncode != 0:
         raise Exception("sendmail returned with exit code: %d" % p.returncode)
 
     sys.stdout.write("Spooled mail to local mail transmission agent\n")
     return 0
+
+
+def _sendmail_path():
+    # type: () -> str
+    # We normally don't deliver the sendmail command, but our notification integration tests
+    # put some fake sendmail command into the site to prevent actual sending of mails.
+    for path in [
+            "%s/local/bin/sendmail" % cmk.utils.paths.omd_root,
+            "/usr/sbin/sendmail",
+    ]:
+        if os.path.exists(path):
+            return path
+
+    raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
 def read_bulk_contexts():
@@ -259,8 +290,14 @@ def post_request(message_constructor, success_code=200):
     context = collect_context()
 
     url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
+    proxy_url = context.get("PARAMETER_PROXY_URL")
+    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
 
-    r = requests.post(url=url, json=message_constructor(context))
+    try:
+        r = requests.post(url=url, json=message_constructor(context), proxies=proxies)
+    except requests.exceptions.ProxyError:
+        sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
+        sys.exit(2)
 
     if r.status_code == success_code:
         sys.exit(0)

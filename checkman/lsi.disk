@@ -1,4 +1,4 @@
-title: Status of a disk in an LSI RAID array
+title: LSI RAID Controller: Status of a Disk
 agents: linux
 catalog: os/storage
 license: GPL
@@ -13,11 +13,10 @@ description:
  the disk is sent at all by the agent.
 
 item:
- The id of the disk (as string).
+ The ID of the disk
 
 inventory:
- The inventory creates checks for all existing disks - regardless of
- their states. The current state of a disk is used as target state.
- That way, you will be notified by Nagios, even if a disk changes
- from state {HSP} to {ONL}.
+ One service is created for each existing disk regardless of their states.
+ The current state of a disk is used as target state.
+ That way, you will be notified, even if a disk changes from state {HSP} to {ONL}.
 

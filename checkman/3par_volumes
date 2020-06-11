@@ -4,16 +4,29 @@ catalog: hw/storagehw/hpe
 license: GPL
 distribution: check_mk
 description:
- This check measures the utilization of a virtual volume. You
- can define thresholds as known by other filesystem checks.
+ This check measures the utilization of a virtual volume.
 
- Additionally there is information about the used space of this
- virtual volume on the filer, the provisioning type and the
- associated WWN. If available there is also information about
- the compaction and/or deduplication ratio.
+ There is information about
 
- The check will also change the state if the virtual volume on
- the filer reports a degraded or failed state.
+ - the used space of this virtual volume on the filer
+
+ - the provisioning type
+
+ - the associated WWN.
+
+ - the compaction and/or deduplication ratio (if available)
+
+ You can define thresholds for warning and critical (0 by default).
+ If there is failed space above a configurable threshold the service goes
+ to a {WARN} or {CRIT} state and shows the failed space.
+
+ The service will also change the state if the virtual volume on
+ the filer reports a degraded {WARN} or failed {CRIT} state.
+
+ This check uses the 3PAR special agent.
+
+item:
+ Name of the volume.
 
 inventory:
  One service is created for each virtual volume.

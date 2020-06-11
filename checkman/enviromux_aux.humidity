@@ -1,11 +1,11 @@
-title: NTI Enviromux 16D: Auxiliary sensor humidity
+title: NTI Enviromux 16D: Auxiliary Sensor Humidity
 agents: snmp
 catalog: hw/environment/nti
 license: GPL
 distribution: check_mk
 description:
  This check monitors the humidity of aux sensors attached to
- NTI Enviromux devices.
+ NTI Enviromux 16D devices.
 
 item:
  The item is composed from the sensor description and the sensor index.
@@ -14,5 +14,5 @@ perfdata:
  One graph for the relivative humidity.
 
 inventory:
- All available aux humidity sensors are automatically discovered.
+ One service is created for each available aux humidity sensor.
 

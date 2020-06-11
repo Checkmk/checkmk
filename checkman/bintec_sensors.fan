@@ -1,6 +1,6 @@
 title: Bintec Routers: Fan Speed
 agents: snmp
-catalog: hw/network/bintec
+catalog: hw/environment/bintec
 license: GPL
 distribution: check_mk
 description:
@@ -10,5 +10,5 @@ item:
  The sensorDescr from SNMP.
 
 inventory:
- For each fan one service is created
+ One service is created for each fan.
 

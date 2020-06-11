@@ -5,22 +5,122 @@
 
 #include <chrono>
 #include <filesystem>
+#include <future>
 
 #include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "common/yaml.h"
 #include "read_file.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "yaml-cpp/yaml.h"
+#include "tools/_tgt.h"
+
+namespace cma::details {
+extern bool G_Service;
+extern bool G_Test;
+}  // namespace cma::details
 
 namespace wtools {  // to become friendly for cma::cfg classes
 
+constexpr std::string_view expected_name =
+    tgt::Is64bit() ? "watest64.exe" : "watest32.exe";
+
+std::wstring GetCurrentProcessPath() {
+    auto current_process_id = ::GetCurrentProcessId();
+    return wtools::GetProcessPath(current_process_id);
+}
+
+void KillTmpProcesses() {
+    // kill process
+    wtools::ScanProcessList([](const PROCESSENTRY32& entry) -> auto {
+        auto fname = wtools::ConvertToUTF8(entry.szExeFile);
+        if (fname == expected_name) {
+            wtools::KillProcess(entry.th32ProcessID);
+        }
+        return true;
+    });
+}
+
+int RunMeAgain(int requested) {
+    namespace fs = std::filesystem;
+
+    KillTmpProcesses();
+
+    // start process again
+    auto path = GetCurrentProcessPath();
+    if (path.empty()) return false;
+
+    if (fs::path(path).filename().u8string() != expected_name) return false;
+
+    auto cmd = fmt::format("{} wait", fs::path{path}.u8string());
+    int count = 0;
+    for (int i = 0; i < requested; i++) {
+        auto success = cma::tools::RunDetachedCommand(cmd);
+        if (success) count++;
+    }
+
+    return count;
+}
+
+TEST(Wtools, ProcessManagement) {
+    namespace fs = std::filesystem;
+    auto started = RunMeAgain(1);
+    ASSERT_EQ(started, 1);
+    ON_OUT_OF_SCOPE(KillTmpProcesses());
+
+    uint32_t pid = 0;
+    std::wstring path;
+    wtools::ScanProcessList(
+        [&path, &pid ](const PROCESSENTRY32& entry) -> auto {
+            auto fname = wtools::ConvertToUTF8(entry.szExeFile);
+            if (fname == expected_name) {
+                path = GetProcessPath(entry.th32ProcessID);
+                pid = entry.th32ProcessID;
+                return false;
+            }
+            return true;
+        });
+
+    EXPECT_TRUE(!path.empty());
+    EXPECT_TRUE(pid != 0);
+    if (pid != 0) {
+        EXPECT_TRUE(wtools::KillProcess(pid, 1));
+        pid = 0;
+        path.clear();
+        wtools::ScanProcessList(
+            [&path, &pid ](const PROCESSENTRY32& entry) -> auto {
+                auto fname = wtools::ConvertToUTF8(entry.szExeFile);
+                if (fname == expected_name) {
+                    path = GetProcessPath(entry.th32ProcessID);
+                    pid = entry.th32ProcessID;
+                    return false;
+                }
+                return true;
+            });
+
+        EXPECT_TRUE(path.empty());
+        EXPECT_TRUE(pid == 0);
+    }
+}
+
+TEST(Wtools, KillProcsByDir) {
+    namespace fs = std::filesystem;
+    auto started = RunMeAgain(3);
+    ASSERT_EQ(started, 3);
+    ON_OUT_OF_SCOPE(KillTmpProcesses());
+
+    uint32_t pid = 0;
+    auto path = fs::path{GetCurrentProcessPath()};
+
+    auto killed = wtools::KillProcessesByDir(path.parent_path().parent_path());
+    EXPECT_EQ(killed, started);
+}
+
 TEST(Wtools, ScanProcess) {
     using namespace std::chrono;
-    ON_OUT_OF_SCOPE(printf("eof ScanProcess\n"));
     try {
         std::vector<std::string> names;
 
@@ -110,7 +210,6 @@ TEST(Wtools, ScanProcess) {
 }
 
 TEST(Wtools, ConditionallyConvertLowLevel) {
-    ON_OUT_OF_SCOPE(printf("eof CCLL\n"));
     {
         std::vector<uint8_t> v = {0xFE, 0xFE};
         EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v));
@@ -388,6 +487,12 @@ TEST(Wtools, KillTree) {
     EXPECT_FALSE(kProcessTreeKillAllowed);
 }
 
+TEST(Wtools, IsHandleValid) {
+    EXPECT_FALSE(IsHandleValid(nullptr));
+    EXPECT_FALSE(IsHandleValid(INVALID_HANDLE_VALUE));
+    EXPECT_TRUE(IsHandleValid(reinterpret_cast<HANDLE>(4)));
+}
+
 TEST(Wtools, Acl) {
     wtools::ACLInfo info("c:\\windows\\notepad.exe");
     auto ret = info.query();
@@ -405,6 +510,75 @@ TEST(Wtools, Acl) {
         wtools::ACLInfo info_temp("c:\\windows\\temp");
         auto ret = info_temp.query();
         if (ret == S_OK) XLOG::l("\n{}", info_temp.output());
+    }
+}
+
+TEST(Wtools, LineEnding) {
+    cma::OnStartTest();
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    std::filesystem::path tmp = cma::cfg::GetTempDir();
+
+    auto work_file = tmp / "lf.test";
+
+    const std::string s = "a\nb\r\nc\nd\n\n";
+    const std::string expected = "a\r\nb\r\r\nc\r\nd\r\n\r\n";
+
+    std::ofstream tst(work_file, std::ios::binary);
+    tst.write(s.c_str(), s.size());
+    tst.close();
+
+    wtools::PatchFileLineEnding(work_file);
+
+    auto result = ReadWholeFile(work_file);
+    EXPECT_EQ(result, expected);
+}
+
+TEST(Wtools, UserGroupName) {
+    cma::OnStartTest();
+    EXPECT_TRUE(GenerateCmaUserNameInGroup(L"").empty());
+    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_TST_XX");
+
+    cma::details::G_Service = true;
+    ON_OUT_OF_SCOPE(cma::details::G_Service = false;
+                    cma::details::G_Test = true);
+
+    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_in_XX");
+    cma::details::G_Service = false;
+    cma::details::G_Test = false;
+    EXPECT_TRUE(GenerateCmaUserNameInGroup(L"XX").empty());
+}
+
+TEST(Wtools, Registry) {
+    constexpr std::wstring_view path = LR"(SOFTWARE\checkmk_tst\unit_test)";
+    constexpr std::wstring_view name = L"cmk_test";
+
+    // clean
+    DeleteRegistryValue(path, name);
+    EXPECT_TRUE(DeleteRegistryValue(path, name));
+    ON_OUT_OF_SCOPE(DeleteRegistryValue(path, name));
+
+    {
+        constexpr uint32_t value = 2;
+        constexpr uint32_t weird_value = 546'444;
+        constexpr std::wstring_view str_value = L"aaa";
+        ASSERT_TRUE(SetRegistryValue(path, name, value));
+        EXPECT_EQ(GetRegistryValue(path, name, weird_value), value);
+        EXPECT_EQ(GetRegistryValue(path, name, str_value), str_value);
+        ASSERT_TRUE(SetRegistryValue(path, name, value + 1));
+        EXPECT_EQ(GetRegistryValue(path, name, weird_value), value + 1);
+        EXPECT_TRUE(DeleteRegistryValue(path, name));
+    }
+
+    {
+        constexpr std::wstring_view value = L"21";
+        constexpr std::wstring_view weird_value = L"_____";
+        constexpr uint32_t uint_value = 123;
+        ASSERT_TRUE(wtools::SetRegistryValue(path, name, value));
+        EXPECT_EQ(wtools::GetRegistryValue(path, name, weird_value),
+                  std::wstring(value));
+        EXPECT_EQ(GetRegistryValue(path, name, uint_value), uint_value);
+        EXPECT_TRUE(wtools::DeleteRegistryValue(path, name));
     }
 }
 

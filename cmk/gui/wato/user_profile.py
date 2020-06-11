@@ -1,31 +1,13 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Page user can change several aspects of it's own profile"""
 
 import time
+
+from six import ensure_str
 
 import cmk.gui.i18n
 import cmk.gui.sites
@@ -72,7 +54,7 @@ def user_profile_async_replication_dialog(sites):
     num_replsites = 0
     for site_id in sites:
         site = config.sites[site_id]
-        if not "secret" in site:
+        if "secret" not in site:
             status_txt = _('Not logged in.')
             start_sync = False
             icon = 'repl_locked'
@@ -89,9 +71,9 @@ def user_profile_async_replication_dialog(sites):
             estimated_duration = changes_manager.get_activation_time(site_id,
                                                                      ACTIVATION_TIME_PROFILE_SYNC,
                                                                      2.0)
-            html.javascript(
-                'cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
-                (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
+            html.javascript('cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
+                            (site_id, int(estimated_duration * 1000.0),
+                             ensure_str(_('Replication in progress'))))
             num_replsites += 1
         else:
             _add_profile_replication_change(site_id, status_txt)
@@ -152,19 +134,21 @@ def _show_page_user_profile(change_pw):
                             language = None
                         # Set custom language
                         users[config.user.id]['language'] = language
-                        config.user.set_attribute("language", language)
+                        config.user.language = language
                         html.set_language_cookie(language)
 
                     else:
                         # Remove the customized language
                         if 'language' in users[config.user.id]:
                             del users[config.user.id]['language']
-                        config.user.unset_attribute("language")
+                        config.user.reset_language()
 
                     # load the new language
-                    cmk.gui.i18n.localize(config.user.language())
+                    cmk.gui.i18n.localize(config.user.language)
 
                     user = users.get(config.user.id)
+                    if user is None:
+                        raise Exception("current user is not in user DB")
                     if config.user.may('general.edit_notifications') and user.get(
                             "notifications_enabled"):
                         value = forms.get_input(watolib.get_vs_flexible_notifications(),
@@ -200,7 +184,7 @@ def _show_page_user_profile(change_pw):
                                           _("The new password must differ from your current one."))
 
                 if cur_password and password:
-                    if userdb.hook_login(config.user.id, cur_password) in [None, False]:
+                    if userdb.hook_login(config.user.id, cur_password) is False:
                         raise MKUserError("cur_password", _("Your old password is wrong."))
                     if password2 and password != password2:
                         raise MKUserError("password2", _("The both new passwords do not match."))
@@ -275,12 +259,11 @@ def _show_page_user_profile(change_pw):
     if success:
         html.reload_sidebar()
         if change_pw:
-            html.message(_("Your password has been changed."))
-            raise HTTPRedirect(html.request.var('_origtarget', 'index.py'))
-        else:
-            html.message(_("Successfully updated user profile."))
-            # Ensure theme changes are applied without additional user interaction
-            html.immediate_browser_redirect(0.5, html.makeuri([]))
+            html.show_message(_("Your password has been changed."))
+            raise HTTPRedirect(html.request.get_str_input_mandatory('_origtarget', 'index.py'))
+        html.show_message(_("Successfully updated user profile."))
+        # Ensure theme changes are applied without additional user interaction
+        html.immediate_browser_redirect(0.5, html.makeuri([]))
 
     if html.has_user_errors():
         html.show_user_errors()
@@ -358,21 +341,22 @@ class ModeAjaxProfileReplication(AjaxPage):
     def page(self):
         request = self.webapi_request()
 
-        site_id = request.get("site")
-        if not site_id:
+        site_id_val = request.get("site")
+        if not site_id_val:
             raise MKUserError(None, "The site_id is missing")
-
+        site_id = ensure_str(site_id_val)
         if site_id not in config.sitenames():
             raise MKUserError(None, _("The requested site does not exist"))
 
-        status = cmk.gui.sites.states().get(site_id, {}).get("state", "unknown")
+        status = cmk.gui.sites.states().get(site_id,
+                                            cmk.gui.sites.SiteStatus({})).get("state", "unknown")
         if status == "dead":
             raise MKGeneralException(_('The site is marked as dead. Not trying to replicate.'))
 
         site = config.site(site_id)
         result = self._synchronize_profile(site_id, site, config.user.id)
 
-        if result != True:
+        if result is not True:
             _add_profile_replication_change(site_id, result)
             raise MKGeneralException(result)
 
@@ -380,7 +364,7 @@ class ModeAjaxProfileReplication(AjaxPage):
 
     def _synchronize_profile(self, site_id, site, user_id):
         users = userdb.load_users(lock=False)
-        if not user_id in users:
+        if user_id not in users:
             raise MKUserError(None, _('The requested user does not exist'))
 
         start = time.time()

@@ -1,41 +1,23 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
-import os
 import json
 import pprint
+from typing import Dict, Any, List, Tuple as _Tuple, Optional as _Optional, Union
+from pathlib import Path
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.gui.escaping as escaping
 
-if cmk.is_managed_edition():
+try:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-else:
-    managed = None  # type: ignore
+except ImportError:
+    managed = None  # type: ignore[assignment]
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -47,10 +29,27 @@ from cmk.gui.permissions import (
     Permission,
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Text, ValueSpec, Tuple, Transform, Percentage, Integer, Alternative, FixedValue, TextAscii,
-    Dictionary, MonitoringState, IconSelector, ListOf, CascadingDropdown, ListOfStrings, Checkbox,
-    TextUnicode, TextAreaUnicode, Optional, ID, DropdownChoice,
+from cmk.gui.valuespec import (
+    ValueSpec,
+    Tuple,
+    Transform,
+    Percentage,
+    Integer,
+    Alternative,
+    FixedValue,
+    TextAscii,
+    Dictionary,
+    MonitoringState,
+    IconSelector,
+    ListOf,
+    CascadingDropdown,
+    ListOfStrings,
+    Checkbox,
+    TextUnicode,
+    TextAreaUnicode,
+    Optional,
+    ID,
+    DropdownChoice,
 )
 
 from cmk.gui.i18n import _
@@ -73,6 +72,12 @@ from cmk.gui.plugins.wato import (
 )
 
 import cmk.gui.node_visualization
+from cmk.utils.type_defs import ContactgroupName
+
+BIPack = Dict[str, Any]
+BIAggrOptions = Dict[str, Any]
+BIAggrGroups = List[str]
+BIAggrNode = _Tuple
 
 #   .--Base class----------------------------------------------------------.
 #   |             ____                        _                            |
@@ -84,7 +89,7 @@ import cmk.gui.node_visualization
 #   '----------------------------------------------------------------------'
 
 
-class BIManagement(object):
+class BIManagement:
     def __init__(self):
         # We need to replace the BI constants internally with something
         # that we can replace back after writing the BI-Rules out
@@ -106,7 +111,9 @@ class BIManagement(object):
         self._load_config()
 
         if not config.user.may("wato.bi_admin"):
-            self._user_contactgroups = userdb.contactgroups_of_user(config.user.id)
+            assert config.user.id is not None
+            self._user_contactgroups = userdb.contactgroups_of_user(
+                config.user.id)  # type: _Optional[List[ContactgroupName]]
         else:
             self._user_contactgroups = None  # meaning I am admin
 
@@ -114,7 +121,7 @@ class BIManagement(object):
         if html.request.has_var("pack"):
             self._pack_id = html.request.var("pack")
             try:
-                self._pack = self._packs[self._pack_id]
+                self._pack = self._packs[self._pack_id]  # type: _Optional[BIPack]
             except KeyError:
                 raise MKUserError("pack", _("This BI pack does not exist."))
         else:
@@ -126,19 +133,22 @@ class BIManagement(object):
     # '--------------------------------------------------------------------'
 
     def _load_config(self):
-        filename = watolib.multisite_dir() + "bi.mk"
+        filename = Path(watolib.multisite_dir()) / "bi.mk"
         try:
             vars_ = {
                 "aggregation_rules": {},
                 "aggregations": [],
                 "host_aggregations": [],
                 "bi_packs": {},
-            }
+            }  # type: Dict[str, Any]
             vars_.update(self._bi_constants)
-            if os.path.exists(filename):
-                exec (open(filename).read(), vars_, vars_)
+
+            if filename.exists():
+                # TODO: Can be changed to text IO with Python 3
+                with filename.open("rb") as f:
+                    exec(f.read(), vars_, vars_)
             else:
-                exec (bi_example, vars_, vars_)
+                exec(bi_example, vars_, vars_)
 
             # put legacy non-pack stuff into packs
             if (vars_["aggregation_rules"] or vars_["aggregations"] or vars_["host_aggregations"]) and \
@@ -186,12 +196,12 @@ class BIManagement(object):
     def _add_missing_aggr_ids(self):
         # Determine existing IDs
         used_aggr_ids = set()
-        for pack_id, pack in self._packs.iteritems():
+        for pack_id, pack in self._packs.items():
             used_aggr_ids.update({x["ID"] for x in pack["aggregations"] if "ID" in x})
 
         # Compute missing IDs
         new_id = ""
-        for pack_id, pack in self._packs.iteritems():
+        for pack_id, pack in self._packs.items():
             aggr_id_counter = 0
             for aggregation in pack["aggregations"]:
                 if "ID" not in aggregation:
@@ -218,17 +228,18 @@ class BIManagement(object):
         return output
 
     def _convert_pack_to_bi(self, pack):
-        converted_rules = dict([
-            (rule_id, self._convert_rule_to_bi(rule)) for (rule_id, rule) in pack["rules"].items()
-        ])
-        converted_aggregations = []
-        converted_host_aggregations = []
+        converted_rules = {
+            rule_id: self._convert_rule_to_bi(rule) for rule_id, rule in pack["rules"].items()
+        }
+        converted_aggregations = []  # type: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]]
+        converted_host_aggregations = [
+        ]  # type: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]]
         for aggregation in pack["aggregations"]:
+            converted_aggregation = self._convert_aggregation_to_bi(aggregation)
             if aggregation["single_host"]:
-                append_to = converted_host_aggregations
+                converted_host_aggregations.append(converted_aggregation)
             else:
-                append_to = converted_aggregations
-            append_to.append(self._convert_aggregation_to_bi(aggregation))
+                converted_aggregations.append(converted_aggregation)
 
         converted_pack = pack.copy()
         converted_pack["aggregations"] = converted_aggregations
@@ -254,9 +265,9 @@ class BIManagement(object):
             ("hard_states", False),
             ("downtime_aggr_warn", False),
             ("disabled", False),
-        ]
+        ]  # type: List[_Tuple[str, Any]]
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             option_keys.append(("customer", managed.default_customer_id()))
 
         # Create dict with all aggregation options
@@ -269,13 +280,13 @@ class BIManagement(object):
     def _convert_node_to_bi(self, node):
         if node[0] == "call":
             return node[1]
-        elif node[0] == "host":
+        if node[0] == "host":
             return (node[1][0], self._bi_constants['HOST_STATE'])
-        elif node[0] == "remaining":
+        if node[0] == "remaining":
             return (node[1][0], self._bi_constants['REMAINING'])
-        elif node[0] == "service":
+        if node[0] == "service":
             return node[1]
-        elif node[0] == "foreach_host":
+        if node[0] == "foreach_host":
             what = node[1][0]
 
             tags = node[1][1]
@@ -284,7 +295,7 @@ class BIManagement(object):
             else:
                 hostspec = self._bi_constants['ALL_HOSTS']
 
-            if type(what == tuple) and what[0] == 'child_with':
+            if isinstance(what, tuple) and what[0] == 'child_with':
                 child_conditions = what[1]
                 what = what[0]
                 child_tags = child_conditions[0]
@@ -294,7 +305,7 @@ class BIManagement(object):
                        + self._convert_node_to_bi(node[1][3])
             return (self._bi_constants["FOREACH_" + what.upper()], tags,
                     hostspec) + self._convert_node_to_bi(node[1][3])
-        elif node[0] == "foreach_service":
+        if node[0] == "foreach_service":
             tags = node[1][0]
             if node[1][1]:
                 spec = node[1][1]
@@ -361,7 +372,7 @@ class BIManagement(object):
             }
         crule = {}
         crule.update(rule)
-        crule["nodes"] = map(self._convert_node_from_bi, rule["nodes"])
+        crule["nodes"] = list(map(self._convert_node_from_bi, rule["nodes"]))
         parts = rule["aggregation"].split("!")
         crule["aggregation"] = (parts[0], tuple(map(tryint, parts[1:])))
         crule["id"] = ruleid
@@ -372,8 +383,9 @@ class BIManagement(object):
         brule.update(rule)
         if "id" in brule:
             del brule["id"]
-        brule["nodes"] = map(self._convert_node_to_bi, rule["nodes"])
-        brule["aggregation"] = "!".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1]))
+        brule["nodes"] = list(map(self._convert_node_to_bi, rule["nodes"]))
+        brule["aggregation"] = "!".join([rule["aggregation"][0]] +
+                                        list(map(str, rule["aggregation"][1])))
         return brule
 
     # Convert node-Tuple into format used by CascadingDropdown
@@ -381,56 +393,53 @@ class BIManagement(object):
         if len(node) == 2:
             if isinstance(node[1], list):
                 return ("call", node)
-            elif node[1] == self._bi_constants['HOST_STATE']:
+            if node[1] == self._bi_constants['HOST_STATE']:
                 return ("host", (node[0],))
-            elif node[1] == self._bi_constants['REMAINING']:
+            if node[1] == self._bi_constants['REMAINING']:
                 return ("remaining", (node[0],))
             return ("service", node)
 
-        else:  # FOREACH_...
+        foreach_spec = node[0]
+        if foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
+            # extract the conditions meant for matching the childs
+            child_conditions = list(node[1:3])
+            if child_conditions[1] == self._bi_constants['ALL_HOSTS']:
+                child_conditions[1] = None
+            node = node[0:1] + node[3:]
 
-            foreach_spec = node[0]
-            if foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
-                # extract the conditions meant for matching the childs
-                child_conditions = list(node[1:3])
-                if child_conditions[1] == self._bi_constants['ALL_HOSTS']:
-                    child_conditions[1] = None
-                node = node[0:1] + node[3:]
+        # Extract the list of tags
+        if isinstance(node[1], list):
+            tags = node[1]
+            node = node[0:1] + node[2:]
+        else:
+            tags = []
 
-            # Extract the list of tags
-            if isinstance(node[1], list):
-                tags = node[1]
-                node = node[0:1] + node[2:]
-            else:
-                tags = []
+        hostspec = node[1]
+        if hostspec == self._bi_constants['ALL_HOSTS']:
+            hostspec = None
 
-            hostspec = node[1]
-            if hostspec == self._bi_constants['ALL_HOSTS']:
-                hostspec = None
+        if foreach_spec == self._bi_constants['FOREACH_SERVICE']:
+            service = node[2]
+            subnode = self._convert_node_from_bi(node[3:])
+            return ("foreach_service", (tags, hostspec, service, subnode))
 
-            if foreach_spec == self._bi_constants['FOREACH_SERVICE']:
-                service = node[2]
-                subnode = self._convert_node_from_bi(node[3:])
-                return ("foreach_service", (tags, hostspec, service, subnode))
-            else:
-
-                subnode = self._convert_node_from_bi(node[2:])
-                if foreach_spec == self._bi_constants['FOREACH_HOST']:
-                    what = "host"
-                elif foreach_spec == self._bi_constants['FOREACH_CHILD']:
-                    what = "child"
-                elif foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
-                    what = ("child_with", child_conditions)
-                elif foreach_spec == self._bi_constants['FOREACH_PARENT']:
-                    what = "parent"
-                return ("foreach_host", (what, tags, hostspec, subnode))
+        subnode = self._convert_node_from_bi(node[2:])
+        if foreach_spec == self._bi_constants['FOREACH_HOST']:
+            what = "host"  # type: Union[str, _Tuple]
+        elif foreach_spec == self._bi_constants['FOREACH_CHILD']:
+            what = "child"
+        elif foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
+            what = ("child_with", child_conditions)
+        elif foreach_spec == self._bi_constants['FOREACH_PARENT']:
+            what = "parent"
+        return ("foreach_host", (what, tags, hostspec, subnode))
 
     def get_packs(self):
         return self._packs
 
     def find_aggregation_rule_usages(self):
-        aggregations_that_use_rule = {}
-        for pack_id, pack in self._packs.iteritems():
+        aggregations_that_use_rule = {}  # type: Dict[str, List]
+        for pack_id, pack in self._packs.items():
             for aggr_id, aggregation in enumerate(pack["aggregations"]):
                 rule_id, _description = self.rule_called_by_node(aggregation["node"])
                 aggregations_that_use_rule.setdefault(rule_id, []).append(
@@ -483,7 +492,7 @@ class BIManagement(object):
             else:
                 args = _("without arguments")
             return node[1][0], _("Explicit call ") + args
-        elif node[0] == "foreach_host":
+        if node[0] == "foreach_host":
             subnode = node[1][-1]
             if subnode[0] == 'call':
                 if node[1][0] == 'host':
@@ -512,7 +521,7 @@ class ModeBI(WatoMode, BIManagement):
     def title(self):
         title = _("Business Intelligence")
         if self._pack:
-            title += " - " + html.attrencode(self._pack["title"])
+            title += " - " + escaping.escape_attribute(self._pack["title"])
         return title
 
     def buttons(self):
@@ -538,10 +547,10 @@ class ModeBI(WatoMode, BIManagement):
 
     def _allowed_rule_choices(self):
         choices = []
-        for pack_id, pack in sorted(self._packs.iteritems()):
+        for pack_id, pack in sorted(self._packs.items()):
             if self.may_use_rules_in_pack(pack):
                 pack_choices = [(rule_id, "%s (%s)" % (rule["title"], rule["id"]))
-                                for rule_id, rule in pack["rules"].iteritems()]
+                                for rule_id, rule in pack["rules"].items()]
                 choices.append((pack_id, "%s (%s)" % (pack["title"], pack["id"]),
                                 DropdownChoice(choices=sorted(pack_choices))))
         return choices
@@ -549,26 +558,18 @@ class ModeBI(WatoMode, BIManagement):
     def may_use_rules_in_pack(self, pack):
         return pack["public"] or self.is_contact_for_pack(pack)
 
-    def is_contact_for_pack(self, pack=None):
+    def is_contact_for_pack(self, pack):
         if self._user_contactgroups is None:
             return True  # I am BI admin
-
-        if pack is None:
-            pack = self._pack
-
         for group in self._user_contactgroups:
             if group in pack["contact_groups"]:
                 return True
         return False
 
-    def must_be_contact_for_pack(self, pack=None):
-        if not self.is_contact_for_pack(pack=pack):
-            if pack is None:
-                pack_title = self._pack["title"]
-            else:
-                pack_title = pack["title"]
+    def must_be_contact_for_pack(self, pack):
+        if not self.is_contact_for_pack(pack):
             raise MKAuthException(
-                _("You have no permission for changes in this BI pack %s.") % pack_title)
+                _("You have no permission for changes in this BI pack %s.") % pack["title"])
 
     def _validate_rule_call(self, value, varprefix):
         rule_id, arguments = value
@@ -788,7 +789,7 @@ class ModeBI(WatoMode, BIManagement):
                     new.append(group)
             return new
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             cme_elements = managed.customer_choice_element()
         else:
             cme_elements = []
@@ -940,11 +941,10 @@ class ModeBI(WatoMode, BIManagement):
                 if ru_id == ruleid:  # Rule is directly being used
                     return level + 1
                 # Check if lower rules use it
-                else:
-                    subrule = self.find_rule_by_id(ru_id)
-                    l = self.rule_uses_rule(subrule, ruleid, level + 1)
-                    if l:
-                        return l
+                subrule = self.find_rule_by_id(ru_id)
+                lv = self.rule_uses_rule(subrule, ruleid, level + 1)
+                if lv:
+                    return lv
         return False
 
     def count_rule_references(self, ruleid):
@@ -958,10 +958,10 @@ class ModeBI(WatoMode, BIManagement):
         level = 0
         rule_refs = 0
         for pack in self._packs.values():
-            for rule in pack["rules"].itervalues():
-                l = self.rule_uses_rule(rule, ruleid)
-                level = max(l, level)
-                if l == 1:
+            for rule in pack["rules"].values():
+                lv = self.rule_uses_rule(rule, ruleid)
+                level = max(lv, level)
+                if lv == 1:
                     rule_refs += 1
 
         return aggr_refs, rule_refs, level
@@ -992,8 +992,7 @@ class ModeBI(WatoMode, BIManagement):
                                           "%s%s" % (tree_prefix, tree_path),
                                           False,
                                           title,
-                                          title_url=edit_url,
-                                          tree_img="tree_black")
+                                          title_url=edit_url)
             for sub_rule_id in sub_rule_ids:
                 self.render_rule_tree(sub_rule_id, tree_path + "/" + sub_rule_id, tree_prefix)
             html.end_foldable_container()
@@ -1004,9 +1003,11 @@ class ModeBI(WatoMode, BIManagement):
 
     def _get_selection(self, _type):
         checkbox_name = "_c_%s_" % _type
-        return [varname.split(checkbox_name)[-1] \
-                for varname, _value in html.request.itervars(prefix=checkbox_name)
-                if html.get_checkbox(varname)]
+        return [
+            varname.split(checkbox_name)[-1]  #
+            for varname, _value in html.request.itervars(prefix=checkbox_name)
+            if html.get_checkbox(varname)
+        ]
 
 
 #.
@@ -1228,29 +1229,30 @@ class ModeBIAggregations(ModeBI):
     def buttons(self):
         ModeBI.buttons(self)
         html.context_button(_("Rules"), self.url_to_pack([("mode", "bi_rules")]), "aggr")
-        if self.have_rules() and self.is_contact_for_pack():
+        if self.have_rules() and self.is_contact_for_pack(self._pack):
             html.context_button(_("New Aggregation"),
                                 self.url_to_pack([("mode", "bi_edit_aggregation")]), "new")
 
     def action(self):
-        self.must_be_contact_for_pack()
+        self.must_be_contact_for_pack(self._pack)
 
         if html.request.var("_del_aggr"):
             return self._delete_after_confirm()
 
-        elif html.request.var("_bulk_delete_bi_aggregations"):
+        if html.request.var("_bulk_delete_bi_aggregations"):
             return self._bulk_delete_after_confirm()
 
-        elif html.request.var("_bulk_move_bi_aggregations"):
+        if html.request.var("_bulk_move_bi_aggregations"):
             return self._bulk_move_after_confirm()
 
     def _delete_after_confirm(self):
-        aggregation_id = html.get_integer_input("_del_aggr")
+        aggregation_id = html.request.get_integer_input_mandatory("_del_aggr")
         c = wato_confirm(
             _("Confirm aggregation deletion"),
             _("Do you really want to delete the aggregation number <b>%s</b>?") %
             (aggregation_id + 1))
         if c:
+            assert self._pack is not None
             del self._pack["aggregations"][aggregation_id]
             self._add_change("bi-delete-aggregation",
                              _("Deleted BI aggregation number %d") % (aggregation_id + 1))
@@ -1261,11 +1263,11 @@ class ModeBIAggregations(ModeBI):
     def _bulk_delete_after_confirm(self):
         selection = sorted(map(int, self._get_selection("aggregation")))
         if selection:
-            c = wato_confirm(_("Confirm deletion of %d aggregations") % \
-                               len(selection),
-                             _("Do you really want to delete %d aggregations?") % \
-                               len(selection))
+            c = wato_confirm(
+                _("Confirm deletion of %d aggregations") % len(selection),
+                _("Do you really want to delete %d aggregations?") % len(selection))
             if c:
+                assert self._pack is not None
                 for aggregation_id in selection[::-1]:
                     del self._pack["aggregations"][aggregation_id]
                     self._add_change("bi-delete-aggregation",
@@ -1286,20 +1288,23 @@ class ModeBIAggregations(ModeBI):
             target_pack = self._packs[target]
             self.must_be_contact_for_pack(target_pack)
 
-        selection = map(int, self._get_selection("aggregation"))
+        selection = list(map(int, self._get_selection("aggregation")))
         if selection and target_pack is not None:
-            c = wato_confirm(_("Confirm moving of %d aggregations to %s") % \
-                              (len(selection), target_pack['title']),
-                             _("Do you really want to move %d aggregations to %s?") % \
-                              (len(selection), target_pack['title']))
+            c = wato_confirm(
+                _("Confirm moving of %d aggregations to %s") %
+                (len(selection), target_pack['title']),
+                _("Do you really want to move %d aggregations to %s?") %
+                (len(selection), target_pack['title']))
             if c:
+                assert self._pack is not None
                 for aggregation_id in selection[::-1]:
                     aggregation = self._pack["aggregations"][aggregation_id]
                     target_pack["aggregations"].append(aggregation)
                     del self._pack["aggregations"][aggregation_id]
-                    self._add_change("bi-move-aggregation",
-                                   _("Moved BI aggregation with ID %s to BI pack %s") % \
-                                    (aggregation_id+1, target))
+                    self._add_change(
+                        "bi-move-aggregation",
+                        _("Moved BI aggregation with ID %s to BI pack %s") %
+                        (aggregation_id + 1, target))
                 self.save_config()
             elif c is False:
                 return ""
@@ -1308,6 +1313,7 @@ class ModeBIAggregations(ModeBI):
         html.begin_form("bulk_delete_form", method="POST")
         self._render_aggregations()
         html.hidden_fields()
+        assert self._pack is not None
         if self._pack["aggregations"]:
             fieldstyle = "margin-top:10px"
             html.button("_bulk_delete_bi_aggregations",
@@ -1329,18 +1335,19 @@ class ModeBIAggregations(ModeBI):
                     html.javascript('cmk.selection.update_bulk_moveto("%s")' %
                                     html.request.var('bulk_moveto', ''))
 
-                html.select("bulk_moveto",
-                            move_choices,
-                            "@",
-                            onchange="cmk.selection.update_bulk_moveto(this.value)",
-                            attrs={
-                                'class': 'bulk_moveto',
-                                'style': fieldstyle
-                            })
+                html.dropdown(
+                    "bulk_moveto",
+                    move_choices,
+                    "@",
+                    onchange="cmk.selection.update_bulk_moveto(this.value)",
+                    class_='bulk_moveto',
+                    style=fieldstyle,
+                )
         html.end_form()
 
     def _render_aggregations(self):
         with table_element("bi_aggr", _("Aggregations")) as table:
+            assert self._pack is not None
             for aggregation_id, aggregation in enumerate(self._pack["aggregations"]):
                 table.row()
                 table.cell(html.render_input("_toggle_group",
@@ -1358,13 +1365,13 @@ class ModeBIAggregations(ModeBI):
                                                      ("pack", self._pack_id)])
                 html.icon_button(edit_url, _("Edit this aggregation"), "edit")
 
-                if self.is_contact_for_pack():
+                if self.is_contact_for_pack(self._pack):
                     delete_url = html.makeactionuri([("_del_aggr", aggregation_id)])
                     html.icon_button(delete_url, _("Delete this aggregation"), "delete")
 
                 table.text_cell(_("ID"), aggregation.get("ID"))
 
-                if cmk.is_managed_edition():
+                if cmk_version.is_managed_edition():
                     table.text_cell(_("Customer"))
                     if "customer" in aggregation:
                         html.write_text(managed.get_customer_name(aggregation))
@@ -1445,7 +1452,7 @@ class ModeBIRules(ModeBI):
         if self._view_type == "list":
             html.context_button(_("Aggregations"), self.url_to_pack([("mode", "bi_aggregations")]),
                                 "aggr")
-            if self.is_contact_for_pack():
+            if self.is_contact_for_pack(self._pack):
                 html.context_button(
                     _("New Rule"),
                     self.url_to_pack([("mode", "bi_edit_rule"), ("pack", self._pack_id)]), "new")
@@ -1456,15 +1463,15 @@ class ModeBIRules(ModeBI):
             html.context_button(_("Back"), html.makeuri([("view", "list")]), "back")
 
     def action(self):
-        self.must_be_contact_for_pack()
+        self.must_be_contact_for_pack(self._pack)
 
         if html.request.var("_del_rule"):
             return self._delete_after_confirm()
 
-        elif html.request.var("_bulk_delete_bi_rules"):
+        if html.request.var("_bulk_delete_bi_rules"):
             return self._bulk_delete_after_confirm()
 
-        elif html.request.var("_bulk_move_bi_rules"):
+        if html.request.var("_bulk_move_bi_rules"):
             return self._bulk_move_after_confirm()
 
     def _delete_after_confirm(self):
@@ -1475,6 +1482,7 @@ class ModeBIRules(ModeBI):
             _("Do you really want to delete the rule with "
               "the ID <b>%s</b>?") % rule_id)
         if c:
+            assert self._pack is not None
             del self._pack["rules"][rule_id]
             self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
             self.save_config()
@@ -1487,11 +1495,11 @@ class ModeBIRules(ModeBI):
             self._check_delete_rule_id_permission(rule_id)
 
         if selection:
-            c = wato_confirm(_("Confirm deletion of %d rules") % \
-                               len(selection),
-                             _("Do you really want to delete %d rules?") % \
-                               len(selection))
+            c = wato_confirm(
+                _("Confirm deletion of %d rules") % len(selection),
+                _("Do you really want to delete %d rules?") % len(selection))
             if c:
+                assert self._pack is not None
                 for rule_id in selection:
                     del self._pack["rules"][rule_id]
                     self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
@@ -1521,11 +1529,12 @@ class ModeBIRules(ModeBI):
 
         selection = self._get_selection("rule")
         if selection and target_pack is not None:
-            c = wato_confirm(_("Confirm moving of %d rules to %s") % \
-                              (len(selection), target_pack['title']),
-                             _("Do you really want to move %d rules to %s?") % \
-                              (len(selection), target_pack['title']))
+            c = wato_confirm(
+                _("Confirm moving of %d rules to %s") % (len(selection), target_pack['title']),
+                _("Do you really want to move %d rules to %s?") %
+                (len(selection), target_pack['title']))
             if c:
+                assert self._pack is not None
                 for rule_id in selection:
                     rule_attrs = self._pack["rules"][rule_id]
                     target_pack["rules"].setdefault(rule_id, rule_attrs)
@@ -1538,7 +1547,8 @@ class ModeBIRules(ModeBI):
                 return ""
 
     def page(self):
-        self.must_be_contact_for_pack()
+        assert self._pack is not None
+        self.must_be_contact_for_pack(self._pack)
         if not self._pack["aggregations"] and not self._pack["rules"]:
             menu = MainMenu()
             menu.add_item(
@@ -1575,19 +1585,20 @@ class ModeBIRules(ModeBI):
                     html.javascript('cmk.selection.update_bulk_moveto("%s")' %
                                     html.request.var('bulk_moveto', ''))
 
-                html.select("bulk_moveto",
-                            move_choices,
-                            "@",
-                            onchange="cmk.selection.update_bulk_moveto(this.value)",
-                            attrs={
-                                'class': 'bulk_moveto',
-                                'style': fieldstyle
-                            })
+                html.dropdown(
+                    "bulk_moveto",
+                    move_choices,
+                    "@",
+                    onchange="cmk.selection.update_bulk_moveto(this.value)",
+                    class_='bulk_moveto',
+                    style_=fieldstyle,
+                )
         html.end_form()
 
     def render_rules(self, title, only_unused):
         aggregations_that_use_rule = self.find_aggregation_rule_usages()
 
+        assert self._pack is not None
         rules = self._pack["rules"].items()
         # Sort rules according to nesting level, and then to id
         rules_refs = [
@@ -1650,7 +1661,7 @@ class ModeBIRules(ModeBI):
 
                     table.text_cell(
                         _("Aggregation"),
-                        "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
+                        "/".join([rule["aggregation"][0]] + list(map(str, rule["aggregation"][1]))))
                     table.text_cell(_("Nodes"), len(rule["nodes"]), css="number")
                     table.cell(_("Used by"))
                     have_this = set([])
@@ -1691,7 +1702,7 @@ class ModeBIRuleTree(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._ruleid = html.get_ascii_input("id")
+        self._ruleid = html.request.get_ascii_input("id")
         if not self.pack_containing_rule(self._ruleid):
             raise MKUserError("id", _("This BI rule does not exist"))
 
@@ -1740,13 +1751,15 @@ class ModeBIEditAggregation(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._edited_nr = html.get_integer_input("id", -1)  # In case of Aggregations: index in list
+        self._edited_nr = html.request.get_integer_input_mandatory(
+            "id", -1)  # In case of Aggregations: index in list
         if self._edited_nr == -1:
             self._new = True
             self._edited_aggregation = {"groups": [_("Main")]}
         else:
             self._new = False
             try:
+                assert self._pack is not None
                 self._edited_aggregation = self._pack["aggregations"][self._edited_nr]
             except IndexError:
                 raise MKUserError("id", _("This aggregation does not exist."))
@@ -1761,14 +1774,14 @@ class ModeBIEditAggregation(ModeBI):
 
     def _get_aggregations_by_id(self):
         ids = {}
-        for _pack, settings in self._packs.iteritems():
+        for _pack, settings in self._packs.items():
             for aggregation in settings["aggregations"]:
                 if "ID" in aggregation:
                     ids[aggregation["ID"]] = (settings["title"], aggregation)
         return ids
 
     def action(self):
-        self.must_be_contact_for_pack()
+        self.must_be_contact_for_pack(self._pack)
         if html.check_transaction():
             new_aggr = self._vs_aggregation.from_html_vars('aggr')
             self._vs_aggregation.validate_value(new_aggr, 'aggr')
@@ -1784,6 +1797,7 @@ class ModeBIEditAggregation(ModeBI):
                     "aggr_p_id",
                     "This aggregation id is already used in pack %s" % aggregation_ids[aggr_id][0])
 
+            assert self._pack is not None
             if self._new:
                 self._pack["aggregations"].append(new_aggr)
                 self._add_change(
@@ -1801,7 +1815,7 @@ class ModeBIEditAggregation(ModeBI):
         self._vs_aggregation.render_input("aggr", self._edited_aggregation)
         forms.end()
         html.hidden_fields()
-        if self.is_contact_for_pack():
+        if self.is_contact_for_pack(self._pack):
             html.button("_save", self._new and _("Create") or _("Save"), "submit")
         html.set_focus("aggr_p_groups_0")
         html.end_form()
@@ -1830,7 +1844,7 @@ class ModeBIEditRule(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._ruleid = html.get_ascii_input("id")  # In case of Aggregations: index in list
+        self._ruleid = html.request.get_ascii_input("id")  # In case of Aggregations: index in list
         self._new = self._ruleid is None
 
         if not self._new and not self.pack_containing_rule(self._ruleid):
@@ -1839,13 +1853,14 @@ class ModeBIEditRule(ModeBI):
     def title(self):
         if self._new:
             return ModeBI.title(self) + " - " + _("Create New Rule")
-        return ModeBI.title(self) + " - " + _("Edit Rule") + " " + html.attrencode(self._ruleid)
+        return ModeBI.title(self) + " - " + _("Edit Rule") + " " + escaping.escape_attribute(
+            self._ruleid)
 
     def buttons(self):
         html.context_button(_("Abort"), html.makeuri([("mode", "bi_rules")]), "abort")
 
     def action(self):
-        self.must_be_contact_for_pack()
+        self.must_be_contact_for_pack(self._pack)
 
         vs_rule = self.valuespec()
         new_rule = vs_rule.from_html_vars('rule')
@@ -1859,9 +1874,10 @@ class ModeBIEditRule(ModeBI):
                       "which uses rule <b>%s</b>.") % (", ".join(forbidden_packs), self._ruleid))
 
             new_ruleid = new_rule["id"]
-            c = wato_confirm(_("Confirm renaming existing BI rule"),
-                             _("Do you really want to rename the existing BI rule <b>%s</b> to <b>%s</b>?") % \
-                              (self._ruleid, new_ruleid))
+            c = wato_confirm(
+                _("Confirm renaming existing BI rule"),
+                _("Do you really want to rename the existing BI rule <b>%s</b> to <b>%s</b>?") %
+                (self._ruleid, new_ruleid))
 
             if c:
                 self._rename_ruleid_after_confirm(new_ruleid)
@@ -1889,6 +1905,7 @@ class ModeBIEditRule(ModeBI):
                 raise MKUserError(None,
                                   _("Please add at least one child node. Empty rules are useless."))
 
+            assert self._pack is not None
             if self._new:
                 del new_rule["id"]
                 self._pack["rules"][self._ruleid] = new_rule
@@ -1909,11 +1926,11 @@ class ModeBIEditRule(ModeBI):
 
     def _get_forbidden_packs_using_rule(self):
         forbidden_packs = set()
-        for packid, packinfo in self._packs.iteritems():
+        for packid, packinfo in self._packs.items():
             uses_rule = False
             if self._pack == packinfo:
                 continue
-            for ruleid, rule_info in packinfo['rules'].iteritems():
+            for ruleid, rule_info in packinfo['rules'].items():
                 if ruleid == self._ruleid:
                     uses_rule = True
                     break
@@ -1926,9 +1943,9 @@ class ModeBIEditRule(ModeBI):
                 node = aggregation.get('node')
                 if node is None:
                     continue
-                if (node[0] == 'call' and self._ruleid == node[1][0]) or \
-                   (node[0] in ["foreach_host", "foreach_service"] and node[-1][-1][0] == 'call' and \
-                    self._ruleid == node[-1][-1][1][0]):
+                if ((node[0] == 'call' and self._ruleid == node[1][0]) or
+                    (node[0] in ["foreach_host", "foreach_service"] and
+                     node[-1][-1][0] == 'call' and self._ruleid == node[-1][-1][1][0])):
                     uses_rule = True
                     break
             if uses_rule and not self.is_contact_for_pack(pack=packinfo):
@@ -1937,8 +1954,8 @@ class ModeBIEditRule(ModeBI):
 
     def _rename_ruleid_after_confirm(self, new_ruleid):
         new_packs = self._packs.copy()
-        for packid, packinfo in self._packs.iteritems():
-            for ruleid, rule_info in packinfo['rules'].iteritems():
+        for packid, packinfo in self._packs.items():
+            for ruleid, rule_info in packinfo['rules'].items():
                 if ruleid == self._ruleid:
                     new_rule_info = rule_info.copy()
                     new_rule_info['id'] = new_ruleid
@@ -1987,7 +2004,8 @@ class ModeBIEditRule(ModeBI):
         return (what, tuple(parameters + [self._create_call_node(ruleid, arguments)]))
 
     def page(self):
-        self.must_be_contact_for_pack()
+        assert self._pack is not None
+        self.must_be_contact_for_pack(self._pack)
 
         if self._new:
             cloneid = html.request.var("clone")
@@ -2010,7 +2028,7 @@ class ModeBIEditRule(ModeBI):
         self.valuespec().render_input("rule", value)
         forms.end()
         html.hidden_fields()
-        if self.is_contact_for_pack():
+        if self.is_contact_for_pack(self._pack):
             html.button("_save", self._new and _("Create") or _("Save"), "submit")
         if self._new:
             html.set_focus("rule_p_id")
@@ -2019,7 +2037,7 @@ class ModeBIEditRule(ModeBI):
         html.end_form()
 
     def _may_use_rules_from_packs(self, rulepack):
-        rules_without_permissions = {}
+        rules_without_permissions = {}  # type: Dict[_Tuple[str, str], Any]
         for node in rulepack.get("nodes", []):
             node_type, node_content = node
             if node_type != 'call':
@@ -2033,9 +2051,12 @@ class ModeBIEditRule(ModeBI):
                 rules_without_permissions[packid].append(node_ruleid)
 
         if rules_without_permissions:
-            message = ", ".join([_("BI rules %s from BI pack '%s'") % \
-                                 (", ".join([ "'%s'" % ruleid for ruleid in ruleids]), title)
-                                 for (_nodeid, title), ruleids in rules_without_permissions.items()])
+            message = ", ".join([
+                _("BI rules %s from BI pack '%s'") %
+                (", ".join(["'%s'" % ruleid
+                            for ruleid in ruleids]), title)
+                for (_nodeid, title), ruleids in rules_without_permissions.items()
+            ])
             raise MKAuthException(
                 _("You have no permission for changes in this rule using %s.") % message)
 
@@ -2255,7 +2276,7 @@ bi_aggregation_functions["best"] = {
 
 
 def vs_count_ok_count(title, defval, defvalperc):
-    # type: (Text, int, int) -> Alternative
+    # type: (str, int, int) -> Alternative
     return Alternative(
         title=title,
         style="dropdown",

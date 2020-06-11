@@ -1,30 +1,14 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails.  You should have received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 import "core-js/stable";
 
 import $ from "jquery";
+import * as d3 from "d3";
+import * as d3_sankey from "d3-sankey";
+import * as crossfilter from "crossfilter2";
+import * as dc from "dc";
 import * as forms from "forms";
 import * as ajax from "ajax";
 import * as prediction from "prediction";
@@ -43,6 +27,7 @@ import * as crash_reporting from "crash_reporting";
 import * as backup from "backup";
 import * as hover from "hover";
 import * as service_discovery from "service_discovery";
+import * as sidebar from "sidebar";
 import * as sites from "sites";
 import * as host_diagnose from "host_diagnose";
 import * as profile_replication from "profile_replication";
@@ -54,13 +39,18 @@ import * as reload_pause from "reload_pause";
 import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
 
-import * as d3 from "d3";
-import * as d3_flextree from "d3-flextree";
+import * as cmk_figures from "cmk_figures";
+import "cmk_figure_plugins";
+
+import * as cmk_tabs from "cmk_tabs";
+
 import * as node_visualization from "node_visualization";
 import * as node_visualization_utils from "node_visualization_utils";
 import * as node_visualization_layout_styles from "node_visualization_layout_styles";
 import * as node_visualization_viewport_utils from "node_visualization_viewport_utils";
 import * as node_visualization_viewport_layers from "node_visualization_viewport_layers";
+
+import {fetch} from "whatwg-fetch";
 
 // Optional import is currently not possible using the ES6 imports
 var graphs;
@@ -68,6 +58,27 @@ try {
     graphs = require("graphs");
 } catch(e) {
     graphs = null;
+}
+
+var ntop_interface_details;
+try {
+    ntop_interface_details = require("ntop_interface_details");
+} catch(e) {
+    ntop_interface_details = null;
+}
+
+var ntop_alerts;
+try {
+    ntop_alerts = require("ntop_alerts");
+} catch(e) {
+    ntop_alerts = null;
+}
+
+var ntop_flows;
+try {
+    ntop_flows = require("ntop_flows");
+} catch(e) {
+    ntop_flows = null;
 }
 
 $(() => {
@@ -78,6 +89,10 @@ $(() => {
 });
 
 export const cmk_export = {
+    crossfilter: crossfilter.default,
+    d3: d3,
+    dc: dc,
+    sankey: d3_sankey,
     cmk: {
         forms: forms,
         prediction: prediction,
@@ -98,6 +113,7 @@ export const cmk_export = {
         hover: hover,
         service_discovery: service_discovery,
         sites: sites,
+        sidebar: sidebar, /* needed for add snapin page */
         host_diagnose: host_diagnose,
         profile_replication: profile_replication,
         wato: wato,
@@ -108,12 +124,18 @@ export const cmk_export = {
         graph_integration: graph_integration,
         graphs: graphs,
         dashboard: dashboard,
+        // TODO: node_visualization cleanups
         node_visualization_utils: node_visualization_utils,
         node_visualization_layout_styles: node_visualization_layout_styles,
         node_visualization_viewport_utils: node_visualization_viewport_utils,
         node_visualization_viewport_layers: node_visualization_viewport_layers,
         node_visualization: node_visualization,
-        d3: d3,
-        d3_flextree: d3_flextree,
+        figures: cmk_figures,
+        tabs: cmk_tabs,
+        ntop: {
+            interface_details: ntop_interface_details,
+            alerts: ntop_alerts,
+            flows: ntop_flows
+        },
     }
 };

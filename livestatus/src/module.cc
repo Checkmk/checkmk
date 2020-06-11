@@ -1,26 +1,7 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // Needed for S_ISSOCK
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -29,31 +10,38 @@
 // https://github.com/include-what-you-use/include-what-you-use/issues/166
 // IWYU pragma: no_include <ext/alloc_traits.h>
 #include "config.h"
+
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <unistd.h>
+
 #include <algorithm>
 #include <atomic>
+#include <cerrno>
 #include <chrono>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
+#include <deque>
+#include <filesystem>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <type_traits>
 #include <vector>
+
 #include "Average.h"
 #include "ChronoUtils.h"
-#include "ClientQueue.h"
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "NagiosCore.h"
 #include "OutputBuffer.h"
 #include "Poller.h"
+#include "Queue.h"
 #include "RegExp.h"
 #include "TimeperiodsCache.h"
 #include "Triggers.h"
@@ -113,7 +101,8 @@ Encoding fl_data_encoding{Encoding::utf8};
 
 static Logger *fl_logger_nagios = nullptr;
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
-static ClientQueue *fl_client_queue = nullptr;
+using ClientQueue_t = Queue<std::deque<int>>;
+static ClientQueue_t *fl_client_queue = nullptr;
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 
 /* simple statistics data for TableStatus */
@@ -179,7 +168,6 @@ void livestatus_cleanup_after_fork() {
     // store_deinit();
     struct stat st;
 
-    int i;
     // We need to close our server and client sockets. Otherwise
     // our connections are inherited to host and service checks.
     // If we close our client connection in such a situation,
@@ -188,11 +176,11 @@ void livestatus_cleanup_after_fork() {
     // not atomic :-(
 
     // Eventuell sollte man hier anstelle von store_deinit() nicht
-    // darauf verlassen, dass die ClientQueue alle Verbindungen zumacht.
+    // darauf verlassen, dass die fl_client_queue alle Verbindungen zumacht.
     // Es sind ja auch Dateideskriptoren offen, die von Threads gehalten
     // werden und nicht mehr in der Queue sind. Und in store_deinit()
     // wird mit mutexes rumgemacht....
-    for (i = 3; i < g_max_fd_ever; i++) {
+    for (int i = 3; i < g_max_fd_ever; i++) {
         if (0 == fstat(i, &st) && S_ISSOCK(st.st_mode)) {
             close(i);
         }
@@ -201,7 +189,7 @@ void livestatus_cleanup_after_fork() {
 
 void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
-    auto logger = fl_core->loggerLivestatus();
+    auto *logger = fl_core->loggerLivestatus();
     auto last_update_status = std::chrono::system_clock::now();
     while (!fl_should_terminate) {
         do_statistics();
@@ -210,36 +198,27 @@ void *main_thread(void *data) {
             update_status();
             last_update_status = now;
         }
-        Poller poller;
-        poller.addFileDescriptor(g_unix_socket, PollEvents::in);
-        int retval = poller.poll(2500ms);
-        if (retval > 0 &&
-            poller.isFileDescriptorSet(g_unix_socket, PollEvents::in)) {
-#if HAVE_ACCEPT4
-            int cc = accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
-#else
-            int cc = accept(g_unix_socket, nullptr, nullptr);
-#endif
-            if (cc == -1) {
-                generic_error ge("cannot accept client connection");
-                Warning(logger) << ge;
+        if (!Poller{}.wait(2500ms, g_unix_socket, PollEvents::in, logger)) {
+            if (errno == ETIMEDOUT) {
                 continue;
             }
-#if !HAVE_ACCEPT4
-            if (fcntl(cc, F_SETFD, FD_CLOEXEC) == -1) {
-                generic_error ge(
-                    "cannot set close-on-exec bit on client socket");
-                Alert(logger) << ge;
-                break;
-            }
-#endif
-            if (cc > g_max_fd_ever) {
-                g_max_fd_ever = cc;
-            }
-            fl_client_queue->addConnection(cc);  // closes fd
-            g_num_queued_connections++;
-            counterIncrement(Counter::connections);
+            break;
         }
+        int cc = accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
+        if (cc == -1) {
+            generic_error ge("cannot accept client connection");
+            Warning(logger) << ge;
+            continue;
+        }
+        if (cc > g_max_fd_ever) {
+            g_max_fd_ever = cc;
+        }
+        if (!fl_client_queue->try_push(cc)) {
+            generic_error ge("cannot enqueue client socket");
+            Warning(logger) << ge;
+        }
+        g_num_queued_connections++;
+        counterIncrement(Counter::connections);
     }
     Notice(logger) << "socket thread has terminated";
     return voidp;
@@ -247,14 +226,13 @@ void *main_thread(void *data) {
 
 void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
-    auto logger = fl_core->loggerLivestatus();
+    auto *logger = fl_core->loggerLivestatus();
     while (!fl_should_terminate) {
-        int cc = fl_client_queue->popConnection();
         g_num_queued_connections--;
         g_livestatus_active_connections++;
-        if (cc >= 0) {
-            Debug(logger) << "accepted client connection on fd " << cc;
-            InputBuffer input_buffer(cc, fl_should_terminate, logger,
+        if (auto cc = fl_client_queue->pop()) {
+            Debug(logger) << "accepted client connection on fd " << *cc;
+            InputBuffer input_buffer(*cc, fl_should_terminate, logger,
                                      fl_query_timeout, fl_idle_timeout);
             bool keepalive = true;
             unsigned requestnr = 0;
@@ -264,10 +242,10 @@ void *client_thread(void *data) {
                                   << " on same connection";
                 }
                 counterIncrement(Counter::requests);
-                OutputBuffer output_buffer(cc, fl_should_terminate, logger);
+                OutputBuffer output_buffer(*cc, fl_should_terminate, logger);
                 keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
-            close(cc);
+            close(*cc);
         }
         g_livestatus_active_connections--;
     }
@@ -317,7 +295,7 @@ void start_threads() {
         return;
     }
 
-    auto logger = fl_core->loggerLivestatus();
+    auto *logger = fl_core->loggerLivestatus();
     logger->setLevel(fl_livestatus_log_level);
     logger->setUseParentHandlers(false);
     try {
@@ -337,7 +315,7 @@ void start_threads() {
 
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-    size_t defsize;
+    size_t defsize = 0;
     if (pthread_attr_getstacksize(&attr, &defsize) == 0) {
         Debug(fl_logger_nagios) << "default stack size is " << defsize;
     }
@@ -376,7 +354,10 @@ void terminate_threads() {
         pthread_join(fl_thread_info[0].id, nullptr);
         Informational(fl_logger_nagios)
             << "waiting for client threads to terminate...";
-        fl_client_queue->terminate();
+        fl_client_queue->join();
+        while (auto fd = fl_client_queue->try_pop()) {
+            close(*fd);
+        }
         for (const auto &info : fl_thread_info) {
             if (pthread_join(info.id, nullptr) != 0) {
                 Warning(fl_logger_nagios)
@@ -437,8 +418,8 @@ bool open_unix_socket() {
         return false;
     }
 
-    // Make writable group members (fchmod didn't do nothing for me. Don't know
-    // why!)
+    // Make writable group members (fchmod didn't do nothing for me. Don't
+    // know why!)
     if (0 != chmod(fl_paths._socket.c_str(), 0660)) {
         generic_error ge("cannot change file permissions for UNIX socket at " +
                          fl_paths._socket + " to 0660");
@@ -476,12 +457,12 @@ int broker_host(int event_type __attribute__((__unused__)),
 int broker_check(int event_type, void *data) {
     int result = NEB_OK;
     if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
-        auto c = static_cast<nebstruct_service_check_data *>(data);
+        auto *c = static_cast<nebstruct_service_check_data *>(data);
         if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
             counterIncrement(Counter::service_checks);
         }
     } else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
-        auto c = static_cast<nebstruct_host_check_data *>(data);
+        auto *c = static_cast<nebstruct_host_check_data *>(data);
         if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
             counterIncrement(Counter::host_checks);
         }
@@ -491,7 +472,7 @@ int broker_check(int event_type, void *data) {
 }
 
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
-    auto co = static_cast<nebstruct_comment_data *>(data);
+    auto *co = static_cast<nebstruct_comment_data *>(data);
     fl_core->registerComment(co);
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::comment);
@@ -499,7 +480,7 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 }
 
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
-    auto dt = static_cast<nebstruct_downtime_data *>(data);
+    auto *dt = static_cast<nebstruct_downtime_data *>(data);
     fl_core->registerDowntime(dt);
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::downtime);
@@ -510,7 +491,8 @@ int broker_log(int event_type __attribute__((__unused__)),
                void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
     counterIncrement(Counter::log_messages);
-    // NOTE: We use logging very early, even before the core is instantiated!
+    // NOTE: We use logging very early, even before the core is
+    // instantiated!
     if (fl_core != nullptr) {
         fl_core->triggers().notify_all(Triggers::Kind::log);
     }
@@ -519,7 +501,7 @@ int broker_log(int event_type __attribute__((__unused__)),
 
 // called twice (start/end) for each external command, even builtin ones
 int broker_command(int event_type __attribute__((__unused__)), void *data) {
-    auto sc = static_cast<nebstruct_external_command_data *>(data);
+    auto *sc = static_cast<nebstruct_external_command_data *>(data);
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
         counterIncrement(Counter::commands);
         if (sc->command_type == CMD_CUSTOM_COMMAND &&
@@ -550,16 +532,16 @@ int broker_program(int event_type __attribute__((__unused__)),
 
 void livestatus_log_initial_states() {
     extern scheduled_downtime *scheduled_downtime_list;
-    // It's a bit unclear if we need to log downtimes of hosts *before* their
-    // corresponding service downtimes, so let's play safe...
-    for (auto dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
+    // It's a bit unclear if we need to log downtimes of hosts *before*
+    // their corresponding service downtimes, so let's play safe...
+    for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
         if (dt->is_in_effect != 0 && dt->type == HOST_DOWNTIME) {
             Informational(fl_logger_nagios)
                 << "HOST DOWNTIME ALERT: " << dt->host_name << ";STARTED;"
                 << dt->comment;
         }
     }
-    for (auto dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
+    for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
         if (dt->is_in_effect != 0 && dt->type == SERVICE_DOWNTIME) {
             Informational(fl_logger_nagios)
                 << "SERVICE DOWNTIME ALERT: " << dt->host_name << ";"
@@ -571,7 +553,7 @@ void livestatus_log_initial_states() {
 
 int broker_event(int event_type __attribute__((__unused__)), void *data) {
     counterIncrement(Counter::neb_callbacks);
-    auto ts = static_cast<struct nebstruct_timed_event_struct *>(data);
+    auto *ts = static_cast<struct nebstruct_timed_event_struct *>(data);
     if (ts->event_type == EVENT_LOG_ROTATION) {
         if (g_thread_running == 1) {
             livestatus_log_initial_states();
@@ -585,12 +567,12 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
 }
 
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
-    auto ps = static_cast<struct nebstruct_process_struct *>(data);
+    auto *ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
             fl_core = new NagiosCore(fl_paths, fl_limits, fl_authorization,
                                      fl_data_encoding);
-            fl_client_queue = new ClientQueue();
+            fl_client_queue = new ClientQueue_t{};
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
@@ -730,7 +712,8 @@ std::string check_path(const std::string &name, const std::string &path) {
 
 void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     {
-        // set default path to our logfile to be in the same path as nagios.log
+        // set default path to our logfile to be in the same path as
+        // nagios.log
         extern char *log_file;
         std::string lf{log_file};
         auto slash = lf.rfind('/');
@@ -850,6 +833,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 }
             } else if (left == "pnp_path") {
                 fl_paths._pnp = check_path("PNP perfdata directory", right);
+            } else if (left == "crash_report_path") {
+                fl_paths._crash_reports_path =
+                    check_path("Path to the crash reports", right);
             } else if (left == "mk_inventory_path") {
                 fl_paths._mk_inventory =
                     check_path("Check_MK Inventory directory", right);

@@ -1,19 +1,24 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # Example program for accessing status of event console
 
-from __future__ import print_function
-import socket, os
+import os
+import socket
 
 # Create Unix socket and connect to status socket
-path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+path = os.getenv("OMD_ROOT", "") + "/tmp/run/mkeventd/status"
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 sock.connect(path)
 
 # Send query
-sock.send("GET events\nFilter: event_phase = open")
+sock.sendall(b"GET events\nFilter: event_phase = open")
 
 # Read response and convert Python source to Python object
-response_text = ""
+response_text = b""
 while True:
     chunk = sock.recv(8192)
     response_text += chunk

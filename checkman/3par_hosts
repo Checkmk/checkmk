@@ -4,10 +4,23 @@ catalog: hw/storagehw/hpe
 license: GPL
 distribution: check_mk
 description:
- This checks shows the ID, Type of OS and number of paths of a
- connected host. The state will always be {OK} if the host is
- in the output of the filer. Otherwise the state will change to
- {UNKNOWN}.
+ This checks shows
+
+ - the ID
+
+ - Type of OS
+
+ - number of paths
+
+ of a connected host.
+
+ The state will always be {OK} if the host is in the output of the filer.
+ Otherwise the state will change to {UNKNOWN}.
+
+ This check uses the 3PAR special agent.
+
+item:
+ Name of the host.
 
 inventory:
  One service is created for each connected host.

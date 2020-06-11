@@ -1,38 +1,18 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
 
 # TODO: More feature related splitting up would be better
 
 import abc
 import time
-from typing import Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
-import six
+from typing import Dict, List, Optional, Tuple, Union
 
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.valuespec import ValueSpec
 
 import cmk.utils.plugin_registry
 
@@ -40,9 +20,12 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.view_utils import get_labels
+from cmk.gui.type_defs import ColumnName, HTTPVariables
+from cmk.gui.htmllib import Choices
 
 
-class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
+class VisualInfo(metaclass=abc.ABCMeta):
     """Base class for all visual info classes"""
     @abc.abstractproperty
     def ident(self):
@@ -52,13 +35,13 @@ class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """The human readable GUI title"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def title_plural(self):
-        # type: () -> Text
+        # type: () -> str
         """The human readable GUI title for multiple items"""
         raise NotImplementedError()
 
@@ -85,6 +68,12 @@ class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
         don't add the site hint"""
         return True
 
+    @property
+    def sort_index(self):
+        # type: () -> int
+        """Used for sorting when listing multiple infos. Lower is displayed first"""
+        return 30
+
 
 class VisualInfoRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
@@ -93,11 +82,21 @@ class VisualInfoRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_name(self, plugin_class):
         return plugin_class().ident
 
+    # At least painter <> info matching extracts the info name from the name of the painter by
+    # splitting at first "_" and use the text before it as info name. See
+    # cmk.gui.views.infos_needed_by_painter().
+    def registration_hook(self, plugin_class):
+        ident = plugin_class().ident
+        if ident == "aggr_group":
+            return  # TODO: Allow this broken thing for the moment
+        if "_" in ident:
+            raise MKGeneralException("Underscores must not be used in info names: %s" % ident)
+
 
 visual_info_registry = VisualInfoRegistry()
 
 
-class VisualType(six.with_metaclass(abc.ABCMeta, object)):
+class VisualType(metaclass=abc.ABCMeta):
     """Base class for all filters"""
     @abc.abstractproperty
     def ident(self):
@@ -107,7 +106,7 @@ class VisualType(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """The human readable GUI title"""
         raise NotImplementedError()
 
@@ -143,7 +142,7 @@ class VisualType(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def popup_add_handler(self, add_type):
-        # type: (str) -> List[Tuple[str, Text]]
+        # type: (str) -> List[Tuple[str, str]]
         """List of visual choices another visual of the given type can be added to"""
         raise NotImplementedError()
 
@@ -159,12 +158,56 @@ class VisualType(six.with_metaclass(abc.ABCMeta, object)):
         """Get the permitted visuals of this type"""
         raise NotImplementedError()
 
-    def is_enabled_for(self, this_visual, visual, context_vars):
-        """Optional feature of visuals: Make them dynamically available as links or not
+    def link_from(self, linking_view, linking_view_rows, visual, context_vars):
+        """Dynamically show/hide links to other visuals (e.g. reports, dashboards, views) from views
 
-        This has been implemented for HW/SW inventory views which are often useless when a host
-        has no such information available. For example the "Oracle Tablespaces" inventory view
-        is useless on hosts that don't host Oracle databases."""
+        This method uses the conditions read from the "link_from" attribute of a given visual to
+        decide whether or not the given linking_view should show a link to the given visual.
+
+        The decision can be made based on the given context_vars, linking_view definition and
+        linking_view_rows. Currently there is only a small set of conditions implemented here.
+
+        single_infos: Only link when the given list of single_infos match.
+        host_labels: Only link when the given host labels match.
+
+        Example: The visual with this definition will only be linked from host detail pages of hosts
+        that are Checkmk servers.
+
+        'link_from': {
+            'single_infos': ["host"],
+            'host_labels': {
+                'cmk/check_mk_server': 'yes'
+            }
+        }
+        """
+        link_from = visual["link_from"]
+        if not link_from:
+            return True  # No link from filtering: Always display this.
+
+        single_info_condition = link_from.get("single_infos")
+        if single_info_condition and not set(single_info_condition).issubset(
+                linking_view.spec["single_infos"]):
+            return False  # Not matching required single infos
+
+        # Currently implemented very specific for the cases we need at the moment. Build something
+        # more generic once we need it.
+        if single_info_condition != ["host"]:
+            raise NotImplementedError()
+
+        if not linking_view_rows:
+            return False  # Unknown host, no linking
+
+        # In case we have rows of a single host context we only have a single row that holds the
+        # host information. In case we have multiple rows, we normally have service rows which
+        # all hold the same host information in their host columns.
+        row = linking_view_rows[0]
+
+        # Exclude by host labels
+        host_labels = get_labels(row, "host")
+        for label_group_id, label_value in link_from.get("host_labels", {}).items():
+            if host_labels.get(label_group_id) != label_value:
+                return False
+
         return True
 
 
@@ -179,7 +222,7 @@ class VisualTypeRegistry(cmk.utils.plugin_registry.ClassRegistry):
 visual_type_registry = VisualTypeRegistry()
 
 
-class Filter(six.with_metaclass(abc.ABCMeta, object)):
+class Filter(metaclass=abc.ABCMeta):
     """Base class for all filters"""
     @abc.abstractproperty
     def ident(self):
@@ -190,7 +233,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Used as display string for the filter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
@@ -200,6 +243,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def __init__(self, info, htmlvars, link_columns):
+        # type: (str, List[str], List[ColumnName]) -> None
         """
         info:          The datasource info this filter needs to work. If this
                        is "service", the filter will also be available in tables
@@ -221,7 +265,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def description(self):
-        # type: () -> Optional[Text]
+        # type: () -> Optional[str]
         return None
 
     def available(self):
@@ -258,13 +302,17 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
         """Whether this filter needs to load host inventory data"""
         return False
 
+    def validate_value(self, value):
+        # type: (Dict) -> None
+        return
+
     def filter_table(self, rows):
         # type: (List[dict]) -> List[dict]
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return rows
 
     def variable_settings(self, row):
-        # type: (dict) -> List[tuple]
+        # type: (dict) -> HTTPVariables
         """return pairs of htmlvar and name according to dataset in row"""
         return []
 
@@ -275,7 +323,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
         return self.info[:-1] + "_"
 
     def heading_info(self):
-        # type: () -> Optional[Text]
+        # type: () -> Optional[str]
         """Hidden filters may contribute to the pages headers of the views"""
         return None
 
@@ -301,7 +349,7 @@ class FilterUnicodeFilter(Filter):
     def value(self):
         val = {}
         for varname in self.htmlvars:
-            val[varname] = html.get_unicode_input(varname, '')
+            val[varname] = html.request.get_unicode_input(varname, '')
         return val
 
 
@@ -317,17 +365,17 @@ class FilterTristate(Filter):
         html.begin_radio_group(horizontal=True)
         for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
             checked = current == value or (current in [None, ""] and int(value) == self.deflt)
-            html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
+            html.radiobutton(self.varname, value, checked, text + u" &nbsp; ")
         html.end_radio_group()
 
     def tristate_value(self):
-        return html.get_integer_input(self.varname, self.deflt)
+        return html.request.get_integer_input_mandatory(self.varname, self.deflt)
 
     def filter(self, infoname):
         current = self.tristate_value()
         if current == -1:  # ignore
             return ""
-        elif current == 1:
+        if current == 1:
             return self.filter_code(infoname, True)
         return self.filter_code(infoname, False)
 
@@ -356,9 +404,9 @@ class FilterTime(Filter):
         return True
 
     def display(self):
-        choices = [ (str(sec), title + " " + _("ago")) for sec, title in self.ranges ] + \
-                  [ ("abs", _("Date (YYYY-MM-DD)")),
-                    ("unix", _("UNIX timestamp")) ]
+        choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges
+                  ]  # type: Choices
+        choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
 
         html.open_table(class_="filtertime")
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
@@ -391,21 +439,25 @@ class FilterTime(Filter):
                self._get_time_range_of("until")
 
     def _get_time_range_of(self, what):
+        # type: (str) -> Union[None, int, float]
         varprefix = self.ident + "_" + what
 
         rangename = html.request.var(varprefix + "_range")
         if rangename == "abs":
             try:
-                return time.mktime(time.strptime(html.request.var(varprefix), "%Y-%m-%d"))
+                return time.mktime(
+                    time.strptime(html.request.get_str_input_mandatory(varprefix), "%Y-%m-%d"))
             except Exception:
                 html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
                 return None
 
-        elif rangename == "unix":
-            return html.get_integer_input(varprefix)
+        if rangename == "unix":
+            return html.request.get_integer_input_mandatory(varprefix)
+        if rangename is None:
+            return None
 
         try:
-            count = html.get_integer_input(varprefix)
+            count = html.request.get_integer_input_mandatory(varprefix)
             secs = count * int(rangename)
             return int(time.time()) - secs
         except Exception:
@@ -413,38 +465,16 @@ class FilterTime(Filter):
             return None
 
 
-class FilterCRESite(Filter):
-    def __init__(self, enforce):
-        super(FilterCRESite, self).__init__(
-            'host',
-            ["site"],
-            [],
-        )
-        self.enforce = enforce
+def filter_cre_choices():
+    return sorted([(sitename, config.site(sitename)["alias"])
+                   for sitename, state in sites.states().items()
+                   if state["state"] == "online"],
+                  key=lambda a: a[1].lower())
 
-    def display(self):
-        html.dropdown("site", self._choices())
 
-    def _choices(self):
-        if self.enforce:
-            choices = []
-        else:
-            choices = [("", "")]
-
-        for sitename, state in sites.states().items():
-            if state["state"] == "online":
-                choices.append((sitename, config.site(sitename)["alias"]))
-
-        return sorted(choices, key=lambda a: a[1].lower())
-
-    def heading_info(self):
-        current_value = html.request.var("site")
-        if current_value:
-            alias = config.site(current_value)["alias"]
-            return alias
-
-    def variable_settings(self, row):
-        return [("site", row["site"])]
+def filter_cre_heading_info():
+    current_value = html.request.var("site")
+    return config.site(current_value)["alias"] if current_value else None
 
 
 class FilterRegistry(cmk.utils.plugin_registry.ClassRegistry):

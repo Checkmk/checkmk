@@ -1,4 +1,4 @@
-title: CPU usage on Windows systems (deprecated)
+title: Windows: CPU Usage (deprecated)
 agents: windows
 catalog: os/kernel
 license: GPL
@@ -13,10 +13,9 @@ description:
  check cycle. A combination with a larger value of {max_check_attempts}
  or {notification_delay} might be useful here.
 
- Note: this check is deprecated and not used by modern Check_MK agents.
+ Note: this check is deprecated and not used by modern Checkmk agents.
  It is replaced by {winperf_processor.util}.
 
 inventory:
- A check of this type is automatically created for all Windows
- hosts.
+ One service is created for each Windows host.
 

@@ -1,4 +1,4 @@
-title: IPMI Management board: Sensors
+title: IPMI Management Board: Sensors
 agents: linux
 catalog: os/hardware
 license: GPL
@@ -9,15 +9,15 @@ description:
  temperature sensors and power supplies.
 
  Note that IPMI provides four states: 'ok', 'non-critical', 'critical' and
- 'non-recoverable'. The default Check-MK behaviour is to map 'ok' to {OK},
+ 'non-recoverable'. The default Checkmk behaviour is to map 'ok' to {OK},
  'non-critical' to {WARN} and 'critical' and 'non-recoverable' to {CRIT}.
  However, some manufacturers choose to display both 'ok' and 'non-critical'
- as normal on their provided tools. If you want Check-MK to behave similarly,
+ as normal on their provided tools. If you want Checkmk to behave similarly,
  you can set up a corresponding "Service State Translation" rule.
 
 item:
  The name of the sensor as provided via IPMI.
 
 inventory:
- All sensors that are reported by the management board of a host via IPMI
- are automatically inventorized.
+ One service is created for each sensor that are reported
+ by the management board of a host via IPMI.

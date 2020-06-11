@@ -1,4 +1,4 @@
-title: MSSQL cache hit ratio
+title: MS SQL Server: Cache Hit Ratio
 agents: windows
 catalog: app/mssql
 license: GPL
@@ -10,7 +10,7 @@ description:
  The check has been developed with MSSQL Server 2008 R2 but should
  work with other versions too.
 
- This check needs the Check_MK mssql.vbs -plugin installed in
+ This check needs the Checkmk mssql.vbs -plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 
@@ -19,7 +19,7 @@ item:
  name) are used for the item.
 
 inventory:
- One separate check for each available cache hit counter will be created.
+ One service is created for each available cache hit counter.
  This might be dedicated to tablespaces but also MSSQL server internal parts
  like the "Buffer Manager".
 

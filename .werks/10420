@@ -1,0 +1,16 @@
+Title: AWS EC2 Limits queries directly AWS Service Quotas for vCPU limits
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1576683815
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+The AWS upgrade to vCPU-based instance limits is accompanied with a
+simplified overview of limits. However, this limits are regulated by
+customer's usage and change overtime to accompany growing demand.
+
+The AWS special agent now queries the AWS Service Quotas to update to your
+current limits to your different instance families.

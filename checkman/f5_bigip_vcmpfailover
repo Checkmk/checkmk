@@ -1,4 +1,4 @@
-title: F5 Big-IP: active/active or passive/active vCMP guest failover status
+title: F5 Big-IP: Active/Active or Passive/Active vCMP Guest Failover Status
 agents: snmp
 catalog: hw/network/f5
 license: GPL
@@ -10,5 +10,5 @@ description:
  It will issue a warning if the cluster setup differs from the expected setup.
 
 inventory:
- Creates one service
+ One service is created.
 

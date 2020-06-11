@@ -14,4 +14,4 @@ item:
  The alarm identifier.
 
 inventory:
- One service per alarm identifier is created.
+ One service is created for each activated alarm identifier.

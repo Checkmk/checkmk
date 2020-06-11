@@ -1,49 +1,24 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context
 manager."""
 
-import sys
 import ast
 from contextlib import contextmanager
 import errno
 import fcntl
 import logging
 import os
+from pathlib import Path
 import pprint
 import tempfile
-import time
-from typing import Callable, Any, Union, Dict, Iterator, List  # pylint: disable=unused-import
+from typing import Any, Union, Dict, Iterator, Optional, AnyStr, cast
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path
+from six import ensure_binary
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKTerminate
 from cmk.utils.i18n import _
@@ -54,7 +29,6 @@ logger = logging.getLogger("cmk.store")
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.
 
-#.
 #   .--Predefined----------------------------------------------------------.
 #   |          ____               _       __ _                _            |
 #   |         |  _ \ _ __ ___  __| | ___ / _(_)_ __   ___  __| |           |
@@ -89,7 +63,6 @@ def lock_exclusive():
     aquire_lock(configuration_lockfile())
 
 
-#.
 #.
 #   .--Directories---------------------------------------------------------.
 #   |           ____  _               _             _                      |
@@ -155,7 +128,7 @@ def load_mk_file(path, default=None, lock=False):
     try:
         try:
             with path.open(mode="rb") as f:
-                exec (f.read(), globals(), default)
+                exec(f.read(), globals(), default)
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise
@@ -179,19 +152,73 @@ def save_mk_file(path, mk_content, add_header=True):
     content = ""
 
     if add_header:
-        content += "# Written by Check_MK store (%s)\n\n" % \
-                    time.strftime("%Y-%m-%d %H:%M:%S")
+        content += "# Written by Checkmk store\n\n"
 
     content += mk_content
     content += "\n"
     save_file(path, content)
 
 
+# A simple wrapper for cases where you only have to write a single value to a .mk file.
+def save_to_mk_file(path, key, value, pprint_value=False):
+    # type: (Union[Path, str], str, Any, bool) -> None
+    format_func = repr
+    if pprint_value:
+        format_func = pprint.pformat
+
+    # mypy complains: "[mypy:] Cannot call function of unknown type"
+    if isinstance(value, dict):
+        formated = "%s.update(%s)" % (key, format_func(value))
+    else:
+        formated = "%s += %s" % (key, format_func(value))
+
+    save_mk_file(path, formated)
+
+
+#.
+#   .--load/save-----------------------------------------------------------.
+#   |             _                 _    __                                |
+#   |            | | ___   __ _  __| |  / /__  __ ___   _____              |
+#   |            | |/ _ \ / _` |/ _` | / / __|/ _` \ \ / / _ \             |
+#   |            | | (_) | (_| | (_| |/ /\__ \ (_| |\ V /  __/             |
+#   |            |_|\___/ \__,_|\__,_/_/ |___/\__,_| \_/ \___|             |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
 # Handle .mk files that are only holding a python data structure and often
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
-def load_data_from_file(path, default=None, lock=False):
+def load_object_from_file(path, default=None, lock=False):
     # type: (Union[Path, str], Any, bool) -> Any
+    content = cast(str, _load_data_from_file(path, lock=lock, encoding="utf-8"))
+    if not content:
+        return default
+    return ast.literal_eval(content)
+
+
+def load_text_from_file(path, default=u"", lock=False):
+    # type: (Union[Path, str], str, bool) -> str
+    content = cast(str, _load_data_from_file(path, lock=lock, encoding="utf-8"))
+    if not content:
+        return default
+    return content
+
+
+def load_bytes_from_file(path, default=b"", lock=False):
+    # type: (Union[Path, str], bytes, bool) -> bytes
+    content = cast(bytes, _load_data_from_file(path, lock=lock))
+    if not content:
+        return default
+    return content
+
+
+# TODO: This function has to die! Its return type depends on the value of the
+# encoding parameter, which doesn't work at all with mypy and various APIs like
+# ast.literal_eval. As a workaround, we use casts, but this isn't a real
+# solution....
+def _load_data_from_file(path, lock=False, encoding=None):
+    # type: (Union[Path, str], bool, Optional[str]) -> Union[None, str, bytes]
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -200,18 +227,11 @@ def load_data_from_file(path, default=None, lock=False):
 
     try:
         try:
-            with path.open() as f:
-                content = f.read().strip()
-
-            if not content:
-                # May be created empty during locking
-                return default
-
-            return ast.literal_eval(content)
+            return path.read_text(encoding=encoding) if encoding else path.read_bytes()
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise
-            return default
+            return None
 
     except (MKTerminate, MKTimeout):
         if lock:
@@ -228,28 +248,47 @@ def load_data_from_file(path, default=None, lock=False):
 
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
-def save_data_to_file(path, data, pretty=False):
+def save_object_to_file(path, data, pretty=False):
     # type: (Union[Path, str], Any, bool) -> None
     if pretty:
         try:
-            formated_data = pprint.pformat(data)
+            formatted_data = pprint.pformat(data)
         except UnicodeDecodeError:
             # When writing a dict with unicode keys and normal strings with garbled
             # umlaut encoding pprint.pformat() fails with UnicodeDecodeError().
             # example:
             #   pprint.pformat({'Z\xc3\xa4ug': 'on',  'Z\xe4ug': 'on', u'Z\xc3\xa4ugx': 'on'})
             # Catch the exception and use repr() instead
-            formated_data = repr(data)
+            formatted_data = repr(data)
     else:
-        formated_data = repr(data)
+        formatted_data = repr(data)
+    save_file(path, "%s\n" % formatted_data)
 
-    save_file(path, "%s\n" % formated_data)
+
+def save_text_to_file(path, content, mode=0o660):
+    # type: (Union[Path, str], str, int) -> None
+    if not isinstance(content, str):
+        raise TypeError("content argument must be Text, not bytes")
+    _save_data_to_file(path, content.encode("utf-8"), mode)
+
+
+def save_bytes_to_file(path, content, mode=0o660):
+    # type: (Union[Path, str], bytes, int) -> None
+    if not isinstance(content, bytes):
+        raise TypeError("content argument must be bytes, not Text")
+    _save_data_to_file(path, content, mode)
+
+
+def save_file(path, content, mode=0o660):
+    # type: (Union[Path, str], AnyStr, int) -> None
+    # Just to be sure: ensure_binary
+    _save_data_to_file(path, ensure_binary(content), mode=mode)
 
 
 # Saving assumes a locked destination file (usually done by loading code)
 # Then the new file is written to a temporary file and moved to the target path
-def save_file(path, content, mode=0o660):
-    # type: (Union[Path, str], str, int) -> None
+def _save_data_to_file(path, content, mode=0o660):
+    # type: (Union[Path, str], bytes, int) -> None
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -261,10 +300,11 @@ def save_file(path, content, mode=0o660):
         # Please note that this already creates the file with 0 bytes (in case it is missing).
         aquire_lock(path)
 
-        with tempfile.NamedTemporaryFile("w",
+        with tempfile.NamedTemporaryFile("wb",
                                          dir=str(path.parent),
                                          prefix=".%s.new" % path.name,
                                          delete=False) as tmp:
+
             tmp_path = tmp.name
             os.chmod(tmp_path, mode)
             tmp.write(content)
@@ -314,22 +354,6 @@ def save_file(path, content, mode=0o660):
         release_lock(path)
 
 
-# A simple wrapper for cases where you only have to write a single value to a .mk file.
-def save_to_mk_file(path, key, value, pprint_value=False):
-    # type: (Union[Path, str], str, Any, bool) -> None
-    format_func = repr
-    if pprint_value:
-        format_func = pprint.pformat
-
-    # mypy complains: "[mypy:] Cannot call function of unknown type"
-    if isinstance(value, dict):
-        formated = "%s.update(%s)" % (key, format_func(value))
-    else:
-        formated = "%s += %s" % (key, format_func(value))
-
-    save_mk_file(path, formated)
-
-
 #.
 #   .--File locking--------------------------------------------------------.
 #   |          _____ _ _        _            _    _                        |
@@ -345,6 +369,16 @@ def save_to_mk_file(path, key, value, pprint_value=False):
 #   '----------------------------------------------------------------------'
 
 _acquired_locks = {}  # type: Dict[str, int]
+
+
+@contextmanager
+def locked(path, blocking=True):
+    # type: (Union[Path, str], bool) -> Iterator[None]
+    try:
+        aquire_lock(path, blocking)
+        yield
+    finally:
+        release_lock(path)
 
 
 def aquire_lock(path, blocking=True):
@@ -378,9 +412,8 @@ def aquire_lock(path, blocking=True):
         if os.path.sameopenfile(fd, fd_new):
             os.close(fd_new)
             break
-        else:
-            os.close(fd)
-            fd = fd_new
+        os.close(fd)
+        fd = fd_new
 
     _acquired_locks[str(path)] = fd
     logger.debug("Got lock on %s", path)
@@ -429,6 +462,24 @@ def release_all_locks():
     # type: () -> None
     logger.debug("Releasing all locks")
     logger.debug("_acquired_locks: %r", _acquired_locks)
-    for path in list(_acquired_locks.iterkeys()):
+    for path in list(_acquired_locks.keys()):
         release_lock(path)
     _acquired_locks.clear()
+
+
+@contextmanager
+def cleanup_locks():
+    # type: () -> Iterator[None]
+    """Context-manager to release all memorized locks at the end of the block.
+
+    This is a hack which should be removed. In order to make this happen, every lock shall
+    itself only be used as a context-manager.
+    """
+    try:
+        yield
+    finally:
+        try:
+            release_all_locks()
+        except Exception:
+            logger.exception("Error while releasing locks after block.")
+            raise

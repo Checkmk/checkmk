@@ -1,0 +1,23 @@
+// builds python module for windows agent
+
+properties([
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
+    pipelineTriggers([pollSCM('H/15 * * * *')])
+])
+
+node ('windows') {
+    stage('git checkout') {
+        checkout(scm)
+            windows = load 'buildscripts/scripts/lib/windows.groovy'
+    }
+    
+    stage('cached build') {
+        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+            windows.build(
+                TARGET: 'cached',
+                CREDS: NEXUS_USERNAME+':'+NEXUS_PASSWORD,
+                CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
+            )
+        }
+    }
+}

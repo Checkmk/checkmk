@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO:
 # - The classes here mix two things:
@@ -39,8 +19,12 @@
 
 import os
 import json
+from typing import Dict, Any, List, Tuple, Optional as _Optional
+
+from six import ensure_str
 
 import cmk.utils.store as store
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
@@ -58,8 +42,10 @@ from cmk.gui.valuespec import (
     DualListChoice,
     Optional,
 )
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
+from cmk.gui.type_defs import HTTPVariables
 
 from cmk.gui.exceptions import (
     MKUserError,
@@ -85,8 +71,9 @@ from cmk.gui.permissions import (
 #   '----------------------------------------------------------------------'
 
 
-class Base(object):
+class Base:
     def __init__(self, d):
+        # type: (Dict[str, Any]) -> None
         super(Base, self).__init__()
 
         # The dictionary with the name _ holds all information about
@@ -95,6 +82,7 @@ class Base(object):
         self._ = d
 
     def internal_representation(self):
+        # type: () -> Dict[str, Any]
         return self._
 
     # You always must override the following method. Not all phrases
@@ -110,6 +98,7 @@ class Base(object):
     # moment we use dedicated methods, wrong usage will be found by pylint.
     @classmethod
     def phrase(cls, phrase):
+        # type: (str) -> str
         return _("MISSING '%s'") % phrase
 
     # Implement this function in a subclass in order to add parameters
@@ -159,21 +148,18 @@ class Base(object):
     # page type by calling parameters() for each class
     @classmethod
     def _collect_parameters(cls, mode):
-        topics = {}
+        topics = {}  # type: Dict[str, List[DictionaryEntry]]
         for topic, elements in cls.parameters(mode):
             el = topics.setdefault(topic, [])
             el += elements
 
-        # Sort topics and elements in the topics
+        # Sort elements of each topic
         for topic in topics.values():
             topic.sort()
 
-        sorted_topics = topics.items()
-        sorted_topics.sort(key=lambda x: x[1][0])
-
         # Now remove order numbers and produce the structures for the Dictionary VS
         parameters, keys_by_topic = [], []
-        for topic, elements in sorted_topics:
+        for topic, elements in sorted(topics.items(), key=lambda x: x[1][0]):
             topic_keys = []
 
             for _unused_order, key, vs in elements:
@@ -188,33 +174,42 @@ class Base(object):
     # that pages in question of a dictionary format that is not
     # compatible.
     def name(self):
+        # type: () -> str
         return self._["name"]
 
     def title(self):
+        # type: () -> str
         return self._["title"]
 
     def description(self):
+        # type: () -> str
         return self._.get("description", "")
 
     def is_hidden(self):
+        # type: () -> bool
         return False
 
     def _can_be_linked(self):
+        # type: () -> bool
         return True
 
     def render_title(self):
+        # type: () -> str
         return _u(self.title())
 
     def is_empty(self):
+        # type: () -> bool
         return False
 
     def _show_in_sidebar(self):
+        # type: () -> bool
         return not self.is_empty() and not self.is_hidden()
 
     # Default values for the creation dialog can be overridden by the
     # sub class.
     @classmethod
     def default_name(cls):
+        # type: () -> str
         stem = cls.type_name()
         nr = 1
         while True:
@@ -226,17 +221,17 @@ class Base(object):
                     break
             if not conflict:
                 return name
-            else:
-                nr += 1
+            nr += 1
 
     @classmethod
     def default_topic(cls):
+        # type: () -> str
         return _("Other")
 
     # Store for all instances of this page type. The key into
     # this dictionary????
     # TODO: Brauchen wir hier überhaupt ein dict??
-    __instances = {}
+    __instances = {}  # type: Dict[str, Base]
 
     @classmethod
     def clear_instances(cls):
@@ -272,9 +267,7 @@ class Base(object):
     # is sorted by the title of the instance
     @classmethod
     def instances_sorted(cls):
-        instances = cls.__instances.values()
-        instances.sort(key=lambda x: x.title())
-        return instances
+        return sorted(cls.__instances.values(), key=lambda x: x.title())
 
     # Stub function for the list of all pages. In case of Overridable
     # several instances might exist that overlay each other. This
@@ -283,6 +276,7 @@ class Base(object):
     def pages(cls):
         for instance in cls.__instances.values():
             return instance
+        return None
 
     # Stub function for finding a page by name. Overriden by
     # Overridable.
@@ -291,9 +285,11 @@ class Base(object):
         for instance in cls.__instances.values():
             if instance.name() == name:
                 return instance
+        return None
 
     @classmethod
     def type_name(cls):
+        # type: () -> str
         raise NotImplementedError()
 
     # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
@@ -494,7 +490,7 @@ class Overridable(Base):
             return True
 
         if isinstance(self._["public"], tuple) and self._["public"][0] == "contact_groups":
-            if set(config.user.contact_groups()).intersection(self._["public"][1]):
+            if set(config.user.contact_groups).intersection(self._["public"][1]):
                 return True
 
         return False
@@ -533,6 +529,7 @@ class Overridable(Base):
         return "general.edit_" + cls.type_name()
 
     def owner(self):
+        # type: () -> UserId
         return self._["owner"]
 
     # Checks if the current user is allowed to see a certain page
@@ -549,12 +546,12 @@ class Overridable(Base):
         #    continue # not allowed to see this view
 
         # TODO: Permissions
-        ### visual = visuals[(owner, visual_name)]
-        ### if owner == config.user.id or \
-        ###    (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
-        ###     custom.append((owner, visual_name, visual))
-        ### elif visual["public"] and owner == "":
-        ###     builtin.append((owner, visual_name, visual))
+        # ## visual = visuals[(owner, visual_name)]
+        # ## if owner == config.user.id or \
+        # ##    (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
+        # ##     custom.append((owner, visual_name, visual))
+        # ## elif visual["public"] and owner == "":
+        # ##     builtin.append((owner, visual_name, visual))
 
     @classmethod
     def permitted_instances_sorted(cls):
@@ -568,14 +565,14 @@ class Overridable(Base):
     def may_delete(self):
         if self.is_builtin():
             return False
-        elif self.is_mine() and config.user.may(self._delete_permission()):
+        if self.is_mine() and config.user.may(self._delete_permission()):
             return True
         return config.user.may('general.delete_foreign_%s' % self.type_name())
 
     def may_edit(self):
         if self.is_builtin():
             return False
-        elif self.is_mine() and config.user.may("general.edit_%s" % self.type_name()):
+        if self.is_mine() and config.user.may("general.edit_%s" % self.type_name()):
             return True
         return config.user.may('general.edit_foreign_%s' % self.type_name())
 
@@ -589,7 +586,7 @@ class Overridable(Base):
                     % (self.type_name(), self.owner(), self.name(), backurl)
 
     def delete_url(self):
-        add_vars = [('_delete', self.name())]
+        add_vars = [('_delete', self.name())]  # type: HTTPVariables
         if not self.is_mine():
             add_vars.append(('_owner', self.owner()))
         return html.makeactionuri(add_vars)
@@ -739,11 +736,11 @@ class Overridable(Base):
 
         if mine:
             return mine
-        elif forced:
+        if forced:
             return forced
-        elif builtin:
+        if builtin:
             return builtin
-        elif foreign:
+        if foreign:
             return foreign
         return None
 
@@ -772,25 +769,24 @@ class Overridable(Base):
 
         # First load builtin pages. Set username to ''
         for name, page_dict in cls.builtin_pages().items():
-            page_dict["owner"] = ''  # might have been forgotten on copy action
+            page_dict["owner"] = UserId(u'')  # might have been forgotten on copy action
             page_dict["public"] = True
             page_dict["name"] = name
             new_page = cls(page_dict)
             cls.add_instance(("", name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
-        for user in os.listdir(config.config_dir):
-            user = user.decode("utf-8")
+        for user_dir in os.listdir(config.config_dir):
+            user = UserId(ensure_str(user_dir))
             try:
-                path = "%s/%s/user_%ss.mk" % (config.config_dir, user.encode("utf-8"),
-                                              cls.type_name())
+                path = "%s/%s/user_%ss.mk" % (config.config_dir, ensure_str(user), cls.type_name())
                 if not os.path.exists(path):
                     continue
 
                 if not userdb.user_exists(user):
                     continue
 
-                user_pages = store.load_data_from_file(path, {})
+                user_pages = store.load_object_from_file(path, default={})
                 for name, page_dict in user_pages.items():
                     page_dict["owner"] = user
                     page_dict["name"] = name
@@ -811,6 +807,7 @@ class Overridable(Base):
 
     @classmethod
     def save_user_instances(cls, owner=None):
+        # type: (_Optional[UserId]) -> None
         if not owner:
             owner = config.user.id
 
@@ -868,7 +865,7 @@ class Overridable(Base):
         def has_reporting():
             try:
                 # The suppression below is OK, we just want to check if the module is there.
-                import cmk.gui.cee.reporting  # pylint: disable=unused-variable,redefined-outer-name
+                import cmk.gui.cee.reporting as _dummy  # noqa: F401 # pylint: disable=import-outside-toplevel
                 return True
             except ImportError:
                 return False
@@ -876,8 +873,8 @@ class Overridable(Base):
         if has_reporting():
             html.context_button(_("Reports"), "edit_reports.py", "report")
 
-        ### if render_custom_context_buttons:
-        ###     render_custom_context_buttons()
+        # ## if render_custom_context_buttons:
+        # ##     render_custom_context_buttons()
 
         for other_type_name, other_pagetype in page_types.items():
             if cls.type_name() != other_type_name:
@@ -889,7 +886,7 @@ class Overridable(Base):
         # Deletion
         delname = html.request.var("_delete")
         if delname and html.transaction_valid():
-            owner = html.request.var('_owner', config.user.id)
+            owner = UserId(html.request.get_unicode_input_mandatory('_owner', config.user.id))
 
             try:
                 instance = cls.instance((owner, delname))
@@ -964,9 +961,13 @@ class Overridable(Base):
                     # Actions
                     table.cell(_('Actions'), css='buttons visuals')
 
+                    # View
+                    if isinstance(instance, PageRenderer):
+                        html.icon_button(instance.page_url(), _("View"), "new_" + cls.type_name())
+
                     # Clone / Customize
-                    buttontext = _("Create a customized copy of this")
-                    html.icon_button(instance.clone_url(), buttontext, "new_" + cls.type_name())
+                    html.icon_button(instance.clone_url(), _("Create a customized copy of this"),
+                                     "clone")
 
                     # Delete
                     if instance.may_delete():
@@ -989,12 +990,12 @@ class Overridable(Base):
                     # Custom columns specific to that page type
                     instance.render_extra_columns(table)
 
-                    ### for title, renderer in custom_columns:
-                    ###     table.cell(title, renderer(visual))
+                    # ## for title, renderer in custom_columns:
+                    # ##     table.cell(title, renderer(visual))
 
                     # Owner
                     if instance.is_builtin():
-                        ownertxt = html.i(_("builtin"))
+                        ownertxt = html.render_i(_("builtin"))
                     else:
                         ownertxt = instance.owner()
                     table.cell(_('Owner'), ownertxt)
@@ -1003,8 +1004,8 @@ class Overridable(Base):
 
                     # FIXME: WTF?!?
                     # TODO: Haeeh? Another custom columns
-                    ### if render_custom_columns:
-                    ###     render_custom_columns(visual_name, visual)
+                    # ## if render_custom_columns:
+                    # ##     render_custom_columns(visual_name, visual)
 
             if what != "builtin":
                 html.button("_bulk_delete_%s" % what,
@@ -1035,11 +1036,12 @@ class Overridable(Base):
 
     @classmethod
     def _bulk_delete_after_confirm(cls, what):
-        to_delete = []
+        to_delete = []  # type: List[Tuple[UserId, str]]
         for varname, _value in html.request.itervars(prefix="_c_%s+" % what):
             if html.get_checkbox(varname):
                 checkbox_ident = varname.split("_c_%s+" % what)[-1]
-                to_delete.append(checkbox_ident.split("+", 1))
+                raw_user, name = checkbox_ident.split("+", 1)
+                to_delete.append((UserId(raw_user), name))
 
         if not to_delete:
             return
@@ -1088,7 +1090,8 @@ class Overridable(Base):
             if mode == "edit":
                 title = cls.phrase("edit")
 
-                owner_user_id = html.request.var("owner", config.user.id)
+                owner_user_id = UserId(
+                    html.request.get_unicode_input_mandatory("owner", config.user.id))
                 if owner_user_id == config.user.id:
                     page = cls.find_my_page(page_name)
                 else:
@@ -1102,7 +1105,8 @@ class Overridable(Base):
                 cls.remove_instance((owner_user_id, page_name))  # will be added later again
             else:  # clone
                 title = cls.phrase("clone")
-                load_user = html.get_unicode_input("load_user")  # FIXME: Change varname to "owner"
+                load_user = html.request.get_unicode_input(
+                    "load_user")  # FIXME: Change varname to "owner"
 
                 try:
                     page = cls.instance((load_user, page_name))
@@ -1120,13 +1124,14 @@ class Overridable(Base):
         vs = Dictionary(
             title=_("General Properties"),
             render='form',
-            optional_keys=None,
+            optional_keys=False,
             elements=parameters,
             headers=keys_by_topic,
         )
 
         def validate(page_dict):
-            owner_user_id = html.request.var("owner", config.user.id)
+            owner_user_id = UserId(html.request.get_unicode_input_mandatory(
+                "owner", config.user.id))
             page_name = page_dict["name"]
             if owner_user_id == config.user.id:
                 page = cls.find_my_page(page_name)
@@ -1149,7 +1154,7 @@ class Overridable(Base):
                 for key, value in page_dict.items():
                     new_page_dict.setdefault(key, value)
 
-            owner = html.request.var("owner", config.user.id)
+            owner = UserId(html.request.get_unicode_input_mandatory("owner", config.user.id))
             new_page_dict["owner"] = owner
             new_page = cls(new_page_dict)
 
@@ -1161,7 +1166,7 @@ class Overridable(Base):
                 redirect_url = back_url
 
             html.immediate_browser_redirect(0.5, redirect_url)
-            html.message(_('Your changes haven been saved.'))
+            html.show_message(_('Your changes haven been saved.'))
             # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
             # can we simply move it there?
             # TODO: This is not true for all cases. e.g. the BookmarkList is not
@@ -1176,23 +1181,25 @@ class Overridable(Base):
             html.show_localization_hint()
 
         html.footer()
-        return
 
 
-class PublishTo(CascadingDropdown):
-    def __init__(self, type_title=None, with_foreign_groups=True, **kwargs):
-        kwargs.setdefault("title", _('Make this %s available for other users') % type_title)
-        super(PublishTo, self).__init__(choices=[
-            (True, _("Publish to all users")),
-            ("contact_groups", _("Publish to members of contact groups"),
-             ContactGroupChoice(
-                 with_foreign_groups=with_foreign_groups,
-                 title=_("Publish to members of contact groups"),
-                 rows=5,
-                 size=80,
-             )),
-        ],
-                                        **kwargs)
+def PublishTo(title=None, type_title=None, with_foreign_groups=True):
+    # type: (_Optional[str], _Optional[str], bool) -> CascadingDropdown
+    if title is None:
+        title = _('Make this %s available for other users') % type_title
+
+    choices = [
+        (True, _("Publish to all users")),
+        ("contact_groups", _("Publish to members of contact groups"),
+         ContactGroupChoice(
+             with_foreign_groups=with_foreign_groups,
+             title=_("Publish to members of contact groups"),
+             rows=5,
+             size=80,
+         )),
+    ]  # type: List[CascadingDropdownChoice]
+
+    return CascadingDropdown(title=title, choices=choices)
 
 
 class ContactGroupChoice(DualListChoice):
@@ -1205,7 +1212,7 @@ class ContactGroupChoice(DualListChoice):
         contact_group_choices = sites.all_groups("contact")
         return [(group_id, alias)
                 for (group_id, alias) in contact_group_choices
-                if self._with_foreign_groups or group_id in config.user.contact_groups()]
+                if self._with_foreign_groups or group_id in config.user.contact_groups]
 
 
 #.
@@ -1301,10 +1308,10 @@ class OverridableContainer(Overridable, Container):
     # class by the URL variable page_type.
     @classmethod
     def ajax_add_element(cls):
-        page_type_name = html.request.var("page_type")
-        page_name = html.request.var("page_name")
-        element_type = html.request.var("element_type")
-        create_info = json.loads(html.request.var("create_info"))
+        page_type_name = html.request.get_ascii_input_mandatory("page_type")
+        page_name = html.request.get_ascii_input_mandatory("page_name")
+        element_type = html.request.get_ascii_input_mandatory("element_type")
+        create_info = json.loads(html.request.get_ascii_input_mandatory("create_info"))
 
         page_ty = page_types[page_type_name]
         target_page, need_sidebar_reload = page_ty.add_element_via_popup(

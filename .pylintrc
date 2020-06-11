@@ -26,10 +26,17 @@ jobs=0
 # TODO: Why do we need persistence?
 persistent=yes
 extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql
-bad-functions=basestring,unicode,file,cmp,apply,execfile,reduce,reload
+bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
 
 [MESSAGES CONTROL]
 disable=
+    # Use local suppressions or (even better) refactor the code.
+    import-outside-toplevel,
+    #---------------------------------------------------------------------------
+    # Enabling this would be very desirable, but currently highly broken, see
+    # https://github.com/PyCQA/pylint/issues/3507. The pylint people seem to
+    # ignore mypy stuff as much as they can, it seems... :-/
+    isinstance-second-argument-not-valid-type,
     #---------------------------------------------------------------------------
     # We should really enable this, there could be some real exceptions waiting
     # to be thrown. But some work is needed first to sprinkle abc annotations
@@ -124,6 +131,12 @@ disable=
     # to our dev dependencies.
     wrong-spelling-in-comment,
     wrong-spelling-in-docstring,
+    #---------------------------------------------------------------------------
+    # Pylint is full of bugs regarding this, leading to tons of false positives
+    # when pathlib.path is used. Furthermore, the handling of NewTypes is totally
+    # broken, see e.g. https://github.com/PyCQA/pylint/issues/2296 and
+    # https://github.com/PyCQA/pylint/issues/3162.
+    no-member,
 
 [REPORTS]
 output-format=cmk_colorized
@@ -131,3 +144,7 @@ msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
 
 [FORMAT]
 max-line-length=100
+
+[VARIABLES]
+# Be a little bit more mypy-friendly.
+additional-builtins=reveal_type

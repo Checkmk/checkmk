@@ -1,0 +1,15 @@
+Title: brocade_fcport: use 64bit counters for tx/rx frames
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1574260052
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+On high-speed interfaces, the 32bit counters may wrap very often and make
+the counters unusable. 64bit counters track traffic appropriately, thus
+they are preferred when available.
+
+The 64bit counters are already used for tx/rx words and bbcredits

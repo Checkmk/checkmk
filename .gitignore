@@ -1,3 +1,4 @@
+.syntastic
 *.gcno
 *.pyc
 *.py.*.py
@@ -10,12 +11,13 @@
 .bugs/.my_ids
 .cache
 .coverage
+.coverage.*
 .directory
 .metadata
 .mypy_cache
 .ropeproject
 .venv-2.7
-.venv-3.7
+.venv-3.8
 GPATH
 GRTAGS
 GTAGS
@@ -40,6 +42,8 @@ config.status
 config.sub
 configure
 depcomp
+doc/plugin-api/build/
+doc/plugin-api/source/apidoc/
 install-sh
 missing
 mk-livestatus-*.tar.gz
@@ -49,6 +53,9 @@ stamp-h1
 tags
 tests/web/data/*
 .idea/
+/*.wpr
+/*.wpu
+/.tmp*
 *.iml
 .venv
 *.gcov
@@ -57,3 +64,4 @@ artefacts/
 node_modules/
 web/htdocs/js/*_min.js.map
 .mypy_cache/
+.vscode/

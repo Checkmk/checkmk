@@ -16,4 +16,4 @@ item:
  dots, e. g. 129.45.3
 
 inventory:
- Creates one check for every temperature sensor found by SNMP.
+ One service is created for each temperature sensor found by SNMP.

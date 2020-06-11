@@ -573,7 +573,7 @@ def page_list(what,
 
 
 def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
-    if visual["hidden"]:
+    if what != "dashboards" and visual["hidden"]:
         return False  # don't link to hidden visuals
 
     if owner == config.user.id:

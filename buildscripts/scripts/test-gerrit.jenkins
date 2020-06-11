@@ -8,8 +8,7 @@ withFolderProperties{
     NODE = env.BUILD_NODE
 }
 
-// TODO: Enable supported versions step by step and check which we should really support
-def PYTHON_VERSIONS = [ "2.6", "2.7", "3.3", "3.4", "3.5", "3.6", "3.7" ] //, "3.8" ]
+def PYTHON_VERSIONS = [ "2.6", "2.7", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8" ]
 
 node (NODE) {
     def WORKSPACE = pwd()

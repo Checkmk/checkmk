@@ -4,16 +4,15 @@ if "%2%" == "" powershell Write-Host "Invalid 2-st param, smth like to extlibs" 
 
 set omd_path=%1%
 
-set unpacker_exe=scripts\7-zip\7z.exe
+set unpacker_exe=7z.exe
 set unpacker=%unpacker_exe% x -y
-if not exist "%unpacker_exe%" powershell Write-Host "%unpacker_exe% not found" -ForegroundColor red  && goto end
 set out_root=%2%
 set unpack_cmd=scripts\unpack_package.cmd
 if not exist "%unpack_cmd%" powershell Write-Host "%unpack_cmd% not found" -ForegroundColor red  && goto end
 
 rem with internal folder in the tar.gz
 set nm=googletest
-set vv=-release-1.10.0
+set vv=-07d4a6e93d
 set src_dir_name=%omd_path%\%nm%
 if not exist %src_dir_name% powershell Write-Host "%src_dir_name% is not found" -ForegroundColor Red && goto end
 set src_file_name=%nm%%vv%

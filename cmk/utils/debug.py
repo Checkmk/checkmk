@@ -7,23 +7,19 @@
 debug_mode = False
 
 
-def enabled():
-    # type: () -> bool
+def enabled() -> bool:
     return debug_mode
 
 
-def disabled():
-    # type: () -> bool
+def disabled() -> bool:
     return not debug_mode
 
 
-def enable():
-    # type: () -> None
+def enable() -> None:
     global debug_mode
     debug_mode = True
 
 
-def disable():
-    # type: () -> None
+def disable() -> None:
     global debug_mode
     debug_mode = False

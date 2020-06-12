@@ -16,16 +16,16 @@ IOLog = IO[str]
 logger = logging.getLogger("cmk")
 
 
-def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
-    # type: (str) -> logging.Formatter
+def get_formatter(
+    format_str: str = "%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"
+) -> logging.Formatter:
     """Returns a new message formater instance that uses the standard
     Check_MK log format by default. You can also set another format
     if you like."""
     return logging.Formatter(format_str)
 
 
-def clear_console_logging():
-    # type: () -> None
+def clear_console_logging() -> None:
     logger.handlers[:] = []
     logger.addHandler(logging.NullHandler())
     logger.setLevel(logging.INFO)
@@ -36,8 +36,7 @@ def clear_console_logging():
 clear_console_logging()
 
 
-def setup_console_logging():
-    # type: () -> None
+def setup_console_logging() -> None:
     """This method enables all log messages to be written to the console
     without any additional information like date/time, logger-name. Just
     the log line is written.
@@ -48,8 +47,7 @@ def setup_console_logging():
     setup_logging_handler(sys.stdout, get_formatter("%(message)s"))
 
 
-def open_log(log_file_path):
-    # type: (Union[str, Path]) -> IOLog
+def open_log(log_file_path: Union[str, Path]) -> IOLog:
     """Open logfile and fall back to stderr if this is not successfull
     The opened file-like object is returned.
     """
@@ -57,7 +55,7 @@ def open_log(log_file_path):
         log_file_path = Path(log_file_path)
 
     try:
-        logfile = log_file_path.open("a", encoding="utf-8")  # type: IOLog
+        logfile: IOLog = log_file_path.open("a", encoding="utf-8")
         logfile.flush()
     except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)
@@ -66,8 +64,7 @@ def open_log(log_file_path):
     return logfile
 
 
-def setup_logging_handler(stream, formatter=None):
-    # type: (IOLog, logging.Formatter) -> None
+def setup_logging_handler(stream: IOLog, formatter: logging.Formatter = None) -> None:
     """This method enables all log messages to be written to the given
     stream file object. The messages are formated in Check_MK standard
     logging format.
@@ -82,8 +79,7 @@ def setup_logging_handler(stream, formatter=None):
     logger.addHandler(handler)
 
 
-def verbosity_to_log_level(verbosity):
-    # type: (int) -> int
+def verbosity_to_log_level(verbosity: int) -> int:
     """Values for "verbosity":
 
       0: enables INFO and above

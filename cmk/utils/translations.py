@@ -12,13 +12,12 @@ from cmk.utils.type_defs import ServiceName
 TranslationOptions = Dict  # TODO: Improve this type
 
 
-def translate_hostname(translation, hostname):
-    # type: (TranslationOptions, str) -> str
+def translate_hostname(translation: TranslationOptions, hostname: str) -> str:
     return _translate(translation, hostname)
 
 
-def translate_service_description(translation, service_description):
-    # type: (TranslationOptions, ServiceName) -> ServiceName
+def translate_service_description(translation: TranslationOptions,
+                                  service_description: ServiceName) -> ServiceName:
     if service_description.strip() in \
         ["Check_MK", "Check_MK Agent",
          "Check_MK Discovery", "Check_MK inventory",
@@ -27,8 +26,7 @@ def translate_service_description(translation, service_description):
     return _translate(translation, service_description)
 
 
-def _translate(translation, name):
-    # type: (TranslationOptions, str) -> str
+def _translate(translation: TranslationOptions, name: str) -> str:
     # 1. Case conversion
     caseconf = translation.get("case")
     if caseconf == "upper":

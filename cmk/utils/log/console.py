@@ -15,8 +15,8 @@ from ._level import VERBOSE
 
 # For StreamHandler.setStream()
 @contextmanager
-def set_stream(logger, handler, stream):
-    # type: (logging.Logger, logging.StreamHandler, IO[str]) -> Generator[None, None, None]
+def set_stream(logger: logging.Logger, handler: logging.StreamHandler,
+               stream: IO[str]) -> Generator[None, None, None]:
     # See `https://bugs.python.org/issue6333` for why this is necessary.
     old = handler.setStream(stream)
     logger.addHandler(handler)
@@ -37,17 +37,15 @@ _console.propagate = False
 isEnabledFor = _console.isEnabledFor
 
 
-def log(level, text, *args, **kwargs):
-    # type: (int, str, *Any, **Any) -> None
-    stream = kwargs.pop("stream", sys.stdout)  # type: IO[str]
+def log(level: int, text: str, *args: Any, **kwargs: Any) -> None:
+    stream: IO[str] = kwargs.pop("stream", sys.stdout)
     assert not kwargs
 
     with set_stream(_console, _handler, stream):
         _console.log(level, text, *args)
 
 
-def debug(text, *args, **kwargs):
-    # type: (str, *Any, Optional[IO[str]]) -> None
+def debug(text: str, *args: Any, **kwargs: Optional[IO[str]]) -> None:
     """Output text if, opt_verbose >= 2 (-vv)."""
     log(logging.DEBUG, text, *args, **kwargs)
 
@@ -55,8 +53,7 @@ def debug(text, *args, **kwargs):
 vverbose = debug
 
 
-def verbose(text, *args, **kwargs):
-    # type: (str, *Any, Optional[IO[str]]) -> None
+def verbose(text: str, *args: Any, **kwargs: Optional[IO[str]]) -> None:
     """Output text if opt_verbose is set (-v).
 
     Adds no linefeed.
@@ -65,8 +62,7 @@ def verbose(text, *args, **kwargs):
     log(VERBOSE, text, *args, **kwargs)
 
 
-def info(text, *args, **kwargs):
-    # type: (str, *Any, Optional[IO[str]]) -> None
+def info(text: str, *args: Any, **kwargs: Optional[IO[str]]) -> None:
     """Output text if opt_verbose is set (-v).
 
     Adds no linefeed.
@@ -80,9 +76,8 @@ def info(text, *args, **kwargs):
 #
 
 
-def warning(text, *args, **kwargs):
-    # type: (str, *Any, **Any) -> None
-    stream = kwargs.pop("stream", sys.stderr)  # type: IO[str]
+def warning(text: str, *args: Any, **kwargs: Any) -> None:
+    stream: IO[str] = kwargs.pop("stream", sys.stderr)
     assert not kwargs
     log(logging.WARNING, _format_warning(text), *args, stream=stream)
 
@@ -95,6 +90,5 @@ def _format_warning(text):
     return "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
 
 
-def error(text, *args):
-    # type: (str, *Any) -> None
+def error(text: str, *args: Any) -> None:
     log(logging.ERROR, text, *args, stream=sys.stderr)

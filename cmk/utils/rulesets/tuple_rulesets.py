@@ -121,8 +121,7 @@ def hosttags_match_taglist(hosttags, required_tags):
     return True
 
 
-def convert_pattern_list(patterns):
-    # type: (List[str]) -> Optional[Pattern[str]]
+def convert_pattern_list(patterns: List[str]) -> Optional[Pattern[str]]:
     """Compiles a list of service match patterns to a single regex
 
     Reducing the number of individual regex matches improves the performance dramatically.

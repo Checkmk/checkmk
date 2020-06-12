@@ -16,21 +16,18 @@ NotificationPluginName = NewType("NotificationPluginName", str)
 NotificationContext = NewType("NotificationContext", Dict)
 
 
-def _state_for(exit_code):
-    # type: (NotificationResultCode) -> str
+def _state_for(exit_code: NotificationResultCode) -> str:
     return cmk.utils.defines.service_state_name(exit_code, u"UNKNOWN")
 
 
-def find_wato_folder(context):
-    # type: (NotificationContext) -> str
+def find_wato_folder(context: NotificationContext) -> str:
     for tag in context.get("HOSTTAGS", "").split():
         if tag.startswith("/wato/"):
             return tag[6:].rstrip("/")
     return u""
 
 
-def notification_message(plugin, context):
-    # type: (NotificationPluginName, NotificationContext) -> str
+def notification_message(plugin: NotificationPluginName, context: NotificationContext) -> str:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")
@@ -47,8 +44,8 @@ def notification_message(plugin, context):
     return u"%s: %s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, output)
 
 
-def notification_progress_message(plugin, context, exit_code, output):
-    # type: (NotificationPluginName, NotificationContext, NotificationResultCode, str) -> str
+def notification_progress_message(plugin: NotificationPluginName, context: NotificationContext,
+                                  exit_code: NotificationResultCode, output: str) -> str:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")
@@ -62,8 +59,8 @@ def notification_progress_message(plugin, context, exit_code, output):
     return u"%s: %s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, output)
 
 
-def notification_result_message(plugin, context, exit_code, output):
-    # type: (NotificationPluginName, NotificationContext, NotificationResultCode, List[str]) -> str
+def notification_result_message(plugin: NotificationPluginName, context: NotificationContext,
+                                exit_code: NotificationResultCode, output: List[str]) -> str:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")

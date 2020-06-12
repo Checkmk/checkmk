@@ -12,18 +12,15 @@ from typing import Union
 
 
 # One bright day, when every path is really a Path, this can die... :-)
-def _path(*args):
-    # type: (*Union[str, Path]) -> str
+def _path(*args: Union[str, Path]) -> str:
     return str(Path(*args))
 
 
-def _omd_path(path):
-    # type: (str) -> str
+def _omd_path(path: str) -> str:
     return _path(omd_root, path)
 
 
-def _local_path(global_path):
-    # type: (Union[str, Path]) -> Path
+def _local_path(global_path: Union[str, Path]) -> Path:
     return Path(_path(omd_root, "local", Path(global_path).relative_to(omd_root)))
 
 

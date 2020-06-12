@@ -50,8 +50,7 @@ class RobustJSONEncoder(json.JSONEncoder):
 class CrashReportStore:
     _keep_num_crashes = 20
     """Caring about the persistance of crash reports in the local site"""
-    def save(self, crash):
-        # type: (ABCCrashReport) -> None
+    def save(self, crash: 'ABCCrashReport') -> None:
         """Save the crash report instance to it's crash report directory"""
         self._prepare_crash_dump_directory(crash)
 
@@ -69,8 +68,7 @@ class CrashReportStore:
 
         self._cleanup_old_crashes(crash.crash_dir().parent)
 
-    def _prepare_crash_dump_directory(self, crash):
-        # type: (ABCCrashReport) -> None
+    def _prepare_crash_dump_directory(self, crash: 'ABCCrashReport') -> None:
         crash_dir = crash.crash_dir()
         crash_dir.mkdir(parents=True, exist_ok=True)
 
@@ -81,11 +79,9 @@ class CrashReportStore:
             except OSError:
                 pass
 
-    def _cleanup_old_crashes(self, base_dir):
-        # type: (Path) -> None
+    def _cleanup_old_crashes(self, base_dir: Path) -> None:
         """Simple cleanup mechanism: For each crash type we keep up to X crashes"""
-        def uuid_paths(path):
-            # type: (Path) -> Iterator[Path]
+        def uuid_paths(path: Path) -> Iterator[Path]:
             for p in path.iterdir():
                 try:
                     uuid.UUID(str(p.name))
@@ -106,19 +102,16 @@ class CrashReportStore:
             with suppress(OSError):
                 crash_dir.rmdir()
 
-    def load_from_directory(self, crash_dir):
-        # type: (Path) -> ABCCrashReport
+    def load_from_directory(self, crash_dir: Path) -> 'ABCCrashReport':
         """Populate the crash info from the given crash directory"""
         return ABCCrashReport.deserialize(self._load_decoded_from_directory(crash_dir))
 
-    def _load_decoded_from_directory(self, crash_dir):
-        # type: (Path) -> Dict[str, Any]
+    def _load_decoded_from_directory(self, crash_dir: Path) -> Dict[str, Any]:
         serialized = self.load_serialized_from_directory(crash_dir)
         serialized["crash_info"] = json.loads(serialized["crash_info"])
         return serialized
 
-    def load_serialized_from_directory(self, crash_dir):
-        # type: (Path) -> Dict[str, bytes]
+    def load_serialized_from_directory(self, crash_dir: Path) -> Dict[str, bytes]:
         """Load the raw serialized crash report from the given directory
 
         Nothing is decoded here, the plain files are read into a dictionary. This creates a
@@ -137,13 +130,13 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
     # TODO: Can not use this with python 2
     #@abc.abstractclassmethod
     @classmethod
-    def type(cls):
-        # type: () -> str
+    def type(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def from_exception(cls, details=None, type_specific_attributes=None):
-        # type: (Dict, Dict) -> ABCCrashReport
+    def from_exception(cls,
+                       details: Dict = None,
+                       type_specific_attributes: Dict = None) -> 'ABCCrashReport':
         """Create a crash info object from the current exception context
 
         details - Is an optional dictionary of crash type specific attributes
@@ -158,19 +151,16 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
         return cls(**attributes)
 
     @classmethod
-    def deserialize(cls, serialized):
-        # type: (Type[ABCCrashReport], dict) -> ABCCrashReport
+    def deserialize(cls: 'Type[ABCCrashReport]', serialized: dict) -> 'ABCCrashReport':
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
         return class_(**serialized)
 
-    def _serialize_attributes(self):
-        # type: () -> dict
+    def _serialize_attributes(self) -> dict:
         """Serialize object type specific attributes for transport"""
         return {"crash_info": self.crash_info}
 
-    def serialize(self):
-        # type: () -> Dict
+    def serialize(self) -> Dict:
         """Serialize the object
 
         Nested structures are allowed. Only objects that can be handled by
@@ -181,18 +171,15 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
 
         return self._serialize_attributes()
 
-    def __init__(self, crash_info):
-        # type: (Dict) -> None
+    def __init__(self, crash_info: Dict) -> None:
         super(ABCCrashReport, self).__init__()
         self.crash_info = crash_info
 
-    def ident(self):
-        # type: () -> Tuple[str, ...]
+    def ident(self) -> Tuple[str, ...]:
         """Return the identity in form of a tuple of a single crash report"""
         return (self.crash_info["id"],)
 
-    def ident_to_text(self):
-        # type: () -> str
+    def ident_to_text(self) -> str:
         """Returns the textual representation of the identity
 
         The parts are separated with "@" signs. The "@" signs found in the parts are
@@ -200,22 +187,19 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
         service descriptions don't have such signs."""
         return "@".join([p.replace("@", "~") for p in self.ident()])
 
-    def crash_dir(self, ident_text=None):
-        # type: (Optional[str]) -> Path
+    def crash_dir(self, ident_text: Optional[str] = None) -> Path:
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
         return cmk.utils.paths.crash_dir / ensure_str(self.type()) / ensure_str(ident_text)
 
-    def local_crash_report_url(self):
-        # type: () -> str
+    def local_crash_report_url(self) -> str:
         """Returns the site local URL to the current crash report"""
         return "crash.py?%s" % urllib.parse.urlencode([("component", self.type()),
                                                        ("ident", self.ident_to_text())])
 
 
-def _get_generic_crash_info(type_name, details):
-    # type: (str, Dict) -> Dict
+def _get_generic_crash_info(type_name: str, details: Dict) -> Dict:
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need
@@ -264,8 +248,7 @@ def _get_generic_crash_info(type_name, details):
     return infos
 
 
-def _get_local_vars_of_last_exception():
-    # type: () -> str
+def _get_local_vars_of_last_exception() -> str:
     local_vars = {}
     try:
         for key, val in inspect.trace()[-1][0].f_locals.items():
@@ -283,8 +266,7 @@ def _get_local_vars_of_last_exception():
                                    maxsize=5 * 1024 * 1024)))
 
 
-def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
-    # type: (Any, int, int) -> Any
+def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 1024) -> Any:
     if maxdepth == 0:
         return "Max recursion depth reached"
 
@@ -299,7 +281,7 @@ def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
             val[index] = _format_var_for_export(item, maxdepth - 1)
 
     elif isinstance(val, tuple):
-        new_val = ()  # type: Tuple
+        new_val: Tuple = ()
         for item in val:
             new_val += (_format_var_for_export(item, maxdepth - 1),)
         val = new_val

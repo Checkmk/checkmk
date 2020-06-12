@@ -23,33 +23,27 @@ class ABCRegistry(Mapping[str, _VT]):
     Entries are registered with this registry using register(), typically via decoration.
 
     """
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(ABCRegistry, self).__init__()
-        self._entries = {}  # type: Dict[str, _VT]
+        self._entries: Dict[str, _VT] = {}
 
     # TODO: Make staticmethod (But abc.abstractstaticmethod not available. How to make this possible?)
     @abstractmethod
-    def plugin_base_class(self):
-        # type: () -> Type
+    def plugin_base_class(self) -> Type:
         raise NotImplementedError()
 
     @abstractmethod
-    def plugin_name(self, plugin_class):
-        # type: (Type) -> str
+    def plugin_name(self, plugin_class: Type) -> str:
         raise NotImplementedError()
 
-    def registration_hook(self, plugin_class):
-        # type: (Type) -> None
+    def registration_hook(self, plugin_class: Type) -> None:
         pass
 
     @abstractmethod
-    def register(self, plugin_class):
-        # type: (Type) -> Type
+    def register(self, plugin_class: Type) -> Type:
         raise NotImplementedError()
 
-    def unregister(self, name):
-        # type: (str) -> None
+    def unregister(self, name: str) -> None:
         del self._entries[name]
 
     def __getitem__(self, key):
@@ -67,8 +61,7 @@ class ABCRegistry(Mapping[str, _VT]):
 # def plugin_base_class(self) -> Type
 # def plugin_name(self, plugin_class: Type) -> Type
 class ClassRegistry(ABCRegistry):
-    def register(self, plugin_class):
-        # type: (Type) -> Type
+    def register(self, plugin_class: Type) -> Type:
         """Register a class with the registry, can be used as a decorator"""
         if not issubclass(plugin_class, self.plugin_base_class()):
             raise TypeError('%s is not a subclass of %s' %
@@ -82,8 +75,7 @@ class ClassRegistry(ABCRegistry):
 #
 # def plugin_base_class(self) -> Type
 class InstanceRegistry(ABCRegistry):
-    def register(self, instance):  # pylint: disable=arguments-differ
-        # type: (Any) -> Any
+    def register(self, instance: Any) -> Any:  # pylint: disable=arguments-differ
         if not isinstance(instance, self.plugin_base_class()):
             raise ValueError('%r is not an instance of %s' %
                              (instance, self.plugin_base_class().__name__))
@@ -91,6 +83,5 @@ class InstanceRegistry(ABCRegistry):
         self._entries[self.plugin_name(instance)] = instance
         return instance
 
-    def plugin_name(self, instance):  # pylint: disable=arguments-differ
-        # type: (Any) -> str
+    def plugin_name(self, instance: Any) -> str:  # pylint: disable=arguments-differ
         return instance.name

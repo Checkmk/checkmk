@@ -103,7 +103,7 @@ def _compiled_werks_dir():
 
 
 def load():
-    werks = {}  # type: Dict[int, Dict[str, Any]]
+    werks: Dict[int, Dict[str, Any]] = {}
     # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
     for file_name in itertools.chain(_compiled_werks_dir().glob("werks"),
                                      _compiled_werks_dir().glob("werks-*")):
@@ -153,11 +153,11 @@ _ALLOWED_WERK_FIELDS = _REQUIRED_WERK_FIELDS | _OPTIONAL_WERK_FIELDS
 
 
 def _load_werk(path):
-    werk = {
+    werk: Dict[str, Any] = {
         "body": [],
         "compatible": "compat",
         "edition": "cre",
-    }  # type: Dict[str, Any]
+    }
     in_header = True
     with path.open(encoding="utf-8") as fp:
         for line in fp:
@@ -257,8 +257,7 @@ VERSION_PATTERN = re.compile(r'^([.\-a-z]+)?(\d+)')
 
 
 # Parses versions of Check_MK and converts them into comparable integers.
-def parse_check_mk_version(v):
-    # type: (str) -> int
+def parse_check_mk_version(v: str) -> int:
     """Figure out how to compare versions semantically.
 
     Parses versions of Check_MK and converts them into comparable integers.

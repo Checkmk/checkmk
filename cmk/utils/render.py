@@ -29,41 +29,34 @@ from cmk.utils.i18n import _
 
 
 # NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
-def date(timestamp):
-    # type: (Optional[float]) -> str
+def date(timestamp: Optional[float]) -> str:
     return time.strftime(str(_("%Y-%m-%d")), time.localtime(timestamp))
 
 
-def date_and_time(timestamp):
-    # type: (Optional[float]) -> str
+def date_and_time(timestamp: Optional[float]) -> str:
     return "%s %s" % (date(timestamp), time_of_day(timestamp))
 
 
 # NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
-def time_of_day(timestamp):
-    # type: (Optional[float]) -> str
+def time_of_day(timestamp: Optional[float]) -> str:
     return time.strftime(str(_("%H:%M:%S")), time.localtime(timestamp))
 
 
-def timespan(seconds):
-    # type: (Union[float, int]) -> str
+def timespan(seconds: Union[float, int]) -> str:
     return str(timedelta(seconds=int(seconds)))
 
 
-def time_since(timestamp):
-    # type: (int) -> str
+def time_since(timestamp: int) -> str:
     return timespan(time.time() - timestamp)
 
 
 class Age:
     """Format time difference seconds into approximated human readable text"""
-    def __init__(self, secs):
-        # type: (float) -> None
+    def __init__(self, secs: float) -> None:
         super(Age, self).__init__()
         self.__secs = secs
 
-    def __str__(self):
-        # type: () -> str
+    def __str__(self) -> str:
         secs = self.__secs
 
         if secs < 0:
@@ -97,14 +90,12 @@ class Age:
 
         return "%.0f %s" % (years, _("y"))
 
-    def __float__(self):
-        # type: () -> float
+    def __float__(self) -> float:
         return float(self.__secs)
 
 
 # TODO: Make call sites use Age() directly?
-def approx_age(secs):
-    # type: (float) -> str
+def approx_age(secs: float) -> str:
     return "%s" % Age(secs)
 
 
@@ -119,8 +110,9 @@ def approx_age(secs):
 #   '----------------------------------------------------------------------'
 
 
-def scale_factor_prefix(value, base, prefixes=('', 'k', 'M', 'G', 'T', 'P')):
-    # type: (float, float, Tuple[str, ...]) -> Tuple[float, str]
+def scale_factor_prefix(
+    value: float, base: float,
+    prefixes: Tuple[str, ...] = ('', 'k', 'M', 'G', 'T', 'P')) -> Tuple[float, str]:
     base = float(base)
 
     prefix = prefixes[-1]
@@ -133,8 +125,7 @@ def scale_factor_prefix(value, base, prefixes=('', 'k', 'M', 'G', 'T', 'P')):
     return factor / base, prefix  # fixed: true-division
 
 
-def drop_dotzero(v, digits=2):
-    # type: (float, int) -> str
+def drop_dotzero(v: float, digits: int = 2) -> str:
     """Renders a number as a floating point number and drops useless
     zeroes at the end of the fraction
 
@@ -147,16 +138,18 @@ def drop_dotzero(v, digits=2):
     return t
 
 
-def fmt_number_with_precision(v, base=1000.0, precision=2, drop_zeroes=False, unit=""):
-    # type: (float, float, int, bool, str) -> str
+def fmt_number_with_precision(v: float,
+                              base: float = 1000.0,
+                              precision: int = 2,
+                              drop_zeroes: bool = False,
+                              unit: str = "") -> str:
     factor, prefix = scale_factor_prefix(v, base)
     value = float(v) / factor
     number = drop_dotzero(value, precision) if drop_zeroes else '%.*f' % (precision, value)
     return '%s %s' % (number, prefix + unit)
 
 
-def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
-    # type: (int, float, int, str) -> str
+def fmt_bytes(b: int, base: float = 1024.0, precision: int = 2, unit: str = "B") -> str:
     """Formats byte values to be used in texts for humans.
 
     Takes bytes as integer and returns a string which represents the bytes in a
@@ -168,8 +161,7 @@ def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
 # Precise size of a file - separated decimal separator
 # 1234 -> "1234"
 # 12345 => "12,345"
-def filesize(size):
-    # type: (float) -> str
+def filesize(size: float) -> str:
     dec_sep = ","
     if size < 10000:
         return str(size)
@@ -193,8 +185,7 @@ def filesize(size):
 #   '----------------------------------------------------------------------'
 
 
-def percent(perc, scientific_notation=False):
-    # type: (float, bool) -> str
+def percent(perc: float, scientific_notation: bool = False) -> str:
     """Renders a given number as percentage string"""
     # 0 / 0.0 -> 0%
     # 9.0e-05 -> 0.00009%
@@ -252,8 +243,7 @@ def percent(perc, scientific_notation=False):
     return result + "%"
 
 
-def scientific(v, precision=3):
-    # type: (float, int) -> str
+def scientific(v: float, precision: int = 3) -> str:
     """Renders a given number in scientific notation (E-notation)"""
     if v == 0:
         return "0"
@@ -279,8 +269,7 @@ def scientific(v, precision=3):
 #
 # Note if the type of v is integer, then the precision cut
 # down to the precision of the actual number
-def physical_precision(v, precision, unit_symbol):
-    # type: (float, int, str) -> str
+def physical_precision(v: float, precision: int, unit_symbol: str) -> str:
     if v < 0:
         return "-" + physical_precision(-v, precision, unit_symbol)
 
@@ -290,8 +279,7 @@ def physical_precision(v, precision, unit_symbol):
     return (u"%%.%df %%s%%s" % places_after_comma) % (scaled_value, scale_symbol, unit_symbol)
 
 
-def calculate_physical_precision(v, precision):
-    # type: (float, int) -> Tuple[str, int, int]
+def calculate_physical_precision(v: float, precision: int) -> Tuple[str, int, int]:
     if v == 0:
         return "", precision - 1, 1
 
@@ -335,8 +323,7 @@ def calculate_physical_precision(v, precision):
     return scale_symbols[scale], places_after_comma, 1000**scale
 
 
-def fmt_nic_speed(speed):
-    # type: (str) -> str
+def fmt_nic_speed(speed: str) -> str:
     """Format network speed (bit/s) for humans."""
     try:
         speedi = int(speed)
@@ -361,13 +348,11 @@ def fmt_nic_speed(speed):
 #   '----------------------------------------------------------------------'
 
 
-def _frexp10(x):
-    # type: (float) -> Tuple[float, int]
+def _frexp10(x: float) -> Tuple[float, int]:
     return _frexpb(x, 10)
 
 
-def _frexpb(x, base):
-    # type: (float, int) -> Tuple[float, int]
+def _frexpb(x: float, base: int) -> Tuple[float, int]:
     exp = int(math.log(x, base))
     mantissa = x / base**exp
     if mantissa < 1:

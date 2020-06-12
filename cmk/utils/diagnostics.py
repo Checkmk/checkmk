@@ -31,8 +31,7 @@ _BOOLEAN_CONFIG_OPTS = [
 ]
 
 
-def serialize_wato_parameters(wato_parameters):
-    # type: (DiagnosticsParameters) -> DiagnosticsCLParameters
+def serialize_wato_parameters(wato_parameters: DiagnosticsParameters) -> DiagnosticsCLParameters:
     opt_info_parameters = wato_parameters.get("opt_info")
     if opt_info_parameters is None:
         return []
@@ -45,8 +44,8 @@ def serialize_wato_parameters(wato_parameters):
     return serialized_parameters
 
 
-def deserialize_cl_parameters(cl_parameters):
-    # type: (DiagnosticsCLParameters) -> DiagnosticsOptionalParameters
+def deserialize_cl_parameters(
+        cl_parameters: DiagnosticsCLParameters) -> DiagnosticsOptionalParameters:
     if cl_parameters is None:
         return {}
 

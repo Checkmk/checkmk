@@ -267,16 +267,14 @@ check_mk_agents = {
     "vnx_quotas": "VNX Quotas"
 }
 
-_manpage_catalog = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
+_manpage_catalog: Dict[ManPageCatalogPath, List[Dict]] = {}
 
 
-def man_page_exists(name):
-    # type: (str) -> bool
+def man_page_exists(name: str) -> bool:
     return man_page_path(name) is not None
 
 
-def man_page_path(name):
-    # type: (str) -> Optional[Path]
+def man_page_path(name: str) -> Optional[Path]:
     if name[0] != "." and name[-1] != "~":
         for basedir in [
                 cmk.utils.paths.local_check_manpages_dir,
@@ -288,8 +286,7 @@ def man_page_path(name):
     return None
 
 
-def all_man_pages():
-    # type: () -> Dict[str, str]
+def all_man_pages() -> Dict[str, str]:
     manuals = {}
     for basedir in [
             Path(cmk.utils.paths.check_manpages_dir),  #
@@ -302,8 +299,7 @@ def all_man_pages():
     return manuals
 
 
-def print_man_page_table():
-    # type: () -> None
+def print_man_page_table() -> None:
     table = []
     for name, path in sorted(all_man_pages().items()):
         try:
@@ -314,8 +310,7 @@ def print_man_page_table():
     tty.print_table([str('Check type'), str('Title')], [tty.bold, tty.normal], table)
 
 
-def get_title_from_man_page(path):
-    # type: (Path) -> str
+def get_title_from_man_page(path: Path) -> str:
     with path.open(encoding="utf-8") as fp:
         for line in fp:
             if line.startswith("title:"):
@@ -327,9 +322,8 @@ def man_page_catalog_titles():
     return catalog_titles
 
 
-def load_man_page_catalog():
-    # type: () -> Dict[ManPageCatalogPath, List[Dict]]
-    catalog = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
+def load_man_page_catalog() -> Dict[ManPageCatalogPath, List[Dict]]:
+    catalog: Dict[ManPageCatalogPath, List[Dict]] = {}
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, Path(path))
@@ -511,14 +505,13 @@ def _parse_man_page_header(name, path):
     return parsed
 
 
-def load_man_page(name):
-    # type: (str) -> Optional[ManPage]
+def load_man_page(name: str) -> Optional[ManPage]:
     path = man_page_path(name)
     if path is None:
         return None
 
-    man_page = {}  # type: ManPage
-    current_section = []  # type: List[Tuple[str, str]]
+    man_page: ManPage = {}
+    current_section: List[Tuple[str, str]] = []
     current_variable = None
     man_page['header'] = current_section
     empty_line_count = 0
@@ -559,7 +552,7 @@ def load_man_page(name):
                 raise MKGeneralException("Syntax error in %s line %d (%s).\n" %
                                          (path, lineno + 1, e))
 
-    header = {}  # type: Dict[str, Any]
+    header: Dict[str, Any] = {}
     for key, value in man_page['header']:
         header[key] = value.strip()
     header["agents"] = [a.strip() for a in header["agents"].split(",")]

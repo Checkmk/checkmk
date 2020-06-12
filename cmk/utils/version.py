@@ -25,14 +25,12 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
 
-def omd_version():
-    # type: () -> str
+def omd_version() -> str:
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
     return ensure_str(version_link.resolve().name)
 
 
-def omd_site():
-    # type: () -> str
+def omd_site() -> str:
     try:
         return os.environ["OMD_SITE"]
     except KeyError:
@@ -41,8 +39,7 @@ def omd_site():
               "only execute this in an OMD site."))
 
 
-def edition_short():
-    # type: () -> str
+def edition_short() -> str:
     """Can currently either return \"cre\" or \"cee\"."""
     parts = omd_version().split(".")
     if parts[-1] == "demo":
@@ -51,23 +48,19 @@ def edition_short():
     return str(parts[-1])
 
 
-def is_enterprise_edition():
-    # type: () -> bool
+def is_enterprise_edition() -> bool:
     return edition_short() == "cee"
 
 
-def is_raw_edition():
-    # type: () -> bool
+def is_raw_edition() -> bool:
     return edition_short() == "cre"
 
 
-def is_managed_edition():
-    # type: () -> bool
+def is_managed_edition() -> bool:
     return edition_short() == "cme"
 
 
-def is_demo():
-    # type: () -> bool
+def is_demo() -> bool:
     parts = omd_version().split(".")
     return parts[-1] == "demo"
 
@@ -85,8 +78,7 @@ def is_demo():
 # and diagnostics.
 
 
-def get_general_version_infos():
-    # type: () -> Dict[str, Any]
+def get_general_version_infos() -> Dict[str, Any]:
     return {
         "time": time.time(),
         "os": _get_os_info(),
@@ -98,8 +90,7 @@ def get_general_version_infos():
     }
 
 
-def _get_os_info():
-    # type: () -> str
+def _get_os_info() -> str:
     if "OMD_ROOT" in os.environ:
         return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
             "=", 1)[1].strip()
@@ -124,8 +115,7 @@ def _get_os_info():
     return "UNKNOWN"
 
 
-def _current_monitoring_core():
-    # type: () -> str
+def _current_monitoring_core() -> str:
     try:
         p = subprocess.Popen(
             ["omd", "config", "show", "CORE"],

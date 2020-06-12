@@ -11,20 +11,17 @@ from typing import Callable
 cleanup_functions = set()
 
 
-def register_cleanup(func):
-    # type: (Callable) -> None
+def register_cleanup(func: Callable) -> None:
     cleanup_functions.add(func)
 
 
-def unregister_cleanup(func):
-    # type: (Callable) -> None
+def unregister_cleanup(func: Callable) -> None:
     cleanup_functions.remove(func)
 
 
 # Reset some global variable to their original value. This is needed in
 # keepalive mode. We could in fact do some positive caching in keepalive mode,
 # e.g. the counters of the hosts could be saved in memory.
-def cleanup_globals():
-    # type: () -> None
+def cleanup_globals() -> None:
     for func in cleanup_functions:
         func()

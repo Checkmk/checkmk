@@ -11,8 +11,8 @@ import sys
 from typing import Tuple, Optional, List, Generator
 
 
-def load_plugins_with_exceptions(package_name, *init_file_paths):
-    # type: (str, *Path) -> Generator[Tuple[str, Exception], None, None]
+def load_plugins_with_exceptions(
+        package_name: str, *init_file_paths: Path) -> Generator[Tuple[str, Exception], None, None]:
     """Load all specified packages
 
     This function accepts two parameters, a package name in Python's dotted syntax (e.g.
@@ -34,7 +34,7 @@ def load_plugins_with_exceptions(package_name, *init_file_paths):
     """
     __import__(package_name)
     package = sys.modules[package_name]
-    module_path = getattr(package, '__path__')  # type: Optional[List[str]]
+    module_path: Optional[List[str]] = getattr(package, '__path__')
     if module_path:
         for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
             try:
@@ -50,8 +50,7 @@ def load_plugins_with_exceptions(package_name, *init_file_paths):
                 yield plugin_name, exc
 
 
-def load_plugins(init_file_path, package_name):
-    # type: (str, str) -> None
+def load_plugins(init_file_path: str, package_name: str) -> None:
     """Import all submodules of a module, recursively
 
     This works reliably even with relative imports happening along the chain.
@@ -69,7 +68,7 @@ def load_plugins(init_file_path, package_name):
     # occurring while compiling.
     __import__(package_name)
     package = sys.modules[package_name]
-    module_path = getattr(package, '__path__')  # type: Optional[List[str]]
+    module_path: Optional[List[str]] = getattr(package, '__path__')
     if module_path:
         for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
             importlib.import_module("%s.%s" % (package_name, plugin_name))

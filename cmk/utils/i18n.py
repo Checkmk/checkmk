@@ -14,6 +14,5 @@ from six import ensure_str
 # (See https://docs.python.org/2/library/gettext.html). For this we
 # need the path to the locale files here.
 # Fake i18n when not available
-def _(string):
-    # type: (AnyStr) -> str
+def _(string: AnyStr) -> str:
     return ensure_str(string)

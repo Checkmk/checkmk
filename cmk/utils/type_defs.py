@@ -79,8 +79,7 @@ class OIDSpec:
     VALID_CHARACTERS = '.' + string.digits
 
     @classmethod
-    def validate(cls, value):
-        # type: (str) -> None
+    def validate(cls, value: str) -> None:
         if not isinstance(value, str):
             raise TypeError("expected a non-empty string: %r" % (value,))
         if not value:
@@ -93,16 +92,14 @@ class OIDSpec:
         if value.endswith('.'):
             raise ValueError("%r should not end with '.'" % (value,))
 
-    def __init__(self, value):
-        # type: (str) -> None
+    def __init__(self, value: str) -> None:
         self.validate(value)
         self._value = value
 
 
 # TODO: We should really parse our configuration file and use a
 # class/NamedTuple, see above.
-def timeperiod_spec_alias(timeperiod_spec, default=u""):
-    # type: (TimeperiodSpec, str) -> str
+def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = u"") -> str:
     alias = timeperiod_spec.get("alias", default)
     if isinstance(alias, str):
         return alias
@@ -115,8 +112,7 @@ class EvalableFloat(float):
     def __str__(self):
         return super().__repr__()
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         if self > sys.float_info.max:
             return '1e%d' % (sys.float_info.max_10_exp + 1)
         if self < -1 * sys.float_info.max:

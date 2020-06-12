@@ -28,7 +28,7 @@ import threading
 import time
 import traceback
 from types import FrameType
-from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
+from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
 from six import ensure_binary
 

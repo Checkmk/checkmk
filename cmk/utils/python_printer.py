@@ -29,63 +29,54 @@ def pformat(obj):
 
 
 class PythonPrinter:
-    def __init__(self, stream=None):
-        # type: (Optional[IO[str]]) -> None
+    def __init__(self, stream: Optional[IO[str]] = None) -> None:
         self._stream = sys.stdout if stream is None else stream
 
-    def pprint(self, obj):
-        # type: (object) -> None
+    def pprint(self, obj: object) -> None:
         self._format(obj)
         self._write('\n')
 
-    def _write(self, s):
-        # type: (str) -> None
+    def _write(self, s: str) -> None:
         self._stream.write(s)
 
-    def pformat(self, obj):
-        # type: (object) -> str
+    def pformat(self, obj: object) -> str:
         sio = StrIO()
         PythonPrinter(stream=sio)._format(obj)
         return sio.getvalue()
 
-    def _format(self, obj):
-        # type: (object) -> None
+    def _format(self, obj: object) -> None:
         # NOTE: Fail early! We only want exact type matches here, no instance
         # checks and no magic calls to repr. Only this way we can ensure that
         # we don't miss any recursive calls down the line.
         _dispatch.get(type(obj), _format_unhandled_type)(self, obj)
 
 
-def _format_unhandled_type(printer, obj):
-    # type: (PythonPrinter, object) -> None
+def _format_unhandled_type(printer: PythonPrinter, obj: object) -> None:
     raise ValueError('unhandled type %r' % type(obj))
 
 
-def _format_via_repr(printer, obj):
-    # type: (PythonPrinter, object) -> None
+def _format_via_repr(printer: PythonPrinter, obj: object) -> None:
     printer._write(repr(obj))
 
 
-def _format_byte_string(printer, obj):
-    # type: (PythonPrinter, _bytes) -> None
+def _format_byte_string(printer: PythonPrinter, obj: _bytes) -> None:
     printer._write(_bytes_prefix_to_add)
     printer._write(repr(obj))
 
 
-def _format_unicode_string(printer, obj):
-    # type: (PythonPrinter, _str) -> None
+def _format_unicode_string(printer: PythonPrinter, obj: _str) -> None:
     printer._write(_str_prefix_to_add)
 
     if "'" in obj and '"' not in obj:
         closure = '"'
-        quotes = {'"': '\\"'}  # type: Dict
+        quotes: Dict = {'"': '\\"'}
     else:
         closure = "'"
         quotes = {"'": "\\'"}
 
     # When Python 3 creates a repr which is interpreted by Python 2, we need to produce
     # a repr-string where non ascii characters are hex escaped as Python 2 usually does.
-    chars = []  # type: List[str]
+    chars: List[str] = []
     for c in obj:
         if ord(c) > 127:
             chars.append('\\x{:02x}'.format(ord(c)))
@@ -99,8 +90,7 @@ def _format_unicode_string(printer, obj):
     printer._write("".join([closure, "".join(chars), closure]))
 
 
-def _format_tuple(printer, obj):
-    # type: (PythonPrinter, tuple) -> None
+def _format_tuple(printer: PythonPrinter, obj: tuple) -> None:
     if len(obj) == 1:
         printer._write('(')
         printer._format(obj[0])
@@ -109,38 +99,34 @@ def _format_tuple(printer, obj):
         _format_sequence(printer, obj, _format_object, '(', ')')
 
 
-def _format_list(printer, obj):
-    # type: (PythonPrinter, list) -> None
+def _format_list(printer: PythonPrinter, obj: list) -> None:
     _format_sequence(printer, obj, _format_object, '[', ']')
 
 
-def _format_set(printer, obj):
-    # type: (PythonPrinter, set) -> None
+def _format_set(printer: PythonPrinter, obj: set) -> None:
     if obj:
         _format_sequence(printer, sorted(obj, key=_safe_key), _format_object, '{', '}')
     else:
         printer._write('set()')
 
 
-def _format_dict(printer, obj):
-    # type: (PythonPrinter, dict) -> None
+def _format_dict(printer: PythonPrinter, obj: dict) -> None:
     _format_sequence(printer, sorted(obj.items(), key=_safe_tuple), _format_dict_item, '{', '}')
 
 
-def _format_object(printer, obj):
-    # type: (PythonPrinter, object) -> None
+def _format_object(printer: PythonPrinter, obj: object) -> None:
     printer._format(obj)
 
 
-def _format_dict_item(printer, item):
-    # type: (PythonPrinter, Tuple[object, object]) -> None
+def _format_dict_item(printer: PythonPrinter, item: Tuple[object, object]) -> None:
     printer._format(item[0])
     printer._write(': ')
     printer._format(item[1])
 
 
-def _format_sequence(printer, seq, format_element, open_str, close_str):
-    # type: (PythonPrinter, Iterable[object], Callable[[PythonPrinter, Any], None], str, str) -> None
+def _format_sequence(printer: PythonPrinter, seq: Iterable[object],
+                     format_element: Callable[[PythonPrinter, Any],
+                                              None], open_str: str, close_str: str) -> None:
     printer._write(open_str)
     separator = ''
     for obj in seq:
@@ -150,7 +136,7 @@ def _format_sequence(printer, seq, format_element, open_str, close_str):
     printer._write(close_str)
 
 
-_dispatch = {
+_dispatch: Dict[Any, Any] = {
     bool: _format_via_repr,
     bytearray: _format_via_repr,
     _bytes: _format_byte_string,
@@ -165,7 +151,7 @@ _dispatch = {
     _str: _format_unicode_string,
     tuple: _format_tuple,
     type(None): _format_via_repr,
-}  # type: Dict[Any, Any]
+}
 
 
 # Python 3 is a bit picky about comparing objects of different types.

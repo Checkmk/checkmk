@@ -5,6 +5,5 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def section_name_of(check_plugin_name):
-    # type: (str) -> str
+def section_name_of(check_plugin_name: str) -> str:
     return check_plugin_name.split(".")[0]

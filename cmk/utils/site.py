@@ -12,14 +12,13 @@ import cmk.utils.paths
 OMDConfig = Dict[str, str]
 
 
-def get_omd_config(omd_root=None):
-    # type: (Optional[Path]) -> OMDConfig
+def get_omd_config(omd_root: Optional[Path] = None) -> OMDConfig:
     if omd_root is None:
         omd_root = Path(cmk.utils.paths.omd_root)
 
     site_conf = omd_root / "etc" / "omd" / "site.conf"
 
-    omd_config = {}  # type: OMDConfig
+    omd_config: OMDConfig = {}
     with site_conf.open(encoding="utf-8") as f:
         for line in f:
             key, value = line.split("=")
@@ -27,8 +26,7 @@ def get_omd_config(omd_root=None):
     return omd_config
 
 
-def get_apache_port(omd_root=None):
-    # type: (Optional[Path]) -> int
+def get_apache_port(omd_root: Optional[Path] = None) -> int:
     port = get_omd_config(omd_root).get("CONFIG_APACHE_TCP_PORT")
     if port is None:
         return 80

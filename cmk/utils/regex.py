@@ -11,11 +11,10 @@ from typing import Any, AnyStr, Dict, Pattern, Tuple
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
-g_compiled_regexes = {}  # type: Dict[Tuple[Any, int], Pattern]
+g_compiled_regexes: Dict[Tuple[Any, int], Pattern] = {}
 
 
-def regex(pattern, flags=0):
-    # type: (AnyStr, int) -> Pattern[AnyStr]
+def regex(pattern: AnyStr, flags: int = 0) -> Pattern[AnyStr]:
     """Compile regex or look it up in already compiled regexes.
     (compiling is a CPU consuming process. We cache compiled regexes)."""
     try:
@@ -32,8 +31,7 @@ def regex(pattern, flags=0):
     return reg
 
 
-def is_regex(pattern):
-    # type: (str) -> bool
+def is_regex(pattern: str) -> bool:
     """Checks if a string contains characters that make it neccessary
     to use regular expression logic to handle it correctly"""
     for c in pattern:
@@ -42,8 +40,7 @@ def is_regex(pattern):
     return False
 
 
-def escape_regex_chars(match):
-    # type: (str) -> str
+def escape_regex_chars(match: str) -> str:
     r = ""
     for c in match:
         if c in r"[]\().?{}|*^$+":

@@ -17,8 +17,12 @@ from typing import Type, Union, Callable, Tuple, Dict, Set, Any
 # Algorithm borrowed from Python 3 functools
 # + Add support for "list" args
 # pylint: disable=dangerous-default-value
-def _make_key(args, kwds, kwd_mark=(object(),), fasttypes={int, str}, type=type, len=len):
-    # type: (Tuple, Dict, Tuple, Set[Type], Callable, Callable) -> Union[int, str, _HashedSeq]
+def _make_key(args: Tuple,
+              kwds: Dict,
+              kwd_mark: Tuple = (object(),),
+              fasttypes: Set[Type] = {int, str},
+              type: Callable = type,
+              len: Callable = len) -> 'Union[int, str, _HashedSeq]':
     """Make a cache key from optionally typed positional and keyword arguments
     The key is constructed in a way that is flat as possible rather than
     as a nested structure that would take more memory.
@@ -71,13 +75,11 @@ Examples:
 """
     __slots__ = ["_logger", "_cache", "mem_func"]
 
-    def __init__(self, function):
-        # type: (Callable) -> None
+    def __init__(self, function: Callable) -> None:
         self.mem_func = function
-        self._cache = {}  # type: Dict[Union[int, str, _HashedSeq], Any]
+        self._cache: Dict[Union[int, str, _HashedSeq], Any] = {}
 
-    def __call__(self, *args, **kwargs):
-        # type: (Any, Any) -> Any
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
         cache_id = _make_key(args, kwargs)
 
         if cache_id in self._cache:

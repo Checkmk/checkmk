@@ -19,11 +19,12 @@ ADDITIONAL_MYPY_ARGS :=
 	test-integration test-integration-docker \
 	test-integration-docker-debug \
 	test-composition-docker test-composition-docker-debug test-composition \
-	test-format-python test-format-python3 \
+	test-format-shell test-format-python test-format-python3 \
 	test-shellcheck test-unit-coverage-html \
 	test-pipenv-deps test-bandit
 
 help:
+	@echo "test-format-shell             - Run the shell formatting"
 	@echo "test-mypy                     - Run mypy tests"
 	@echo "test-mypy-raw                 - Run mypy tests with raw edition config"
 	@echo "test-mypy3                    - Run mypy tests for Python 3"
@@ -220,6 +221,9 @@ test-shellcheck:
 		$(SHELLCHECK_OUTPUT_ARGS) \
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
+
+test-format-shell:
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
 clean:
 	rm -rf .mypy_cache

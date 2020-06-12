@@ -646,10 +646,10 @@ def copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
     name_part = [('view_name', view_name)]  # type: HTTPVariables
     singlecontext_vars = cast(
         HTTPVariables,
-        visuals.get_singlecontext_vars(
+        list(visuals.get_singlecontext_vars(
             view["context"],
             view["single_infos"],
-        ).items())
+        ).items()))
     dashlet['title_url'] = html.makeuri_contextless(name_part + singlecontext_vars,
                                                     filename='view.py')
 

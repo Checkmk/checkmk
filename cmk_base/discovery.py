@@ -799,10 +799,9 @@ def snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True, 
             value = snmp.get_single_oid(access_data, oid, do_snmp_scan=do_snmp_scan)
             if value == None:
                 raise MKSNMPError(
-                    "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
-                    "In that case please configure the ruleset \"Hosts without system "
-                    "description OID\" to tell Check_MK not to fetch the system "
-                    "description and system object OIDs." % (name, oid))
+                    "Cannot fetch %s OID %s. Please check your SNMP "
+                    "configuration. Possible reason might be: Wrong credentials, "
+                    "wrong SNMP version, Firewall rules, etc." % (name, oid))
     else:
         # Fake OID values to prevent issues with a lot of scan functions
         console.vverbose("       Skipping system description OID "

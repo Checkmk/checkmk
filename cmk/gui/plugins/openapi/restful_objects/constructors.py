@@ -433,7 +433,6 @@ def collection_item(collection_type, domain_type, obj):
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/value;collection="folder"',
         ...     'title': 'Foo',
-        ...     'domainType': 'link',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ... }
         >>> res = collection_item('folder', 'folder', {'title': 'Foo', 'id': '3'})

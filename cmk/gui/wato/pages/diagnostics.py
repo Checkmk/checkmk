@@ -15,6 +15,8 @@ from cmk.utils.diagnostics import (
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
     OPT_CHECKMK_OVERVIEW,
+    OPT_CHECKMK_CONFIG_FILES,
+    get_checkmk_config_files_map,
 )
 import cmk.utils.version as cmk_version
 
@@ -29,6 +31,9 @@ from cmk.gui.valuespec import (
     Filename,
     FixedValue,
     ValueSpec,
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    DualListChoice,
 )
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.background_job import BackgroundProcessInterface
@@ -54,8 +59,7 @@ class ModeDiagnostics(WatoMode):
         return "diagnostics"
 
     @classmethod
-    def permissions(cls):
-        # type : () -> List[str]
+    def permissions(cls) -> List[str]:
         return ["diagnostics"]
 
     def _from_vars(self) -> None:
@@ -155,6 +159,13 @@ class ModeDiagnostics(WatoMode):
                         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
                         "(Agent plugin mk_inventory needs to be installed)"),
              )),
+            (OPT_CHECKMK_CONFIG_FILES,
+             CascadingDropdown(
+                 title=_("Checkmk Configuration Files"),
+                 help=_("Configuration files '*.mk' or '*.conf' from etc/check_mk"),
+                 choices=self._get_checkmk_config_files_choices(),
+                 default_value="global_settings",
+             )),
         ]
 
         if not cmk_version.is_raw_edition():
@@ -169,6 +180,56 @@ class ModeDiagnostics(WatoMode):
                             "25 hours and 35 days"),
                  )))
         return elements
+
+    def _get_checkmk_config_files_choices(self) -> List[CascadingDropdownChoice]:
+        sorted_checkmk_config_files = sorted(get_checkmk_config_files_map())
+        checkmk_config_files = []
+        global_settings = []
+        host_and_folders = []
+
+        for rel_config_file in sorted_checkmk_config_files:
+            checkmk_config_files.append(rel_config_file)
+
+            rel_config_file_path = Path(rel_config_file)
+            rel_config_file_name = rel_config_file_path.name
+            rel_config_file_parts = rel_config_file_path.parts
+
+            if (rel_config_file_name == "sites.mk" or
+                (rel_config_file_name == "global.mk" and rel_config_file_parts and
+                 rel_config_file_parts[0] == "conf.d")):
+                global_settings.append(rel_config_file)
+
+            if rel_config_file_name in ["hosts.mk", "tags.mk", "rules.mk", ".wato"]:
+                host_and_folders.append(rel_config_file)
+
+        return [
+            ("all", _("Pack all files"),
+             FixedValue(
+                 checkmk_config_files,
+                 totext=self._list_of_files_to_text(checkmk_config_files),
+             )),
+            ("global_settings", _("Only global settings"),
+             FixedValue(
+                 global_settings,
+                 totext=self._list_of_files_to_text(global_settings),
+             )),
+            ("hosts_and_folders", _("Only hosts and folders"),
+             FixedValue(
+                 host_and_folders,
+                 totext=self._list_of_files_to_text(host_and_folders),
+             )),
+            ("explicit_list_of_files", _("Explicit list of files"),
+             DualListChoice(
+                 choices=[
+                     (rel_filepath, rel_filepath) for rel_filepath in sorted_checkmk_config_files
+                 ],
+                 size=80,
+                 rows=20,
+             )),
+        ]
+
+    def _list_of_files_to_text(self, list_of_files: List[str]) -> str:
+        return "<br>%s" % ",<br>".join(list_of_files)
 
 
 @gui_background_job.job_registry.register
@@ -193,6 +254,9 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
     def do_execute(self, diagnostics_parameters: DiagnosticsParameters,
                    job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
+
+        job_interface.send_progress_update(repr(diagnostics_parameters))
+        job_interface.send_progress_update(repr(serialize_wato_parameters(diagnostics_parameters)))
 
         site = diagnostics_parameters["site"]
         timeout = html.request.request_timeout - 2

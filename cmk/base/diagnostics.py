@@ -7,7 +7,7 @@
 import traceback
 import errno
 import abc
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Iterator
 import uuid
 import tarfile
 import json
@@ -16,6 +16,7 @@ import tempfile
 import platform
 import urllib.parse
 import textwrap
+import shutil
 import requests
 
 import livestatus
@@ -35,13 +36,15 @@ from cmk.utils.diagnostics import (
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
     OPT_CHECKMK_OVERVIEW,
+    OPT_CHECKMK_CONFIG_FILES,
     DiagnosticsOptionalParameters,
+    get_checkmk_config_files_map,
 )
 
 import cmk.base.section as section
 
 DiagnosticsElementJSONResult = Dict[str, Any]
-DiagnosticsElementFilepath = Path
+DiagnosticsElementFilepaths = Iterator[Path]
 
 SUFFIX = ".tar.gz"
 
@@ -136,6 +139,11 @@ class DiagnosticsDump:
         if parameters.get(OPT_CHECKMK_OVERVIEW):
             optional_elements.append(CheckmkOverviewDiagnosticsElement())
 
+        rel_checkmk_config_filepaths = parameters.get(OPT_CHECKMK_CONFIG_FILES)
+        if rel_checkmk_config_filepaths:
+            optional_elements.append(
+                CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_filepaths))
+
         if not cmk_version.is_raw_edition() and parameters.get(OPT_PERFORMANCE_GRAPHS):
             optional_elements.append(PerformanceGraphsDiagnosticsElement())
 
@@ -166,8 +174,11 @@ class DiagnosticsDump:
         filepaths = []
         for element in self.elements:
             console.info("%s\n", _format_title(element.title))
+            console.info("%s\n", _format_description(element.description))
+
             try:
-                filepaths.append(element.add_or_get_file(tmp_dump_folder, collectors))
+                for filepath in element.add_or_get_files(tmp_dump_folder, collectors):
+                    filepaths.append(filepath)
 
             except DiagnosticsElementError as e:
                 console.info("%s\n", _format_error(str(e)))
@@ -176,8 +187,6 @@ class DiagnosticsDump:
             except Exception:
                 console.info("%s\n", _format_error(traceback.format_exc()))
                 continue
-
-            console.info("%s\n", _format_description(element.description))
 
         return filepaths
 
@@ -289,21 +298,25 @@ class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def add_or_get_file(self, tmp_dump_folder: Path,
-                        collectors: Collectors) -> DiagnosticsElementFilepath:
+    def add_or_get_files(self, tmp_dump_folder: Path,
+                         collectors: Collectors) -> DiagnosticsElementFilepaths:
+        # Please note the case if there are more than one filepath results. A Python generator
+        # is executed until the first raise. Then it will be stopped and all generator states
+        # are gone. Correctly calculated filepaths till then are yielded.
+        # (Example: CheckmkConfigFilesDiagnosticsElement: collect errors and raise at the end)
         raise NotImplementedError()
 
 
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
-    def add_or_get_file(self, tmp_dump_folder: Path,
-                        collectors: Collectors) -> DiagnosticsElementFilepath:
+    def add_or_get_files(self, tmp_dump_folder: Path,
+                         collectors: Collectors) -> DiagnosticsElementFilepaths:
         infos = self._collect_infos(collectors)
         if not infos:
             raise DiagnosticsElementError("No information")
 
         filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".json")
         store.save_text_to_file(filepath, json.dumps(infos))
-        return filepath
+        yield filepath
 
     @abc.abstractmethod
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
@@ -406,6 +419,58 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return node.get_raw_tree()
 
 
+#   ---other dumps----------------------------------------------------------
+
+
+class CheckmkConfigFilesDiagnosticsElement(ABCDiagnosticsElement):
+    def __init__(self, rel_checkmk_config_filepaths: List[str]) -> None:
+        self.rel_checkmk_config_filepaths = rel_checkmk_config_filepaths
+
+    @property
+    def ident(self) -> str:
+        # Unused because we directly pack the .mk or .conf file
+        return "checkmk_config_files"
+
+    @property
+    def title(self) -> str:
+        return _("Checkmk Configuration Files")
+
+    @property
+    def description(self) -> str:
+        return _("Configuration files '*.mk' or '*.conf' from etc/checkmk: %s") % ", ".join(
+            self.rel_checkmk_config_filepaths)
+
+    def add_or_get_files(self, tmp_dump_folder: Path,
+                         collectors: Collectors) -> DiagnosticsElementFilepaths:
+        checkmk_config_files_map = get_checkmk_config_files_map()
+        unknown_files = []
+
+        for rel_filepath in self.rel_checkmk_config_filepaths:
+            filepath = checkmk_config_files_map.get(rel_filepath)
+            if filepath is None or not filepath.exists():
+                unknown_files.append(rel_filepath)
+                continue
+
+            # Respect file path (2), otherwise the paths of same named files are forgotten (1).
+            # Moreover we do not want to pack a folder hierarchy.
+            # Example:
+            # - apache.d/wato/global.mk
+            # - conf.d/wato/global.mk
+            # => tar.gz (1):
+            #    - global.mk
+            #    - global.mk
+            # We give these files a new name:
+            # => tar.gz (2):
+            #    - apache.d-wato-global.mk
+            #    - conf.d-wato-global.mk
+            new_filename = "-".join(Path(rel_filepath).parts)
+            tmp_filepath = shutil.copy(str(filepath), str(tmp_dump_folder.joinpath(new_filename)))
+            yield Path(tmp_filepath)
+
+        if unknown_files:
+            raise DiagnosticsElementError("No such files: %s" % ", ".join(unknown_files))
+
+
 #   ---cee dumps------------------------------------------------------------
 
 
@@ -424,8 +489,8 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
                  "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
                  "25 hours and 35 days")
 
-    def add_or_get_file(self, tmp_dump_folder: Path,
-                        collectors: Collectors) -> DiagnosticsElementFilepath:
+    def add_or_get_files(self, tmp_dump_folder: Path,
+                         collectors: Collectors) -> DiagnosticsElementFilepaths:
         checkmk_server_name = collectors.get_checkmk_server_name()
         if checkmk_server_name is None:
             raise DiagnosticsElementError("No Checkmk server found")
@@ -448,7 +513,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         with filepath.open("wb") as f:
             f.write(response.content)
 
-        return filepath
+        yield filepath
 
     def _get_response(self, checkmk_server_name: str, collectors: Collectors) -> requests.Response:
         automation_secret = self._get_automation_secret()

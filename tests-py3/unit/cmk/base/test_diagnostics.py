@@ -31,6 +31,11 @@ def _fake_local_connection(host_list):
     return _wrapper
 
 
+@pytest.fixture()
+def _collectors():
+    return diagnostics.Collectors()
+
+
 #   .--dump----------------------------------------------------------------.
 #   |                         _                                            |
 #   |                      __| |_   _ _ __ ___  _ __                       |
@@ -99,10 +104,10 @@ def test_diagnostics_element_general():
                                                "Python version and paths, Architecture")
 
 
-def test_diagnostics_element_general_content(tmp_path):
+def test_diagnostics_element_general_content(tmp_path, _collectors):
     diagnostics_element = diagnostics.GeneralDiagnosticsElement()
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
+    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("general.json")
@@ -131,7 +136,7 @@ def test_diagnostics_element_local_files():
         "This also includes information about installed MKPs.")
 
 
-def test_diagnostics_element_local_files_content(tmp_path):
+def test_diagnostics_element_local_files_content(tmp_path, _collectors):
     diagnostics_element = diagnostics.LocalFilesDiagnosticsElement()
 
     def create_test_package(name):
@@ -153,7 +158,7 @@ def test_diagnostics_element_local_files_content(tmp_path):
     create_test_package(name)
 
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
+    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("local_files.json")
@@ -241,7 +246,7 @@ def test_diagnostics_element_omd_config():
                                                "NSCA mode, TMP filesystem mode")
 
 
-def test_diagnostics_element_omd_config_content(tmp_path):
+def test_diagnostics_element_omd_config_content(tmp_path, _collectors):
     diagnostics_element = diagnostics.OMDConfigDiagnosticsElement()
 
     # Fake raw output of site.conf
@@ -273,7 +278,7 @@ CONFIG_PNP4NAGIOS='on'
 CONFIG_TMPFS='on'""")
 
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
+    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("omd_config.json")
@@ -360,7 +365,7 @@ def test_diagnostics_element_checkmk_overview():
     }, "No HW/SW inventory node 'Software > Applications > Checkmk'"),
 ])
 def test_diagnostics_element_checkmk_overview_error(monkeypatch, tmp_path, _fake_local_connection,
-                                                    host_list, host_tree, error):
+                                                    _collectors, host_list, host_tree, error):
     diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
@@ -375,7 +380,7 @@ def test_diagnostics_element_checkmk_overview_error(monkeypatch, tmp_path, _fake
     tmppath = Path(tmp_path).joinpath("tmp")
 
     with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-        diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
+        next(diagnostics_element.add_or_get_files(tmppath, _collectors))
         assert error == str(e)
 
     if host_tree:
@@ -419,7 +424,7 @@ def test_diagnostics_element_checkmk_overview_error(monkeypatch, tmp_path, _fake
     }),
 ])
 def test_diagnostics_element_checkmk_overview_content(monkeypatch, tmp_path, _fake_local_connection,
-                                                      host_list, host_tree):
+                                                      _collectors, host_list, host_tree):
 
     diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
 
@@ -433,7 +438,7 @@ def test_diagnostics_element_checkmk_overview_content(monkeypatch, tmp_path, _fa
             f.write(repr(host_tree))
 
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
+    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("checkmk_overview.json")
@@ -472,6 +477,50 @@ def test_diagnostics_element_checkmk_overview_content(monkeypatch, tmp_path, _fa
     shutil.rmtree(str(inventory_dir))
 
 
+def test_diagnostics_element_checkmk_config_files():
+    diagnostics_element = diagnostics.CheckmkConfigFilesDiagnosticsElement(
+        ["/path/to/raw-conf-file1", "/path/to/raw-conf-file2"])
+    assert diagnostics_element.ident == "checkmk_config_files"
+    assert diagnostics_element.title == "Checkmk Configuration Files"
+    assert diagnostics_element.description == (
+        "Configuration files '*.mk' or '*.conf' from etc/checkmk: "
+        "/path/to/raw-conf-file1, /path/to/raw-conf-file2")
+
+
+def test_diagnostics_element_checkmk_config_files_error(tmp_path, _collectors):
+    short_test_conf_filepath = "/no/such/file"
+    diagnostics_element = diagnostics.CheckmkConfigFilesDiagnosticsElement(
+        [short_test_conf_filepath])
+    tmppath = Path(tmp_path).joinpath("tmp")
+
+    with pytest.raises(diagnostics.DiagnosticsElementError) as e:
+        next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+        assert "No such files %s" % short_test_conf_filepath == str(e)
+
+
+def test_diagnostics_element_checkmk_config_files_content(tmp_path, _collectors):
+    test_conf_dir = Path(cmk.utils.paths.default_config_dir) / "test"
+    test_conf_dir.mkdir(parents=True, exist_ok=True)
+    test_conf_filepath = test_conf_dir.joinpath("test.conf")
+    with test_conf_filepath.open("w", encoding="utf-8") as f:
+        f.write("testvar = testvalue")
+
+    short_test_conf_filepath = str(
+        Path(test_conf_filepath).relative_to(cmk.utils.paths.default_config_dir))
+    diagnostics_element = diagnostics.CheckmkConfigFilesDiagnosticsElement(
+        [short_test_conf_filepath])
+    tmppath = Path(tmp_path).joinpath("tmp")
+    tmppath.mkdir(parents=True, exist_ok=True)
+    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+
+    assert filepath == tmppath.joinpath("test-test.conf")
+
+    with filepath.open("r", encoding="utf-8") as f:
+        content = f.read()
+
+    assert content == "testvar = testvalue"
+
+
 def test_diagnostics_element_performance_graphs():
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
     assert diagnostics_element.ident == "performance_graphs"
@@ -497,7 +546,8 @@ def test_diagnostics_element_performance_graphs():
         ([['checkmk-server-name']], 200, "", b"", "Verification of PDF document header failed"),
     ])
 def test_diagnostics_element_performance_graphs_error(monkeypatch, tmp_path, _fake_local_connection,
-                                                      host_list, status_code, text, content, error):
+                                                      _collectors, host_list, status_code, text,
+                                                      content, error):
 
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
 
@@ -522,7 +572,7 @@ CONFIG_APACHE_TCP_PORT='5000'""")
     tmppath.mkdir(parents=True, exist_ok=True)
 
     with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-        diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
+        next(diagnostics_element.add_or_get_files(tmppath, _collectors))
         assert error == str(e)
 
     shutil.rmtree(str(automation_dir))
@@ -533,8 +583,8 @@ CONFIG_APACHE_TCP_PORT='5000'""")
     ([['checkmk-server-name']], 200, "", b"%PDF-"),
 ])
 def test_diagnostics_element_performance_graphs_content(monkeypatch, tmp_path,
-                                                        _fake_local_connection, host_list,
-                                                        status_code, text, content):
+                                                        _fake_local_connection, _collectors,
+                                                        host_list, status_code, text, content):
 
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
 
@@ -557,7 +607,7 @@ CONFIG_APACHE_TCP_PORT='5000'""")
 
     tmppath = Path(tmp_path).joinpath("tmp")
     tmppath.mkdir(parents=True, exist_ok=True)
-    filepath = diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
+    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("performance_graphs.pdf")

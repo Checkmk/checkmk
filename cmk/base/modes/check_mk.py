@@ -20,11 +20,12 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
-    DiagnosticsOptionalParameters,
-    OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
+    OPT_CHECKMK_OVERVIEW,
+    OPT_CHECKMK_CONFIG_FILES,
+    DiagnosticsModesParameters,
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
@@ -1774,8 +1775,9 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_create_diagnostics_dump(options: DiagnosticsOptionalParameters) -> None:
-    cmk.base.diagnostics.create_diagnostics_dump(options)
+def mode_create_diagnostics_dump(options: DiagnosticsModesParameters) -> None:
+    cmk.base.diagnostics.create_diagnostics_dump(
+        cmk.utils.diagnostics.deserialize_modes_parameters(options))
 
 
 def _get_diagnostics_dump_sub_options() -> List[Option]:
@@ -1792,6 +1794,12 @@ def _get_diagnostics_dump_sub_options() -> List[Option]:
         Option(
             long_option=OPT_CHECKMK_OVERVIEW,
             short_help="Pack HW/SW inventory node 'Software > Applications > Checkmk'",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_CONFIG_FILES,
+            short_help="Pack configuration files '*.mk' and '*.conf' from etc/check_mk",
+            argument=True,
+            argument_descr="FILE,FILE...",
         ),
     ]
 

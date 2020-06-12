@@ -20,7 +20,7 @@ ADDITIONAL_MYPY_ARGS :=
 	test-integration-docker-debug \
 	test-composition-docker test-composition-docker-debug test-composition \
 	test-format-python test-format-python3 \
-	test-unit-coverage-html \
+	test-shellcheck test-unit-coverage-html \
 	test-pipenv-deps test-bandit
 
 help:
@@ -46,6 +46,7 @@ help:
 	@echo "test-pipenv-deps              - Run pipenv dependency issue test"
 	@echo "test-bandit                   - Run bandit (security) tests"
 	@echo "test-agent-plugin-unit-py%-docker - Run Agent plugin tests in container (py version specific)"
+	@echo "test-shellcheck               - Run shellcheck tests"
 
 prepare-node-modules:
 	$(MAKE) -C .. node_modules/.bin/webpack
@@ -211,6 +212,14 @@ test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
+
+test-shellcheck:
+	@CMK_DIR="$(realpath ..)" ; \
+	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
+	shellcheck \
+		$(SHELLCHECK_OUTPUT_ARGS) \
+		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
+		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
 clean:
 	rm -rf .mypy_cache

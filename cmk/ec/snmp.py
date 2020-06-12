@@ -36,8 +36,8 @@ class SNMPTrapEngine:
     class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
-    def __init__(self, settings, config, logger, callback):
-        # type: (Settings, Dict[str, Any], Logger, Callable) -> None
+    def __init__(self, settings: Settings, config: Dict[str, Any], logger: Logger,
+                 callback: Callable) -> None:
         super().__init__()
         self._logger = logger
         if settings.options.snmptrap_udp is None:
@@ -57,8 +57,7 @@ class SNMPTrapEngine:
                                                    "rfc3412.prepareDataElements:sm-failure")
 
     @staticmethod
-    def _auth_proto_for(proto_name):
-        # type: (str) -> Tuple[int, ...]
+    def _auth_proto_for(proto_name: str) -> Tuple[int, ...]:
         if proto_name == "md5":
             return pysnmp.entity.config.usmHMACMD5AuthProtocol
         if proto_name == "sha":
@@ -66,16 +65,14 @@ class SNMPTrapEngine:
         raise Exception("Invalid SNMP auth protocol: %s" % proto_name)
 
     @staticmethod
-    def _priv_proto_for(proto_name):
-        # type: (str) -> Tuple[int, ...]
+    def _priv_proto_for(proto_name: str) -> Tuple[int, ...]:
         if proto_name == "DES":
             return pysnmp.entity.config.usmDESPrivProtocol
         if proto_name == "AES":
             return pysnmp.entity.config.usmAesCfb128Protocol
         raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
 
-    def _initialize_snmp_credentials(self, config):
-        # type: (Dict[str, Any]) -> None
+    def _initialize_snmp_credentials(self, config: Dict[str, Any]) -> None:
         user_num = 0
         for spec in config["snmp_credentials"]:
             credentials = spec["credentials"]
@@ -125,8 +122,7 @@ class SNMPTrapEngine:
                     priv_key,
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
 
-    def process_snmptrap(self, message, sender_address):
-        # type: (bytes, Any) -> None
+    def process_snmptrap(self, message: bytes, sender_address: Any) -> None:
         """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
         and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
         self._logger.log(VERBOSE, "Trap received from %s:%d. Checking for acceptance now.",
@@ -169,8 +165,7 @@ class SNMPTrapEngine:
 
 
 class SNMPTrapTranslator:
-    def __init__(self, settings, config, logger):
-        # type: (Settings, Dict[str, Any], Logger) -> None
+    def __init__(self, settings: Settings, config: Dict[str, Any], logger: Logger) -> None:
         super().__init__()
         self._logger = logger
         translation_config = config["translate_snmptraps"]
@@ -190,8 +185,8 @@ class SNMPTrapTranslator:
             raise Exception("invalid SNMP trap translation")
 
     @staticmethod
-    def _construct_resolver(logger, mibs_dir, load_texts):
-        # type: (Logger, Path, bool) -> Optional[pysnmp.smi.view.MibViewController]
+    def _construct_resolver(logger: Logger, mibs_dir: Path,
+                            load_texts: bool) -> Optional[pysnmp.smi.view.MibViewController]:
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 

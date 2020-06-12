@@ -31,8 +31,8 @@ from .settings import Settings
 #   '----------------------------------------------------------------------'
 
 
-def event_has_opened(history, settings, config, logger, event_server, event_columns, rule, event):
-    # type: (Any, Settings, Dict[str, Any], Logger, Any, Any, Any, Any) -> None
+def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
+                     event_server: Any, event_columns: Any, rule: Any, event: Any) -> None:
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -57,9 +57,9 @@ def event_has_opened(history, settings, config, logger, event_server, event_colu
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(history, settings, config, logger, event_server, event_columns, actions, event,
-                     is_cancelling):
-    # type: (Any, Settings, Dict[str, Any], Logger, Any, Any, Any, Any, bool) -> None
+def do_event_actions(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
+                     event_server: Any, event_columns: Any, actions: Any, event: Any,
+                     is_cancelling: bool) -> None:
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(event_server, logger, event, is_cancelling=is_cancelling)
@@ -78,8 +78,8 @@ def do_event_actions(history, settings, config, logger, event_server, event_colu
 # not hang for more than a couple of ms.
 
 
-def do_event_action(history, settings, config, logger, event_columns, action, event, user):
-    # type: (Any, Settings, Dict[str, Any], Logger, Any, Any, Any, Any) -> None
+def do_event_action(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
+                    event_columns: Any, action: Any, event: Any, user: Any) -> None:
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
         return
@@ -112,21 +112,19 @@ def do_event_action(history, settings, config, logger, event_columns, action, ev
         logger.exception("Error during execution of action %s" % action["id"])
 
 
-def _escape_null_bytes(s):
-    # type: (Any) -> Any
+def _escape_null_bytes(s: Any) -> Any:
     return s.replace("\000", "\\000")
 
 
-def _get_quoted_event(event, logger):
-    # type: (Any, Logger) -> Any
-    new_event = {}  # type: Dict[str, Any]
+def _get_quoted_event(event: Any, logger: Logger) -> Any:
+    new_event: Dict[str, Any] = {}
     fields_to_quote = ["application", "match_groups", "text", "comment", "contact"]
     for key, value in event.items():
         if key not in fields_to_quote:
             new_event[key] = value
         else:
             try:
-                new_value = None  # type: Any
+                new_value: Any = None
                 if isinstance(value, list):
                     new_value = list(map(quote_shell_string, value))
                 elif isinstance(value, tuple):
@@ -142,20 +140,17 @@ def _get_quoted_event(event, logger):
     return new_event
 
 
-def _substitute_event_tags(event_columns, text, event):
-    # type: (Any, Any, Any) -> Any
+def _substitute_event_tags(event_columns: Any, text: Any, event: Any) -> Any:
     for key, value in _get_event_tags(event_columns, event).items():
         text = text.replace('$%s$' % key.upper(), value)
     return text
 
 
-def quote_shell_string(s):
-    # type: (Any) -> Any
+def quote_shell_string(s: Any) -> Any:
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
-def _send_email(config, to, subject, body, logger):
-    # type: (Dict[str, Any], Any, Any, Any, Logger) -> bool
+def _send_email(config: Dict[str, Any], to: Any, subject: Any, body: Any, logger: Logger) -> bool:
     command_utf8 = [
         "mail", "-S", "sendcharsets=utf-8", "-s",
         subject.encode("utf-8"),
@@ -189,8 +184,7 @@ def _send_email(config, to, subject, body, logger):
     return True
 
 
-def _execute_script(event_columns, body, event, logger):
-    # type: (Any, Any, Any, Any) -> None
+def _execute_script(event_columns: Any, body: Any, event: Any, logger: Any) -> None:
     script_env = os.environ.copy()
 
     for key, value in _get_event_tags(event_columns, event).items():
@@ -217,8 +211,7 @@ def _execute_script(event_columns, body, event, logger):
         logger.info('  Output: \'%s\'' % stdout)
 
 
-def _get_event_tags(event_columns, event):
-    # type: (Any, Any) -> Dict[Any, Any]
+def _get_event_tags(event_columns: Any, event: Any) -> Dict[Any, Any]:
     substs = [
         ("match_group_%d" % (nr + 1), g) for (nr, g) in enumerate(event.get("match_groups", ()))
     ]
@@ -227,8 +220,7 @@ def _get_event_tags(event_columns, event):
         varname = key[6:]
         substs.append((varname, event.get(varname, defaultvalue)))
 
-    def to_string(v):
-        # type: (Any) -> str
+    def to_string(v: Any) -> str:
         if isinstance(v, str):
             return v
         return "%s" % v
@@ -267,8 +259,11 @@ def _get_event_tags(event_columns, event):
 
 # This function creates a Check_MK Notification for a locally running Check_MK.
 # We simulate a *service* notification.
-def do_notify(event_server, logger, event, username=None, is_cancelling=False):
-    # type: (Any, Logger, Any, bool, bool) -> None
+def do_notify(event_server: Any,
+              logger: Logger,
+              event: Any,
+              username: bool = None,
+              is_cancelling: bool = False) -> None:
     if _core_has_notifications_disabled(event, logger):
         return
 
@@ -304,16 +299,15 @@ def do_notify(event_server, logger, event, username=None, is_cancelling=False):
         logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 
 
-def _create_notification_context(event_server, event, username, is_cancelling, logger):
-    # type: (Any, Any, Any, bool, Logger) -> Any
+def _create_notification_context(event_server: Any, event: Any, username: Any, is_cancelling: bool,
+                                 logger: Logger) -> Any:
     context = _base_notification_context(event, username, is_cancelling)
     _add_infos_from_monitoring_host(event_server, context, event)  # involves Livestatus query
     _add_contacts_from_rule(context, event, logger)
     return context
 
 
-def _base_notification_context(event, username, is_cancelling):
-    # type: (Any, Any, bool) -> Dict[str, Any]
+def _base_notification_context(event: Any, username: Any, is_cancelling: bool) -> Dict[str, Any]:
     return {
         "WHAT": "SERVICE",
         "CONTACTNAME": "check-mk-notify",
@@ -364,10 +358,8 @@ def _base_notification_context(event, username, is_cancelling):
 
 # "CONTACTS" is allowed to be missing in the context, cmk --notify will
 # add the fallback contacts then.
-def _add_infos_from_monitoring_host(event_server, context, event):
-    # type: (Any, Any, Any) -> None
-    def _add_artificial_context_info():
-        # type: () -> None
+def _add_infos_from_monitoring_host(event_server: Any, context: Any, event: Any) -> None:
+    def _add_artificial_context_info() -> None:
         context.update({
             "HOSTNAME": event["host"],
             "HOSTALIAS": event["host"],
@@ -405,8 +397,7 @@ def _add_infos_from_monitoring_host(event_server, context, event):
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"
 
 
-def _add_contacts_from_rule(context, event, logger):
-    # type: (Any, Any, Logger) -> None
+def _add_contacts_from_rule(context: Any, event: Any, logger: Logger) -> None:
     # Add contact information from the rule, but only if the
     # host is unknown or if contact groups in rule have precedence
 
@@ -418,8 +409,7 @@ def _add_contacts_from_rule(context, event, logger):
         _add_contact_information_to_context(context, event["contact_groups"], logger)
 
 
-def _add_contact_information_to_context(context, contact_groups, logger):
-    # type: (Any, Any, Any) -> None
+def _add_contact_information_to_context(context: Any, contact_groups: Any, logger: Any) -> None:
     contact_names = _rbn_groups_contacts(contact_groups)
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
@@ -431,8 +421,7 @@ def _add_contact_information_to_context(context, contact_groups, logger):
 # to move all this Check_MK-specific livestatus query stuff to a helper
 # module in lib some day.
 # NOTE: Typing chaos ahead!
-def _rbn_groups_contacts(groups):
-    # type: (Any) -> Any
+def _rbn_groups_contacts(groups: Any) -> Any:
     if not groups:
         return {}
     query = "GET contactgroups\nColumns: members\n"
@@ -441,7 +430,7 @@ def _rbn_groups_contacts(groups):
     query += "Or: %d\n" % len(groups)
 
     try:
-        contacts = set()  # type: Set[str]
+        contacts: Set[str] = set()
         for contact_list in livestatus.LocalConnection().query_column(query):
             contacts.update(contact_list)
         return contacts
@@ -455,8 +444,7 @@ def _rbn_groups_contacts(groups):
         return []
 
 
-def _core_has_notifications_disabled(event, logger):
-    # type: (Any, Logger) -> bool
+def _core_has_notifications_disabled(event: Any, logger: Logger) -> bool:
     try:
         notifications_enabled = livestatus.LocalConnection().query_value(
             "GET status\nColumns: enable_notifications")

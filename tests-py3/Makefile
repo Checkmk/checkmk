@@ -15,6 +15,11 @@ BANDIT := $(PIPENV3) run bandit
 MYPY := $(SCRIPTS)/run-mypy
 ADDITIONAL_MYPY_ARGS :=
 
+# Since the unit tests (that are written for Python 3) are executed with Python 2.6, we need to
+# convert them, just like it is done for the agent plugins (see agents/plugins/Makefile)
+AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
+AGENT_PLUGIN_UNIT_TEST_FILES_PY26 := $(subst agent-plugin-unit,agent-plugin-unit/py26,$(AGENT_PLUGIN_UNIT_TEST_FILES))
+
 .PHONY: clean help prepare-node-modules test-bandit test-composition test-composition-docker \
 	test-composition-docker-debug test-docker test-format-python3 test-format-shell \
 	test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
@@ -44,82 +49,13 @@ help:
 	@echo "test-unit                     - Run unit tests"
 	@echo "test-unit-coverage-html       - Create HTML coverage report for unit tests"
 
-prepare-node-modules:
-	$(MAKE) -C .. node_modules/.bin/webpack
+clean:
+	rm -rf .mypy_cache
 
-test-docker:
-	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
-	$(PYTEST) -T docker docker
-
-test-pylint:
-	$(PYTEST) -T pylint pylint
-
-test-unit:
-	$(PYTEST) -T unit unit
-
-test-unit-coverage-html:
-	$(PYTEST) \
-	    --cov=cmk \
-	    --cov-report=html \
-	    --cov-config=.coveragerc_unit \
-	    --no-cov-on-fail \
-	    -T unit unit
-
-test-mypy3:
-	$(FIND_PYTHON_FILES) 3 | \
-	`: filter out plugins, they are not real modules` \
-	grep -v $$(realpath '../checks') | \
-	grep -v $$(realpath '../inventory') | \
-	if test -d ../enterprise; then \
-	    grep -v $$(realpath '../agents')/bakery; \
-	else \
-	    cat; \
-	fi | xargs -n 1500 $(MYPY) $(ADDITIONAL_MYPY_ARGS)
-
-test-mypy3-raw:
-	$(MAKE) test-mypy3 ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
-
-test-format-python3: ../.style.yapf
-# Explicitly specify --style [FILE] to prevent costly searching in parent directories
-# for each file specified via command line
-#
-# There are some mixed up lines on stdout caused by the --parallel option.
-# Nevertheless, we keep that option to get a big performance boost. GitHub issue
-# opened for this problem: https://github.com/google/yapf/issues/644.
-	@if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES) 3; else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(YAPF) --parallel --style ../.style.yapf --verbose --diff | \
-	grep '^+++ .*(reformatted)$$' | \
-	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
-	exit $${PIPESTATUS[0]}
-
-test-packaging:
-	$(PYTEST) -T packaging packaging
-
-test-gui-crawl: prepare-node-modules
-	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
-
-test-gui-crawl-docker:
-	$(PIPENV3) run scripts/run-dockerized.py "test-gui-crawl"
-
-test-integration: prepare-node-modules
-	CI=true $(PIPENV3) run scripts/run-integration-test.py $(realpath integration)
-
-test-integration-docker:
-	$(PIPENV3) run scripts/run-dockerized.py "test-integration"
-
-test-integration-docker-debug test-composition-docker-debug: prepare-node-modules
-	$(PIPENV3) run scripts/run-dockerized.py debug
-
-test-composition-docker:
-	$(PIPENV3) run scripts/run-dockerized.py "test-composition"
-
-test-composition: prepare-node-modules
-	$(PYTEST) -p no:cov -T composition $(realpath composition)
-
-# Since the unit tests (that are written for Python 3) are executed with Python 2.6, we need to
-# convert them, just like it is done for the agent plugins (see agents/plugins/Makefile)
-AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
-AGENT_PLUGIN_UNIT_TEST_FILES_PY26 := $(subst agent-plugin-unit,agent-plugin-unit/py26,$(AGENT_PLUGIN_UNIT_TEST_FILES))
+bandit.ini:
+	( echo -n -e "[bandit]\ntargets: "; \
+	  $(FIND_PYTHON_FILES) 3 | tr '\n' ',' | sed 's/,$$//'; \
+	  echo ) > bandit.ini
 
 test-agent-plugin-unit-py2.6-docker: $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 
@@ -148,18 +84,77 @@ test-agent-plugin-unit-py%-docker:
 	    $$IMAGE_HASH \
 	    python$* -m pytest --ignore=tests/py26/ "/tests"
 
-test-pipenv-deps:
-	$(PIPENV3) check
-
-bandit.ini:
-	( echo -n -e "[bandit]\ntargets: "; \
-	  $(FIND_PYTHON_FILES) 3 | tr '\n' ',' | sed 's/,$$//'; \
-	  echo ) > bandit.ini
-
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
+
+prepare-node-modules:
+	$(MAKE) -C .. node_modules/.bin/webpack
+
+test-integration-docker-debug test-composition-docker-debug: prepare-node-modules
+	$(PIPENV3) run scripts/run-dockerized.py debug
+
+test-composition-docker:
+	$(PIPENV3) run scripts/run-dockerized.py "test-composition"
+
+test-composition: prepare-node-modules
+	$(PYTEST) -p no:cov -T composition $(realpath composition)
+
+test-docker:
+	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
+	$(PYTEST) -T docker docker
+
+test-format-python3: ../.style.yapf
+# Explicitly specify --style [FILE] to prevent costly searching in parent directories
+# for each file specified via command line
+#
+# There are some mixed up lines on stdout caused by the --parallel option.
+# Nevertheless, we keep that option to get a big performance boost. GitHub issue
+# opened for this problem: https://github.com/google/yapf/issues/644.
+	@if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES) 3; else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(YAPF) --parallel --style ../.style.yapf --verbose --diff | \
+	grep '^+++ .*(reformatted)$$' | \
+	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
+	exit $${PIPESTATUS[0]}
+
+test-format-shell:
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
+
+test-gui-crawl: prepare-node-modules
+	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
+
+test-gui-crawl-docker:
+	$(PIPENV3) run scripts/run-dockerized.py "test-gui-crawl"
+
+test-integration: prepare-node-modules
+	CI=true $(PIPENV3) run scripts/run-integration-test.py $(realpath integration)
+
+test-integration-docker:
+	$(PIPENV3) run scripts/run-dockerized.py "test-integration"
+
+test-mypy3:
+	$(FIND_PYTHON_FILES) 3 | \
+	`: filter out plugins, they are not real modules` \
+	grep -v $$(realpath '../checks') | \
+	grep -v $$(realpath '../inventory') | \
+	if test -d ../enterprise; then \
+	    grep -v $$(realpath '../agents')/bakery; \
+	else \
+	    cat; \
+	fi | xargs -n 1500 $(MYPY) $(ADDITIONAL_MYPY_ARGS)
+
+test-mypy3-raw:
+	$(MAKE) test-mypy3 ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
+
+test-packaging:
+	$(PYTEST) -T packaging packaging
+
+test-pipenv-deps:
+	$(PIPENV3) check
+
+test-pylint:
+	$(PYTEST) -T pylint pylint
 
 test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \
@@ -169,8 +164,13 @@ test-shellcheck:
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
-test-format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
+test-unit:
+	$(PYTEST) -T unit unit
 
-clean:
-	rm -rf .mypy_cache
+test-unit-coverage-html:
+	$(PYTEST) \
+	    --cov=cmk \
+	    --cov-report=html \
+	    --cov-config=.coveragerc_unit \
+	    --no-cov-on-fail \
+	    -T unit unit

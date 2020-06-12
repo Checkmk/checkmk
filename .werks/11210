@@ -1,0 +1,10 @@
+Title: Update AWS EC2 instance type list
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p14
+Date: 1591956747
+Class: fix
+
+Checkmk can now monitor additional types of AWS EC2 instances

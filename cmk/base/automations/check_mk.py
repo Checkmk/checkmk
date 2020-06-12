@@ -1805,6 +1805,7 @@ class AutomationCreateDiagnosticsDump(Automation):
             return {
                 "output": buf.getvalue(),
                 "tarfile_path": str(dump.tarfile_path),
+                "tarfile_created": dump.tarfile_created,
             }
 
 

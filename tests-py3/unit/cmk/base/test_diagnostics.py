@@ -348,17 +348,41 @@ def test_diagnostics_element_checkmk_overview():
         "(Agent plugin mk_inventory needs to be installed)")
 
 
-@pytest.mark.parametrize("host_list, host_tree, error, filepath_result", [
-    ([], None, "No Checkmk server found", False),
-    ([['checkmk-server-name']
-     ], None, "No HW/SW inventory tree of 'checkmk-server-name' found", False),
+@pytest.mark.parametrize("host_list, host_tree, error", [
+    ([], None, "No Checkmk server found"),
+    ([['checkmk-server-name']], None, "No HW/SW inventory tree of 'checkmk-server-name' found"),
     ([['checkmk-server-name']], {
         "hardware": {},
         "networking": {},
         "software": {
             "applications": {},
         },
-    }, "No HW/SW inventory node 'Software > Applications > Checkmk'", False),
+    }, "No HW/SW inventory node 'Software > Applications > Checkmk'"),
+])
+def test_diagnostics_element_checkmk_overview_error(monkeypatch, tmp_path, _fake_local_connection,
+                                                    host_list, host_tree, error):
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
+
+    monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
+
+    if host_tree:
+        # Fake HW/SW inventory tree
+        inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
+        inventory_dir.mkdir(parents=True, exist_ok=True)
+        with inventory_dir.joinpath("checkmk-server-name").open("w") as f:
+            f.write(repr(host_tree))
+
+    tmppath = Path(tmp_path).joinpath("tmp")
+
+    with pytest.raises(diagnostics.DiagnosticsElementError) as e:
+        diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
+        assert error == str(e)
+
+    if host_tree:
+        shutil.rmtree(str(inventory_dir))
+
+
+@pytest.mark.parametrize("host_list, host_tree", [
     ([['checkmk-server-name']], {
         "hardware": {},
         "networking": {},
@@ -392,10 +416,11 @@ def test_diagnostics_element_checkmk_overview():
                 }
             }
         }
-    }, "", True),
+    }),
 ])
 def test_diagnostics_element_checkmk_overview_content(monkeypatch, tmp_path, _fake_local_connection,
-                                                      host_list, host_tree, error, filepath_result):
+                                                      host_list, host_tree):
+
     diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
@@ -410,48 +435,41 @@ def test_diagnostics_element_checkmk_overview_content(monkeypatch, tmp_path, _fa
     tmppath = Path(tmp_path).joinpath("tmp")
     filepath = diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
 
-    if filepath_result:
-        assert isinstance(filepath, Path)
-        assert filepath == tmppath.joinpath("checkmk_overview.json")
+    assert isinstance(filepath, Path)
+    assert filepath == tmppath.joinpath("checkmk_overview.json")
 
-        content = json.loads(filepath.open().read())
+    content = json.loads(filepath.open().read())
 
-        assert content["cluster"] == {
-            'is_cluster': False,
-        }
+    assert content["cluster"] == {
+        'is_cluster': False,
+    }
 
-        assert content["sites"] == [
-            {
-                'autostart': False,
-                'site': 'heute',
-                'used_version': '2020.06.09.cee',
-            },
-        ]
+    assert content["sites"] == [
+        {
+            'autostart': False,
+            'site': 'heute',
+            'used_version': '2020.06.09.cee',
+        },
+    ]
 
-        assert content["versions"] == [
-            {
-                'demo': False,
-                'edition': 'cee',
-                'num_sites': 0,
-                'number': '2020.06.07',
-                'version': '2020.06.07.cee',
-            },
-            {
-                'demo': False,
-                'edition': 'cee',
-                'num_sites': 1,
-                'number': '2020.06.09',
-                'version': '2020.06.09.cee',
-            },
-        ]
+    assert content["versions"] == [
+        {
+            'demo': False,
+            'edition': 'cee',
+            'num_sites': 0,
+            'number': '2020.06.07',
+            'version': '2020.06.07.cee',
+        },
+        {
+            'demo': False,
+            'edition': 'cee',
+            'num_sites': 1,
+            'number': '2020.06.09',
+            'version': '2020.06.09.cee',
+        },
+    ]
 
-    else:
-        assert filepath is None
-
-    assert diagnostics_element.error == error
-
-    if host_tree:
-        shutil.rmtree(str(inventory_dir))
+    shutil.rmtree(str(inventory_dir))
 
 
 def test_diagnostics_element_performance_graphs():
@@ -465,25 +483,59 @@ def test_diagnostics_element_performance_graphs():
 
 
 @pytest.mark.parametrize(
-    "host_list, status_code, text, content, error, filepath_result",
+    "host_list, status_code, text, content, error",
     [
         # no Checkmk server
-        ([], 123, "", b"", "No Checkmk server found", False),
-        ([], 200, "<html>foo bar</html>", b"", "No Checkmk server found", False),
-        ([], 200, "", b"", "No Checkmk server found", False),
-        ([], 200, "", b"%PDF-", "No Checkmk server found", False),
+        ([], 123, "", b"", "No Checkmk server found"),
+        ([], 200, "<html>foo bar</html>", b"", "No Checkmk server found"),
+        ([], 200, "", b"", "No Checkmk server found"),
+        ([], 200, "", b"%PDF-", "No Checkmk server found"),
         # Checkmk server
-        ([['checkmk-server-name']], 123, "", b"", "HTTP error - 123 ()", False),
-        ([['checkmk-server-name']], 200, "<html>foo bar</html>", b"",
-         "Login failed - Invalid automation user or secret", False),
+        ([['checkmk-server-name']], 123, "", b"", "HTTP error - 123 ()"),
         ([['checkmk-server-name']
-         ], 200, "", b"", "Verification of PDF document header failed", False),
-        ([['checkmk-server-name']], 200, "", b"%PDF-", "", True),
+         ], 200, "<html>foo bar</html>", b"", "Login failed - Invalid automation user or secret"),
+        ([['checkmk-server-name']], 200, "", b"", "Verification of PDF document header failed"),
     ])
+def test_diagnostics_element_performance_graphs_error(monkeypatch, tmp_path, _fake_local_connection,
+                                                      host_list, status_code, text, content, error):
+
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
+
+    monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
+
+    FakeResponse = collections.namedtuple("FakeResponse", ["status_code", "text", "content"])
+    monkeypatch.setattr(requests, "post",
+                        lambda *arg, **kwargs: FakeResponse(status_code, text, content))
+
+    automation_dir = Path(cmk.utils.paths.var_dir) / "web" / "automation"
+    automation_dir.mkdir(parents=True, exist_ok=True)
+    with automation_dir.joinpath("automation.secret").open("w") as f:
+        f.write("my-123-password")
+
+    etc_omd_dir = Path(cmk.utils.paths.omd_root) / "etc" / "omd"
+    etc_omd_dir.mkdir(parents=True, exist_ok=True)
+    with etc_omd_dir.joinpath("site.conf").open("w") as f:
+        f.write("""CONFIG_APACHE_TCP_ADDR='127.0.0.1'
+CONFIG_APACHE_TCP_PORT='5000'""")
+
+    tmppath = Path(tmp_path).joinpath("tmp")
+    tmppath.mkdir(parents=True, exist_ok=True)
+
+    with pytest.raises(diagnostics.DiagnosticsElementError) as e:
+        diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
+        assert error == str(e)
+
+    shutil.rmtree(str(automation_dir))
+    shutil.rmtree(str(etc_omd_dir))
+
+
+@pytest.mark.parametrize("host_list, status_code, text, content", [
+    ([['checkmk-server-name']], 200, "", b"%PDF-"),
+])
 def test_diagnostics_element_performance_graphs_content(monkeypatch, tmp_path,
                                                         _fake_local_connection, host_list,
-                                                        status_code, text, content, error,
-                                                        filepath_result):
+                                                        status_code, text, content):
+
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
@@ -507,12 +559,8 @@ CONFIG_APACHE_TCP_PORT='5000'""")
     tmppath.mkdir(parents=True, exist_ok=True)
     filepath = diagnostics_element.add_or_get_file(tmppath, diagnostics.Collectors())
 
-    if filepath_result:
-        assert isinstance(filepath, Path)
-        assert filepath == tmppath.joinpath("performance_graphs.pdf")
-    else:
-        assert filepath is None
-    assert diagnostics_element.error == error
+    assert isinstance(filepath, Path)
+    assert filepath == tmppath.joinpath("performance_graphs.pdf")
 
     shutil.rmtree(str(automation_dir))
     shutil.rmtree(str(etc_omd_dir))

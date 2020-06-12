@@ -216,14 +216,18 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
         job_interface.send_progress_update(result["output"])
 
-        tarfile_path = result['tarfile_path']
-        download_url = html.makeuri_contextless([("site", site),
-                                                 ("tarfile_name", str(Path(tarfile_path)))],
-                                                "download_diagnostics_dump.py")
-        button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
+        if result["tarfile_created"]:
+            tarfile_path = result['tarfile_path']
+            download_url = html.makeuri_contextless([("site", site),
+                                                     ("tarfile_name", str(Path(tarfile_path)))],
+                                                    "download_diagnostics_dump.py")
+            button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
 
-        job_interface.send_progress_update(_("Dump file: %s") % tarfile_path)
-        job_interface.send_result_message(_("%s Creating dump file successfully") % button)
+            job_interface.send_progress_update(_("Dump file: %s") % tarfile_path)
+            job_interface.send_result_message(_("%s Creating dump file successfully") % button)
+
+        else:
+            job_interface.send_result_message(_("Creating dump file failed"))
 
 
 @page_registry.register_page("download_diagnostics_dump")

@@ -23,9 +23,9 @@ def section_success(text):
 def section_error(text, verbose=True):
     # type: (str, bool) -> None
     if verbose:
-        console.verbose("%sERROR%s - %s\n", tty.red, tty.normal, text)
+        console.verbose("%s - %s\n", tty.error, text)
     else:
-        console.info("%sERROR%s - %s\n", tty.red, tty.normal, text)
+        console.info("%s - %s\n", tty.error, text)
 
 
 def section_step(text, add_info="", verbose=True):

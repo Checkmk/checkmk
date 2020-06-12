@@ -40,6 +40,9 @@ from cmk.utils.diagnostics import (
 
 import cmk.base.section as section
 
+DiagnosticsElementJSONResult = Dict[str, Any]
+DiagnosticsElementFilepath = Path
+
 SUFFIX = ".tar.gz"
 
 
@@ -47,8 +50,12 @@ def create_diagnostics_dump(parameters):
     # type: (Optional[DiagnosticsOptionalParameters]) -> None
     dump = DiagnosticsDump(parameters)
     dump.create()
-    section.section_step("Created diagnostics dump", verbose=False)
-    console.info("%s\n", _format_filepath(dump.tarfile_path))
+
+    section.section_step("Creating diagnostics dump", verbose=False)
+    if dump.tarfile_created:
+        console.info("%s\n", _format_filepath(dump.tarfile_path))
+    else:
+        console.info("%s%s\n", _GAP, "No dump")
 
 
 #   .--format helper-------------------------------------------------------.
@@ -83,6 +90,10 @@ def _format_description(description):
     )
 
 
+def _format_error(error):
+    return "%s%s - %s" % (2 * _GAP, tty.error, error)
+
+
 #.
 #   .--dump----------------------------------------------------------------.
 #   |                         _                                            |
@@ -107,6 +118,7 @@ class DiagnosticsDump:
         dump_folder = cmk.utils.paths.diagnostics_dir
         self.dump_folder = dump_folder
         self.tarfile_path = dump_folder.joinpath(str(uuid.uuid4())).with_suffix(SUFFIX)
+        self.tarfile_created = False
 
     def _get_fixed_elements(self):
         # type: () -> List[ABCDiagnosticsElement]
@@ -152,6 +164,7 @@ class DiagnosticsDump:
              tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder:
             for filepath in self._get_filepaths(Path(tmp_dump_folder)):
                 tar.add(str(filepath), arcname=filepath.name)
+                self.tarfile_created = True
 
     def _get_filepaths(self, tmp_dump_folder):
         # type: (Path) -> List[Path]
@@ -163,21 +176,26 @@ class DiagnosticsDump:
         for element in self.elements:
             console.info("%s\n", _format_title(element.title))
             try:
-                filepath = element.add_or_get_file(tmp_dump_folder, collectors)
-            except Exception:
-                section.section_error(traceback.format_exc(), verbose=False)
+                filepaths.append(element.add_or_get_file(tmp_dump_folder, collectors))
+
+            except DiagnosticsElementError as e:
+                console.info("%s\n", _format_error(str(e)))
                 continue
 
-            if filepath is None:
-                section.section_error(element.error, verbose=False)
+            except Exception:
+                console.info("%s\n", _format_error(traceback.format_exc()))
                 continue
 
             console.info("%s\n", _format_description(element.description))
-            filepaths.append(filepath)
+
         return filepaths
 
     def _cleanup_dump_folder(self):
         # type: () -> None
+        if not self.tarfile_created:
+            # Remove empty tarfile path
+            self._remove_file(self.tarfile_path)
+
         dumps = sorted(
             [(dump.stat().st_mtime, dump) for dump in self.dump_folder.glob("*%s" % SUFFIX)],
             key=lambda t: t[0])[:-self._keep_num_dumps]
@@ -270,14 +288,11 @@ class CheckmkServerNameCollector(ABCCollector):
 #   '----------------------------------------------------------------------'
 
 
-class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
-    def __init__(self):
-        # Set an informative error message if an error occurs during
-        # collecting information in ABCDiagnosticsElement.add_or_get_file.
-        # In this case the filepath should be 'None' and this message is
-        # shown on CL output.
-        self.error = ""
+class DiagnosticsElementError(Exception):
+    pass
 
+
+class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -295,25 +310,24 @@ class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def add_or_get_file(self, tmp_dump_folder, collectors):
-        # type: (Path, Collectors) -> Optional[Path]
+        # type: (Path, Collectors) -> DiagnosticsElementFilepath
         raise NotImplementedError()
 
 
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
     def add_or_get_file(self, tmp_dump_folder, collectors):
-        # type: (Path, Collectors) -> Optional[Path]
-        filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".json")
+        # type: (Path, Collectors) -> DiagnosticsElementFilepath
         infos = self._collect_infos(collectors)
         if not infos:
-            if not self.error:
-                self.error = "No information"
-            return None
+            raise DiagnosticsElementError("No information")
+
+        filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".json")
         store.save_text_to_file(filepath, json.dumps(infos))
         return filepath
 
     @abc.abstractmethod
     def _collect_infos(self, collectors):
-        # type: (Collectors) -> Dict[str, Any]
+        # type: (Collectors) -> DiagnosticsElementJSONResult
         raise NotImplementedError()
 
 
@@ -338,7 +352,7 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                  "Python version and paths, Architecture")
 
     def _collect_infos(self, collectors):
-        # type: (Collectors) -> Dict[str, Any]
+        # type: (Collectors) -> DiagnosticsElementJSONResult
         version_infos = cmk_version.get_general_version_infos()
         version_infos["arch"] = platform.machine()
         return version_infos
@@ -362,7 +376,7 @@ class LocalFilesDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                  "This also includes information about installed MKPs.")
 
     def _collect_infos(self, collectors):
-        # type: (Collectors) -> Dict[str, Any]
+        # type: (Collectors) -> DiagnosticsElementJSONResult
         return packaging.get_all_package_infos()
 
 
@@ -386,7 +400,7 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                  "NSCA mode, TMP filesystem mode")
 
     def _collect_infos(self, collectors):
-        # type: (Collectors) -> site.OMDConfig
+        # type: (Collectors) -> DiagnosticsElementJSONResult
         return collectors.get_omd_config()
 
 
@@ -411,22 +425,21 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                  "(Agent plugin mk_inventory needs to be installed)")
 
     def _collect_infos(self, collectors):
-        # type: (Collectors) -> Dict[str, Any]
+        # type: (Collectors) -> DiagnosticsElementJSONResult
         checkmk_server_name = collectors.get_checkmk_server_name()
         if checkmk_server_name is None:
-            self.error = "No Checkmk server found"
-            return {}
+            raise DiagnosticsElementError("No Checkmk server found")
 
         filepath = Path(cmk.utils.paths.inventory_output_dir + "/" + checkmk_server_name)
         if not filepath.exists():
-            self.error = "No HW/SW inventory tree of '%s' found" % checkmk_server_name
-            return {}
+            raise DiagnosticsElementError("No HW/SW inventory tree of '%s' found" %
+                                          checkmk_server_name)
 
         tree = structured_data.StructuredDataTree().load_from(filepath)
         node = tree.get_sub_container(["software", "applications", "check_mk"])
         if node is None:
-            self.error = "No HW/SW inventory node 'Software > Applications > Checkmk'"
-            return {}
+            raise DiagnosticsElementError(
+                "No HW/SW inventory node 'Software > Applications > Checkmk'")
         return node.get_raw_tree()
 
 
@@ -452,27 +465,24 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
                  "25 hours and 35 days")
 
     def add_or_get_file(self, tmp_dump_folder, collectors):
-        # type: (Path, Collectors) -> Optional[Path]
+        # type: (Path, Collectors) -> DiagnosticsElementFilepath
         checkmk_server_name = collectors.get_checkmk_server_name()
         if checkmk_server_name is None:
-            self.error = "No Checkmk server found"
-            return None
+            raise DiagnosticsElementError("No Checkmk server found")
 
         response = self._get_response(checkmk_server_name, collectors)
 
         if response.status_code != 200:
-            self.error = "HTTP error - %d (%s)" % (response.status_code, response.text)
-            return None
+            raise DiagnosticsElementError("HTTP error - %d (%s)" %
+                                          (response.status_code, response.text))
 
         if "<html>" in response.text.lower():
-            self.error = "Login failed - Invalid automation user or secret"
-            return None
+            raise DiagnosticsElementError("Login failed - Invalid automation user or secret")
 
         # Verify if it's a PDF document: The header must begin with
         # "%PDF-" (hex: "25 50 44 46 2d")
         if response.content[:5].hex() != "255044462d":
-            self.error = "Verification of PDF document header failed"
-            return None
+            raise DiagnosticsElementError("Verification of PDF document header failed")
 
         filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".pdf")
         with filepath.open("wb") as f:

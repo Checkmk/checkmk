@@ -40,17 +40,17 @@ def main(raw_args):
     with tempfile.TemporaryDirectory(prefix="cmk-run-dockerized-") as tmpdir:
         tmp_path = Path(tmpdir)
 
-        distro_name = os.environ.get("DISTRO", "ubuntu-19.04")
-        docker_tag = os.environ.get("DOCKER_TAG", "%s-latest" % current_base_branch_name())
-        version_spec = os.environ.get("VERSION", CMKVersion.GIT)
-        edition = os.environ.get("EDITION", CMKVersion.CEE)
-        branch = os.environ.get("BRANCH", current_base_branch_name())
+        distro_name = _os_environ_get("DISTRO", "ubuntu-19.04")
+        docker_tag = _os_environ_get("DOCKER_TAG", "%s-latest" % current_base_branch_name())
+        version_spec = _os_environ_get("VERSION", CMKVersion.GIT)
+        edition = _os_environ_get("EDITION", CMKVersion.CEE)
+        branch = _os_environ_get("BRANCH", current_base_branch_name())
 
         version = CMKVersion(version_spec, edition, branch)
         logger.info("Version: %s (%s), Edition: %s, Branch: %s", version.version,
                     version.version_spec, edition, branch)
 
-        result_path = Path(os.environ.get("RESULT_PATH", tmp_path.joinpath("results")))
+        result_path = Path(_os_environ_get("RESULT_PATH", tmp_path.joinpath("results")))
         result_path.mkdir(parents=True, exist_ok=True)
         logger.info("Prepared result path: %s", result_path)
 
@@ -62,6 +62,15 @@ def main(raw_args):
             result_path=result_path,
             interactive=args.make_target == "debug",
         )
+
+
+def _os_environ_get(key: str, default: str) -> str:
+    result = os.environ.get(key, default)
+    if key in os.environ:
+        logger.info('environment contains "%s" => "%s"', key, result)
+    else:
+        logger.info('environment does not contain "%s", using default "%s"', key, result)
+    return result
 
 
 def _parse_arguments(args):

@@ -105,15 +105,6 @@ node (NODE) {
             TEXT_ON_SKIP: ''
          )
 
-         gerrit_stages.run(
-            NAME: 'Shell Unit Tests',
-            CONDITION: true,
-            DIR: 'tests',
-            ENV_VARS: [],
-            COMMAND: "make test-unit-sh &> ${RESULTS}/shell-unit.txt",
-            TEXT_ON_SKIP: ''
-         )
-
          PYTHON_VERSIONS.each { PYTHON_VERSION ->
             gerrit_stages.run(
                NAME: 'Agent Plugin Unit Tests ' + PYTHON_VERSION,

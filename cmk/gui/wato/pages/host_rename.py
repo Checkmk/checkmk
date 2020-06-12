@@ -15,7 +15,6 @@ from cmk.utils.regex import regex
 import cmk.utils.store as store
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb

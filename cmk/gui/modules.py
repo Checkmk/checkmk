@@ -47,29 +47,26 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module
 
 # TODO: Both kept for compatibility with old plugins. Drop this one day
-pagehandlers = {}  # type: Dict[Any, Any]
+pagehandlers: Dict[Any, Any] = {}
 # Modules to be loaded within the application by default. These
 # modules are loaded on application initialization. The module
 # function load_plugins() is called for all these modules to
 # initialize them.
-_legacy_modules = []  # type: List[ModuleType]
+_legacy_modules: List[ModuleType] = []
 
 
-def register_handlers(handlers):
-    # type: (Dict) -> None
+def register_handlers(handlers: Dict) -> None:
     pagehandlers.update(handlers)
 
 
-def _imports():
-    # type: () -> Iterator[str]
+def _imports() -> Iterator[str]:
     """Returns a list of names of all currently imported python modules"""
     for val in globals().values():
         if isinstance(val, ModuleType):
             yield val.__name__
 
 
-def init_modules():
-    # type: () -> None
+def init_modules() -> None:
     """Loads all modules needed into memory and performs global initializations for
     each module, when it needs some. These initializations should be fast ones."""
     global _legacy_modules
@@ -88,8 +85,7 @@ def init_modules():
 g_all_modules_loaded = False
 
 
-def load_all_plugins(only_modules=None):
-    # type: (Optional[List[str]]) -> None
+def load_all_plugins(only_modules: Optional[List[str]] = None) -> None:
     """Call the load_plugins() function in all modules"""
     global g_all_modules_loaded
     # Initially, we have to load all modules, regardless of any optimization.
@@ -113,8 +109,7 @@ def load_all_plugins(only_modules=None):
     g_all_modules_loaded = True
 
 
-def _cmk_gui_top_level_modules():
-    # type: () -> List[ModuleType]
+def _cmk_gui_top_level_modules() -> List[ModuleType]:
     return [
         module  #
         for name, module in sys.modules.items()
@@ -128,8 +123,7 @@ def _cmk_gui_top_level_modules():
     ]
 
 
-def _find_local_web_plugins():
-    # type: () -> Iterator[str]
+def _find_local_web_plugins() -> Iterator[str]:
     basedir = str(cmk.utils.paths.local_web_dir) + "/plugins/"
 
     try:
@@ -151,8 +145,7 @@ def _find_local_web_plugins():
 _last_web_plugins_update = 0.0
 
 
-def _local_web_plugins_have_changed():
-    # type: () -> bool
+def _local_web_plugins_have_changed() -> bool:
     global _last_web_plugins_update
 
     if 'local_web_plugins_have_changed' in g:

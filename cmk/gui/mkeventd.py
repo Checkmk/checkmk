@@ -33,18 +33,15 @@ from cmk.gui.permissions import (
 from cmk.gui.valuespec import DropdownChoices
 
 
-def _socket_path():
-    # type: () -> Path
+def _socket_path() -> Path:
     return Path(cmk.utils.paths.omd_root, "tmp", "run", "mkeventd", "status")
 
 
-def mib_upload_dir():
-    # type: () -> Path
+def mib_upload_dir() -> Path:
     return cmk.utils.paths.local_mib_dir
 
 
-def mib_dirs():
-    # type: () -> List[Tuple[Path, str]]
+def mib_dirs() -> List[Tuple[Path, str]]:
     # ASN1 MIB source directory candidates. Non existing dirs are ok.
     return [
         (mib_upload_dir(), _('Custom MIBs')),
@@ -53,7 +50,7 @@ def mib_dirs():
     ]
 
 
-syslog_priorities = [
+syslog_priorities: DropdownChoices = [
     (0, "emerg"),
     (1, "alert"),
     (2, "crit"),
@@ -62,9 +59,9 @@ syslog_priorities = [
     (5, "notice"),
     (6, "info"),
     (7, "debug"),
-]  # type: DropdownChoices
+]
 
-syslog_facilities = [
+syslog_facilities: DropdownChoices = [
     (0, "kern"),
     (1, "user"),
     (2, "mail"),
@@ -90,7 +87,7 @@ syslog_facilities = [
     (22, "local6"),
     (23, "local7"),
     (31, "snmptrap"),
-]  # type: DropdownChoices
+]
 
 phase_names = {
     'counting': _("counting"),
@@ -163,8 +160,7 @@ def eventd_configuration():
     return cfg
 
 
-def daemon_running():
-    # type: () -> bool
+def daemon_running() -> bool:
     return _socket_path().exists()
 
 
@@ -230,8 +226,9 @@ def query_ec_directly(query):
             _("Cannot connect to event daemon via %s: %s") % (_socket_path(), e))
 
 
-def execute_command(name, args=None, site=None):
-    # type: (str, Optional[List[str]], Optional[SiteId]) -> None
+def execute_command(name: str,
+                    args: Optional[List[str]] = None,
+                    site: Optional[SiteId] = None) -> None:
     if args:
         formated_args = ";" + ";".join(args)
     else:
@@ -260,7 +257,7 @@ def get_total_stats(only_sites):
 
     # First simply add rates. Times must then be averaged
     # weighted by message rate or connect rate
-    total_stats = {}  # type: Dict[str, float]
+    total_stats: Dict[str, float] = {}
     for row in stats_per_site:
         for key, value in row.items():
             if key.endswith("rate"):

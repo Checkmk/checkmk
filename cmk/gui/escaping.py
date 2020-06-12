@@ -35,8 +35,7 @@ _A_HREF = re.compile(r'&lt;a href=((?:&quot;|&#x27;).*?(?:&quot;|&#x27;))&gt;')
 
 
 # TODO: Cleanup the accepted types!
-def escape_attribute(value):
-    # type: (EscapableEntity) -> str
+def escape_attribute(value: EscapableEntity) -> str:
     """Escape HTML attributes.
 
     For example: replace '"' with '&quot;', '<' with '&lt;'.
@@ -73,8 +72,7 @@ def escape_attribute(value):
     return html_escape(u"%s" % value, quote=True)  # TODO: Not in the signature!
 
 
-def unescape_attributes(value):
-    # type: (str) -> str
+def unescape_attributes(value: str) -> str:
     # In python3 use html.unescape
     return ensure_str(value  #
                       .replace("&amp;", "&")  #
@@ -83,8 +81,7 @@ def unescape_attributes(value):
                       .replace("&gt;", ">"))
 
 
-def escape_text(text):
-    # type: (EscapableEntity) -> str
+def escape_text(text: EscapableEntity) -> str:
     """Escape HTML text
 
     We only strip some tags and allow some simple tags
@@ -118,8 +115,7 @@ def escape_text(text):
     return text.replace(u"&amp;nbsp;", u"&nbsp;")
 
 
-def strip_scripts(ht):
-    # type: (str) -> str
+def strip_scripts(ht: str) -> str:
     """Strip script tags from text.
 
     This function does not handle all the possible edge cases. Beware.
@@ -157,8 +153,7 @@ def strip_scripts(ht):
     return ht
 
 
-def strip_tags(ht):
-    # type: (EscapableEntity) -> str
+def strip_tags(ht: EscapableEntity) -> str:
     """Strip all HTML tags from a text.
 
     Args:

@@ -10,7 +10,7 @@
 from functools import partial
 import logging
 
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from werkzeug.local import LocalProxy, LocalStack
 
@@ -19,7 +19,6 @@ from werkzeug.local import LocalProxy, LocalStack
 # Cyclical import
 
 if TYPE_CHECKING:
-    from typing import Any
     from cmk.gui import htmllib, http, config
 
 _sentinel = object()
@@ -71,7 +70,7 @@ class AppContext:
 
 
 current_app = LocalProxy(partial(_lookup_app_object, "app"))
-g = LocalProxy(partial(_lookup_app_object, "g"))  # type: Any
+g: Any = LocalProxy(partial(_lookup_app_object, "g"))
 
 ######################################################################
 # TODO: This should live somewhere else...
@@ -161,7 +160,7 @@ local = request_local_attr()  # None as name will get the whole object.
 # LocalProxy is meant as a transparent proxy, so we leave it out to de-confuse
 # mypy. LocalProxy uses a lot of reflection magic, which can't be understood by
 # tools in general.
-user = request_local_attr('user')  # type: config.LoggedInUser
-request = request_local_attr('request')  # type: http.Request
+user: 'config.LoggedInUser' = request_local_attr('user')
+request: 'http.Request' = request_local_attr('request')
 
-html = request_local_attr('html')  # type: htmllib.html
+html: 'htmllib.html' = request_local_attr('html')

@@ -23,17 +23,14 @@ AjaxPageResult = Dict[str, Any]
 class Page(metaclass=abc.ABCMeta):
     #TODO: Use when we are using python3 abc.abstractmethod
     @classmethod
-    def ident(cls):
-        # type: () -> str
+    def ident(cls) -> str:
         raise NotImplementedError()
 
-    def handle_page(self):
-        # type: () -> None
+    def handle_page(self) -> None:
         self.page()
 
     @abc.abstractmethod
-    def page(self):
-        # type: () -> PageResult
+    def page(self) -> PageResult:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
@@ -45,23 +42,19 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
         super(AjaxPage, self).__init__()
         self._from_vars()
 
-    def _from_vars(self):
-        # type: () -> None
+    def _from_vars(self) -> None:
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
 
-    def webapi_request(self):
-        # type: () -> Dict[str, str]
+    def webapi_request(self) -> Dict[str, str]:
         return html.get_request()
 
     @abc.abstractmethod
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
-    def handle_page(self):
-        # type: () -> None
+    def handle_page(self) -> None:
         """The page handler, called by the page registry"""
         html.set_output_format("json")
         try:
@@ -80,18 +73,14 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
 
 
 class PageRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[Page]
+    def plugin_base_class(self) -> Type[Page]:
         return Page
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[Page]) -> str
+    def plugin_name(self, plugin_class: Type[Page]) -> str:
         return plugin_class.ident()
 
-    def register_page(self, path):
-        # type: (str) -> Callable[[Type[Page]], Type[Page]]
-        def wrap(plugin_class):
-            # type: (Type[Page]) -> Type[Page]
+    def register_page(self, path: str) -> Callable[[Type[Page]], Type[Page]]:
+        def wrap(plugin_class: Type[Page]) -> Type[Page]:
             if not inspect.isclass(plugin_class):
                 raise NotImplementedError()
 
@@ -110,8 +99,7 @@ page_registry = PageRegistry()
 
 # TODO: Refactor all call sites to sub classes of Page() and change the
 # registration to page_registry.register("path")
-def register(path):
-    # type: (str) -> Callable[[PageHandlerFunc], PageHandlerFunc]
+def register(path: str) -> Callable[[PageHandlerFunc], PageHandlerFunc]:
     """Register a function to be called when the given URL is called.
 
     In case you need to register some callable like staticmethods or
@@ -120,8 +108,7 @@ def register(path):
 
     It is essentially a decorator that calls register_page_handler().
     """
-    def wrap(wrapped_callable):
-        # type: (PageHandlerFunc) -> PageHandlerFunc
+    def wrap(wrapped_callable: PageHandlerFunc) -> PageHandlerFunc:
         cls_name = "PageClass%s" % path.title().replace(":", "")
         LegacyPageClass = type(cls_name, (Page,), {
             "_wrapped_callable": (wrapped_callable,),
@@ -135,21 +122,20 @@ def register(path):
 
 
 # TODO: replace all call sites by directly calling page_registry.register_page("path")
-def register_page_handler(path, page_func):
-    # type: (str, PageHandlerFunc) -> PageHandlerFunc
+def register_page_handler(path: str, page_func: PageHandlerFunc) -> PageHandlerFunc:
     """Register a function to be called when the given URL is called."""
     wrap = register(path)
     return wrap(page_func)
 
 
-def get_page_handler(name, dflt=None):
-    # type: (str, Optional[PageHandlerFunc]) -> Optional[PageHandlerFunc]
+def get_page_handler(name: str,
+                     dflt: Optional[PageHandlerFunc] = None) -> Optional[PageHandlerFunc]:
     """Returns either the page handler registered for the given name or None
 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
     # NOTE: Workaround for our non-generic registries... :-/
-    pr = page_registry  # type: Mapping[str, Type[Page]]
+    pr: Mapping[str, Type[Page]] = page_registry
     handle_class = pr.get(name)
     if handle_class is None:
         return dflt

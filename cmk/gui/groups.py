@@ -14,23 +14,19 @@ GroupSpec = Dict[str, Any]  # TODO: Improve this type
 GroupSpecs = Dict[str, GroupSpec]
 
 
-def load_host_group_information():
-    # type: () -> GroupSpecs
+def load_host_group_information() -> GroupSpecs:
     return load_group_information()["host"]
 
 
-def load_service_group_information():
-    # type: () -> GroupSpecs
+def load_service_group_information() -> GroupSpecs:
     return load_group_information()["service"]
 
 
-def load_contact_group_information():
-    # type: () -> GroupSpecs
+def load_contact_group_information() -> GroupSpecs:
     return load_group_information()["contact"]
 
 
-def load_group_information():
-    # type: () -> Dict[str, GroupSpecs]
+def load_group_information() -> Dict[str, GroupSpecs]:
     if "group_information" in g:
         return g.group_information
 
@@ -38,7 +34,7 @@ def load_group_information():
     gui_groups = _load_gui_groups()
 
     # Merge information from Check_MK and Multisite worlds together
-    groups = {}  # type: Dict[str, Dict[str, GroupSpec]]
+    groups: Dict[str, Dict[str, GroupSpec]] = {}
     for what in ["host", "service", "contact"]:
         groups[what] = {}
         for gid, alias in cmk_base_groups['define_%sgroups' % what].items():
@@ -53,11 +49,11 @@ def load_group_information():
 
 def _load_cmk_base_groups():
     """Load group information from Check_MK world"""
-    group_specs = {
+    group_specs: Dict[str, GroupSpecs] = {
         "define_hostgroups": {},
         "define_servicegroups": {},
         "define_contactgroups": {},
-    }  # type: Dict[str, GroupSpecs]
+    }
 
     return store.load_mk_file(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk",
                               default=group_specs)
@@ -65,11 +61,11 @@ def _load_cmk_base_groups():
 
 def _load_gui_groups():
     # Now load information from the Web world
-    group_specs = {
+    group_specs: Dict[str, GroupSpecs] = {
         "multisite_hostgroups": {},
         "multisite_servicegroups": {},
         "multisite_contactgroups": {},
-    }  # type: Dict[str, GroupSpecs]
+    }
 
     return store.load_mk_file(cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk",
                               default=group_specs)

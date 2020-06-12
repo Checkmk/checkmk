@@ -40,7 +40,7 @@ from cmk.gui.valuespec import (
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
 # Keep global variable for caching werks between requests. The never change.
-g_werks = {}  # type: Dict[int, Dict[str, Any]]
+g_werks: Dict[int, Dict[str, Any]] = {}
 
 
 @cmk.gui.pages.register("version")
@@ -350,7 +350,7 @@ def werk_matches_options(werk, werk_table_options):
     # check if werk id is int because valuespec is TextAscii
     # else, set empty id to return all results beside input warning
     try:
-        werk_to_match = int(werk_table_options["id"])  # type: Union[int, str]
+        werk_to_match: Union[int, str] = int(werk_table_options["id"])
     except ValueError:
         werk_to_match = ""
 
@@ -396,7 +396,7 @@ def _default_werk_table_options():
 
 
 def _render_werk_table_options():
-    werk_table_options = {}  # type: Dict[str, Any]
+    werk_table_options: Dict[str, Any] = {}
 
     for name, height, vs, default_value in _werk_table_option_entries():
         value = default_value

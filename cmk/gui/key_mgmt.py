@@ -37,8 +37,7 @@ from cmk.gui.exceptions import MKUserError
 
 
 class KeypairStore:
-    def __init__(self, path, attr):
-        # type: (str, str) -> None
+    def __init__(self, path: str, attr: str) -> None:
         self._path = Path(path)
         self._attr = attr
         super(KeypairStore, self).__init__()
@@ -47,7 +46,7 @@ class KeypairStore:
         if not self._path.exists():
             return {}
 
-        variables = {self._attr: {}}  # type: Dict[str, Any]
+        variables: Dict[str, Any] = {self._attr: {}}
         # TODO: Can be changed to text IO with Python 3
         with self._path.open("rb") as f:
             exec(f.read(), variables, variables)

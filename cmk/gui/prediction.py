@@ -43,7 +43,7 @@ def page_graph():
     # Load all prediction information, sort by time of generation
     tg_name = html.request.var("timegroup")
     timegroup = None
-    timegroups = []  # type: List[prediction.PredictionInfo]
+    timegroups: List[prediction.PredictionInfo] = []
     now = time.time()
     for f in os.listdir(pred_dir):
         if not f.endswith(".info"):
@@ -160,7 +160,7 @@ def compute_vertical_scala(low, high):
         factor = 1024.0**5
 
     v = 0.0
-    vert_scala = []  # type: List[List[Any]]
+    vert_scala: List[List[Any]] = []
     steps = (max(0, high) - min(0, low)) / factor  # fixed: true-division
     if steps < 3:
         step = 0.2 * factor
@@ -206,7 +206,7 @@ def get_current_perfdata(host, service, dsname):
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(tg_data, tg_info):
     columns = tg_data["columns"]
-    swapped = {c: [] for c in columns}  # type: Dict[Any, List[Any]]
+    swapped: Dict[Any, List[Any]] = {c: [] for c in columns}
     for step in tg_data["points"]:
         row = dict(zip(columns, step))
         for k, v in row.items():

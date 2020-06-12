@@ -64,7 +64,7 @@ def parse_tree_path(tree_path):
     # .software.packages:        (list) => path = ["software", "packages"],     key = []
     if tree_path.endswith(":"):
         path = tree_path[:-1].strip(".").split(".")
-        attribute_keys = []  # type: Optional[List[str]]
+        attribute_keys: Optional[List[str]] = []
     elif tree_path.endswith("."):
         path = tree_path[:-1].strip(".").split(".")
         attribute_keys = None
@@ -103,8 +103,7 @@ def sort_children(children):
     return sorted(children, key=lambda x: ordering[type(x)])
 
 
-def load_filtered_inventory_tree(hostname):
-    # type: (Optional[HostName]) -> Optional[StructuredDataTree]
+def load_filtered_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataTree]:
     """Loads the host inventory tree from the current file and returns the filtered tree"""
     return _filter_tree(_load_inventory_tree(hostname))
 
@@ -174,7 +173,7 @@ def get_history_deltas(hostname, search_timestamp=None):
             previous_timestamp = all_timestamps[new_timestamp_idx - 1]
             required_timestamps = [search_timestamp]
 
-    tree_lookup = {}  # type: Dict[str, Any]
+    tree_lookup: Dict[str, Any] = {}
 
     def get_tree(timestamp):
         if timestamp is None:
@@ -271,8 +270,7 @@ class LoadStructuredDataError(MKException):
     pass
 
 
-def _load_inventory_tree(hostname):
-    # type: (Optional[HostName]) -> Optional[StructuredDataTree]
+def _load_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataTree]:
     """Load data of a host, cache it in the current HTTP request"""
     if not hostname:
         return None
@@ -295,8 +293,7 @@ def _load_inventory_tree(hostname):
     return inventory_tree
 
 
-def _create_tree_from_raw_tree(raw_tree):
-    # type: (bytes) -> Optional[StructuredDataTree]
+def _create_tree_from_raw_tree(raw_tree: bytes) -> Optional[StructuredDataTree]:
     if raw_tree:
         return StructuredDataTree().create_tree_from_raw_tree(
             ast.literal_eval(raw_tree.decode("utf-8")))
@@ -315,8 +312,7 @@ def _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree):
     return inventory_tree
 
 
-def _filter_tree(struct_tree):
-    # type: (Optional[StructuredDataTree]) -> Optional[StructuredDataTree]
+def _filter_tree(struct_tree: Optional[StructuredDataTree]) -> Optional[StructuredDataTree]:
     if struct_tree is None:
         return None
     return struct_tree.get_filtered_tree(_get_permitted_inventory_paths())

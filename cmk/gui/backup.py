@@ -213,12 +213,10 @@ class MKBackupJob:
             None: _("Never executed"),
         }[state]
 
-    def state_file_path(self):
-        # type: () -> Path
+    def state_file_path(self) -> Path:
         raise NotImplementedError()
 
-    def cleanup(self):
-        # type: () -> None
+    def cleanup(self) -> None:
         try:
             self.state_file_path().unlink()
         except OSError as e:
@@ -255,12 +253,10 @@ class MKBackupJob:
 
         return state
 
-    def was_started(self):
-        # type: () -> bool
+    def was_started(self) -> bool:
         return self.state_file_path().exists()
 
-    def is_running(self):
-        # type: () -> bool
+    def is_running(self) -> bool:
         if not self.was_started():
             return False
 
@@ -342,8 +338,7 @@ class Job(MKBackupJob, BackupEntity):
 
         return "-".join([p.replace("-", "+") for p in parts])
 
-    def state_file_path(self):
-        # type: () -> Path
+    def state_file_path(self) -> Path:
         if not is_site():
             path = Path("/var/lib/mkbackup")
         else:
@@ -625,7 +620,7 @@ class PageEditBackupJob:
                 raise MKUserError("_job", _("This job is currently running."))
 
             self._new = False
-            self._ident = job_ident  # type: Optional[str]
+            self._ident: Optional[str] = job_ident
             self._job_cfg = job.to_config()
             self._title = _("Edit backup job: %s") % job.title()
         else:
@@ -806,8 +801,8 @@ class PageEditBackupJob:
 class PageAbstractBackupJobState:
     def __init__(self):
         super(PageAbstractBackupJobState, self).__init__()
-        self._job = None  # type: Optional[MKBackupJob]
-        self._ident = None  # type: Optional[str]
+        self._job: Optional[MKBackupJob] = None
+        self._ident: Optional[str] = None
 
     def jobs(self):
         raise NotImplementedError()
@@ -839,7 +834,7 @@ class PageAbstractBackupJobState:
 
         html.open_table(class_=["data", "backup_job"])
 
-        css = "state0"  # type: Optional[str]
+        css: Optional[str] = "state0"
         state_txt = job.state_name(state["state"])
         if state["state"] == "finished":
             if not state["success"]:
@@ -931,8 +926,7 @@ class Target(BackupEntity):
             raise NotImplementedError()
         return self.type_class()(self.type_params())
 
-    def show_backup_list(self, only_type):
-        # type: (str) -> None
+    def show_backup_list(self, only_type: str) -> None:
         with table_element(sortable=False, searchable=False) as table:
 
             for backup_ident, info in sorted(self.backups().items()):
@@ -1099,7 +1093,7 @@ class PageEditBackupTarget:
                 raise MKUserError("target", _("This backup target does not exist."))
 
             self._new = False
-            self._ident = target_ident  # type: Optional[str]
+            self._ident: Optional[str] = target_ident
             self._target_cfg = target.to_config()
             self._title = _("Edit backup target: %s") % target.title()
         else:
@@ -1231,8 +1225,7 @@ class ABCBackupTargetType(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @classmethod
-    def choices(cls):
-        # type: (Any) -> List[Tuple[str, str, ValueSpec]]
+    def choices(cls: Any) -> List[Tuple[str, str, ValueSpec]]:
         choices = []
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
         # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)
@@ -1519,8 +1512,7 @@ class RestoreJob(MKBackupJob):
     def title(self):
         return _("Restore")
 
-    def state_file_path(self):
-        # type: () -> Path
+    def state_file_path(self) -> Path:
         if not is_site():
             return Path("/var/lib/mkbackup/restore.state")
         return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])

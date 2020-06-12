@@ -29,16 +29,14 @@ class LegacyVarsMixin:
     """
     DELETED = object()
 
-    def __init__(self, *args, **kw):
-        # type: (*Any, **Any) -> None
+    def __init__(self, *args: Any, **kw: Any) -> None:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # [mypy:] Too many arguments for "__init__" of "object"  [call-arg]
         super(LegacyVarsMixin, self).__init__(*args, **kw)  # type: ignore[call-arg]
         self.legacy_vars = self._vars = {}  # type: Dict[str, Union[str, object]]
 
-    def set_var(self, varname, value):
-        # type: (str, str) -> None
+    def set_var(self, varname: str, value: str) -> None:
         if not isinstance(value, str):
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
 
@@ -50,19 +48,16 @@ class LegacyVarsMixin:
 
         self.legacy_vars[varname] = value
 
-    def del_var(self, varname):
-        # type: (str) -> None
+    def del_var(self, varname: str) -> None:
         varname = ensure_str(varname)
         self.legacy_vars[varname] = self.DELETED
 
-    def del_vars(self, prefix=""):
-        # type: (str) -> None
+    def del_vars(self, prefix: str = "") -> None:
         for varname, _value in list(self.legacy_vars.items()):
             if varname.startswith(prefix):
                 self.del_var(varname)
 
-    def itervars(self, prefix=""):
-        # type: (str) -> Iterator[Tuple[str, str]]
+    def itervars(self, prefix: str = "") -> Iterator[Tuple[str, str]]:
         skip = []
         for name, value in self.legacy_vars.items():
             if name.startswith(prefix):
@@ -80,8 +75,7 @@ class LegacyVarsMixin:
                 continue
             yield name, val
 
-    def has_var(self, varname):
-        # type: (str) -> bool
+    def has_var(self, varname: str) -> bool:
         varname = ensure_str(varname)
         if varname in self.legacy_vars:
             return self.legacy_vars[varname] is not self.DELETED
@@ -91,8 +85,7 @@ class LegacyVarsMixin:
         # up with 1.7, once we have moved to python 3.
         return super(LegacyVarsMixin, self).has_var(varname)  # type: ignore[misc]
 
-    def var(self, varname, default=None):
-        # type: (str, Optional[str]) -> Optional[str]
+    def var(self, varname: str, default: Optional[str] = None) -> Optional[str]:
         varname = ensure_str(varname)
         legacy_var = self.legacy_vars.get(varname, None)
         if legacy_var is not None:
@@ -107,16 +100,14 @@ class LegacyVarsMixin:
 
 
 class LegacyUploadMixin:
-    def __init__(self, *args, **kw):
-        # type: (*Any, **Any) -> None
+    def __init__(self, *args: Any, **kw: Any) -> None:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # [mypy:] Too many arguments for "__init__" of "object"  [call-arg]
         super(LegacyUploadMixin, self).__init__(*args, **kw)  # type: ignore[call-arg]
-        self.upload_cache = {}  # type: Dict[str, UploadedFile]
+        self.upload_cache: Dict[str, UploadedFile] = {}
 
-    def uploaded_file(self, name):
-        # type: (str) -> UploadedFile
+    def uploaded_file(self, name: str) -> UploadedFile:
         # NOTE: There could be multiple entries with the same key, we ignore that for now...
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
@@ -139,8 +130,7 @@ class LegacyDeprecatedMixin:
     They are to be removed as they provide no additional value over the already available
     methods and properties in Request itself.
     """
-    def itervars(self, prefix=""):
-        # type: (str) -> Iterator[Tuple[str, Optional[str]]]
+    def itervars(self, prefix: str = "") -> Iterator[Tuple[str, Optional[str]]]:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
@@ -149,8 +139,7 @@ class LegacyDeprecatedMixin:
                 # Preserve previous behaviour
                 yield name, ensure_str(values[-1]) if values else None
 
-    def var(self, name, default=None):
-        # type: (str, Optional[str]) -> Optional[str]
+    def var(self, name: str, default: Optional[str] = None) -> Optional[str]:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
@@ -161,23 +150,20 @@ class LegacyDeprecatedMixin:
         # Preserve previous behaviour
         return ensure_str(values[-1])
 
-    def has_var(self, varname):
-        # type: (str) -> bool
+    def has_var(self, varname: str) -> bool:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return varname in self.values  # type: ignore[attr-defined]
 
-    def has_cookie(self, varname):
-        # type: (str) -> bool
+    def has_cookie(self, varname: str) -> bool:
         """Whether or not the client provides a cookie with the given name"""
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return varname in self.cookies  # type: ignore[attr-defined]
 
-    def cookie(self, varname, default=None):
-        # type: (str, Optional[str]) -> Optional[str]
+    def cookie(self, varname: str, default: Optional[str] = None) -> Optional[str]:
         """Return the value of the cookie provided by the client.
 
         If the cookie has not been set, None will be returned as a default.
@@ -191,63 +177,55 @@ class LegacyDeprecatedMixin:
             return ensure_str(value)
         return None
 
-    def get_request_header(self, key, default=None):
-        # type: (str, Optional[str]) -> Optional[str]
+    def get_request_header(self, key: str, default: Optional[str] = None) -> Optional[str]:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return self.headers.get(key, default)  # type: ignore[attr-defined]
 
-    def get_cookie_names(self):
-        # type: () -> List[str]
+    def get_cookie_names(self) -> List[str]:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return list(self.cookies.keys())  # type: ignore[attr-defined]
 
     @property
-    def referer(self):
-        # type: () -> Optional[str]
+    def referer(self) -> Optional[str]:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return self.referrer  # type: ignore[attr-defined]
 
     @property
-    def request_method(self):
-        # type: () -> str
+    def request_method(self) -> str:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return self.method  # type: ignore[attr-defined]
 
     @property
-    def requested_url(self):
-        # type: () -> str
+    def requested_url(self) -> str:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return self.url  # type: ignore[attr-defined]
 
     @property
-    def requested_file(self):
-        # type: () -> str
+    def requested_file(self) -> str:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return self.base_url  # type: ignore[attr-defined]
 
     @property
-    def is_ssl_request(self):
-        # type: () -> bool
+    def is_ssl_request(self) -> bool:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return self.is_secure  # type: ignore[attr-defined]
 
     @property
-    def remote_ip(self):
-        # type: () -> str
+    def remote_ip(self) -> str:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
@@ -264,8 +242,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
     """
     # pylint: disable=too-many-ancestors
     @property
-    def request_timeout(self):
-        # type: () -> int
+    def request_timeout(self) -> int:
         """The system web servers configured request timeout.
 
         This is the time before the request terminates from the view of the client."""
@@ -275,12 +252,10 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
 
     # TODO: For historic reasons this needs to return byte strings. We will clean this up
     # soon when moving to python 3
-    def get_str_input(self, varname, deflt=None):
-        # type: (str, Optional[str]) -> Optional[str]
+    def get_str_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
         return self.var(varname, deflt)
 
-    def get_str_input_mandatory(self, varname, deflt=None):
-        # type: (str, Optional[str]) -> str
+    def get_str_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
         value = self.var(varname, deflt)
         if value is None:
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
@@ -288,8 +263,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
 
     # TODO: For historic reasons this needs to return byte strings. We will clean this up
     # soon when moving to python 3
-    def get_ascii_input(self, varname, deflt=None):
-        # type: (str, Optional[str]) -> Optional[str]
+    def get_ascii_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
         In case a non ASCII character is found an MKUserError() is raised."""
         value = self.var(varname, deflt)
@@ -301,15 +275,13 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
 
     # TODO: For historic reasons this needs to return byte strings. We will clean this up
     # soon when moving to python 3
-    def get_ascii_input_mandatory(self, varname, deflt=None):
-        # type: (str, Optional[str]) -> str
+    def get_ascii_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
         value = self.get_ascii_input(varname, deflt)
         if value is None:
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         return value
 
-    def get_unicode_input(self, varname, deflt=None):
-        # type: (str, Optional[str]) -> Optional[str]
+    def get_unicode_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
         try:
             val = self.var(varname, ensure_str(deflt) if deflt is not None else None)
             if val is None:
@@ -321,29 +293,25 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
                 _("The given text is wrong encoded. "
                   "You need to provide a UTF-8 encoded text."))
 
-    def get_unicode_input_mandatory(self, varname, deflt=None):
-        # type: (str, Optional[str]) -> str
+    def get_unicode_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
         value = self.get_unicode_input(varname, deflt)
         if value is None:
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         return value
 
-    def get_binary_input(self, varname, deflt=None):
-        # type: (str, Optional[bytes]) -> Optional[bytes]
+    def get_binary_input(self, varname: str, deflt: Optional[bytes] = None) -> Optional[bytes]:
         val = self.var(varname, ensure_str(deflt) if deflt is not None else None)
         if val is None:
             return None
         return ensure_binary(val)
 
-    def get_binary_input_mandatory(self, varname, deflt=None):
-        # type: (str, Optional[bytes]) -> bytes
+    def get_binary_input_mandatory(self, varname: str, deflt: Optional[bytes] = None) -> bytes:
         value = self.get_binary_input(varname, deflt)
         if value is None:
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         return value
 
-    def get_integer_input(self, varname, deflt=None):
-        # type: (str, Optional[int]) -> Optional[int]
+    def get_integer_input(self, varname: str, deflt: Optional[int] = None) -> Optional[int]:
 
         value = self.var(varname, "%d" % deflt if deflt is not None else None)
         if value is None:
@@ -354,15 +322,13 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
         except ValueError:
             raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
 
-    def get_integer_input_mandatory(self, varname, deflt=None):
-        # type: (str, Optional[int]) -> int
+    def get_integer_input_mandatory(self, varname: str, deflt: Optional[int] = None) -> int:
         value = self.get_integer_input(varname, deflt)
         if value is None:
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         return value
 
-    def get_float_input(self, varname, deflt=None):
-        # type: (str, Optional[float]) -> Optional[float]
+    def get_float_input(self, varname: str, deflt: Optional[float] = None) -> Optional[float]:
 
         value = self.var(varname, "%s" % deflt if deflt is not None else None)
         if value is None:
@@ -373,8 +339,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
         except ValueError:
             raise MKUserError(varname, _("The parameter \"%s\" is not a float.") % varname)
 
-    def get_float_input_mandatory(self, varname, deflt=None):
-        # type: (str, Optional[float]) -> float
+    def get_float_input_mandatory(self, varname: str, deflt: Optional[float] = None) -> float:
         value = self.get_float_input(varname, deflt)
         if value is None:
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
@@ -385,12 +350,10 @@ class Response(werkzeug.wrappers.Response):
     # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
 
-    def set_http_cookie(self, key, value, secure=None):
-        # type: (str, str, Optional[bool]) -> None
+    def set_http_cookie(self, key: str, value: str, secure: Optional[bool] = None) -> None:
         if secure is None:
             secure = request.is_secure
         super(Response, self).set_cookie(key, value, secure=secure, httponly=True)
 
-    def set_content_type(self, mime_type):
-        # type: (str) -> None
+    def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)

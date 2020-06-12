@@ -72,8 +72,7 @@ from cmk.gui.permissions import (
 
 
 class Base:
-    def __init__(self, d):
-        # type: (Dict[str, Any]) -> None
+    def __init__(self, d: Dict[str, Any]) -> None:
         super(Base, self).__init__()
 
         # The dictionary with the name _ holds all information about
@@ -81,8 +80,7 @@ class Base:
         # and saved to files using repr().
         self._ = d
 
-    def internal_representation(self):
-        # type: () -> Dict[str, Any]
+    def internal_representation(self) -> Dict[str, Any]:
         return self._
 
     # You always must override the following method. Not all phrases
@@ -97,8 +95,7 @@ class Base:
     # the "add_to" phrase is not relevant for non container elements. In the
     # moment we use dedicated methods, wrong usage will be found by pylint.
     @classmethod
-    def phrase(cls, phrase):
-        # type: (str) -> str
+    def phrase(cls, phrase: str) -> str:
         return _("MISSING '%s'") % phrase
 
     # Implement this function in a subclass in order to add parameters
@@ -148,7 +145,7 @@ class Base:
     # page type by calling parameters() for each class
     @classmethod
     def _collect_parameters(cls, mode):
-        topics = {}  # type: Dict[str, List[DictionaryEntry]]
+        topics: Dict[str, List[DictionaryEntry]] = {}
         for topic, elements in cls.parameters(mode):
             el = topics.setdefault(topic, [])
             el += elements
@@ -173,43 +170,34 @@ class Base:
     # Object methods that *can* be overridden - for cases where
     # that pages in question of a dictionary format that is not
     # compatible.
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         return self._["name"]
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return self._["title"]
 
-    def description(self):
-        # type: () -> str
+    def description(self) -> str:
         return self._.get("description", "")
 
-    def is_hidden(self):
-        # type: () -> bool
+    def is_hidden(self) -> bool:
         return False
 
-    def _can_be_linked(self):
-        # type: () -> bool
+    def _can_be_linked(self) -> bool:
         return True
 
-    def render_title(self):
-        # type: () -> str
+    def render_title(self) -> str:
         return _u(self.title())
 
-    def is_empty(self):
-        # type: () -> bool
+    def is_empty(self) -> bool:
         return False
 
-    def _show_in_sidebar(self):
-        # type: () -> bool
+    def _show_in_sidebar(self) -> bool:
         return not self.is_empty() and not self.is_hidden()
 
     # Default values for the creation dialog can be overridden by the
     # sub class.
     @classmethod
-    def default_name(cls):
-        # type: () -> str
+    def default_name(cls) -> str:
         stem = cls.type_name()
         nr = 1
         while True:
@@ -224,14 +212,13 @@ class Base:
             nr += 1
 
     @classmethod
-    def default_topic(cls):
-        # type: () -> str
+    def default_topic(cls) -> str:
         return _("Other")
 
     # Store for all instances of this page type. The key into
     # this dictionary????
     # TODO: Brauchen wir hier überhaupt ein dict??
-    __instances = {}  # type: Dict[str, Base]
+    __instances: 'Dict[str, Base]' = {}
 
     @classmethod
     def clear_instances(cls):
@@ -288,8 +275,7 @@ class Base:
         return None
 
     @classmethod
-    def type_name(cls):
-        # type: () -> str
+    def type_name(cls) -> str:
         raise NotImplementedError()
 
     # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
@@ -528,8 +514,7 @@ class Overridable(Base):
     def _delete_permission(cls):
         return "general.edit_" + cls.type_name()
 
-    def owner(self):
-        # type: () -> UserId
+    def owner(self) -> UserId:
         return self._["owner"]
 
     # Checks if the current user is allowed to see a certain page
@@ -586,7 +571,7 @@ class Overridable(Base):
                     % (self.type_name(), self.owner(), self.name(), backurl)
 
     def delete_url(self):
-        add_vars = [('_delete', self.name())]  # type: HTTPVariables
+        add_vars: HTTPVariables = [('_delete', self.name())]
         if not self.is_mine():
             add_vars.append(('_owner', self.owner()))
         return html.makeactionuri(add_vars)
@@ -806,8 +791,7 @@ class Overridable(Base):
                 cls.declare_permission(instance)
 
     @classmethod
-    def save_user_instances(cls, owner=None):
-        # type: (_Optional[UserId]) -> None
+    def save_user_instances(cls, owner: _Optional[UserId] = None) -> None:
         if not owner:
             owner = config.user.id
 
@@ -1036,7 +1020,7 @@ class Overridable(Base):
 
     @classmethod
     def _bulk_delete_after_confirm(cls, what):
-        to_delete = []  # type: List[Tuple[UserId, str]]
+        to_delete: List[Tuple[UserId, str]] = []
         for varname, _value in html.request.itervars(prefix="_c_%s+" % what):
             if html.get_checkbox(varname):
                 checkbox_ident = varname.split("_c_%s+" % what)[-1]
@@ -1183,12 +1167,13 @@ class Overridable(Base):
         html.footer()
 
 
-def PublishTo(title=None, type_title=None, with_foreign_groups=True):
-    # type: (_Optional[str], _Optional[str], bool) -> CascadingDropdown
+def PublishTo(title: _Optional[str] = None,
+              type_title: _Optional[str] = None,
+              with_foreign_groups: bool = True) -> CascadingDropdown:
     if title is None:
         title = _('Make this %s available for other users') % type_title
 
-    choices = [
+    choices: List[CascadingDropdownChoice] = [
         (True, _("Publish to all users")),
         ("contact_groups", _("Publish to members of contact groups"),
          ContactGroupChoice(
@@ -1197,7 +1182,7 @@ def PublishTo(title=None, type_title=None, with_foreign_groups=True):
              rows=5,
              size=80,
          )),
-    ]  # type: List[CascadingDropdownChoice]
+    ]
 
     return CascadingDropdown(title=title, choices=choices)
 

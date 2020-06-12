@@ -76,8 +76,7 @@ def save_gui_messages(messages, user_id=None):
     store.save_object_to_file(path, messages)
 
 
-def _notify_methods():
-    # type: () -> Dict[str, Dict[str, Any]]
+def _notify_methods() -> Dict[str, Dict[str, Any]]:
     return {
         'gui_popup': {
             'title': _('Popup Message in the GUI (shows up alert window)'),
@@ -154,7 +153,7 @@ def page_notify():
 
 
 def _vs_notify():
-    dest_choices = [
+    dest_choices: List[CascadingDropdownChoice] = [
         ('broadcast', _('Everybody (Broadcast)')),
         ('list', _('A list of specific users'),
          DualListChoice(
@@ -164,7 +163,7 @@ def _vs_notify():
              allow_empty=False,
          )),
         #('contactgroup', _('All members of a contact group')),
-    ]  # type: List[CascadingDropdownChoice]
+    ]
 
     if config.save_user_access_times:
         dest_choices.append(('online', _('All online users')))
@@ -250,7 +249,7 @@ def _process_notify_message(msg):
         num_success[method] = 0
 
     # Now loop all notitification methods to send the notifications
-    errors = {}  # type: Dict[str, List[Tuple]]
+    errors: Dict[str, List[Tuple]] = {}
     for user_id in recipients:
         for method in msg['methods']:
             try:

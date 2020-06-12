@@ -12,7 +12,7 @@ import pprint
 import traceback
 import json
 import functools
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as _Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as _Tuple, Union  # pylint: disable=unused-import
 
 from six import ensure_str
 
@@ -110,7 +110,7 @@ from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unuse
 
 import cmk.gui.plugins.views.inventory
 import cmk.gui.plugins.views.availability
-from cmk.gui.plugins.views.perfometers import perfometers  # pylint: disable=unused-import
+from cmk.gui.plugins.views.perfometers import perfometers  # noqa: F401 # pylint: disable=unused-import
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.views  # pylint: disable=no-name-in-module
@@ -126,16 +126,16 @@ if TYPE_CHECKING:
     from cmk.gui.type_defs import FilterHeaders, Row, Rows, ColumnName
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
-multisite_painter_options = {}  # type: Dict[str, Any]
-multisite_layouts = {}  # type: Dict[str, Any]
-multisite_commands = []  # type: List[Dict[str, Any]]
-multisite_datasources = {}  # type: Dict[str, Any]
-multisite_painters = {}  # type: Dict[str, Dict[str, Any]]
-multisite_sorters = {}  # type: Dict[str, Any]
+multisite_painter_options: Dict[str, Any] = {}
+multisite_layouts: Dict[str, Any] = {}
+multisite_commands: List[Dict[str, Any]] = []
+multisite_datasources: Dict[str, Any] = {}
+multisite_painters: Dict[str, Dict[str, Any]] = {}
+multisite_sorters: Dict[str, Any] = {}
 
 
 @visual_type_registry.register
@@ -288,19 +288,17 @@ class PermissionSectionViews(PermissionSection):
 
 class View:
     """Manages processing of a single view, e.g. during rendering"""
-    def __init__(self, view_name, view_spec, context):
-        # type: (str, Dict, Dict) -> None
+    def __init__(self, view_name: str, view_spec: Dict, context: Dict) -> None:
         super(View, self).__init__()
         self.name = view_name
         self.spec = view_spec
         self.context = context
-        self._row_limit = None  # type: Optional[int]
-        self._only_sites = None  # type: Optional[List[SiteId]]
-        self._user_sorters = None  # type: Optional[List[SorterSpec]]
+        self._row_limit: Optional[int] = None
+        self._only_sites: Optional[List[SiteId]] = None
+        self._user_sorters: 'Optional[List[SorterSpec]]' = None
 
     @property
-    def datasource(self):
-        # type: () -> DataSource
+    def datasource(self) -> DataSource:
         try:
             return data_source_registry[self.spec["datasource"]]()
         except KeyError:
@@ -315,10 +313,9 @@ class View:
                   "because the datasource does not exist.") % (self.name, self.datasource))
 
     @property
-    def row_cells(self):
-        # type: () -> List[Cell]
+    def row_cells(self) -> List[Cell]:
         """Regular cells are displaying information about the rows of the type the view is about"""
-        cells = []  # type: List[Cell]
+        cells: List[Cell] = []
         for e in self.spec["painters"]:
             if not painter_exists(e):
                 continue
@@ -331,27 +328,23 @@ class View:
         return cells
 
     @property
-    def group_cells(self):
-        # type: () -> List[Cell]
+    def group_cells(self) -> List[Cell]:
         """Group cells are displayed as titles of grouped rows"""
         return [Cell(self, e) for e in self.spec["group_painters"] if painter_exists(e)]
 
     @property
-    def join_cells(self):
-        # type: () -> List[JoinCell]
+    def join_cells(self) -> List[JoinCell]:
         """Join cells are displaying information of a joined source (e.g.service data on host views)"""
         return [x for x in self.row_cells if isinstance(x, JoinCell)]
 
     @property
-    def sorters(self):
-        # type: () -> List[SorterEntry]
+    def sorters(self) -> List[SorterEntry]:
         """Returns the list of effective sorters to be used to sort the rows of this view"""
         return self._get_sorter_entries(
             self.user_sorters if self.user_sorters else self.spec["sorters"])
 
     # TODO: Improve argument type
-    def _get_sorter_entries(self, sorter_list):
-        # type: (List) -> List[SorterEntry]
+    def _get_sorter_entries(self, sorter_list: List) -> List[SorterEntry]:
         sorters = []
         for entry in sorter_list:
             if not isinstance(entry, SorterEntry):
@@ -375,21 +368,18 @@ class View:
         return sorters
 
     @property
-    def row_limit(self):
-        # type: () -> Optional[int]
+    def row_limit(self) -> Optional[int]:
         if self.datasource.ignore_limit:
             return None
 
         return self._row_limit
 
     @row_limit.setter
-    def row_limit(self, row_limit):
-        # type: (Optional[int]) -> None
+    def row_limit(self, row_limit: Optional[int]) -> None:
         self._row_limit = row_limit
 
     @property
-    def only_sites(self):
-        # type: () -> Optional[List[SiteId]]
+    def only_sites(self) -> Optional[List[SiteId]]:
         """Optional list of sites to query instead of all sites
 
         This is a performance feature. It is highly recommended to set the only_sites attribute
@@ -398,13 +388,11 @@ class View:
         return self._only_sites
 
     @only_sites.setter
-    def only_sites(self, only_sites):
-        # type: (Optional[List[SiteId]]) -> None
+    def only_sites(self, only_sites: Optional[List[SiteId]]) -> None:
         self._only_sites = only_sites
 
     @property
-    def user_sorters(self):
-        # type: () -> Optional[List[SorterSpec]]
+    def user_sorters(self) -> 'Optional[List[SorterSpec]]':
         """Optional list of sorters to use for rendering the view
 
         The user may click on the headers of tables to change the default view sorting. In the
@@ -413,14 +401,12 @@ class View:
         return self._user_sorters
 
     @user_sorters.setter
-    def user_sorters(self, user_sorters):
-        # type: (Optional[List[SorterSpec]]) -> None
+    def user_sorters(self, user_sorters: 'Optional[List[SorterSpec]]') -> None:
         self._user_sorters = user_sorters
 
 
 class ViewRenderer(metaclass=abc.ABCMeta):
-    def __init__(self, view):
-        # type: (View) -> None
+    def __init__(self, view: View) -> None:
         super(ViewRenderer, self).__init__()
         self.view = view
 
@@ -431,8 +417,7 @@ class ViewRenderer(metaclass=abc.ABCMeta):
 
 
 class GUIViewRenderer(ViewRenderer):
-    def __init__(self, view, show_buttons):
-        # type: (View, bool) -> None
+    def __init__(self, view: View, show_buttons: bool) -> None:
         super(GUIViewRenderer, self).__init__(view)
         self._show_buttons = show_buttons
 
@@ -684,8 +669,7 @@ def _register_tag_plugins():
     setattr(_register_tag_plugins, "_config_hash", _calc_config_hash())
 
 
-def _calc_config_hash():
-    # type: () -> int
+def _calc_config_hash() -> int:
     return hash(repr(config.tags.get_dict_format()))
 
 
@@ -796,8 +780,7 @@ def page_edit_views():
 # First step: Select the data source
 
 
-def DatasourceSelection():
-    # type: () -> DropdownChoice
+def DatasourceSelection() -> DropdownChoice:
     """Create datasource selection valuespec, also for other modules"""
     return DropdownChoice(
         title=_('Datasource'),
@@ -999,7 +982,7 @@ def view_editor_column_spec(ident, title, ds_name):
         empty_text = _("Please add at least one column to your view.")
 
     def column_elements(_painters, painter_type):
-        empty_choices = [(None, "")]  # type: List[DropdownChoiceEntry]
+        empty_choices: List[DropdownChoiceEntry] = [(None, "")]
         elements = [
             CascadingDropdown(title=_('Column'),
                               choices=painter_choices_with_params(_painters),
@@ -1034,8 +1017,7 @@ def view_editor_column_spec(ident, title, ds_name):
         return elements
 
     painters = painters_of_datasource(ds_name)
-    vs_column = Tuple(title=_('Column'), elements=column_elements(painters,
-                                                                  'painter'))  # type: ValueSpec
+    vs_column: ValueSpec = Tuple(title=_('Column'), elements=column_elements(painters, 'painter'))
 
     join_painters = join_painters_of_datasource(ds_name)
     if ident == 'columns' and join_painters:
@@ -1412,7 +1394,7 @@ def show_view(view, view_renderer, only_count=False):
 
     # Sorting - use view sorters and URL supplied sorters
     if only_count:
-        sorters = []  # type: List[SorterEntry]
+        sorters: List[SorterEntry] = []
     else:
         sorters = view.sorters
 
@@ -1532,8 +1514,7 @@ def show_view(view, view_renderer, only_count=False):
                          show_filters, unfiltered_amount_of_rows)
 
 
-def _get_all_active_filters(view):
-    # type: (View) -> List[Filter]
+def _get_all_active_filters(view: View) -> 'List[Filter]':
     # Always allow the users to specify all allowed filters using the URL
     use_filters = list(visuals.filters_allowed_for_infos(view.datasource.infos).values())
 
@@ -1552,15 +1533,14 @@ def _get_all_active_filters(view):
     return use_filters
 
 
-def _is_ec_unrelated_host_view(view):
-    # type: (View) -> bool
+def _is_ec_unrelated_host_view(view: View) -> bool:
     # The "name" is not set in view report elements
     return view.datasource.ident in [ "mkeventd_events", "mkeventd_history" ] \
        and "host" in view.spec["single_infos"] and view.spec.get("name") != "ec_events_of_monhost"
 
 
-def _get_needed_regular_columns(cells, sorters, datasource):
-    # type: (List[Cell], List[SorterEntry], DataSource) -> List[ColumnName]
+def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
+                                datasource: DataSource) -> 'List[ColumnName]':
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
     if html.request.var("mode") == "availability" and "aggr" in datasource.infos:
@@ -1601,8 +1581,8 @@ def _get_needed_regular_columns(cells, sorters, datasource):
 # TODO: When this is used by the reporting then *all* filters are active.
 # That way the inventory data will always be loaded. When we convert this to the
 # visuals principle the we need to optimize this.
-def get_livestatus_filter_headers(view, all_active_filters):
-    # type: (View, List[Filter]) -> FilterHeaders
+def get_livestatus_filter_headers(view: View,
+                                  all_active_filters: 'List[Filter]') -> 'FilterHeaders':
     """Prepare Filter headers for Livestatus"""
     filterheaders = ""
     for filt in all_active_filters:
@@ -1617,8 +1597,8 @@ def get_livestatus_filter_headers(view, all_active_filters):
     return filterheaders
 
 
-def _get_needed_join_columns(join_cells, sorters):
-    # type: (List[JoinCell], List[SorterEntry]) -> List[ColumnName]
+def _get_needed_join_columns(join_cells: List[JoinCell],
+                             sorters: List[SorterEntry]) -> 'List[ColumnName]':
     join_columns = columns_of_cells(join_cells)
 
     # Columns needed for sorters
@@ -1635,13 +1615,13 @@ def _get_needed_join_columns(join_cells, sorters):
     return list(join_columns)
 
 
-def is_sla_data_needed(group_cells, cells, sorters, all_active_filters):
-    # type: (List[Cell], List[Cell], List[SorterEntry], List[Filter]) -> bool
+def is_sla_data_needed(group_cells: List[Cell], cells: List[Cell], sorters: List[SorterEntry],
+                       all_active_filters: 'List[Filter]') -> bool:
     pass
 
 
-def is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
-    # type: (List[Cell], List[Cell], List[SorterEntry], List[Filter]) -> bool
+def is_inventory_data_needed(group_cells: List[Cell], cells: List[Cell], sorters: List[SorterEntry],
+                             all_active_filters: 'List[Filter]') -> bool:
     for cell in cells:
         if cell.has_tooltip():
             if cell.tooltip_painter_name().startswith("inv_"):
@@ -1662,9 +1642,8 @@ def is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
     return False
 
 
-def columns_of_cells(cells):
-    # type: (Sequence[Cell]) -> Set[ColumnName]
-    columns = set()  # type: Set[ColumnName]
+def columns_of_cells(cells: Sequence[Cell]) -> 'Set[ColumnName]':
+    columns: 'Set[ColumnName]' = set()
     for cell in cells:
         columns.update(cell.needed_columns())
     return columns
@@ -1674,8 +1653,8 @@ JoinMasterKey = _Tuple[SiteId, str]
 JoinSlaveKey = str
 
 
-def _do_table_join(view, master_rows, master_filters, sorters):
-    # type: (View, List[LivestatusRow], str, List[SorterEntry]) -> None
+def _do_table_join(view: View, master_rows: List[LivestatusRow], master_filters: str,
+                   sorters: List[SorterEntry]) -> None:
     assert view.datasource.join is not None
     join_table, join_master_column = view.datasource.join
     slave_ds = data_source_registry[join_table]()
@@ -1698,9 +1677,9 @@ def _do_table_join(view, master_rows, master_filters, sorters):
                                 limit=None,
                                 all_active_filters=None)
 
-    per_master_entry = {}  # type: Dict[JoinMasterKey, Dict[JoinSlaveKey, LivestatusRow]]
-    current_key = None  # type: Optional[JoinMasterKey]
-    current_entry = None  # type: Optional[Dict[JoinSlaveKey, LivestatusRow]]
+    per_master_entry: Dict[JoinMasterKey, Dict[JoinSlaveKey, LivestatusRow]] = {}
+    current_key: Optional[JoinMasterKey] = None
+    current_entry: Optional[Dict[JoinSlaveKey, LivestatusRow]] = None
     for row in rows:
         master_key = (row["site"], row[join_master_column])
         if master_key != current_key:
@@ -1717,16 +1696,14 @@ def _do_table_join(view, master_rows, master_filters, sorters):
         row["JOIN"] = joininfo
 
 
-g_alarm_sound_states = set([])  # type: Set[str]
+g_alarm_sound_states: Set[str] = set([])
 
 
-def clear_alarm_sound_states():
-    # type: () -> None
+def clear_alarm_sound_states() -> None:
     g_alarm_sound_states.clear()
 
 
-def save_state_for_playing_alarm_sounds(row):
-    # type: (Row) -> None
+def save_state_for_playing_alarm_sounds(row: 'Row') -> None:
     if not config.enable_sounds or not config.sounds:
         return
 
@@ -1748,8 +1725,7 @@ def save_state_for_playing_alarm_sounds(row):
         g_alarm_sound_states.add(state_name)
 
 
-def play_alarm_sounds():
-    # type: () -> None
+def play_alarm_sounds() -> None:
     if not config.enable_sounds or not config.sounds:
         return
 
@@ -1763,14 +1739,12 @@ def play_alarm_sounds():
             break  # only one sound at one time
 
 
-def get_user_sorters():
-    # type: () -> List[SorterSpec]
+def get_user_sorters() -> 'List[SorterSpec]':
     """Returns a list of optionally set sort parameters from HTTP request"""
     return _parse_url_sorters(html.request.var("sort"))
 
 
-def get_only_sites():
-    # type: () -> Optional[List[SiteId]]
+def get_only_sites() -> Optional[List[SiteId]]:
     """Is the view limited to specific sites by request?"""
     site_arg = html.request.var("site")
     if site_arg:
@@ -1778,8 +1752,7 @@ def get_only_sites():
     return None
 
 
-def get_limit():
-    # type: () -> Optional[int]
+def get_limit() -> Optional[int]:
     """How many data rows may the user query?"""
     limitvar = html.request.var("limit", "soft")
     if limitvar == "hard" and config.user.may("general.ignore_soft_limit"):
@@ -1826,8 +1799,8 @@ def ajax_set_viewoption():
     view_name = html.request.get_str_input_mandatory("view_name")
     option = html.request.get_str_input_mandatory("option")
     value_str = html.request.var("value")
-    value_mapping = {'true': True, 'false': False}  # type: Dict[Optional[str], bool]
-    value = value_mapping.get(value_str, value_str)  # type: Union[None, str, bool, int]
+    value_mapping: Dict[Optional[str], bool] = {'true': True, 'false': False}
+    value: Union[None, str, bool, int] = value_mapping.get(value_str, value_str)
     if isinstance(value, str) and value[0].isdigit():
         try:
             value = int(value)
@@ -2013,14 +1986,12 @@ def _show_combined_graphs_context_button(view):
     return view.datasource.ident in ["hosts", "services", "hostsbygroup", "servicesbygroup"]
 
 
-def _link_to_folder_by_path(path):
-    # type: (str) -> str
+def _link_to_folder_by_path(path: str) -> str:
     """Return an URL to a certain WATO folder when we just know its path"""
     return html.makeuri_contextless([("mode", "folder"), ("folder", path)], filename="wato.py")
 
 
-def _link_to_host_by_name(host_name):
-    # type: (str) -> str
+def _link_to_host_by_name(host_name: str) -> str:
     """Return an URL to the edit-properties of a host when we just know its name"""
     return html.makeuri_contextless([("mode", "edit_host"), ("host", host_name)],
                                     filename="wato.py")
@@ -2136,15 +2107,13 @@ def ajax_count_button():
     config.user.save_button_counts()
 
 
-def _sort_data(view, data, sorters):
-    # type: (View, Rows, List[SorterEntry]) -> None
+def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:
     """Sort data according to list of sorters."""
     if not sorters:
         return
 
     # Handle case where join columns are not present for all rows
-    def safe_compare(compfunc, row1, row2):
-        # type: (Callable[[Row, Row], int], Row, Row) -> int
+    def safe_compare(compfunc: 'Callable[[Row, Row], int]', row1: 'Row', row2: 'Row') -> int:
         if row1 is None and row2 is None:
             return 0
         if row1 is None:
@@ -2153,8 +2122,7 @@ def _sort_data(view, data, sorters):
             return 1
         return compfunc(row1, row2)
 
-    def multisort(e1, e2):
-        # type: (Row, Row) -> int
+    def multisort(e1: 'Row', e2: 'Row') -> int:
         for entry in sorters:
             neg = -1 if entry.negate else 1
 
@@ -2175,8 +2143,7 @@ def sorters_of_datasource(ds_name):
     return _allowed_for_datasource(sorter_registry, ds_name)
 
 
-def painters_of_datasource(ds_name):
-    # type: (str) -> Dict[str, Painter]
+def painters_of_datasource(ds_name: str) -> Dict[str, Painter]:
     return _allowed_for_datasource(painter_registry, ds_name)
 
 
@@ -2221,21 +2188,18 @@ def infos_needed_by_painter(painter, add_columns=None):
     return {c.split("_", 1)[0] for c in painter.columns if c != "site" and c not in add_columns}
 
 
-def painter_choices(painters):
-    # type: (Dict[str, Painter]) -> List[DropdownChoiceEntry]
+def painter_choices(painters: Dict[str, Painter]) -> List[DropdownChoiceEntry]:
     return [(c[0], c[1]) for c in painter_choices_with_params(painters)]
 
 
-def painter_choices_with_params(painters):
-    # type: (Dict[str, Painter]) -> List[CascadingDropdownChoice]
+def painter_choices_with_params(painters: Dict[str, Painter]) -> List[CascadingDropdownChoice]:
     return sorted(((name, get_painter_title_for_choices(painter),
                     painter.parameters if painter.parameters else None)
                    for name, painter in painters.items()),
                   key=lambda x: x[1])
 
 
-def get_sorter_title_for_choices(sorter):
-    # type: (Sorter) -> str
+def get_sorter_title_for_choices(sorter: 'Sorter') -> str:
     info_title = "/".join([
         visual_info_registry[info_name]().title_plural
         for info_name in sorted(infos_needed_by_painter(sorter))
@@ -2248,8 +2212,7 @@ def get_sorter_title_for_choices(sorter):
     return u"%s: %s" % (info_title, sorter.title)
 
 
-def get_painter_title_for_choices(painter):
-    # type: (Painter) -> str
+def get_painter_title_for_choices(painter: Painter) -> str:
     info_title = "/".join([
         visual_info_registry[info_name]().title_plural
         for info_name in sorted(infos_needed_by_painter(painter))
@@ -2320,7 +2283,7 @@ def show_command_form(is_open, datasource):
     html.hidden_fields()  # set all current variables, exception action vars
 
     # Show command forms, grouped by (optional) command group
-    by_group = {}  # type: Dict[Any, List[Any]]
+    by_group: Dict[Any, List[Any]] = {}
     for command_class in command_registry.values():
         command = command_class()
         if what in command.tables and config.user.may(command.permission().name):

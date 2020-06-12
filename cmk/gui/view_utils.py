@@ -33,8 +33,9 @@ if TYPE_CHECKING:
 # There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.
-def format_plugin_output(output, row=None, shall_escape=True):
-    # type: (CellContent, Optional[Row], bool) -> str
+def format_plugin_output(output: CellContent,
+                         row: 'Optional[Row]' = None,
+                         shall_escape: bool = True) -> str:
     assert not isinstance(output, dict)
     ok_marker = '<b class="stmark state0">OK</b>'
     warn_marker = '<b class="stmark state1">WARN</b>'
@@ -83,15 +84,14 @@ def format_plugin_output(output, row=None, shall_escape=True):
     return output
 
 
-def get_host_list_links(site, hosts):
-    # type: (SiteId, List[Union[str]]) -> List[str]
+def get_host_list_links(site: SiteId, hosts: List[Union[str]]) -> List[str]:
     entries = []
     for host in hosts:
-        args = [
+        args: HTTPVariables = [
             ("view_name", "hoststatus"),
             ("site", site),
             ("host", host),
-        ]  # type: HTTPVariables
+        ]
 
         if html.request.var("display_options"):
             args.append(("display_options", html.request.var("display_options")))
@@ -102,13 +102,11 @@ def get_host_list_links(site, hosts):
     return entries
 
 
-def row_limit_exceeded(row_count, limit):
-    # type: (int, Optional[int]) -> bool
+def row_limit_exceeded(row_count: int, limit: Optional[int]) -> bool:
     return limit is not None and row_count >= limit + 1
 
 
-def query_limit_exceeded_warn(limit, user_config):
-    # type: (Optional[int], LoggedInUser) -> None
+def query_limit_exceeded_warn(limit: Optional[int], user_config: 'LoggedInUser') -> None:
     """Compare query reply against limits, warn in the GUI about incompleteness"""
     text = HTML(_("Your query produced more than %d results. ") % limit)
 
@@ -128,8 +126,7 @@ def query_limit_exceeded_warn(limit, user_config):
     html.show_warning(text)
 
 
-def get_labels(row, what):
-    # type: (Row, str) -> Labels
+def get_labels(row: 'Row', what: str) -> Labels:
     # Sites with old versions that don't have the labels column return
     # None for this field. Convert this to the default value
     labels = row.get("%s_labels" % what, {}) or {}
@@ -137,8 +134,8 @@ def get_labels(row, what):
     return labels
 
 
-def render_labels(labels, object_type, with_links, label_sources):
-    # type: (Labels, str, bool, LabelSources) -> HTML
+def render_labels(labels: Labels, object_type: str, with_links: bool,
+                  label_sources: LabelSources) -> HTML:
     return _render_tag_groups_or_labels(labels,
                                         object_type,
                                         with_links,
@@ -146,8 +143,7 @@ def render_labels(labels, object_type, with_links, label_sources):
                                         label_sources=label_sources)
 
 
-def render_tag_groups(tag_groups, object_type, with_links):
-    # type: (TagGroups, str, bool) -> HTML
+def render_tag_groups(tag_groups: TagGroups, object_type: str, with_links: bool) -> HTML:
     return _render_tag_groups_or_labels(tag_groups,
                                         object_type,
                                         with_links,
@@ -155,8 +151,9 @@ def render_tag_groups(tag_groups, object_type, with_links):
                                         label_sources={})
 
 
-def _render_tag_groups_or_labels(entries, object_type, with_links, label_type, label_sources):
-    # type: (Union[TagGroups, Labels], str, bool, str, LabelSources) -> HTML
+def _render_tag_groups_or_labels(entries: Union[TagGroups,
+                                                Labels], object_type: str, with_links: bool,
+                                 label_type: str, label_sources: LabelSources) -> HTML:
     elements = [
         _render_tag_group(tg_id, tag, object_type, with_links, label_type,
                           label_sources.get(tg_id, "unspecified"))
@@ -167,8 +164,8 @@ def _render_tag_groups_or_labels(entries, object_type, with_links, label_type, l
                             readonly="true")
 
 
-def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_source):
-    # type: (Union[TagID, str], Union[TagValue, str], str, bool, str, str) -> HTML
+def _render_tag_group(tg_id: Union[TagID, str], tag: Union[TagValue, str], object_type: str,
+                      with_link: bool, label_type: str, label_source: str) -> HTML:
     span = html.render_tag(html.render_div(
         html.render_span("%s:%s" % (tg_id, tag), class_=["tagify__tag-text"])),
                            class_=["tagify--noAnim", label_source])
@@ -176,11 +173,11 @@ def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_sour
         return span
 
     if label_type == "tag_group":
-        type_filter_vars = [
+        type_filter_vars: HTTPVariables = [
             ("%s_tag_0_grp" % object_type, tg_id),
             ("%s_tag_0_op" % object_type, "is"),
             ("%s_tag_0_val" % object_type, tag),
-        ]  # type: HTTPVariables
+        ]
     elif label_type == "label":
         type_filter_vars = [
             ("%s_label" % object_type, json.dumps([{
@@ -191,18 +188,17 @@ def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_sour
     else:
         raise NotImplementedError()
 
-    url_vars = [
+    url_vars: HTTPVariables = [
         ("filled_in", "filter"),
         ("search", "Search"),
         ("view_name", "searchhost" if object_type == "host" else "searchsvc"),
-    ]  # type: HTTPVariables
+    ]
 
     url = html.makeuri_contextless(url_vars + type_filter_vars, filename="view.py")
     return html.render_a(span, href=url)
 
 
-def get_themed_perfometer_bg_color():
-    # type: () -> str
+def get_themed_perfometer_bg_color() -> str:
     """Return the theme specific background color for perfometer rendering"""
     if html.get_theme() == "modern-dark":
         return "#bdbdbd"

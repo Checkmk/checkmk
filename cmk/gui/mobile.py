@@ -36,8 +36,7 @@ Items = List[Tuple[str, str, str]]
 NavigationBar = List[Tuple[str, str, str, str]]
 
 
-def mobile_html_head(title):
-    # type: (str) -> None
+def mobile_html_head(title: str) -> None:
     html.mobile = True
     html.write(
         """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
@@ -75,14 +74,12 @@ def mobile_html_head(title):
     html.open_body(class_="mobile")
 
 
-def mobile_html_foot():
-    # type: () -> None
+def mobile_html_foot() -> None:
     html.close_body()
     html.close_html()
 
 
-def jqm_header_button(pos, url, title, icon=""):
-    # type: (str, str, str, str) -> None
+def jqm_header_button(pos: str, url: str, title: str, icon: str = "") -> None:
     html.a('',
            href=url,
            class_="ui-btn-%s" % pos,
@@ -94,8 +91,10 @@ def jqm_header_button(pos, url, title, icon=""):
            })
 
 
-def jqm_page_header(title, id_=None, left_button=None, right_button=None):
-    # type: (str, Optional[str], Optional[HeaderButton], Optional[HeaderButton]) -> None
+def jqm_page_header(title: str,
+                    id_: Optional[str] = None,
+                    left_button: Optional[HeaderButton] = None,
+                    right_button: Optional[HeaderButton] = None) -> None:
     html.open_div(id_=id_ if id_ else None, **{"data-role": "page"})
     html.open_div(
         **{
@@ -113,8 +112,7 @@ def jqm_page_header(title, id_=None, left_button=None, right_button=None):
     html.open_div(**{"data-role": "content"})
 
 
-def jqm_page_navfooter(items, current, page_id):
-    # type: (NavigationBar, str, str) -> None
+def jqm_page_navfooter(items: NavigationBar, current: str, page_id: str) -> None:
     html.close_div()  # close content
     html.open_div(
         **{
@@ -148,8 +146,7 @@ def jqm_page_navfooter(items, current, page_id):
     html.close_div()  # close page-div
 
 
-def jqm_page_index(title, items):
-    # type: (str, Items) -> None
+def jqm_page_index(title: str, items: Items) -> None:
     manual_sort = [_("Hosts"), _("Services"), _("Events")]
 
     items.sort(key=lambda x: (x[0], x[2]))
@@ -162,8 +159,7 @@ def jqm_page_index(title, items):
         jqm_page_index_topic_renderer(topic, items)
 
 
-def jqm_page_index_topic_renderer(topic, items):
-    # type: (str, Items) -> None
+def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
     has_items_for_topic = any(i for i in items if i[0] == topic)
     if not has_items_for_topic:
         return
@@ -182,8 +178,7 @@ def jqm_page_index_topic_renderer(topic, items):
     html.close_ul()
 
 
-def page_login():
-    # type: () -> None
+def page_login() -> None:
     title = _("Check_MK Mobile")
     mobile_html_head(title)
     jqm_page_header(title, id_="login")
@@ -215,8 +210,7 @@ def page_login():
 
 
 @cmk.gui.pages.register("mobile")
-def page_index():
-    # type: () -> None
+def page_index() -> None:
     title = _("Check_MK Mobile")
     mobile_html_head(title)
     jqm_page_header(title,
@@ -277,8 +271,7 @@ def page_index():
 
 
 @cmk.gui.pages.register("mobile_view")
-def page_view():
-    # type: () -> None
+def page_view() -> None:
     view_name = html.request.var("view_name")
     if not view_name:
         return page_index()
@@ -317,9 +310,9 @@ def page_view():
 
 
 class MobileViewRenderer(views.ViewRenderer):
-    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
-               unfiltered_amount_of_rows):
-        # type: (Rows, List[Cell], List[Cell], bool, Layout, int, List[Filter], int) -> None
+    def render(self, rows: Rows, group_cells: List[Cell], cells: List[Cell], show_checkboxes: bool,
+               layout: Layout, num_columns: int, show_filters: List[Filter],
+               unfiltered_amount_of_rows: int) -> None:
         view_spec = self.view.spec
         home = ("mobile.py", "Home", "home")
 
@@ -400,8 +393,7 @@ class MobileViewRenderer(views.ViewRenderer):
             jqm_page_navfooter(navbar, 'context', page_id)
 
 
-def show_filter_form(show_filters):
-    # type: (List[Filter]) -> None
+def show_filter_form(show_filters: List[Filter]) -> None:
     # Sort filters
     s = sorted([(f.sort_index, f.title, f) for f in show_filters if f.available()])
 
@@ -425,8 +417,7 @@ def show_filter_form(show_filters):
     """)
 
 
-def show_command_form(datasource, rows):
-    # type: (DataSource, Rows) -> None
+def show_command_form(datasource: DataSource, rows: Rows) -> None:
     what = datasource.infos[0]
     html.javascript("""
     $(document).ready(function() {
@@ -457,8 +448,7 @@ def show_command_form(datasource, rows):
 
 
 # FIXME: Reduce ducplicate code with views.py
-def do_commands(what, rows):
-    # type: (str, Rows) -> bool
+def do_commands(what: str, rows: Rows) -> bool:
     command = None
     title, executor = views.core_command(what, rows[0], 0, len(rows))[1:3]  # just get the title
     title_what = _("hosts") if what == "host" else _("services")
@@ -472,7 +462,7 @@ def do_commands(what, rows):
         return r is None  # Show commands on negative answer
 
     count = 0
-    already_executed = set()  # type: Set[str]
+    already_executed: Set[str] = set()
     for nr, row in enumerate(rows):
         nagios_commands, title, executor = views.core_command(what, row, nr, len(rows))
         for command in nagios_commands:
@@ -486,8 +476,7 @@ def do_commands(what, rows):
     return True  # Show commands again
 
 
-def show_context_links(context_links):
-    # type: (List[Tuple[str, str, str, str]]) -> None
+def show_context_links(context_links: List[Tuple[str, str, str, str]]) -> None:
     items = []
     for title, uri, _icon, _buttonid in context_links:
         items.append(('Context', uri, title))

@@ -46,7 +46,7 @@ from cmk.gui.permissions import (
 )
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 compile_logger = logger.getChild("bi.compilation")
 
 BIAggregationTree = Dict[str, Any]  # TODO: Improve this type
@@ -167,25 +167,24 @@ NT_PLACEHOLDER = 4  # temporary dummy entry needed for REMAINING
 # Global variables
 # NOTE: All this global stuff *really* needs to go away, it induces the
 # horrible "implicit protocol" anti-pattern all over the place!
-g_bi_cache_manager = None  # type: Optional[BICacheManager]
-g_bi_sitedata_manager = None  # type: Optional[BISitedataManager]
-g_bi_job_manager = None  # type: Optional[BIJobManager]
+g_bi_cache_manager: 'Optional[BICacheManager]' = None
+g_bi_sitedata_manager: 'Optional[BISitedataManager]' = None
+g_bi_job_manager: 'Optional[BIJobManager]' = None
 g_services_items = None
-g_services = {}  # type: Dict[BIHostSpec, Tuple[Any, Any, Any, Any, Any]]
-g_services_by_hostname = {
-}  # type: Dict[HostName, List[Tuple[SiteId, Tuple[Any, Any, Any, Any, Any]]]]
-g_remaining_refs = []  # type: List[Tuple[BIHostSpec, Any, Any]]
+g_services: Dict[BIHostSpec, Tuple[Any, Any, Any, Any, Any]] = {}
+g_services_by_hostname: Dict[HostName, List[Tuple[SiteId, Tuple[Any, Any, Any, Any, Any]]]] = {}
+g_remaining_refs: List[Tuple[BIHostSpec, Any, Any]] = []
 # dictionary with hosts and its compiled services
-g_compiled_services_leafes = {}  # type: Dict[BIHostSpec, Set[ServiceName]]
+g_compiled_services_leafes: Dict[BIHostSpec, Set[ServiceName]] = {}
 
-g_tree_cache = {}  # type: Dict[str, Any]
+g_tree_cache: Dict[str, Any] = {}
 g_config_information = None  # for invalidating cache after config change
 did_compilation = False  # Is set to true if anything has been compiled
 
-regex_host_hit_cache = set()  # type: Set[Tuple[Any, Any]]
-regex_host_miss_cache = set()  # type: Set[Tuple[Any, Any]]
-regex_svc_hit_cache = set()  # type: Set[Tuple[Any, Any]]
-regex_svc_miss_cache = set()  # type: Set[Tuple[Any, Any]]
+regex_host_hit_cache: Set[Tuple[Any, Any]] = set()
+regex_host_miss_cache: Set[Tuple[Any, Any]] = set()
+regex_svc_hit_cache: Set[Tuple[Any, Any]] = set()
+regex_svc_miss_cache: Set[Tuple[Any, Any]] = set()
 
 
 # Load the static configuration of all services and hosts (including tags)
@@ -231,8 +230,7 @@ def load_services(only_hosts):
 # If file timestamps change -> Cache is invalid
 # If there are more sites online than before -> Cache is invalid
 # If there are less sites online than before -> No problem at all
-def get_current_sitestats():
-    # type: () -> Dict[str, Any]
+def get_current_sitestats() -> Dict[str, Any]:
     sitestats_timestamps = []
 
     # Read all relevant multisite.d/*.mk files
@@ -258,11 +256,11 @@ def get_current_sitestats():
             continue
         relevant_configuration_timestamps.append(entry)
 
-    current_world = {
+    current_world: Dict[str, Any] = {
         "timestamps": relevant_configuration_timestamps,
         "online_sites": set(),
         "known_sites": set()
-    }  # type: Dict[str, Any]
+    }
 
     # This request here is mandatory, since the sites.states() info might be outdated
     sites.live().set_prepend_site(True)
@@ -296,12 +294,11 @@ def get_aggregation_group_trees():
     return sorted(groups)
 
 
-def aggregation_group_choices():
-    # type: () -> List[DropdownChoiceEntry]
+def aggregation_group_choices() -> List[DropdownChoiceEntry]:
     """ Returns a sorted list of aggregation group names """
     migrate_bi_configuration()
 
-    group_names = set()  # type: Set[str]
+    group_names: Set[str] = set()
     for aggr_def in config.aggregations + config.host_aggregations:
         group_names.update(aggr_def[1])
 
@@ -613,11 +610,10 @@ def marshal_load_data(filepath):
 # Note 2: Generally these files are never deleted, just overwritten
 #         or truncated. This helps preserving any locked filedescriptor
 class BICacheFile:
-    def __init__(self, filepath):
-        # type: (str) -> None
+    def __init__(self, filepath: str) -> None:
         self._filepath = filepath
         self._cached_data = None
-        self._filetime = None  # type: Optional[float]
+        self._filetime: Optional[float] = None
 
         try:
             with open(self._filepath, "ab"):
@@ -700,7 +696,7 @@ class BISitedataManager:
 
     def _reset_cached_data(self):
         # The actual processed data this class provides
-        self._data = {"services": {}, "services_by_hostname": {}}  # type: Dict[str, Dict]
+        self._data: Dict[str, Dict] = {"services": {}, "services_by_hostname": {}}
         # Sites from which we have data
         self._have_sites = set()
         # Cached all hosts info
@@ -768,7 +764,7 @@ class BISitedataManager:
             sites.live().set_prepend_site(False)
             sites.live().set_only_sites(None)
 
-        site_dict = {}  # type: Dict[str, Any]
+        site_dict: Dict[str, Any] = {}
         # Technically, the pre-annotations are a lie, we should really have a typed
         # interface for Livestatus.
         varnames: List[str]
@@ -878,11 +874,11 @@ class BISitedataManager:
 class BIJobManager:
     # TODO: Make this a *real* class with a *real* constructor... :-/
     def __init__(self):
-        self._queued_jobs = []  # type: List[Dict[str, Any]]
+        self._queued_jobs: List[Dict[str, Any]] = []
         super(BIJobManager, self).__init__()
 
     def _get_only_hosts_and_only_groups(self, aggr_ids, only_hosts, only_groups, all_hosts):
-        all_groups = set()  # type: Set[Any]
+        all_groups: Set[Any] = set()
         for _aggr_type, _idx, aggr_groups in aggr_ids:
             all_groups.update(aggr_groups)
 
@@ -977,8 +973,8 @@ class BIJobManager:
         self._queued_jobs = []
 
     def _reap_worker_results(self):
-        results = []  # type: List[Any]
-        errors = []  # type: List[Any]
+        results: List[Any] = []
+        errors: List[Any] = []
 
         still_running = []
         for worker in self._workers:
@@ -1060,8 +1056,7 @@ class BIJobManager:
         g_bi_cache_manager.discard_cachefile_data()
         return True  # Did compilation
 
-    def _get_all_jobs(self):
-        # type: () -> List[Dict[str, Any]]
+    def _get_all_jobs(self) -> List[Dict[str, Any]]:
         if g_bi_sitedata_manager is None:
             raise Exception("_get_all_jobs: g_bi_sitedata_manager is None")
         jobs = []
@@ -1410,7 +1405,7 @@ def api_get_aggregation_state(filter_names=None, filter_groups=None):
         if filter_names and aggr_name not in filter_names:
             return False
 
-        aggr_sites = set(x[0] for x in tree.get("reqhosts"))  # type: Set[SiteId]
+        aggr_sites: Set[SiteId] = set(x[0] for x in tree.get("reqhosts"))
 
         missing_sites.update(aggr_sites - online_sites)
         if not aggr_sites.intersection(online_sites):
@@ -1418,9 +1413,9 @@ def api_get_aggregation_state(filter_names=None, filter_groups=None):
             return False
         return True
 
-    required_hosts = set()  # type: BINeededHosts
-    required_trees = set()  # type: Set[BIAggregationTitle]
-    tree_lookup = {}  # type: Dict[BIAggregationTitle, Any]
+    required_hosts: BINeededHosts = set()
+    required_trees: Set[BIAggregationTitle] = set()
+    tree_lookup: Dict[BIAggregationTitle, Any] = {}
 
     for group, trees in g_tree_cache["forest"].items():
         if filter_groups and group not in filter_groups:
@@ -1536,7 +1531,7 @@ def compile_forest(only_hosts=None, only_groups=None):
 def check_title_uniqueness(forest):
     # Legacy, will be removed any decade from now
     # One aggregation cannot be in mutliple groups.
-    known_titles = set()  # type: Set[Any]
+    known_titles: Set[Any] = set()
     for aggrs in forest.values():
         for aggr in aggrs:
             title = aggr["title"]
@@ -1551,7 +1546,7 @@ def check_title_uniqueness(forest):
 
 
 def check_aggregation_title_uniqueness(aggregations):
-    known_titles = set()  # type: Set[Any]
+    known_titles: Set[Any] = set()
     for attrs in aggregations.values():
         title = attrs["title"]
         if title in known_titles:
@@ -1590,9 +1585,9 @@ def compile_rule_node(aggr_type, calllist, lvl):
             config.FOREACH_SERVICE,
     ]:
         matches = find_matching_services(aggr_type, what, calllist[1:])
-        new_elements = []  # type: List[Any]
+        new_elements: List[Any] = []
         # avoid duplicate rule incarnations
-        handled_args = set()  # type: Set[Any]
+        handled_args: Set[Any] = set()
         for (hostname, hostalias), matchgroups in matches:
             args = substitute_matches(arglist, hostname, hostalias, matchgroups)
             if tuple(args) not in handled_args:
@@ -1791,7 +1786,7 @@ def find_all_leaves(node):
 
     # rule node
     if node["type"] == NT_RULE:
-        entries = []  # type: List[Any]
+        entries: List[Any] = []
         for n in node["nodes"]:
             entries += find_all_leaves(n)
         return entries
@@ -1862,7 +1857,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
     arginfo = dict(zip(arglist, args))
     inst_description = subst_vars(description, arginfo)
 
-    elements = []  # type: List[Any]
+    elements: List[Any] = []
 
     for node in nodes:
         # Handle HIDDEN nodes. There are compiled just as normal nodes, but
@@ -1880,7 +1875,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
 
         if node[1] in [config.HOST_STATE, config.REMAINING]:
             new_elements = compile_leaf_node(subst_vars(node[0], arginfo), node[1])
-            new_new_elements = []  # type: List[Any]
+            new_new_elements: List[Any] = []
             for entry in new_elements:
                 # Postpone: remember reference to list where we need to add
                 # remaining services of host
@@ -1913,7 +1908,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
                 matches = find_matching_services(aggr_type, node[0], calllist)
                 new_elements = []
                 # avoid duplicate rule incarnations
-                handled_args = set()  # type: Set[Any]
+                handled_args: Set[Any] = set()
                 for (hostname, hostalias), matchgroups in matches:
                     if tuple(args) + matchgroups not in handled_args:
                         new_elements += compile_leaf_node(
@@ -1941,7 +1936,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
 
         elements += new_elements
 
-    needed_hosts = set()  # type: BINeededHosts
+    needed_hosts: BINeededHosts = set()
     for element in elements:
         needed_hosts.update(element.get("reqhosts", []))
 
@@ -2075,7 +2070,7 @@ def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_
 
 
 def compile_leaf_node(host_re, service_re=config.HOST_STATE):
-    found = []  # type: List[Any]
+    found: List[Any] = []
 
     if host_re == "$1$":
         return found
@@ -2187,8 +2182,8 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
 
 # Execution of the trees. Returns a tree object reflecting
 # the states of all nodes
-def execute_tree(tree, status_info=None):
-    # type: (BIAggregationTree, Optional[BIStatusInfo]) -> BITreeState
+def execute_tree(tree: BIAggregationTree,
+                 status_info: Optional[BIStatusInfo] = None) -> BITreeState:
     aggregation_options = {
         #        "use_aggregation_id": tree["aggregation_id"],
         "node_visualization": tree["node_visualization"],
@@ -2208,8 +2203,8 @@ def execute_node(node, status_info, aggregation_options):
     return execute_rule_node(node, status_info, aggregation_options)
 
 
-def _get_state_assumption_key(site, host, service):
-    # type: (Any, Any, Any) -> Union[Tuple[Any, Any], Tuple[Any, Any, Any]]
+def _get_state_assumption_key(site: Any, host: Any,
+                              service: Any) -> Union[Tuple[Any, Any], Tuple[Any, Any, Any]]:
     if service:
         return (site, host, service)
     return (site, host)
@@ -2259,13 +2254,13 @@ def execute_leaf_node(node, status_info, aggregation_options):
                     "in_service_period": in_service_period,
                 }
                 if state_assumption is not None:
-                    assumed_state = {
+                    assumed_state: Optional[Dict[str, Any]] = {
                         "state": state_assumption,
                         "output": _("Assumed to be %s") % _service_state_names()[state_assumption],
                         "in_downtime": downtime_depth > 0 and 2 or host_in_downtime != 0 and 1 or 0,
                         "acknowledged": bool(acknowledged),
                         "in_service_period": in_service_period,
-                    }  # type: Optional[Dict[str, Any]]
+                    }
 
                 else:
                     assumed_state = None
@@ -2373,7 +2368,7 @@ def execute_rule_node(node, status_info, aggregation_options):
             assumed_states.append(node_states[-1])
 
     if len(node_states) == 0:
-        state = {"state": None, "output": _("Not yet monitored")}  # type: Dict[str, Any]
+        state: Dict[str, Any] = {"state": None, "output": _("Not yet monitored")}
         downtime_state = state
     else:
         state = func(*([node_states] + funcargs))
@@ -2409,11 +2404,10 @@ def execute_rule_node(node, status_info, aggregation_options):
 
 # Get all status information we need for the aggregation from
 # a known lists of lists (list of site/host pairs)
-def get_status_info(required_hosts):
-    # type: (BINeededHosts) -> BIStatusInfo
+def get_status_info(required_hosts: BINeededHosts) -> BIStatusInfo:
     # Query each site only for hosts that that site provides
-    req_hosts = set()  # type: Set[HostName]
-    req_sites = set()  # type: Set[SiteId]
+    req_hosts: Set[HostName] = set()
+    req_sites: Set[SiteId] = set()
 
     for site, host in required_hosts:
         req_hosts.add(host)
@@ -2477,7 +2471,7 @@ def get_status_info_filtered(filter_header, only_sites, limit, host_columns, pre
     # This is needed to allow cluster hosts (which have the nodes as parents) in the
     # host_aggregation construct.
     if precompile_on_demand:
-        parent_filter = []  # type: List[Any]
+        parent_filter: List[Any] = []
         for row in rows:
             parent_filter += ['Filter: host_name = %s\n' % p for p in row["parents"]]
 
@@ -2661,8 +2655,7 @@ def page_all():
 
 
 @cmk.gui.pages.register("bi_set_assumption")
-def ajax_set_assumption():
-    # type: () -> None
+def ajax_set_assumption() -> None:
     site = html.request.get_unicode_input("site")
     host = html.request.get_unicode_input("host")
     service = html.request.get_unicode_input("service")
@@ -2704,7 +2697,7 @@ def ajax_render_tree():
     # TODO: Cleanup the renderer to use a class registry for lookup
     renderer_class_name = html.request.var("renderer")
     if renderer_class_name == "FoldableTreeRendererTree":
-        renderer_cls = FoldableTreeRendererTree  # type: Type[ABCFoldableTreeRenderer]
+        renderer_cls: Type[ABCFoldableTreeRenderer] = FoldableTreeRendererTree
     elif renderer_class_name == "FoldableTreeRendererBoxes":
         renderer_cls = FoldableTreeRendererBoxes
     elif renderer_class_name == "FoldableTreeRendererBottomUp":
@@ -3038,18 +3031,18 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
     def _show_node(self, tree, show_host, mousecode=None, img_class=None):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
-            addclass = "assumed"  # type: Optional[str]
+            addclass: Optional[str] = "assumed"
             effective_state = tree[1]
         else:
             addclass = None
             effective_state = tree[0]
 
-        class_ = [
+        class_: List[Optional[str]] = [
             "content",  #
             "state",
             "state%d" % (effective_state["state"] if effective_state["state"] is not None else -1),
             addclass
-        ]  # type: List[Optional[str]]
+        ]
         html.open_span(class_=class_)
         html.write_text(self._render_bi_state(effective_state["state"]))
         html.close_span()
@@ -3092,9 +3085,8 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
             html.close_span()
 
-        output = cmk.gui.view_utils.format_plugin_output(
-            effective_state["output"],
-            shall_escape=config.escape_plugin_output)  # type: HTMLContent
+        output: HTMLContent = cmk.gui.view_utils.format_plugin_output(
+            effective_state["output"], shall_escape=config.escape_plugin_output)
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:
@@ -3113,7 +3105,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
     def _show_subtree(self, tree, path, show_host):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
-            addclass = "assumed"  # type: Optional[str]
+            addclass: Optional[str] = "assumed"
             effective_state = tree[1]
         else:
             addclass = None
@@ -3212,7 +3204,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
         return [(content, height, [])]
 
     def _gen_node(self, tree, height, show_host):
-        leaves = []  # type: List[Any]
+        leaves: List[Any] = []
         for node in tree[3]:
             if not node[2].get("hidden"):
                 leaves += self._gen_table(node, height - 1, show_host)
@@ -3246,8 +3238,8 @@ class FoldableTreeRendererTopDown(ABCFoldableTreeRendererTable):
 #
 
 
-def create_aggregation_row(tree, status_info=None):
-    # type: (BIAggregationTree, Optional[BIStatusInfo]) -> BIAggregationRow
+def create_aggregation_row(tree: BIAggregationTree,
+                           status_info: Optional[BIStatusInfo] = None) -> BIAggregationRow:
     tree_state = execute_tree(tree, status_info)
 
     # TODO: the tree state may include hosts the current user has
@@ -3319,7 +3311,7 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
         if affected is None:
             items = {}
         else:
-            by_groups = {}  # type: Dict[Any, Any]
+            by_groups: Dict[Any, Any] = {}
             for group, aggr in affected:
                 entries = by_groups.get(group, [])
                 entries.append(aggr)
@@ -3335,12 +3327,12 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
         if only_aggr_name and only_aggr_name != tree.get("title"):
             return False
 
-        aggr_sites = set(x[0] for x in tree.get("reqhosts"))  # type: Set[SiteId]
+        aggr_sites: Set[SiteId] = set(x[0] for x in tree.get("reqhosts"))
         if not aggr_sites.intersection(online_sites):
             return False
         return True
 
-    required_hosts = set()  # type: BINeededHosts
+    required_hosts: BINeededHosts = set()
     for group, trees in items.items():
         for tree in trees:
             if not is_tree_required(tree):
@@ -3470,7 +3462,7 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
         # displayed in the same view and the information thus being present
         # in some of the other hostrows.
         if joinbyname:
-            status_info = {}  # type: Optional[Dict[Any, Any]]
+            status_info: Optional[Dict[Any, Any]] = {}
             aggrs = g_tree_cache["aggregations_by_hostname"].get(host, [])
             # collect all the required host of all matching aggregations
             for a in aggrs:
@@ -3577,13 +3569,13 @@ def is_part_of_aggregation(what, site, host, service):
     return (site, host, service) in g_tree_cache["affected_services"]
 
 
-_rule_to_pack_lookup = {}  # type: Dict[str, str]
+_rule_to_pack_lookup: Dict[str, str] = {}
 
 
 def migrate_bi_configuration():
-    converted_host_aggregations = []  # type: List[Any]
-    converted_aggregations = []  # type: List[Any]
-    converted_aggregation_rules = {}  # type: Dict[Any, Any]
+    converted_host_aggregations: List[Any] = []
+    converted_aggregations: List[Any] = []
+    converted_aggregation_rules: Dict[Any, Any] = {}
     if config.bi_packs:
         global _rule_to_pack_lookup
         _rule_to_pack_lookup = {}

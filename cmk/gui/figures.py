@@ -92,8 +92,7 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def data_generator(cls):
-        # type: () -> Type[ABCDataGenerator]
+    def data_generator(cls) -> Type[ABCDataGenerator]:
         raise NotImplementedError()
 
     @property

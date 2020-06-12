@@ -42,8 +42,9 @@ import cmk.gui.forms as forms
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 
 
-def handle_exception_as_gui_crash_report(details=None, plain_error=False, fail_silently=False):
-    # type: (Optional[Dict], bool, bool) -> None
+def handle_exception_as_gui_crash_report(details: Optional[Dict] = None,
+                                         plain_error: bool = False,
+                                         fail_silently: bool = False) -> None:
     crash = GUICrashReport.from_exception(details=details)
     CrashReportStore().save(crash)
 
@@ -51,8 +52,7 @@ def handle_exception_as_gui_crash_report(details=None, plain_error=False, fail_s
     show_crash_dump_message(crash, plain_error, fail_silently)
 
 
-def show_crash_dump_message(crash, plain_text, fail_silently):
-    # type: (GUICrashReport, bool, bool) -> None
+def show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_silently: bool) -> None:
     """Create a crash dump from a GUI exception and display a message to the user"""
 
     title = _("Internal error")
@@ -132,8 +132,7 @@ class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
                 (self._crash_id, self._site_id))
         return row
 
-    def _get_crash_report_row(self, crash_id, site_id):
-        # type: (str, str) -> Optional[Dict[str, str]]
+    def _get_crash_report_row(self, crash_id: str, site_id: str) -> Optional[Dict[str, str]]:
         rows = CrashReportsRowTable().get_crash_report_rows(
             only_sites=[config.SiteId(ensure_str(site_id))],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id))
@@ -257,12 +256,10 @@ class PageCrash(ABCCrashReportPage):
 
         return details
 
-    def _get_version(self):
-        # type: () -> str
+    def _get_version(self) -> str:
         return cmk_version.__version__
 
-    def _get_crash_report_target(self):
-        # type: () -> str
+    def _get_crash_report_target(self) -> str:
         return config.crash_report_target
 
     def _vs_crash_report(self):
@@ -371,8 +368,7 @@ class ABCReportRenderer(metaclass=abc.ABCMeta):
     # TODO: Can not use this with python 2
     #@abc.abstractclassmethod
     @classmethod
-    def type(cls):
-        # type: () -> str
+    def type(cls) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -554,8 +550,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
         html.write(ensure_str(_pack_crash_report(self._get_serialized_crash_report())))
 
 
-def _pack_crash_report(serialized_crash_report):
-    # type: (Mapping[str, Optional[bytes]]) -> bytes
+def _pack_crash_report(serialized_crash_report: Mapping[str, Optional[bytes]]) -> bytes:
     """Returns a byte string representing the current crash report in tar archive format"""
     buf = io.BytesIO()
     with tarfile.open(mode="w:gz", fileobj=buf) as tar:

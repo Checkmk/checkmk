@@ -253,7 +253,7 @@ def ack_button(site=None, host_name=None, int_filename=None):
     else:
         label = _("Clear Logs")
 
-    urivars = [('_ack', '1')]  # type: HTTPVariables
+    urivars: HTTPVariables = [('_ack', '1')]
     if int_filename:
         urivars.append(("file", int_filename))
     html.context_button(label, html.makeactionuri(urivars), 'delete')
@@ -351,9 +351,9 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
 
 
 def parse_file(site, host_name, file_name, hidecontext=False):
-    log_chunks = []  # type: List[Dict[str, Any]]
+    log_chunks: List[Dict[str, Any]] = []
     try:
-        chunk = None  # type: Optional[Dict[str, Any]]
+        chunk: Optional[Dict[str, Any]] = None
         lines = get_logfile_lines(site, host_name, file_name)
         if lines is None:
             return None
@@ -367,7 +367,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):
                 continue
 
             if line[:3] == '<<<':  # new chunk begins
-                log_lines = []  # type: List[Dict[str, Any]]
+                log_lines: List[Dict[str, Any]] = []
                 chunk = {'lines': log_lines}
                 log_chunks.append(chunk)
 

@@ -36,8 +36,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, M
 auth_logger = logger.getChild("auth")
 
 
-def authenticate(request):
-    # type: (Request) -> bool
+def authenticate(request: Request) -> bool:
     """Perform the user authentication
 
     This is called by index.py to ensure user
@@ -57,20 +56,17 @@ def authenticate(request):
     return False
 
 
-def login(user_id):
-    # type: (UserId) -> None
+def login(user_id: UserId) -> None:
     """After the user has been authenticated, tell the different components
     of the GUI which user is authenticated."""
     config.set_user_by_id(user_id)
 
 
-def auth_cookie_name():
-    # type: () -> str
+def auth_cookie_name() -> str:
     return 'auth%s' % site_cookie_suffix()
 
 
-def site_cookie_suffix():
-    # type: () -> str
+def site_cookie_suffix() -> str:
     url_prefix = config.url_prefix()
 
     # Strip of eventual present "http://<host>". DIRTY!
@@ -80,8 +76,7 @@ def site_cookie_suffix():
     return os.path.dirname(url_prefix).replace('/', '_')
 
 
-def _load_secret():
-    # type: () -> str
+def _load_secret() -> str:
     """Reads the sites auth secret from a file
 
     Creates the files if it does not exist. Having access to the secret means that one can issue
@@ -109,13 +104,11 @@ def _load_secret():
     return secret
 
 
-def _generate_secret():
-    # type: () -> str
+def _generate_secret() -> str:
     return ensure_str(utils.get_random_string(256))
 
 
-def _load_serial(username):
-    # type: (UserId) -> int
+def _load_serial(username: UserId) -> int:
     """Load the password serial of the user
 
     This serial identifies the current config state of the user account. If either the password is
@@ -126,21 +119,18 @@ def _load_serial(username):
     return userdb.load_custom_attr(username, 'serial', int, 0)
 
 
-def _generate_auth_hash(username, now):
-    # type: (UserId, float) -> str
+def _generate_auth_hash(username: UserId, now: float) -> str:
     return _generate_hash(username, ensure_str(username) + str(now))
 
 
-def _generate_hash(username, value):
-    # type: (UserId, str) -> str
+def _generate_hash(username: UserId, value: str) -> str:
     """Generates a hash to be added into the cookie value"""
     secret = _load_secret()
     serial = _load_serial(username)
     return md5(ensure_binary(value + str(serial) + secret)).hexdigest()
 
 
-def del_auth_cookie():
-    # type: () -> None
+def del_auth_cookie() -> None:
     # Note: in distributed setups a cookie issued by one site is accepted by
     # others with the same auth.secret and user serial numbers. When a users
     # logs out then we need to delete all cookies that are accepted by us -
@@ -151,14 +141,12 @@ def del_auth_cookie():
                 html.response.delete_cookie(cookie_name)
 
 
-def _auth_cookie_value(username):
-    # type: (UserId) -> str
+def _auth_cookie_value(username: UserId) -> str:
     now = time.time()
     return ":".join([ensure_str(username), str(now), _generate_auth_hash(username, now)])
 
 
-def _invalidate_auth_session():
-    # type: () -> None
+def _invalidate_auth_session() -> None:
     if config.single_user_session is not None:
         userdb.invalidate_session(config.user.id)
 
@@ -166,16 +154,14 @@ def _invalidate_auth_session():
     html.del_language_cookie()
 
 
-def _renew_auth_session(username):
-    # type: (UserId) -> None
+def _renew_auth_session(username: UserId) -> None:
     if config.single_user_session is not None:
         userdb.refresh_session(username)
 
     set_auth_cookie(username)
 
 
-def _create_auth_session(username):
-    # type: (UserId) -> None
+def _create_auth_session(username: UserId) -> None:
     if config.single_user_session is not None:
         session_id = userdb.initialize_session(username)
         _set_session_cookie(username, session_id)
@@ -183,30 +169,25 @@ def _create_auth_session(username):
     set_auth_cookie(username)
 
 
-def set_auth_cookie(username):
-    # type: (UserId) -> None
+def set_auth_cookie(username: UserId) -> None:
     html.response.set_http_cookie(auth_cookie_name(), _auth_cookie_value(username))
 
 
-def _set_session_cookie(username, session_id):
-    # type: (UserId, str) -> None
+def _set_session_cookie(username: UserId, session_id: str) -> None:
     html.response.set_http_cookie(_session_cookie_name(),
                                   _session_cookie_value(username, session_id))
 
 
-def _session_cookie_name():
-    # type: () -> str
+def _session_cookie_name() -> str:
     return 'session%s' % site_cookie_suffix()
 
 
-def _session_cookie_value(username, session_id):
-    # type: (UserId, str) -> str
+def _session_cookie_value(username: UserId, session_id: str) -> str:
     value = ensure_str(username) + ":" + session_id
     return value + ":" + _generate_hash(username, value)
 
 
-def _get_session_id_from_cookie(username):
-    # type: (UserId) -> str
+def _get_session_id_from_cookie(username: UserId) -> str:
     raw_value = html.request.cookie(_session_cookie_name(), "::")
     assert raw_value is not None
     cookie_username, session_id, cookie_hash = raw_value.split(':', 2)
@@ -219,8 +200,7 @@ def _get_session_id_from_cookie(username):
     return session_id
 
 
-def _renew_cookie(cookie_name, username):
-    # type: (str, UserId) -> None
+def _renew_cookie(cookie_name: str, username: UserId) -> None:
     # Do not renew if:
     # a) The _ajaxid var is set
     # b) A logout is requested
@@ -231,8 +211,7 @@ def _renew_cookie(cookie_name, username):
         _renew_auth_session(username)
 
 
-def _check_auth_cookie(cookie_name):
-    # type: (str) -> Optional[UserId]
+def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     username, issue_time, cookie_hash = _parse_auth_cookie(cookie_name)
     _check_parsed_auth_cookie(username, issue_time, cookie_hash)
 
@@ -263,8 +242,7 @@ def _check_auth_cookie(cookie_name):
     return username
 
 
-def _parse_auth_cookie(cookie_name):
-    # type: (str) -> Tuple[UserId, float, str]
+def _parse_auth_cookie(cookie_name: str) -> Tuple[UserId, float, str]:
     raw_cookie = html.request.cookie(cookie_name, "::")
     assert raw_cookie is not None
 
@@ -273,8 +251,7 @@ def _parse_auth_cookie(cookie_name):
     return UserId(username), float(issue_time) if issue_time else 0.0, ensure_str(cookie_hash)
 
 
-def _check_parsed_auth_cookie(username, issue_time, cookie_hash):
-    # type: (UserId, float, str) -> None
+def _check_parsed_auth_cookie(username: UserId, issue_time: float, cookie_hash: str) -> None:
     if not userdb.user_exists(username):
         raise MKAuthException(_('Username is unknown'))
 
@@ -282,8 +259,7 @@ def _check_parsed_auth_cookie(username, issue_time, cookie_hash):
         raise MKAuthException(_('Invalid credentials'))
 
 
-def _auth_cookie_is_valid(cookie_name):
-    # type: (str) -> bool
+def _auth_cookie_is_valid(cookie_name: str) -> bool:
     try:
         _check_parsed_auth_cookie(*_parse_auth_cookie(cookie_name))
         return True
@@ -301,9 +277,8 @@ def _auth_cookie_is_valid(cookie_name):
 # - It also calls userdb.is_customer_user_allowed_to_login()
 # - It calls userdb.create_non_existing_user() but we don't
 # - It calls connection.is_locked() but we don't
-def _check_auth(request):
-    # type: (Request) -> Optional[UserId]
-    user_id = check_auth_web_server(request)  # type: Optional[UserId]
+def _check_auth(request: Request) -> Optional[UserId]:
+    user_id: Optional[UserId] = check_auth_web_server(request)
 
     if html.request.var("_secret"):
         user_id = _check_auth_automation()
@@ -326,8 +301,7 @@ def _check_auth(request):
     return user_id
 
 
-def verify_automation_secret(user_id, secret):
-    # type: (UserId, str) -> bool
+def verify_automation_secret(user_id: UserId, secret: str) -> bool:
     if secret and user_id and "/" not in user_id:
         path = Path(cmk.utils.paths.var_dir) / "web" / ensure_str(user_id) / "automation.secret"
         if not path.is_file():
@@ -339,8 +313,7 @@ def verify_automation_secret(user_id, secret):
     return False
 
 
-def _check_auth_automation():
-    # type: () -> UserId
+def _check_auth_automation() -> UserId:
     secret = html.request.get_str_input_mandatory("_secret", "").strip()
     user_id = html.request.get_unicode_input_mandatory("_username", "")
 
@@ -356,8 +329,7 @@ def _check_auth_automation():
     raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
 
 
-def _check_auth_http_header():
-    # type: () -> Optional[UserId]
+def _check_auth_http_header() -> Optional[UserId]:
     """When http header auth is enabled, try to read the user_id from the var
     and when there is some available, set the auth cookie (for other addons) and proceed."""
     assert isinstance(config.auth_by_http_header, str)
@@ -371,8 +343,7 @@ def _check_auth_http_header():
     return user_id
 
 
-def check_auth_web_server(request):
-    # type: (Request) -> UserId
+def check_auth_web_server(request: Request) -> UserId:
     """Try to get the authenticated user from the HTTP request
 
     The user may have configured (basic) authentication by the web server. In
@@ -384,8 +355,7 @@ def check_auth_web_server(request):
         return UserId(ensure_str(user))
 
 
-def _check_auth_by_cookie():
-    # type: () -> Optional[UserId]
+def _check_auth_by_cookie() -> Optional[UserId]:
     for cookie_name in html.request.get_cookie_names():
         if cookie_name.startswith('auth_'):
             try:
@@ -401,27 +371,23 @@ def _check_auth_by_cookie():
     return None
 
 
-def set_auth_type(_auth_type):
-    # type: (str) -> None
+def set_auth_type(_auth_type: str) -> None:
     local.auth_type = _auth_type
 
 
-auth_type = LocalProxy(lambda: local.auth_type)  # type: Union[str, LocalProxy]
+auth_type: Union[str, LocalProxy] = LocalProxy(lambda: local.auth_type)
 
 
 @page_registry.register_page("login")
 class LoginPage(Page):
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(LoginPage, self).__init__()
         self._no_html_output = False
 
-    def set_no_html_output(self, no_html_output):
-        # type: (bool) -> None
+    def set_no_html_output(self, no_html_output: bool) -> None:
         self._no_html_output = no_html_output
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
         cmk.gui.i18n.localize(html.request.var("lang", config.get_language()))
@@ -437,8 +403,7 @@ class LoginPage(Page):
 
         self._show_login_page()
 
-    def _do_login(self):
-        # type: () -> None
+    def _do_login(self) -> None:
         """handle the sent login form"""
         if not html.request.var('_login'):
             return
@@ -502,8 +467,7 @@ class LoginPage(Page):
         except MKUserError as e:
             html.add_user_error(e.varname, e)
 
-    def _show_login_page(self):
-        # type: () -> None
+    def _show_login_page(self) -> None:
         html.set_render_headfoot(False)
         html.add_body_css_class("login")
         html.header(config.get_page_heading(), javascripts=[])
@@ -555,7 +519,7 @@ class LoginPage(Page):
             html.show_message(config.login_screen["login_message"])
             html.close_div()
 
-        footer = []  # type: List[Union[HTML, str]]
+        footer: List[Union[HTML, str]] = []
         for title, url, target in config.login_screen.get("footer_links", []):
             footer.append(html.render_a(title, href=url, target=target))
 
@@ -586,8 +550,7 @@ class LoginPage(Page):
 
 @page_registry.register_page("logout")
 class LogoutPage(Page):
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         _invalidate_auth_session()
 
         if auth_type == 'cookie':

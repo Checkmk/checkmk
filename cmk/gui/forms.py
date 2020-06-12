@@ -21,8 +21,7 @@ g_header_open = False
 g_section_open = False
 
 
-def get_input(valuespec, varprefix):
-    # type: (ValueSpec, str) -> Any
+def get_input(valuespec: 'ValueSpec', varprefix: str) -> Any:
     value = valuespec.from_html_vars(varprefix)
     valuespec.validate_value(value, varprefix)
     return value
@@ -36,28 +35,26 @@ def get_input(valuespec, varprefix):
 # several dictionaries at once.
 # TODO: Remove all call sites and clean this up! The mechanic of this
 # is very uncommon compared to the other usages of valuespecs.
-def edit_dictionaries(
-        dictionaries,  # type: List[Tuple[str, Union[Transform, Dictionary]]]
-        value,  # type: Dict[str, Any]
-        focus=None,  # type: Optional[str]
-        hover_help=True,  # type: bool
-        validate=None,  # type: Optional[Callable[[Any], None]]
-        buttontext=None,  # type: Optional[str]
-        title=None,  # type: Optional[str]
-        buttons=None,  # type: List[Tuple[str, str, str]]
-        method="GET",  # type: str
-        preview=False,  # type: bool
-        varprefix="",  # type: str
-        formname="form",  # type: str
-        consume_transid=True  # type: bool
-):
+def edit_dictionaries(dictionaries: 'List[Tuple[str, Union[Transform, Dictionary]]]',
+                      value: Dict[str, Any],
+                      focus: Optional[str] = None,
+                      hover_help: bool = True,
+                      validate: Optional[Callable[[Any], None]] = None,
+                      buttontext: Optional[str] = None,
+                      title: Optional[str] = None,
+                      buttons: List[Tuple[str, str, str]] = None,
+                      method: str = "GET",
+                      preview: bool = False,
+                      varprefix: str = "",
+                      formname: str = "form",
+                      consume_transid: bool = True):
 
     if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
         if not preview and consume_transid:
             html.check_transaction()
 
-        messages = []  # type: List[str]
-        new_value = {}  # type: Dict[str, Dict[str, Any]]
+        messages: List[str] = []
+        new_value: Dict[str, Dict[str, Any]] = {}
         for keyname, vs_dict in dictionaries:
             dict_varprefix = varprefix + keyname
             new_value[keyname] = {}
@@ -109,18 +106,15 @@ def edit_dictionaries(
 
 
 # Similar but for editing an arbitrary valuespec
-def edit_valuespec(
-        vs,  # type: Dictionary
-        value,  # type: Dict[str, Any]
-        buttontext=None,  # type: Optional[str]
-        method="GET",  # type: str
-        varprefix="",  # type: str
-        validate=None,  # type: Optional[Callable[[Dict[str, Any]], None]]
-        formname="form",  # type: str
-        consume_transid=True,  # type: bool
-        focus=None  # type: Optional[str]
-):
-    # type: (...) -> Optional[Dict[str, Any]]
+def edit_valuespec(vs: 'Dictionary',
+                   value: Dict[str, Any],
+                   buttontext: Optional[str] = None,
+                   method: str = "GET",
+                   varprefix: str = "",
+                   validate: Optional[Callable[[Dict[str, Any]], None]] = None,
+                   formname: str = "form",
+                   consume_transid: bool = True,
+                   focus: Optional[str] = None) -> Optional[Dict[str, Any]]:
 
     if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
         if consume_transid:
@@ -167,8 +161,11 @@ def edit_valuespec(
 # New functions for painting forms
 
 
-def header(title, isopen=True, table_id="", narrow=False, css=None):
-    # type: (str, bool, str, bool, Optional[str]) -> None
+def header(title: str,
+           isopen: bool = True,
+           table_id: str = "",
+           narrow: bool = False,
+           css: Optional[str] = None) -> None:
     global g_header_open, g_section_open
     if g_header_open:
         end()
@@ -187,8 +184,7 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
 
 
 # container without legend and content
-def container():
-    # type: () -> None
+def container() -> None:
     global g_section_open
     section_close()
     html.open_tr()
@@ -196,19 +192,17 @@ def container():
     g_section_open = True
 
 
-def space():
-    # type: () -> None
+def space() -> None:
     html.tr(html.render_td('', colspan=2, style="height:15px;"))
 
 
-def section(title=None,
-            checkbox=None,
-            section_id=None,
-            simple=False,
-            hide=False,
-            legend=True,
-            css=None):
-    # type: (Union[None, HTML, str], Union[None, HTML, str, Tuple[str, bool, str]], Optional[str], bool, bool, bool, Optional[str]) -> None
+def section(title: Union[None, HTML, str] = None,
+            checkbox: Union[None, HTML, str, Tuple[str, bool, str]] = None,
+            section_id: Optional[str] = None,
+            simple: bool = False,
+            hide: bool = False,
+            legend: bool = True,
+            css: Optional[str] = None) -> None:
     global g_section_open
     section_close()
     html.open_tr(id_=section_id, class_=[css], style="display:none;" if hide else None)
@@ -236,15 +230,13 @@ def section(title=None,
     g_section_open = True
 
 
-def section_close():
-    # type: () -> None
+def section_close() -> None:
     if g_section_open:
         html.close_td()
         html.close_tr()
 
 
-def end():
-    # type: () -> None
+def end() -> None:
     global g_header_open
     g_header_open = False
     section_close()

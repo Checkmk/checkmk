@@ -49,7 +49,7 @@ from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unuse
     validate_host_attributes,
 )
 
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 
 
 def load_plugins(force):
@@ -92,7 +92,7 @@ class PermissionWATOAllowedAPI(Permission):
 
 Formatter = Callable[[Dict[str, Any]], str]
 
-_FORMATTERS = {
+_FORMATTERS: Dict[str, Tuple[Formatter, Formatter]] = {
     "json":
         (json.dumps,
          lambda response: json.dumps(response, sort_keys=True, indent=4, separators=(',', ': '))),
@@ -100,7 +100,7 @@ _FORMATTERS = {
     "xml":
         (dicttoxml.dicttoxml,
          lambda response: xml.dom.minidom.parseString(dicttoxml.dicttoxml(response)).toprettyxml()),
-}  # type: Dict[str, Tuple[Formatter, Formatter]]
+}
 
 
 @cmk.gui.pages.register("webapi")

@@ -61,7 +61,7 @@ from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unuse
 )
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 
 auth_logger = logger.getChild("auth")
 
@@ -69,8 +69,7 @@ Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 
 
 # Load all userdb plugins
-def load_plugins(force):
-    # type: (bool) -> None
+def load_plugins(force: bool) -> None:
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
@@ -85,8 +84,7 @@ def load_plugins(force):
 
 # The saved configuration for user connections is a bit inconsistent, let's fix
 # this here once and for all.
-def _fix_user_connections():
-    # type: () -> None
+def _fix_user_connections() -> None:
     for cfg in config.user_connections:
         # Although our current configuration always seems to have a 'disabled'
         # entry, this might not have always been the case.
@@ -100,37 +98,32 @@ config.register_post_config_load_hook(_fix_user_connections)
 
 
 # When at least one LDAP connection is defined and active a sync is possible
-def sync_possible():
-    # type: () -> bool
+def sync_possible() -> bool:
     return any(connection.type() == "ldap" for _connection_id, connection in active_connections())
 
 
-def locked_attributes(connection_id):
-    # type: (Optional[str]) -> List[str]
+def locked_attributes(connection_id: Optional[str]) -> List[str]:
     """Returns a list of connection specific locked attributes"""
     return _get_attributes(connection_id, lambda c: c.locked_attributes())
 
 
-def multisite_attributes(connection_id):
-    # type: (Optional[str]) -> List[str]
+def multisite_attributes(connection_id: Optional[str]) -> List[str]:
     """Returns a list of connection specific multisite attributes"""
     return _get_attributes(connection_id, lambda c: c.multisite_attributes())
 
 
-def non_contact_attributes(connection_id):
-    # type: (Optional[str]) -> List[str]
+def non_contact_attributes(connection_id: Optional[str]) -> List[str]:
     """Returns a list of connection specific non contact attributes"""
     return _get_attributes(connection_id, lambda c: c.non_contact_attributes())
 
 
-def _get_attributes(connection_id, selector):
-    # type: (Optional[str], Callable[[UserConnector], List[str]]) -> List[str]
+def _get_attributes(connection_id: Optional[str], selector: Callable[[UserConnector],
+                                                                     List[str]]) -> List[str]:
     connection = get_connection(connection_id)
     return selector(connection) if connection else []
 
 
-def create_non_existing_user(connection_id, username):
-    # type: (str, UserId) -> None
+def create_non_existing_user(connection_id: str, username: UserId) -> None:
     if user_exists(username):
         return  # User exists. Nothing to do...
 
@@ -154,8 +147,7 @@ def create_non_existing_user(connection_id, username):
         show_exception(connection_id, _("Error during sync"), e)
 
 
-def is_customer_user_allowed_to_login(user_id):
-    # type: (UserId) -> bool
+def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
     if not cmk_version.is_managed_edition():
         return True
 
@@ -174,23 +166,20 @@ def is_customer_user_allowed_to_login(user_id):
 # When using the multisite authentication with just by WATO created users it would be
 # easy, but we also need to deal with users which are only existant in the htpasswd
 # file and don't have a profile directory yet.
-def user_exists(username):
-    # type: (UserId) -> bool
+def user_exists(username: UserId) -> bool:
     if _user_exists_according_to_profile(username):
         return True
 
     return Htpasswd(Path(cmk.utils.paths.htpasswd_file)).exists(username)
 
 
-def _user_exists_according_to_profile(username):
-    # type: (UserId) -> bool
+def _user_exists_according_to_profile(username: UserId) -> bool:
     base_path = config.config_dir + "/" + ensure_str(username) + "/"
     return os.path.exists(base_path + "transids.mk") \
             or os.path.exists(base_path + "serial.mk")
 
 
-def login_timed_out(username, last_activity):
-    # type: (UserId, float) -> bool
+def login_timed_out(username: UserId, last_activity: float) -> bool:
     idle_timeout = load_custom_attr(username, "idle_timeout", _convert_idle_timeout, None)
     if idle_timeout is None:
         idle_timeout = config.user_idle_timeout
@@ -207,15 +196,13 @@ def login_timed_out(username, last_activity):
     return timed_out
 
 
-def update_user_access_time(username):
-    # type: (UserId) -> None
+def update_user_access_time(username: UserId) -> None:
     if not config.save_user_access_times:
         return
     save_custom_attr(username, 'last_seen', repr(time.time()))
 
 
-def on_succeeded_login(username):
-    # type: (UserId) -> None
+def on_succeeded_login(username: UserId) -> None:
     num_failed_logins = load_custom_attr(username, 'num_failed_logins', utils.saveint)
     if num_failed_logins is not None and num_failed_logins != 0:
         save_custom_attr(username, 'num_failed_logins', '0')
@@ -225,8 +212,7 @@ def on_succeeded_login(username):
 
 # userdb.need_to_change_pw returns either False or the reason description why the
 # password needs to be changed
-def need_to_change_pw(username):
-    # type: (UserId) -> Union[bool, str]
+def need_to_change_pw(username: UserId) -> Union[bool, str]:
     if not _is_local_user(username):
         return False
 
@@ -248,8 +234,7 @@ def need_to_change_pw(username):
     return False
 
 
-def _is_local_user(user_id):
-    # type: (UserId) -> bool
+def _is_local_user(user_id: UserId) -> bool:
     user = load_cached_profile(user_id)
     if user is None:
         # No cached profile present. Load all users to get the users data
@@ -259,8 +244,7 @@ def _is_local_user(user_id):
     return user.get('connector', 'htpasswd') == 'htpasswd'
 
 
-def _user_locked(user_id):
-    # type: (UserId) -> bool
+def _user_locked(user_id: UserId) -> bool:
     user = load_cached_profile(user_id)
     if user is None:
         # No cached profile present. Load all users to get the users data
@@ -270,8 +254,7 @@ def _user_locked(user_id):
     return user.get('locked', False)
 
 
-def on_failed_login(username):
-    # type: (UserId) -> None
+def on_failed_login(username: UserId) -> None:
     users = load_users(lock=True)
     if username in users:
         if "num_failed_logins" in users[username]:
@@ -286,13 +269,11 @@ def on_failed_login(username):
         save_users(users)
 
 
-def _root_dir():
-    # type: () -> str
+def _root_dir() -> str:
     return cmk.utils.paths.check_mk_config_dir + "/wato/"
 
 
-def _multisite_dir():
-    # type: () -> str
+def _multisite_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
@@ -313,13 +294,14 @@ class UserSelection(DropdownChoice):
                                                only_automation=False):
         def get_wato_users(nv):
             users = load_users()
-            elements = sorted([(name, "%s - %s" % (name, us.get("alias", name)))
-                               for (name, us) in users.items()
-                               if (not only_contacts or us.get("contactgroups")) and
-                               (not only_automation or us.get("automation_secret"))
-                              ])  # type: List[Tuple[Optional[UserId], str]]
+            elements: List[Tuple[Optional[UserId], str]] = sorted([
+                (name, "%s - %s" % (name, us.get("alias", name)))
+                for (name, us) in users.items()
+                if (not only_contacts or us.get("contactgroups")) and
+                (not only_automation or us.get("automation_secret"))
+            ])
             if nv is not None:
-                empty = [(None, none_value)]  # type: List[Tuple[Optional[UserId], str]]
+                empty: List[Tuple[Optional[UserId], str]] = [(None, none_value)]
                 elements = empty + elements
             return elements
 
@@ -354,8 +336,7 @@ class UserSelection(DropdownChoice):
 #   '----------------------------------------------------------------------'
 
 
-def is_valid_user_session(username, session_id):
-    # type: (UserId, str) -> bool
+def is_valid_user_session(username: UserId, session_id: str) -> bool:
     if config.single_user_session is None:
         return True  # No login session limitation enabled, no validation
 
@@ -373,8 +354,7 @@ def is_valid_user_session(username, session_id):
     return False
 
 
-def ensure_user_can_init_session(username):
-    # type: (UserId) -> bool
+def ensure_user_can_init_session(username: UserId) -> bool:
     if config.single_user_session is None:
         return True  # No login session limitation enabled, no validation
 
@@ -394,8 +374,7 @@ def ensure_user_can_init_session(username):
     raise MKUserError(None, _("Another session is active"))
 
 
-def initialize_session(username):
-    # type: (UserId) -> str
+def initialize_session(username: UserId) -> str:
     """Creates a new user login session (if single user session mode is enabled) and
     returns the session_id of the new session."""
     if not config.single_user_session:
@@ -406,14 +385,12 @@ def initialize_session(username):
     return session_id
 
 
-def create_session_id():
-    # type: () -> str
+def create_session_id() -> str:
     """Creates a random session id for the user and returns it."""
     return utils.gen_id()
 
 
-def refresh_session(username):
-    # type: (UserId) -> None
+def refresh_session(username: UserId) -> None:
     """Updates the current session of the user and returns the session_id or only
     returns an empty string when single user session mode is not enabled."""
     if not config.single_user_session:
@@ -427,27 +404,23 @@ def refresh_session(username):
     save_session_info(username, session_id)
 
 
-def invalidate_session(username):
-    # type: (UserId) -> None
+def invalidate_session(username: UserId) -> None:
     remove_custom_attr(username, "session_info")
 
 
 # Saves the current session_id and the current time (last activity)
-def save_session_info(username, session_id):
-    # type: (UserId, str) -> None
+def save_session_info(username: UserId, session_id: str) -> None:
     save_custom_attr(username, "session_info", "%s|%s" % (session_id, int(time.time())))
 
 
 # Returns either None (when no session_id available) or a two element
 # tuple where the first element is the sesssion_id and the second the
 # timestamp of the last activity.
-def load_session_info(username):
-    # type: (UserId) -> Optional[Tuple[str, int]]
+def load_session_info(username: UserId) -> Optional[Tuple[str, int]]:
     return load_custom_attr(username, "session_info", _convert_session_info)
 
 
-def _convert_session_info(value):
-    # type: (str) -> Optional[Tuple[str, int]]
+def _convert_session_info(value: str) -> Optional[Tuple[str, int]]:
     if value == "":
         return None
 
@@ -467,9 +440,8 @@ def _convert_session_info(value):
 
 
 class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
-    def __init__(self, user_editable, show_in_table, add_custom_macro, domain, permission,
-                 from_config):
-        # type: (bool, bool, bool, str, Optional[str], bool) -> None
+    def __init__(self, user_editable: bool, show_in_table: bool, add_custom_macro: bool,
+                 domain: str, permission: Optional[str], from_config: bool) -> None:
         super(GenericUserAttribute, self).__init__()
         self._user_editable = user_editable
         self._show_in_table = show_in_table
@@ -478,42 +450,35 @@ class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
         self._permission = permission
         self._from_config = from_config
 
-    def from_config(self):
-        # type: () -> bool
+    def from_config(self) -> bool:
         return self._from_config
 
-    def user_editable(self):
-        # type: () -> bool
+    def user_editable(self) -> bool:
         return self._user_editable
 
-    def permission(self):
-        # type: () -> Optional[str]
+    def permission(self) -> Optional[str]:
         return self._permission
 
-    def show_in_table(self):
-        # type: () -> bool
+    def show_in_table(self) -> bool:
         return self._show_in_table
 
-    def add_custom_macro(self):
-        # type: () -> bool
+    def add_custom_macro(self) -> bool:
         return self._add_custom_macro
 
-    def domain(self):
-        # type: () -> str
+    def domain(self) -> str:
         return self._domain
 
 
 # TODO: Legacy plugin API. Converts to new internal structure. Drop this with 1.6 or later.
-def declare_user_attribute(name,
-                           vs,
-                           user_editable=True,
-                           permission=None,
-                           show_in_table=False,
-                           topic=None,
-                           add_custom_macro=False,
-                           domain="multisite",
-                           from_config=False):
-    # type: (str, ValueSpec, bool, Optional[str], bool, str, bool, str, bool) -> None
+def declare_user_attribute(name: str,
+                           vs: ValueSpec,
+                           user_editable: bool = True,
+                           permission: Optional[str] = None,
+                           show_in_table: bool = False,
+                           topic: str = None,
+                           add_custom_macro: bool = False,
+                           domain: str = "multisite",
+                           from_config: bool = False) -> None:
 
     # FIXME: The classmethods "name" and "topic" shadow the arguments from the function scope.
     # Any use off "name" and "topic" inside the class will result in a NameError.
@@ -527,22 +492,18 @@ def declare_user_attribute(name,
         _topic = attr_topic if attr_topic else 'personal'
 
         @classmethod
-        def name(cls):
-            # type: () -> str
+        def name(cls) -> str:
             return cls._name
 
         @classmethod
-        def valuespec(cls):
-            # type: () -> ValueSpec
+        def valuespec(cls) -> ValueSpec:
             return cls._valuespec
 
         @classmethod
-        def topic(cls):
-            # type: () -> str
+        def topic(cls) -> str:
             return cls._topic
 
-        def __init__(self):
-            # type: () -> None
+        def __init__(self) -> None:
             super(LegacyUserAttribute, self).__init__(
                 user_editable=user_editable,
                 show_in_table=show_in_table,
@@ -553,8 +514,7 @@ def declare_user_attribute(name,
             )
 
 
-def load_users(lock=False):
-    # type: (bool) -> Users
+def load_users(lock: bool = False) -> Users:
     filename = _root_dir() + "contacts.mk"
 
     if lock:
@@ -677,7 +637,7 @@ def load_users(lock=False):
             try:
                 user_secret_path = Path(directory) / d / "automation.secret"
                 with user_secret_path.open(encoding="utf-8") as f:
-                    secret = ensure_str(f.read().strip())  # type: Optional[str]
+                    secret: Optional[str] = ensure_str(f.read().strip())
             except IOError:
                 secret = None
 
@@ -696,13 +656,14 @@ def load_users(lock=False):
     return result
 
 
-def custom_attr_path(userid, key):
-    # type: (UserId, str) -> str
+def custom_attr_path(userid: UserId, key: str) -> str:
     return cmk.utils.paths.var_dir + "/web/" + ensure_str(userid) + "/" + key + ".mk"
 
 
-def load_custom_attr(userid, key, conv_func, default=None):
-    # type: (UserId, str, Callable[[str], Any], Any) -> Any
+def load_custom_attr(userid: UserId,
+                     key: str,
+                     conv_func: Callable[[str], Any],
+                     default: Any = None) -> Any:
     path = Path(custom_attr_path(userid, key))
     try:
         with path.open(encoding="utf-8") as f:
@@ -711,23 +672,20 @@ def load_custom_attr(userid, key, conv_func, default=None):
         return default
 
 
-def save_custom_attr(userid, key, val):
-    # type: (UserId, str, Any) -> None
+def save_custom_attr(userid: UserId, key: str, val: Any) -> None:
     path = custom_attr_path(userid, key)
     store.mkdir(os.path.dirname(path))
     store.save_file(path, '%s\n' % val)
 
 
-def remove_custom_attr(userid, key):
-    # type: (UserId, str) -> None
+def remove_custom_attr(userid: UserId, key: str) -> None:
     try:
         os.unlink(custom_attr_path(userid, key))
     except OSError:
         pass  # Ignore non existing files
 
 
-def get_online_user_ids():
-    # type: () -> List[UserId]
+def get_online_user_ids() -> List[UserId]:
     online_threshold = time.time() - config.user_online_maxage
     users = []
     for user_id, user in load_users(lock=False).items():
@@ -736,13 +694,11 @@ def get_online_user_ids():
     return users
 
 
-def split_dict(d, keylist, positive):
-    # type: (Dict[str, Any], List[str], bool) -> Dict[str, Any]
+def split_dict(d: Dict[str, Any], keylist: List[str], positive: bool) -> Dict[str, Any]:
     return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
-def save_users(profiles):
-    # type: (Users) -> None
+def save_users(profiles: Users) -> None:
     write_contacts_and_users_file(profiles)
 
     # Execute user connector save hooks
@@ -768,8 +724,7 @@ def save_users(profiles):
 
 # TODO: Isn't this needed only while generating the contacts.mk?
 #       Check this and move it to the right place
-def _add_custom_macro_attributes(profiles):
-    # type: (Users) -> Users
+def _add_custom_macro_attributes(profiles: Users) -> Users:
     updated_profiles = copy.deepcopy(profiles)
 
     # Add custom macros
@@ -785,8 +740,7 @@ def _add_custom_macro_attributes(profiles):
 
 
 # Write user specific files
-def _save_user_profiles(updated_profiles):
-    # type: (Users) -> None
+def _save_user_profiles(updated_profiles: Users) -> None:
     non_contact_keys = _non_contact_keys()
     multisite_keys = _multisite_keys()
 
@@ -829,8 +783,7 @@ def _save_user_profiles(updated_profiles):
 # a user by accident. But for some internal files it is ok to delete them.
 #
 # Be aware: The user_exists() function relies on these files to be deleted.
-def _cleanup_old_user_profiles(updated_profiles):
-    # type: (Users) -> None
+def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
     profile_files_to_delete = [
         "automation.secret",
         "transids.mk",
@@ -848,8 +801,7 @@ def _cleanup_old_user_profiles(updated_profiles):
                     os.unlink(entry + '/' + to_delete)
 
 
-def write_contacts_and_users_file(profiles, custom_default_config_dir=None):
-    # type: (Users, str) -> None
+def write_contacts_and_users_file(profiles: Users, custom_default_config_dir: str = None) -> None:
     non_contact_keys = _non_contact_keys()
     multisite_keys = _multisite_keys()
     updated_profiles = _add_custom_macro_attributes(profiles)
@@ -861,8 +813,8 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir=None):
         check_mk_config_dir = "%s/conf.d/wato" % cmk.utils.paths.default_config_dir
         multisite_config_dir = "%s/multisite.d/wato" % cmk.utils.paths.default_config_dir
 
-    non_contact_attributes_cache = {}  # type: Dict[Optional[str], List[str]]
-    multisite_attributes_cache = {}  # type: Dict[Optional[str], List[str]]
+    non_contact_attributes_cache: Dict[Optional[str], List[str]] = {}
+    multisite_attributes_cache: Dict[Optional[str], List[str]] = {}
     for user_settings in updated_profiles.values():
         connector = cast(Optional[str], user_settings.get("connector"))
         if connector not in non_contact_attributes_cache:
@@ -902,8 +854,7 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir=None):
                           pprint_value=config.wato_pprint_config)
 
 
-def _non_contact_keys():
-    # type: () -> List[str]
+def _non_contact_keys() -> List[str]:
     """User attributes not to put into contact definitions for Check_MK"""
     return [
         "roles",
@@ -921,8 +872,7 @@ def _non_contact_keys():
     ] + _get_multisite_custom_variable_names()
 
 
-def _multisite_keys():
-    # type: () -> List[str]
+def _multisite_keys() -> List[str]:
     """User attributes to put into multisite configuration"""
     return [
         "roles",
@@ -934,8 +884,7 @@ def _multisite_keys():
     ] + _get_multisite_custom_variable_names()
 
 
-def _get_multisite_custom_variable_names():
-    # type: () -> List[str]
+def _get_multisite_custom_variable_names() -> List[str]:
     return [
         name  #
         for name, attr in get_user_attributes()
@@ -943,8 +892,7 @@ def _get_multisite_custom_variable_names():
     ]
 
 
-def _save_auth_serials(updated_profiles):
-    # type: (Users) -> None
+def _save_auth_serials(updated_profiles: Users) -> None:
     """Write out the users serials"""
     # Write out the users serials
     serials = u""
@@ -953,14 +901,12 @@ def _save_auth_serials(updated_profiles):
     store.save_file('%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
 
 
-def rewrite_users():
-    # type: () -> None
+def rewrite_users() -> None:
     users = load_users(lock=True)
     save_users(users)
 
 
-def create_cmk_automation_user():
-    # type: () -> None
+def create_cmk_automation_user() -> None:
     secret = utils.gen_id()
 
     users = load_users(lock=True)
@@ -980,8 +926,8 @@ def create_cmk_automation_user():
     save_users(users)
 
 
-def _save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
-    # type: (UserId, UserSpec, List[str], List[str]) -> None
+def _save_cached_profile(user_id: UserId, user: UserSpec, multisite_keys: List[str],
+                         non_contact_keys: List[str]) -> None:
     # Only save contact AND multisite attributes to the profile. Not the
     # infos that are stored in the custom attribute files.
     cache = {}
@@ -992,8 +938,7 @@ def _save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
     config.save_user_file("cached_profile", cache, user_id=user_id)
 
 
-def contactgroups_of_user(user_id):
-    # type: (UserId) -> List[ContactgroupName]
+def contactgroups_of_user(user_id: UserId) -> List[ContactgroupName]:
     user = load_cached_profile(user_id)
     if user is None:
         # No cached profile present. Load all users to get the users data
@@ -1003,8 +948,7 @@ def contactgroups_of_user(user_id):
     return user.get("contactgroups", [])
 
 
-def _convert_idle_timeout(value):
-    # type: (str) -> Union[int, bool, None]
+def _convert_idle_timeout(value: str) -> Union[int, bool, None]:
     if value == "False":
         return False  # Idle timeout disabled
 
@@ -1027,8 +971,7 @@ def _convert_idle_timeout(value):
 #   '----------------------------------------------------------------------'
 
 
-def update_config_based_user_attributes():
-    # type: () -> None
+def update_config_based_user_attributes() -> None:
     _clear_config_based_user_attributes()
 
     for attr in config.wato_user_attrs:
@@ -1052,8 +995,7 @@ def update_config_based_user_attributes():
     cmk.gui.plugins.userdb.ldap_connector.register_user_attribute_sync_plugins()
 
 
-def _clear_config_based_user_attributes():
-    # type: () -> None
+def _clear_config_based_user_attributes() -> None:
     for _name, attr in get_user_attributes():
         if attr.from_config():
             user_attribute_registry.unregister(attr.name())
@@ -1074,8 +1016,7 @@ config.register_post_config_load_hook(update_config_based_user_attributes)
 
 
 # This hook is called to validate the login credentials provided by a user
-def hook_login(username, password):
-    # type: (UserId, str) -> Union[UserId, bool]
+def hook_login(username: UserId, password: str) -> Union[UserId, bool]:
     for connection_id, connection in active_connections():
         result = connection.check_credentials(username, password)
         # None        -> User unknown, means continue with other connectors
@@ -1110,14 +1051,12 @@ def hook_login(username, password):
     return False
 
 
-def show_exception(connection_id, title, e, debug=True):
-    # type: (str, str, Exception, bool) -> None
+def show_exception(connection_id: str, title: str, e: Exception, debug: bool = True) -> None:
     html.show_error("<b>" + connection_id + ' - ' + title + "</b>"
                     "<pre>%s</pre>" % (debug and traceback.format_exc() or e))
 
 
-def hook_save(users):
-    # type: (Users) -> None
+def hook_save(users: Users) -> None:
     """Hook function can be registered here to be executed during saving of the
     new user construct"""
     for connection_id, connection in active_connections():
@@ -1129,8 +1068,7 @@ def hook_save(users):
             show_exception(connection_id, _("Error during saving"), e)
 
 
-def general_userdb_job():
-    # type: () -> None
+def general_userdb_job() -> None:
     """This function registers general stuff, which is independet of the single
     connectors to each page load. It is exectued AFTER all other connections jobs."""
 
@@ -1142,8 +1080,7 @@ def general_userdb_job():
         rewrite_users()
 
 
-def execute_userdb_job():
-    # type: () -> None
+def execute_userdb_job() -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log. """
@@ -1163,8 +1100,7 @@ def execute_userdb_job():
     job.start()
 
 
-def userdb_sync_job_enabled():
-    # type: () -> bool
+def userdb_sync_job_enabled() -> bool:
     cfg = user_sync_config()
 
     if cfg is None:
@@ -1177,8 +1113,7 @@ def userdb_sync_job_enabled():
 
 
 @cmk.gui.pages.register("ajax_userdb_sync")
-def ajax_sync():
-    # type: () -> None
+def ajax_sync() -> None:
     try:
         job = UserSyncBackgroundJob()
         job.set_function(job.do_sync,
@@ -1203,25 +1138,22 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
     job_prefix = "user_sync"
 
     @classmethod
-    def gui_title(cls):
-        # type: () -> str
+    def gui_title(cls) -> str:
         return _("User synchronization")
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(UserSyncBackgroundJob, self).__init__(
             self.job_prefix,
             title=self.gui_title(),
             stoppable=False,
         )
 
-    def _back_url(self):
-        # type: () -> str
+    def _back_url(self) -> str:
         return html.makeuri_contextless([("mode", "users")], filename="wato.py")
 
-    def do_sync(self, job_interface, add_to_changelog, enforce_sync, load_users_func,
-                save_users_func):
-        # type: (background_job.BackgroundProcessInterface, bool, bool, Callable, Callable) -> None
+    def do_sync(self, job_interface: background_job.BackgroundProcessInterface,
+                add_to_changelog: bool, enforce_sync: bool, load_users_func: Callable,
+                save_users_func: Callable) -> None:
         job_interface.send_progress_update(_("Synchronization started..."))
         if self._execute_sync_action(job_interface, add_to_changelog, enforce_sync, load_users_func,
                                      save_users_func):
@@ -1229,9 +1161,9 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         else:
             job_interface.send_exception(_("The user synchronization failed."))
 
-    def _execute_sync_action(self, job_interface, add_to_changelog, enforce_sync, load_users_func,
-                             save_users_func):
-        # type: (background_job.BackgroundProcessInterface, bool, bool, Callable, Callable) -> bool
+    def _execute_sync_action(self, job_interface: background_job.BackgroundProcessInterface,
+                             add_to_changelog: bool, enforce_sync: bool, load_users_func: Callable,
+                             save_users_func: Callable) -> bool:
         for connection_id, connection in active_connections():
             try:
                 if not enforce_sync and not connection.sync_is_needed():

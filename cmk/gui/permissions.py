@@ -14,28 +14,24 @@ import cmk.utils.plugin_registry
 
 class PermissionSection(metaclass=abc.ABCMeta):
     @abc.abstractproperty
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         """The identity of a permission section.
         One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         """Display name representing the section"""
         raise NotImplementedError()
 
     @property
-    def sort_index(self):
-        # type: () -> int
+    def sort_index(self) -> int:
         """Number to sort the sections with"""
         return 50
 
     # TODO: Is this still needed?
     @property
-    def do_sort(self):
-        # type: () -> bool
+    def do_sort(self) -> bool:
         """Whether or not to sort the permissions by title in this section"""
         return False
 
@@ -58,44 +54,37 @@ class Permission(metaclass=abc.ABCMeta):
     _sort_index = 0
 
     @abc.abstractproperty
-    def section(self):
-        # type: () -> Type[PermissionSection]
+    def section(self) -> Type[PermissionSection]:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def permission_name(self):
-        # type: () -> str
+    def permission_name(self) -> str:
         """The identity of a permission (without it's section identity).
         One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         """Display name representing the permission"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def description(self):
-        # type: () -> str
+    def description(self) -> str:
         """Text to explain the purpose of this permission"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def defaults(self):
-        # type: () -> List[str]
+    def defaults(self) -> List[str]:
         """List of role IDs that have this permission by default"""
         raise NotImplementedError()
 
     @property
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         """The full identity of a permission (including the section identity)."""
         return ".".join((self.section().name, self.permission_name))
 
     @property
-    def sort_index(self):
-        # type: () -> int
+    def sort_index(self) -> int:
         """Number to sort the permission with"""
         return self._sort_index
 

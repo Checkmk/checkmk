@@ -61,8 +61,8 @@ from cmk.base.check_utils import CheckParameters, Service
 from cmk.base.exceptions import MKParseFunctionError
 
 if not cmk_version.is_raw_edition():
-    import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
-    from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=no-name-in-module, import-error, cmk-module-layer-violation
+    import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
+    from cmk.fetchers.cee.snmp_backend import inline  # type: ignore[import] # pylint: disable=no-name-in-module, import-error, cmk-module-layer-violation
 else:
     keepalive = None  # type: ignore[assignment]
     inline = None  # type: ignore[assignment]

@@ -54,7 +54,7 @@ from cmk.gui.plugins.wato import (
 )
 
 try:
-    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
+    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling  # type: ignore[import]
 except ImportError:
     alert_handling = None  # type: ignore[assignment]
 

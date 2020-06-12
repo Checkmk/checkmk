@@ -123,13 +123,10 @@ try {
                             TARGET: 'agent',
                             STASH_NAME: 'WinMSI'
                         )
-                        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                            windows.build(
-                                TARGET: 'cached',
-                                CREDS: NEXUS_USERNAME+':'+NEXUS_PASSWORD,
-                                STASH_NAME: 'WinPython'
-                            )
-                        }
+                        windows.build(
+                            TARGET: 'module',
+                            STASH_NAME: 'WinPython'
+                        )
                     }
                 }
                 else if (EDITION != 'raw') {

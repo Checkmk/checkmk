@@ -53,6 +53,9 @@ from cmk.gui.plugins.wato import (
     wato_confirm,
 )
 
+# TODO: I have no clue how to import this correctly...
+from cmk.gui.plugins.wato.bi import BIHostRenamer
+
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling  # type: ignore[import]
 except ImportError:
@@ -597,7 +600,7 @@ def rename_host_in_multisite(oldname, newname):
 
 
 def rename_host_in_bi(oldname, newname):
-    return cmk.gui.plugins.wato.bi.BIHostRenamer().rename_host(oldname, newname)
+    return BIHostRenamer().rename_host(oldname, newname)
 
 
 def rename_hosts_in_check_mk(renamings):

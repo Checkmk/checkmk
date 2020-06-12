@@ -568,7 +568,7 @@ format-python3:
 
 
 format-shell:
-	sudo docker run --rm -v "$(realpath .):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
+	$(MAKE)	-C tests-py3 format-shell
 
 
 # Note: You need the doxygen and graphviz packages.

@@ -50,7 +50,7 @@ def main(raw_args):
         logger.info("Version: %s (%s), Edition: %s, Branch: %s", version.version,
                     version.version_spec, edition, branch)
 
-        result_path = Path(_os_environ_get("RESULT_PATH", tmp_path.joinpath("results")))
+        result_path = Path(_os_environ_get("RESULT_PATH", str(tmp_path.joinpath("results"))))
         result_path.mkdir(parents=True, exist_ok=True)
         logger.info("Prepared result path: %s", result_path)
 

@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-include ../defines.make
-
 SHELL := /bin/bash -e
 SCRIPTS := ../scripts
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
@@ -20,11 +18,19 @@ ADDITIONAL_MYPY_ARGS :=
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY26 := $(subst agent-plugin-unit,agent-plugin-unit/py26,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-.PHONY: clean help prepare-node-modules test-bandit test-composition test-composition-docker \
-	test-composition-docker-debug test-docker test-format-python3 test-format-shell \
-	test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
-	test-integration-docker-debug test-mypy3 test-mypy3-raw test-packaging test-pipenv-deps \
-	test-pylint test-shellcheck test-unit test-unit-coverage-html
+# TODO: Complete this list
+SHELL_FILES := \
+	agents/check_mk_agent.linux \
+	agents/check_mk_caching_agent.linux
+
+.PHONY: clean help format-shell prepare-node-modules test-bandit test-composition \
+	test-composition-docker test-composition-docker-debug test-docker test-format-python3 \
+	test-format-shell test-gui-crawl test-gui-crawl-docker test-integration \
+	test-integration-docker test-integration-docker-debug test-mypy3 test-mypy3-raw \
+	test-packaging test-pipenv-deps test-pylint test-shellcheck test-unit test-unit-coverage-html
+
+clean:
+	rm -rf .mypy_cache
 
 help:
 	@echo "test-agent-plugin-unit-py%-docker - Run Agent plugin tests in container (py version specific)"
@@ -49,13 +55,13 @@ help:
 	@echo "test-unit                     - Run unit tests"
 	@echo "test-unit-coverage-html       - Create HTML coverage report for unit tests"
 
-clean:
-	rm -rf .mypy_cache
-
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
 	  $(FIND_PYTHON_FILES) 3 | tr '\n' ',' | sed 's/,$$//'; \
 	  echo ) > bandit.ini
+
+format-shell:
+	sudo docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
 
 test-agent-plugin-unit-py2.6-docker: $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 

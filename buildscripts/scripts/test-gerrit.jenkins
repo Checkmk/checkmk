@@ -99,7 +99,7 @@ node (NODE) {
          gerrit_stages.run(
             NAME: 'Shell Format',
             CONDITION: true,
-            DIR: 'tests',
+            DIR: 'tests-py3',
             ENV_VARS: [],
             COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt",
             TEXT_ON_SKIP: ''

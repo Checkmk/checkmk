@@ -546,18 +546,7 @@ format-c: format-linux
 format-linux:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
-format-python: format-python3 format-python2
-
-format-python2:
-# Explicitly specify --style [FILE] to prevent costly searching in parent directories
-# for each file specified via command line
-#
-# Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
-# for the moment to get the performance boost this option brings.
-	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 2)} ; \
-	$(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
-
-format-python3:
+format-python:
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #

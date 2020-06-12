@@ -526,7 +526,6 @@ def _setup_virtual_environments(container, version):
         stream=True,
     ) == 0
 
-    assert _exec_run(container, ["test", "-d", "/git/virtual-envs/2.7/.venv"]) == 0
     assert _exec_run(container, ["test", "-d", "/git/virtual-envs/3.8/.venv"]) == 0
 
 

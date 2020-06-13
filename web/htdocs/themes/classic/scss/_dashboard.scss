@@ -737,5 +737,43 @@ div#dashboard_context_dialog_container {
         max-width: 180px;
       }
     }
+
+    div.floatfilter, div.floatfilter.double {
+      float: none;
+      height: auto;
+      padding: 0;
+      margin: 0;
+
+      background-color: transparent;
+      border-style: none;
+      border-radius: 0;
+      box-shadow: none;
+
+      div.legend {
+        width: 100%;
+        margin: 0;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: normal;
+        color: #999;
+        text-align: left;
+        text-transform: uppercase;
+        background-color: #282828;
+        border-bottom: 1px dotted #555;
+        border-radius: 0;
+      }
+
+      div.content {
+        height: auto;
+      }
+    }
+
+    td.vlof_buttons {
+      background-color: #444;
+    }
+
+    td.vlof_buttons {
+      background-color: #444;
+    }
   }
 }

@@ -22,7 +22,7 @@ import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
 import cmk.gui.crash_reporting as crash_reporting
-from cmk.gui.type_defs import InfoName
+from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.valuespec import (
     Transform,
     Dictionary,
@@ -456,6 +456,11 @@ def draw_dashboard(name: DashboardName) -> None:
     board = _load_dashboard_with_cloning(permitted_dashboards, name, edit=mode == 'edit')
     board = _add_context_to_dashboard(board)
 
+    # Like _dashboard_info_handler we assume that only host / service filters are relevant
+    board_context = visuals.get_merged_context(
+        visuals.get_context_from_uri_vars(["host", "service"], board["single_infos"]),
+        board["context"])
+
     title = visuals.visual_title('dashboard', board)
 
     # Distance from top of the screen to the lower border of the heading
@@ -478,6 +483,8 @@ def draw_dashboard(name: DashboardName) -> None:
     # yet, display a message to the user to insert the missing information.
     missing_single_infos = set()
     unconfigured_single_infos = set()
+    missing_mandatory_context_filters = not set(board_context.keys()).issuperset(
+        set(board["mandatory_context_filters"]))
 
     refresh_dashlets = []  # Dashlets with automatic refresh, for Javascript
     dashlet_coords = []  # Dimensions and positions of dashlet
@@ -492,6 +499,9 @@ def draw_dashboard(name: DashboardName) -> None:
 
             unconfigured_single_infos.update(dashlet_instance.unconfigured_single_infos())
             missing_single_infos.update(dashlet_instance.missing_single_infos())
+
+            if missing_single_infos or missing_mandatory_context_filters:
+                continue  # Do not render in case required context information is missing
 
             refresh = get_dashlet_refresh(dashlet_instance)
             if refresh:
@@ -522,7 +532,8 @@ def draw_dashboard(name: DashboardName) -> None:
 
     html.close_div()
 
-    _dashboard_context_dialog(board, missing_single_infos, unconfigured_single_infos)
+    _dashboard_context_dialog(board, board_context, missing_mandatory_context_filters,
+                              missing_single_infos, unconfigured_single_infos)
 
     dashboard_properties = {
         "MAX": MAX,
@@ -651,16 +662,13 @@ def _fallback_dashlet_instance(name: DashboardName, board: DashboardConfig,
 
 
 # TODO: Use new generic popup dialogs once they are merged from the current UX rework
-def _dashboard_context_dialog(board: DashboardConfig, missing_single_infos: Set[str],
+def _dashboard_context_dialog(board: DashboardConfig, board_context: VisualContext,
+                              missing_mandatory_context_filters: bool,
+                              missing_single_infos: Set[str],
                               unconfigured_single_infos: Set[str]) -> None:
     html.open_div(id_="dashboard_context_dialog_container", style="display:none")
     html.open_div(id_="dashboard_context_dialog")
     html.begin_form("dashboard_context_dialog", method="GET", add_transid=False)
-
-    # Like _dashboard_info_handler we assume that only host / service filters are relevant
-    board_context = visuals.get_merged_context(
-        visuals.get_context_from_uri_vars(["host", "service"], board["single_infos"]),
-        board["context"])
 
     forms.header(_("Dashboard context"))
 
@@ -701,9 +709,6 @@ def _dashboard_context_dialog(board: DashboardConfig, missing_single_infos: Set[
     html.close_div()
 
     # Display the dialog during initial rendering when required context information is missing.
-    missing_mandatory_context_filters = not set(board_context.keys()).issuperset(
-        set(board["mandatory_context_filters"]))
-
     if missing_single_infos or missing_mandatory_context_filters:
         html.javascript("cmk.dashboard.show_dashboard_context_dialog()")
 

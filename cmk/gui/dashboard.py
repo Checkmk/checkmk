@@ -522,7 +522,7 @@ def draw_dashboard(name: DashboardName) -> None:
 
     html.close_div()
 
-    _single_infos_dialog(board, missing_single_infos, unconfigured_single_infos)
+    _dashboard_context_dialog(board, missing_single_infos, unconfigured_single_infos)
 
     dashboard_properties = {
         "MAX": MAX,
@@ -651,11 +651,11 @@ def _fallback_dashlet_instance(name: DashboardName, board: DashboardConfig,
 
 
 # TODO: Use new generic popup dialogs once they are merged from the current UX rework
-def _single_infos_dialog(board: DashboardConfig, missing_single_infos: Set[str],
-                         unconfigured_single_infos: Set[str]) -> None:
-    html.open_div(id_="single_info_input_container", style="display:none")
-    html.open_div(id_="single_info_input")
-    html.begin_form("single_info_input", method="GET")
+def _dashboard_context_dialog(board: DashboardConfig, missing_single_infos: Set[str],
+                              unconfigured_single_infos: Set[str]) -> None:
+    html.open_div(id_="dashboard_context_dialog_container", style="display:none")
+    html.open_div(id_="dashboard_context_dialog")
+    html.begin_form("dashboard_context_dialog", method="GET", add_transid=False)
 
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
     board_context = visuals.get_merged_context(
@@ -705,7 +705,7 @@ def _single_infos_dialog(board: DashboardConfig, missing_single_infos: Set[str],
         set(board["mandatory_context_filters"]))
 
     if missing_single_infos or missing_mandatory_context_filters:
-        html.javascript("cmk.dashboard.show_single_infos_dialog()")
+        html.javascript("cmk.dashboard.show_dashboard_context_dialog()")
 
 
 def _dashboard_menu(name: DashboardName, board: DashboardConfig) -> None:
@@ -720,7 +720,7 @@ def _dashboard_menu(name: DashboardName, board: DashboardConfig) -> None:
     html.open_ul(style="display:none;", class_=["menu"], id_="controls")
 
     html.open_li()
-    html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.show_single_infos_dialog()")
+    html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.show_dashboard_context_dialog()")
     html.icon(title=_("Update context"), icon="trans")
     html.write_text(_("Update context"))
     html.close_a()

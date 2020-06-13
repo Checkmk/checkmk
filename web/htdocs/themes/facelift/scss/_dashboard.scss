@@ -885,7 +885,7 @@ div.dashlet.single_metric {
   }
 }
 
-div#single_info_input_container {
+div#dashboard_context_dialog_container {
   position: fixed;
   top: 0;
   right: 0;
@@ -895,7 +895,7 @@ div#single_info_input_container {
   background-color: rgba(0, 0, 0, 0.6);
   transition: background-color .1s;
 
-  div#single_info_input {
+  div#dashboard_context_dialog {
     position: relative;
     display: block;
     width: 400px;

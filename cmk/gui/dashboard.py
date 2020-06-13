@@ -662,6 +662,7 @@ def _single_infos_dialog(missing_single_infos: Set[str],
 
     forms.header(_("Dashboard context"))
 
+    # Configure required single info keys (the ones that are not set by the config)
     for info_key in unconfigured_single_infos:
         info = visuals.visual_info_registry[info_key]()
 
@@ -670,6 +671,11 @@ def _single_infos_dialog(missing_single_infos: Set[str],
             valuespec.render_input(filter_name, None)
 
     forms.section_close()
+
+    # Give the user the option to add some additional filters
+    forms.section(_("Additional context"))
+    vs_filters = visuals.VisualFilterList(["host", "service"])
+    vs_filters.render_input("", {})
 
     html.open_tr()
     html.open_td(colspan=2)

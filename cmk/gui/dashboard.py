@@ -657,6 +657,11 @@ def _single_infos_dialog(board: DashboardConfig, missing_single_infos: Set[str],
     html.open_div(id_="single_info_input")
     html.begin_form("single_info_input", method="GET")
 
+    # Like _dashboard_info_handler we assume that only host / service filters are relevant
+    board_context = visuals.get_merged_context(
+        visuals.get_context_from_uri_vars(["host", "service"], board["single_infos"]),
+        board["context"])
+
     forms.header(_("Dashboard context"))
 
     # Configure required single info keys (the ones that are not set by the config)
@@ -668,11 +673,19 @@ def _single_infos_dialog(board: DashboardConfig, missing_single_infos: Set[str],
             valuespec.render_input(filter_name, None)
     forms.section_close()
 
+    # Configure required context filters set in the dashboard config
+    forms.section(_("Required context"))
+    for filter_key in board["mandatory_context_filters"]:
+        valuespec = visuals.VisualFilter(filter_key)
+        valuespec.render_input(filter_key, board_context.get(filter_key))
+
     # Give the user the option to redefine filters configured in the dashboard config
     # and also give the option to add some additional filters
     forms.section(_("Additional context"))
-    vs_filters = visuals.VisualFilterList(["host", "service"])
-    vs_filters.render_input("", board["context"])
+    # Like _dashboard_info_handler we assume that only host / service filters are relevant
+    vs_filters = visuals.VisualFilterList(info_list=["host", "service"],
+                                          ignore=board["mandatory_context_filters"])
+    vs_filters.render_input("", board_context)
 
     html.open_tr()
     html.open_td(colspan=2)
@@ -687,7 +700,11 @@ def _single_infos_dialog(board: DashboardConfig, missing_single_infos: Set[str],
     html.close_div()
     html.close_div()
 
-    if missing_single_infos:
+    # Display the dialog during initial rendering when required context information is missing.
+    missing_mandatory_context_filters = not set(board_context.keys()).issuperset(
+        set(board["mandatory_context_filters"]))
+
+    if missing_single_infos or missing_mandatory_context_filters:
         html.javascript("cmk.dashboard.show_single_infos_dialog()")
 
 
@@ -972,6 +989,7 @@ def _add_context_to_dashboard(board: DashboardConfig) -> DashboardConfig:
     board = copy.deepcopy(board)
     board.setdefault("single_infos", [])
     board.setdefault("context", {})
+    board.setdefault("mandatory_context_filters", [])
     return board
 
 
@@ -1069,6 +1087,18 @@ def _vs_dashboard() -> Dictionary:
                  label=_('Show the header of the dashboard with the configured title.'),
                  default_value=True,
              )),
+            (
+                "mandatory_context_filters",
+                visuals.FilterChoices(
+                    # Like _dashboard_info_handler we assume that only host / service filters are relevant
+                    infos=["host", "service"],
+                    title=_("Required context filters"),
+                    help=_(
+                        "Show the dialog that can be used to update the dashboard context "
+                        "on initial dashboard rendering and enforce the user to provide the "
+                        "context filters that are set here. This can be useful in case you want "
+                        "the users to first provide some context before rendering the dashboard."),
+                )),
         ],
     )
 

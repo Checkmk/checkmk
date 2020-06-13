@@ -1287,6 +1287,15 @@ def get_filter_headers(table, infos, context):
 #   '----------------------------------------------------------------------'
 
 
+def FilterChoices(infos: List[InfoName], title: str, help: str):  # pylint: disable=redefined-builtin
+    """Select names of filters for the given infos"""
+    return DualListChoice(
+        choices=[(x[0], x[1].title()) for x in VisualFilterList.get_choices(infos, ignore=set())],
+        title=title,
+        help=help,
+    )
+
+
 class VisualFilterList(ListOfMultiple):
     """Implements a list of available filters for the given infos. By default no
     filter is selected. The user may select a filter to be activated, then the

@@ -1036,7 +1036,14 @@ def page_edit_dashboard() -> None:
     visuals.page_edit_visual('dashboards',
                              get_all_dashboards(),
                              create_handler=create_dashboard,
-                             custom_field_handler=custom_field_handler)
+                             custom_field_handler=custom_field_handler,
+                             info_handler=_dashboard_info_handler)
+
+
+def _dashboard_info_handler(visual):
+    # We could use all available infos here, but there is a lot of normally unused stuff. For better
+    # usability reduce the list to the (assumed) relevant used ones.
+    return ["host", "service"]
 
 
 def custom_field_handler(dashboard: DashboardConfig) -> None:

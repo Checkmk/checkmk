@@ -518,11 +518,11 @@ def draw_dashboard(name: DashboardName) -> None:
         dashlet_container_end()
         dashlet_coords.append(get_dashlet_dimensions(dashlet_instance))
 
-    _dashboard_menu(name, board, bool(unconfigured_single_infos))
+    _dashboard_menu(name, board)
 
     html.close_div()
 
-    _single_infos_dialog(missing_single_infos, unconfigured_single_infos)
+    _single_infos_dialog(board, missing_single_infos, unconfigured_single_infos)
 
     dashboard_properties = {
         "MAX": MAX,
@@ -654,7 +654,7 @@ def _fallback_dashlet_instance(name: DashboardName, board: DashboardConfig,
 
 
 # TODO: Use new generic popup dialogs once they are merged from the current UX rework
-def _single_infos_dialog(missing_single_infos: Set[str],
+def _single_infos_dialog(board: DashboardConfig, missing_single_infos: Set[str],
                          unconfigured_single_infos: Set[str]) -> None:
     html.open_div(id_="single_info_input_container", style="display:none")
     html.open_div(id_="single_info_input")
@@ -669,13 +669,13 @@ def _single_infos_dialog(missing_single_infos: Set[str],
         for filter_name, valuespec in info.single_spec:
             forms.section(valuespec.title())
             valuespec.render_input(filter_name, None)
-
     forms.section_close()
 
-    # Give the user the option to add some additional filters
+    # Give the user the option to redefine filters configured in the dashboard config
+    # and also give the option to add some additional filters
     forms.section(_("Additional context"))
     vs_filters = visuals.VisualFilterList(["host", "service"])
-    vs_filters.render_input("", {})
+    vs_filters.render_input("", board["context"])
 
     html.open_tr()
     html.open_td(colspan=2)
@@ -694,10 +694,7 @@ def _single_infos_dialog(missing_single_infos: Set[str],
         html.javascript("cmk.dashboard.show_single_infos_dialog()")
 
 
-def _dashboard_menu(name: DashboardName, board: DashboardConfig,
-                    has_unconfigured_single_infos: bool) -> None:
-    if not has_unconfigured_single_infos and not config.user.may("general.edit_dashboards"):
-        return  # hide empty menus
+def _dashboard_menu(name: DashboardName, board: DashboardConfig) -> None:
 
     # Show the menu handle
     html.icon_button(None,
@@ -707,13 +704,13 @@ def _dashboard_menu(name: DashboardName, board: DashboardConfig,
                      onclick='void(0)')
 
     html.open_ul(style="display:none;", class_=["menu"], id_="controls")
-    if has_unconfigured_single_infos:
-        html.open_li()
-        html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.show_single_infos_dialog()")
-        html.icon(title=_("Update context"), icon="trans")
-        html.write_text(_("Update context"))
-        html.close_a()
-        html.close_li()
+
+    html.open_li()
+    html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.show_single_infos_dialog()")
+    html.icon(title=_("Update context"), icon="trans")
+    html.write_text(_("Update context"))
+    html.close_a()
+    html.close_li()
 
     if config.user.may("general.edit_dashboards"):
         # Show the edit menu to all users which are allowed to edit dashboards

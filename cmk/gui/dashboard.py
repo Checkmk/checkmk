@@ -693,12 +693,12 @@ def _dashboard_menu(name: DashboardName, board: DashboardConfig,
     if not has_unconfigured_single_infos and not config.user.may("general.edit_dashboards"):
         return  # hide empty menus
 
-    if config.user.may("general.edit_dashboards"):
-        html.icon_button(None,
-                         _('Edit the Dashboard'),
-                         'dashboard_controls',
-                         'controls_toggle',
-                         onclick='void(0)')
+    # Show the menu handle
+    html.icon_button(None,
+                     _('Open dashboard controls'),
+                     'dashboard_controls',
+                     'controls_toggle',
+                     onclick='void(0)')
 
     html.open_ul(style="display:none;", class_=["menu"], id_="controls")
     if has_unconfigured_single_infos:
@@ -722,69 +722,69 @@ def _show_edit_entries(name: DashboardName, board: DashboardConfig) -> None:
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,
         # the dashboard will be cloned for this user
         html.li(html.render_a(_("Edit Dashboard"), href=html.makeuri([("edit", 1)])))
+        return
 
-    else:
-        #
-        # Add dashlet menu
-        #
-        html.open_li(class_=["sublink"],
-                     id_="control_add",
-                     style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
-                     onmouseover="cmk.dashboard.show_submenu(\'control_add\');")
-        html.open_a(href="javascript:void(0)")
-        html.icon(title=_("Add dashlet"), icon="dashboard_menuarrow")
-        html.write_text(_("Add dashlet"))
-        html.close_a()
+    #
+    # Add dashlet menu
+    #
+    html.open_li(class_=["sublink"],
+                 id_="control_add",
+                 style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
+                 onmouseover="cmk.dashboard.show_submenu(\'control_add\');")
+    html.open_a(href="javascript:void(0)")
+    html.icon(title=_("Add dashlet"), icon="dashboard_menuarrow")
+    html.write_text(_("Add dashlet"))
+    html.close_a()
 
-        # The dashlet types which can be added to the view
-        html.open_ul(style="display:none", class_=["menu", "sub"], id_="control_add_sub")
+    # The dashlet types which can be added to the view
+    html.open_ul(style="display:none", class_=["menu", "sub"], id_="control_add_sub")
 
-        for menu_entry in _get_add_menu_entries(name):
-            html.open_li()
-            html.open_a(href=menu_entry.url)
-            html.icon(title=menu_entry.title, icon=menu_entry.icon_name)
-            html.write_text(menu_entry.title)
-            html.close_a()
-            html.close_li()
-        html.close_ul()
-
-        html.close_li()
-
-        #
-        # Properties link
-        #
+    for menu_entry in _get_add_menu_entries(name):
         html.open_li()
-        html.open_a(href="edit_dashboard.py?load_name=%s&back=%s" %
-                    (name, html.urlencode(html.makeuri([]))),
-                    onmouseover="cmk.dashboard.hide_submenus();")
-        html.icon(title="", icon="trans")
-        html.write_text(_('Properties'))
+        html.open_a(href=menu_entry.url)
+        html.icon(title=menu_entry.title, icon=menu_entry.icon_name)
+        html.write_text(menu_entry.title)
         html.close_a()
         html.close_li()
+    html.close_ul()
 
-        #
-        # Stop editing
-        #
-        html.open_li(style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
-                     id_="control_view")
-        html.open_a(href="javascript:void(0)",
-                    onclick="cmk.dashboard.toggle_dashboard_edit(false)",
-                    onmouseover="cmk.dashboard.hide_submenus();")
-        html.icon(title="", icon="trans")
-        html.write(_('Stop Editing'))
-        html.close_a()
-        html.close_li()
+    html.close_li()
 
-        #
-        # Enable editing link
-        #
-        html.open_li(style="display:%s;" % ("none" if html.request.var("edit") == '1' else "block"),
-                     id_="control_edit")
-        html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.toggle_dashboard_edit(true);")
-        html.icon(title="", icon="trans")
-        html.write(_('Edit Dashboard'))
-        html.close_a()
-        html.close_li()
+    #
+    # Properties link
+    #
+    html.open_li()
+    html.open_a(href="edit_dashboard.py?load_name=%s&back=%s" %
+                (name, html.urlencode(html.makeuri([]))),
+                onmouseover="cmk.dashboard.hide_submenus();")
+    html.icon(title="", icon="trans")
+    html.write_text(_('Properties'))
+    html.close_a()
+    html.close_li()
+
+    #
+    # Stop editing
+    #
+    html.open_li(style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
+                 id_="control_view")
+    html.open_a(href="javascript:void(0)",
+                onclick="cmk.dashboard.toggle_dashboard_edit(false)",
+                onmouseover="cmk.dashboard.hide_submenus();")
+    html.icon(title="", icon="trans")
+    html.write(_('Stop Editing'))
+    html.close_a()
+    html.close_li()
+
+    #
+    # Enable editing link
+    #
+    html.open_li(style="display:%s;" % ("none" if html.request.var("edit") == '1' else "block"),
+                 id_="control_edit")
+    html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.toggle_dashboard_edit(true);")
+    html.icon(title="", icon="trans")
+    html.write(_('Edit Dashboard'))
+    html.close_a()
+    html.close_li()
 
 
 MenuEntry = NamedTuple("MenuEntry", [

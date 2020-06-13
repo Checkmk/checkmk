@@ -583,14 +583,11 @@ def _render_dashlet_content(board: DashboardConfig, dashlet_instance: Dashlet, i
 
     # All outer variables are completely reset for the dashlets to have a clean, well known state.
     # The context that has been built based on the relevant HTTP variables is applied again.
-    with html.stashed_vars():
-        html.request.del_vars()
+    dashlet_context = dashlet_instance.context if dashlet_instance.has_context() else {}
+    with visuals.context_uri_vars(dashlet_context, dashlet_instance.single_infos()):
+        # Set some dashboard related variables that are needed by some dashlets
         html.request.set_var("name", dashlet_instance.dashboard_name)
         html.request.set_var("mtime", str(mtime))
-
-        if dashlet_instance.has_context():
-            visuals.add_context_to_uri_vars(dashlet_instance.context,
-                                            dashlet_instance.single_infos())
 
         return _update_or_show(board, dashlet_instance, is_update, mtime)
 

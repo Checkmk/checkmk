@@ -28,8 +28,11 @@ if not exist %arti_dir% powershell Write-Host "Directory `'%arti_dir%`' doesn`'t
 set creds=%2
 set url=%3
 
-rem check the git in windows manner
+rem get hash of the git commit in windows manner
 for /f "tokens=*" %%a in ('git log --pretty^=format:^'%%h^' -n 1 .') do set git_hash=%%a
+rem verify that git hash is not empty: may happen, that build is performed without checkout
+rem we have to build the target in any case and we will use predefined hash
+if "%git_hash%" == "" Powershell Write-Host "Git directory is ABSENT. Using PREDEFINED NAME latest as Hash" -Foreground yellow && set git_hash='latest'
 
 rem remove quotes from the result
 set git_hash=%git_hash:'=%
@@ -39,10 +42,7 @@ powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
 curl -sSf --user %creds% -o %fname%  %url%/%fname% > nul 2>&1
 IF /I "!ERRORLEVEL!" NEQ "0" (
   powershell Write-Host "%fname% not found on %url%, building..." -Foreground cyan
-  rem Will be replaced with correct call to the make after checking of whole data path.
-  rem powershell Write-Host "Re-Using prebuild Python..." -Foreground yellow
-  rem copy backup\python-3.8.zip "%arti_dir%"\
-  rem Make
+  rem making:
   make ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 33
 
   powershell Write-Host "Checking the result of the build..." -Foreground cyan
@@ -60,7 +60,7 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
   IF /I "!ERRORLEVEL!" NEQ "0" (
     del %fname% > nul 
     powershell Write-Host "[-] Failed to upload" -Foreground red
-    exit /B 33
+    exit /B 35
   ) else (
     del %fname% > nul 
     powershell Write-Host "[+] Finished successfully" -Foreground green

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 import pytest  # type: ignore[import]
 
 from cmk.snmplib.type_defs import OID_END, OIDBytes, OIDCached, OIDEnd, OIDSpec
@@ -45,3 +47,14 @@ def test_snmptree(base, oids):
     assert isinstance(tree.oids, list)
     for oid in tree.oids:
         assert isinstance(oid, (OIDSpec, OIDEnd))
+
+
+@pytest.mark.parametrize("tree", [
+    SNMPTree(base=".1.2.3", oids=["4.5.6", "7.8.9"]),
+    SNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDSpec("7.8.9")]),
+    SNMPTree(base=".1.2.3", oids=[OIDCached("4.5.6"), OIDBytes("7.8.9")]),
+    SNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDEnd()]),
+    SNMPTree(base=OIDSpec(".1.2.3"), oids=[OIDBytes("4.5.6"), OIDEnd()]),
+])
+def test_serialize_snmptree(tree):
+    assert tree.from_json(json.loads(json.dumps(tree.to_json()))) == tree

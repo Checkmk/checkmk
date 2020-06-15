@@ -171,7 +171,10 @@ class OIDSpec:
             raise ValueError("%r should not end with '.'" % (value,))
 
     def __init__(self, value):
-        # type: (str) -> None
+        # type: (Union[OIDSpec, str]) -> None
+        if isinstance(value, OIDSpec):
+            value = str(value)
+
         self.validate(value)
         self._value = value
 

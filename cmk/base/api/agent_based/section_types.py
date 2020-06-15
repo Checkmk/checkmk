@@ -6,9 +6,17 @@
 """Types and classes used by the API for agent_based plugins
 """
 import collections
-from typing import Any, Callable, Generator, List, NamedTuple, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, NamedTuple, Tuple, Union
 
-from cmk.snmplib.type_defs import ABCSNMPTree, OIDEndCompat, OIDEnd, OIDSpec, SNMPTable
+from cmk.snmplib.type_defs import (
+    ABCSNMPTree,
+    OIDBytes,
+    OIDCached,
+    OIDEnd,
+    OIDEndCompat,
+    OIDSpec,
+    SNMPTable,
+)
 
 from cmk.base.api import PluginName
 from cmk.base.check_utils import AgentSectionContent
@@ -32,14 +40,29 @@ class SNMPTree(ABCSNMPTree):
     OIDs.
     """
     def __init__(self, *, base, oids):
-        # type: (str, List[Union[str, OIDSpec, OIDEnd]]) -> None
+        # type: (Union[OIDSpec, str], List[Union[str, OIDSpec, OIDEnd]]) -> None
         super(SNMPTree, self).__init__()
         self._base = self._sanitize_base(base)
         self._oids = self._sanitize_oids(oids)
 
+    def to_json(self):
+        # type: () -> Dict[str, Any]
+        return {
+            "base": SNMPTree._serialize_oid(self.base),
+            "oids": [SNMPTree._serialize_oid(oid) for oid in self.oids],
+        }
+
+    @classmethod
+    def from_json(cls, serialized):
+        # type: (Dict[str, Any]) -> ABCSNMPTree
+        return cls(
+            base=SNMPTree._deserialize_base(*serialized["base"]),
+            oids=[SNMPTree._deserialize_oids(*oid) for oid in serialized["oids"]],
+        )
+
     @staticmethod
     def _sanitize_base(base):
-        # type: (str) -> OIDSpec
+        # type: (Union[OIDSpec, str]) -> OIDSpec
         oid_base = OIDSpec(base)
         if not str(oid_base).startswith('.'):
             raise ValueError("%r must start with '.'" % (oid_base,))
@@ -84,6 +107,41 @@ class SNMPTree(ABCSNMPTree):
     def oids(self):
         # type: () -> List[Union[OIDSpec, OIDEndCompat]]
         return self._oids
+
+    @staticmethod
+    def _serialize_oid(oid):
+        # type: (Union[OIDSpec, OIDEndCompat]) -> Tuple[str, Union[str, int]]
+        if isinstance(oid, OIDSpec):
+            return type(oid).__name__, str(oid)
+        if isinstance(oid, OIDEndCompat):
+            return "OIDEnd", 0
+        raise TypeError(oid)
+
+    @staticmethod
+    def _deserialize_base(type_, value):
+        # type: (str, str) -> OIDSpec
+        # Note: base *cannot* be OIDEnd.
+        try:
+            return {
+                "OIDSpec": OIDSpec,
+                "OIDBytes": OIDBytes,
+                "OIDCached": OIDCached,
+            }[type_](value)
+        except LookupError as exc:
+            raise TypeError(type_) from exc
+
+    @staticmethod
+    def _deserialize_oids(type_, value):
+        # type: (str, Union[str, int]) -> Union[str, OIDSpec, OIDEnd]
+        try:
+            return {
+                "OIDSpec": OIDSpec,
+                "OIDBytes": OIDBytes,
+                "OIDCached": OIDCached,
+                "OIDEnd": OIDEndCompat,
+            }[type_](value)
+        except LookupError as exc:
+            raise TypeError(type_) from exc
 
     def __eq__(self, other):
         # type: (Any) -> bool

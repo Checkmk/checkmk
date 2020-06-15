@@ -75,5 +75,10 @@ then
         ip -6 r
     fi
 
+    # Kernel configuration
+    if type sysctl > /dev/null ; then
+        echo "<<<lnx_sysctl:persist($UNTIL)>>>"
+        sysctl -ae
+    fi
 fi
 

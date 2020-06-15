@@ -369,6 +369,8 @@ def test_registered_permissions():
         'view.invibmmqqueues_search',
         'view.invinterface_of_host',
         'view.invinterface_search',
+        'view.invkernelconfig_of_host',
+        'view.invkernelconfig_search',
         'view.invmodule_of_host',
         'view.invmodule_search',
         'view.invoradataguardstats_of_host',

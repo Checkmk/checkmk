@@ -1187,6 +1187,12 @@ declare_invtable_view("invibmmqqueues", ".software.applications.ibm_mq.queues:",
                       _("IBM MQ Queues"))
 declare_invtable_view("invtunnels", ".networking.tunnels:", _("Networking Tunnels"),
                       _("Networking Tunnels"))
+declare_invtable_view(
+    "invkernelconfig",
+    ".software.kernel_config:",
+    _("Kernel configuration (sysctl)"),
+    _("Kernel configurations (sysctl)"),
+)
 
 # This would also be possible. But we muss a couple of display and filter hints.
 # declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))

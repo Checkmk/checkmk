@@ -8,13 +8,13 @@ from typing import Optional
 
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.snmplib.type_defs import DecodedString, OID
+from cmk.snmplib.type_defs import OID, SNMPDecodedString
 
 import cmk.base.snmp_utils as snmp_utils
 
 
 def oid_kea(_arg, _decoded=None, _name=None):
-    # type: (OID, Optional[DecodedString], Optional[CheckPluginName]) -> Optional[DecodedString]
+    # type: (OID, Optional[SNMPDecodedString], Optional[CheckPluginName]) -> Optional[SNMPDecodedString]
     """OID function of a Kea"""
     return "Kea"
 

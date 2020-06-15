@@ -14,34 +14,34 @@ from cmk.utils.type_defs import HostAddress as _HostAddress
 from cmk.utils.type_defs import HostName as _HostName
 from cmk.utils.type_defs import SectionName as _SectionName
 
-ContextName = str
-DecodedString = str
-DecodedBinary = List[int]
-DecodedValues = Union[DecodedString, DecodedBinary]
+SNMPContextName = str
+SNMPDecodedString = str
+SNMPDecodedBinary = List[int]
+SNMPDecodedValues = Union[SNMPDecodedString, SNMPDecodedBinary]
 SNMPValueEncoding = str
-SNMPTable = List[List[DecodedValues]]
+SNMPTable = List[List[SNMPDecodedValues]]
 SNMPContext = Optional[str]
 SNMPSectionContent = Union[SNMPTable, List[SNMPTable]]
 SNMPSections = Dict[_SectionName, SNMPSectionContent]
-PersistedSNMPSection = Tuple[int, int, SNMPSectionContent]
-PersistedSNMPSections = Dict[_SectionName, PersistedSNMPSection]
-RawSNMPData = SNMPSections
-Column = Union[str, int, Tuple[SNMPValueEncoding, str]]
-Columns = List[Column]
+SNMPPersistedSection = Tuple[int, int, SNMPSectionContent]
+SNMPPersistedSections = Dict[_SectionName, SNMPPersistedSection]
+SNMPRawData = SNMPSections
+SNMPColumn = Union[str, int, Tuple[SNMPValueEncoding, str]]
+SNMPColumns = List[SNMPColumn]
 OID = str
-OIDWithColumns = Tuple[OID, Columns]
-OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]
-OIDFunction = Callable[[OID, Optional[DecodedString], Optional[_CheckPluginName]],
-                       Optional[DecodedString]]
-ScanFunction = Callable[[OIDFunction], bool]
+OIDWithColumns = Tuple[OID, SNMPColumns]
+OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], SNMPColumns]
+OIDFunction = Callable[[OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]],
+                       Optional[SNMPDecodedString]]
+SNMPScanFunction = Callable[[OIDFunction], bool]
 # TODO (CMK-4490): Typing here is just wrong as there is no practical
 # difference between an OIDWithColumns and OIDWithSubOIDsAndColumns with
 # an empty List[OID].
-SingleOIDInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
-MultiOIDInfo = List[SingleOIDInfo]
-OIDInfo = Union[SingleOIDInfo, MultiOIDInfo]
-RawValue = bytes
-SNMPRowInfo = List[Tuple[OID, RawValue]]
+OIDSingleInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
+OIDMultiInfo = List[OIDSingleInfo]
+OIDInfo = Union[OIDSingleInfo, OIDMultiInfo]
+SNMPRawValue = bytes
+SNMPRowInfo = List[Tuple[OID, SNMPRawValue]]
 
 # TODO: Be more specific about the possible tuples
 # if the credentials are a string, we use that as community,
@@ -132,7 +132,7 @@ class ABCSNMPBackend(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get(self, oid, context_name=None):
-        # type: (OID, Optional[ContextName]) -> Optional[RawValue]
+        # type: (OID, Optional[SNMPContextName]) -> Optional[SNMPRawValue]
         """Fetch a single OID from the given host in the given SNMP context
         The OID may end with .* to perform a GETNEXT request. Otherwise a GET
         request is sent to the given host.
@@ -141,7 +141,7 @@ class ABCSNMPBackend(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
-        # type: (OID, Optional[_CheckPluginName], Optional[OID], Optional[ContextName]) -> SNMPRowInfo
+        # type: (OID, Optional[_CheckPluginName], Optional[OID], Optional[SNMPContextName]) -> SNMPRowInfo
         return []
 
 
@@ -213,12 +213,12 @@ class OIDBytes(OIDSpec):
 
 # The old API defines OID_END = 0.  Once we can drop the old API,
 # replace every occurence of this with OIDEnd.
-CompatibleOIDEnd = int
+OIDEndCompat = int
 
 
-# We inherit from CompatibleOIDEnd = int because we must be compatible with the
+# We inherit from OIDEndCompat = int because we must be compatible with the
 # old APIs OID_END, OID_STRING and so on (in particular OID_END = 0).
-class OIDEnd(CompatibleOIDEnd):
+class OIDEnd(OIDEndCompat):
     """OID specification to get the end of the OID string
     When specifying an OID in an SNMPTree object, the parse function
     will be handed the corresponding value of that OID. If you use OIDEnd()
@@ -242,5 +242,5 @@ class ABCSNMPTree(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def oids(self):
-        # type: () -> List[Union[OIDSpec, CompatibleOIDEnd]]
+        # type: () -> List[Union[OIDSpec, OIDEndCompat]]
         raise NotImplementedError()

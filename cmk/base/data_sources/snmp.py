@@ -12,14 +12,14 @@ from typing import Callable, cast, Dict, List, Optional, Set
 from mypy_extensions import NamedArg
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SourceType, SectionName
+from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import (
     ABCSNMPTree,
-    PersistedSNMPSections,
-    RawSNMPData,
     SNMPCredentials,
     SNMPHostConfig,
+    SNMPPersistedSections,
+    SNMPRawData,
     SNMPSectionContent,
     SNMPSections,
 )
@@ -56,14 +56,14 @@ PluginNameFilterFunction = Callable[[
 #   '----------------------------------------------------------------------'
 
 
-class SNMPHostSections(AbstractHostSections[RawSNMPData, SNMPSections, PersistedSNMPSections,
+class SNMPHostSections(AbstractHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                             SNMPSectionContent]):
     def __init__(self,
                  sections=None,
                  cache_info=None,
                  piggybacked_raw_data=None,
                  persisted_sections=None):
-        # type: (Optional[SNMPSections], Optional[SectionCacheInfo], Optional[PiggybackRawData], Optional[PersistedSNMPSections]) -> None
+        # type: (Optional[SNMPSections], Optional[SectionCacheInfo], Optional[PiggybackRawData], Optional[SNMPPersistedSections]) -> None
         super(SNMPHostSections, self).__init__(
             sections=sections if sections is not None else {},
             cache_info=cache_info if cache_info is not None else {},
@@ -119,7 +119,7 @@ class CachedSNMPDetector:
 # TODO: Move common functionality of SNMPManagementBoardDataSource and
 # SNMPDataSource to ABCSNMPDataSource and make SNMPManagementBoardDataSource
 # inherit from ABCSNMPDataSource instead of SNMPDataSource
-class ABCSNMPDataSource(DataSource[RawSNMPData, SNMPSections, PersistedSNMPSections,
+class ABCSNMPDataSource(DataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                    SNMPHostSections],
                         metaclass=abc.ABCMeta):
     @abc.abstractproperty
@@ -199,7 +199,7 @@ class SNMPDataSource(ABCSNMPDataSource):
                (self.title(), credentials_text, bulk, snmp_config.port, inline)
 
     def _empty_raw_data(self):
-        # type: () -> RawSNMPData
+        # type: () -> SNMPRawData
         return {}
 
     def _empty_host_sections(self):
@@ -207,11 +207,11 @@ class SNMPDataSource(ABCSNMPDataSource):
         return SNMPHostSections()
 
     def _from_cache_file(self, raw_data):
-        # type: (bytes) -> RawSNMPData
+        # type: (bytes) -> SNMPRawData
         return ast.literal_eval(raw_data.decode("utf-8"))
 
     def _to_cache_file(self, raw_data):
-        # type: (RawSNMPData) -> bytes
+        # type: (SNMPRawData) -> bytes
         return (repr(raw_data) + "\n").encode("utf-8")
 
     def set_ignore_check_interval(self, ignore_check_interval):
@@ -265,7 +265,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         )
 
     def _execute(self):
-        # type: () -> RawSNMPData
+        # type: () -> SNMPRawData
         verify_ipaddress(self._ipaddress)
         with SNMPDataFetcher(
                 self._make_oid_infos(),
@@ -337,20 +337,20 @@ class SNMPDataSource(ABCSNMPDataSource):
                       (not ('cpu' in str(x) or x in cpu_sections_without_cpu_in_name), x))
 
     def _convert_to_sections(self, raw_data):
-        # type: (RawSNMPData) -> SNMPHostSections
-        raw_data = cast(RawSNMPData, raw_data)
+        # type: (SNMPRawData) -> SNMPHostSections
+        raw_data = cast(SNMPRawData, raw_data)
         sections_to_persist = self._extract_persisted_sections(raw_data)
         return SNMPHostSections(raw_data, persisted_sections=sections_to_persist)
 
     def _extract_persisted_sections(self, raw_data):
-        # type: (RawSNMPData) -> PersistedSNMPSections
+        # type: (SNMPRawData) -> SNMPPersistedSections
         """Extract the sections to be persisted from the raw_data and return it
 
         Gather the check types to be persisted, extract the related data from
         the raw data, calculate the times and store the persisted info for
         later use.
         """
-        persisted_sections = {}  # type: PersistedSNMPSections
+        persisted_sections = {}  # type: SNMPPersistedSections
 
         for section_name, section_content in raw_data.items():
             check_interval = self._host_config.snmp_check_interval(section_name)

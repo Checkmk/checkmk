@@ -23,7 +23,7 @@ def test_oid_end():
     [
         ('1.2', ['1', '2']),  # base no leading dot
         ('.1.2', '12'),  # oids not a list
-        # TODO: this should fail once CompatibleOIDEnd is not needed anymore
+        # TODO: this should fail once OIDEndCompat is not needed anymore
         # ('.1.2', ['1', 2]),  # int in list
         ('.1.2', ['42.1', '42.2']),  # 42 should be in base
     ])

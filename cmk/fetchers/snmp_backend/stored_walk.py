@@ -16,7 +16,7 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import ABCSNMPBackend, ContextName, OID, RawValue, SNMPRowInfo
+from cmk.snmplib.type_defs import ABCSNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
@@ -25,7 +25,7 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 class StoredWalkSNMPBackend(ABCSNMPBackend):
     def get(self, oid, context_name=None):
-        # type: (OID, Optional[ContextName]) -> Optional[RawValue]
+        # type: (OID, Optional[SNMPContextName]) -> Optional[SNMPRawValue]
         walk = self.walk(oid)
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
@@ -36,7 +36,7 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
         return None
 
     def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
-        # type: (OID, Optional[CheckPluginName], Optional[OID], Optional[ContextName]) -> SNMPRowInfo
+        # type: (OID, Optional[CheckPluginName], Optional[OID], Optional[SNMPContextName]) -> SNMPRowInfo
         if oid.startswith("."):
             oid = oid[1:]
 

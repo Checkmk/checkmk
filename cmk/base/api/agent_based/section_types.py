@@ -8,7 +8,7 @@
 import collections
 from typing import Any, Callable, Generator, List, NamedTuple, Tuple, Union
 
-from cmk.snmplib.type_defs import ABCSNMPTree, CompatibleOIDEnd, OIDEnd, OIDSpec, SNMPTable
+from cmk.snmplib.type_defs import ABCSNMPTree, OIDEndCompat, OIDEnd, OIDSpec, SNMPTable
 
 from cmk.base.api import PluginName
 from cmk.base.check_utils import AgentSectionContent
@@ -47,11 +47,11 @@ class SNMPTree(ABCSNMPTree):
 
     @staticmethod
     def _sanitize_oids(oids):
-        # type: (List[Union[str, OIDSpec, OIDEnd]]) -> List[Union[OIDSpec, CompatibleOIDEnd]]
+        # type: (List[Union[str, OIDSpec, OIDEnd]]) -> List[Union[OIDSpec, OIDEndCompat]]
         if not isinstance(oids, list):
             raise TypeError("oids must be a list")
 
-        # Remove the "int" once CompatibleOIDEnd is not needed anymore.
+        # Remove the "int" once OIDEndCompat is not needed anymore.
         # We must handle int, for legacy code. Typing should prevent us from
         # adding new cases.
         typed_oids = [
@@ -82,7 +82,7 @@ class SNMPTree(ABCSNMPTree):
 
     @property
     def oids(self):
-        # type: () -> List[Union[OIDSpec, CompatibleOIDEnd]]
+        # type: () -> List[Union[OIDSpec, OIDEndCompat]]
         return self._oids
 
     def __eq__(self, other):

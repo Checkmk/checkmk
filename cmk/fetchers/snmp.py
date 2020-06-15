@@ -10,7 +10,7 @@ from types import TracebackType
 from typing import Dict, List, Optional, Type
 
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import ABCSNMPTree, RawSNMPData, SNMPHostConfig, SNMPTable
+from cmk.snmplib.type_defs import ABCSNMPTree, SNMPHostConfig, SNMPRawData, SNMPTable
 
 from . import factory
 
@@ -38,8 +38,8 @@ class SNMPDataFetcher:
         pass
 
     def data(self):
-        # type: () -> RawSNMPData
-        info = {}  # type: RawSNMPData
+        # type: () -> SNMPRawData
+        info = {}  # type: SNMPRawData
         for section_name, oid_info in self._oid_infos.items():
             self._logger.debug("%s: Fetching data", section_name)
 

@@ -15,7 +15,7 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
 
-from cmk.snmplib.type_defs import ABCSNMPBackend, ContextName, OID, RawValue, SNMPRowInfo
+from cmk.snmplib.type_defs import ABCSNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
@@ -24,7 +24,7 @@ __all__ = ["ClassicSNMPBackend"]
 
 class ClassicSNMPBackend(ABCSNMPBackend):
     def get(self, oid, context_name=None):
-        # type: (OID, Optional[ContextName]) -> Optional[RawValue]
+        # type: (OID, Optional[SNMPContextName]) -> Optional[SNMPRawValue]
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
             commandtype = "getnext"
@@ -188,7 +188,7 @@ class ClassicSNMPBackend(ABCSNMPBackend):
         return ":%d" % self.config.port
 
     def _snmp_walk_command(self, context_name):
-        # type: (Optional[ContextName]) -> List[str]
+        # type: (Optional[SNMPContextName]) -> List[str]
         """Returns command lines for snmpwalk and snmpget
 
         Including options for authentication. This handles communities and
@@ -205,7 +205,7 @@ class ClassicSNMPBackend(ABCSNMPBackend):
     # (5) privacy protocol (DES|AES) (-x)
     # (6) privacy protocol pass phrase (-X)
     def _snmp_base_command(self, what, context_name):
-        # type: (str, Optional[ContextName]) -> List[str]
+        # type: (str, Optional[SNMPContextName]) -> List[str]
         options = []
 
         if what == 'get':

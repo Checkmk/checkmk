@@ -11,7 +11,7 @@ from six import iterbytes
 
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.snmplib.type_defs import OID, OIDFunction, ScanFunction, SNMPHostConfig
+from cmk.snmplib.type_defs import OID, OIDFunction, SNMPScanFunction, SNMPHostConfig
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -68,19 +68,19 @@ class MutexScanRegistry:
     def __init__(self):
         # type: () -> None
         super(MutexScanRegistry, self).__init__()
-        self._specific_scans = []  # type: List[ScanFunction]
+        self._specific_scans = []  # type: List[SNMPScanFunction]
 
     def _is_specific(self, oid):
         # type: (OIDFunction) -> bool
         return any(scan(oid) for scan in self._specific_scans)
 
     def register(self, scan_function):
-        # type: (ScanFunction) -> ScanFunction
+        # type: (SNMPScanFunction) -> SNMPScanFunction
         self._specific_scans.append(scan_function)
         return scan_function
 
     def as_fallback(self, scan_function):
-        # type: (ScanFunction) -> ScanFunction
+        # type: (SNMPScanFunction) -> SNMPScanFunction
         @functools.wraps(scan_function)
         def wrapper(oid):
             # type: (OIDFunction) -> bool

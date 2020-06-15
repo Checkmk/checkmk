@@ -143,7 +143,7 @@ class SNMPTrapEngine:
     def _log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
         if self._logger.isEnabledFor(VERBOSE):
             self._logger.log(VERBOSE,
-                             'Trap accepted from %s (ContextEngineId "%s", ContextName "%s")',
+                             'Trap accepted from %s (ContextEngineId "%s", SNMPContextName "%s")',
                              ipaddress, context_engine_id.prettyPrint(), context_name.prettyPrint())
 
             for name, val in var_binds:

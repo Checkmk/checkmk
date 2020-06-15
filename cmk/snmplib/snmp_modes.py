@@ -20,7 +20,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 
 from . import snmp_cache
-from .type_defs import ABCSNMPBackend, DecodedString, OID, RawValue, SNMPRowInfo
+from .type_defs import ABCSNMPBackend, OID, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 SNMPWalkOptions = Dict[str, List[OID]]
@@ -40,7 +40,7 @@ SNMPWalkOptions = Dict[str, List[OID]]
 
 # Contextes can only be used when check_plugin_name is given.
 def get_single_oid(oid, check_plugin_name=None, do_snmp_scan=True, *, backend):
-    # type: (str, Optional[str], bool, ABCSNMPBackend) -> Optional[DecodedString]
+    # type: (str, Optional[str], bool, ABCSNMPBackend) -> Optional[SNMPDecodedString]
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
@@ -79,7 +79,7 @@ def get_single_oid(oid, check_plugin_name=None, do_snmp_scan=True, *, backend):
         console.vverbose("failed.\n")
 
     if value is not None:
-        decoded_value = backend.config.ensure_str(value)  # type: Optional[DecodedString]
+        decoded_value = backend.config.ensure_str(value)  # type: Optional[SNMPDecodedString]
     else:
         decoded_value = value
 
@@ -108,14 +108,14 @@ def walk_for_export(oid, *, backend):
 def _convert_rows_for_stored_walk(rows):
     # type: (SNMPRowInfo) -> SNMPRowInfoForStoredWalk
     def should_be_encoded(v):
-        # type: (RawValue) -> bool
+        # type: (SNMPRawValue) -> bool
         for c in bytearray(v):
             if c < 32 or c > 127:
                 return True
         return False
 
     def hex_encode_value(v):
-        # type: (RawValue) -> str
+        # type: (SNMPRawValue) -> str
         encoded = ""
         for c in bytearray(v):
             encoded += "%02X " % c

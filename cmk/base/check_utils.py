@@ -11,8 +11,8 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, HostName, Item, RawAgentData, SectionName
 
 from cmk.snmplib.type_defs import (
-    PersistedSNMPSections,
-    RawSNMPData,
+    SNMPPersistedSections,
+    SNMPRawData,
     SNMPSectionContent,
     SNMPSections,
 )
@@ -35,9 +35,9 @@ ParsedSectionContent = Any
 FinalSectionContent = Union[None, ParsedSectionContent, List[ParsedSectionContent]]
 
 AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
-AbstractRawData = Union[RawAgentData, RawSNMPData]
+AbstractRawData = Union[RawAgentData, SNMPRawData]
 AbstractSections = Union[AgentSections, SNMPSections]
-AbstractPersistedSections = Union[PersistedAgentSections, PersistedSNMPSections]
+AbstractPersistedSections = Union[PersistedAgentSections, SNMPPersistedSections]
 
 BoundedAbstractRawData = TypeVar("BoundedAbstractRawData", bound=AbstractRawData)
 BoundedAbstractSectionContent = TypeVar("BoundedAbstractSectionContent",

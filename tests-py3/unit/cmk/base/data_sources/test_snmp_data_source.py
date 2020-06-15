@@ -15,7 +15,7 @@ from testlib.base import Scenario
 
 from cmk.utils.type_defs import SourceType
 
-from cmk.snmplib.type_defs import RawSNMPData, SNMPTable
+from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -80,7 +80,7 @@ def test_disable_read_to_file_cache(monkeypatch, fs):
 
     file_cache = FileCache.from_source(source)
     table = []  # type: SNMPTable
-    raw_data = {"X": table}  # type: RawSNMPData
+    raw_data = {"X": table}  # type: SNMPRawData
     # End of setup.
 
     assert not source.is_agent_cache_disabled()
@@ -113,7 +113,7 @@ def test_disable_write_to_file_cache(monkeypatch, fs):
 
     file_cache = FileCache.from_source(source)
     table = []  # type: SNMPTable
-    raw_data = {"X": table}  # type: RawSNMPData
+    raw_data = {"X": table}  # type: SNMPRawData
     # End of setup.
 
     source.disable_data_source_cache()
@@ -143,7 +143,7 @@ def test_write_and_read_file_cache(monkeypatch, fs):
     file_cache = FileCache.from_source(source)
 
     table = []  # type: SNMPTable
-    raw_data = {"X": table}  # type: RawSNMPData
+    raw_data = {"X": table}  # type: SNMPRawData
     # End of setup.
 
     assert not source.is_agent_cache_disabled()

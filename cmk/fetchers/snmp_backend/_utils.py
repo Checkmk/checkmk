@@ -7,13 +7,13 @@
 
 from six import ensure_binary
 
-from cmk.snmplib.type_defs import RawValue
+from cmk.snmplib.type_defs import SNMPRawValue
 
 __all__ = ["strip_snmp_value"]
 
 
 def strip_snmp_value(value):
-    # type: (str) -> RawValue
+    # type: (str) -> SNMPRawValue
     v = value.strip()
     if v.startswith('"'):
         v = v[1:-1]

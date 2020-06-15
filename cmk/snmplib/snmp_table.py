@@ -18,9 +18,6 @@ from cmk.utils.type_defs import CheckPluginName, HostName
 from .type_defs import (
     ABCSNMPBackend,
     ABCSNMPTree,
-    Column,
-    Columns,
-    DecodedValues,
     OID,
     OID_BIN,
     OID_END,
@@ -33,16 +30,19 @@ from .type_defs import (
     OIDSpec,
     OIDWithColumns,
     OIDWithSubOIDsAndColumns,
-    RawValue,
+    SNMPColumn,
+    SNMPColumns,
+    SNMPDecodedValues,
     SNMPHostConfig,
+    SNMPRawValue,
     SNMPRowInfo,
     SNMPTable,
     SNMPValueEncoding,
 )
 
 ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
-ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
-ResultColumnsDecoded = List[List[DecodedValues]]
+ResultColumnsSanitized = List[Tuple[List[SNMPRawValue], SNMPValueEncoding]]
+ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
 
 def get_snmp_table(check_plugin_name, oid_info, *, backend):
@@ -131,22 +131,22 @@ def _get_snmp_table(check_plugin_name, oid_info, use_snmpwalk_cache, *, backend)
 
 
 def _value_encoding(column):
-    # type: (Column) -> SNMPValueEncoding
+    # type: (SNMPColumn) -> SNMPValueEncoding
     return "binary" if isinstance(column, OIDBytes) else "string"
 
 
 def _make_target_columns(oid_info):
-    # type: (Union[OIDInfo, ABCSNMPTree]) -> Tuple[OID, List[Any], Columns]
+    # type: (Union[OIDInfo, ABCSNMPTree]) -> Tuple[OID, List[Any], SNMPColumns]
     #
     # OIDInfo is one of:
-    #   - OIDWithColumns = Tuple[OID, Columns]
-    #   - OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]
+    #   - OIDWithColumns = Tuple[OID, SNMPColumns]
+    #   - OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], SNMPColumns]
     #     where List[OID] is a list if OID-infixes that are put between the
     #     baseoid and the columns and prefixed with the index column.
     #
     # TODO: The Union[OIDWithColumns, OIDWithSubOIDsAndColumns] dance is absurd!
     #       Here, we should just have OIDWithSubOIDsAndColumns and
-    #       replace `OIDWithColumns` with `Tuple[OID, [], Columns]`.
+    #       replace `OIDWithColumns` with `Tuple[OID, [], SNMPColumns]`.
     #
     # This allows to merge distinct SNMP subtrees with a similar structure
     # to one virtual new tree (look into cmctc_temp for an example)
@@ -174,7 +174,7 @@ def _make_target_columns(oid_info):
 
 
 def _make_index_rows(max_column, index_format, fetchoid):
-    # type: (SNMPRowInfo, Optional[Column], OID) -> SNMPRowInfo
+    # type: (SNMPRowInfo, Optional[SNMPColumn], OID) -> SNMPRowInfo
     index_rows = []
     for o, _unused_value in max_column:
         if index_format == OID_END:
@@ -210,7 +210,7 @@ def _make_table(columns, snmp_config):
 
 
 def _oid_to_bin(oid):
-    # type: (OID) -> RawValue
+    # type: (OID) -> SNMPRawValue
     return ensure_binary("".join([chr(int(p)) for p in oid.strip(".").split(".")]))
 
 
@@ -238,12 +238,12 @@ def _key_oids(o1):
 
 
 def _key_oid_pairs(pair1):
-    # type: (Tuple[OID, RawValue]) -> List[int]
+    # type: (Tuple[OID, SNMPRawValue]) -> List[int]
     return _oid_to_intlist(pair1[0].lstrip('.'))
 
 
 def _get_snmpwalk(check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache, *, backend):
-    # type: (CheckPluginName, OID, OID, Column, bool, ABCSNMPBackend) -> SNMPRowInfo
+    # type: (CheckPluginName, OID, OID, SNMPColumn, bool, ABCSNMPBackend) -> SNMPRowInfo
     if column in SPECIAL_COLUMNS:
         return []
 
@@ -289,7 +289,7 @@ def _perform_snmpwalk(check_plugin_name, base_oid, fetchoid, *, backend):
 
 
 def _compute_fetch_oid(oid, suboid, column):
-    # type: (Union[OID, OIDSpec], Optional[OID], Column) -> OID
+    # type: (Union[OID, OIDSpec], Optional[OID], SNMPColumn) -> OID
     if suboid:
         fetchoid = "%s.%s" % (oid, suboid)
     else:
@@ -310,9 +310,9 @@ def _sanitize_snmp_encoding(columns, snmp_config):
 
 
 def _decode_column(column, value_encoding, snmp_config):
-    # type: (List[RawValue], SNMPValueEncoding, SNMPHostConfig) -> List[DecodedValues]
+    # type: (List[SNMPRawValue], SNMPValueEncoding, SNMPHostConfig) -> List[SNMPDecodedValues]
     if value_encoding == "string":
-        decode = snmp_config.ensure_str  # type: Callable[[bytes], DecodedValues]
+        decode = snmp_config.ensure_str  # type: Callable[[bytes], SNMPDecodedValues]
     else:
         decode = lambda v: list(bytearray(v))
     return [decode(v) for v in column]

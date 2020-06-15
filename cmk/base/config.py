@@ -77,7 +77,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
-    OIDBytes, OIDCached, ScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming,
+    OIDBytes, OIDCached, SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming,
 )
 
 import cmk.base.autochecks as autochecks
@@ -1419,7 +1419,7 @@ check_config_variables = []  # type:  List[Any]
 # whichs OIDs to fetch for which check (for tabular information)
 snmp_info = {}  # type: Dict[str, Union[Tuple[Any], List[Tuple[Any]]]]
 # SNMP autodetection
-snmp_scan_functions = {}  # type: Dict[str, ScanFunction]
+snmp_scan_functions = {}  # type: Dict[str, SNMPScanFunction]
 # definitions of active "legacy" checks
 active_check_info = {}  # type: Dict[str, Dict[str, Any]]
 special_agent_info = {}  # type: Dict[str, SpecialAgentInfoFunction]

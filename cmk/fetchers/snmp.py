@@ -7,10 +7,10 @@
 import logging
 from functools import partial
 from types import TracebackType
-from typing import Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import SNMPTree, SNMPHostConfig, SNMPRawData, SNMPTable
+from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
 from . import factory
 
@@ -28,6 +28,18 @@ class SNMPDataFetcher:
         self._use_snmpwalk_cache = use_snmpwalk_cache
         self._snmp_config = snmp_config
         self._logger = logging.getLogger("cmk.fetchers.snmp")
+
+    @classmethod
+    def from_json(cls, serialized):
+        # type: (Dict[str, Any]) -> SNMPDataFetcher
+        return cls(
+            {
+                name: [SNMPTree.from_json(tree) for tree in trees
+                      ] for name, trees in serialized["oid_infos"].items()
+            },
+            serialized["use_snmpwalk_cache"],
+            SNMPHostConfig(**serialized["snmp_config"]),
+        )
 
     def __enter__(self):
         # type: () -> SNMPDataFetcher

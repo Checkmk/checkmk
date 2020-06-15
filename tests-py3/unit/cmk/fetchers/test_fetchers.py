@@ -10,6 +10,8 @@ from collections import namedtuple
 
 import pytest  # type: ignore[import]
 
+from cmk.snmplib.type_defs import SNMPTree
+
 # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.fetchers.ipmi import *
 from cmk.fetchers.piggyback import *
@@ -80,9 +82,37 @@ class TestProgram:
 
 
 class TestSNMP:
-    @pytest.mark.skip("not implemented")
     def test_deserialization(self):
-        pass
+        fetcher = SNMPDataFetcher.from_json(
+            to_json({
+                "oid_infos": {
+                    "pim": [SNMPTree(base=".1.1.1", oids=["1.2", "3.4"]).to_json()],
+                    "pam": [SNMPTree(base=".1.2.3", oids=["4.5", "6.7", "8.9"]).to_json()],
+                    "pum": [
+                        SNMPTree(base=".2.2.2", oids=["2.2"]).to_json(),
+                        SNMPTree(base=".3.3.3", oids=["2.2"]).to_json(),
+                    ],
+                },
+                "use_snmpwalk_cache": False,
+                "snmp_config": SNMPHostConfig(
+                    is_ipv6_primary=False,
+                    hostname="bob",
+                    ipaddress="1.2.3.4",
+                    credentials=(),
+                    port=42,
+                    is_bulkwalk_host=False,
+                    is_snmpv2or3_without_bulkwalk_host=False,
+                    bulk_walk_size_of=0,
+                    timing={},
+                    oid_range_limits=[],
+                    snmpv3_contexts=[],
+                    character_encoding=None,
+                    is_usewalk_host=False,
+                    is_inline_snmp_host=False,
+                    record_stats=False,
+                )._asdict(),
+            }))
+        assert isinstance(fetcher, SNMPDataFetcher)
 
 
 class TestTCPDataFetcher:

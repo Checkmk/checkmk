@@ -4911,7 +4911,7 @@ def _valuespec_piggybacked_host_files():
 
 def _vs_max_cache_age(max_cache_age_title):
     return Alternative(
-        title=_("Set maximum age how long piggyback files are kept"),
+        title=_("Keep hosts while piggyback source sends piggyback data only for other hosts for"),
         elements=[
             FixedValue(
                 "global",

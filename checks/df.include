@@ -90,11 +90,11 @@ def ungrouped_mountpoints_and_groups(mplist, group_patterns):
     ungrouped_mountpoints = set(mplist)
     groups = {}
 
-    for mp in mplist:
-        in_group = False
-        for group_name, patterns in group_patterns.items():
-            groups[group_name] = mountpoints_in_group(mplist, patterns)
-            ungrouped_mountpoints = ungrouped_mountpoints.difference(groups[group_name])
+    for group_name, patterns in group_patterns.items():
+        mp_groups = mountpoints_in_group(mplist, patterns)
+        if mp_groups:
+            groups[group_name] = mp_groups
+            ungrouped_mountpoints = ungrouped_mountpoints.difference(mp_groups)
 
     return ungrouped_mountpoints, groups
 

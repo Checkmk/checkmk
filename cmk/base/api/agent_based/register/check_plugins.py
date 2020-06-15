@@ -15,7 +15,6 @@ from cmk.base.api import PluginName
 from cmk.base.api.agent_based.checking_types import (
     CheckPlugin,
     IgnoreResults,
-    management_board,
     Metric,
     Result,
     Service,
@@ -53,15 +52,6 @@ def _requires_item(service_name):
     # type: (str) -> bool
     """See if this check requires an item"""
     return ITEM_VARIABLE in service_name
-
-
-def _validate_management_board_option(plugin_name, management_board_option):
-    # type: (str, Optional[management_board]) -> None
-    if management_board_option is None:
-        return
-    if not isinstance(management_board_option, management_board):
-        raise TypeError("[%s]: 'management_board' must be one of %s" %
-                        (plugin_name, ', '.join(str(i) for i in management_board)))
 
 
 def _create_sections(sections, plugin_name):
@@ -200,7 +190,6 @@ def create_check_plugin(
         name,  # type: str
         sections=None,  # type: Optional[List[str]]
         service_name,  # type: str
-        management_board_option=None,  # type: Optional[management_board]
         discovery_function,  # type: Callable
         discovery_default_parameters=None,  # type: Optional[Dict]
         discovery_ruleset_name=None,  # type: Optional[str]
@@ -222,8 +211,6 @@ def create_check_plugin(
 
     _validate_service_name(name, service_name)
     requires_item = _requires_item(service_name)
-
-    _validate_management_board_option(name, management_board_option)
 
     # validate discovery arguments
     _validate_default_parameters(
@@ -282,7 +269,6 @@ def create_check_plugin(
         plugin_name,
         subscribed_sections,
         service_name,
-        management_board_option,
         _filter_discovery(discovery_function),
         discovery_default_parameters,
         None if discovery_ruleset_name is None else PluginName(discovery_ruleset_name),
@@ -291,3 +277,22 @@ def create_check_plugin(
         None if check_ruleset_name is None else PluginName(check_ruleset_name),
         cluster_check_function,
     )
+
+
+def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
+    return CheckPlugin(
+        PluginName("%s%s" % (MANAGEMENT_NAME_PREFIX, original_plugin.name)),
+        original_plugin.sections,
+        "%s%s" % (MANAGEMENT_DESCR_PREFIX, original_plugin.service_name),
+        original_plugin.discovery_function,
+        original_plugin.discovery_default_parameters,
+        original_plugin.discovery_ruleset_name,
+        original_plugin.check_function,
+        original_plugin.check_default_parameters,
+        original_plugin.check_ruleset_name,
+        original_plugin.cluster_check_function,
+    )
+
+
+def is_management_name(plugin_name: Union[PluginName, str]) -> bool:
+    return str(plugin_name).startswith(MANAGEMENT_NAME_PREFIX)

@@ -11,7 +11,6 @@ from cmk.snmplib.type_defs import ABCSNMPTree
 
 from cmk.base import config
 from cmk.base.api.agent_based.checking_types import CheckFunction, DiscoveryFunction
-from cmk.base.api.agent_based.checking_types import management_board as management_board_enum
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
@@ -126,7 +125,6 @@ def check_plugin(
     check_function: CheckFunction,
     check_default_parameters: Optional[Dict[str, Any]] = None,
     check_ruleset_name: Optional[str] = None,
-    management_board: Optional[management_board_enum] = None,
 ) -> None:
     """Register a check plugin to checkmk.
 
@@ -151,9 +149,6 @@ def check_plugin(
     :param check_parameters: Default parameters for the check function. Must match the
                              ValueSpec of the corresponding WATO ruleset.
     :param check_ruleset_name: The name of the check ruleset.
-    :param management_board: Explicitly tell checkmk wether this plugins services should be
-                             discovered on a management board. Choices are
-                             `management_board.EXCLUSIVE` or `management_board.DISABLED`
     """
     plugin = create_check_plugin(
         name=name,
@@ -165,7 +160,6 @@ def check_plugin(
         check_function=check_function,
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_ruleset_name,
-        management_board_option=management_board,
         forbidden_names=list(config.registered_check_plugins),
     )
 

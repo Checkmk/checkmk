@@ -97,6 +97,11 @@ try:
         create_snmp_section_plugin_from_legacy,
     )
     from cmk.base.api.agent_based.checking_types import CheckPlugin
+    from cmk.base.api.agent_based.register.check_plugins import (
+        is_management_name,
+        MANAGEMENT_NAME_PREFIX,
+        management_plugin_factory,
+    )
     from cmk.base.api.agent_based.register.check_plugins_legacy import (
         create_check_plugin_from_legacy,
         resolve_legacy_name,
@@ -1300,8 +1305,17 @@ def get_registered_section_plugin(plugin_name):
 
 def get_registered_check_plugin(plugin_name):
     # type: (PluginName) -> Optional[CheckPlugin]
-    # TODO (mo): add the management plugin factory here.
-    return registered_check_plugins.get(plugin_name)
+    plugin = registered_check_plugins.get(plugin_name)
+    if plugin is not None or not is_management_name(plugin_name):
+        return plugin
+
+    # create management board plugin on the fly:
+    non_mgmt_name = PluginName(str(plugin_name)[len(MANAGEMENT_NAME_PREFIX):])
+    non_mgmt_plugin = registered_check_plugins.get(non_mgmt_name)
+    if non_mgmt_plugin is not None:
+        return management_plugin_factory(non_mgmt_plugin)
+
+    return None
 
 
 def get_relevant_raw_sections(check_plugin_names):

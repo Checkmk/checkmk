@@ -153,7 +153,6 @@ def test_create_check_plugin():
     assert plugin.name == PluginName(MINIMAL_CREATION_KWARGS["name"])
     assert plugin.sections == [PluginName(MINIMAL_CREATION_KWARGS["name"])]
     assert plugin.service_name == MINIMAL_CREATION_KWARGS["service_name"]
-    assert plugin.management_board is None
     assert plugin.discovery_function.__name__ == MINIMAL_CREATION_KWARGS[
         "discovery_function"].__name__
     assert plugin.discovery_default_parameters is None

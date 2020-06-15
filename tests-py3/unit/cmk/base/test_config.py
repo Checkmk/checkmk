@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from contextlib import suppress
 
 import pytest  # type: ignore[import]
 from six import ensure_str
@@ -17,6 +18,8 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based import checking_types
 from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
 from cmk.base.check_utils import Service
@@ -1891,3 +1894,36 @@ def test_packed_config(pack_string):
     packed_config = config.PackedConfig()
     packed_config._write(pack_string)
     packed_config.load()
+
+
+@pytest.fixture(name="test_plugin")
+def add_test_plugin_to_config():
+    test_plugin = checking_types.CheckPlugin(
+        PluginName("check_unit_test"),
+        [],
+        "Unit Test",
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+    )
+    config.registered_check_plugins[test_plugin.name] = test_plugin
+
+    yield test_plugin
+
+    with suppress(KeyError):
+        config.registered_check_plugins.pop(test_plugin.name)
+
+
+def test_get_registered_check_plugins(test_plugin):
+
+    assert config.get_registered_check_plugin(test_plugin.name) is test_plugin
+    assert config.get_registered_check_plugin(PluginName("mgmt_this_should_not_exists")) is None
+
+    mgmt_plugin = config.get_registered_check_plugin(PluginName("mgmt_%s" % test_plugin.name))
+    assert mgmt_plugin is not None
+    assert str(mgmt_plugin.name).startswith("mgmt_")
+    assert mgmt_plugin.service_name.startswith("Management Interface: ")

@@ -21,7 +21,6 @@ from cmk.snmplib.type_defs import OIDBytes, OIDCached, OIDEnd
 from cmk.base.api.agent_based.checking_types import (
     IgnoreResults,
     IgnoreResultsError,
-    management_board,
     Metric,
     Parameters,
     Result,
@@ -85,7 +84,6 @@ __all__ = [
     # CHECKING related
     "IgnoreResults",
     "IgnoreResultsError",
-    "management_board",
     "Metric",
     "Parameters",  # typing only!
     "Result",

@@ -12,7 +12,6 @@ import itertools
 from cmk.base import item_state
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.checking_types import (
-    management_board,
     CheckPlugin,
     Metric,
     state,
@@ -22,12 +21,7 @@ from cmk.base.api.agent_based.checking_types import (
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 import cmk.base.config as config
-from cmk.base.check_api_utils import (
-    Service as LegacyService,
-    HOST_ONLY as LEGACY_HOST_ONLY,
-    MGMT_ONLY as LEGACY_MGMT_ONLY,
-    HOST_PRECEDENCE as LEGACY_HOST_PREC,
-)
+from cmk.base.check_api_utils import Service as LegacyService
 from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
 
 DUMMY_RULESET_NAME = "non_existent_auto_migration_dummy_rule"
@@ -45,25 +39,13 @@ CONSIDERED_KEYS = {
     "has_perfdata",  # obsolete
     "includes",
     "inventory_function",
-    "management_board",
+    "management_board",  # obsolete
     "node_info",  # handled in section
     "parse_function",
     "service_description",
     "snmp_info",  # handled in section
     "snmp_scan_function",  # handled in section
 }
-
-
-def _create_management_board_option(check_info_dict):
-    # type: (Dict[str, Any]) -> Optional[management_board]
-    legacy_value = check_info_dict.get("management_board")
-    if legacy_value in (None, LEGACY_HOST_PREC):
-        return None
-    if legacy_value == LEGACY_HOST_ONLY:
-        return management_board.DISABLED
-    if legacy_value == LEGACY_MGMT_ONLY:
-        return management_board.EXCLUSIVE
-    raise NotImplementedError("unknown management_board value: %r" % (legacy_value,))
 
 
 def _create_discovery_function(check_info_dict, default_parameters):
@@ -285,7 +267,6 @@ def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidde
         name=new_check_name,
         sections=[check_plugin_name.split('.', 1)[0]],
         service_name=check_info_dict['service_description'],
-        management_board_option=_create_management_board_option(check_info_dict),
         discovery_function=discovery_function,
         discovery_default_parameters=None,  # legacy madness!
         discovery_ruleset_name=None,

@@ -10,19 +10,23 @@ def parse_storeonce4x_alerts(info):
     parsed = []
     alerts_json = json.loads(info[0][0])
     for alert in alerts_json["members"]:
-        # Skip already cleared alarms
-        if alert["state"].upper() != "CLEARED":
-            parsed.append(alert)
-
+        parsed.append(alert)
     return parsed
 
 
 def check_storeonce4x_alerts(_item, _param, parsed):
 
     status_map = {"CRITICAL": 2, "WARNING": 1, "OK": 0, "UNKNOWN": 3, "DISABLED": 3}
+
+    no_uncleared_alerts = True
     for alert in parsed:
-        yield status_map[alert["status"].upper()], "Alert State: %s, Description: %s" % (
-            alert["alertState"], alert["description"])
+        if alert["state"].upper() != "CLEARED":
+            no_uncleared_alerts = False
+            yield status_map[alert["status"].upper()], "Alert State: %s, Description: %s" % (
+                alert["alertState"], alert["description"])
+
+    if no_uncleared_alerts:
+        yield 0, "No uncleared alarm found."
 
 
 check_info["storeonce4x_alerts"] = {

@@ -120,14 +120,14 @@ class StoreOnceOauth2Session:
             return token_json
 
     def get_absolute_expire_time(self, expires_in, expires_in_earlier=20):
-        # type: (int, int) -> str
+        # type: (str, int) -> str
         """
         :param: expires_in_earlier: Will calculate an earlier absolute expire time about its
         value in [s].
         """
         # all expires_in are in seconds according to oAuth2 spec
         now = dt.datetime.now()
-        dt_expires_in = dt.timedelta(0, expires_in)
+        dt_expires_in = dt.timedelta(0, float(expires_in))
         dt_expires_in_earlier = dt.timedelta(0, expires_in_earlier)
         return dt.datetime.strftime(now + dt_expires_in - dt_expires_in_earlier, self._dt_fmt)
 

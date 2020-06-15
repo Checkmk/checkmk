@@ -7,7 +7,7 @@
 
 def agent_storeonce4x_arguments(params, hostname, ipaddress):
     args = [
-        params["username"],
+        params["user"],
         passwordstore_get_cmdline("%s", params["password"]),
         hostname,
     ]

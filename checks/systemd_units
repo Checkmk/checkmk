@@ -167,7 +167,7 @@ def discovery_systemd_units_services(parsed):
     for settings in host_extra_conf(host_name(), discovery_systemd_units_services_rules):
         descriptions = settings.get("descriptions", [])
         names = settings.get("names", [])
-        states = settings.get("states")
+        states = settings.get("states", [])
         for service in services.values():
             if (regex_match(descriptions, service.description) and
                     regex_match(names, service.name) and state_match(states, service.active)):

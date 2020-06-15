@@ -70,7 +70,7 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
                 current += 1
             parts = lines[current].split(None, 1)
             comp = parts[0]
-            hit = self._compare_oids(oid_prefix, comp)
+            hit = StoredWalkSNMPBackend._compare_oids(oid_prefix, comp)
             if hit == 0:
                 break
             if hit == 1:  # we are too low
@@ -81,33 +81,36 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
         if hit != 0:
             return []  # not found
 
-        rowinfo = self._collect_until(oid, oid_prefix, lines, current, -1)
+        rowinfo = StoredWalkSNMPBackend._collect_until(oid, oid_prefix, lines, current, -1)
         rowinfo.reverse()
-        rowinfo += self._collect_until(oid, oid_prefix, lines, current + 1, 1)
+        rowinfo += StoredWalkSNMPBackend._collect_until(oid, oid_prefix, lines, current + 1, 1)
 
         if dot_star:
             return [rowinfo[0]]
 
         return rowinfo
 
-    def _compare_oids(self, a, b):
+    @staticmethod
+    def _compare_oids(a, b):
         # type: (OID, OID) -> int
-        aa = self._to_bin_string(a)
-        bb = self._to_bin_string(b)
+        aa = StoredWalkSNMPBackend._to_bin_string(a)
+        bb = StoredWalkSNMPBackend._to_bin_string(b)
         if len(aa) <= len(bb) and bb[:len(aa)] == aa:
             result = 0
         else:
             result = (aa > bb) - (aa < bb)
         return result
 
-    def _to_bin_string(self, oid):
+    @staticmethod
+    def _to_bin_string(oid):
         # type: (OID) -> Tuple[int, ...]
         try:
             return tuple(map(int, oid.strip(".").split(".")))
         except Exception:
             raise MKGeneralException("Invalid OID %s" % oid)
 
-    def _collect_until(self, oid, oid_prefix, lines, index, direction):
+    @staticmethod
+    def _collect_until(oid, oid_prefix, lines, index, direction):
         # type: (OID, OID, List[str], int, int) -> SNMPRowInfo
         rows = []
         # Handle case, where we run after the end of the lines list

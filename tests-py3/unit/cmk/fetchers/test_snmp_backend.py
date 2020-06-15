@@ -7,6 +7,7 @@
 import pytest  # type: ignore[import]
 
 import cmk.fetchers.snmp_backend._utils as utils
+from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -17,3 +18,17 @@ import cmk.fetchers.snmp_backend._utils as utils
 ])
 def test_strip_snmp_value(value, expected):
     assert utils.strip_snmp_value(value) == expected
+
+
+class TestStoredWalkSNMPBackend:
+    @pytest.mark.parametrize("a, b, result", [
+        ("1.2.3", "1.2.3", 0),
+        ("1.2.3", ".1.2.3", 0),
+        (".1.2.3", "1.2.3", 0),
+        (".1.2.3", ".1.2.3", 0),
+        ("1.2.3", "1.2.3.4", 0),
+        ("1.2.3.4", "1.2.3", 1),
+        ("1.2.3", "4.5.6", -1),
+    ])
+    def test_compare_oids(self, a, b, result):
+        assert StoredWalkSNMPBackend._compare_oids(a, b) == result

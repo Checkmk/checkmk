@@ -7,7 +7,7 @@
 """
 from typing import Any, Dict, List, Optional
 
-from cmk.snmplib.type_defs import ABCSNMPTree
+from cmk.snmplib.type_defs import SNMPTree
 
 from cmk.base import config
 from cmk.base.api.agent_based.checking_types import CheckFunction, DiscoveryFunction
@@ -71,7 +71,7 @@ def snmp_section(
     parse_function: SNMPParseFunction,
     host_label_function: Optional[HostLabelFunction] = None,
     detect: SNMPDetectSpec,
-    trees: List[ABCSNMPTree],
+    trees: List[SNMPTree],
     supersedes: Optional[List[str]] = None,
 ) -> None:
     """Register an snmp section to checkmk

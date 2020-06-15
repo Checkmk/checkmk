@@ -14,7 +14,7 @@ from typing import Any, Generator, List, Optional, Union
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 
-from cmk.snmplib.type_defs import ABCSNMPTree, OIDSpec
+from cmk.snmplib.type_defs import OIDSpec, SNMPTree
 
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import (
@@ -93,13 +93,13 @@ def _validate_detect_spec(detect_spec):
 
 
 def _validate_snmp_trees(trees):
-    # type: (List[ABCSNMPTree]) -> None
+    # type: (List[SNMPTree]) -> None
     type_error = TypeError("value of 'trees' keyword must be a non-empty list of SNMPTrees")
     if not isinstance(trees, list):
         raise type_error
     if not trees:
         raise type_error
-    if any(not isinstance(element, ABCSNMPTree) for element in trees):
+    if any(not isinstance(element, SNMPTree) for element in trees):
         raise type_error
 
 
@@ -183,7 +183,7 @@ def create_snmp_section_plugin(
         host_label_function=None,  # type: Optional[HostLabelFunction]
         supersedes=None,  # type:  Optional[List[str]]
         detect_spec,  # type: SNMPDetectSpec
-        trees,  # type: List[ABCSNMPTree]
+        trees,  # type: List[SNMPTree]
         forbidden_names=None,  # type: Optional[List[PluginName]]
 ):
     # type: (...) -> SNMPSectionPlugin

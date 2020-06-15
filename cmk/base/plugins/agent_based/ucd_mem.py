@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import operator
-from .agent_based_api.v0 import register, SNMPTree
+
+from cmk.snmplib.type_defs import SNMPTree
+
+from .agent_based_api.v0 import register
 from .utils import ucd_hr_detection
 
 # .1.3.6.1.4.1.2021.4.2.0 swap      --> UCD-SNMP-MIB::memErrorName.0

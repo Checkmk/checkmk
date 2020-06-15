@@ -10,7 +10,7 @@ from types import TracebackType
 from typing import Dict, List, Optional, Type
 
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import ABCSNMPTree, SNMPHostConfig, SNMPRawData, SNMPTable
+from cmk.snmplib.type_defs import SNMPTree, SNMPHostConfig, SNMPRawData, SNMPTable
 
 from . import factory
 
@@ -18,7 +18,7 @@ from . import factory
 class SNMPDataFetcher:
     def __init__(
             self,
-            oid_infos,  # type: Dict[str, List[ABCSNMPTree]]
+            oid_infos,  # type: Dict[str, List[SNMPTree]]
             use_snmpwalk_cache,  # type: bool
             snmp_config,  # type: SNMPHostConfig
     ):
@@ -48,7 +48,7 @@ class SNMPDataFetcher:
             get_snmp = partial(snmp_table.get_snmp_table_cached
                                if self._use_snmpwalk_cache else snmp_table.get_snmp_table,
                                backend=factory.backend(self._snmp_config))
-            # branch: List[ABCSNMPTree]
+            # branch: List[SNMPTree]
             check_info = []  # type: List[SNMPTable]
             for entry in oid_info:
                 check_info_part = get_snmp(section_name, entry)

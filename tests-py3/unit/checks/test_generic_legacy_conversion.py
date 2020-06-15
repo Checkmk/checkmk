@@ -11,6 +11,8 @@ from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES
 
 from cmk.utils.check_utils import section_name_of
 
+from cmk.snmplib.type_defs import SNMPTree
+
 import cmk.base.check_api as check_api
 import cmk.base.config as config
 from cmk.base.api import PluginName
@@ -19,7 +21,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function impo
     _explicit_conversions,
     create_detect_spec,
 )
-from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin, SNMPTree
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
 
 pytestmark = pytest.mark.checks
 

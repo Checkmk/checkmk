@@ -8,9 +8,7 @@ import json
 
 import pytest  # type: ignore[import]
 
-from cmk.snmplib.type_defs import OID_END, OIDBytes, OIDCached, OIDEnd, OIDSpec
-
-from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.snmplib.type_defs import OID_END, OIDBytes, OIDCached, OIDEnd, OIDSpec, SNMPTree
 
 
 def test_oid_end():

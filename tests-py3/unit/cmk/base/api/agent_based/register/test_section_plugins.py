@@ -10,7 +10,7 @@ from typing import List
 
 import pytest  # type: ignore[import]
 
-from cmk.snmplib.type_defs import ABCSNMPTree, OIDEnd
+from cmk.snmplib.type_defs import OIDEnd, SNMPTree
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 import cmk.base.api.agent_based.section_types as section_types
@@ -116,7 +116,7 @@ def test_create_snmp_section_plugin():
             base='.1.2.3',
             oids=[OIDEnd(), '2.3'],
         ),
-    ]  # type: List[ABCSNMPTree]
+    ]  # type: List[SNMPTree]
 
     detect = [
         [('.1.2.3.4.5', 'Foo.*', True)],

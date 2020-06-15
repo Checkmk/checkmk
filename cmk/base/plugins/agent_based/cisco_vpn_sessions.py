@@ -32,7 +32,9 @@
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnCumulateSessions.0 = Counter32: 0 Sessions
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnPeakConcurrentSessions.0 = Gauge32: 0 Sessions
 
-from .agent_based_api.v0 import SNMPTree, any_of, contains, register
+from cmk.snmplib.type_defs import SNMPTree
+
+from .agent_based_api.v0 import any_of, contains, register
 
 SESSION_TYPES = ['IPsec RA', 'IPsec L2L', 'AnyConnect SVC', 'WebVPN']
 METRICS_PER_SESSION_TYPE = ['active_sessions', 'cumulative_sessions', 'peak_sessions']

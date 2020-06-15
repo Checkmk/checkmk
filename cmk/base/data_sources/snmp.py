@@ -15,13 +15,13 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import (
-    ABCSNMPTree,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPPersistedSections,
     SNMPRawData,
     SNMPSectionContent,
     SNMPSections,
+    SNMPTree,
 )
 
 from cmk.fetchers import SNMPDataFetcher
@@ -276,8 +276,8 @@ class SNMPDataSource(ABCSNMPDataSource):
         raise MKAgentError("Failed to read data")
 
     def _make_oid_infos(self):
-        # type: () -> Dict[str, List[ABCSNMPTree]]
-        oid_infos = {}  # Dict[str, List[ABCSNMPTree]]
+        # type: () -> Dict[str, List[SNMPTree]]
+        oid_infos = {}  # Dict[str, List[SNMPTree]]
         raw_sections_to_process = {PluginName(n) for n in self._get_raw_section_names_to_process()}
         for section_name in self._sort_section_names(raw_sections_to_process):
             plugin = config.registered_snmp_sections.get(section_name)

@@ -9,11 +9,10 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import ABCSNMPBackend, OID_END, OIDBytes, OIDEnd, SNMPHostConfig
+from cmk.snmplib.type_defs import ABCSNMPBackend, OID_END, OIDBytes, OIDEnd, SNMPHostConfig, SNMPTree
 
 import cmk.base.config as config
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
-from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.check_api import BINARY
 
 SNMPConfig = SNMPHostConfig(

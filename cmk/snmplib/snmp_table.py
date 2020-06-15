@@ -17,7 +17,6 @@ from cmk.utils.type_defs import CheckPluginName, HostName
 
 from .type_defs import (
     ABCSNMPBackend,
-    ABCSNMPTree,
     OID,
     OID_BIN,
     OID_END,
@@ -37,6 +36,7 @@ from .type_defs import (
     SNMPRawValue,
     SNMPRowInfo,
     SNMPTable,
+    SNMPTree,
     SNMPValueEncoding,
 )
 
@@ -46,12 +46,12 @@ ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
 
 def get_snmp_table(check_plugin_name, oid_info, *, backend):
-    # type: (CheckPluginName, Union[OIDInfo, ABCSNMPTree], ABCSNMPBackend) -> SNMPTable
+    # type: (CheckPluginName, Union[OIDInfo, SNMPTree], ABCSNMPBackend) -> SNMPTable
     return _get_snmp_table(check_plugin_name, oid_info, False, backend=backend)
 
 
 def get_snmp_table_cached(check_plugin_name, oid_info, *, backend):
-    # type: (CheckPluginName, Union[OIDInfo, ABCSNMPTree], ABCSNMPBackend) -> SNMPTable
+    # type: (CheckPluginName, Union[OIDInfo, SNMPTree], ABCSNMPBackend) -> SNMPTable
     return _get_snmp_table(check_plugin_name, oid_info, True, backend=backend)
 
 
@@ -66,7 +66,7 @@ SPECIAL_COLUMNS = [
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def _get_snmp_table(check_plugin_name, oid_info, use_snmpwalk_cache, *, backend):
-    # type: (CheckPluginName, Union[OIDInfo, ABCSNMPTree], bool, ABCSNMPBackend) -> SNMPTable
+    # type: (CheckPluginName, Union[OIDInfo, SNMPTree], bool, ABCSNMPBackend) -> SNMPTable
     oid, suboids, targetcolumns = _make_target_columns(oid_info)
 
     index_column = -1
@@ -136,7 +136,7 @@ def _value_encoding(column):
 
 
 def _make_target_columns(oid_info):
-    # type: (Union[OIDInfo, ABCSNMPTree]) -> Tuple[OID, List[Any], SNMPColumns]
+    # type: (Union[OIDInfo, SNMPTree]) -> Tuple[OID, List[Any], SNMPColumns]
     #
     # OIDInfo is one of:
     #   - OIDWithColumns = Tuple[OID, SNMPColumns]
@@ -151,7 +151,7 @@ def _make_target_columns(oid_info):
     # This allows to merge distinct SNMP subtrees with a similar structure
     # to one virtual new tree (look into cmctc_temp for an example)
     suboids = [None]  # type: List
-    if isinstance(oid_info, ABCSNMPTree):
+    if isinstance(oid_info, SNMPTree):
         # TODO (mo): Via SNMPTree is the way to go. Remove all other cases
         #            once we have the auto-conversion of SNMPTrees in place.
         #            In particular:

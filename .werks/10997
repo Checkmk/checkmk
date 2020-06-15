@@ -1,0 +1,13 @@
+Title: mk_postgres: Fixed query "Last vaccum"
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p25
+Date: 1592210174
+Class: fix
+
+The query take the access time from a wrong instance. This may lead to
+wrong service results.
+Please install the newest agent plugin {{mk_postgres}} in order to get
+the right agent output.

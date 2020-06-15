@@ -65,3 +65,4 @@ node_modules/
 web/htdocs/js/*_min.js.map
 .mypy_cache/
 .vscode/
+.testmondata

@@ -70,6 +70,11 @@ repos:
             entry: scripts/check-licence
             language: script
             types: [file, python]
+          - id: unit-tests
+            name: Check affected unit tests
+            entry: scripts/check-pytest-testmon
+            language: script
+            types: [file, python]
           - id: absolute-imports
             name: Check absolute imports
             entry: scripts/check-absolute-imports

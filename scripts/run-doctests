@@ -14,7 +14,7 @@ for param in "$@"; do
     if [[ "$param" == tests* ]]; then
         continue
     fi
-    FILES+=($param)
+    FILES+=($(readlink -f "$param"))
 done
 
 NUM_PARAM=${#FILES[@]}
@@ -27,16 +27,9 @@ fi
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
 
-printf -v files " %s" ${FILES[@]}
-PYTHON2_FILES=$(python_files 2 "$files")
-PYTHON3_FILES=$(python_files 3 "$files")
+pushd $REPO_PATH > /dev/null
 
-if [ ! -z "$PYTHON2_FILES" ]; then
-    $PIPENV 2 run python -m doctest $PYTHON2_FILES
-fi
-
-if [ ! -z "$PYTHON3_FILES" ]; then
-    $PIPENV 3 run python -m doctest $PYTHON3_FILES
-fi
+$PIPENV 3 run python -m doctest $FILES
+popd > /dev/null
 
 exit 0

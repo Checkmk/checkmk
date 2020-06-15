@@ -9,7 +9,19 @@ import signal
 import socket
 import time
 from types import FrameType
-from typing import Any, Callable, Dict, Iterator, List, NoReturn, Optional, Pattern, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    NoReturn,
+    Optional,
+    Pattern,
+    Set,
+    Tuple,
+    Union,
+)
 
 from six import ensure_binary
 
@@ -37,7 +49,7 @@ from cmk.utils.type_defs import (
 import cmk.utils.cleanup
 
 from cmk.base.api import PluginName
-from cmk.base.api.agent_based.checking_types import Parameters
+from cmk.base.api.agent_based import checking_types
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     maincheckify,
     resolve_legacy_name,
@@ -1385,13 +1397,14 @@ def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
             if discovered_service.check_plugin_name not in config.check_info:
                 continue  # Skip not existing check silently
 
+            wrapped_params = checking_types.Parameters(wrap_parameters(params))
+
             _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
                 multi_host_sections,
                 host_config,
                 ip_address,
                 discovered_service,
-                # mypy can't infer "the type of lambda"
-                lambda p=params: Parameters(wrap_parameters(p)),  # type: ignore[misc]
+                lambda p=wrapped_params: p,  # type: ignore[misc]  # can't infer "type of lambda"
             )
 
         table.append((

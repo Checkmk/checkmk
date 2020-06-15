@@ -47,13 +47,11 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
             oid_prefix = oid
             dot_star = False
 
-        path = cmk.utils.paths.snmpwalks_dir + "/" + self.config.hostname
-
-        console.vverbose("  Loading %s from %s\n" % (oid, path))
-
         if snmp_cache.host_cache_contains(self.config.hostname):
             lines = snmp_cache.host_cache_get(self.config.hostname)
         else:
+            path = cmk.utils.paths.snmpwalks_dir + "/" + self.config.hostname
+            console.vverbose("  Loading %s from %s\n" % (oid, path))
             try:
                 lines = open(path).readlines()
             except IOError:

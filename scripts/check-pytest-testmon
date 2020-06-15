@@ -3,6 +3,7 @@
 # This checks ALL tests, but on a second run only those
 # which need to be run because the code they test has been
 # changed or because they previously have failed.
+set -e -o pipefail
 
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV=$REPO_PATH/scripts/run-pipenv

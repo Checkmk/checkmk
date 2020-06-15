@@ -1298,12 +1298,18 @@ def get_registered_section_plugin(plugin_name):
     return None
 
 
+def get_registered_check_plugin(plugin_name):
+    # type: (PluginName) -> Optional[CheckPlugin]
+    # TODO (mo): add the management plugin factory here.
+    return registered_check_plugins.get(plugin_name)
+
+
 def get_relevant_raw_sections(check_plugin_names):
     # type: (Iterable[PluginName]) -> Dict[PluginName, SectionPlugin]
     """return the raw sections potentially relevant for the given check plugins"""
     parsed_section_names = set()  # type: Set[PluginName]
     for check_plugin_name in check_plugin_names:
-        plugin = registered_check_plugins.get(check_plugin_name)
+        plugin = get_registered_check_plugin(check_plugin_name)
         if plugin:
             parsed_section_names.update(plugin.sections)
 

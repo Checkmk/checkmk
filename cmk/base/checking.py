@@ -301,7 +301,7 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
     # type: (data_sources.MultiHostSections, config.HostConfig, Optional[HostAddress], Service) -> bool
     # TODO (mo): centralize maincheckify: CMK-4295
     plugin_name = PluginName(maincheckify(service.check_plugin_name))
-    plugin = config.registered_check_plugins.get(plugin_name)
+    plugin = config.get_registered_check_plugin(plugin_name)
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == CLUSTER_LEGACY_MODE_FROM_HELL):
@@ -340,7 +340,7 @@ def _get_aggregated_result(
 ) -> Tuple[bool, bool, ServiceCheckResult]:
     # TODO (mo): centralize maincheckify: CMK-4295
     plugin_name = PluginName(maincheckify(service.check_plugin_name))
-    plugin = config.registered_check_plugins.get(plugin_name)
+    plugin = config.get_registered_check_plugin(plugin_name)
     if plugin is None:
         return False, True, CHECK_NOT_IMPLEMENTED
 

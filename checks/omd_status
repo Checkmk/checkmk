@@ -22,13 +22,13 @@
 
 
 def inventory_omd_status(sections):
-    info = sections[0]
-    omd_info = sections[1]
-    for site in info:
+    section_omd_status, section_omd_info = sections
+
+    for site in section_omd_status:
         # if we have omd_info we want to ensure that checks are only executed for sites
         # that do have autostart enabled
-        if omd_info and 'sites' in omd_info and site in omd_info['sites']:
-            if omd_info['sites'][site]['autostart'] == '0':
+        if section_omd_info and 'sites' in section_omd_info and site in section_omd_info['sites']:
+            if section_omd_info['sites'][site]['autostart'] == '0':
                 continue
         yield site, None
 
@@ -66,41 +66,26 @@ def parse_omd_status(info):
 
 
 def check_omd_status(item, _no_params, sections):
-    parsed = sections[0]
+    section_omd_status, section_omd_info = sections
 
-    if item not in parsed:
+    parsed_site = section_omd_status.get(item)
+    if parsed_site is None:
         return
 
-    parsed_site = parsed[item]
     number_nodes = len(parsed_site)
-    stopped_nodes = 0
+    stopped_nodes = len(s for s in parsed_site.values() if s.get("overall") == "stopped")
 
     for node, services in parsed_site.items():
-        if "overall" in services and services["overall"] == "stopped":
-            stopped_nodes += 1
+        node_text = (" on %s" % node) if node else ""
 
-    # stopped sites are only CRIT when all are stopped
-    if stopped_nodes == number_nodes:
-        state = 2
-    else:
-        state = 0
-
-    for node, services in parsed_site.items():
-        if node:
-            node_text = " on %s" % node
-        else:
-            node_text = ""
         if "overall" not in services:
-            infotext = "defective installation%s" % node_text
-            yield 2, infotext
+            yield 2, "defective installation%s" % node_text
         elif services["overall"] == "running":
-            infotext = "running%s" % node_text
             # running sites are always OK
-            yield 0, infotext
+            yield 0, "running%s" % node_text
         elif services["overall"] == "stopped":
-            infotext = "stopped%s" % node_text
             # stopped sites are only CRIT when all are stopped
-            yield state, infotext
+            yield 2 if stopped_nodes == number_nodes else 0, "stopped%s" % node_text
         else:
             infotext = "partially running%s, stopped services: " % node_text
             infotext += ", ".join(services["stopped"])

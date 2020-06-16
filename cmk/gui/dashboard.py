@@ -690,8 +690,14 @@ def _dashboard_menu(name: DashboardName, board: DashboardConfig,
     if not has_unconfigured_single_infos and not config.user.may("general.edit_dashboards"):
         return  # hide empty menus
 
-    html.open_ul(style="display:none;", class_=["menu"], id_="controls")
+    if config.user.may("general.edit_dashboards"):
+        html.icon_button(None,
+                         _('Edit the Dashboard'),
+                         'dashboard_controls',
+                         'controls_toggle',
+                         onclick='void(0)')
 
+    html.open_ul(style="display:none;", class_=["menu"], id_="controls")
     if has_unconfigured_single_infos:
         html.open_li()
         html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.show_single_infos_dialog()")
@@ -700,7 +706,7 @@ def _dashboard_menu(name: DashboardName, board: DashboardConfig,
         html.close_a()
         html.close_li()
 
-    if not config.user.may("general.edit_dashboards"):
+    if config.user.may("general.edit_dashboards"):
         # Show the edit menu to all users which are allowed to edit dashboards
         _show_edit_entries(name, board)
 
@@ -708,12 +714,6 @@ def _dashboard_menu(name: DashboardName, board: DashboardConfig,
 
 
 def _show_edit_entries(name: DashboardName, board: DashboardConfig) -> None:
-    html.icon_button(None,
-                     _('Edit the Dashboard'),
-                     'dashboard_controls',
-                     'controls_toggle',
-                     onclick='void(0)')
-
     if board['owner'] != config.user.id:
         # Not owned dashboards must be cloned before being able to edit. Do not switch to
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,

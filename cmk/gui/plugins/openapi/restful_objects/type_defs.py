@@ -35,6 +35,9 @@ EndpointName = Literal[
     'cmk/wait-for-completion',
     'cmk/baking-status',
     'cmk/bakery-status',
+    'cmk/service.move-monitored',
+    'cmk/service.move-undecided',
+    'cmk/service.move-ignored'
 ]  # yapf: disable
 
 RestfulEndpointName = Literal[

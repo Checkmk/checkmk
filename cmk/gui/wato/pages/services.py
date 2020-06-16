@@ -9,15 +9,12 @@ import ast
 import json
 import traceback
 import pprint
-import re
-from hashlib import sha256
 from typing import Any, Dict, NamedTuple, List, Optional
 
 import six
 
 import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
 from cmk.gui.htmllib import HTML
 import cmk.gui.escaping as escaping
@@ -39,10 +36,9 @@ from cmk.gui.watolib import (
 from cmk.gui.watolib.automations import (
     check_mk_automation,)
 from cmk.gui.watolib.rulespecs import rulespec_registry
-from cmk.gui.watolib.rulesets import RuleConditions
-from cmk.gui.watolib.services import (execute_discovery_job, get_check_table, DiscoveryAction,
-                                      CheckTable, CheckTableEntry, DiscoveryResult,
-                                      DiscoveryOptions, StartDiscoveryRequest)
+from cmk.gui.watolib.services import (DiscoveryState, Discovery, checkbox_id, execute_discovery_job,
+                                      get_check_table, DiscoveryAction, CheckTable, CheckTableEntry,
+                                      DiscoveryResult, DiscoveryOptions, StartDiscoveryRequest)
 
 from cmk.gui.plugins.wato import (
     host_status_button,
@@ -55,49 +51,6 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.utils.context_buttons import changelog_button
 
 AjaxDiscoveryRequest = Dict[str, Any]
-
-
-# Would rather use an Enum for this, but this information is exported to javascript
-# using JSON and Enum is not serializable
-#TODO In the future cleanup check_source (passive/active/custom/legacy) and
-# check_state:
-# - passive: new/vanished/old/ignored/removed
-# - active/custom/legacy: old/ignored
-class DiscoveryState:
-    UNDECIDED = "new"
-    VANISHED = "vanished"
-    MONITORED = "old"
-    IGNORED = "ignored"
-    REMOVED = "removed"
-
-    MANUAL = "manual"
-    ACTIVE = "active"
-    CUSTOM = "custom"
-    CLUSTERED_OLD = "clustered_old"
-    CLUSTERED_NEW = "clustered_new"
-    CLUSTERED_VANISHED = "clustered_vanished"
-    CLUSTERED_IGNORED = "clustered_ignored"
-    ACTIVE_IGNORED = "active_ignored"
-    CUSTOM_IGNORED = "custom_ignored"
-    # TODO: Were removed in 1.6 from base. Keeping this for
-    # compatibility with older remote sites. Remove with 1.7.
-    LEGACY = "legacy"
-    LEGACY_IGNORED = "legacy_ignored"
-
-    @classmethod
-    def is_discovered(cls, table_source):
-        return table_source in [
-            cls.UNDECIDED,
-            cls.VANISHED,
-            cls.MONITORED,
-            cls.IGNORED,
-            cls.REMOVED,
-            cls.CLUSTERED_OLD,
-            cls.CLUSTERED_NEW,
-            cls.CLUSTERED_VANISHED,
-            cls.CLUSTERED_IGNORED,
-        ]
-
 
 TableGroupEntry = NamedTuple("TableGroupEntry", [
     ("table_group", str),
@@ -385,6 +338,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return html.drain()
 
     def _get_discovery_options(self, request):
+
         # type: (dict) -> DiscoveryOptions
         options = DiscoveryOptions(**request["discovery_options"])
 
@@ -449,7 +403,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 DiscoveryAction.BULK_UPDATE,
                 DiscoveryAction.FIX_ALL,
         ]:
-            self._do_discovery(discovery_result, request)
+            discovery = Discovery(self._host, self._options, request)
+            discovery.do_discovery(discovery_result)
             # did discovery! update the check table
             discovery_result = self._get_check_table()
 
@@ -461,101 +416,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         return discovery_result
 
-    def _do_discovery(self, discovery_result, request):
-        autochecks_to_save, remove_disabled_rule, add_disabled_rule, saved_services = {}, set(
-        ), set(), set()
-        apply_changes = False
-        for table_source, check_type, _checkgroup, item, paramstring, _params, \
-            descr, _state, _output, _perfdata, service_labels in discovery_result.check_table:
-
-            table_target = self._get_table_target(request, table_source, check_type, item)
-
-            if table_source != table_target:
-                if table_target == DiscoveryState.UNDECIDED:
-                    config.user.need_permission("wato.service_discovery_to_undecided")
-                elif table_target in [
-                        DiscoveryState.MONITORED,
-                        DiscoveryState.CLUSTERED_NEW,
-                        DiscoveryState.CLUSTERED_OLD,
-                ]:
-                    config.user.need_permission("wato.service_discovery_to_undecided")
-                elif table_target == DiscoveryState.IGNORED:
-                    config.user.need_permission("wato.service_discovery_to_ignored")
-                elif table_target == DiscoveryState.REMOVED:
-                    config.user.need_permission("wato.service_discovery_to_removed")
-
-                apply_changes = True
-
-            if table_source == DiscoveryState.UNDECIDED:
-                if table_target == DiscoveryState.MONITORED:
-                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
-                    saved_services.add(descr)
-                elif table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-
-            elif table_source == DiscoveryState.VANISHED:
-                if table_target != DiscoveryState.REMOVED:
-                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
-                    saved_services.add(descr)
-                if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-
-            elif table_source == DiscoveryState.MONITORED:
-                if table_target in [
-                        DiscoveryState.MONITORED,
-                        DiscoveryState.IGNORED,
-                ]:
-                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
-
-                if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-                else:
-                    saved_services.add(descr)
-
-            elif table_source == DiscoveryState.IGNORED:
-                if table_target in [
-                        DiscoveryState.MONITORED,
-                        DiscoveryState.UNDECIDED,
-                        DiscoveryState.VANISHED,
-                ]:
-                    remove_disabled_rule.add(descr)
-                if table_target in [
-                        DiscoveryState.MONITORED,
-                        DiscoveryState.IGNORED,
-                ]:
-                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
-                    saved_services.add(descr)
-                if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-
-            elif table_source in [
-                    DiscoveryState.CLUSTERED_NEW,
-                    DiscoveryState.CLUSTERED_OLD,
-            ]:
-                autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
-                saved_services.add(descr)
-
-            elif table_source in [
-                    DiscoveryState.CLUSTERED_VANISHED,
-                    DiscoveryState.CLUSTERED_IGNORED,
-            ]:
-                # We keep vanished clustered services on the node with the following reason:
-                # If a service is mapped to a cluster then there are already operations
-                # for adding, removing, etc. of this service on the cluster. Therefore we
-                # do not allow any operation for this clustered service on the related node.
-                # We just display the clustered service state (OLD, NEW, VANISHED).
-                autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
-                saved_services.add(descr)
-
-        if apply_changes:
-            need_sync = False
-            if remove_disabled_rule or add_disabled_rule:
-                add_disabled_rule = add_disabled_rule - remove_disabled_rule - saved_services
-                self._save_host_service_enable_disable_rules(remove_disabled_rule,
-                                                             add_disabled_rule)
-                need_sync = True
-            self._save_services(autochecks_to_save, need_sync)
-
     def _do_update_host_labels(self, discovery_result):
         message = _("Updated discovered host labels of '%s' with %d labels") % \
                     (self._host.name(), len(discovery_result.host_labels))
@@ -563,157 +423,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         check_mk_automation(self._host.site_id(), "update-host-labels", [self._host.name()],
                             discovery_result.host_labels)
 
-    def _save_services(self, checks, need_sync):
-        message = _("Saved check configuration of host '%s' with %d services") % \
-                    (self._host.name(), len(checks))
-        watolib.add_service_change(self._host, "set-autochecks", message, need_sync=need_sync)
-        check_mk_automation(self._host.site_id(), "set-autochecks", [self._host.name()], checks)
-
-    def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
-        self._save_service_enable_disable_rules(to_enable, value=False)
-        self._save_service_enable_disable_rules(to_disable, value=True)
-
-    # Load all disabled services rules from the folder, then check whether or not there is a
-    # rule for that host and check whether or not it currently disabled the services in question.
-    # if so, remove them and save the rule again.
-    # Then check whether or not the services are still disabled (by other rules). If so, search
-    # for an existing host dedicated negative rule that enables services. Modify this or create
-    # a new rule to override the disabling of other rules.
-    #
-    # Do the same vice versa for disabling services.
-    def _save_service_enable_disable_rules(self, services, value):
-        if not services:
-            return
-
-        def _compile_patterns(_services, unescaped="exclude"):
-            ret = []
-            for svc in _services:
-                ret.append({"$regex": "%s$" % re.escape(svc)})
-                if unescaped == "include":
-                    ret.append({"$regex": "%s$" % svc})
-            return ret
-
-        rulesets = watolib.AllRulesets()
-        rulesets.load()
-
-        try:
-            ruleset = rulesets.get("ignored_services")
-        except KeyError:
-            ruleset = watolib.Ruleset("ignored_services",
-                                      ruleset_matcher.get_tag_to_group_map(config.tags))
-
-        modified_folders = []
-
-        service_patterns = _compile_patterns(services, unescaped="include")
-        modified_folders += self._remove_from_rule_of_host(ruleset,
-                                                           service_patterns,
-                                                           value=not value)
-
-        # Check whether or not the service still needs a host specific setting after removing
-        # the host specific setting above and remove all services from the service list
-        # that are fine without an additional change.
-        for service in list(services):
-            value_without_host_rule = ruleset.analyse_ruleset(self._host.name(), service,
-                                                              service)[0]
-            if (not value and value_without_host_rule in [None, False]) \
-               or value == value_without_host_rule:
-                services.remove(service)
-
-        service_patterns = _compile_patterns(services)
-        modified_folders += self._update_rule_of_host(ruleset, service_patterns, value=value)
-
-        for folder in modified_folders:
-            rulesets.save_folder(folder)
-
-    def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
-        other_rule = self._get_rule_of_host(ruleset, value)
-        if other_rule and isinstance(other_rule.conditions.service_description, list):
-            for service_condition in service_patterns:
-                if service_condition in other_rule.conditions.service_description:
-                    other_rule.conditions.service_description.remove(service_condition)
-
-            if not other_rule.conditions.service_description:
-                ruleset.delete_rule(other_rule)
-
-            return [other_rule.folder]
-
-        return []
-
-    def _update_rule_of_host(self, ruleset, service_patterns, value):
-        folder = self._host.folder()
-        rule = self._get_rule_of_host(ruleset, value)
-
-        if rule:
-            for service_condition in service_patterns:
-                if service_condition not in rule.conditions.service_description:
-                    rule.conditions.service_description.append(service_condition)
-
-        elif service_patterns:
-            rule = watolib.Rule.create(folder, ruleset)
-
-            conditions = RuleConditions(folder.path())
-            conditions.host_name = [self._host.name()]
-            conditions.service_description = sorted(service_patterns)
-            rule.update_conditions(conditions)
-
-            rule.value = value
-            ruleset.prepend_rule(folder, rule)
-
-        if rule:
-            return [rule.folder]
-        return []
-
-    def _get_rule_of_host(self, ruleset, value):
-        for _folder, _index, rule in ruleset.get_rules():
-            if rule.is_discovery_rule_of(self._host) and rule.value == value:
-                return rule
-        return None
-
-    def _get_table_target(self, request, table_source, check_type, item):
-        if self._options.action == DiscoveryAction.FIX_ALL:
-            if table_source == DiscoveryState.VANISHED:
-                return DiscoveryState.REMOVED
-            if table_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
-            #table_source in [DiscoveryState.MONITORED, DiscoveryState.UNDECIDED]
-            return DiscoveryState.MONITORED
-
-        update_target = request["update_target"]
-        if not update_target:
-            return table_source  # should never happen
-
-        if self._options.action == DiscoveryAction.BULK_UPDATE:
-            if table_source != request["update_source"]:
-                return table_source
-
-            if not self._options.show_checkboxes:
-                return update_target
-
-            if DiscoveryPageRenderer.checkbox_name(check_type, item) in request["update_services"]:
-                return update_target
-
-        if self._options.action == DiscoveryAction.SINGLE_UPDATE:
-            varname = DiscoveryPageRenderer.checkbox_name(check_type, item)
-            if varname in request["update_services"]:
-                return update_target
-
-        return table_source
-
 
 class DiscoveryPageRenderer:
-    @staticmethod
-    def checkbox_name(check_type, item):
-        """This function returns the HTTP variable name to use for a service
-
-        This needs to be unique for each host. Since this text is used as
-        variable name, it must not contain any umlauts or other special characters that
-        are disallowed by html.parse_field_storage(). Since item may contain such
-        chars, we need to use some encoded form of it. Simple escaping/encoding like we
-        use for values of variables is not enough here.
-        """
-        key = u"%s_%s" % (check_type, item)
-        return sha256(key.encode('utf-8')).hexdigest()
-
     def __init__(self, host, options):
         # type: (watolib.CREHost, DiscoveryOptions) -> None
         super(DiscoveryPageRenderer, self).__init__()
@@ -1159,7 +870,7 @@ class DiscoveryPageRenderer:
             " onclick=\"cmk.selection.toggle_group_rows(this);\" value=\"X\" />",
             sortable=False,
             css="checkbox")
-        name = DiscoveryPageRenderer.checkbox_name(check_type, item)
+        name = checkbox_id(check_type, item)
         checked = self._options.action == DiscoveryAction.BULK_UPDATE \
                     and name in request["update_services"]
         html.checkbox(varname=name, deflt=checked, class_=css_classes)
@@ -1179,7 +890,7 @@ class DiscoveryPageRenderer:
 
         table_source, check_type, checkgroup, item, _paramstring, _params, \
             descr, _state, _output, _perfdata, _service_labels = check
-        checkbox_name = DiscoveryPageRenderer.checkbox_name(check_type, item)
+        checkbox_name = checkbox_id(check_type, item)
 
         num_buttons = 0
         if table_source == DiscoveryState.MONITORED:

@@ -7,12 +7,13 @@
 import json
 
 from cmk.gui import watolib
-from cmk.gui.watolib.services import (StartDiscoveryRequest, DiscoveryOptions, get_check_table,
-                                      checkbox_name)
+from cmk.gui.watolib.services import (Discovery, StartDiscoveryRequest, DiscoveryOptions,
+                                      get_check_table, checkbox_id)
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
 from cmk.gui.plugins.openapi.restful_objects import (endpoint_schema, response_schemas)
-from cmk.gui.plugins.openapi.restful_objects.constructors import (domain_object, object_property)
+from cmk.gui.plugins.openapi.restful_objects.constructors import (domain_object, object_property,
+                                                                  link_rel)
 
 SERVICE_DISCOVERY_STATES = {
     "undecided": "new",
@@ -50,7 +51,24 @@ DISCOVERY_SOURCE_STATE = ParamDict.create(
                  ', '.join(sorted(SERVICE_DISCOVERY_STATES.keys()))),
     schema_pattern='|'.join(sorted(SERVICE_DISCOVERY_STATES.keys())),
     example='monitored',
-    required=False)
+    required=True)
+
+DISCOVERY_SERVICE_HASH = ParamDict.create(
+    "service_hash",
+    location='path',
+    description='A name used as an identifier. Can be of arbitratry length',
+    schema_pattern="[a-zA-Z][a-zA-Z0-9_-]+",
+    example='asoidjfo2jifa09',
+    required=True)
+
+DISCOVERY_TARGET_STATE = ParamDict.create(
+    'target_state',
+    location='path',
+    description=('The discovery state of the services. May be one of the following: ' +
+                 ', '.join(sorted(SERVICE_DISCOVERY_STATES.keys()))),
+    schema_pattern='|'.join(sorted(SERVICE_DISCOVERY_STATES.keys())),
+    example='monitored',
+    required=True)
 
 
 @endpoint_schema('/domain-types/service/collections/services',
@@ -75,6 +93,31 @@ def show_services(params):
     return _serve_services(host, discovery_result.check_table, params["discovery_state"])
 
 
+@endpoint_schema('/objects/host/{hostname}/service/{service_hash}/action/move/{target_state}',
+                 '.../update',
+                 method='put',
+                 output_empty=True,
+                 parameters=["hostname", DISCOVERY_SERVICE_HASH, DISCOVERY_TARGET_STATE])
+def move_service(params):
+    host = watolib.Host.host(params["hostname"])
+    discovery_request = {
+        "update_target": params["target_state"],
+        "update_services": [params["service_hash"]]
+    }
+
+    discovery_options = DiscoveryOptions(action='single-update',
+                                         show_checkboxes=False,
+                                         show_parameters=False,
+                                         show_discovered_labels=False,
+                                         show_plugin_names=False,
+                                         ignore_errors=True)
+
+    discovery = Discovery(host=host, discovery_options=discovery_options, request=discovery_request)
+
+    discovery.execute_discovery()
+    return Response(status=204)
+
+
 def _serve_services(host, discovered_services, discovery_state):
     response = Response()
     response.set_data(
@@ -90,8 +133,9 @@ def serialize_service_discovery(host, discovered_services, discovery_state):
     members = {}
     for table_source, check_type, _checkgroup, item, _paramstring, _params, descr, \
         _service_state, _output, _perfdata, _service_labels in discovered_services:
+
         if table_source == SERVICE_DISCOVERY_STATES[discovery_state]:
-            service_hash = checkbox_name(check_type, item)
+            service_hash = checkbox_id(check_type, item)
             members[service_hash] = {
                 "service_name": descr,
                 "check_plugin_name": check_type,
@@ -101,8 +145,23 @@ def serialize_service_discovery(host, discovered_services, discovery_state):
                     value=table_source,
                     prop_format='string',
                     base='',
-                    linkable=False,
-                )
+                    links=[
+                        link_rel(rel="cmk/service.move-monitored",
+                                 href="/objects/host/%s/service/%s/action/move/monitored" %
+                                 (host.ident(), service_hash),
+                                 method='PUT',
+                                 title='Move the service to monitored'),
+                        link_rel(rel="cmk/service.move-undecided",
+                                 href="/objects/host/%s/service/%s/action/move/undecided" %
+                                 (host.ident(), service_hash),
+                                 method='PUT',
+                                 title='Move the service to undecided'),
+                        link_rel(rel="cmk/service.move-ignored",
+                                 href="/objects/host/%s/service/%s/action/move/ignored" %
+                                 (host.ident(), service_hash),
+                                 method='PUT',
+                                 title='Move the service to ignored'),
+                    ]),
             }
 
     return domain_object(

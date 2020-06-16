@@ -34,14 +34,6 @@ discovery = {
                 'include_volume_name': True
             },
         ),
-        (
-            'myGroup',
-            {
-                'patterns': ['GROUPME'],
-                'grouping_behaviour': 'mountpoint',
-                'include_volume_name': True
-            },
-        ),
     ]
 }
 
@@ -122,30 +114,6 @@ checks = {
                         ('fs_size', 5085.99609375, None, None, None, None),
                         ('fs_used_percent', 15.204586736711942, None, None, None, None),
                     ],
-                ),
-            ],
-        ),
-        (
-            'myGroup',
-            {
-                'levels': (80.0, 90.0),
-                'magic_normsize': 20,
-                'levels_low': (50.0, 60.0),
-                'trend_range': 24,
-                'trend_perfdata': True,
-                'show_levels': 'onmagic',
-                'inodes_levels': (10.0, 5.0),
-                'show_inodes': 'onlow',
-                'show_reserved': False,
-                'patterns': ['GROUPME'],
-                'grouping_behaviour': 'mountpoint',
-                'include_volume_name': True
-            },
-            [
-                (
-                    3,
-                    'No filesystem matching the patterns',
-                    [],
                 ),
             ],
         ),

@@ -114,7 +114,16 @@ def _create_check_function(name, check_info_dict, ruleset_name):
 
         item_state.reset_wrapped_counters()  # not supported by the new API!
 
-        subresults = sig_function(**kwargs)
+        try:
+            subresults = sig_function(**kwargs)
+        except TypeError:
+            # this handles a very weird case, in which check plugins do not have an '%s'
+            # in their description (^= no item) but do in fact discover an empty string.
+            # We cannot just append "%s" to the service description, because in that case
+            # our tests complain about the ruleset not being for plugins with item :-(
+            # Just retry without item:
+            subresults = sig_function(**{k: v for k, v in kwargs.items() if k != "item"})
+
         if subresults is None:
             return
 

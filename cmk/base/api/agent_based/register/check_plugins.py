@@ -97,9 +97,9 @@ def _validate_function_args(plugin_name, func_type, function, has_item, has_para
 
 
 def _filter_discovery(
-        generator,  # type: Callable[..., Generator[Any, None, None]]
-):
-    # type: (...) -> Callable[..., Generator[Service, None, None]]
+    generator: Callable[..., Generator[Any, None, None]],
+    requires_item: bool,
+) -> Callable[..., Generator[Service, None, None]]:
     """Only let Services through
 
     This allows for better typing in base code.
@@ -109,6 +109,8 @@ def _filter_discovery(
         for element in generator(*args, **kwargs):
             if not isinstance(element, Service):
                 raise TypeError("unexpected type in discovery: %r" % type(element))
+            if requires_item is (element.item is None):
+                raise TypeError("unexpected type of item discovered: %r" % type(element.item))
             yield element
 
     return filtered_generator
@@ -269,7 +271,7 @@ def create_check_plugin(
         plugin_name,
         subscribed_sections,
         service_name,
-        _filter_discovery(discovery_function),
+        _filter_discovery(discovery_function, requires_item),
         discovery_default_parameters,
         None if discovery_ruleset_name is None else PluginName(discovery_ruleset_name),
         _filter_check(check_function),

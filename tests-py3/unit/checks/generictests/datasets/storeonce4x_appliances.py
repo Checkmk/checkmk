@@ -10,27 +10,27 @@ checkname = 'storeonce4x_appliances'
 
 info = [
     [
-        '{"members": [{"uuid": "bcc0842d7420290ccc3d061ec23ce", "address": "127.0.0.1", "hostname": "zh1wagvbr04", "productName": "HPE StoreOnce 5250", "serialNumber": "CZ39170V01", "localhost": true, "applianceState": 0, "stateUpdatedDate": "2020-05-11T10:45:51.807Z", "federationApiVersion": 1, "applianceStateString": "Reachable", "sinceStateUpdatedSeconds": 1493050}]}'
+        '{"members": [{"uuid": "bcc0842d7420290ccc3d061ec23ce", "address": "127.0.0.1", "hostname": "myhostname", "productName": "HPE StoreOnce 5250", "serialNumber": "123456789", "localhost": true, "applianceState": 0, "stateUpdatedDate": "2020-05-11T10:45:51.807Z", "federationApiVersion": 1, "applianceStateString": "Reachable", "sinceStateUpdatedSeconds": 1493050}]}'
     ],
     [
-        '{"uuid": "bcc0842d7420290ccc3d061ec23ce", "hostname": "zh1wagvbr04", "platformType": "HPE StoreOnce 5250", "softwareVersion": "4.1.3-1921.10", "softwareUpdateRecommended": false, "recommendedSoftwareVersion": "", "localDiskBytes": 100792069099520, "localUserBytes": 1014343032520056, "localFreeBytes": 258734285025280, "localCapacityBytes": 359526354124800, "cloudDiskBytes": 0, "cloudUserBytes": 0, "cloudFreeBytes": 0, "cloudCapacityBytes": 0, "catalystDataJobSessions": 10, "nasNumDedupeSessions": 0, "vtlNumActiveSessions": 0, "catalystInboundCopyJobSessions": 0, "catalystOutboundCopyJobSessions": 0, "repNumSourceJobs": 0, "repNumTargetJobs": 0, "maxStreamsLimit": 512, "metricsCpuTotal": 8.49826, "metricsMemoryTotalPhysical": 506482655232, "metricsMemoryUsedPercent": 6.7811, "metricsDataDiskUtilisationPercent": 97.3215, "applianceStatus": "WARNING", "applianceStatusString": "Warning", "dataServicesStatus": "OK", "dataServicesStatusString": "OK", "licenseStatus": "OK", "licenseStatusString": "OK", "userStorageStatus": "OK", "userStorageStatusString": "OK", "hardwareStatus": "WARNING", "hardwareStatusString": "Warning", "remoteSupportStatus": "OK", "remoteSupportStatusString": "OK", "catStoresSummary": {"statusSummary": {"numOk": 4, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 4}}, "cloudBankStoresSummary": {"statusSummary": {"numOk": 0, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 0}}, "nasSharesSummary": {"statusSummary": {"numOk": 0, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 0}}, "vtlLibrariesSummary": {"statusSummary": {"numOk": 0, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 0}}, "nasRepMappingSummary": {"statusSummary": {"numOk": 0, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 0}}, "vtlRepMappingSummary": {"statusSummary": {"numOk": 0, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 0}}, "systemLocation": "ZH1", "contactName": "Roger Huegi", "contactNumber": "+41 34 426 13 13", "contactEmail": "tm-system@wagner.ch", "diskBytes": 100792069099520, "userBytes": 1014343032520056, "totalActiveSessions": 10, "capacitySavedBytes": 913550963420536, "capacitySavedPercent": 90.06332, "dedupeRatio": 10.06372}'
+        '{"uuid": "bcc0842d7420290ccc3d061ec23ce", "hostname": "myhostname", "platformType": "HPE StoreOnce 5250", "softwareVersion": "4.1.3-1921.10", "softwareUpdateRecommended": false, "recommendedSoftwareVersion": "", "localDiskBytes": 100792069099520, "localUserBytes": 1014343032520056, "localFreeBytes": 258734285025280, "localCapacityBytes": 359526354124800, "cloudDiskBytes": 0, "cloudUserBytes": 0, "cloudFreeBytes": 0, "cloudCapacityBytes": 0, "catalystDataJobSessions": 10, "nasNumDedupeSessions": 0, "vtlNumActiveSessions": 0, "catalystInboundCopyJobSessions": 0, "catalystOutboundCopyJobSessions": 0, "repNumSourceJobs": 0, "repNumTargetJobs": 0, "maxStreamsLimit": 512, "metricsCpuTotal": 8.49826, "metricsMemoryTotalPhysical": 506482655232, "metricsMemoryUsedPercent": 6.7811, "metricsDataDiskUtilisationPercent": 97.3215, "applianceStatus": "WARNING", "applianceStatusString": "Warning", "dataServicesStatus": "OK", "dataServicesStatusString": "OK", "licenseStatus": "OK", "licenseStatusString": "OK", "userStorageStatus": "OK", "userStorageStatusString": "OK", "hardwareStatus": "WARNING", "hardwareStatusString": "Warning", "remoteSupportStatus": "OK", "remoteSupportStatusString": "OK", "catStoresSummary": {"statusSummary": {"numOk": 4, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 4}}, "cloudBankStoresSummary": {"statusSummary": {"numOk": 0, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 0}}, "nasSharesSummary": {"statusSummary": {"numOk": 0, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 0}}, "vtlLibrariesSummary": {"statusSummary": {"numOk": 0, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 0}}, "nasRepMappingSummary": {"statusSummary": {"numOk": 0, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 0}}, "vtlRepMappingSummary": {"statusSummary": {"numOk": 0, "numWarning": 0, "numCritical": 0, "numUnknown": 0, "total": 0}}, "systemLocation": "ZH1", "contactName": "Roger Huegi", "contactNumber": "+41 34 426 13 13", "contactEmail": "tm-system@wagner.ch", "diskBytes": 100792069099520, "userBytes": 1014343032520056, "totalActiveSessions": 10, "capacitySavedBytes": 913550963420536, "capacitySavedPercent": 90.06332, "dedupeRatio": 10.06372}'
     ]
 ]
 
 discovery = {
-    '': [('zh1wagvbr04', {})],
-    'storage': [('zh1wagvbr04', {})],
-    'license': [('zh1wagvbr04', {})],
-    'summaries': [('zh1wagvbr04', {})]
+    '': [('myhostname', {})],
+    'storage': [('myhostname', {})],
+    'license': [('myhostname', {})],
+    'summaries': [('myhostname', {})]
 }
 
 checks = {
     '': [
         (
-            'zh1wagvbr04', {}, [
+            'myhostname', {}, [
                 (
                     0,
-                    'State: Reachable, Serial Number: CZ39170V01, Software version: 4.1.3-1921.10, Product Name: HPE StoreOnce 5250',
+                    'State: Reachable, Serial Number: 123456789, Software version: 4.1.3-1921.10, Product Name: HPE StoreOnce 5250',
                     []
                 )
             ]
@@ -38,7 +38,7 @@ checks = {
     ],
     'storage': [
         (
-            'zh1wagvbr04', {}, [
+            'myhostname', {}, [
                 (
                     0, '28.03% used (91.67 of 326.99 TB)', [
                         (
@@ -56,6 +56,6 @@ checks = {
             ]
         )
     ],
-    'license': [('zh1wagvbr04', {}, [(0, 'Status: OK', [])])],
-    'summaries': [('zh1wagvbr04', {}, [(0, 'Cat stores Ok (4 of 4)', [])])]
+    'license': [('myhostname', {}, [(0, 'Status: OK', [])])],
+    'summaries': [('myhostname', {}, [(0, 'Cat stores Ok (4 of 4)', [])])]
 }

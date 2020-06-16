@@ -1540,11 +1540,11 @@ class AutomationGetAgentOutput(Automation):
         info = b""
 
         try:
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
             if ty == "agent":
                 data_sources.abstract.DataSource.set_may_use_cache_file(
                     not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
-                ipaddress = ip_lookup.lookup_ip_address(hostname)
                 sources = data_sources.DataSources(hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
@@ -1562,7 +1562,7 @@ class AutomationGetAgentOutput(Automation):
                         success = False
                         output += "[%s] %s\n" % (source.id(), source_output)
             else:
-                host_config = snmp_utils.create_snmp_host_config(hostname)
+                host_config = snmp_utils.create_snmp_host_config(hostname, ipaddress)
                 backend = factory.backend(host_config, use_cache=False)
 
                 lines = []

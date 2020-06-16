@@ -851,7 +851,9 @@ def mode_snmpwalk(options, hostnames):
     if not hostnames:
         raise MKBailOut("Please specify host names to walk on.")
 
-    for snmp_config in (snmp_utils.create_snmp_host_config(host) for host in hostnames):
+    for hostname in hostnames:
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
+        snmp_config = snmp_utils.create_snmp_host_config(hostname, ipaddress)
         snmp_modes.do_snmpwalk(options, backend=snmp_factory.backend(snmp_config))
 
 
@@ -913,7 +915,9 @@ def mode_snmpget(args):
                          if cache.get_host_config(host).is_snmp_host)
 
     assert hostnames
-    for snmp_config in (snmp_utils.create_snmp_host_config(host) for host in hostnames):
+    for hostname in hostnames:
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
+        snmp_config = snmp_utils.create_snmp_host_config(hostname, ipaddress)
         snmp_modes.do_snmpget(oid, backend=snmp_factory.backend(snmp_config))
 
 

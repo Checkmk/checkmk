@@ -2144,15 +2144,6 @@ def initialize_check_type_caches():
 #   '----------------------------------------------------------------------'
 
 
-def discoverable_tcp_checks():
-    # type: () -> Set[CheckPluginName]
-    types = set()
-    for check_plugin_name, check in check_info.items():
-        if cmk.base.check_utils.is_tcp_check(check_plugin_name) and check["inventory_function"]:
-            types.add(check_plugin_name)
-    return types
-
-
 def discoverable_snmp_checks():
     # type: () -> Set[CheckPluginName]
     types = set()

@@ -118,13 +118,6 @@ def test_is_snmp_check():
     assert cmk.base.check_utils.is_snmp_check("brocade") is True
 
 
-def test_discoverable_tcp_checks():
-    config.load_all_checks(check_api.get_check_api_context)
-    assert "uptime" in config.discoverable_tcp_checks()
-    assert "snmp_uptime" not in config.discoverable_tcp_checks()
-    assert "logwatch" in config.discoverable_tcp_checks()
-
-
 # ########### Management board checks
 
 

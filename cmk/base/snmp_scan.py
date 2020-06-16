@@ -17,7 +17,6 @@ import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
 
-import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPDetectAtom, SNMPDetectSpec
@@ -88,11 +87,6 @@ def _snmp_scan(host_config,
                backend):
     # type: (SNMPHostConfig, str, bool, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-
-    # Make hostname globally available for scan functions.
-    # This is rarely used, but e.g. the scan for if/if64 needs
-    # this to evaluate if_disabled_if64_checks.
-    check_api_utils.set_hostname(host_config.hostname)
 
     snmp_cache.initialize_single_oid_cache(host_config)
     console.vverbose("  SNMP scan:\n")

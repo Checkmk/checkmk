@@ -27,6 +27,7 @@ from cmk.snmplib.type_defs import (
 
 from cmk.fetchers import factory, SNMPDataFetcher
 
+import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
@@ -109,6 +110,10 @@ class CachedSNMPDetector:
         if self._cached_result is not None:
             return self._cached_result
 
+        # Make hostname globally available for scan functions.
+        # This is rarely used, but e.g. the scan for if/if64 needs
+        # this to evaluate if_disabled_if64_checks.
+        check_api_utils.set_hostname(snmp_config.hostname)
         self._cached_result = self._filter_function(
             snmp_config,
             on_error=on_error,

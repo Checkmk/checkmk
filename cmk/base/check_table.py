@@ -9,6 +9,9 @@ from typing import Callable, cast, Dict, Iterator, List, Optional, Set, Tuple, T
 
 from cmk.utils.exceptions import MKGeneralException
 
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
+
 import cmk.base.config as config
 import cmk.base.item_state as item_state
 import cmk.base.check_utils
@@ -39,8 +42,6 @@ class HostCheckTable:
         super(HostCheckTable, self).__init__()
         self._config_cache = config_cache
         self._host_config = host_config
-
-        self._is_checkname_valid_cache = {}  # type: Dict[str, bool]
 
     def get(self, remove_duplicates, use_cache, skip_autochecks, filter_mode, skip_ignored):
         # type: (bool, bool, bool, Optional[str], bool) -> CheckTable
@@ -154,25 +155,9 @@ class HostCheckTable:
 
     def _is_checkname_valid(self, checkname):
         # type: (CheckPluginName) -> bool
-        if checkname in self._is_checkname_valid_cache:
-            return self._is_checkname_valid_cache[checkname]
-
-        passed = True
-        if checkname not in config.check_info:
-            passed = False
-
-        # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
-        # agent setting. Remove them without rediscovery). Same for agent based checks.
-        elif not self._host_config.is_snmp_host and self._config_cache.is_snmp_check(checkname) and \
-           (not self._host_config.has_management_board or self._host_config.management_protocol != "snmp"):
-            passed = False
-
-        elif not self._host_config.is_agent_host and self._config_cache.is_tcp_check(checkname) and \
-           (not self._host_config.has_management_board or self._host_config.management_protocol != "ipmi"):
-            passed = False
-
-        self._is_checkname_valid_cache[checkname] = passed
-        return passed
+        # TODO (mo): centralize maincheckify: CMK-4295
+        plugin_name = PluginName(maincheckify(checkname))
+        return config.get_registered_check_plugin(plugin_name) is not None
 
     def _get_clustered_services(self, hostname, skip_autochecks):
         # type: (str, bool) -> CheckTable

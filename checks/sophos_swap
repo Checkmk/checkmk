@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+def parse_sophos_swap(info):
+    try:
+        swap_capacity, swap_percent_usage = info[0]
+        swap_capacity = int(swap_capacity) >> 10
+        swap_percent_usage = int(swap_percent_usage)
+        swap_usage = swap_capacity / 100 * swap_percent_usage
+        return (swap_capacity, swap_usage, swap_percent_usage)
+    except (ValueError, IndexError):
+        return None
+
+
+def check_sophos_swap(_item, params, parsed):
+    swap_capacity, swap_usage, swap_percent_usage = parsed
+
+    yield check_levels(
+        swap_percent_usage,
+        "swap_util",
+        params.get("swap_levels", (None, None)),
+        infoname="Usage",
+        human_readable_func=get_percent_human_readable,
+    )
+
+    yield 0, "(%d GB of %d GB)" % (swap_usage, swap_capacity)
+
+check_info['sophos_swap'] = {
+    "parse_function": parse_sophos_swap,
+    "inventory_function": lambda parsed: [(None, {})] if parsed is not None else None,
+    "check_function": check_sophos_swap,
+    "service_description": "Swap",
+    "group": "sophos_swap",
+    "snmp_info": (".1.3.6.1.4.1.21067.2.1.2.4", [
+        3,  # XG-FIREWALL-MIB::swapCapacity
+        4,  # XG-FIREWALL-MIB::swapPercentUsage
+        ]),
+    "snmp_scan_function": lambda oid: '.1.3.6.1.4.1.21067.2' in oid(".1.3.6.1.2.1.1.2.0"),
+}

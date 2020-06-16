@@ -90,18 +90,6 @@ def test_load_checks():
     assert len(config.check_info) > 1000
 
 
-def test_is_tcp_check():
-    config.load_all_checks(check_api.get_check_api_context)
-    assert cmk.base.check_utils.is_tcp_check("xxx") is False
-    assert cmk.base.check_utils.is_tcp_check("uptime") is True
-    assert cmk.base.check_utils.is_tcp_check("uptime") is True
-    assert cmk.base.check_utils.is_tcp_check("snmp_uptime") is False
-    assert cmk.base.check_utils.is_tcp_check("mem") is True
-    assert cmk.base.check_utils.is_tcp_check("mem.linux") is True
-    assert cmk.base.check_utils.is_tcp_check("mem.ding") is True
-    assert cmk.base.check_utils.is_tcp_check("apc_humidity") is False
-
-
 def test_is_snmp_check():
     config.load_all_checks(check_api.get_check_api_context)
     assert cmk.base.check_utils.is_snmp_check("xxx") is False

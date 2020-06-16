@@ -3305,7 +3305,6 @@ class ConfigCache:
         self.check_table_cache = _config_cache.get_dict("check_tables")
 
         self._cache_is_snmp_check = _runtime_cache.get_dict("is_snmp_check")
-        self._cache_is_tcp_check = _runtime_cache.get_dict("is_tcp_check")
         self._cache_section_name_of = {}  # type: Dict[CheckPluginName, SectionName]
 
         self._cache_match_object_service = {
@@ -3684,16 +3683,6 @@ class ConfigCache:
             snmp_checks = _runtime_cache.get_set("check_type_snmp")
             result = self.section_name_of(check_plugin_name) in snmp_checks
             self._cache_is_snmp_check[check_plugin_name] = result
-            return result
-
-    def is_tcp_check(self, check_plugin_name):
-        # type: (CheckPluginName) -> bool
-        try:
-            return self._cache_is_tcp_check[check_plugin_name]
-        except KeyError:
-            tcp_checks = _runtime_cache.get_set("check_type_tcp")
-            result = self.section_name_of(check_plugin_name) in tcp_checks
-            self._cache_is_tcp_check[check_plugin_name] = result
             return result
 
     def host_extra_conf_merged(self, hostname, ruleset):

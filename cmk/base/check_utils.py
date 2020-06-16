@@ -162,15 +162,3 @@ def is_snmp_check(check_plugin_name):
         result = section_name_of(check_plugin_name) in snmp_checks
         cache[check_plugin_name] = result
         return result
-
-
-def is_tcp_check(check_plugin_name):
-    # type: (str) -> bool
-    cache = _runtime_cache.get_dict("is_tcp_check")
-    try:
-        return cache[check_plugin_name]
-    except KeyError:
-        tcp_checks = _runtime_cache.get_set("check_type_tcp")
-        result = section_name_of(check_plugin_name) in tcp_checks
-        cache[check_plugin_name] = result
-        return result

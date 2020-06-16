@@ -5,27 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from six import iterbytes
 
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostAddress, HostName
-
-from cmk.snmplib.type_defs import OID, OIDFunction, SNMPHostConfig, SNMPScanFunction
-
-import cmk.base.config as config
+from cmk.snmplib.type_defs import OID, OIDFunction, SNMPScanFunction
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
-
-
-# TODO: This belongs in `cmk.base.config.HostConfig`
-def create_snmp_host_config(hostname, address):
-    # type: (HostName, Optional[HostAddress]) -> SNMPHostConfig
-    if address is None:
-        raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-
-    return config.get_config_cache().get_host_config(hostname).snmp_config(address)
 
 
 def binstring_to_int(binstring):

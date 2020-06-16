@@ -57,7 +57,6 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
-import cmk.base.snmp_utils as snmp_utils
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -1562,7 +1561,9 @@ class AutomationGetAgentOutput(Automation):
                         success = False
                         output += "[%s] %s\n" % (source.id(), source_output)
             else:
-                host_config = snmp_utils.create_snmp_host_config(hostname, ipaddress)
+                if not ipaddress:
+                    raise MKGeneralException("Failed to gather IP address of %s" % hostname)
+                host_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
                 backend = factory.backend(host_config, use_cache=False)
 
                 lines = []

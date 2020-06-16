@@ -2530,6 +2530,11 @@ class HostConfig:
         self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) \
                                 or (self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6")
 
+    @staticmethod
+    def make_snmp_config(hostname, address):
+        # type: (HostName, HostAddress) -> SNMPHostConfig
+        return get_config_cache().get_host_config(hostname).snmp_config(address)
+
     @property
     def has_piggyback_data(self):
         # type: () -> bool

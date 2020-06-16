@@ -43,12 +43,6 @@ repos:
             language: script
             files: omd/packages/python3?-modules
             types: [file]
-          - id: flake8
-            name: Check flake8
-            entry: scripts/check-flake8
-            language: script
-            types: [file, python]
-            verbose: true
           - id: pylint
             name: Check pylint
             entry: scripts/check-pylint
@@ -70,13 +64,20 @@ repos:
             entry: scripts/check-licence
             language: script
             types: [file, python]
-          - id: unit-tests
-            name: Check affected unit tests
-            entry: scripts/check-pytest-testmon
-            language: script
-            types: [file, python]
           - id: absolute-imports
             name: Check absolute imports
             entry: scripts/check-absolute-imports
             language: script
             types: [file, python]
+          - id: flake8
+            name: Check flake8
+            entry: scripts/check-flake8
+            language: script
+            types: [file, python]
+            verbose: true
+          - id: unit-tests
+            name: Check affected unit tests
+            entry: scripts/check-pytest-testmon 127
+            language: script
+            types: [file, python]
+            verbose: true

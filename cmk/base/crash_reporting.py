@@ -90,12 +90,8 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
 
-        snmp_info = None  # type: Optional[bytes]
-        agent_output = None  # type: Optional[bytes]
-        if cmk.base.check_utils.is_snmp_check(check_plugin_name):
-            snmp_info = _read_snmp_info(hostname)
-        else:
-            agent_output = _read_agent_output(hostname)
+        snmp_info = _read_snmp_info(hostname)
+        agent_output = _read_agent_output(hostname)
 
         return cls.from_exception(
             details={

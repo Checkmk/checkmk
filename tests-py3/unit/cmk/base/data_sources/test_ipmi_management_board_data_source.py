@@ -28,7 +28,6 @@ def test_attribute_defaults(monkeypatch):
     assert source.id() == "mgmt_ipmi"
     assert source.title() == "Management board - IPMI"
     assert source._cpu_tracking_id() == source.id()
-    assert source._gather_check_plugin_names() == {"mgmt_ipmi_sensors"}
     assert source._summary_result(True) == (0, "Version: unknown", [])
     assert source._get_ipmi_version() == "unknown"
 

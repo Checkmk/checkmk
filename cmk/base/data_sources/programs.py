@@ -165,11 +165,6 @@ class SpecialAgentDataSource(ProgramDataSource):
         # type: () -> str
         return "agent_%s" % self._special_agent_id
 
-    # TODO: Can't we make this more specific in case of special agents?
-    def _gather_check_plugin_names(self):
-        # type: () -> Set[CheckPluginName]
-        return config.discoverable_tcp_checks()
-
     @property
     def _source_path(self):
         # type: () -> Path

@@ -238,7 +238,6 @@ BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=Abstr
 # def _from_cache_file(self, raw_data):
 # def _to_cache_file(self, raw_data):
 # def _convert_to_sections(self, raw_data):
-# def _gather_check_plugin_names(self):
 # def _cpu_tracking_id(self):
 # def id(self):
 # def describe(self):
@@ -464,17 +463,6 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return (self._selected_raw_section_names is None or
                 raw_section_name in self._selected_raw_section_names)
 
-    @abc.abstractmethod
-    def _gather_check_plugin_names(self):
-        # type: () -> Set[CheckPluginName]
-        """
-        Returns a collection of check plugin names which are supported by
-        the device.
-
-        Example: SNMP scan
-        """
-        raise NotImplementedError()
-
     def enforce_check_plugin_names(self, check_plugin_names):
         # type: (Optional[Set[CheckPluginName]]) -> None
         """
@@ -688,10 +676,6 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
         directories.
         """
         self._is_main_agent_data_source = True
-
-    def _gather_check_plugin_names(self):
-        # type: () -> Set[CheckPluginName]
-        return config.discoverable_tcp_checks()
 
     def _cpu_tracking_id(self):
         # type: () -> str

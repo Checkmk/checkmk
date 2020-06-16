@@ -259,19 +259,6 @@ class SNMPDataSource(ABCSNMPDataSource):
         """
         self._fetched_raw_section_names = raw_section_names
 
-    def _gather_check_plugin_names(self):
-        # type: () -> Set[CheckPluginName]
-        """Returns a list of check types that shall be executed with this source.
-
-        The logic is only processed once. Once processed, the answer is cached.
-        """
-        return self._detector(
-            self._snmp_config,
-            on_error=self._on_error,
-            do_snmp_scan=self._do_snmp_scan,
-            for_mgmt_board=self.source_type is SourceType.MANAGEMENT,
-        )
-
     def _execute(self):
         # type: () -> SNMPRawData
         verify_ipaddress(self._ipaddress)

@@ -66,10 +66,6 @@ class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
         # type: () -> str
         return self.id()
 
-    def _gather_check_plugin_names(self):
-        # type: () -> Set[CheckPluginName]
-        return {str(n) for n in self._raw_sections}
-
     def _execute(self):
         # type: () -> RawAgentData
         if not self._credentials:

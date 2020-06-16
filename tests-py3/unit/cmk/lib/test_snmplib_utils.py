@@ -8,9 +8,8 @@ from typing import Optional
 
 from cmk.utils.type_defs import CheckPluginName
 
+import cmk.snmplib.utils as snmp_utils
 from cmk.snmplib.type_defs import OID, SNMPDecodedString
-
-import cmk.base.snmp_utils as snmp_utils
 
 
 def oid_kea(_arg, _decoded=None, _name=None):

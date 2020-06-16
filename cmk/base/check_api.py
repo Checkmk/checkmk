@@ -115,6 +115,7 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
+import cmk.snmplib.utils as _snmp_utils
 from cmk.snmplib.type_defs import (
     OID_BIN,
     OID_END,
@@ -128,7 +129,6 @@ from cmk.snmplib.type_defs import (
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
-import cmk.base.snmp_utils as _snmp_utils
 from cmk.base.check_api_utils import (
     HOST_ONLY  # Symbolic representations of states in plugin output; Management board checks; Check is only executed for real SNMP host (e.g. interfaces),
 )
@@ -148,7 +148,6 @@ from cmk.base.check_api_utils import (
 from cmk.base.discovered_labels import DiscoveredHostLabels as HostLabels
 from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels  # noqa: F401 # pylint: disable=unused-import
 from cmk.base.discovered_labels import HostLabel, ServiceLabel
-from cmk.base.snmp_utils import binstring_to_int
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]

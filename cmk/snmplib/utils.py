@@ -9,7 +9,7 @@ from typing import List, Tuple
 
 from six import iterbytes
 
-from cmk.snmplib.type_defs import OID, OIDFunction, SNMPScanFunction
+from .type_defs import OID, OIDFunction, SNMPScanFunction
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 

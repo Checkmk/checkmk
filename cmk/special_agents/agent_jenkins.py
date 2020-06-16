@@ -50,7 +50,7 @@ def main(argv=None):
         handle_request(args, sections)
     except Exception:
         if args.debug:
-            return 1
+            raise
 
     return 0
 

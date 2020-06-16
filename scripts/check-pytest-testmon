@@ -6,7 +6,7 @@
 set -e -o pipefail
 
 REPO_PATH="$(git rev-parse --show-toplevel)"
-PIPENV=$REPO_PATH/scripts/run-pipenv
+PIPENV=pipenv
 
 pushd $REPO_PATH/tests-py3 > /dev/null
 PIPENV_VENV_IN_PROJECT=true \
@@ -15,6 +15,6 @@ PIPENV_VENV_IN_PROJECT=true \
     PIPENV_NO_INHERIT=true \
     PIPENV_PIPFILE="$REPO_PATH/virtual-envs/3.8/Pipfile" \
     PIPENV_IGNORE_VIRTUALENVS=1 \
-    $PIPENV 3 run py.test --testmon -T unit unit
-
+    PYTEST_ARGS=--testmon \
+    $PIPENV run make test-unit
 popd > /dev/null

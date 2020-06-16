@@ -8,6 +8,7 @@ while the inventory is performed for one host.
 
 In the future all inventory code should be moved to this module."""
 
+import functools
 import os
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -29,8 +30,6 @@ from cmk.utils.type_defs import (
     ServiceDetails,
     ServiceState,
 )
-
-from cmk.snmplib.type_defs import SNMPHostConfig
 
 from cmk.base.api import PluginName
 import cmk.base.check_api as check_api
@@ -285,7 +284,12 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
             data_sources.SNMPDataSource.disable_data_source_cache()
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
-            source.set_check_plugin_name_filter(_gather_snmp_check_plugin_names_inventory)
+            source.set_check_plugin_name_filter(
+                functools.partial(
+                    snmp_scan.gather_available_raw_section_names,
+                    for_inventory=True,
+                    for_mgmt_board=False,
+                ))
             if multi_host_sections is not None:
                 # Status data inventory already provides filled multi_host_sections object.
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be
@@ -338,18 +342,6 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
             args += [host_config.inventory_parameters(section_name)]
         inv_function(*args, **kwargs)
     console.verbose("\n")
-
-
-def _gather_snmp_check_plugin_names_inventory(snmp_host_config,
-                                              on_error,
-                                              do_snmp_scan,
-                                              for_mgmt_board=False):
-    # type: (SNMPHostConfig, str, bool, bool) -> Set[CheckPluginName]
-    return snmp_scan.gather_available_raw_section_names(snmp_host_config,
-                                                        on_error,
-                                                        do_snmp_scan,
-                                                        for_inventory=True,
-                                                        for_mgmt_board=for_mgmt_board)
 
 
 #.

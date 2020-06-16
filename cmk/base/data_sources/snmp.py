@@ -15,6 +15,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import (
+    ABCSNMPBackend,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPPersistedSections,
@@ -24,7 +25,7 @@ from cmk.snmplib.type_defs import (
     SNMPTree,
 )
 
-from cmk.fetchers import SNMPDataFetcher
+from cmk.fetchers import factory, SNMPDataFetcher
 
 import cmk.base.config as config
 from cmk.base.api import PluginName
@@ -40,7 +41,8 @@ PluginNameFilterFunction = Callable[[
     SNMPHostConfig,
     NamedArg(str, 'on_error'),
     NamedArg(bool, 'do_snmp_scan'),
-    NamedArg(bool, 'for_mgmt_board')
+    NamedArg(bool, 'for_mgmt_board'),
+    NamedArg(ABCSNMPBackend, 'backend'),
 ], Set[CheckPluginName]]
 
 #.
@@ -112,6 +114,7 @@ class CachedSNMPDetector:
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
             for_mgmt_board=for_mgmt_board,
+            backend=factory.backend(snmp_config),
         )
         return self._cached_result
 

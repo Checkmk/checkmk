@@ -17,8 +17,6 @@ import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
 
-from cmk.fetchers import factory
-
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 from cmk.base.api import PluginName
@@ -59,8 +57,10 @@ def gather_available_raw_section_names(host_config,
                                        on_error,
                                        do_snmp_scan,
                                        for_inventory=False,
-                                       for_mgmt_board=False):
-    # type: (SNMPHostConfig, str, bool, bool, bool) -> Set[CheckPluginName]
+                                       for_mgmt_board=False,
+                                       *,
+                                       backend):
+    # type: (SNMPHostConfig, str, bool, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     try:
         return _snmp_scan(
             host_config,
@@ -68,6 +68,7 @@ def gather_available_raw_section_names(host_config,
             do_snmp_scan=do_snmp_scan,
             for_inv=for_inventory,
             for_mgmt_board=for_mgmt_board,
+            backend=backend,
         )
     except Exception as e:
         if on_error == "raise":
@@ -82,10 +83,11 @@ def _snmp_scan(host_config,
                on_error="ignore",
                for_inv=False,
                do_snmp_scan=True,
-               for_mgmt_board=False):
-    # type: (SNMPHostConfig, str, bool, bool, bool) -> Set[CheckPluginName]
+               for_mgmt_board=False,
+               *,
+               backend):
+    # type: (SNMPHostConfig, str, bool, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-    backend = factory.backend(host_config)
 
     # Make hostname globally available for scan functions.
     # This is rarely used, but e.g. the scan for if/if64 needs

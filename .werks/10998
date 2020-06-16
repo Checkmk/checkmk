@@ -1,0 +1,14 @@
+Title: df.include: Fix discovery of empty filesystem groups
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1592225875
+
+If you've discovered an empty filesystem group via the ruleset
+{{Filesystem grouping patterns}} please rediscover the affected
+hosts. If no mountpoints match one of these patterns then this
+group will not be discovered anymore.

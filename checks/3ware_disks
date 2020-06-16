@@ -44,20 +44,23 @@ def inventory_3ware_disks(info):
 
 def check_3ware_disks(item, _no_params, info):
     for line in info:
-        if line[0] == item:
-            status = line[1]
-            unit_type = line[2]
-            size = line[3]
-            size_type = line[4]
-            disk_type = line[5]
-            model = line[-1]
-            infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % \
-                       (status, unit_type, size, size_type, disk_type, model)
-            if status in ["OK", "VERIFYING"]:
-                return (0, "disk status is " + infotext)
-            elif status in ["SMART_FAILURE"]:
-                return (1, "disk status is " + infotext)
-            return (2, "disk status is " + infotext)
+        if line[0] != item:
+            continue
+
+        status = line[1]
+        unit_type = line[2]
+        size = line[3]
+        size_type = line[4]
+        disk_type = line[5]
+        model = line[-1]
+        infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % \
+                   (status, unit_type, size, size_type, disk_type, model)
+        if status in ["OK", "VERIFYING"]:
+            return (0, "disk status is " + infotext)
+        if status in ["SMART_FAILURE"]:
+            return (1, "disk status is " + infotext)
+        return (2, "disk status is " + infotext)
+
     return (3, "disk %s not found in agent output" % item)
 
 

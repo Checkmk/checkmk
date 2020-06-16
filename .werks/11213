@@ -1,0 +1,11 @@
+Title: ceph_status: could run into unhandled exception
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1592297397
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+

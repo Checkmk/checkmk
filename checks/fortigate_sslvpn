@@ -55,11 +55,13 @@ def check_fortigate_sslvpn(_item, params, data):
                        infoname="Web sessions",
                        human_readable_func=str)
 
-    tunnel_status, infotext, tunnel_perf = check_levels(data["tunnels"],
-                                                        "active_vpn_tunnels",
-                                                        params.get("tunnel_levels"),
-                                                        infoname="Tunnels",
-                                                        human_readable_func=str)
+    tunnel_status, infotext, tunnel_perf = check_levels(
+        data["tunnels"],
+        "active_vpn_tunnels",
+        (params or {}).get("tunnel_levels"),
+        infoname="Tunnels",
+        human_readable_func=str,
+    )
 
     if len(tunnel_perf[0]) == 2:  # no values for warn and crit
         perf_boundaries = (None, None, 0, data["tunnels_max"])

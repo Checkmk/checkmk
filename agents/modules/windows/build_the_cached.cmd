@@ -23,10 +23,11 @@ where curl.exe > nul 2>&1 ||  powershell Write-Host "[-] curl not found"  -Foreg
 powershell Write-Host "[+] curl found" -Foreground green
 
 set arti_dir=%1
-if not exist %arti_dir% powershell Write-Host "Directory `'%arti_dir%`' doesn`'t exist" -Foreground red && exit /B 12
-
 set creds=%2
 set url=%3
+@powershell Write-Host "Used URL is `'%url%`'"  -Foreground cyan
+if not exist %arti_dir% powershell Write-Host "Directory `'%arti_dir%`' doesn`'t exist" -Foreground red && exit /B 12
+
 
 rem get hash of the git commit in windows manner
 for /f "tokens=*" %%a in ('git log --pretty^=format:^'%%h^' -n 1 .') do set git_hash=%%a
@@ -56,6 +57,7 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
   powershell Write-Host "Uploading to cache..." -Foreground cyan
   copy %arti_dir%\python-3.8.zip %fname%
 
+  @echo "Command line: curl -sSf --user creds --upload-file %fname% %url%"
   curl -sSf --user %creds% --upload-file %fname% %url%
   IF /I "!ERRORLEVEL!" NEQ "0" (
     del %fname% > nul 

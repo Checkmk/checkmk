@@ -123,15 +123,15 @@ checks = {
                     0, 'Client connections: 0', [
                         ('connections', 0, None, None, None, None),
                         (
-                            'connections_duration_max', 2278332, None, None,
+                            'connections_duration_max', 2278.332, None, None,
                             None, None
                         ),
                         (
-                            'connections_duration_mean', 339537.0, None, None,
+                            'connections_duration_mean', 339.537, None, None,
                             None, None
                         ),
                         (
-                            'connections_duration_min', 13, None, None, None,
+                            'connections_duration_min', 0.013, None, None, None,
                             None
                         ), ('connections_rate', 0.0, None, None, None, None),
                         ('if_in_octets', 0.0, None, None, None, None),
@@ -157,15 +157,15 @@ checks = {
                     0, 'Client connections: 0', [
                         ('connections', 0, None, None, None, None),
                         (
-                            'connections_duration_max', 1147634, None, None,
+                            'connections_duration_max', 1147.634, None, None,
                             None, None
                         ),
                         (
-                            'connections_duration_mean', 48323.0, None, None,
+                            'connections_duration_mean', 48.323, None, None,
                             None, None
                         ),
                         (
-                            'connections_duration_min', 79, None, None, None,
+                            'connections_duration_min', 0.079, None, None, None,
                             None
                         ), ('connections_rate', 0.0, None, None, None, None),
                         ('if_in_octets', 0.0, None, None, None, None),

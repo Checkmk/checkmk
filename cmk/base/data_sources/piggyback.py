@@ -9,9 +9,8 @@ from typing import Dict, List, Optional, Tuple
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
-from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, ServiceCheckResult
+from cmk.utils.type_defs import HostAddress, HostName, PluginName, RawAgentData, ServiceCheckResult
 
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 import cmk.base.config as config
 from cmk.base.exceptions import MKAgentError

@@ -6,7 +6,8 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.api import PluginName
+from cmk.utils.type_defs import PluginName
+
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.section_types import SNMPTree

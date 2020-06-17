@@ -10,7 +10,14 @@ import time
 from typing import cast, Dict, Iterable, List, Optional, Set
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SectionName, SourceType
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostAddress,
+    HostName,
+    PluginName,
+    SectionName,
+    SourceType,
+)
 
 from cmk.snmplib.type_defs import (
     SNMPCredentials,
@@ -28,7 +35,6 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.inventory_plugins as inventory_plugins
 from cmk.base.snmp_scan import PluginNameFilterFunction
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo

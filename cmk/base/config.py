@@ -67,6 +67,7 @@ from cmk.utils.type_defs import (
     LabelSources,
     Ruleset,
     RulesetName,
+    PluginName,
     ServicegroupName,
     ServiceName,
     TagGroups,
@@ -77,8 +78,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
-    OIDBytes, OIDCached, SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming,
-)
+    OIDBytes, OIDCached, SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming)
 
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
@@ -90,7 +90,6 @@ from cmk.base.check_utils import CheckParameters, DiscoveredService, SectionName
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 try:
-    from cmk.base.api import PluginName
     from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
     from cmk.base.api.agent_based.register.section_plugins_legacy import (
         create_agent_section_plugin_from_legacy,

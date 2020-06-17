@@ -32,6 +32,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     Metric,
+    PluginName,
     RawAgentData,
     SectionName,
     ServiceCheckResult,
@@ -40,8 +41,6 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 from cmk.utils.werks import parse_check_mk_version
-
-from cmk.base.api import PluginName
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config

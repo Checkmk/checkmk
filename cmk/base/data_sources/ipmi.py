@@ -9,13 +9,13 @@ from typing import Dict, List, Optional, cast
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
+    PluginName,
     RawAgentData,
     ServiceCheckResult,
     ServiceDetails,
     SourceType,
 )
 
-from cmk.base.api import PluginName
 from cmk.base.config import IPMICredentials, SectionPlugin
 from cmk.base.exceptions import MKAgentError
 

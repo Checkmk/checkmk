@@ -20,11 +20,10 @@ import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
-from cmk.utils.type_defs import SourceType
+from cmk.utils.type_defs import PluginName, SourceType
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostName, HostAddress
 
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

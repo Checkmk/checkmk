@@ -14,8 +14,8 @@ from six import ensure_str
 from cmk.fetchers import ProgramDataFetcher
 
 import cmk.utils.paths
+from cmk.utils.type_defs import PluginName
 
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 import cmk.base.config as config
 import cmk.base.core_config as core_config

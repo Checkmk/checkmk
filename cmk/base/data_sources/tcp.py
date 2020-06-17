@@ -7,13 +7,13 @@
 import socket
 from typing import Dict, Optional
 
-from cmk.base.api import PluginName
+from cmk.utils.type_defs import HostName, HostAddress, PluginName
+
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 from cmk.base.check_utils import RawAgentData
 from cmk.base.config import SectionPlugin
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 from cmk.fetchers import TCPDataFetcher
-from cmk.utils.type_defs import HostName, HostAddress
 
 from .abstract import CheckMKAgentDataSource, verify_ipaddress
 

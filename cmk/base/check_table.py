@@ -8,8 +8,8 @@
 from typing import Callable, cast, Dict, Iterator, List, Optional, Set, Tuple, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import PluginName
 
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 
 import cmk.base.config as config

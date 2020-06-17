@@ -10,7 +10,8 @@ import inspect
 
 import pytest  # type: ignore[import]
 
-from cmk.base.api import PluginName
+from cmk.utils.type_defs import PluginName
+
 import cmk.base.api.agent_based.checking_types as checking_types
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
 from cmk.base.check_api_utils import Service as OldService

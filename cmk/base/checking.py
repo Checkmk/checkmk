@@ -42,6 +42,7 @@ from cmk.utils.type_defs import (
     HostName,
     Item,
     Metric,
+    PluginName,
     SectionName,
     ServiceAdditionalDetails,
     ServiceCheckResult,
@@ -62,7 +63,6 @@ import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.utils
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based import checking_types, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     CLUSTER_LEGACY_MODE_FROM_HELL,

@@ -10,13 +10,12 @@ from typing import Any, Callable, cast, Union, Tuple, Dict, Set, List, Optional,
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import HostName, HostAddress, ServiceName, SourceType
+from cmk.utils.type_defs import HostName, HostAddress, PluginName, ServiceName, SourceType
 
 import cmk.base.config as config
 import cmk.base.caching as caching
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.utils import parse_string_table
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,

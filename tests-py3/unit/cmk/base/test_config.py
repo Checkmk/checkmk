@@ -17,8 +17,8 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
+from cmk.utils.type_defs import PluginName
 
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based import checking_types
 from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config

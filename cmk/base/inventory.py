@@ -25,12 +25,12 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     Metric,
+    PluginName,
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
 )
 
-from cmk.base.api import PluginName
 import cmk.base.check_api as check_api
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config

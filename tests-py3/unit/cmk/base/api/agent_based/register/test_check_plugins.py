@@ -8,7 +8,8 @@ from typing import Any, Dict
 
 import pytest  # type: ignore[import]
 
-from cmk.base.api import PluginName
+from cmk.utils.type_defs import PluginName
+
 import cmk.base.api.agent_based.register.check_plugins as check_plugins
 
 

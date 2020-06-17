@@ -44,12 +44,12 @@ from cmk.utils.type_defs import (
     HostState,
     Item,
     Metric,
+    PluginName,
     RulesetName,
     SourceType,
 )
 import cmk.utils.cleanup
 
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based import checking_types
 from cmk.base.api.agent_based.register.check_plugins import MANAGEMENT_NAME_PREFIX
 from cmk.base.api.agent_based.register.check_plugins_legacy import (

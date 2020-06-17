@@ -111,6 +111,7 @@ from cmk.utils.type_defs import EvalableFloat as as_float
 from cmk.utils.type_defs import (
     HostName,
     MetricName,
+    PluginName as _PluginName,
     ServiceCheckResult,
     ServiceDetails,
     ServiceName,
@@ -127,8 +128,6 @@ from cmk.snmplib.type_defs import (
     OIDBytes,
     OIDCached,
 )
-
-from cmk.base.api import PluginName as _PluginName
 
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state

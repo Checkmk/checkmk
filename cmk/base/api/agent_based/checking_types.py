@@ -10,8 +10,8 @@ from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, T
 import enum
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.type_defs import EvalableFloat
-from cmk.base.api import PluginName
+from cmk.utils.type_defs import EvalableFloat, PluginName
+
 from cmk.base.discovered_labels import ServiceLabel
 
 # we may have 0/None for min/max for instance.

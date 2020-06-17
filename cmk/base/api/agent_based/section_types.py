@@ -7,9 +7,10 @@
 """
 from typing import Any, Callable, Generator, List, NamedTuple
 
+from cmk.utils.type_defs import PluginName
+
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTable, SNMPTree
 
-from cmk.base.api import PluginName
 from cmk.base.check_utils import AgentSectionContent
 from cmk.base.discovered_labels import HostLabel
 

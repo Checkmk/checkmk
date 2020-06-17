@@ -9,8 +9,9 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 import functools
 import itertools
 
+from cmk.utils.type_defs import PluginName
+
 from cmk.base import item_state
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.checking_types import (
     CheckPlugin,
     Metric,

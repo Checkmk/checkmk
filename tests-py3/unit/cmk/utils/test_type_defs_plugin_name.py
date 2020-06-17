@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.api import PluginName
+from cmk.utils.type_defs import PluginName
 
 
 @pytest.mark.parametrize("str_name",

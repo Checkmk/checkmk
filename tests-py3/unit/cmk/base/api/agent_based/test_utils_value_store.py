@@ -9,8 +9,8 @@ from typing import Dict, Tuple
 import pytest  # type: ignore[import]
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import PluginName
 
-from cmk.base.api import PluginName
 import cmk.base.api.agent_based.value_store as value_store
 from cmk.base.api.agent_based.utils import GetRateError, get_rate, get_average
 

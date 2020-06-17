@@ -402,6 +402,7 @@ class SoapTemplates:
         '  <ns1:specSet>'
         '    <ns1:propSet>'
         '      <ns1:type>VirtualMachine</ns1:type>'
+        '      <ns1:pathSet>summary.config.ftInfo.role</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.consumedOverheadMemory</ns1:pathSet>'
         '      <ns1:pathSet>config.hardware.numCPU</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.overallCpuDemand</ns1:pathSet>'
@@ -1773,6 +1774,9 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
         vm_data = dict(get_pattern("<name>(.*?)</name><val.*?>(.*?)</val>", entry))
         if opt.skip_placeholder_vm and is_placeholder_vm(vm_data.get("config.hardware.device")):
             continue
+
+        if vm_data.get("summary.config.ftInfo.role") == '2':
+            continue  # This response coming from the passive fault-tolerance node
 
         if "runtime.host" in vm_data:
             vm_data["runtime.host"] = hostsystems.get(vm_data["runtime.host"],

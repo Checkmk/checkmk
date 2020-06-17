@@ -662,6 +662,7 @@ class AutomationAnalyseServices(Automation):
         # 2. Load all autochecks of the host in question and try to find
         # our service there
         for service in services:
+
             if (service.check_plugin_name, service.item) not in table:
                 continue  # this is a removed duplicate or clustered service
 

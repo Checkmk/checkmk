@@ -85,6 +85,7 @@ check_info["test_check_1"] = {
     assert "test_check_1_default_levels" not in config.__dict__
     assert "test_check_1" in config._check_contexts
     assert "test_check_1_default_levels" in config._check_contexts["test_check_1"]
+    assert config._check_contexts["test_check_1"]["test_check_1_default_levels"] == (10.0, 20.0)
 
     web.discover_services("modes-test-host")
 
@@ -92,7 +93,7 @@ check_info["test_check_1"] = {
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     assert services[0].check_plugin_name == "test_check_1"
     assert services[0].item is None
-    assert services[0].parameters_unresolved == "test_check_1_default_levels"
+    assert services[0].parameters_unresolved == "{'auto-migration-wrapper-key': (10.0, 20.0)}"
     assert services[0].service_labels.to_dict() == {}
 
     # Now execute the check function to verify the variable is available

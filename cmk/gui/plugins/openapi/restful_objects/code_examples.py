@@ -28,7 +28,10 @@ curl \\
 {%- for header in headers %}
     --header "{{ header['name'] }}: {{ header['example'] }}" \\
 {%- endfor %}{% if request_schema %}
-    -d '{{ request_schema | to_dict | to_json(indent=2) | indent(skip_lines=1, spaces=8) }}' \\
+    -d '{{ request_schema |
+            to_dict |
+            to_json(indent=2, sort_keys=True) |
+            indent(skip_lines=1, spaces=8) }}' \\
 {%- endif %}
     "$API_URL{{ request_endpoint | fill_out_parameters }}"
 """
@@ -43,7 +46,7 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
 {%- for header in headers %} \\
     '{{ header['name'] }}: {{ header['example'] }}'{% if not loop.last %} \\{% endif %}
 {%- endfor %}{% if request_schema %} \\
-    {% for key, value in (request_schema | to_dict).items() -%}
+    {% for key, value in (request_schema | to_dict).items() | sort -%}
         {{ key }}='{{ value | to_env }}'{% if not loop.last %} \\{% endif %}
     {% endfor -%}
 {% endif %}
@@ -217,6 +220,7 @@ def _build_code_templates():
     ...     request_endpoint='foo',
     ...     request_method='get',
     ...     request_schema=resolve_schema_instance('CreateHost'),
+    ...     endpoint_parameters={},
     ...     headers=[],
     ... )
     >>> assert '&' not in result

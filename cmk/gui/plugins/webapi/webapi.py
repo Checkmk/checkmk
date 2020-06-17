@@ -16,7 +16,6 @@ from six import ensure_str
 import cmk.utils.version as cmk_version
 
 import cmk.utils.tags
-import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
@@ -29,9 +28,7 @@ from cmk.utils.exceptions import (
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import (
-    MKUserError,
-    MKAuthException,
-)
+    MKUserError,)
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
 from cmk.gui.watolib.tags import (
@@ -1161,42 +1158,21 @@ class APICallOther(APICallCollection):
 
     def _activate_changes(self, request):
         mode = request.get("mode", "dirty")
-        if request.get("allow_foreign_changes"):
-            allow_foreign_changes = bool(int(request.get("allow_foreign_changes")))
-        else:
-            allow_foreign_changes = False
-
-        sites = request.get("sites")
-
-        changes = watolib.ActivateChanges()
-        changes.load()
-
-        if changes.has_foreign_changes():
-            if not config.user.may("wato.activateforeign"):
-                raise MKAuthException(_("You are not allowed to activate changes of other users."))
-            if not allow_foreign_changes:
-                raise MKAuthException(
-                    _("There are changes from other users and foreign changes are not allowed in this API call."
-                     ))
-
-        if mode == "specific":
-            for site in sites:
-                if site not in config.allsites().keys():
-                    raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(site))
-
-        manager = watolib.ActivateChangesManager()
-        manager.load()
-
-        if not manager.has_changes():
-            raise MKUserError(None, _("Currently there are no changes to activate."))
-
-        if not sites:
-            sites = manager.dirty_and_active_activation_sites()
-
+        allow_foreign_changes = bool(int(request.get("allow_foreign_changes") or "0"))
         comment = request.get("comment", "").strip()
-        if comment == "":
+        if not comment:
             comment = None
 
-        manager.start(sites, comment=comment, activate_foreign=allow_foreign_changes)
-        manager.wait_for_completion()
-        return manager.get_state()
+        if mode == 'specific':
+            sites = request.get('sites', [])
+            if not sites:
+                raise MKUserError(None, _("No site given."))
+        else:
+            sites = []
+
+        activation_id = watolib.activate_changes_start(
+            sites,
+            comment,
+            force_foreign_changes=allow_foreign_changes,
+        )
+        return watolib.activate_changes_wait(activation_id)

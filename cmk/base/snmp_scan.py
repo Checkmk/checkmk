@@ -19,8 +19,7 @@ import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectAtom, SNMPDetectSpec
 
-import cmk.base.config as config
-from cmk.base.config import SNMPSectionPlugin
+from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 
 
 def _evaluate_snmp_detection(detect_spec, cp_name, do_snmp_scan, *, backend):
@@ -56,25 +55,20 @@ PluginNameFilterFunction = Callable[[
     Iterable[SNMPSectionPlugin],
     NamedArg(str, 'on_error'),
     NamedArg(bool, 'do_snmp_scan'),
-    NamedArg(bool, 'for_mgmt_board'),
+    NamedArg(bool, "binary_host"),
     NamedArg(ABCSNMPBackend, 'backend'),
 ], Set[CheckPluginName]]
 
 
 # gather auto_discovered check_plugin_names for this host
-def gather_available_raw_section_names(sections,
-                                       on_error,
-                                       do_snmp_scan,
-                                       for_mgmt_board=False,
-                                       *,
-                                       backend):
+def gather_available_raw_section_names(sections, on_error, do_snmp_scan, *, binary_host, backend):
     # type: (Iterable[SNMPSectionPlugin], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     try:
         return _snmp_scan(
             sections,
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
-            for_mgmt_board=for_mgmt_board,
+            binary_host=binary_host,
             backend=backend,
         )
     except Exception as e:
@@ -90,15 +84,12 @@ OID_SYS_DESCR = ".1.3.6.1.2.1.1.1.0"
 OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 
 
-def _snmp_scan(sections, on_error="ignore", do_snmp_scan=True, for_mgmt_board=False, *, backend):
+def _snmp_scan(sections, on_error="ignore", do_snmp_scan=True, *, binary_host, backend):
     # type: (Iterable[SNMPSectionPlugin], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
     _snmp_scan_cache_description(
-        config.get_config_cache().in_binary_hostlist(
-            backend.hostname,
-            config.snmp_without_sys_descr,
-        ),
+        binary_host=binary_host,
         do_snmp_scan=do_snmp_scan,
         backend=backend,
     )
@@ -108,17 +99,8 @@ def _snmp_scan(sections, on_error="ignore", do_snmp_scan=True, for_mgmt_board=Fa
                                             on_error=on_error,
                                             backend=backend)
     _output_snmp_check_plugins("SNMP scan found", found_plugins)
-
-    filtered = config.filter_by_management_board(
-        backend.hostname,
-        found_plugins,
-        for_mgmt_board,
-        for_discovery=True,
-    )
-
-    _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
     snmp_cache.write_single_oid_cache(backend.config)
-    return filtered
+    return found_plugins
 
 
 def _snmp_scan_cache_description(binary_host, *, do_snmp_scan, backend):

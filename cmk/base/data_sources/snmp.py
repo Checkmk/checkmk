@@ -122,12 +122,21 @@ class CachedSNMPDetector:
         # This is rarely used, but e.g. the scan for if/if64 needs
         # this to evaluate if_disabled_if64_checks.
         check_api_utils.set_hostname(snmp_config.hostname)
-        self._cached_result = self._filter_function(
+        found_plugins = self._filter_function(
             self.sections(),
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
-            for_mgmt_board=for_mgmt_board,
+            binary_host=config.get_config_cache().in_binary_hostlist(
+                snmp_config.hostname,
+                config.snmp_without_sys_descr,
+            ),
             backend=factory.backend(snmp_config),
+        )
+        self._cached_result = config.filter_by_management_board(
+            snmp_config.hostname,
+            found_plugins,
+            for_mgmt_board=for_mgmt_board,
+            for_discovery=True,
         )
         return self._cached_result
 

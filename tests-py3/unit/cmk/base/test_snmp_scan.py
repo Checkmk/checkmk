@@ -224,7 +224,7 @@ def test_snmp_scan_cache_description__success_non_binary(backend):
     assert sys_obj
 
     snmp_scan._snmp_scan_cache_description(
-        False,
+        binary_host=False,
         do_snmp_scan=False,
         backend=backend,
     )
@@ -238,7 +238,7 @@ def test_snmp_scan_cache_description__success_non_binary(backend):
 @pytest.mark.usefixtures("cache_oids")
 def test_snmp_scan_cache_description__success_binary(backend):
     snmp_scan._snmp_scan_cache_description(
-        True,
+        binary_host=True,
         do_snmp_scan=False,
         backend=backend,
     )
@@ -273,5 +273,13 @@ def test_gather_available_raw_section_names_defaults(backend, mocker):
         config.registered_snmp_sections.values(),
         on_error="raise",
         do_snmp_scan=False,
+        binary_host=False,
         backend=backend,
-    ) == {"snmp_uptime", "snmp_info", "hr_mem"}
+    ) == {
+        "hr_mem",
+        "mgmt_snmp_info",
+        "mgmt_snmp_uptime",
+        "snmp_info",
+        "snmp_os",
+        "snmp_uptime",
+    }

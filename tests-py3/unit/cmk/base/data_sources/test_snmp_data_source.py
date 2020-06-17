@@ -221,7 +221,7 @@ def test_detector_requires_type_filter_function_and_ipaddress(monkeypatch, ipadd
     with pytest.raises(Exception):
         source._get_raw_section_names_to_process()
 
-    def dummy_filter_func(sections, on_error, do_snmp_scan, for_mgmt_board=False, *, backend):
+    def dummy_filter_func(sections, on_error, do_snmp_scan, *, binary_host, backend):
         return set()
 
     source.set_check_plugin_name_filter(dummy_filter_func, inventory=False)

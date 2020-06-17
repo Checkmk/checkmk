@@ -74,11 +74,11 @@ class DiscoveryState:
 # Would rather use an Enum for this, but this information is exported to javascript
 # using JSON and Enum is not serializable
 class DiscoveryAction:
-    NONE = ""
+    NONE = ""  # corresponds to Full Scan in WATO
     STOP = "stop"
     SCAN = "scan"
     FIX_ALL = "fix_all"
-    REFRESH = "refresh"
+    REFRESH = "refresh"  # corresponds to Tabula Rasa in WATO
     SINGLE_UPDATE = "single_update"
     BULK_UPDATE = "bulk_update"
     UPDATE_HOST_LABELS = "update_host_labels"

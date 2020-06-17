@@ -34,6 +34,8 @@ SERVICE_DISCOVERY_STATES = {
     "legacy_ignored": "legacy_ignored"
 }
 
+DISCOVERY_ACTION = {"tabula-rasa": "refresh", "full-scan": "refresh"}
+
 DISCOVERY_HOST = ParamDict.create(
     'host',
     schema_pattern="[a-zA-Z][a-zA-Z0-9_-]+",
@@ -70,6 +72,15 @@ DISCOVERY_TARGET_STATE = ParamDict.create(
     example='monitored',
     required=True)
 
+DISCOVERY_MODE = ParamDict.create(
+    'discover_mode',
+    location='path',
+    description=('The mode of the discovery action. May be one of the following: ' +
+                 ', '.join(sorted(DISCOVERY_ACTION.keys()))),
+    schema_pattern='|'.join(sorted(DISCOVERY_ACTION.keys())),
+    example='tabula-rasa',
+    required=True)
+
 
 @endpoint_schema('/domain-types/service/collections/services',
                  '.../collection',
@@ -94,7 +105,7 @@ def show_services(params):
 
 
 @endpoint_schema('/objects/host/{hostname}/service/{service_hash}/action/move/{target_state}',
-                 '.../update',
+                 '.../modify',
                  method='put',
                  output_empty=True,
                  parameters=["hostname", DISCOVERY_SERVICE_HASH, DISCOVERY_TARGET_STATE])
@@ -115,6 +126,26 @@ def move_service(params):
     discovery = Discovery(host=host, discovery_options=discovery_options, request=discovery_request)
 
     discovery.execute_discovery()
+    return Response(status=204)
+
+
+@endpoint_schema('/objects/host/{hostname}/actions/discover-services/mode/{discover_mode}',
+                 '.../update',
+                 method='post',
+                 output_empty=True,
+                 parameters=["hostname", DISCOVERY_MODE])
+def execute(params):
+    host = watolib.Host.host(params["hostname"])
+    discovery_request = StartDiscoveryRequest(host=host,
+                                              folder=host.folder(),
+                                              options=DiscoveryOptions(
+                                                  action=DISCOVERY_ACTION[params["discover_mode"]],
+                                                  show_checkboxes=False,
+                                                  show_parameters=False,
+                                                  show_discovered_labels=False,
+                                                  show_plugin_names=False,
+                                                  ignore_errors=True))
+    _discovery_result = get_check_table(discovery_request)
     return Response(status=204)
 
 

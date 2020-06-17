@@ -361,7 +361,7 @@ def get_aggregated_result(
 
     source_type = (SourceType.MANAGEMENT
                    if service.check_plugin_name.startswith('mgmt_') else SourceType.HOST)
-    kwargs = None
+    kwargs = {}
     try:
         kwargs = multi_host_sections.get_section_cluster_kwargs(
             host_config.hostname,
@@ -394,14 +394,14 @@ def get_aggregated_result(
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        return True, True, (
-            3,
-            cmk.base.crash_reporting.create_check_crash_dump(
-                host_config.hostname, service.check_plugin_name, service.item,
-                is_manual_check(host_config.hostname, service.check_plugin_name, service.item),
-                service.parameters, service.description),
-            [],
-        )
+        result = 3, cmk.base.crash_reporting.create_check_crash_dump(
+            host_config.hostname,
+            service.check_plugin_name,
+            service.item,
+            is_manual_check(host_config.hostname, service.check_plugin_name, service.item),
+            service.parameters,
+            service.description,
+        ), []
 
     return True, True, result
 
@@ -467,9 +467,13 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
         if cmk.utils.debug.enabled():
             raise
         result = 3, cmk.base.crash_reporting.create_check_crash_dump(
-            hostname, service.check_plugin_name, service.item,
-            is_manual_check(hostname, service.check_plugin_name, service.item), service.parameters,
-            service.description), []
+            hostname,
+            service.check_plugin_name,
+            service.item,
+            is_manual_check(hostname, service.check_plugin_name, service.item),
+            service.parameters,
+            service.description,
+        ), []
 
     _submit_check_result(
         hostname,

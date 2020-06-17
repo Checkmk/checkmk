@@ -54,6 +54,7 @@ from cmk.base.api.agent_based import checking_types
 from cmk.base.api.agent_based.register.check_plugins import MANAGEMENT_NAME_PREFIX
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     maincheckify,
+    resolve_legacy_name,
     wrap_parameters,
 )
 import cmk.base.autochecks as autochecks
@@ -1074,7 +1075,7 @@ def _enriched_discovered_services(
             continue
 
         yield DiscoveredService(
-            check_plugin_name=str(check_plugin_name),
+            check_plugin_name=resolve_legacy_name(check_plugin_name),
             item=service.item,
             description=description,
             parameters_unresolved=service.parameters,

@@ -1328,6 +1328,7 @@ def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
                 host_config,
                 ip_address,
                 discovered_service,
+                plugin,
                 lambda p=wrapped_params: p,  # type: ignore[misc]  # can't infer "type of lambda"
             )
 

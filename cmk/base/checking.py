@@ -329,6 +329,7 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
         host_config,
         ipaddress,
         service,
+        plugin,
         lambda: determine_check_params(service.parameters),
     )
 
@@ -346,13 +347,13 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
 
 
 def get_aggregated_result(
-    multi_host_sections: data_sources.MultiHostSections, host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress], service: Service,
-    params_function: Callable[[],
-                              checking_types.Parameters]) -> Tuple[bool, bool, ServiceCheckResult]:
-    # TODO (mo): centralize maincheckify: CMK-4295
-    plugin_name = PluginName(maincheckify(service.check_plugin_name))
-    plugin = config.get_registered_check_plugin(plugin_name)
+    multi_host_sections: data_sources.MultiHostSections,
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    service: Service,
+    plugin: Optional[checking_types.CheckPlugin],
+    params_function: Callable[[], checking_types.Parameters],
+) -> Tuple[bool, bool, ServiceCheckResult]:
     if plugin is None:
         return False, True, CHECK_NOT_IMPLEMENTED
 

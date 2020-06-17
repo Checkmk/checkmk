@@ -7,7 +7,7 @@
 """
 from typing import Any, Dict, List, Optional
 
-from cmk.snmplib.type_defs import SNMPTree
+from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 from cmk.base import config
 from cmk.base.api.agent_based.checking_types import CheckFunction, DiscoveryFunction
@@ -19,7 +19,6 @@ from cmk.base.api.agent_based.register.section_plugins import (
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
     HostLabelFunction,
-    SNMPDetectSpec,
     SNMPParseFunction,
 )
 

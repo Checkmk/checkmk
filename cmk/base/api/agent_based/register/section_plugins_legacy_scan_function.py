@@ -9,6 +9,9 @@ from typing import Callable, Dict, List
 import os.path
 import ast
 import inspect
+
+from cmk.snmplib.type_defs import SNMPDetectSpec
+
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,
@@ -20,7 +23,6 @@ from cmk.base.api.agent_based.utils import (
     equals,
     not_equals,
 )
-from cmk.base.api.agent_based.section_types import SNMPDetectSpec
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
 from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection, printer
 

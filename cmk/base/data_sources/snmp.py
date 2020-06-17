@@ -7,7 +7,7 @@
 import abc
 import ast
 import time
-from typing import cast, Dict, List, Optional, Set
+from typing import cast, Dict, Iterable, List, Optional, Set
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SectionName, SourceType
@@ -26,6 +26,7 @@ from cmk.fetchers import factory, SNMPDataFetcher
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
+import cmk.base.inventory_plugins as inventory_plugins
 from cmk.base.snmp_scan import PluginNameFilterFunction
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
@@ -76,12 +77,29 @@ class CachedSNMPDetector:
         # TODO (mo): With the new API we may be able to set this here.
         #            For now, it is set later :-(
         self._filter_function = None  # type: Optional[PluginNameFilterFunction]
+        self._for_inventory = False
         # Optional set: None: we never tried, empty: we tried, but found nothing
         self._cached_result = None  # type: Optional[Set[CheckPluginName]]
 
     def set_filter_function(self, filter_function):
         # type: (PluginNameFilterFunction) -> None
         self._filter_function = filter_function
+
+    def set_for_inventory(self, for_inventory):
+        # type: (bool) -> None
+        self._for_inventory = for_inventory
+
+    def sections(self):
+        # type: () -> Iterable[SNMPSectionPlugin]
+        # Assumption here is that inventory plugins are significantly fewer
+        # than check plugins.
+        if self._for_inventory:
+            return [
+                config.registered_snmp_sections[PluginName(info)]
+                for info in inventory_plugins.inv_info
+                if PluginName(info) in config.registered_snmp_sections
+            ]
+        return list(config.registered_snmp_sections.values())
 
     def __call__(
             self,
@@ -105,6 +123,7 @@ class CachedSNMPDetector:
         # this to evaluate if_disabled_if64_checks.
         check_api_utils.set_hostname(snmp_config.hostname)
         self._cached_result = self._filter_function(
+            self.sections(),
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
             for_mgmt_board=for_mgmt_board,
@@ -233,9 +252,10 @@ class SNMPDataSource(ABCSNMPDataSource):
         # type: () -> bool
         return self._do_snmp_scan
 
-    def set_check_plugin_name_filter(self, filter_func):
-        # type: (PluginNameFilterFunction) -> None
+    def set_check_plugin_name_filter(self, filter_func, *, inventory):
+        # type: (PluginNameFilterFunction, bool) -> None
         self._detector.set_filter_function(filter_func)
+        self._detector.set_for_inventory(inventory)
 
     def set_fetched_raw_section_names(self, raw_section_names):
         # type: (Set[PluginName]) -> None

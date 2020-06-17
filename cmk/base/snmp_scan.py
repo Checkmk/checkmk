@@ -20,7 +20,6 @@ import cmk.snmplib.snmp_modes as snmp_modes
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectAtom, SNMPDetectSpec
 
 import cmk.base.config as config
-from cmk.base.api import PluginName
 from cmk.base.config import SNMPSectionPlugin
 
 
@@ -54,6 +53,7 @@ def _evaluate_snmp_detection_atom(atom, cp_name, do_snmp_scan, *, backend):
 
 
 PluginNameFilterFunction = Callable[[
+    Iterable[SNMPSectionPlugin],
     NamedArg(str, 'on_error'),
     NamedArg(bool, 'do_snmp_scan'),
     NamedArg(bool, 'for_mgmt_board'),
@@ -62,18 +62,18 @@ PluginNameFilterFunction = Callable[[
 
 
 # gather auto_discovered check_plugin_names for this host
-def gather_available_raw_section_names(on_error,
+def gather_available_raw_section_names(sections,
+                                       on_error,
                                        do_snmp_scan,
-                                       for_inventory=False,
                                        for_mgmt_board=False,
                                        *,
                                        backend):
-    # type: (str, bool, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
+    # type: (Iterable[SNMPSectionPlugin], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     try:
         return _snmp_scan(
+            sections,
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
-            for_inv=for_inventory,
             for_mgmt_board=for_mgmt_board,
             backend=backend,
         )
@@ -90,13 +90,8 @@ OID_SYS_DESCR = ".1.3.6.1.2.1.1.1.0"
 OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 
 
-def _snmp_scan(on_error="ignore",
-               for_inv=False,
-               do_snmp_scan=True,
-               for_mgmt_board=False,
-               *,
-               backend):
-    # type: (str, bool, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
+def _snmp_scan(sections, on_error="ignore", do_snmp_scan=True, for_mgmt_board=False, *, backend):
+    # type: (Iterable[SNMPSectionPlugin], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
     _snmp_scan_cache_description(
@@ -108,7 +103,6 @@ def _snmp_scan(on_error="ignore",
         backend=backend,
     )
 
-    sections = _snmp_scan_get_sections(for_inv)
     found_plugins = _snmp_scan_find_plugins(sections,
                                             do_snmp_scan=do_snmp_scan,
                                             on_error=on_error,
@@ -120,7 +114,6 @@ def _snmp_scan(on_error="ignore",
         found_plugins,
         for_mgmt_board,
         for_discovery=True,
-        for_inventory=for_inv,
     )
 
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
@@ -143,21 +136,6 @@ def _snmp_scan_cache_description(binary_host, *, do_snmp_scan, backend):
                          "(Set %s and %s to \"\")\n", OID_SYS_DESCR, OID_SYS_OBJ)
         snmp_cache.set_single_oid_cache(OID_SYS_DESCR, "")
         snmp_cache.set_single_oid_cache(OID_SYS_OBJ, "")
-
-
-def _snmp_scan_get_sections(for_inv):
-    # type: (bool) -> Iterable[SNMPSectionPlugin]
-    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-    # TODO (mo): Assumption here is that inventory plugins are significantly fewer
-    #            than check plugins. We should pass an explicit list along, instead
-    #            of this flag. That way we would also get rid of the import above.
-    if for_inv:
-        return [
-            config.registered_snmp_sections[PluginName(info)]
-            for info in inventory_plugins.inv_info
-            if PluginName(info) in config.registered_snmp_sections
-        ]
-    return list(config.registered_snmp_sections.values())
 
 
 def _snmp_scan_find_plugins(sections, *, do_snmp_scan, on_error, backend):

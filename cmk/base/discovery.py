@@ -1000,7 +1000,8 @@ def _get_sources_for_discovery(
             if for_check_discovery and source.get_may_use_cache_file():
                 data_sources.SNMPDataSource.disable_data_source_cache()
 
-            source.set_check_plugin_name_filter(snmp_scan.gather_available_raw_section_names)
+            source.set_check_plugin_name_filter(snmp_scan.gather_available_raw_section_names,
+                                                inventory=False)
 
     return sources
 

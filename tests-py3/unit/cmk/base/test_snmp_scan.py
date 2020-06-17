@@ -204,12 +204,12 @@ def cache_oids(backend):
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 @pytest.mark.parametrize("oid", [snmp_scan.OID_SYS_DESCR, snmp_scan.OID_SYS_OBJ])
-def test_gather_available_raw_section_names__missing_oids(oid, backend):
+def test_snmp_scan_cache_description__oid_missing(oid, backend):
     snmp_cache.set_single_oid_cache(oid, None)
 
     with pytest.raises(snmp_scan.MKSNMPError, match=r"Cannot fetch [\w ]+ OID %s" % oid):
-        snmp_scan.gather_available_raw_section_names(
-            on_error="raise",
+        snmp_scan._snmp_scan_cache_description(
+            False,
             do_snmp_scan=False,
             backend=backend,
         )
@@ -217,38 +217,61 @@ def test_gather_available_raw_section_names__missing_oids(oid, backend):
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
-def test_gather_available_raw_section_names_defaults(backend, mocker):
-    # Whitebox testing: `len(sections)`.
-    mocker.patch.object(
-        snmp_scan,
-        "_evaluate_snmp_detection",
-        autospec=True,
-        side_effect=snmp_scan._evaluate_snmp_detection,
-    )
+def test_snmp_scan_cache_description__success_non_binary(backend):
+    sys_desc = snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR)
+    sys_obj = snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ)
+    assert sys_desc
+    assert sys_obj
 
-    # Whitebox testing: `len(found_plugins)`
-    mocker.patch.object(
-        snmp_scan.config,
-        "filter_by_management_board",
-        autospec=True,
-        side_effect=snmp_scan.config.filter_by_management_board,
-    )
-
-    assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR)
-    assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ)
-    result = snmp_scan.gather_available_raw_section_names(
-        on_error="raise",
+    snmp_scan._snmp_scan_cache_description(
+        False,
         do_snmp_scan=False,
         backend=backend,
     )
 
-    these_sections_count = snmp_scan._evaluate_snmp_detection.call_count  # type: ignore[attr-defined]
-    found_plugins = (
-        snmp_scan.config.filter_by_management_board.call_args.args[1]  # type: ignore[attr-defined]
+    # Success is no-op
+    assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR) == sys_desc
+    assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ) == sys_obj
+
+
+@pytest.mark.usefixtures("scenario")
+@pytest.mark.usefixtures("cache_oids")
+def test_snmp_scan_cache_description__success_binary(backend):
+    snmp_scan._snmp_scan_cache_description(
+        True,
+        do_snmp_scan=False,
+        backend=backend,
     )
-    assert isinstance(found_plugins, set)
 
-    assert these_sections_count > len(found_plugins)
-    assert len(found_plugins) > len(result)
+    assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR) == ""
+    assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ) == ""
 
-    assert result == {"snmp_uptime", "snmp_info", "hr_mem"}
+
+@pytest.mark.usefixtures("scenario")
+@pytest.mark.usefixtures("cache_oids")
+def test_snmp_scan_find_plugins__success(backend):
+    sections = config.registered_snmp_sections.values()
+    found = snmp_scan._snmp_scan_find_plugins(
+        sections,
+        do_snmp_scan=False,
+        on_error="raise",
+        backend=backend,
+    )
+
+    assert sections
+    assert found
+    assert len(sections) > len(found)
+
+
+@pytest.mark.usefixtures("scenario")
+@pytest.mark.usefixtures("cache_oids")
+def test_gather_available_raw_section_names_defaults(backend, mocker):
+    assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR)
+    assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ)
+
+    assert snmp_scan.gather_available_raw_section_names(
+        config.registered_snmp_sections.values(),
+        on_error="raise",
+        do_snmp_scan=False,
+        backend=backend,
+    ) == {"snmp_uptime", "snmp_info", "hr_mem"}

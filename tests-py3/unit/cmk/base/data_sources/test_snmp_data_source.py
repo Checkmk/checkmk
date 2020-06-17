@@ -221,11 +221,10 @@ def test_detector_requires_type_filter_function_and_ipaddress(monkeypatch, ipadd
     with pytest.raises(Exception):
         source._get_raw_section_names_to_process()
 
-    # One filter function is defined in cmk.base.inventory and another one in snmp_scan.
-    def dummy_filter_func(on_error, do_snmp_scan, for_mgmt_board=False, *, backend):
+    def dummy_filter_func(sections, on_error, do_snmp_scan, for_mgmt_board=False, *, backend):
         return set()
 
-    source.set_check_plugin_name_filter(dummy_filter_func)
+    source.set_check_plugin_name_filter(dummy_filter_func, inventory=False)
     if ipaddress is None:
         with pytest.raises(NotImplementedError):
             source._get_raw_section_names_to_process()

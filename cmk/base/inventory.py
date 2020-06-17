@@ -283,12 +283,11 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
             data_sources.SNMPDataSource.disable_data_source_cache()
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
-            source.set_check_plugin_name_filter(
-                functools.partial(
-                    snmp_scan.gather_available_raw_section_names,
-                    for_inventory=True,
-                    for_mgmt_board=False,
-                ))
+            source.set_check_plugin_name_filter(functools.partial(
+                snmp_scan.gather_available_raw_section_names,
+                for_mgmt_board=False,
+            ),
+                                                inventory=True)
             if multi_host_sections is not None:
                 # Status data inventory already provides filled multi_host_sections object.
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be

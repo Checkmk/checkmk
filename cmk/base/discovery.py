@@ -1306,15 +1306,21 @@ def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
 
     table = []  # type: CheckPreviewTable
     for check_source, discovered_service in services.values():
-        params = _preview_params(host_name, discovered_service, check_source)
+        # TODO (mo): centralize maincheckify: CMK-4295
+        plugin_name = PluginName(maincheckify(discovered_service.check_plugin_name))
+        plugin = config.get_registered_check_plugin(plugin_name)
+        params = _preview_params(host_name, discovered_service, plugin, check_source)
+
         if check_source in ['legacy', 'active', 'custom']:
             exitcode = None
             output = u"WAITING - %s check, cannot be done offline" % check_source.title()
             perfdata = []  # type: List[Metric]
+            ruleset_name = None  # type: Optional[RulesetName]
         else:
-            if discovered_service.check_plugin_name not in config.check_info:
+            if plugin is None:
                 continue  # Skip not existing check silently
 
+            ruleset_name = str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
             wrapped_params = checking_types.Parameters(wrap_parameters(params))
 
             _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
@@ -1328,7 +1334,7 @@ def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
         table.append((
             _preview_check_source(host_name, discovered_service, check_source),
             discovered_service.check_plugin_name,
-            _preview_ruleset_name(host_name, discovered_service, check_source),
+            ruleset_name,
             discovered_service.item,
             discovered_service.parameters_unresolved,
             params,
@@ -1353,25 +1359,16 @@ def _preview_check_source(
     return check_source
 
 
-def _preview_ruleset_name(
-    host_name: HostName,
-    discovered_service: DiscoveredService,
-    check_source: str,
-) -> Optional[RulesetName]:
-    if check_source in ["legacy", "active", "custom"]:
-        return None
-    return config.check_info[discovered_service.check_plugin_name]["group"]
-
-
 def _preview_params(
     host_name: HostName,
     discovered_service: DiscoveredService,
+    plugin: Optional[checking_types.CheckPlugin],
     check_source: str,
 ) -> Optional[CheckParameters]:
     params = None  # type: Optional[CheckParameters]
 
     if check_source not in ['legacy', 'active', 'custom']:
-        if discovered_service.check_plugin_name not in config.check_info:
+        if plugin is None:
             return params
         params = _get_check_parameters(discovered_service)
         if check_source != 'manual':
@@ -1417,7 +1414,8 @@ def _get_check_parameters(discovered_service):
         return params
     try:
         check_context = config.get_check_context(discovered_service.check_plugin_name)
-        # TODO: Can't we simply access check_context[paramstring]?
+        # We can't simply access check_context[paramstring], because we may have
+        # something like '{"foo": bar}'
         return eval(params, check_context, check_context)
     except Exception:
         raise MKGeneralException(

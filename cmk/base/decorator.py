@@ -61,7 +61,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
                 if cmk.utils.debug.enabled():
                     raise
                 crash_output = cmk.base.crash_reporting.create_check_crash_dump(
-                    hostname, check_plugin_name, None, False, None, description, [])
+                    hostname, check_plugin_name, None, False, None, description)
                 infotexts.append(crash_output.replace("Crash dump:\n", "Crash dump:\\n"))
                 status = max(status, cast(int, exit_spec.get("exception", 3)))
 

@@ -399,7 +399,7 @@ def get_aggregated_result(
             cmk.base.crash_reporting.create_check_crash_dump(
                 host_config.hostname, service.check_plugin_name, service.item,
                 is_manual_check(host_config.hostname, service.check_plugin_name, service.item),
-                service.parameters, service.description, kwargs),
+                service.parameters, service.description),
             [],
         )
 
@@ -469,7 +469,7 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
         result = 3, cmk.base.crash_reporting.create_check_crash_dump(
             hostname, service.check_plugin_name, service.item,
             is_manual_check(hostname, service.check_plugin_name, service.item), service.parameters,
-            service.description, section_content), []
+            service.description), []
 
     _submit_check_result(
         hostname,

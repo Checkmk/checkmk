@@ -24,7 +24,6 @@ from cmk.utils.type_defs import (
 
 import cmk.base.check_utils
 import cmk.base.config as config
-from cmk.base.data_sources.host_sections import FinalSectionContent
 from cmk.base.check_utils import CheckParameters, RawAgentData
 
 CrashReportStore = crash_reporting.CrashReportStore
@@ -46,9 +45,14 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
         })
 
 
-def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, params, description,
-                            info):
-    # type: (HostName, CheckPluginName, Item, bool, CheckParameters, ServiceName, FinalSectionContent) -> str
+def create_check_crash_dump(
+    hostname: HostName,
+    check_plugin_name: CheckPluginName,
+    item: Item,
+    is_manual_check: bool,
+    params: CheckParameters,
+    description: ServiceName,
+) -> str:
     """Create a crash dump from an exception occured during check execution
 
     The crash dump is put into a tarball, base64 encoded and appended to the long output
@@ -64,7 +68,6 @@ def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, 
             is_manual_check=is_manual_check,
             params=params,
             description=description,
-            info=info,
             text=text,
         )
         CrashReportStore().save(crash)
@@ -84,9 +87,16 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         return "check"
 
     @classmethod
-    def from_exception_and_context(cls, hostname, check_plugin_name, item, is_manual_check, params,
-                                   description, info, text):
-        # type: (HostName, CheckPluginName, Item, bool, CheckParameters, ServiceName, FinalSectionContent, str) -> crash_reporting.ABCCrashReport
+    def from_exception_and_context(
+        cls,
+        hostname: HostName,
+        check_plugin_name: CheckPluginName,
+        item: Item,
+        is_manual_check: bool,
+        params: CheckParameters,
+        description: ServiceName,
+        text: str,
+    ) -> crash_reporting.ABCCrashReport:
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
 

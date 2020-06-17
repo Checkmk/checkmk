@@ -81,7 +81,6 @@ def test_check_crash_report_from_exception(monkeypatch):
             is_manual_check=False,
             params=None,
             description=u"Uptime",
-            info="X",
             text=u"Output",
         )
 
@@ -122,7 +121,6 @@ def test_check_crash_report_save(monkeypatch):
             is_manual_check=False,
             params=None,
             description=u"Uptime",
-            info="X",
             text=u"Output",
         )
         store.save(crash)
@@ -153,7 +151,6 @@ def test_check_crash_report_read_agent_output(monkeypatch):
             is_manual_check=False,
             params=None,
             description=u"Uptime",
-            info="X",
             text=u"Output",
         )
 
@@ -184,7 +181,6 @@ def test_check_crash_report_read_snmp_info(monkeypatch):
             is_manual_check=False,
             params=None,
             description=u"Uptime",
-            info="X",
             text=u"Output",
         )
 

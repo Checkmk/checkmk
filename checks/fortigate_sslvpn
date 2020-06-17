@@ -35,12 +35,14 @@ def check_fortigate_sslvpn(_item, params, data):
                        infoname="Web sessions",
                        human_readable_func=str)
 
-    yield check_levels(data["tunnels"],
-                       "active_vpn_tunnels",
-                       params.get("tunnel_levels"),
-                       infoname="Tunnels",
-                       boundaries=(0, data["tunnels_max"]),
-                       human_readable_func=str)
+    yield check_levels(
+        data["tunnels"],
+        "active_vpn_tunnels",
+        (params or {}).get("tunnel_levels"),
+        infoname="Tunnels",
+        boundaries=(0, data["tunnels_max"]),
+        human_readable_func=str,
+    )
 
 
 check_info["fortigate_sslvpn"] = {

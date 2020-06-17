@@ -131,9 +131,8 @@ def check_ceph_status_osds(_no_item, params, parsed):
         ('full', 'Full', 2),
         ('nearfull', 'Near full', 1),
     ]:
-        ds_data = data.get(ds)
-        if ds_data is not None:
-            yield state, "%s: %s" % (title, ", ".join(ds_data))
+        if data.get(ds, False):
+            yield state, title
 
     yield 0, "OSDs: %s, Remapped PGs: %s" % (num_osds, data["num_remapped_pgs"])
 

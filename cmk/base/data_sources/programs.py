@@ -7,7 +7,7 @@
 import abc
 import os
 from pathlib import Path
-from typing import Dict, Optional, Set
+from typing import Dict, Optional
 
 from six import ensure_str
 

@@ -15,28 +15,28 @@ from cmk.utils.type_defs import CheckPluginName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
+from cmk.snmplib.type_defs import ABCSNMPBackend
 
 import cmk.base.config as config
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPDetectAtom, SNMPDetectSpec
 
 
-def _evaluate_snmp_detection(detect_spec, host_config, cp_name, do_snmp_scan, *, backend):
-    # type: (SNMPDetectSpec, SNMPHostConfig, str, bool, ABCSNMPBackend) -> bool
+def _evaluate_snmp_detection(detect_spec, cp_name, do_snmp_scan, *, backend):
+    # type: (SNMPDetectSpec, str, bool, ABCSNMPBackend) -> bool
     """Evaluate a SNMP detection specification
 
     Return True if and and only if at least all conditions in one "line" are True
     """
     return any(
         all(
-            _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan, backend=backend)
+            _evaluate_snmp_detection_atom(atom, cp_name, do_snmp_scan, backend=backend)
             for atom in alternative)
         for alternative in detect_spec)
 
 
-def _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan, *, backend):
-    # type: (SNMPDetectAtom, SNMPHostConfig, str, bool, ABCSNMPBackend) -> bool
+def _evaluate_snmp_detection_atom(atom, cp_name, do_snmp_scan, *, backend):
+    # type: (SNMPDetectAtom, str, bool, ABCSNMPBackend) -> bool
     oid, pattern, flag = atom
     value = snmp_modes.get_single_oid(
         oid,
@@ -52,17 +52,15 @@ def _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan, *, b
 
 
 # gather auto_discovered check_plugin_names for this host
-def gather_available_raw_section_names(host_config,
-                                       on_error,
+def gather_available_raw_section_names(on_error,
                                        do_snmp_scan,
                                        for_inventory=False,
                                        for_mgmt_board=False,
                                        *,
                                        backend):
-    # type: (SNMPHostConfig, str, bool, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
+    # type: (str, bool, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     try:
         return _snmp_scan(
-            host_config,
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
             for_inv=for_inventory,
@@ -78,19 +76,18 @@ def gather_available_raw_section_names(host_config,
     return set()
 
 
-def _snmp_scan(host_config,
-               on_error="ignore",
+def _snmp_scan(on_error="ignore",
                for_inv=False,
                do_snmp_scan=True,
                for_mgmt_board=False,
                *,
                backend):
-    # type: (SNMPHostConfig, str, bool, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
+    # type: (str, bool, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
 
-    snmp_cache.initialize_single_oid_cache(host_config)
+    snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
-    if not config.get_config_cache().in_binary_hostlist(host_config.hostname,
+    if not config.get_config_cache().in_binary_hostlist(backend.hostname,
                                                         config.snmp_without_sys_descr):
         for oid, name in [(".1.3.6.1.2.1.1.1.0", "system description"),
                           (".1.3.6.1.2.1.1.2.0", "system object")]:
@@ -125,7 +122,6 @@ def _snmp_scan(host_config,
         try:
             if _evaluate_snmp_detection(
                     section_plugin.detect_spec,
-                    host_config,
                     str(section_plugin.name),
                     do_snmp_scan,
                     backend=backend,
@@ -144,7 +140,7 @@ def _snmp_scan(host_config,
     _output_snmp_check_plugins("SNMP scan found", found_plugins)
 
     filtered = config.filter_by_management_board(
-        host_config.hostname,
+        backend.hostname,
         found_plugins,
         for_mgmt_board,
         for_discovery=True,
@@ -152,7 +148,7 @@ def _snmp_scan(host_config,
     )
 
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
-    snmp_cache.write_single_oid_cache(host_config)
+    snmp_cache.write_single_oid_cache(backend.config)
     return filtered
 
 

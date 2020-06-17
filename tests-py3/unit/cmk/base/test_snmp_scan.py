@@ -138,7 +138,6 @@ def test_snmp_scan_functions(monkeypatch, name, oids_data, expected_result):
     converted_detect_spec = create_detect_spec(name, scan_function, [])
     actual_result = snmp_scan._evaluate_snmp_detection(
         converted_detect_spec,
-        None,  # type: ignore # not used
         name,
         None,  # type: ignore # not used
         backend=None,  # type: ignore  # monkeypatched

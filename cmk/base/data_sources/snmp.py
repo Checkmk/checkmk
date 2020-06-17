@@ -39,7 +39,6 @@ from .abstract import DataSource, verify_ipaddress
 from .host_sections import AbstractHostSections
 
 PluginNameFilterFunction = Callable[[
-    SNMPHostConfig,
     NamedArg(str, 'on_error'),
     NamedArg(bool, 'do_snmp_scan'),
     NamedArg(bool, 'for_mgmt_board'),
@@ -115,7 +114,6 @@ class CachedSNMPDetector:
         # this to evaluate if_disabled_if64_checks.
         check_api_utils.set_hostname(snmp_config.hostname)
         self._cached_result = self._filter_function(
-            snmp_config,
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
             for_mgmt_board=for_mgmt_board,

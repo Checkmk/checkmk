@@ -20,7 +20,6 @@ from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.exceptions import MKAgentError
-from cmk.base.check_utils import CheckPluginName
 from cmk.utils.type_defs import HostName, HostAddress
 
 from .abstract import CheckMKAgentDataSource, RawAgentData

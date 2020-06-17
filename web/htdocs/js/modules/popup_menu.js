@@ -42,7 +42,7 @@ function popup_context() {
         spec = spec || {};
         this.id = spec.id || null;
         this.data = spec.data || null;
-        this.conclose = spec.onclose || null;
+        this.onclose = spec.onclose || null;
 
         if (this.id) {
             utils.add_event_handler("click", handle_popup_close);

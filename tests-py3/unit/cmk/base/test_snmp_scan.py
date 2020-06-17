@@ -4,11 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access, redefined-outer-name
 
 import pytest  # type: ignore[import]
 
+from testlib.base import Scenario
+
+import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
+from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
 
 import cmk.base.check_api as check_api
 import cmk.base.config as config
@@ -126,7 +130,7 @@ SNMP_SCAN_FUNCTIONS = config.snmp_scan_functions.copy()
             False,
         ),
     ])
-def test_snmp_scan_functions(monkeypatch, name, oids_data, expected_result):
+def test_evaluate_snmp_detection(monkeypatch, name, oids_data, expected_result):
     def oid_function(oid, _default=None, _name=None):
         return oids_data.get(oid)
 
@@ -143,3 +147,108 @@ def test_snmp_scan_functions(monkeypatch, name, oids_data, expected_result):
         backend=None,  # type: ignore  # monkeypatched
     )
     assert actual_result is expected_result
+
+
+# C/P from `test_snmplib_snmp_table`.
+SNMPConfig = SNMPHostConfig(
+    is_ipv6_primary=False,
+    hostname="testhost",
+    ipaddress="1.2.3.4",
+    credentials="",
+    port=42,
+    is_bulkwalk_host=False,
+    is_snmpv2or3_without_bulkwalk_host=False,
+    bulk_walk_size_of=0,
+    timing={},
+    oid_range_limits=[],
+    snmpv3_contexts=[],
+    character_encoding="ascii",
+    is_usewalk_host=False,
+    is_inline_snmp_host=False,
+    record_stats=False,
+)
+
+
+# Adapted from `test_snmplib_snmp_table`.
+class SNMPTestBackend(ABCSNMPBackend):
+    def get(self, oid, context_name=None):
+        raise NotImplementedError("get")
+
+    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
+        raise NotImplementedError("walk")
+
+
+@pytest.fixture
+def backend():
+    return SNMPTestBackend(SNMPConfig)
+
+
+@pytest.fixture
+def scenario(backend, monkeypatch):
+    # Set the `ruleset_matcher` on the config.
+    ts = Scenario()
+    ts.add_host(backend.hostname)
+    ts.apply(monkeypatch)
+
+
+@pytest.fixture
+def cache_oids(backend):
+    # Cache OIDs to avoid actual SNMP I/O.
+    snmp_cache.initialize_single_oid_cache(backend.config)
+    snmp_cache.set_single_oid_cache(snmp_scan.OID_SYS_DESCR, "sys description")
+    snmp_cache.set_single_oid_cache(snmp_scan.OID_SYS_OBJ, "sys object")
+    yield
+    snmp_cache._clear_other_hosts_oid_cache(backend.hostname)
+
+
+@pytest.mark.usefixtures("scenario")
+@pytest.mark.usefixtures("cache_oids")
+@pytest.mark.parametrize("oid", [snmp_scan.OID_SYS_DESCR, snmp_scan.OID_SYS_OBJ])
+def test_gather_available_raw_section_names__missing_oids(oid, backend):
+    snmp_cache.set_single_oid_cache(oid, None)
+
+    with pytest.raises(snmp_scan.MKSNMPError, match=r"Cannot fetch [\w ]+ OID %s" % oid):
+        snmp_scan.gather_available_raw_section_names(
+            on_error="raise",
+            do_snmp_scan=False,
+            backend=backend,
+        )
+
+
+@pytest.mark.usefixtures("scenario")
+@pytest.mark.usefixtures("cache_oids")
+def test_gather_available_raw_section_names_defaults(backend, mocker):
+    # Whitebox testing: `len(these_sections)`.
+    mocker.patch.object(
+        snmp_scan,
+        "_evaluate_snmp_detection",
+        autospec=True,
+        side_effect=snmp_scan._evaluate_snmp_detection,
+    )
+
+    # Whitebox testing: `len(found_plugins)`
+    mocker.patch.object(
+        snmp_scan.config,
+        "filter_by_management_board",
+        autospec=True,
+        side_effect=snmp_scan.config.filter_by_management_board,
+    )
+
+    assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR)
+    assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ)
+    result = snmp_scan.gather_available_raw_section_names(
+        on_error="raise",
+        do_snmp_scan=False,
+        backend=backend,
+    )
+
+    these_sections_count = snmp_scan._evaluate_snmp_detection.call_count  # type: ignore[attr-defined]
+    found_plugins = (
+        snmp_scan.config.filter_by_management_board.call_args.args[1]  # type: ignore[attr-defined]
+    )
+    assert isinstance(found_plugins, set)
+
+    assert these_sections_count > len(found_plugins)
+    assert len(found_plugins) > len(result)
+
+    assert result == {"snmp_uptime", "snmp_info", "hr_mem"}

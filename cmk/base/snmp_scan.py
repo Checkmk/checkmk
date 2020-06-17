@@ -75,6 +75,10 @@ def gather_available_raw_section_names(on_error,
     return set()
 
 
+OID_SYS_DESCR = ".1.3.6.1.2.1.1.1.0"
+OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
+
+
 def _snmp_scan(on_error="ignore",
                for_inv=False,
                do_snmp_scan=True,
@@ -88,8 +92,7 @@ def _snmp_scan(on_error="ignore",
     console.vverbose("  SNMP scan:\n")
     if not config.get_config_cache().in_binary_hostlist(backend.hostname,
                                                         config.snmp_without_sys_descr):
-        for oid, name in [(".1.3.6.1.2.1.1.1.0", "system description"),
-                          (".1.3.6.1.2.1.1.2.0", "system object")]:
+        for oid, name in [(OID_SYS_DESCR, "system description"), (OID_SYS_OBJ, "system object")]:
             value = snmp_modes.get_single_oid(oid, do_snmp_scan=do_snmp_scan, backend=backend)
             if value is None:
                 raise MKSNMPError("Cannot fetch %s OID %s. Please check your SNMP "
@@ -98,9 +101,9 @@ def _snmp_scan(on_error="ignore",
     else:
         # Fake OID values to prevent issues with a lot of scan functions
         console.vverbose("       Skipping system description OID "
-                         "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
-        snmp_cache.set_single_oid_cache(".1.3.6.1.2.1.1.1.0", "")
-        snmp_cache.set_single_oid_cache(".1.3.6.1.2.1.1.2.0", "")
+                         "(Set %s and %s to \"\")\n", OID_SYS_DESCR, OID_SYS_OBJ)
+        snmp_cache.set_single_oid_cache(OID_SYS_DESCR, "")
+        snmp_cache.set_single_oid_cache(OID_SYS_OBJ, "")
 
     # TODO (mo): Assumption here is that inventory plugins are significantly fewer
     #            than check plugins. We should pass an explicit list along, instead

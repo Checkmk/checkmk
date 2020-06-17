@@ -40,6 +40,9 @@ def parse_fortigate_sslvpn(info):
 
 @get_parsed_item_data
 def check_fortigate_sslvpn(_item, params, data):
+    if params is None:
+        params = {}
+
     fn_bool_state = {"1": "disabled", "2": "enabled"}
     yield 0, "%s" % fn_bool_state[data["state"]]
 
@@ -58,7 +61,7 @@ def check_fortigate_sslvpn(_item, params, data):
     tunnel_status, infotext, tunnel_perf = check_levels(
         data["tunnels"],
         "active_vpn_tunnels",
-        (params or {}).get("tunnel_levels"),
+        params.get("tunnel_levels"),
         infoname="Tunnels",
         human_readable_func=str,
     )

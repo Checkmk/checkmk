@@ -1,0 +1,17 @@
+Title: Optional package: Update fortigate_sslvpn-1.0: Fix crash if old-style parameters
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p14
+Date: 1592387456
+Class: fix
+
+If old-style parameters (None) are discovered then the service raise an AttributeError:
+'NoneType' object has no attribute 'get'.
+
+This change updates the optional extension package fortigate_sslvpn-1.0.  For a
+first installation, you can find this package in the Extension packages page.
+The fortigate_sslvpn-1.0 package is listed as an optional extension package and
+becomes available to your site after performing the "Install this package"
+action.

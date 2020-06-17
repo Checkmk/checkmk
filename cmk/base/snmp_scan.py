@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Iterable, Set
+from typing import Callable, Iterable, Set
+
+from mypy_extensions import NamedArg
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
@@ -19,6 +21,7 @@ from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectAtom, SNMPDetectSpec
 
 import cmk.base.config as config
 from cmk.base.api import PluginName
+from cmk.base.config import SNMPSectionPlugin
 
 
 def _evaluate_snmp_detection(detect_spec, cp_name, do_snmp_scan, *, backend):
@@ -48,6 +51,14 @@ def _evaluate_snmp_detection_atom(atom, cp_name, do_snmp_scan, *, backend):
         return pattern == '.*' and not flag
     # ignore case!
     return bool(regex(pattern, re.IGNORECASE).fullmatch(value)) is flag
+
+
+PluginNameFilterFunction = Callable[[
+    NamedArg(str, 'on_error'),
+    NamedArg(bool, 'do_snmp_scan'),
+    NamedArg(bool, 'for_mgmt_board'),
+    NamedArg(ABCSNMPBackend, 'backend'),
+], Set[CheckPluginName]]
 
 
 # gather auto_discovered check_plugin_names for this host
@@ -86,12 +97,40 @@ def _snmp_scan(on_error="ignore",
                *,
                backend):
     # type: (str, bool, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
-    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
-    if not config.get_config_cache().in_binary_hostlist(backend.hostname,
-                                                        config.snmp_without_sys_descr):
+    _snmp_scan_cache_description(
+        config.get_config_cache().in_binary_hostlist(
+            backend.hostname,
+            config.snmp_without_sys_descr,
+        ),
+        do_snmp_scan=do_snmp_scan,
+        backend=backend,
+    )
+
+    sections = _snmp_scan_get_sections(for_inv)
+    found_plugins = _snmp_scan_find_plugins(sections,
+                                            do_snmp_scan=do_snmp_scan,
+                                            on_error=on_error,
+                                            backend=backend)
+    _output_snmp_check_plugins("SNMP scan found", found_plugins)
+
+    filtered = config.filter_by_management_board(
+        backend.hostname,
+        found_plugins,
+        for_mgmt_board,
+        for_discovery=True,
+        for_inventory=for_inv,
+    )
+
+    _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
+    snmp_cache.write_single_oid_cache(backend.config)
+    return filtered
+
+
+def _snmp_scan_cache_description(binary_host, *, do_snmp_scan, backend):
+    # type: (bool, bool, ABCSNMPBackend) -> None
+    if not binary_host:
         for oid, name in [(OID_SYS_DESCR, "system description"), (OID_SYS_OBJ, "system object")]:
             value = snmp_modes.get_single_oid(oid, do_snmp_scan=do_snmp_scan, backend=backend)
             if value is None:
@@ -105,22 +144,26 @@ def _snmp_scan(on_error="ignore",
         snmp_cache.set_single_oid_cache(OID_SYS_DESCR, "")
         snmp_cache.set_single_oid_cache(OID_SYS_OBJ, "")
 
+
+def _snmp_scan_get_sections(for_inv):
+    # type: (bool) -> Iterable[SNMPSectionPlugin]
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     # TODO (mo): Assumption here is that inventory plugins are significantly fewer
     #            than check plugins. We should pass an explicit list along, instead
     #            of this flag. That way we would also get rid of the import above.
     if for_inv:
-        section_names = [PluginName(n) for n in inventory_plugins.inv_info]
-        these_sections = [
-            config.registered_snmp_sections[section_name]
-            for section_name in section_names
-            if section_name in config.registered_snmp_sections
+        return [
+            config.registered_snmp_sections[PluginName(info)]
+            for info in inventory_plugins.inv_info
+            if PluginName(info) in config.registered_snmp_sections
         ]
-    else:
-        these_sections = list(config.registered_snmp_sections.values())
+    return list(config.registered_snmp_sections.values())
 
+
+def _snmp_scan_find_plugins(sections, *, do_snmp_scan, on_error, backend):
+    # type: (Iterable[SNMPSectionPlugin], bool, str, ABCSNMPBackend) -> Set[CheckPluginName]
     found_plugins = set()  # type: Set[CheckPluginName]
-
-    for section_plugin in these_sections:
+    for section_plugin in sections:
         try:
             if _evaluate_snmp_detection(
                     section_plugin.detect_spec,
@@ -138,20 +181,7 @@ def _snmp_scan(on_error="ignore",
                 console.warning("   Exception in SNMP scan function of %s" % section_plugin.name)
             elif on_error == "raise":
                 raise
-
-    _output_snmp_check_plugins("SNMP scan found", found_plugins)
-
-    filtered = config.filter_by_management_board(
-        backend.hostname,
-        found_plugins,
-        for_mgmt_board,
-        for_discovery=True,
-        for_inventory=for_inv,
-    )
-
-    _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
-    snmp_cache.write_single_oid_cache(backend.config)
-    return filtered
+    return found_plugins
 
 
 def _output_snmp_check_plugins(title, collection):

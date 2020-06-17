@@ -7,15 +7,12 @@
 import abc
 import ast
 import time
-from typing import Callable, cast, Dict, List, Optional, Set
-
-from mypy_extensions import NamedArg
+from typing import cast, Dict, List, Optional, Set
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import (
-    ABCSNMPBackend,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPPersistedSections,
@@ -29,6 +26,7 @@ from cmk.fetchers import factory, SNMPDataFetcher
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
+from cmk.base.snmp_scan import PluginNameFilterFunction
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
@@ -37,13 +35,6 @@ from cmk.base.exceptions import MKAgentError
 
 from .abstract import DataSource, verify_ipaddress
 from .host_sections import AbstractHostSections
-
-PluginNameFilterFunction = Callable[[
-    NamedArg(str, 'on_error'),
-    NamedArg(bool, 'do_snmp_scan'),
-    NamedArg(bool, 'for_mgmt_board'),
-    NamedArg(ABCSNMPBackend, 'backend'),
-], Set[CheckPluginName]]
 
 #.
 #   .--SNMP----------------------------------------------------------------.

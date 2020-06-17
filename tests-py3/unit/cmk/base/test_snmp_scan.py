@@ -218,7 +218,7 @@ def test_gather_available_raw_section_names__missing_oids(oid, backend):
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 def test_gather_available_raw_section_names_defaults(backend, mocker):
-    # Whitebox testing: `len(these_sections)`.
+    # Whitebox testing: `len(sections)`.
     mocker.patch.object(
         snmp_scan,
         "_evaluate_snmp_detection",

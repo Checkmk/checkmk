@@ -77,9 +77,11 @@ def test_check_crash_report_from_exception(monkeypatch):
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
             hostname="testhost",
             check_plugin_name="uptime",
-            item=None,
+            check_plugin_kwargs={
+                "item": None,
+                "params": None
+            },
             is_manual_check=False,
-            params=None,
             description=u"Uptime",
             text=u"Output",
         )
@@ -117,9 +119,8 @@ def test_check_crash_report_save(monkeypatch):
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
             hostname="testhost",
             check_plugin_name="uptime",
-            item=None,
+            check_plugin_kwargs={},
             is_manual_check=False,
-            params=None,
             description=u"Uptime",
             text=u"Output",
         )
@@ -147,9 +148,8 @@ def test_check_crash_report_read_agent_output(monkeypatch):
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
             hostname="testhost",
             check_plugin_name="uptime",
-            item=None,
+            check_plugin_kwargs={},
             is_manual_check=False,
-            params=None,
             description=u"Uptime",
             text=u"Output",
         )
@@ -177,9 +177,8 @@ def test_check_crash_report_read_snmp_info(monkeypatch):
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
             hostname="testhost",
             check_plugin_name="snmp_uptime",
-            item=None,
+            check_plugin_kwargs={},
             is_manual_check=False,
-            params=None,
             description=u"Uptime",
             text=u"Output",
         )

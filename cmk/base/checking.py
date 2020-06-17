@@ -397,9 +397,8 @@ def get_aggregated_result(
         result = 3, cmk.base.crash_reporting.create_check_crash_dump(
             host_config.hostname,
             service.check_plugin_name,
-            service.item,
+            kwargs,
             is_manual_check(host_config.hostname, service.check_plugin_name, service.item),
-            service.parameters,
             service.description,
         ), []
 
@@ -446,8 +445,8 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
         # Call the actual check function
         item_state.reset_wrapped_counters()
 
-        raw_result = check_function(service.item, legacy_determine_check_params(service.parameters),
-                                    section_content)
+        used_params = legacy_determine_check_params(service.parameters)
+        raw_result = check_function(service.item, used_params, section_content)
         result = sanitize_check_result(raw_result)
         item_state.raise_counter_wrap()
 
@@ -469,9 +468,12 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
         result = 3, cmk.base.crash_reporting.create_check_crash_dump(
             hostname,
             service.check_plugin_name,
-            service.item,
+            {
+                "item": service.item,
+                "params": used_params,
+                "section_content": section_content
+            },
             is_manual_check(hostname, service.check_plugin_name, service.item),
-            service.parameters,
             service.description,
         ), []
 

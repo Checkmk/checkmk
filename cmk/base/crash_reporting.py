@@ -8,7 +8,7 @@
 import os
 import sys
 import traceback
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from pathlib import Path
 
 import cmk.utils.debug
@@ -48,9 +48,8 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
 def create_check_crash_dump(
     hostname: HostName,
     check_plugin_name: CheckPluginName,
-    item: Item,
+    check_plugin_kwargs: Dict[str, Any],
     is_manual_check: bool,
-    params: CheckParameters,
     description: ServiceName,
 ) -> str:
     """Create a crash dump from an exception occured during check execution
@@ -64,9 +63,8 @@ def create_check_crash_dump(
         crash = CheckCrashReport.from_exception_and_context(
             hostname=hostname,
             check_plugin_name=check_plugin_name,
-            item=item,
+            check_plugin_kwargs=check_plugin_kwargs,
             is_manual_check=is_manual_check,
-            params=params,
             description=description,
             text=text,
         )
@@ -91,9 +89,8 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         cls,
         hostname: HostName,
         check_plugin_name: CheckPluginName,
-        item: Item,
+        check_plugin_kwargs: Dict[str, Any],
         is_manual_check: bool,
-        params: CheckParameters,
         description: ServiceName,
         text: str,
     ) -> crash_reporting.ABCCrashReport:
@@ -110,11 +107,10 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 "is_cluster": host_config.is_cluster,
                 "description": description,
                 "check_type": check_plugin_name,
-                "item": item,
-                "params": params,
                 "uses_snmp": cmk.base.check_utils.is_snmp_check(check_plugin_name),
                 "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
                 "manual_check": is_manual_check,
+                **check_plugin_kwargs,
             },
             type_specific_attributes={
                 "snmp_info": snmp_info,

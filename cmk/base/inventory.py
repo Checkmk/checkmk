@@ -10,7 +10,7 @@ In the future all inventory code should be moved to this module."""
 
 import functools
 import os
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -22,7 +22,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.type_defs import (
-    CheckPluginName,
     HostAddress,
     HostName,
     Metric,

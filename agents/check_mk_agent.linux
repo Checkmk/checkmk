@@ -151,7 +151,7 @@ section_mem() {
 }
 
 section_cpu() {
-    if [ "$(uname -m)" = "armv7l" ]; then
+    if [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv6l" ]; then
         CPU_REGEX='^processor'
     else
         CPU_REGEX='^CPU|^processor'

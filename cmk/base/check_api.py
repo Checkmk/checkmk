@@ -69,6 +69,8 @@ Global variables:
 # NOTE: The above suppression is necessary because our testing framework blindly
 # concatenates lots of files, including this one.
 
+# pylint: disable=unused-import
+
 # We import several modules here for the checks
 
 import calendar

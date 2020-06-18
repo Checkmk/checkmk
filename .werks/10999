@@ -7,7 +7,7 @@ Version: 1.6.0p14
 Date: 1592387456
 Class: fix
 
-If old-style parameters (None) are discovered then the service raise an AttributeError:
+If old-style parameters (None) are discovered then the service raises an AttributeError:
 'NoneType' object has no attribute 'get'.
 
 This change updates the optional extension package fortigate_sslvpn-1.0.  For a

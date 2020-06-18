@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Callable, Iterable, Set
+from typing import Callable, Iterable, NamedTuple, Set
 
 from mypy_extensions import NamedArg
 
@@ -13,13 +13,16 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, PluginName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectAtom, SNMPDetectSpec
 
-from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
+SNMPScanSection = NamedTuple("SNMPScanSection", [
+    ("name", PluginName),
+    ("specs", SNMPDetectSpec),
+])
 
 
 def _evaluate_snmp_detection(detect_spec, cp_name, do_snmp_scan, *, backend):
@@ -52,7 +55,7 @@ def _evaluate_snmp_detection_atom(atom, cp_name, do_snmp_scan, *, backend):
 
 
 PluginNameFilterFunction = Callable[[
-    Iterable[SNMPSectionPlugin],
+    Iterable[SNMPScanSection],
     NamedArg(str, 'on_error'),
     NamedArg(bool, 'do_snmp_scan'),
     NamedArg(bool, "binary_host"),
@@ -62,7 +65,7 @@ PluginNameFilterFunction = Callable[[
 
 # gather auto_discovered check_plugin_names for this host
 def gather_available_raw_section_names(sections, on_error, do_snmp_scan, *, binary_host, backend):
-    # type: (Iterable[SNMPSectionPlugin], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
+    # type: (Iterable[SNMPScanSection], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     try:
         return _snmp_scan(
             sections,
@@ -85,7 +88,7 @@ OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 
 
 def _snmp_scan(sections, on_error="ignore", do_snmp_scan=True, *, binary_host, backend):
-    # type: (Iterable[SNMPSectionPlugin], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
+    # type: (Iterable[SNMPScanSection], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
     _snmp_scan_cache_description(
@@ -121,24 +124,24 @@ def _snmp_scan_cache_description(binary_host, *, do_snmp_scan, backend):
 
 
 def _snmp_scan_find_plugins(sections, *, do_snmp_scan, on_error, backend):
-    # type: (Iterable[SNMPSectionPlugin], bool, str, ABCSNMPBackend) -> Set[CheckPluginName]
+    # type: (Iterable[SNMPScanSection], bool, str, ABCSNMPBackend) -> Set[CheckPluginName]
     found_plugins = set()  # type: Set[CheckPluginName]
-    for section_plugin in sections:
+    for name, specs in sections:
         try:
             if _evaluate_snmp_detection(
-                    section_plugin.detect_spec,
-                    str(section_plugin.name),
+                    specs,
+                    str(name),
                     do_snmp_scan,
                     backend=backend,
             ):
-                found_plugins.add(str(section_plugin.name))
+                found_plugins.add(str(name))
         except MKGeneralException:
             # some error messages which we explicitly want to show to the user
             # should be raised through this
             raise
         except Exception:
             if on_error == "warn":
-                console.warning("   Exception in SNMP scan function of %s" % section_plugin.name)
+                console.warning("   Exception in SNMP scan function of %s" % name)
             elif on_error == "raise":
                 raise
     return found_plugins

@@ -19,6 +19,7 @@ import cmk.base.config as config
 import cmk.base.snmp_scan as snmp_scan
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     create_detect_spec,)
+from cmk.base.snmp_scan import SNMPScanSection
 
 config.load_all_checks(check_api.get_check_api_context)
 
@@ -250,7 +251,9 @@ def test_snmp_scan_cache_description__success_binary(backend):
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 def test_snmp_scan_find_plugins__success(backend):
-    sections = config.registered_snmp_sections.values()
+    sections = [
+        SNMPScanSection(_.name, _.detect_spec) for _ in config.registered_snmp_sections.values()
+    ]
     found = snmp_scan._snmp_scan_find_plugins(
         sections,
         do_snmp_scan=False,
@@ -270,7 +273,7 @@ def test_gather_available_raw_section_names_defaults(backend, mocker):
     assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ)
 
     assert snmp_scan.gather_available_raw_section_names(
-        config.registered_snmp_sections.values(),
+        [SNMPScanSection(_.name, _.detect_spec) for _ in config.registered_snmp_sections.values()],
         on_error="raise",
         do_snmp_scan=False,
         binary_host=False,

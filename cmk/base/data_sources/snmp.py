@@ -34,7 +34,7 @@ from cmk.fetchers import factory, SNMPDataFetcher
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.inventory_plugins as inventory_plugins
-from cmk.base.snmp_scan import PluginNameFilterFunction
+from cmk.base.snmp_scan import PluginNameFilterFunction, SNMPScanSection
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
@@ -96,16 +96,13 @@ class CachedSNMPDetector:
         self._for_inventory = for_inventory
 
     def sections(self):
-        # type: () -> Iterable[SNMPSectionPlugin]
-        # Assumption here is that inventory plugins are significantly fewer
-        # than check plugins.
-        if self._for_inventory:
-            return [
-                config.registered_snmp_sections[PluginName(info)]
-                for info in inventory_plugins.inv_info
-                if PluginName(info) in config.registered_snmp_sections
-            ]
-        return list(config.registered_snmp_sections.values())
+        # type: () -> Iterable[SNMPScanSection]
+        sections = []
+        for name, section in config.registered_snmp_sections.items():
+            if self._for_inventory and not inventory_plugins.is_snmp_plugin(str(name)):
+                continue
+            sections.append(SNMPScanSection(section.name, section.detect_spec))
+        return sections
 
     def __call__(
             self,

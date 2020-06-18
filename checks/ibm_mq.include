@@ -31,12 +31,13 @@ def parse_runmqsc_display_output(info, group_by_object):
         information if there are more values to come after the current one
         (True), or if it is the last value (False).
         """
-        it = iter(iterable)
-        last = next(it)
-        for val in it:
-            yield last, True
-            last = val
-        yield last, False
+        sentinel = object()
+        previous = sentinel
+        for value in iter(iterable):
+            if previous is not sentinel:
+                yield previous, True
+            previous = value
+        yield previous, False
 
     parsed = {}
     attributes = {}

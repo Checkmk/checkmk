@@ -10,7 +10,6 @@ def _try_set(node, nkey, parsed, pkey):
         node[nkey] = parsed[pkey]
     except KeyError:
         pass
-    return
 
 
 def parse_aix_lparstat_inventory(info):

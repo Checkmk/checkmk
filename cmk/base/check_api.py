@@ -712,12 +712,18 @@ def discover(selector=None, default_params=None):
             if isinstance(parsed, dict):
                 filterer = validate_filter(filter_function)
                 for key, value in parsed.items():
-                    for n in _get_discovery_iter(filterer(key, value), lambda: key):
+                    for n in _get_discovery_iter(
+                            filterer(key, value),
+                            lambda: key,  # pylint: disable=cell-var-from-loop
+                    ):
                         yield (n, params)
             elif isinstance(parsed, (list, tuple)):
                 filterer = validate_filter(filter_function)
                 for entry in parsed:
-                    for n in _get_discovery_iter(filterer(entry), lambda: entry[0]):
+                    for n in _get_discovery_iter(
+                            filterer(entry),
+                            lambda: entry[0],  # pylint: disable=cell-var-from-loop
+                    ):
                         yield (n, params)
             else:
                 raise ValueError(

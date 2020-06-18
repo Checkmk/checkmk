@@ -18,7 +18,6 @@ import cmk.utils.crash_reporting as crash_reporting
 from cmk.utils.type_defs import (
     HostName,
     CheckPluginName,
-    Item,
     ServiceName,
 )
 

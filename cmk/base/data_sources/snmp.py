@@ -19,6 +19,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.snmplib.snmp_scan import PluginNameFilterFunction, SNMPScanSection
 from cmk.snmplib.type_defs import (
     SNMPCredentials,
     SNMPHostConfig,
@@ -34,7 +35,6 @@ from cmk.fetchers import factory, SNMPDataFetcher
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.inventory_plugins as inventory_plugins
-from cmk.base.snmp_scan import PluginNameFilterFunction, SNMPScanSection
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo

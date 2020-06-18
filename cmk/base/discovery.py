@@ -50,6 +50,8 @@ from cmk.utils.type_defs import (
 )
 import cmk.utils.cleanup
 
+import cmk.snmplib.snmp_scan as snmp_scan
+
 from cmk.base.api.agent_based import checking_types
 from cmk.base.api.agent_based.register.check_plugins import MANAGEMENT_NAME_PREFIX
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
@@ -69,7 +71,6 @@ import cmk.base.data_sources as data_sources
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
-import cmk.base.snmp_scan as snmp_scan
 import cmk.base.utils
 
 from cmk.base.caching import config_cache as _config_cache

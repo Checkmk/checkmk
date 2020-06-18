@@ -31,6 +31,8 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
+import cmk.snmplib.snmp_scan as snmp_scan
+
 import cmk.base.check_api as check_api
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -38,7 +40,6 @@ import cmk.base.data_sources as data_sources
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
-import cmk.base.snmp_scan as snmp_scan
 from cmk.base.data_sources.snmp import SNMPHostSections
 from cmk.base.discovered_labels import HostLabel
 

@@ -12,14 +12,14 @@ from testlib.base import Scenario
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
+import cmk.snmplib.snmp_scan as snmp_scan
+from cmk.snmplib.snmp_scan import SNMPScanSection
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
 
 import cmk.base.check_api as check_api
 import cmk.base.config as config
-import cmk.base.snmp_scan as snmp_scan
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     create_detect_spec,)
-from cmk.base.snmp_scan import SNMPScanSection
 
 config.load_all_checks(check_api.get_check_api_context)
 

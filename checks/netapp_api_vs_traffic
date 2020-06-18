@@ -119,7 +119,11 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                 ref = now
 
             rate = get_rate('%s.%s' % (protocol, what), ref, int(data[what]) * scale)
-            yield 0, "%s %s: %s" % (protoname, perftext, format_func(rate)), [(perfname, rate)]
+            yield 0, "%s %s: %s" % (
+                protoname,
+                perftext,
+                format_func(rate),  # pylint: disable=not-callable
+            ), [(perfname, rate)]
 
 
 check_info["netapp_api_vs_traffic"] = {

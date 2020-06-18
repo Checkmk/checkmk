@@ -126,7 +126,7 @@ check_info['aws_elb.latency'] = {
 
 
 def check_aws_elb_http_elb(item, params, parsed):
-    return check_aws_http_elb(params.get("levels_load_balancers", params), parsed, ['4xx', '5xx'],
+    return check_aws_http_errors(params.get("levels_load_balancers", params), parsed, ['4xx', '5xx'],
                               'HTTPCode_ELB_%s')
 
 
@@ -151,7 +151,7 @@ check_info['aws_elb.http_elb'] = {
 
 
 def check_aws_elb_http_backend(item, params, parsed):
-    return check_aws_http_elb(params.get("levels_backend_targets", params), parsed,
+    return check_aws_http_errors(params.get("levels_backend_targets", params), parsed,
                               ['2xx', '3xx', '4xx', '5xx'], 'HTTPCode_Backend_%s')
 
 

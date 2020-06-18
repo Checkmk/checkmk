@@ -77,7 +77,8 @@ def _check_capacity_minmax_metrics(params, parsed, to_check):
                 metric_name,
                 _capacity_params_to_levels(params.get(params_key, {})),
                 infoname=infoname,
-                human_readable_func=lambda f: aws_get_float_human_readable(f, unit=unit))
+                human_readable_func=lambda f, _u=unit: aws_get_float_human_readable(f, unit=_u),
+            )
 
 
 def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):

@@ -477,24 +477,21 @@ class MultiHostSections:
         Please note that this is not a check/subcheck individual setting. This option is related
         to the agent section.
         """
-        if section_name not in config.check_info or not config.check_info[section_name][
-                "extra_sections"]:
+        extra_sections = config.check_info.get(str(section_name), {}).get("extra_sections", [])
+        if not extra_sections:
             return section_content
 
         # In case of extra_sections the existing info is wrapped into a new list to which all
         # extra sections are appended
-        section_contents = [section_content]
-        for extra_section_name in config.check_info[section_name]["extra_sections"]:
-            section_contents.append(
-                self.get_section_content(
-                    hostname,
-                    ipaddress,
-                    management_board_info,
-                    extra_section_name,
-                    for_discovery,
-                ),)
-
-        return section_contents
+        return [section_content] + [
+            self.get_section_content(
+                hostname,
+                ipaddress,
+                management_board_info,
+                extra_section_name,
+                for_discovery,
+            ) for extra_section_name in extra_sections
+        ]
 
     def _update_with_parse_function(self, section_content, section_name):
         # type: (AbstractSectionContent, SectionName) -> ParsedSectionContent

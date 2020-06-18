@@ -111,7 +111,7 @@ from cmk.utils.type_defs import EvalableFloat as as_float
 from cmk.utils.type_defs import (
     HostName,
     MetricName,
-    PluginName as _PluginName,
+    SectionName as _SectionName,
     ServiceCheckResult,
     ServiceDetails,
     ServiceName,
@@ -581,7 +581,7 @@ def _agent_cache_file_age(hostname, check_plugin_name):
     # For old-style plugins, plugin and section name are same, so check the
     # corresponding section:
     section_name_str = _cmk_utils.check_utils.section_name_of(check_plugin_name)
-    if _PluginName(section_name_str) in _config.registered_snmp_sections:
+    if _SectionName(section_name_str) in _config.registered_snmp_sections:
         cachefile = "%s/%s.%s" % (_paths.tcp_cache_dir, hostname, section_name_str)
     else:
         cachefile = "%s/%s" % (_paths.tcp_cache_dir, hostname)

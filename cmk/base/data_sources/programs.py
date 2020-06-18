@@ -14,13 +14,12 @@ from six import ensure_str
 from cmk.fetchers import ProgramDataFetcher
 
 import cmk.utils.paths
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import HostName, HostAddress, SectionName
 
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.exceptions import MKAgentError
-from cmk.utils.type_defs import HostName, HostAddress
 
 from .abstract import CheckMKAgentDataSource, RawAgentData
 
@@ -83,7 +82,7 @@ class DSProgramDataSource(ProgramDataSource):
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
             command_template,  # type: str
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
+            selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
     ):
         # type: (...) -> None
         super(DSProgramDataSource, self).__init__(
@@ -143,7 +142,7 @@ class SpecialAgentDataSource(ProgramDataSource):
             ipaddress,  # type: Optional[HostAddress]
             special_agent_id,  # type: str
             params,  # type: Dict
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
+            selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
     ):
         # type: (...) -> None
         self._special_agent_id = special_agent_id

@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES
 
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import SNMPTree
 
@@ -113,7 +113,7 @@ def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent
         if name != section_name_of(name):
             continue
 
-        section_name = PluginName(name)
+        section_name = SectionName(name)
 
         with known_exceptions('section', name):
             section = migrated_agent_sections.get(section_name)

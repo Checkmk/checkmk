@@ -209,12 +209,12 @@ def _check_missing_sections(missing_sections, exit_spec):
         match = False
         for pattern, status in specific_missing_sections_spec:
             reg = regex(pattern)
-            if reg.match(section):
+            if reg.match(str(section)):
                 match = True
                 specific_missing_sections.add((section, status))
                 break
         if not match:
-            generic_missing_sections.add(section)
+            generic_missing_sections.add(str(section))
 
     generic_missing_sections_status = cast(int, exit_spec.get("missing_sections", 1))
     infotexts = [
@@ -293,7 +293,8 @@ def _do_all_checks_on_host(
         if success:
             num_success += 1
         else:
-            missing_sections.add(section_name_of(service.check_plugin_name))
+            # TODO (mo): update semantics: CMK-4310
+            missing_sections.add(SectionName(section_name_of(service.check_plugin_name)))
 
     import cmk.base.inventory as inventory  # pylint: disable=import-outside-toplevel
     inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,
@@ -492,7 +493,7 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
         hostname,
         service.description,
         result,
-        _legacy_determine_cache_info(multi_host_sections, section_name),
+        _legacy_determine_cache_info(multi_host_sections, SectionName(section_name)),
     )
     return True
 

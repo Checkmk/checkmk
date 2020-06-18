@@ -13,7 +13,7 @@ from typing import Any, Generator, List, Optional, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import PluginName, SectionName
 
 from cmk.snmplib.type_defs import OIDSpec, SNMPDetectSpec, SNMPTree
 
@@ -56,7 +56,7 @@ def _validate_host_label_function(host_label_function):
 
 
 def _validate_supersedings(supersedes):
-    # type: (List[PluginName]) -> None
+    # type: (List[SectionName]) -> None
     if not len(supersedes) == len(set(supersedes)):
         raise ValueError("duplicate supersedes entry")
 
@@ -130,11 +130,11 @@ def _create_host_label_function(host_label_function):
 
 
 def _create_supersedes(supersedes):
-    # type: (Optional[List[str]]) -> List[PluginName]
+    # type: (Optional[List[str]]) -> List[SectionName]
     if supersedes is None:
         return []
 
-    supersedes_plugins = [PluginName(n) for n in supersedes]
+    supersedes_plugins = [SectionName(n) for n in supersedes]
     _validate_supersedings(supersedes_plugins)
 
     return sorted(supersedes_plugins)
@@ -147,7 +147,7 @@ def create_agent_section_plugin(
         parse_function,  # type: AgentParseFunction
         host_label_function=None,  # type: Optional[HostLabelFunction]
         supersedes=None,  # type:  Optional[List[str]]
-        forbidden_names,  # type: List[PluginName]
+        forbidden_names,  # type: List[SectionName]
 ):
     # type: (...) -> AgentSectionPlugin
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
@@ -161,13 +161,13 @@ def create_agent_section_plugin(
     if parsed_section_name is not None:
         raise NotImplementedError("parsed_section_name is not yet available")
 
-    plugin_name = PluginName(name, forbidden_names=forbidden_names)
+    section_name = SectionName(name, forbidden_names=forbidden_names)
 
     _validate_parse_function(parse_function)
 
     return AgentSectionPlugin(
-        plugin_name,
-        PluginName(parsed_section_name) if parsed_section_name else plugin_name,  # type: ignore
+        section_name,
+        PluginName(parsed_section_name if parsed_section_name else str(section_name)),
         parse_function,
         _create_host_label_function(host_label_function),
         _create_supersedes(supersedes),
@@ -183,7 +183,7 @@ def create_snmp_section_plugin(
         supersedes=None,  # type:  Optional[List[str]]
         detect_spec,  # type: SNMPDetectSpec
         trees,  # type: List[SNMPTree]
-        forbidden_names=None,  # type: Optional[List[PluginName]]
+        forbidden_names=None,  # type: Optional[List[SectionName]]
 ):
     # type: (...) -> SNMPSectionPlugin
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
@@ -197,15 +197,15 @@ def create_snmp_section_plugin(
     if parsed_section_name is not None:
         raise NotImplementedError("parsed_section_name is not yet available")
 
-    plugin_name = PluginName(name, forbidden_names)
+    section_name = SectionName(name, forbidden_names)
 
     _validate_parse_function(parse_function)
     _validate_detect_spec(detect_spec)
     _validate_snmp_trees(trees)
 
     return SNMPSectionPlugin(
-        plugin_name,
-        PluginName(parsed_section_name) if parsed_section_name else plugin_name,  # type: ignore
+        section_name,
+        PluginName(parsed_section_name if parsed_section_name else str(section_name)),
         parse_function,
         _create_host_label_function(host_label_function),
         _create_supersedes(supersedes),

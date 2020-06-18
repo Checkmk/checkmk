@@ -9,8 +9,8 @@ from typing import Dict, List, Optional, cast
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
-    PluginName,
     RawAgentData,
+    SectionName,
     ServiceCheckResult,
     ServiceDetails,
     SourceType,
@@ -28,13 +28,13 @@ from .abstract import CheckMKAgentDataSource
 class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
     source_type = SourceType.MANAGEMENT
 
-    _raw_sections = {PluginName("mgmt_ipmi_sensors")}
+    _raw_sections = {SectionName("mgmt_ipmi_sensors")}
 
     def __init__(
             self,
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, SectionPlugin]]
+            selected_raw_sections=None,  # type: Optional[Dict[SectionName, SectionPlugin]]
     ):
         # type: (...) -> None
         super(IPMIManagementBoardDataSource, self).__init__(
@@ -87,7 +87,7 @@ class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
         if self._host_sections is None:
             return "unknown"
 
-        section = self._host_sections.sections.get("mgmt_ipmi_firmware")
+        section = self._host_sections.sections.get(SectionName("mgmt_ipmi_firmware"))
         if not section:
             return "unknown"
 

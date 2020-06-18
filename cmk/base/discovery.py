@@ -46,6 +46,7 @@ from cmk.utils.type_defs import (
     Metric,
     PluginName,
     RulesetName,
+    SectionName,
     SourceType,
 )
 import cmk.utils.cleanup
@@ -875,17 +876,16 @@ def _discover_host_labels(
         return discovered_host_labels
 
     try:
-        raw_sections = [PluginName(n) for n in host_data.sections]
         # We do *not* process all available raw sections. Instead we see which *parsed*
         # sections would result from them, and then process those.
-        section_plugins = (config.get_registered_section_plugin(rs) for rs in raw_sections)
+        section_plugins = (config.get_registered_section_plugin(rs) for rs in host_data.sections)
         parsed_sections = {p.parsed_section_name for p in section_plugins if p is not None}
 
         console.vverbose("Trying host label discovery with: %s\n" %
                          ", ".join(str(p) for p in parsed_sections))
         for parsed_section_name in sorted(parsed_sections):
             try:
-                plugin = config.get_parsed_section_creator(parsed_section_name, raw_sections)
+                plugin = config.get_parsed_section_creator(parsed_section_name, host_data.sections)
                 parsed = multi_host_sections.get_parsed_section(host_key, parsed_section_name)
                 if plugin is None or parsed is None:
                     continue
@@ -974,7 +974,7 @@ def _get_sources_for_discovery(
         on_error,  # type: str
         for_check_discovery=False,  # type: bool
         *,
-        selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
+        selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
 ):
     # type: (...) -> data_sources.DataSources
     sources = data_sources.DataSources(

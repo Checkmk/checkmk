@@ -196,13 +196,11 @@ class MultiHostSections:
         cached_ats = []  # type: List[int]
         intervals = []  # type: List[int]
         for host_key, host_sections in self._multi_host_sections.items():
-            raw_sections = [
-                self._get_raw_section(host_key, parsed_section_name)
-                for parsed_section_name in section_names
-            ]
-            raw_section_names = (str(s.name) for s in raw_sections if s is not None)
-            for name in raw_section_names:
-                cache_info = host_sections.cache_info.get(name)
+            for parsed_section_name in section_names:
+                raw_section = self._get_raw_section(host_key, parsed_section_name)
+                if raw_section is None:
+                    continue
+                cache_info = host_sections.cache_info.get(raw_section.name)
                 if cache_info:
                     cached_ats.append(cache_info[0])
                     intervals.append(cache_info[1])
@@ -222,7 +220,7 @@ class MultiHostSections:
         section_def = self._get_raw_section(host_key, section_name)
         if section_def is None:
             # no section creating the desired one was found, assume a 'default' section:
-            raw_section_name = section_name
+            raw_section_name = SectionName(str(section_name))
             parse_function = parse_string_table  # type: Union[SNMPParseFunction, AgentParseFunction]
         else:
             raw_section_name = section_def.name
@@ -230,7 +228,7 @@ class MultiHostSections:
 
         try:
             hosts_raw_sections = self._multi_host_sections[host_key].sections
-            string_table = hosts_raw_sections[str(raw_section_name)]
+            string_table = hosts_raw_sections[raw_section_name]
         except KeyError:
             return self._parsed_sections.setdefault(cache_key, None)
 
@@ -256,8 +254,7 @@ class MultiHostSections:
         except KeyError:
             return self._parsed_to_raw_map.setdefault(cache_key, None)
 
-        available_raw_sections = [PluginName(n) for n in hosts_raw_sections]
-        section_def = config.get_parsed_section_creator(section_name, available_raw_sections)
+        section_def = config.get_parsed_section_creator(section_name, list(hosts_raw_sections))
         return self._parsed_to_raw_map.setdefault(cache_key, section_def)
 
     def get_section_content(
@@ -309,7 +306,7 @@ class MultiHostSections:
             ipaddress,
             source_type,
             check_plugin_name,
-            section_name,
+            SectionName(section_name),
             for_discovery,
             nodes_of_clustered_service,
         )
@@ -322,7 +319,7 @@ class MultiHostSections:
                 ipaddress,
                 SourceType.MANAGEMENT,
                 check_plugin_name,
-                section_name,
+                SectionName(section_name),
                 for_discovery,
                 nodes_of_clustered_service,
             )
@@ -505,18 +502,15 @@ class MultiHostSections:
 
         All exceptions raised by the parse function will be catched and re-raised as
         MKParseFunctionError() exceptions."""
-
-        # TODO (mo): change this function to expect a PluginName as argument
-        section_plugin_name = PluginName(section_name)
-        section_plugin = config.get_registered_section_plugin(section_plugin_name)
+        section_plugin = config.get_registered_section_plugin(section_name)
         if section_plugin is None:
             # use legacy parse function for unmigrated sections
-            parse_function = config.check_info.get(section_name, {}).get("parse_function")
+            parse_function = config.check_info.get(str(section_name), {}).get("parse_function")
             if parse_function is None:
                 return section_content
         else:
             # TODO (mo): deal with the parsed_section_name feature (CMK-4006)
-            if section_plugin.name != section_plugin.parsed_section_name:
+            if str(section_plugin.name) != str(section_plugin.parsed_section_name):
                 raise NotImplementedError()
             parse_function = section_plugin.parse_function
 
@@ -549,9 +543,7 @@ class MultiHostSections:
         something.
         """
         raw_section_names = {
-            PluginName(name)
-            for node_data in self._multi_host_sections.values()
-            for name in node_data.sections
+            name for node_data in self._multi_host_sections.values() for name in node_data.sections
         }
 
         raw_sections = [
@@ -559,7 +551,7 @@ class MultiHostSections:
         ]
 
         parsed_section_names = {
-            name if section is None else section.parsed_section_name
+            PluginName(str(name)) if section is None else section.parsed_section_name
             for name, section in raw_sections
         }
 

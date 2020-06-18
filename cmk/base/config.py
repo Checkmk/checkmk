@@ -68,6 +68,7 @@ from cmk.utils.type_defs import (
     Ruleset,
     RulesetName,
     PluginName,
+    SectionName,
     ServicegroupName,
     ServiceName,
     TagGroups,
@@ -86,7 +87,7 @@ import cmk.base.check_utils
 import cmk.base.default_config as default_config
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.caching import runtime_cache as _runtime_cache
-from cmk.base.check_utils import LegacyCheckParameters, DiscoveredService, SectionName
+from cmk.base.check_utils import LegacyCheckParameters, DiscoveredService
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 try:
@@ -1294,12 +1295,12 @@ def get_http_proxy(http_proxy):
     return None
 
 
-def get_registered_section_plugin(plugin_name):
-    # type: (PluginName) -> Optional[SectionPlugin]
-    if plugin_name in registered_agent_sections:
-        return registered_agent_sections[plugin_name]
-    if plugin_name in registered_snmp_sections:
-        return registered_snmp_sections[plugin_name]
+def get_registered_section_plugin(section_name):
+    # type: (SectionName) -> Optional[SectionPlugin]
+    if section_name in registered_agent_sections:
+        return registered_agent_sections[section_name]
+    if section_name in registered_snmp_sections:
+        return registered_snmp_sections[section_name]
     return None
 
 
@@ -1319,7 +1320,7 @@ def get_registered_check_plugin(plugin_name):
 
 
 def get_relevant_raw_sections(check_plugin_names):
-    # type: (Iterable[PluginName]) -> Dict[PluginName, SectionPlugin]
+    # type: (Iterable[PluginName]) -> Dict[SectionName, SectionPlugin]
     """return the raw sections potentially relevant for the given check plugins"""
     parsed_section_names = set()  # type: Set[PluginName]
     for check_plugin_name in check_plugin_names:
@@ -1340,7 +1341,7 @@ def get_relevant_raw_sections(check_plugin_names):
 
 
 def get_parsed_section_creator(parsed_section_name, available_raw_sections):
-    # type: (PluginName, List[PluginName]) -> Optional[SectionPlugin]
+    # type: (PluginName, List[SectionName]) -> Optional[SectionPlugin]
     """return the section definition required to create the enquired parsed section"""
     section_defs = (get_registered_section_plugin(name) for name in available_raw_sections)
     candidates = [
@@ -1440,8 +1441,8 @@ special_agent_info = {}  # type: Dict[str, SpecialAgentInfoFunction]
 
 # The following data structures hold information registered by the API functions
 # with the correspondig name, e.g. register.agent_section -> registered_agent_sections
-registered_agent_sections = {}  # type: Dict[PluginName, AgentSectionPlugin]
-registered_snmp_sections = {}  # type: Dict[PluginName, SNMPSectionPlugin]
+registered_agent_sections = {}  # type: Dict[SectionName, AgentSectionPlugin]
+registered_snmp_sections = {}  # type: Dict[SectionName, SNMPSectionPlugin]
 registered_check_plugins = {}  # type: Dict[PluginName, CheckPlugin]
 
 # Names of variables registered in the check files. This is used to
@@ -2022,7 +2023,7 @@ def _extract_agent_and_snmp_sections():
         section_name = section_name_of(check_plugin_name)
         is_snmp_plugin = section_name in snmp_info
 
-        if get_registered_section_plugin(PluginName(section_name)):
+        if get_registered_section_plugin(SectionName(section_name)):
             continue
 
         check_info_dict = check_info.get(section_name, check_info[check_plugin_name])
@@ -3309,7 +3310,7 @@ class ConfigCache:
         self.check_table_cache = _config_cache.get_dict("check_tables")
 
         self._cache_is_snmp_check = _runtime_cache.get_dict("is_snmp_check")
-        self._cache_section_name_of = {}  # type: Dict[CheckPluginName, SectionName]
+        self._cache_section_name_of = {}  # type: Dict[CheckPluginName, str]
 
         self._cache_match_object_service = {
         }  # type: Dict[Tuple[HostName, ServiceName], RulesetMatchObject]
@@ -3679,7 +3680,7 @@ class ConfigCache:
         )
 
     def section_name_of(self, section):
-        # type: (CheckPluginName) -> SectionName
+        # type: (CheckPluginName) -> str
         try:
             return self._cache_section_name_of[section]
         except KeyError:

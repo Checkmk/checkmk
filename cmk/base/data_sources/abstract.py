@@ -32,7 +32,6 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     Metric,
-    PluginName,
     RawAgentData,
     SectionName,
     ServiceCheckResult,
@@ -103,7 +102,7 @@ class SectionStore:
                 raise
 
         store.save_object_to_file(self.path, sections, pretty=False)
-        self._logger.debug("Stored persisted sections: %s", ", ".join(sections))
+        self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
 
     # TODO: This is not race condition free when modifying the data. Either remove
     # the possible write here and simply ignore the outdated sections or lock when
@@ -268,7 +267,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             self,
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
-            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+            selected_raw_section_names=None,  # type: Optional[Set[SectionName]]
     ):
         # type: (...) -> None
         """Initialize the abstract base class
@@ -458,7 +457,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
 
     def is_relevant_raw_section(self, raw_section_name):
-        # type: (PluginName) -> bool
+        # type: (SectionName) -> bool
         return (self._selected_raw_section_names is None or
                 raw_section_name in self._selected_raw_section_names)
 
@@ -657,7 +656,7 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
             self,
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
-            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+            selected_raw_section_names=None,  # type: Optional[Set[SectionName]]
     ):
         # type: (...) -> None
         super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress,
@@ -809,12 +808,10 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
 
     @staticmethod
     def _parse_section_header(headerline):
-        # type: (bytes) -> Tuple[Optional[str], Dict[str, Optional[str]]]
+        # type: (bytes) -> Tuple[Optional[SectionName], Dict[str, Optional[str]]]
         headerparts = ensure_str(headerline).split(":")
-        section_name = headerparts[0]
         try:
-            # TODO (mo): actually return a PluginName instance
-            _ = PluginName(section_name)
+            section_name = SectionName(headerparts[0])
         except ValueError:
             return None, {}
 
@@ -857,7 +854,7 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
         # type: (bool) -> ServiceCheckResult
         assert isinstance(self._host_sections, AgentHostSections)
 
-        cmk_section = self._host_sections.sections.get("check_mk")
+        cmk_section = self._host_sections.sections.get(SectionName("check_mk"))
         agent_info = self._get_agent_info(cmk_section)
         agent_version = agent_info["version"]
 

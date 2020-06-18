@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk wide type definitions"""
 
+import abc
 import enum
+import functools
 import string
 import sys
 from typing import Any, Dict, Iterable, List, NewType, Optional, Set, Tuple, Union
@@ -64,13 +66,8 @@ BakeryHostName = Union[bool, None, HostName]
 # can easily transform back and forth for serialization.
 TimeperiodSpec = Dict[str, Union[str, List[Tuple[str, str]]]]
 
-SectionName = str
 
-
-# TODO(mo): I know we already have SectionName.
-#           However, this is a true class, not just a type alias.
-#           Hopefully we can remove SectionName soon.
-class PluginName:
+class ABCPluginName(abc.ABC):
     """Common class for all plugin names
 
     A plugin name must be a non-empty string consting only of letters A-z, digits
@@ -78,30 +75,26 @@ class PluginName:
     """
     VALID_CHARACTERS = string.ascii_letters + '_' + string.digits
 
-    # unfortunately, we have some WATO rules that contain dots or dashs.
-    # In order not to break things, but be consistent in the future
-    # we maintain a list of exceptions.
-    _LEGACY_NAMING_EXCEPTIONS = {
-        'drbd.net', 'drbd.disk', 'drbd.stats', 'fileinfo-groups', 'hpux_snmp_cs.cpu',
-        'j4p_performance.mem', 'j4p_performance.threads', 'j4p_performance.uptime',
-        'j4p_performance.app_state', 'j4p_performance.app_sess', 'j4p_performance.serv_req',
-        'sap_value-groups'
-    }
+    @abc.abstractproperty
+    def _legacy_naming_exceptions(self) -> Set[str]:
+        """we allow to maintain a list of exceptions"""
+        return set()
 
     def __init__(self, plugin_name, forbidden_names=None):
-        # type: (str, Optional[Iterable[PluginName]]) -> None
+        # type: (str, Optional[Iterable[ABCPluginName]]) -> None
         self._value = plugin_name
-        if plugin_name in self._LEGACY_NAMING_EXCEPTIONS:
+        if plugin_name in self._legacy_naming_exceptions:
             return
 
         if not isinstance(plugin_name, str):
-            raise TypeError("PluginName must initialized from str")
+            raise TypeError("%s must initialized from str" % self.__class__.__name__)
         if not plugin_name:
-            raise ValueError("PluginName initializer must not be empty")
+            raise ValueError("%s initializer must not be empty" % self.__class__.__name__)
 
         for char in plugin_name:
             if char not in self.VALID_CHARACTERS:
-                raise ValueError("invalid character for PluginName %r: %r" % (plugin_name, char))
+                raise ValueError("invalid character for %s %r: %r" %
+                                 (self.__class__.__name__, plugin_name, char))
 
         if forbidden_names and any(plugin_name == str(fn) for fn in forbidden_names):
             raise ValueError("duplicate plugin name: %r" % (plugin_name,))
@@ -121,14 +114,49 @@ class PluginName:
         return self._value == other._value
 
     def __lt__(self, other):
-        # type: (PluginName) -> bool
+        # type: (Any) -> bool
         if not isinstance(other, self.__class__):
             raise TypeError("Can only be compared with %s objects" % self.__class__)
         return self._value < other._value
 
     def __hash__(self):
         # type: () -> int
-        return hash(self._value)
+        return hash(type(self).__name__ + self._value)
+
+
+@functools.total_ordering
+class SectionName(ABCPluginName):
+    @property
+    def _legacy_naming_exceptions(self) -> Set[str]:
+        return set()
+
+
+# TODO (mo):
+# At some point, we should have as different classes at least:
+#   * SectionName
+#   * ParsedSectionName
+#   * CheckPluginName
+#   * InventoryPluginName
+#   * RulesetName
+# The relation between the different plugins should be specified in the
+# plugin definitions, s.t. things like 'PluginName(str(section_name))'
+# should never be needed.
+@functools.total_ordering
+class PluginName(ABCPluginName):
+    @property
+    def _legacy_naming_exceptions(self) -> Set[str]:
+        """
+        allow these names
+
+        Unfortunately, we have some WATO rules that contain dots or dashes.
+        In order not to break things, we allow those
+        """
+        return {
+            'drbd.net', 'drbd.disk', 'drbd.stats', 'fileinfo-groups', 'hpux_snmp_cs.cpu',
+            'j4p_performance.mem', 'j4p_performance.threads', 'j4p_performance.uptime',
+            'j4p_performance.app_state', 'j4p_performance.app_sess', 'j4p_performance.serv_req',
+            'sap_value-groups'
+        }
 
 
 class SourceType(enum.Enum):

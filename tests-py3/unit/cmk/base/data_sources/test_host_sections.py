@@ -8,7 +8,7 @@ import collections
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import PluginName, SourceType
+from cmk.utils.type_defs import PluginName, SectionName, SourceType
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -22,7 +22,7 @@ _TestSection = collections.namedtuple(
 )
 
 SECTION_ONE = _TestSection(
-    PluginName("one"),
+    SectionName("one"),
     PluginName("parsed"),
     lambda x: {
         "parsed_by": "one",
@@ -32,7 +32,7 @@ SECTION_ONE = _TestSection(
 )
 
 SECTION_TWO = _TestSection(
-    PluginName("two"),
+    SectionName("two"),
     PluginName("parsed"),
     lambda x: {
         "parsed_by": "two",
@@ -42,7 +42,7 @@ SECTION_TWO = _TestSection(
 )
 
 SECTION_THREE = _TestSection(
-    PluginName("three"),
+    SectionName("three"),
     PluginName("parsed2"),
     lambda x: {
         "parsed_by": "three",
@@ -68,7 +68,7 @@ NODE_2 = [
 ]
 
 
-def _set_up(monkeypatch, hostname, nodes, cluster_mapping):
+def _set_up(monkeypatch, hostname, nodes, cluster_mapping) -> None:
     test_scen = Scenario()
 
     if nodes is None:
@@ -94,13 +94,13 @@ def _set_up(monkeypatch, hostname, nodes, cluster_mapping):
     [
         ({}, None),
         ({
-            "one": NODE_1
+            SectionName("one"): NODE_1
         }, {
             "parsed_by": "one",
             "node": "node1"
         }),
         ({
-            "two": NODE_1
+            SectionName("two"): NODE_1
         }, {
             "parsed_by": "two",
             "node": "node1"
@@ -157,9 +157,9 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
     _set_up(monkeypatch, "node1", None, {})
 
     node_section_content = {
-        "one": NODE_1,
-        # TODO (mo): CMK-4232 # "two": NODE_1,
-        "three": NODE_1
+        SectionName("one"): NODE_1,
+        # TODO (mo): CMK-4232 # SectionName("two"): NODE_1,
+        SectionName("three"): NODE_1
     }
 
     host_key = ("node1", "127.0.0.1", SourceType.HOST)
@@ -237,12 +237,15 @@ def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_res
     _set_up(monkeypatch, "cluster", ["node2", "node1"], {"node1": "cluster", "node2": "cluster"})
 
     node1_section_content = {
-        "one": NODE_1,
-        # TODO (mo): CMK-4232 # "two": NODE_1,
-        "three": NODE_1
+        SectionName("one"): NODE_1,
+        # TODO (mo): CMK-4232 # SectionName("two"): NODE_1,
+        SectionName("three"): NODE_1
     }
 
-    node2_section_content = {"two": NODE_2, "three": NODE_2}
+    node2_section_content = {
+        SectionName("two"): NODE_2,
+        SectionName("three"): NODE_2,
+    }
 
     multi_host_sections = MultiHostSections()
     multi_host_sections.setdefault_host_sections(
@@ -321,14 +324,14 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
     for nodename, node_section_content in host_entries:
         multi_host_sections.setdefault_host_sections(
             (nodename, "127.0.0.1", SourceType.HOST),
-            AgentHostSections(sections={"check_plugin_name": node_section_content}),
+            AgentHostSections(sections={SectionName("section_plugin_name"): node_section_content}),
         )
 
     section_content = multi_host_sections.get_section_content(
         hostname,
         "127.0.0.1",
         check_api_utils.HOST_ONLY,
-        "check_plugin_name",
+        "section_plugin_name",
         False,
         service_description=service_descr,
     )
@@ -339,7 +342,7 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
         hostname,
         "127.0.0.1",
         check_api_utils.HOST_PRECEDENCE,
-        "check_plugin_name",
+        "section_plugin_name",
         False,
         service_description=service_descr,
     )
@@ -350,7 +353,7 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
         hostname,
         "127.0.0.1",
         check_api_utils.MGMT_ONLY,
-        "check_plugin_name",
+        "section_plugin_name",
         False,
         service_description=service_descr,
     )

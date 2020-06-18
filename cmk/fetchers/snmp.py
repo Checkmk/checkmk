@@ -9,6 +9,8 @@ from functools import partial
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Type
 
+from cmk.utils.type_defs import SectionName
+
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
@@ -18,7 +20,7 @@ from . import factory
 class SNMPDataFetcher:
     def __init__(
             self,
-            oid_infos,  # type: Dict[str, List[SNMPTree]]
+            oid_infos,  # type: Dict[SectionName, List[SNMPTree]]
             use_snmpwalk_cache,  # type: bool
             snmp_config,  # type: SNMPHostConfig
     ):

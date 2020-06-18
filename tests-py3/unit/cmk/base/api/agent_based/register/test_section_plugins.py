@@ -10,7 +10,7 @@ from typing import List
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import PluginName, SectionName
 
 from cmk.snmplib.type_defs import OIDEnd, SNMPTree
 
@@ -65,9 +65,9 @@ def test_validate_host_label_function_value(host_label_function, exception_type)
 
 def test_validate_supersedings():
     supersedes = [
-        PluginName("foo"),
-        PluginName("bar"),
-        PluginName("foo"),
+        SectionName("foo"),
+        SectionName("bar"),
+        SectionName("foo"),
     ]
 
     with pytest.raises(ValueError, match="duplicate"):
@@ -103,11 +103,11 @@ def test_create_agent_section_plugin():
 
     assert isinstance(plugin, section_types.AgentSectionPlugin)
     assert len(plugin) == 5
-    assert plugin.name == PluginName("norris")
+    assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == PluginName("norris")  # "chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
-    assert plugin.supersedes == []  # [PluginName("Bar"), PluginName("Foo")]
+    assert plugin.supersedes == []  # [SectionName("Bar"), SectionName("Foo")]
 
 
 def test_create_snmp_section_plugin():
@@ -157,10 +157,10 @@ def test_create_snmp_section_plugin():
 
     assert isinstance(plugin, section_types.SNMPSectionPlugin)
     assert len(plugin) == 7
-    assert plugin.name == PluginName("norris")
+    assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == PluginName("norris")  # "chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
     assert plugin.detect_spec == detect
     assert plugin.trees == trees
-    assert plugin.supersedes == []  # [PluginName("Bar"), PluginName("Foo")]
+    assert plugin.supersedes == []  # [SectionName("Bar"), SectionName("Foo")]

@@ -12,7 +12,7 @@ import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import SectionName
 
 import cmk.base.config as config
 import cmk.base.check_utils
@@ -86,7 +86,7 @@ def _extract_snmp_sections():
         if 'snmp_info' not in plugin_info:
             continue
         section_name = section_name_of(plugin_name)
-        if config.get_registered_section_plugin(PluginName(section_name)):
+        if config.get_registered_section_plugin(SectionName(section_name)):
             continue
 
         fallback_files = ([_include_file_path(i) for i in plugin_info.get('includes', [])] +
@@ -156,7 +156,7 @@ def _include_file_path(name):
 def is_snmp_plugin(check_plugin_name):
     # type: (str) -> bool
     section_name = section_name_of(check_plugin_name)
-    return PluginName(section_name) in config.registered_snmp_sections
+    return SectionName(section_name) in config.registered_snmp_sections
 
 
 def sorted_inventory_plugins():

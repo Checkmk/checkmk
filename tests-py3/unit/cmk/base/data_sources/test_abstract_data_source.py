@@ -8,6 +8,8 @@
 
 import pytest  # type: ignore[import]
 
+from cmk.utils.type_defs import SectionName
+
 import cmk.base.data_sources.abstract as _abstract
 
 
@@ -30,11 +32,11 @@ def test_normalize_ip():
 @pytest.mark.parametrize(
     "headerline, section_name, section_options",
     [
-        (b"norris", "norris", {}),
-        (b"norris:chuck", "norris", {
+        (b"norris", SectionName("norris"), {}),
+        (b"norris:chuck", SectionName("norris"), {
             "chuck": None
         }),
-        (b"my_section:sep(0):cached(23,42)", "my_section", {
+        (b"my_section:sep(0):cached(23,42)", SectionName("my_section"), {
             "sep": "0",
             "cached": "23,42"
         }),

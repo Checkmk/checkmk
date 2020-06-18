@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Tuple
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
-from cmk.utils.type_defs import HostAddress, HostName, PluginName, RawAgentData, ServiceCheckResult
+from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, SectionName, ServiceCheckResult
 
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 import cmk.base.config as config
@@ -25,7 +25,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
             self,
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
+            selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
     ):
         # type: (...) -> None
         super(PiggyBackDataSource, self).__init__(

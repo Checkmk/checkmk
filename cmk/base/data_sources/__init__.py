@@ -20,9 +20,8 @@ import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
-from cmk.utils.type_defs import PluginName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, PluginName, SectionName, SourceType
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostName, HostAddress
 
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
 import cmk.base.config as config
@@ -64,7 +63,7 @@ class DataSources:
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
             # optional set: None -> no selection, empty -> select *nothing*
-        selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
+        selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
     ):
         # type: (...) -> None
         super(DataSources, self).__init__()
@@ -81,7 +80,7 @@ class DataSources:
         self._enforced_check_plugin_names = None  # type: Optional[Set[CheckPluginName]]
 
     def _initialize_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[PluginName, config.SectionPlugin]]) -> None
+        # type: (Optional[Dict[SectionName, config.SectionPlugin]]) -> None
         self._sources = {}  # type: Dict[str, DataSource]
 
         if self._host_config.is_cluster:
@@ -94,7 +93,7 @@ class DataSources:
         self._initialize_management_board_data_sources(selected_raw_sections)
 
     def _initialize_agent_based_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[PluginName, config.SectionPlugin]]) -> None
+        # type: (Optional[Dict[SectionName, config.SectionPlugin]]) -> None
         if self._host_config.is_all_agents_host:
             source = self._get_agent_data_source(
                 ignore_special_agents=True,
@@ -127,7 +126,7 @@ class DataSources:
             self._add_source(piggy_source)
 
     def _initialize_snmp_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[PluginName, config.SectionPlugin]]) -> None
+        # type: (Optional[Dict[SectionName, config.SectionPlugin]]) -> None
         if not self._host_config.is_snmp_host:
             return
         snmp_source = SNMPDataSource(
@@ -138,7 +137,7 @@ class DataSources:
         self._add_source(snmp_source)
 
     def _initialize_management_board_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[PluginName, config.SectionPlugin]]) -> None
+        # type: (Optional[Dict[SectionName, config.SectionPlugin]]) -> None
         protocol = self._host_config.management_protocol
         if protocol is None:
             return
@@ -186,7 +185,7 @@ class DataSources:
     def _get_agent_data_source(
             self,
             ignore_special_agents,  # type: bool
-            selected_raw_sections,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
+            selected_raw_sections,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
     ):
         # type: (...) -> CheckMKAgentDataSource
         if not ignore_special_agents:
@@ -212,7 +211,7 @@ class DataSources:
 
     def _get_special_agent_data_sources(
             self,
-            selected_raw_sections,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
+            selected_raw_sections,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
     ):
         # type: (...) -> List[SpecialAgentDataSource]
         return [

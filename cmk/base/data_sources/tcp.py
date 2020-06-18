@@ -7,7 +7,7 @@
 import socket
 from typing import Dict, Optional
 
-from cmk.utils.type_defs import HostName, HostAddress, PluginName
+from cmk.utils.type_defs import HostName, HostAddress, SectionName
 
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 from cmk.base.check_utils import RawAgentData
@@ -37,7 +37,7 @@ class TCPDataSource(CheckMKAgentDataSource):
             self,
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, SectionPlugin]]
+            selected_raw_sections=None,  # type: Optional[Dict[SectionName, SectionPlugin]]
     ):
         # type: (...) -> None
         super(TCPDataSource, self).__init__(

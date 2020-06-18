@@ -13,14 +13,14 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import CheckPluginName, PluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectAtom, SNMPDetectSpec
 
 SNMPScanSection = NamedTuple("SNMPScanSection", [
-    ("name", PluginName),
+    ("name", SectionName),
     ("specs", SNMPDetectSpec),
 ])
 
@@ -54,7 +54,7 @@ def _evaluate_snmp_detection_atom(atom, cp_name, do_snmp_scan, *, backend):
     return bool(regex(pattern, re.IGNORECASE).fullmatch(value)) is flag
 
 
-PluginNameFilterFunction = Callable[[
+SectionNameFilterFunction = Callable[[
     Iterable[SNMPScanSection],
     NamedArg(str, 'on_error'),
     NamedArg(bool, 'do_snmp_scan'),

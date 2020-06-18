@@ -25,7 +25,6 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     Metric,
-    PluginName,
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
@@ -298,8 +297,7 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
                     (hostname, ipaddress, source.source_type),
                     SNMPHostSections(),
                 )
-                source.set_fetched_raw_section_names(
-                    {PluginName(s) for s in host_sections.sections})
+                source.set_fetched_raw_section_names(set(host_sections.sections))
                 host_sections_from_source = source.run()
                 host_sections.update(host_sections_from_source)
 

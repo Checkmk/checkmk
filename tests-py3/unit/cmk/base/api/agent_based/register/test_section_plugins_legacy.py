@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import PluginName, SectionName
 
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
@@ -96,7 +96,7 @@ def test_create_snmp_section_plugin_from_legacy():
         (".1.2.3.4.5", ["2", 3]),
     )
 
-    assert plugin.name == PluginName("norris")
+    assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == PluginName("norris")
     assert plugin.parse_function.__name__ == "old_school_parse_function"
     assert plugin.host_label_function.__name__ == "host_label_function"

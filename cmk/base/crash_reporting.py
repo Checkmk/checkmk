@@ -24,7 +24,7 @@ from cmk.utils.type_defs import (
 
 import cmk.base.check_utils
 import cmk.base.config as config
-from cmk.base.check_utils import CheckParameters, RawAgentData
+from cmk.base.check_utils import RawAgentData
 
 CrashReportStore = crash_reporting.CrashReportStore
 

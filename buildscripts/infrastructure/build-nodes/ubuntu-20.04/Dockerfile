@@ -97,6 +97,12 @@ RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
 
+# Exclusively for this distro at the moment, because it is used by several CI
+# jobs for special tasks (checking out git, "make dist", orchestrating other
+# containers, ...). Scripts should be usable with other Ubuntu versions.
+RUN /opt/install-docker.sh
+RUN /opt/install-make-dist-deps.sh
+
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container
 RUN groupadd -g 1000 jenkins \

@@ -77,7 +77,8 @@ def heartbeat_crm_parse_general(info):
 
         elif ' '.join(line[1:3]).rstrip('.,').lower() == 'nodes configured':
             num_nodes = int(line[0])
-        elif ' '.join(line[1:3]).rstrip('.,').lower() == 'resources configured':
+        elif ' '.join(line[1:3]).rstrip('.,').lower() == 'resources configured' or ' '.join(
+                line[1:4]).rstrip('.,').lower() == 'resource instances configured':
             num_resources = int(line[0])
 
     return last_updated, dc, num_nodes, num_resources

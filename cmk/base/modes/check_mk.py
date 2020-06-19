@@ -1535,9 +1535,10 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def _convert_checks_argument(arg: str) -> List[str]:
+def _convert_checks_argument(arg: str) -> Optional[List[str]]:
     if arg == "@all":
-        return list(config.check_info)
+        # this is the same as ommitting the option entirely.
+        return None
     return arg.split(",")
 
 

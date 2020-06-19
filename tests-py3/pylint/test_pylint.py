@@ -41,7 +41,11 @@ def pylint_test_dir():
     shutil.rmtree(test_dir)
 
 
-def test_pylint(pylint_test_dir):
+def test_pylint(pylint_test_dir, capsys):
+    with capsys.disabled():
+        retcode = subprocess.call("python -m pylint --version".split(), shell=False)
+        assert not retcode
+
     exit_code = pylint_cmk.run_pylint(repo_path(), _get_files_to_check(pylint_test_dir))
     assert exit_code == 0, "PyLint found an error"
 

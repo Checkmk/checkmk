@@ -18,7 +18,7 @@ node (NODE) {
     }
     try {
         integration.build(
-            DISTRO_LIST: ["ubuntu-20.04"],
+            DISTRO_LIST: ["ubuntu-19.04"],
             EDITION: "cee",
             VERSION: "git",
             DOCKER_TAG: versioning.select_docker_tag(versioning.get_branch(scm), "", DOCKER_TAG_DEFAULT),

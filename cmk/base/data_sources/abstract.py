@@ -739,7 +739,7 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
 
         # handle sections with option persist(...)
         persisted_sections = {}  # type: PersistedAgentSections
-        section_content = []  # type: AgentSectionContent
+        section_content = None  # type: Optional[AgentSectionContent]
         section_options = {}  # type: Dict[str, Optional[str]]
         agent_cache_info = {}  # type: SectionCacheInfo
         separator = None  # type: Optional[str]
@@ -762,6 +762,10 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
             elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
                 section_name, section_options = self._parse_section_header(stripped_line[3:-3])
 
+                if section_name is None:
+                    self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
+                    section_content = None
+                    continue
                 section_content = sections.setdefault(section_name, [])
 
                 raw_separator = section_options.get("sep")
@@ -788,6 +792,9 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
                 encoding = section_options.get("encoding")
 
             elif stripped_line != b'':
+                if section_content is None:
+                    continue
+
                 raw_nostrip = section_options.get("nostrip")
                 if raw_nostrip is None:
                     line = stripped_line
@@ -802,9 +809,15 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
 
     @staticmethod
     def _parse_section_header(headerline):
-        # type: (bytes) -> Tuple[str, Dict[str, Optional[str]]]
+        # type: (bytes) -> Tuple[Optional[str], Dict[str, Optional[str]]]
         headerparts = ensure_str(headerline).split(":")
         section_name = headerparts[0]
+        try:
+            # TODO (mo): actually return a PluginName instance
+            _ = PluginName(section_name)
+        except ValueError:
+            return None, {}
+
         section_options = {}  # type: Dict[str, Optional[str]]
         for option in headerparts[1:]:
             if "(" not in option:

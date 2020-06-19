@@ -15,6 +15,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 from testlib import InventoryPluginManager  # , CheckManager
+from testlib.debug_utils import cmk_debug_enabled
 from testlib.utils import get_standard_linux_agent_output
 
 import cmk.base.automations
@@ -216,7 +217,11 @@ def test_mode_inventory_caching(test_cfg, hosts, cache, force, monkeypatch):
 
 def test_mode_inventory_as_check(test_cfg, monkeypatch):
     _patch_data_source_run(monkeypatch)
-    assert cmk.base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1") == 0
+
+    with cmk_debug_enabled():
+        exit_code = cmk.base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1")
+
+    assert exit_code == 0
     assert _counter_run == 2
 
 

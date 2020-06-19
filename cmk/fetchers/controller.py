@@ -6,18 +6,14 @@
 
 #
 # Protocol: <header><payload>
-# Header is fixed size(6+8+9+9 = 32 bytes) string in format
-# header: <ID>:<'SUCCESS'|'FAILURE'>:<HINT>:<SIZE>:
-# ID   - 5 bytes protocol id, "base0" at the start
-# HINT - 8 bytes string. Arbitrary data, usually some error info
-# SIZE - 8 bytes string 0..9
-# example:
-# "base0:SUCCESS:        :12345678:"
-#
 
-from pathlib import Path
+import enum
 import json
+from pathlib import Path
+from typing import Any, Union
+
 from cmk.utils.paths import core_fetcher_config_dir
+
 from . import TCPDataFetcher
 
 #
@@ -27,6 +23,72 @@ from . import TCPDataFetcher
 # sonst ganz normaler Accessoren hat, z.B. `inst.length -> int`, `inst.protocol -> str`, etc.
 # Kann auch den Payload enthalten. Dann wird `length` automatisch vom Payload abgeleitet.
 #
+
+
+class Header:
+    """Header is fixed size(5+8+9+9 = 31 bytes) string in format
+
+      header: <ID>:<'SUCCESS'|'FAILURE'>:<HINT>:<SIZE>:
+      ID   - 5 bytes protocol id, "base0" at the start
+      HINT - 8 bytes string. Arbitrary data, usually some error info
+      SIZE - 8 bytes string 0..9
+
+    Example:
+        "base0:SUCCESS:        :12345678:"
+
+    """
+    class State(str, enum.Enum):
+        SUCCESS = "SUCCESS"
+        FAILURE = "FAILURE"
+
+    fmt = "{:<4}:{:<7}:{:<8}:{:<8}:"
+    length = 31
+
+    def __init__(self, name, state, hint, payload_length):
+        # type: (str, Union[Header.State, str], str, int) -> None
+        self.name = name
+        self.state = Header.State(state) if isinstance(state, str) else state
+        self.hint = hint
+        self.payload_length = payload_length
+
+    def __repr__(self):
+        # type: () -> str
+        return "%s(%r, %r, %r, %r)" % (
+            type(self).__name__,
+            self.name,
+            self.state,
+            self.hint,
+            self.payload_length,
+        )
+
+    def __str__(self):
+        # type: () -> str
+        return Header.fmt.format(self.name, self.state, self.hint, self.payload_length)
+
+    def __eq__(self, other):
+        # type: (Any) -> bool
+        return str(self) == str(other)
+
+    def __hash__(self):
+        # type: () -> int
+        return hash(str(self))
+
+    def __len__(self):
+        # type: () -> int
+        return Header.length
+
+    @classmethod
+    def from_network(cls, data):
+        # type: (str) -> Header
+        try:
+            name, state, hint, payload_length = data[:Header.length].split(":")[:4]
+            return cls(name, state, hint, int(payload_length, base=10))
+        except ValueError as exc:
+            raise ValueError(data) from exc
+
+    def clone(self):
+        # type: () -> Header
+        return Header(self.name, self.state, self.hint, self.payload_length)
 
 
 def supported_protocol_name():

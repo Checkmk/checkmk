@@ -3218,16 +3218,26 @@ class HostConfig:
             return None
         return entries[0]
 
-    def set_autochecks(self, new_items):
-        # type: (List[DiscoveredService]) -> None
+    def set_autochecks(
+        self,
+        new_services: List[DiscoveredService],
+    ) -> None:
         """Merge existing autochecks with the given autochecks for a host and save it"""
         if self.is_cluster:
             if self.nodes:
-                autochecks.set_autochecks_of_cluster(self.nodes, self.hostname, new_items,
-                                                     self._config_cache.host_of_clustered_service,
-                                                     service_description)
+                autochecks.set_autochecks_of_cluster(
+                    self.nodes,
+                    self.hostname,
+                    new_services,
+                    self._config_cache.host_of_clustered_service,
+                    service_description,  # wtf?
+                )
         else:
-            autochecks.set_autochecks_of_real_hosts(self.hostname, new_items, service_description)
+            autochecks.set_autochecks_of_real_hosts(
+                self.hostname,
+                new_services,
+                service_description,  # of what?
+            )
 
     def remove_autochecks(self):
         # type: () -> int

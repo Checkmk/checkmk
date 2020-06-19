@@ -42,7 +42,7 @@ class StoreOnceOauth2Session:
     # TODO: In case of an update, the tmpfs will be deleted. This is no problem at first sight as a
     # new "fetch_token" will be triggered, however we should find better place for such tokens.
     _token_dir = Path(cmk.utils.paths.tmp_dir, "special_agents/agent_storeonce4x")
-    _token_file = _token_dir / "oAuthToken.json"
+    _token_file_suffix = "%s_oAuthToken.json"
     _refresh_endpoint = "/pml/login/refresh"
     _token_endpoint = "/pml/login/authenticate"
     _dt_fmt = '%Y-%m-%d %H:%M:%S.%f'
@@ -50,6 +50,7 @@ class StoreOnceOauth2Session:
     def __init__(self, host, port, user, secret, verify_ssl):
         # type: (str, str, str, str, bool) -> None
         self._host = host
+        self._token_file = self._token_file_suffix % self._host
         self._port = port
         self._user = user
         self._secret = secret
@@ -78,8 +79,8 @@ class StoreOnceOauth2Session:
                     "expires_in": self._json_token["expires_in"]
                 })
 
-        except FileNotFoundError:
-            LOGGER.debug("Token file not found, creating connection without token.")
+        except (FileNotFoundError, KeyError):
+            LOGGER.debug("Token file not found or error in token file. Creating new connection.")
             self._oauth_session = OAuth2Session(
                 self._user,
                 client=self._client,
@@ -87,13 +88,14 @@ class StoreOnceOauth2Session:
                 (self._host, self._port, self._refresh_endpoint),
                 token_updater=self.store_token_file_and_update_expires_in_abs)
             # Fetch token
-            token_dict = self._oauth_session.fetch_token(token_url='https://%s%s' %
-                                                         (self._host, self._token_endpoint),
-                                                         username=self._user,
-                                                         password=self._secret,
-                                                         verify=self._verify_ssl)
+            token_dict = self._oauth_session.fetch_token(
+                token_url='https://%s:%s%s' % (self._host, self._port, self._token_endpoint),
+                username=self._user,
+                password=self._secret,
+                verify=self._verify_ssl)
             # Initially create the token file
             self.store_token_file_and_update_expires_in_abs(token_dict)
+            self._json_token = token_dict
 
     def store_token_file_and_update_expires_in_abs(self, token_dict):
         # type: (dict) -> None

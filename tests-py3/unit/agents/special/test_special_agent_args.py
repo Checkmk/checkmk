@@ -32,7 +32,6 @@ NOT_TESTED_YET = {
     'agent_salesforce',
     'agent_siemens_plc',
     'agent_storeonce',
-    'agent_storeonce4x',
     'agent_tinkerforge',
     'agent_ucs_bladecenter',
     'agent_vnx_quotas',
@@ -77,6 +76,7 @@ REQUIRED_ARGUMENTS = {
     'agent_splunk': ['HOSTNAME'],
     'agent_vsphere': ['HOSTNAME'],
     'agent_proxmox': ['HOSTNAME'],
+    'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST']
 }  # type: Dict[str, List[str]]
 
 

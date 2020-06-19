@@ -1535,6 +1535,21 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
+def _convert_checks_argument(arg: str) -> List[str]:
+    if arg == "@all":
+        return list(config.check_info)
+    return arg.split(",")
+
+
+_option_checks = Option(
+    long_option="checks",
+    short_help="Restrict discovery/checking to these check plugins",
+    argument=True,
+    argument_descr="C",
+    argument_conv=_convert_checks_argument,
+)
+
+
 def mode_discover(options, args):
     # type: (Dict, List[str]) -> None
     hostnames = modes.parse_hostname_list(args)
@@ -1580,13 +1595,7 @@ modes.register(
                  short_help="Delete existing services before starting discovery",
                  count=True,
              ),
-             Option(
-                 long_option="checks",
-                 short_help="Restrict discovery to certain check types",
-                 argument=True,
-                 argument_descr="C",
-                 argument_conv=lambda x: list(config.check_info) if x == "@all" else x.split(","),
-             ),
+             _option_checks,
          ]))
 
 #.
@@ -1666,13 +1675,7 @@ modes.register(
                  short_option="p",
                  short_help="Also show performance data (use with -v)",
              ),
-             Option(
-                 long_option="checks",
-                 short_help="Restrict discovery to certain check types",
-                 argument=True,
-                 argument_descr="C",
-                 argument_conv=lambda x: list(config.check_info) if x == "@all" else x.split(","),
-             ),
+             _option_checks,
              keepalive_option,
              Option(
                  long_option="keepalive-fd",

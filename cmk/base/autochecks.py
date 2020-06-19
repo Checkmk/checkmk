@@ -16,7 +16,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckVariables
+from cmk.utils.type_defs import CheckVariables, PluginName
 from cmk.utils.log import console
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
@@ -26,7 +26,7 @@ from cmk.base.check_utils import CheckPluginName, CheckParameters, DiscoveredSer
 ComputeCheckParameters = Callable[[HostName, CheckPluginName, Item, CheckParameters],
                                   Optional[CheckParameters]]
 GetCheckVariables = Callable[[], CheckVariables]
-GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
+GetServiceDescription = Callable[[HostName, Union[CheckPluginName, PluginName], Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
 
 

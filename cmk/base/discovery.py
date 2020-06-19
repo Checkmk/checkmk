@@ -1187,28 +1187,41 @@ def _merge_manual_services(host_config, services, on_error):
     # Find manual checks. These can override discovered checks -> "manual"
     manual_items = check_table.get_check_table(hostname, skip_autochecks=True)
     for service in manual_items.values():
-        services[(service.check_plugin_name,
-                  service.item)] = ('manual',
-                                    DiscoveredService(service.check_plugin_name,
-                                                      service.item, service.description,
-                                                      repr(service.parameters)))
+        services[(service.check_plugin_name, service.item)] = (
+            'manual',
+            DiscoveredService(
+                service.check_plugin_name,
+                service.item,
+                service.description,
+                repr(service.parameters),
+            ),
+        )
 
     # Add custom checks -> "custom"
     for entry in host_config.custom_checks:
-        services[('custom',
-                  entry['service_description'])] = ('custom',
-                                                    DiscoveredService('custom',
-                                                                      entry['service_description'],
-                                                                      entry['service_description'],
-                                                                      'None'))
+        services[('custom', entry['service_description'])] = (
+            'custom',
+            DiscoveredService(
+                'custom',
+                entry['service_description'],
+                entry['service_description'],
+                'None',
+            ),
+        )
 
     # Similar for 'active_checks', but here we have parameters
     for plugin_name, entries in host_config.active_checks:
         for params in entries:
             descr = config.active_check_service_description(hostname, plugin_name, params)
-            services[(plugin_name, descr)] = ('active',
-                                              DiscoveredService(plugin_name, descr, descr,
-                                                                repr(params)))
+            services[(plugin_name, descr)] = (
+                'active',
+                DiscoveredService(
+                    plugin_name,
+                    descr,
+                    descr,
+                    repr(params),
+                ),
+            )
 
     # Handle disabled services -> "ignored"
     for check_source, discovered_service in services.values():
@@ -1221,8 +1234,10 @@ def _merge_manual_services(host_config, services, on_error):
 
         if config.service_ignored(hostname, discovered_service.check_plugin_name,
                                   discovered_service.description):
-            services[(discovered_service.check_plugin_name,
-                      discovered_service.item)] = ("ignored", discovered_service)
+            services[(discovered_service.check_plugin_name, discovered_service.item)] = (
+                "ignored",
+                discovered_service,
+            )
 
     return services
 

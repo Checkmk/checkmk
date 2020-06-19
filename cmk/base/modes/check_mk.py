@@ -6,7 +6,7 @@
 
 import os
 import sys
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict, Set
 
 from six import ensure_str
 
@@ -26,12 +26,13 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostgroupName, HostName, TagValue
+from cmk.utils.type_defs import HostAddress, HostgroupName, HostName, PluginName, TagValue
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.fetchers.factory as snmp_factory
 
+from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 import cmk.base.backup
 import cmk.base.check_api as check_api
 import cmk.base.check_utils
@@ -1534,12 +1535,18 @@ modes.register(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+_ChecksOption = Optional[Set[PluginName]]
 
-def _convert_checks_argument(arg: str) -> Optional[List[str]]:
+
+def _convert_checks_argument(arg: str) -> _ChecksOption:
     if arg == "@all":
         # this is the same as ommitting the option entirely.
         return None
-    return arg.split(",")
+    try:
+        # kindly forgive empty strings
+        return {PluginName(maincheckify(n)) for n in arg.split(",") if n}
+    except ValueError as exc:
+        raise MKBailOut("Error in --checks argument: %s" % exc)
 
 
 _option_checks = Option(
@@ -1550,9 +1557,18 @@ _option_checks = Option(
     argument_conv=_convert_checks_argument,
 )
 
+DiscoverOptions = TypedDict(
+    'DiscoverOptions',
+    {
+        'checks': _ChecksOption,
+        'discover': int,
+    },
+    total=False,
+)
+
 
 def mode_discover(options, args):
-    # type: (Dict, List[str]) -> None
+    # type: (DiscoverOptions, List[str]) -> None
     hostnames = modes.parse_hostname_list(args)
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
@@ -1562,11 +1578,7 @@ def mode_discover(options, args):
         data_sources.abstract.DataSource.set_may_use_cache_file(
             not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
-    check_plugin_names = options.get("checks")
-    if check_plugin_names is not None:
-        check_plugin_names = set(check_plugin_names)
-
-    discovery.do_discovery(set(hostnames), check_plugin_names, options["discover"] == 1)
+    discovery.do_discovery(set(hostnames), options.get("checks"), options["discover"] == 1)
 
 
 modes.register(
@@ -1609,9 +1621,21 @@ modes.register(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+CheckingOptions = TypedDict(
+    'CheckingOptions',
+    {
+        'no-submit': bool,
+        'perfdata': bool,
+        'checks': _ChecksOption,
+        'keepalive': bool,
+        'keepalive-fd': int,
+    },
+    total=False,
+)
+
 
 def mode_check(options, args):
-    # type: (Dict, List[str]) -> None
+    # type: (CheckingOptions, List[str]) -> None
     import cmk.base.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
     try:

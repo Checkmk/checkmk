@@ -22,6 +22,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Set,
     Tuple,
     Union,
 )
@@ -67,6 +68,7 @@ from cmk.base.api.agent_based import checking_types, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     CLUSTER_LEGACY_MODE_FROM_HELL,
     maincheckify,
+    resolve_legacy_name,
     wrap_parameters,
 )
 from cmk.base.check_utils import LegacyCheckParameters, Service
@@ -113,7 +115,7 @@ CHECK_NOT_IMPLEMENTED = (3, 'Check plugin not implemented', [])  # type: Service
 
 @cmk.base.decorator.handle_check_mk_check_result("mk", "Check_MK")
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
-    # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]
+    # type: (HostName, Optional[HostAddress], Optional[Set[PluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]
     cpu_tracking.start("busy")
     console.verbose("Check_MK version %s\n", cmk_version.__version__)
 
@@ -230,8 +232,12 @@ def _check_missing_sections(missing_sections, exit_spec):
 
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
-def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_names=None):
-    # type: (data_sources.DataSources, config.HostConfig, Optional[HostAddress], Optional[List[str]]) -> Tuple[int, List[SectionName]]
+def _do_all_checks_on_host(
+    sources: data_sources.DataSources,
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    only_check_plugins: Optional[Set[PluginName]] = None,
+) -> Tuple[int, List[SectionName]]:
     hostname = host_config.hostname  # type: HostName
     config_cache = config.get_config_cache()
 
@@ -249,12 +255,15 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
-    if only_check_plugin_names is None:
-        only_check_plugins = {service.check_plugin_name for service in services}
-    else:
-        only_check_plugins = set(only_check_plugin_names)
+    if only_check_plugins is None:
+        only_check_plugins = {
+            # TODO (mo): make service.check_plugin_name a PluginName instance and thus
+            # TODO (mo): centralize maincheckify: CMK-4295
+            PluginName(maincheckify(service.check_plugin_name)) for service in services
+        }
 
-    sources.enforce_check_plugin_names(only_check_plugins)
+    # TODO (mo): nuke this method entirely
+    sources.enforce_check_plugin_names({resolve_legacy_name(n) for n in only_check_plugins})
 
     # Gather the data from the sources
     multi_host_sections = sources.get_host_sections()
@@ -272,7 +281,8 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
         only_check_plugins -= removed_plugins
 
     for service in services:
-        if service.check_plugin_name not in only_check_plugins:
+        # TODO (mo): centralize maincheckify: CMK-4295
+        if PluginName(maincheckify(service.check_plugin_name)) not in only_check_plugins:
             continue
         if belongs_to_cluster and _is_not_of_host(hostname, service):
             continue

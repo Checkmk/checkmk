@@ -178,15 +178,13 @@ def _accept_all_services(_hostname, _check_plugin_name, _item):
 # being called from the main option parsing code. The list of
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
-def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
-    # type: (Set[HostName], Optional[Set[CheckPluginName]], bool) -> None
+def do_discovery(arg_hostnames, check_plugin_names, arg_only_new):
+    # type: (Set[HostName], Optional[Set[PluginName]], bool) -> None
     config_cache = config.get_config_cache()
     use_caches = not arg_hostnames or data_sources.abstract.DataSource.get_may_use_cache_file()
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
-    check_plugin_names = {PluginName(maincheckify(n)) for n in arg_check_plugin_names
-                         } if arg_check_plugin_names is not None else None
 
     # Now loop through all hosts
     for hostname in sorted(host_names):

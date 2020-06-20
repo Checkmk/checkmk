@@ -2170,6 +2170,8 @@ def _update_with_default_check_parameters(checktype, params):
     # type: (CheckPluginName, CheckParameters) -> CheckParameters
     # Handle dictionary based checks
     def_levels_varname = check_info[checktype].get("default_levels_variable")
+    if not def_levels_varname:
+        return params
 
     # Handle case where parameter is None but the type of the
     # default value is a dictionary. This is for example the
@@ -2179,7 +2181,7 @@ def _update_with_default_check_parameters(checktype, params):
     # None as a parameter. We convert that to an empty dictionary
     # that will be updated with the factory settings and default
     # levels, if possible.
-    if params is None and def_levels_varname:
+    if params is None:
         fs = factory_settings.get(def_levels_varname)
         if isinstance(fs, dict):
             params = {}
@@ -2189,14 +2191,11 @@ def _update_with_default_check_parameters(checktype, params):
     if isinstance(params, dict):
 
         # Start with factory settings
-        if def_levels_varname:
-            new_params = factory_settings.get(def_levels_varname, {}).copy()
-        else:
-            new_params = {}
+        new_params = factory_settings.get(def_levels_varname, {}).copy()
 
         # Merge user's default settings onto it
         check_context = _check_contexts[checktype]
-        if def_levels_varname and def_levels_varname in check_context:
+        if def_levels_varname in check_context:
             def_levels = check_context[def_levels_varname]
             if isinstance(def_levels, dict):
                 new_params.update(def_levels)

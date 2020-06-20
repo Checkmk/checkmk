@@ -99,6 +99,12 @@ metric_info["output_signal_power_dbm"] = {
     "color": "#2080c0",
 }
 
+metric_info["deviation_dbm"] = {
+    "title": _("Deviation"),
+    "unit": "dbm",
+    "color": "#b39eb5",
+}
+
 metric_info["signal_power_dbm"] = {
     "title": _("Power"),
     "unit": "dbm",

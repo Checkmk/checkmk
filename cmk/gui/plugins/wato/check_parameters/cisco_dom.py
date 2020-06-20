@@ -72,6 +72,26 @@ def _vs_cisco_dom(which_levels):
             ]))
 
 
+def _vs_cisco_dom_deviation():
+    return (
+        "deviation_levels",
+        Alternative(
+            title="Levels for the deviation",
+            style="dropdown",
+            elements=[
+                Tuple(title=_("Use the following levels"),
+                      elements=[
+                          Float(title=_(u"Warnig at"),   default_value=1.00, unit=_("dBm")),
+                          Float(title=_(u"Critical at"), default_value=2.00, unit=_("dBm")),
+                      ]),
+                FixedValue(
+                    False,
+                    title=_("No levels"),
+                    totext="",
+                ),
+            ]))
+
+
 def _item_spec_cisco_dom():
     # type: () -> TextAscii
     return TextAscii(title=_("Sensor description if present, sensor index otherwise"))
@@ -82,6 +102,7 @@ def _parameter_valuespec_cisco_dom():
     return Dictionary(elements=[
         (_vs_cisco_dom("upper")),
         (_vs_cisco_dom("lower")),
+        (_vs_cisco_dom_deviation()),
     ],)
 
 

@@ -324,6 +324,9 @@ check_info['cisco_temperature'] = {
 #   '----------------------------------------------------------------------'
 
 discovery_cisco_dom_rules = []
+factory_settings['cisco_temperature_dom_default_levels'] = {
+    'deviation_levels': (1.00, 2.00),
+}
 
 
 def inventory_cisco_temperature_dom(parsed):
@@ -337,7 +340,7 @@ def inventory_cisco_temperature_dom(parsed):
         dev_state = attrs.get('raw_dev_state')
         adm_state = attrs.get('admin_state')
         if dev_state == '1' and adm_state in admin_states_to_discover:
-            yield item, {}
+            yield item, {"first_reading": attrs.get('reading')}
 
 
 def _determine_levels(user_levels, device_levels):
@@ -378,10 +381,28 @@ def check_cisco_temperature_dom(item, params, parsed):
         dsname = "signal_power_dbm"
     yield check_levels(reading, dsname, levels, unit='dBm', infoname="Signal power")
 
+    # Verify deviation from first reading
+    first_reading = params.get('first_reading')
+    if first_reading is not None:
+        deviation_levels_upper = params.get('deviation_levels') or (None, None)
+        # The deviation levels are absolute, but the difference can also be negative.
+        # Specular levels are created for negative deviations.
+        # 'human_readable_func = abs' is not used to have the graph with both positive and negative values.
+        if all(deviation_levels_upper):
+            deviation_levels_lower = tuple([x * -1 for x in deviation_levels_upper])
+        else:
+            deviation_levels_lower = (None,None)
+        levels = ( deviation_levels_upper + deviation_levels_lower )
+
+        deviation = reading - first_reading
+        dsname = "deviation_dbm"
+        yield check_levels(deviation, dsname, levels, unit='dBm', infoname="Deviation")
+
 
 check_info['cisco_temperature.dom'] = {
     "inventory_function": inventory_cisco_temperature_dom,
     "check_function": check_cisco_temperature_dom,
+    "default_levels_variable" : "cisco_temperature_dom_default_levels",
     "service_description": "DOM %s",
     "group": "cisco_dom",
     "has_perfdata": True,

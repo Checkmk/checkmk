@@ -2188,23 +2188,22 @@ def _update_with_default_check_parameters(checktype, params):
 
     # Honor factory settings for dict-type checks. Merge
     # dict type checks with multiple matching rules
-    if isinstance(params, dict):
+    if not isinstance(params, dict):
+        return params
 
-        # Start with factory settings
-        new_params = factory_settings.get(def_levels_varname, {}).copy()
+    # Start with factory settings
+    new_params = factory_settings.get(def_levels_varname, {}).copy()
 
-        # Merge user's default settings onto it
-        check_context = _check_contexts[checktype]
-        if def_levels_varname in check_context:
-            def_levels = check_context[def_levels_varname]
-            if isinstance(def_levels, dict):
-                new_params.update(def_levels)
+    # Merge user's default settings onto it
+    check_context = _check_contexts[checktype]
+    if def_levels_varname in check_context:
+        def_levels = check_context[def_levels_varname]
+        if isinstance(def_levels, dict):
+            new_params.update(def_levels)
 
-        # Merge params from inventory onto it
-        new_params.update(params)
-        params = new_params
-
-    return params
+    # Merge params from inventory onto it
+    new_params.update(params)
+    return new_params
 
 
 def _update_with_configured_check_parameters(host, checktype, item, params):

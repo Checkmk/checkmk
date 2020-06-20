@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, NoReturn, Tuple, TypeVar, Union
+from typing import Any, Dict, List, NoReturn, Optional, Tuple, TypeVar, Union
 
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
@@ -162,3 +162,26 @@ def is_snmp_check(check_plugin_name):
         result = section_name_of(check_plugin_name) in snmp_checks
         cache[check_plugin_name] = result
         return result
+
+
+# TODO (mo): *consider* using the type aliases.
+def get_default_parameters(
+    check_info_dict: Dict[str, Any],
+    factory_settings: Dict[str, Dict[str, Any]],
+    check_context: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    """compute default parameters"""
+    params_variable_name = check_info_dict.get("default_levels_variable")
+    if not params_variable_name:
+        return None
+
+    # factory_settings
+    fs_parameters = factory_settings.get(params_variable_name, {})
+
+    # global scope of check context
+    gs_parameters = check_context.get(params_variable_name)
+
+    return {
+        **fs_parameters,
+        **gs_parameters,
+    } if isinstance(gs_parameters, dict) else fs_parameters

@@ -23,6 +23,7 @@ from cmk.base.api.agent_based.checking_types import (
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 import cmk.base.config as config
 from cmk.base.check_api_utils import Service as LegacyService
+from cmk.base.check_utils import get_default_parameters
 from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
 
 DUMMY_RULESET_NAME = "non_existent_auto_migration_dummy_rule"
@@ -221,26 +222,17 @@ def _create_signature_check_function(
 def _create_wrapped_parameters(check_plugin_name, check_info_dict):
     # type: (str, Dict[str, Any]) -> Optional[Dict[str, Any]]
     """compute default parameters and wrap them in a dictionary"""
-    var_name = check_info_dict.get("default_levels_variable")
-    if var_name is None:
+    default_parameters = get_default_parameters(
+        check_info_dict,
+        config.factory_settings,
+        config.get_check_context(check_plugin_name),
+    )
+    if default_parameters is None:
         return {} if check_info_dict.get("group") else None
 
-    # look in factory settings
-    parameters = config.factory_settings.get(var_name)
-    if isinstance(parameters, dict):
-        return parameters
-    if parameters is not None:
-        return wrap_parameters(parameters)
-
-    # look in check context
-    parameters = _resolve_string_parameters(var_name, check_plugin_name)
-    if isinstance(parameters, dict):
-        return parameters
-    if parameters is not None:
-        return wrap_parameters(parameters)
-
-    raise ValueError("[%s]: default levels variable %r is undefined" %
-                     (check_plugin_name, var_name))
+    if isinstance(default_parameters, dict):
+        return default_parameters
+    return wrap_parameters(default_parameters)
 
 
 def _create_cluster_legacy_mode_from_hell(check_function):

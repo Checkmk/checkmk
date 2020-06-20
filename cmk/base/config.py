@@ -2169,8 +2169,12 @@ def compute_check_parameters(host, checktype, item, params):
 def _update_with_default_check_parameters(checktype, params):
     # type: (CheckPluginName, CheckParameters) -> CheckParameters
     # Handle dictionary based checks
-    def_levels_varname = check_info[checktype].get("default_levels_variable")
-    if not def_levels_varname:
+    default_parameters = cmk.base.check_utils.get_default_parameters(
+        check_info[checktype],
+        factory_settings,
+        _check_contexts[checktype],
+    )
+    if default_parameters is None:
         return params
 
     # Handle case where parameter is None but the type of the
@@ -2182,28 +2186,10 @@ def _update_with_default_check_parameters(checktype, params):
     # that will be updated with the factory settings and default
     # levels, if possible.
     if params is None:
-        fs = factory_settings.get(def_levels_varname)
-        if isinstance(fs, dict):
-            params = {}
+        params = {}
 
-    # Honor factory settings for dict-type checks. Merge
-    # dict type checks with multiple matching rules
-    if not isinstance(params, dict):
-        return params
-
-    # Start with factory settings
-    new_params = factory_settings.get(def_levels_varname, {}).copy()
-
-    # Merge user's default settings onto it
-    check_context = _check_contexts[checktype]
-    if def_levels_varname in check_context:
-        def_levels = check_context[def_levels_varname]
-        if isinstance(def_levels, dict):
-            new_params.update(def_levels)
-
-    # Merge params from inventory onto it
-    new_params.update(params)
-    return new_params
+    # Merge params from inventory onto default parameters (if params is not updateable, it wins):
+    return {**default_parameters, **params} if isinstance(params, dict) else params
 
 
 def _update_with_configured_check_parameters(host, checktype, item, params):

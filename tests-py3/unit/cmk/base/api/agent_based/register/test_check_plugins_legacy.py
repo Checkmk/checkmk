@@ -108,7 +108,9 @@ def test_create_check_function():
     ]
 
 
-def test_create_check_plugin_from_legacy():
+def test_create_check_plugin_from_legacy_wo_params(monkeypatch):
+    monkeypatch.setattr(config, '_check_contexts', {"norris": {}})
+
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
         MINIMAL_CHECK_INFO,
@@ -124,6 +126,40 @@ def test_create_check_plugin_from_legacy():
     assert plugin.check_function.__name__ == 'check_migration_wrapper'
     assert plugin.check_default_parameters is None
     assert plugin.check_ruleset_name is None
+    assert plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"
+
+
+def test_create_check_plugin_from_legacy_with_params(monkeypatch):
+    monkeypatch.setattr(config, 'factory_settings', {"norris_default_levels": {"levels": (23, 42)}})
+    monkeypatch.setattr(config, '_check_contexts',
+                        {"norris": {
+                            "norris_default_levels": {
+                                "levels_lower": (1, 2)
+                            }
+                        }})
+
+    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
+        "norris",
+        {
+            **MINIMAL_CHECK_INFO,
+            "group": "norris_rule",
+            "default_levels_variable": "norris_default_levels",
+        },
+        [],
+    )
+
+    assert plugin.name == PluginName("norris")
+    assert plugin.sections == [PluginName("norris")]
+    assert plugin.service_name == MINIMAL_CHECK_INFO["service_description"]
+    assert plugin.discovery_function.__name__ == 'discovery_migration_wrapper'
+    assert plugin.discovery_default_parameters is None
+    assert plugin.discovery_ruleset_name is None
+    assert plugin.check_function.__name__ == 'check_migration_wrapper'
+    assert plugin.check_default_parameters == {
+        "levels": (23, 42),
+        "levels_lower": (1, 2),
+    }
+    assert plugin.check_ruleset_name == PluginName("norris_rule")
     assert plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"
 
 

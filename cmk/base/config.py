@@ -3589,10 +3589,12 @@ class ConfigCache:
 
     def service_level_of_service(self, hostname, description):
         # type: (HostName, ServiceName) -> Optional[int]
-        return self.get_service_ruleset_value(hostname,
-                                              description,
-                                              service_service_levels,
-                                              deflt=None)
+        return self.get_service_ruleset_value(
+            hostname,
+            description,
+            service_service_levels,
+            deflt=None,
+        )
 
     def check_period_of_service(self, hostname, description):
         # type: (HostName, ServiceName) -> Optional[TimeperiodName]
@@ -3626,10 +3628,11 @@ class ConfigCache:
         if cache_id in self._cache_match_object_service:
             return self._cache_match_object_service[cache_id]
 
-        result = RulesetMatchObject(host_name=hostname,
-                                    service_description=svc_desc,
-                                    service_labels=self.labels.labels_of_service(
-                                        self.ruleset_matcher, hostname, svc_desc))
+        result = RulesetMatchObject(
+            host_name=hostname,
+            service_description=svc_desc,
+            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+        )
         self._cache_match_object_service[cache_id] = result
         return result
 
@@ -3647,10 +3650,11 @@ class ConfigCache:
         if cache_id in self._cache_match_object_service_checkgroup:
             return self._cache_match_object_service_checkgroup[cache_id]
 
-        result = RulesetMatchObject(host_name=hostname,
-                                    service_description=item,
-                                    service_labels=self.labels.labels_of_service(
-                                        self.ruleset_matcher, hostname, svc_desc))
+        result = RulesetMatchObject(
+            host_name=hostname,
+            service_description=item,
+            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+        )
         self._cache_match_object_service_checkgroup[cache_id] = result
         return result
 
@@ -3673,8 +3677,12 @@ class ConfigCache:
 
     def get_autochecks_of(self, hostname):
         # type: (HostName) -> List[cmk.base.check_utils.Service]
-        return self._autochecks_manager.get_autochecks_of(hostname, compute_check_parameters,
-                                                          service_description, get_check_variables)
+        return self._autochecks_manager.get_autochecks_of(
+            hostname,
+            compute_check_parameters,
+            service_description,
+            get_check_variables,
+        )
 
     def section_name_of(self, section):
         # type: (CheckPluginName) -> SectionName
@@ -3698,13 +3706,18 @@ class ConfigCache:
     def host_extra_conf_merged(self, hostname, ruleset):
         # type: (HostName, Ruleset) -> Dict[str, Any]
         return self.ruleset_matcher.get_host_ruleset_merged_dict(
-            self.ruleset_match_object_of_host(hostname), ruleset)
+            self.ruleset_match_object_of_host(hostname),
+            ruleset,
+        )
 
     def host_extra_conf(self, hostname, ruleset):
         # type: (HostName, Ruleset) -> List
         return list(
             self.ruleset_matcher.get_host_ruleset_values(
-                self.ruleset_match_object_of_host(hostname), ruleset, is_binary=False))
+                self.ruleset_match_object_of_host(hostname),
+                ruleset,
+                is_binary=False,
+            ))
 
     # TODO: Cleanup external in_binary_hostlist call sites
     def in_binary_hostlist(self, hostname, ruleset):
@@ -3716,19 +3729,21 @@ class ConfigCache:
         # type: (HostName, ServiceName, Ruleset) -> List
         """Compute outcome of a service rule set that has an item."""
         return list(
-            self.ruleset_matcher.get_service_ruleset_values(self.ruleset_match_object_of_service(
-                hostname, description),
-                                                            ruleset,
-                                                            is_binary=False))
+            self.ruleset_matcher.get_service_ruleset_values(
+                self.ruleset_match_object_of_service(hostname, description),
+                ruleset,
+                is_binary=False,
+            ))
 
     def get_service_ruleset_value(self, hostname, description, ruleset, deflt):
         # type: (HostName, ServiceName, Ruleset, Any) -> Any
         """Compute first match service ruleset outcome with fallback to a default value"""
         return next(
-            self.ruleset_matcher.get_service_ruleset_values(self.ruleset_match_object_of_service(
-                hostname, description),
-                                                            ruleset,
-                                                            is_binary=False), deflt)
+            self.ruleset_matcher.get_service_ruleset_values(
+                self.ruleset_match_object_of_service(hostname, description),
+                ruleset,
+                is_binary=False,
+            ), deflt)
 
     def service_extra_conf_merged(self, hostname, description, ruleset):
         # type: (HostName, ServiceName, Ruleset) -> Dict[str, Any]
@@ -3785,8 +3800,11 @@ class ConfigCache:
         # type: () -> Set[HostName]
         """Returns a set of all hosts, regardless if currently disabled or monitored on a remote site."""
         hosts = set()  # type: Set[HostName]
-        hosts.update(self.all_configured_realhosts(), self.all_configured_clusters(),
-                     self._get_all_configured_shadow_hosts())
+        hosts.update(
+            self.all_configured_realhosts(),
+            self.all_configured_clusters(),
+            self._get_all_configured_shadow_hosts(),
+        )
         return hosts
 
     def _setup_clusters_nodes_cache(self):

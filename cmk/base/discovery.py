@@ -74,7 +74,7 @@ import cmk.base.section as section
 import cmk.base.utils
 
 from cmk.base.caching import config_cache as _config_cache
-from cmk.base.check_utils import CheckParameters, DiscoveredService, FinalSectionContent
+from cmk.base.check_utils import LegacyCheckParameters, DiscoveredService, FinalSectionContent
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
@@ -84,11 +84,11 @@ _marked_host_discovery_timeout = 120
 DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.Item],
                                Tuple[str, DiscoveredService]]
 CheckPreviewEntry = Tuple[str, CheckPluginName, Optional[RulesetName], check_table.Item,
-                          check_table.CheckParameters, check_table.CheckParameters, str,
+                          check_table.LegacyCheckParameters, check_table.LegacyCheckParameters, str,
                           Optional[int], str, List[Metric], Dict[str, str]]
 CheckPreviewTable = List[CheckPreviewEntry]
 DiscoveryEntry = Union[check_api_utils.Service, DiscoveredHostLabels, HostLabel,
-                       Tuple[Item, CheckParameters]]
+                       Tuple[Item, LegacyCheckParameters]]
 DiscoveryResult = List[DiscoveryEntry]
 DiscoveryFunction = Callable[[FinalSectionContent], DiscoveryResult]
 
@@ -1380,8 +1380,8 @@ def _preview_params(
     discovered_service: DiscoveredService,
     plugin: Optional[checking_types.CheckPlugin],
     check_source: str,
-) -> Optional[CheckParameters]:
-    params = None  # type: Optional[CheckParameters]
+) -> Optional[LegacyCheckParameters]:
+    params = None  # type: Optional[LegacyCheckParameters]
 
     if check_source not in ['legacy', 'active', 'custom']:
         if plugin is None:
@@ -1422,7 +1422,7 @@ def _preview_params(
 
 
 def _get_check_parameters(discovered_service):
-    # type: (DiscoveredService) -> CheckParameters
+    # type: (DiscoveredService) -> LegacyCheckParameters
     """Retrieves the check parameters (read from autochecks), possibly resolving a
     string to its actual value."""
     params = discovered_service.parameters_unresolved

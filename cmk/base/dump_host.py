@@ -18,7 +18,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 import cmk.base.checking as checking
 from cmk.utils.type_defs import HostName
-from cmk.base.check_utils import CheckParameters
+from cmk.base.check_utils import LegacyCheckParameters
 
 
 def dump_host(hostname):
@@ -119,7 +119,7 @@ def dump_host(hostname):
 
 
 def _evaluate_params(params):
-    # type: (CheckParameters) -> str
+    # type: (LegacyCheckParameters) -> str
     if not isinstance(params, cmk.base.config.TimespecificParamList):
         return "%r" % (params,)
 

@@ -36,7 +36,7 @@ from cmk.base.config import (
     Tags,
     ObjectAttributes,
 )
-from cmk.base.check_utils import Service, CheckParameters
+from cmk.base.check_utils import Service, LegacyCheckParameters
 
 ConfigurationWarnings = List[str]
 ObjectMacros = Dict[str, AnyStr]
@@ -371,7 +371,7 @@ def get_cmk_passive_service_attributes(config_cache, host_config, service, check
 
 
 def get_service_attributes(hostname, description, config_cache, checkname=None, params=None):
-    # type: (HostName, ServiceName, ConfigCache, Optional[CheckPluginName], CheckParameters) -> ObjectAttributes
+    # type: (HostName, ServiceName, ConfigCache, Optional[CheckPluginName], LegacyCheckParameters) -> ObjectAttributes
     attrs = _extra_service_attributes(hostname, description, config_cache, checkname,
                                       params)  # type: ObjectAttributes
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
@@ -387,7 +387,7 @@ def get_service_attributes(hostname, description, config_cache, checkname=None, 
 
 
 def _extra_service_attributes(hostname, description, config_cache, checkname, params):
-    # type: (HostName, ServiceName, ConfigCache, Optional[CheckPluginName], CheckParameters) -> ObjectAttributes
+    # type: (HostName, ServiceName, ConfigCache, Optional[CheckPluginName], LegacyCheckParameters) -> ObjectAttributes
     attrs = {}  # ObjectAttributes
 
     # Add service custom_variables. Name conflicts are prevented by the GUI, but just

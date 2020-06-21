@@ -86,7 +86,7 @@ import cmk.base.check_utils
 import cmk.base.default_config as default_config
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.caching import runtime_cache as _runtime_cache
-from cmk.base.check_utils import CheckParameters, DiscoveredService, SectionName
+from cmk.base.check_utils import LegacyCheckParameters, DiscoveredService, SectionName
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 try:
@@ -2154,7 +2154,7 @@ def discoverable_snmp_checks():
 
 
 def compute_check_parameters(host, checktype, item, params):
-    # type: (HostName, Union[CheckPluginName, PluginName], Item, CheckParameters) -> Optional[CheckParameters]
+    # type: (HostName, Union[CheckPluginName, PluginName], Item, LegacyCheckParameters) -> Optional[LegacyCheckParameters]
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
@@ -2178,7 +2178,7 @@ def compute_check_parameters(host, checktype, item, params):
 
 
 def _update_with_default_check_parameters(plugin, params):
-    # type: (CheckPlugin, CheckParameters) -> CheckParameters
+    # type: (CheckPlugin, LegacyCheckParameters) -> LegacyCheckParameters
     # Handle dictionary based checks
     if plugin.check_default_parameters is None:
         return params
@@ -2199,7 +2199,7 @@ def _update_with_default_check_parameters(plugin, params):
 
 
 def _update_with_configured_check_parameters(host, plugin, item, params):
-    # type: (HostName, CheckPlugin, Item, CheckParameters) -> CheckParameters
+    # type: (HostName, CheckPlugin, Item, LegacyCheckParameters) -> LegacyCheckParameters
     descr = service_description(host, plugin.name, item)
 
     config_cache = get_config_cache()
@@ -2253,7 +2253,7 @@ def set_timespecific_param_list(entries, params):
 
 
 def _get_checkgroup_parameters(config_cache, host, checkgroup, item, descr):
-    # type: (ConfigCache, HostName, RulesetName, Item, ServiceName) -> List[CheckParameters]
+    # type: (ConfigCache, HostName, RulesetName, Item, ServiceName) -> List[LegacyCheckParameters]
     rules = checkgroup_parameters.get(checkgroup)
     if rules is None:
         return []
@@ -3019,7 +3019,7 @@ class HostConfig:
 
     @property
     def static_checks(self):
-        # type: () -> List[Tuple[RulesetName, CheckPluginName, Item, CheckParameters]]
+        # type: () -> List[Tuple[RulesetName, CheckPluginName, Item, LegacyCheckParameters]]
         """Returns a table of all "manual checks" configured for this host"""
         matched = []
         for checkgroup_name in static_checks:
@@ -3542,7 +3542,7 @@ class ConfigCache:
         return attrs
 
     def icons_and_actions_of_service(self, hostname, description, checkname, params):
-        # type: (HostName, ServiceName, Optional[CheckPluginName], CheckParameters) -> List[str]
+        # type: (HostName, ServiceName, Optional[CheckPluginName], LegacyCheckParameters) -> List[str]
         actions = set(self.service_extra_conf(hostname, description, service_icons_and_actions))
 
         # Some WATO rules might register icons on their own

@@ -20,7 +20,7 @@ from cmk.snmplib.type_defs import (
 from cmk.base.caching import runtime_cache as _runtime_cache
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
-CheckParameters = Union[None, Dict, Tuple, List, str]
+LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
 RulesetName = str
 
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
@@ -51,7 +51,7 @@ class Service:
     __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
 
     def __init__(self, check_plugin_name, item, description, parameters, service_labels=None):
-        # type: (CheckPluginName, Item, str, CheckParameters, DiscoveredServiceLabels) -> None
+        # type: (CheckPluginName, Item, str, LegacyCheckParameters, DiscoveredServiceLabels) -> None
         self._check_plugin_name = check_plugin_name
         self._item = item
         self._description = description
@@ -75,7 +75,7 @@ class Service:
 
     @property
     def parameters(self):
-        # type: () -> CheckParameters
+        # type: () -> LegacyCheckParameters
         return self._parameters
 
     @property
@@ -116,7 +116,7 @@ class DiscoveredService(Service):
                  description,
                  parameters_unresolved,
                  service_labels=None):
-        # type: (CheckPluginName, Item, str, CheckParameters, DiscoveredServiceLabels) -> None
+        # type: (CheckPluginName, Item, str, LegacyCheckParameters, DiscoveredServiceLabels) -> None
         super(DiscoveredService, self).__init__(check_plugin_name=check_plugin_name,
                                                 item=item,
                                                 description=description,
@@ -131,7 +131,7 @@ class DiscoveredService(Service):
 
     @property
     def parameters_unresolved(self):
-        # type: () -> CheckParameters
+        # type: () -> LegacyCheckParameters
         """Returns the unresolved check parameters discovered for this service
 
         The reason for this hack is some old check API behaviour: A check may return the name of

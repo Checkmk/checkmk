@@ -12,7 +12,7 @@
 from typing import Optional
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels
-from cmk.base.check_utils import CheckParameters
+from cmk.base.check_utils import LegacyCheckParameters
 from cmk.utils.type_defs import CheckPluginName, Item, HostName, ServiceName
 
 # Symbolic representations of states in plugin output
@@ -34,7 +34,7 @@ _service_description = None  # type: Optional[ServiceName]
 class Service:
     """Can be used to by the discovery function to tell Checkmk about a new service"""
     def __init__(self, item, parameters=None, service_labels=None, host_labels=None):
-        # type: (Item, CheckParameters, DiscoveredServiceLabels, DiscoveredHostLabels) -> None
+        # type: (Item, LegacyCheckParameters, DiscoveredServiceLabels, DiscoveredHostLabels) -> None
         self.item = item
         self.parameters = parameters
         self.service_labels = service_labels or DiscoveredServiceLabels()

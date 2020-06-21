@@ -69,7 +69,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
     maincheckify,
     wrap_parameters,
 )
-from cmk.base.check_utils import CheckParameters, Service
+from cmk.base.check_utils import LegacyCheckParameters, Service
 from cmk.base.exceptions import MKParseFunctionError
 
 if not cmk_version.is_raw_edition():
@@ -507,7 +507,7 @@ def _legacy_determine_cache_info(multi_host_sections, section_name):
 
 
 def determine_check_params(entries):
-    # type: (CheckParameters) -> checking_types.Parameters
+    # type: (LegacyCheckParameters) -> checking_types.Parameters
     # TODO (mo): obviously, we do not want to keep legacy_determine_check_params
     # around in the long run. This needs cleaning up, once we've gotten
     # rid of tuple parameters.
@@ -519,7 +519,7 @@ def determine_check_params(entries):
 
 
 def legacy_determine_check_params(entries):
-    # type: (CheckParameters) -> CheckParameters
+    # type: (LegacyCheckParameters) -> LegacyCheckParameters
     if not isinstance(entries, cmk.base.config.TimespecificParamList):
         return entries
 

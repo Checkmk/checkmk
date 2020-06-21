@@ -17,16 +17,13 @@ from cmk.utils.paths import core_fetcher_config_dir
 from . import TCPDataFetcher
 
 #
-# At the moment Protocol and API are opened to changes and input.
-# TODO (ml): estimate possibility and efforts to serialize protocol im more intelligent manner:
-# Ich bin gewöhnt eine Klasse für so was zu machen, die sich serialisiert mit `__bytes__` und
-# sonst ganz normaler Accessoren hat, z.B. `inst.length -> int`, `inst.protocol -> str`, etc.
-# Kann auch den Payload enthalten. Dann wird `length` automatisch vom Payload abgeleitet.
+# At the moment Protocol and API are opened to critic.
+# Base structure and API are fixed
 #
 
 
 class Header:
-    """Header is fixed size(5+8+9+9 = 31 bytes) string in format
+    """Header is fixed size(6+8+9+9 = 32 bytes) string in format
 
       header: <ID>:<'SUCCESS'|'FAILURE'>:<HINT>:<SIZE>:
       ID   - 5 bytes protocol id, "base0" at the start
@@ -41,8 +38,8 @@ class Header:
         SUCCESS = "SUCCESS"
         FAILURE = "FAILURE"
 
-    fmt = "{:<4}:{:<7}:{:<8}:{:<8}:"
-    length = 31
+    fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
+    length = 32
 
     def __init__(self, name, state, hint, payload_length):
         # type: (str, Union[Header.State, str], str, int) -> None
@@ -63,7 +60,7 @@ class Header:
 
     def __str__(self):
         # type: () -> str
-        return Header.fmt.format(self.name, self.state, self.hint, self.payload_length)
+        return Header.fmt.format(self.name[:5], self.state[:7], self.hint[:8], self.payload_length)
 
     def __eq__(self, other):
         # type: (Any) -> bool
@@ -81,6 +78,7 @@ class Header:
     def from_network(cls, data):
         # type: (str) -> Header
         try:
+            # to simplify parsing we are using ':' as a splitter
             name, state, hint, payload_length = data[:Header.length].split(":")[:4]
             return cls(name, state, hint, int(payload_length, base=10))
         except ValueError as exc:
@@ -90,30 +88,28 @@ class Header:
         # type: () -> Header
         return Header(self.name, self.state, self.hint, self.payload_length)
 
-
-def supported_protocol_name():
-    # type: () -> str
-    return "fetch"
+    @staticmethod
+    def default_protocol_name():
+        # type: () -> str
+        return "fetch"
 
 
 def make_success_answer(data):
     # type : (str) -> str
-    return _make_success_header(length=len(data)) + data
+    return str(
+        Header(name=Header.default_protocol_name(),
+               state=Header.State.SUCCESS,
+               hint=" ",
+               payload_length=len(data))) + data
 
 
 def make_failure_answer(data, hint):
     # type : (str, str) -> str
-    return _make_failure_header(length=len(data), hint=hint) + data
-
-
-def _make_failure_header(length, hint):
-    # type : (int, str) -> str
-    return "{:<4}:FAILURE:{:<8}:{:<8}:".format(supported_protocol_name(), hint[:8], length)
-
-
-def _make_success_header(length):
-    # type : (int) -> str
-    return "{:<4}:SUCCESS:{:<8}:{:<8}:".format(supported_protocol_name(), " ", length)
+    return str(
+        Header(name=Header.default_protocol_name(),
+               state=Header.State.FAILURE,
+               hint=hint,
+               payload_length=len(data))) + data
 
 
 def run(serial, host, timeout):

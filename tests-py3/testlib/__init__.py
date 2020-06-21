@@ -331,10 +331,13 @@ class Check(BaseCheck):
             raise MissingCheckInfoError(self.name)
         self.info = config.check_info[self.name]
         self.context = config._check_contexts[self.name]
+        self._migrated_plugin = config.get_registered_check_plugin(
+            config.PluginName(self.name.replace('.', '_')))
 
     def default_parameters(self):
-        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-        return config._update_with_default_check_parameters(self.name, {})
+        if self._migrated_plugin:
+            return self._migrated_plugin.check_default_parameters or {}
+        return {}
 
     def run_parse(self, info):
         parse_func = self.info.get("parse_function")

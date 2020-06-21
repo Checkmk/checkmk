@@ -103,6 +103,7 @@ try:
     )
     from cmk.base.api.agent_based.register.check_plugins_legacy import (
         create_check_plugin_from_legacy,
+        maincheckify,
         resolve_legacy_name,
     )
 except ImportError:
@@ -2153,28 +2154,33 @@ def discoverable_snmp_checks():
 
 
 def compute_check_parameters(host, checktype, item, params):
-    # type: (HostName, CheckPluginName, Item, CheckParameters) -> Optional[CheckParameters]
+    # type: (HostName, Union[CheckPluginName, PluginName], Item, CheckParameters) -> Optional[CheckParameters]
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
-    if checktype not in check_info:  # handle vanished checktype
+    # TODO (mo): The signature of this function has been broadened to accept CheckPluginName
+    # *or* PluginName alternatively (to ease migration).
+    # Once we're ready, it should only accept the PluginName (or even the plugin itself, we will
+    # see)
+    if isinstance(checktype, PluginName):
+        plugin_name = checktype
+    else:
+        plugin_name = PluginName(maincheckify(checktype))
+
+    plugin = get_registered_check_plugin(plugin_name)
+    if plugin is None:  # handle vanished check plugin
         return None
 
-    params = _update_with_default_check_parameters(checktype, params)
-    params = _update_with_configured_check_parameters(host, checktype, item, params)
+    params = _update_with_default_check_parameters(plugin, params)
+    params = _update_with_configured_check_parameters(host, plugin, item, params)
 
     return params
 
 
-def _update_with_default_check_parameters(checktype, params):
-    # type: (CheckPluginName, CheckParameters) -> CheckParameters
+def _update_with_default_check_parameters(plugin, params):
+    # type: (CheckPlugin, CheckParameters) -> CheckParameters
     # Handle dictionary based checks
-    default_parameters = cmk.base.check_utils.get_default_parameters(
-        check_info[checktype],
-        factory_settings,
-        _check_contexts[checktype],
-    )
-    if default_parameters is None:
+    if plugin.check_default_parameters is None:
         return params
 
     # Handle case where parameter is None but the type of the
@@ -2189,19 +2195,23 @@ def _update_with_default_check_parameters(checktype, params):
         params = {}
 
     # Merge params from inventory onto default parameters (if params is not updateable, it wins):
-    return {**default_parameters, **params} if isinstance(params, dict) else params
+    return {**plugin.check_default_parameters, **params} if isinstance(params, dict) else params
 
 
-def _update_with_configured_check_parameters(host, checktype, item, params):
-    # type: (HostName, CheckPluginName, Item, CheckParameters) -> CheckParameters
-    descr = service_description(host, checktype, item)
+def _update_with_configured_check_parameters(host, plugin, item, params):
+    # type: (HostName, CheckPlugin, Item, CheckParameters) -> CheckParameters
+    descr = service_description(host, plugin.name, item)
 
     config_cache = get_config_cache()
 
     # Get parameters configured via checkgroup_parameters
-    checkgroup = check_info[checktype]["group"]
-    entries = ([] if not checkgroup else _get_checkgroup_parameters(config_cache, host, checkgroup,
-                                                                    item, descr))
+    entries = _get_checkgroup_parameters(
+        config_cache,
+        host,
+        str(plugin.check_ruleset_name),
+        item,
+        descr,
+    ) if plugin.check_ruleset_name is not None else []
 
     # Get parameters configured via check_parameters
     entries += config_cache.service_extra_conf(host, descr, check_parameters)

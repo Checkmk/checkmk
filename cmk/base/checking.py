@@ -71,7 +71,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
     resolve_legacy_name,
     wrap_parameters,
 )
-from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.check_utils import LegacyCheckParameters, ABCService, Service
 from cmk.base.exceptions import MKParseFunctionError
 
 if not cmk_version.is_raw_edition():
@@ -361,7 +361,7 @@ def get_aggregated_result(
     multi_host_sections: data_sources.MultiHostSections,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    service: Service,
+    service: ABCService,
     plugin: Optional[checking_types.CheckPlugin],
     params_function: Callable[[], checking_types.Parameters],
 ) -> Tuple[bool, bool, ServiceCheckResult]:

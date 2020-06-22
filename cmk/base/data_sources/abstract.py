@@ -286,7 +286,6 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self._ipaddress = ipaddress
         self._max_cachefile_age = None  # type: Optional[int]
         self._selected_raw_section_names = selected_raw_section_names
-        self._enforced_check_plugin_names = None  # type: Optional[Set[CheckPluginName]]
 
         self._logger = logging.getLogger("cmk.base.data_source.%s" % self.id())
         self._setup_logger()
@@ -463,20 +462,6 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         # type: (SectionName) -> bool
         return (self._selected_raw_section_names is None or
                 raw_section_name in self._selected_raw_section_names)
-
-    def enforce_check_plugin_names(self, check_plugin_names):
-        # type: (Optional[Set[CheckPluginName]]) -> None
-        """
-        Returns a subset of beforehand gathered check plugin names which are
-        supported by the data source.
-
-        Example: management board checks only for management board data sources
-        """
-        if check_plugin_names is not None:
-            self._enforced_check_plugin_names = config.filter_by_management_board(
-                self._hostname, check_plugin_names, self.source_type is SourceType.MANAGEMENT)
-        else:
-            self._enforced_check_plugin_names = check_plugin_names
 
     @abc.abstractmethod
     def _cpu_tracking_id(self):

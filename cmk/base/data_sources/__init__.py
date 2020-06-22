@@ -24,6 +24,7 @@ from cmk.utils.type_defs import HostAddress, HostName, PluginName, SectionName, 
 from cmk.utils.log import console
 
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
@@ -74,10 +75,6 @@ class DataSources:
         self._host_config = self._config_cache.get_host_config(hostname)
 
         self._initialize_data_sources(selected_raw_sections)
-
-        # Has currently no effect. The value possibly set during execution on the single data
-        # sources is kept here in this object to return it later on
-        self._enforced_check_plugin_names = None  # type: Optional[Set[CheckPluginName]]
 
     def _initialize_data_sources(self, selected_raw_sections):
         # type: (Optional[Dict[SectionName, config.SectionPlugin]]) -> None
@@ -224,17 +221,6 @@ class DataSources:
             ) for agentname, params in self._host_config.special_agents
         ]
 
-    def enforce_check_plugin_names(self, check_plugin_names):
-        # type: (Set[CheckPluginName]) -> None
-        self._enforced_check_plugin_names = check_plugin_names
-        for source in self.get_data_sources():
-            source.enforce_check_plugin_names(check_plugin_names)
-
-    def get_enforced_check_plugin_names(self):
-        # type: () -> Optional[Set[CheckPluginName]]
-        """Returns either the collection of enforced check plugin names (when they have been set before) or None"""
-        return self._enforced_check_plugin_names
-
     def get_data_sources(self):
         # type: () -> Iterable[DataSource]
         # Always execute piggyback at the end
@@ -271,9 +257,15 @@ class DataSources:
                 node_check_names = check_table.get_needed_check_names(node_hostname,
                                                                       remove_duplicates=True,
                                                                       filter_mode="only_clustered")
+                node_needed_raw_sections = config.get_relevant_raw_sections(
+                    # TODO (mo): centralize maincheckify: CMK-4295
+                    PluginName(maincheckify(n)) for n in node_check_names)
 
-                node_data_sources = DataSources(node_hostname, node_ipaddress)
-                node_data_sources.enforce_check_plugin_names(node_check_names)
+                node_data_sources = DataSources(
+                    node_hostname,
+                    node_ipaddress,
+                    node_needed_raw_sections,
+                )
                 hosts.append((node_hostname, node_ipaddress, node_data_sources,
                               config.cluster_max_cachefile_age))
         else:

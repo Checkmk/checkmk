@@ -68,7 +68,6 @@ from cmk.base.api.agent_based import checking_types, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     CLUSTER_LEGACY_MODE_FROM_HELL,
     maincheckify,
-    resolve_legacy_name,
     wrap_parameters,
 )
 from cmk.base.check_utils import LegacyCheckParameters, ABCService, Service
@@ -124,6 +123,11 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
     exit_spec = host_config.exit_code_spec()
 
+    # If check plugins are specified via command line,
+    # see which raw sections we may need
+    selected_raw_sections = (None if only_check_plugin_names is None else
+                             config.get_relevant_raw_sections(only_check_plugin_names))
+
     status = 0  # type: ServiceState
     infotexts = []  # type: List[ServiceDetails]
     long_infotexts = []  # type: List[ServiceAdditionalDetails]
@@ -137,7 +141,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
         item_state.load(hostname)
 
-        sources = data_sources.DataSources(hostname, ipaddress)
+        sources = data_sources.DataSources(hostname, ipaddress, selected_raw_sections)
 
         num_success, missing_sections = \
             _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_names)
@@ -261,9 +265,6 @@ def _do_all_checks_on_host(
             # TODO (mo): centralize maincheckify: CMK-4295
             PluginName(maincheckify(service.check_plugin_name)) for service in services
         }
-
-    # TODO (mo): nuke this method entirely
-    sources.enforce_check_plugin_names({resolve_legacy_name(n) for n in only_check_plugins})
 
     # Gather the data from the sources
     multi_host_sections = sources.get_host_sections()

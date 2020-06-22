@@ -34,7 +34,6 @@ from cmk.fetchers import factory, SNMPDataFetcher
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.inventory_plugins as inventory_plugins
-from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
@@ -318,11 +317,6 @@ class SNMPDataSource(ABCSNMPDataSource):
         # TODO (mo): Make this (and the called) function(s) return the sections directly!
         if self._selected_raw_section_names is not None:
             return self._selected_raw_section_names
-
-        # TODO (mo): At the moment, we must also consider the legacy version:
-        if self._enforced_check_plugin_names is not None:
-            # TODO (mo): centralize maincheckify: CMK-4295
-            return {SectionName(maincheckify(n)) for n in self._enforced_check_plugin_names}
 
         return self._detector(
             self._snmp_config,

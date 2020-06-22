@@ -40,7 +40,7 @@ def main(raw_args):
     with tempfile.TemporaryDirectory(prefix="cmk-run-dockerized-") as tmpdir:
         tmp_path = Path(tmpdir)
 
-        distro_name = _os_environ_get("DISTRO", "ubuntu-19.04")
+        distro_name = _os_environ_get("DISTRO", "ubuntu-20.04")
         docker_tag = _os_environ_get("DOCKER_TAG", "%s-latest" % current_base_branch_name())
         version_spec = _os_environ_get("VERSION", CMKVersion.GIT)
         edition = _os_environ_get("EDITION", CMKVersion.CEE)

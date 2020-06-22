@@ -42,6 +42,7 @@ from cmk.utils.type_defs import (
     HostName,
     Item,
     Metric,
+    PluginName,
     SectionName,
     ServiceAdditionalDetails,
     ServiceCheckResult,
@@ -62,7 +63,6 @@ import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.utils
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based import checking_types, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     CLUSTER_LEGACY_MODE_FROM_HELL,
@@ -329,6 +329,7 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
         host_config,
         ipaddress,
         service,
+        plugin,
         lambda: determine_check_params(service.parameters),
     )
 
@@ -346,13 +347,13 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
 
 
 def get_aggregated_result(
-    multi_host_sections: data_sources.MultiHostSections, host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress], service: Service,
-    params_function: Callable[[],
-                              checking_types.Parameters]) -> Tuple[bool, bool, ServiceCheckResult]:
-    # TODO (mo): centralize maincheckify: CMK-4295
-    plugin_name = PluginName(maincheckify(service.check_plugin_name))
-    plugin = config.get_registered_check_plugin(plugin_name)
+    multi_host_sections: data_sources.MultiHostSections,
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    service: Service,
+    plugin: Optional[checking_types.CheckPlugin],
+    params_function: Callable[[], checking_types.Parameters],
+) -> Tuple[bool, bool, ServiceCheckResult]:
     if plugin is None:
         return False, True, CHECK_NOT_IMPLEMENTED
 
@@ -361,7 +362,7 @@ def get_aggregated_result(
 
     source_type = (SourceType.MANAGEMENT
                    if service.check_plugin_name.startswith('mgmt_') else SourceType.HOST)
-    kwargs = None
+    kwargs = {}
     try:
         kwargs = multi_host_sections.get_section_cluster_kwargs(
             host_config.hostname,
@@ -394,14 +395,13 @@ def get_aggregated_result(
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        return True, True, (
-            3,
-            cmk.base.crash_reporting.create_check_crash_dump(
-                host_config.hostname, service.check_plugin_name, service.item,
-                is_manual_check(host_config.hostname, service.check_plugin_name, service.item),
-                service.parameters, service.description, kwargs),
-            [],
-        )
+        result = 3, cmk.base.crash_reporting.create_check_crash_dump(
+            host_config.hostname,
+            service.check_plugin_name,
+            kwargs,
+            is_manual_check(host_config.hostname, service.check_plugin_name, service.item),
+            service.description,
+        ), []
 
     return True, True, result
 
@@ -446,8 +446,8 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
         # Call the actual check function
         item_state.reset_wrapped_counters()
 
-        raw_result = check_function(service.item, legacy_determine_check_params(service.parameters),
-                                    section_content)
+        used_params = legacy_determine_check_params(service.parameters)
+        raw_result = check_function(service.item, used_params, section_content)
         result = sanitize_check_result(raw_result)
         item_state.raise_counter_wrap()
 
@@ -467,9 +467,16 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
         if cmk.utils.debug.enabled():
             raise
         result = 3, cmk.base.crash_reporting.create_check_crash_dump(
-            hostname, service.check_plugin_name, service.item,
-            is_manual_check(hostname, service.check_plugin_name, service.item), service.parameters,
-            service.description, section_content), []
+            hostname,
+            service.check_plugin_name,
+            {
+                "item": service.item,
+                "params": used_params,
+                "section_content": section_content
+            },
+            is_manual_check(hostname, service.check_plugin_name, service.item),
+            service.description,
+        ), []
 
     _submit_check_result(
         hostname,

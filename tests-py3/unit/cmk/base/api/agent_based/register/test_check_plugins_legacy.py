@@ -10,10 +10,12 @@ import inspect
 
 import pytest  # type: ignore[import]
 
-from cmk.base.api import PluginName
+from cmk.utils.type_defs import PluginName
+
 import cmk.base.api.agent_based.checking_types as checking_types
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
 from cmk.base.check_api_utils import Service as OldService
+import cmk.base.config as config
 from cmk.base.discovered_labels import HostLabel
 
 
@@ -29,7 +31,7 @@ MINIMAL_CHECK_INFO = {
 }
 
 
-def test_create_discovery_function():
+def test_create_discovery_function(monkeypatch):
     def insane_discovery(info):
         """Completely crazy discovery function:
 
@@ -46,8 +48,14 @@ def test_create_discovery_function():
             OldService("bar", {"P": "O"}),
         ]
 
+    monkeypatch.setattr(config, "_check_contexts",
+                        {"norris": {
+                            "params_string": {
+                                "levels": "default"
+                            }
+                        }})
     new_function = check_plugins_legacy._create_discovery_function(
-        {"inventory_function": insane_discovery}, {"levels": "default"})
+        "norris", {"inventory_function": insane_discovery})
 
     fixed_params = inspect.signature(new_function).parameters
     assert list(fixed_params) == ["section"]

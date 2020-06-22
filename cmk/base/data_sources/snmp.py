@@ -7,15 +7,20 @@
 import abc
 import ast
 import time
-from typing import Callable, cast, Dict, List, Optional, Set
-
-from mypy_extensions import NamedArg
+from typing import cast, Dict, Iterable, List, Optional, Set
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SectionName, SourceType
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostAddress,
+    HostName,
+    PluginName,
+    SectionName,
+    SourceType,
+)
 
+from cmk.snmplib.snmp_scan import PluginNameFilterFunction, SNMPScanSection
 from cmk.snmplib.type_defs import (
-    ABCSNMPBackend,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPPersistedSections,
@@ -29,7 +34,7 @@ from cmk.fetchers import factory, SNMPDataFetcher
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
-from cmk.base.api import PluginName
+import cmk.base.inventory_plugins as inventory_plugins
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
@@ -37,14 +42,6 @@ from cmk.base.exceptions import MKAgentError
 
 from .abstract import DataSource, verify_ipaddress
 from .host_sections import AbstractHostSections
-
-PluginNameFilterFunction = Callable[[
-    SNMPHostConfig,
-    NamedArg(str, 'on_error'),
-    NamedArg(bool, 'do_snmp_scan'),
-    NamedArg(bool, 'for_mgmt_board'),
-    NamedArg(ABCSNMPBackend, 'backend'),
-], Set[CheckPluginName]]
 
 #.
 #   .--SNMP----------------------------------------------------------------.
@@ -86,12 +83,26 @@ class CachedSNMPDetector:
         # TODO (mo): With the new API we may be able to set this here.
         #            For now, it is set later :-(
         self._filter_function = None  # type: Optional[PluginNameFilterFunction]
+        self._for_inventory = False
         # Optional set: None: we never tried, empty: we tried, but found nothing
         self._cached_result = None  # type: Optional[Set[CheckPluginName]]
 
     def set_filter_function(self, filter_function):
         # type: (PluginNameFilterFunction) -> None
         self._filter_function = filter_function
+
+    def set_for_inventory(self, for_inventory):
+        # type: (bool) -> None
+        self._for_inventory = for_inventory
+
+    def sections(self):
+        # type: () -> Iterable[SNMPScanSection]
+        sections = []
+        for name, section in config.registered_snmp_sections.items():
+            if self._for_inventory and not inventory_plugins.is_snmp_plugin(str(name)):
+                continue
+            sections.append(SNMPScanSection(section.name, section.detect_spec))
+        return sections
 
     def __call__(
             self,
@@ -114,12 +125,21 @@ class CachedSNMPDetector:
         # This is rarely used, but e.g. the scan for if/if64 needs
         # this to evaluate if_disabled_if64_checks.
         check_api_utils.set_hostname(snmp_config.hostname)
-        self._cached_result = self._filter_function(
-            snmp_config,
+        found_plugins = self._filter_function(
+            self.sections(),
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
-            for_mgmt_board=for_mgmt_board,
+            binary_host=config.get_config_cache().in_binary_hostlist(
+                snmp_config.hostname,
+                config.snmp_without_sys_descr,
+            ),
             backend=factory.backend(snmp_config),
+        )
+        self._cached_result = config.filter_by_management_board(
+            snmp_config.hostname,
+            found_plugins,
+            for_mgmt_board=for_mgmt_board,
+            for_discovery=True,
         )
         return self._cached_result
 
@@ -244,9 +264,10 @@ class SNMPDataSource(ABCSNMPDataSource):
         # type: () -> bool
         return self._do_snmp_scan
 
-    def set_check_plugin_name_filter(self, filter_func):
-        # type: (PluginNameFilterFunction) -> None
+    def set_check_plugin_name_filter(self, filter_func, *, inventory):
+        # type: (PluginNameFilterFunction, bool) -> None
         self._detector.set_filter_function(filter_func)
+        self._detector.set_for_inventory(inventory)
 
     def set_fetched_raw_section_names(self, raw_section_names):
         # type: (Set[PluginName]) -> None

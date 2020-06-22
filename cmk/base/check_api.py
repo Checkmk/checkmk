@@ -69,6 +69,8 @@ Global variables:
 # NOTE: The above suppression is necessary because our testing framework blindly
 # concatenates lots of files, including this one.
 
+# pylint: disable=unused-import
+
 # We import several modules here for the checks
 
 import calendar
@@ -109,6 +111,7 @@ from cmk.utils.type_defs import EvalableFloat as as_float
 from cmk.utils.type_defs import (
     HostName,
     MetricName,
+    PluginName as _PluginName,
     ServiceCheckResult,
     ServiceDetails,
     ServiceName,
@@ -571,17 +574,19 @@ def _agent_cache_file_age(hostname, check_plugin_name):
     if host_config.is_cluster:
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
 
-    # TODO 'import-outside-toplevel' not available in pylint for Python 2
-    import cmk.base.check_utils  # pylint: disable-all
-    if cmk.base.check_utils.is_snmp_check(check_plugin_name):
-        cachefile = _paths.tcp_cache_dir + "/" + hostname + "." + check_plugin_name.split(".")[
-            0]  # type: Optional[str]
-    elif cmk.base.check_utils.is_tcp_check(check_plugin_name):
-        cachefile = _paths.tcp_cache_dir + "/" + hostname
+    # NOTE: This is a workaround for the 'old' API and will not be correct
+    # for the new one. This is a check plugin name, and the property of being
+    # 'TCP' or 'SNMP' is a property of the section.
+    # This function is deprecated for new plugins.
+    # For old-style plugins, plugin and section name are same, so check the
+    # corresponding section:
+    section_name_str = _cmk_utils.check_utils.section_name_of(check_plugin_name)
+    if _PluginName(section_name_str) in _config.registered_snmp_sections:
+        cachefile = "%s/%s.%s" % (_paths.tcp_cache_dir, hostname, section_name_str)
     else:
-        cachefile = None
+        cachefile = "%s/%s" % (_paths.tcp_cache_dir, hostname)
 
-    if cachefile is not None and os.path.exists(cachefile):
+    if os.path.exists(cachefile):
         return _cmk_utils.cachefile_age(cachefile)
 
     return None
@@ -706,12 +711,18 @@ def discover(selector=None, default_params=None):
             if isinstance(parsed, dict):
                 filterer = validate_filter(filter_function)
                 for key, value in parsed.items():
-                    for n in _get_discovery_iter(filterer(key, value), lambda: key):
+                    for n in _get_discovery_iter(
+                            filterer(key, value),
+                            lambda: key,  # pylint: disable=cell-var-from-loop
+                    ):
                         yield (n, params)
             elif isinstance(parsed, (list, tuple)):
                 filterer = validate_filter(filter_function)
                 for entry in parsed:
-                    for n in _get_discovery_iter(filterer(entry), lambda: entry[0]):
+                    for n in _get_discovery_iter(
+                            filterer(entry),
+                            lambda: entry[0],  # pylint: disable=cell-var-from-loop
+                    ):
                         yield (n, params)
             else:
                 raise ValueError(

@@ -28,7 +28,7 @@ import subprocess
 import hashlib
 from logging import Logger
 from pathlib import Path
-from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple
+from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple, Any
 
 import psutil  # type: ignore[import]
 from six import ensure_binary, ensure_str
@@ -39,6 +39,7 @@ from livestatus import (
 )
 
 import cmk.utils
+import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
@@ -65,6 +66,7 @@ from cmk.gui.exceptions import (
     MKGeneralException,
     RequestTimeout,
     MKUserError,
+    MKAuthException,
 )
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.plugins.userdb.utils import user_sync_default_config
@@ -132,6 +134,8 @@ _replication_paths = []  # type: List[ReplicationPath]
 ReplicationPathPre16 = Union[Tuple[str, str, str, List[str]], Tuple[str, str, str]]
 ReplicationPathCompat = Union[ReplicationPathPre16, ReplicationPath]
 ConfigWarnings = Dict[ConfigDomainName, List[str]]
+ActivationId = str
+ActivationState = Dict[str, Dict[str, Any]]
 
 
 def add_replication_paths(paths):
@@ -448,7 +452,7 @@ class ActivateChanges:
 
 
 class ActivateChangesManager(ActivateChanges):
-    """Manages the activation of pending changes in Checkmk
+    """Manages the activation of pending configuration changes
 
     A single object cares about one activation for all affected sites.
 
@@ -464,6 +468,16 @@ class ActivateChangesManager(ActivateChanges):
     # Persisted data
     activation_persisted_dir = cmk.utils.paths.var_dir + "/wato/activation"
 
+    # These keys will be persisted in <activation_id>/info.mk
+    info_keys = (
+        "_sites",
+        "_activate_until",
+        "_comment",
+        "_activate_foreign",
+        "_activation_id",
+        "_time_started",
+    )
+
     def __init__(self):
         self._sites = []  # type: List[SiteId]
         self._site_snapshot_settings = {}  # type: Dict[SiteId, SnapshotSettings]
@@ -471,17 +485,16 @@ class ActivateChangesManager(ActivateChanges):
         self._comment = None  # type: Optional[str]
         self._activate_foreign = False
         self._activation_id = None  # type: Optional[str]
-        if not os.path.exists(self.activation_persisted_dir):
-            os.makedirs(self.activation_persisted_dir)
+        self._prevent_activate = False
+        store.makedirs(self.activation_persisted_dir)
         super(ActivateChangesManager, self).__init__()
 
     def load_activation(self, activation_id):
+        # type: (ActivationId) -> None
         self._activation_id = activation_id
-
-        if not os.path.exists(self._info_path()):
-            raise MKUserError(None, "Unknown activation process")
-
-        self._load_activation()
+        from_file = self._load_activation_info(activation_id)
+        for key in self.info_keys:
+            setattr(self, key, from_file[key])
 
     # Creates the snapshot and starts the single site sync processes. In case these
     # steps could not be started, exceptions are raised and have to be handled by
@@ -503,6 +516,38 @@ class ActivateChangesManager(ActivateChanges):
             activate_foreign=False,  # type: bool
             prevent_activate=False  # type: bool
     ):
+        # type: (...) -> ActivationId
+        """Start activation of changes.
+
+        For each site one background process will be launched, handling the activation of one
+        particular site. Handling of remote sites is done transparently through the use of
+        SyncSnapshots.
+
+        Args:
+            sites:
+                The sites for which activation should be started.
+
+            activate_until:
+                The most current change-id which shall be activated. If newer changes are present
+                the activation is aborted.
+
+            comment:
+                A comment which will be persisted in the temporary info.mk file and stored with the
+                newly created snapshot.
+
+            activate_foreign:
+                A boolean flag, indicating that even changes which do not originate from the
+                user requesting the activation shall be activated. If this is not set and there
+                are "foreign" changes, the activation will be aborted. In any case the user needs
+                to have the `wato.activateforeign` permission.
+
+            prevent_activate:
+                Doesn't seem to be doing much. Remove?
+
+        Returns:
+            The activation-id under which to track the progress of this particular run.
+
+        """
         self._activate_foreign = activate_foreign
 
         self._sites = self._get_sites(sites)
@@ -526,17 +571,16 @@ class ActivateChangesManager(ActivateChanges):
         return self._activation_id
 
     def _verify_valid_host_config(self):
-        # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
-        defective_hosts = cmk.gui.watolib.hosts_and_folders.validate_all_hosts([], force_all=True)
+        defective_hosts = cmk.gui.watolib.validate_all_hosts([], force_all=True)
         if defective_hosts:
             raise MKUserError(
                 None,
                 _("You cannot activate changes while some hosts have "
                   "an invalid configuration: ") + ", ".join([
                       '<a href="%s">%s</a>' %
-                      (cmk.gui.watolib.hosts_and_folders.folder_preserving_link(
-                          [("mode", "edit_host"), ("host", hn)]), hn) for hn in defective_hosts
+                      (cmk.gui.watolib.folder_preserving_link([("mode", "edit_host"),
+                                                               ("host", hn)]), hn)
+                      for hn in defective_hosts
                   ]))
 
     def activate_until(self):
@@ -568,49 +612,55 @@ class ActivateChangesManager(ActivateChanges):
         # type: () -> bool
         return bool(self.running_sites())
 
+    def _activation_running(self, site_id):
+        # type: (SiteId) -> bool
+        site_state = self.get_site_state(site_id)
+
+        # The site_state file may be missing/empty, if the operation has started recently.
+        # However, if the file is still missing after a considerable amount
+        # of time, we consider this site activation as dead
+        seconds_since_start = time.time() - self._time_started
+        if site_state == {} and seconds_since_start > html.request.request_timeout - 10:
+            return False
+
+        if site_state == {} or site_state["_phase"] == PHASE_INITIALIZED:
+            # Just been initialized. Treat as running as it has not been
+            # started and could not lock the site stat file yet.
+            return True
+
+        # Check whether or not the process is still there
+        # The pid refers to
+        # - the site scheduler PID as long as the site is in queue
+        # - the site activate changes PID
+        # - None, if the site was locked by another process
+        if site_state["_pid"] is None:
+            return False
+
+        try:
+            os.kill(site_state["_pid"], 0)
+            return True
+        except OSError as e:
+            # ESRCH: no such process
+            # EPERM: operation not permitted (another process reused this)
+            # -> Both cases mean it is not running anymore
+            if e.errno in [errno.EPERM, errno.ESRCH]:
+                return False
+
+            raise
+
     # Check whether or not at least one site thread is still working
     # (flock on the <activation_id>/site_<site_id>.mk file)
     def running_sites(self):
         # type: () -> List[SiteId]
-        state = self.get_state()
-
         running = []
         for site_id in self._sites:
-            site_state = state["sites"][site_id]
-
-            # The site_state file may be missing/empty, if the operation has started recently.
-            # However, if the file is still missing after a considerable amount
-            # of time, we consider this site activation as dead
-            seconds_since_start = time.time() - self._time_started
-            if site_state == {} and seconds_since_start > html.request.request_timeout - 10:
-                continue
-
-            if site_state == {} or site_state["_phase"] == PHASE_INITIALIZED:
-                # Just been initialized. Treat as running as it has not been
-                # started and could not lock the site stat file yet.
+            if self._activation_running(site_id):
                 running.append(site_id)
-                continue
-
-            # Check whether or not the process is still there
-            # The pid refers to
-            # - the site scheduler PID as long as the site is in queue
-            # - the site activate changes PID
-            # - None, if the site was locked by another process
-            try:
-                if site_state["_pid"] is None:
-                    continue
-                os.kill(site_state["_pid"], 0)
-                running.append(site_id)
-            except OSError as e:
-                # ESRCH: no such process
-                # EPERM: operation not permitted (another process reused this)
-                # -> Both cases mean it is not running anymore
-                if e.errno not in [errno.EPERM, errno.ESRCH]:
-                    raise
 
         return running
 
     def _new_activation_id(self):
+        # type: () -> ActivationId
         return cmk.gui.utils.gen_id()
 
     def _get_sites(self, sites):
@@ -621,44 +671,34 @@ class ActivateChangesManager(ActivateChanges):
 
         return sites
 
-    def _info_path(self):
-        return "%s/%s/info.mk" % (self.activation_tmp_base_dir, self._activation_id)
+    def _info_path(self, activation_id):
+        return "%s/%s/info.mk" % (self.activation_tmp_base_dir, activation_id)
+
+    def activations(self):
+        for activation_id in os.listdir(self.activation_tmp_base_dir):
+            yield activation_id, self._load_activation_info(activation_id)
 
     def _site_snapshot_file(self, site_id):
         return "%s/%s/site_%s_sync.tar.gz" % (self.activation_tmp_base_dir, self._activation_id,
                                               site_id)
 
-    def _load_activation(self):
-        self.__dict__.update(store.load_object_from_file(self._info_path(), {}))
+    def _load_activation_info(self, activation_id):
+        if not os.path.exists(self._info_path(activation_id)):
+            raise MKUserError(None, "Unknown activation process")
+
+        return store.load_object_from_file(self._info_path(activation_id), {})
 
     def _save_activation(self):
-        try:
-            os.makedirs(os.path.dirname(self._info_path()))
-        except OSError as e:
-            if e.errno == errno.EEXIST:
-                pass
-            else:
-                raise
-
-        return store.save_object_to_file(
-            self._info_path(), {
-                "_sites": self._sites,
-                "_activate_until": self._activate_until,
-                "_comment": self._comment,
-                "_activate_foreign": self._activate_foreign,
-                "_activation_id": self._activation_id,
-                "_time_started": self._time_started,
-            })
+        store.makedirs(os.path.dirname(self._info_path(self._activation_id)))
+        to_file = {key: getattr(self, key) for key in self.info_keys}
+        return store.save_object_to_file(self._info_path(self._activation_id), to_file)
 
     # Give hooks chance to do some pre-activation things (and maybe stop
     # the activation)
     def _pre_activate_changes(self):
-        # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
         try:
             if hooks.registered('pre-distribute-changes'):
-                hooks.call("pre-distribute-changes",
-                           cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
+                hooks.call("pre-distribute-changes", cmk.gui.watolib.collect_all_hosts())
         except Exception as e:
             logger.exception("error calling pre-distribute-changes hook")
             if config.debug:
@@ -666,6 +706,12 @@ class ActivateChangesManager(ActivateChanges):
             raise MKUserError(None, _("Can not start activation: %s") % e)
 
     def _create_snapshots(self):
+        """Creates the needed SyncSnapshots for each applicable site.
+
+        Some conflict prevention is being done. This function checks for the presence of
+        newer changes than the ones to be activated.
+
+        """
         with store.lock_checkmk_configuration():
             if not self._changes:
                 raise MKUserError(None, _("Currently there are no changes to activate."))
@@ -770,17 +816,15 @@ class ActivateChangesManager(ActivateChanges):
             log_audit(None, "activate-changes", "%s: %s" % (_("Comment"), self._comment))
 
     def get_state(self):
+        # type: (...) -> ActivationState
         return {
             "sites": {
-                site_id: self._load_site_state(site_id)  #
+                site_id: self.get_site_state(site_id)  #
                 for site_id in self._sites
             }
         }
 
     def get_site_state(self, site_id):
-        return self._load_site_state(site_id)
-
-    def _load_site_state(self, site_id):
         return store.load_object_from_file(self.site_state_path(site_id), {})
 
     def site_state_path(self, site_id):
@@ -1883,6 +1927,33 @@ def _is_pre_17_remote_site(site_status):
 
 def _get_replication_components(work_dir, site_config, is_pre_17_remote_site):
     # type: (str, SiteConfiguration, bool) -> List[ReplicationPath]
+    """Gives a list of ReplicationPath instances.
+
+    These represent the folders which need to be sent to remote sites. Whether a specific subset
+    of paths need to be sent is being determined by the site-specific `site_config`.
+
+    Note:
+        "Replication path" or "replication component" or "snapshot component" are the same concept.
+
+    Args:
+        work_dir:
+            Something no longer used apparently.
+
+        site_config:
+            The site configuration. Specifically the following keys on it are used:
+
+                 - `replicate_ec`:
+                 - `replicate_mkps`
+
+        is_pre_17_remote_site:
+            This is true if the site in question (as supplied in `site_config`) is of a version
+            1.6.x or less.
+
+    Returns:
+        A list of ReplicationPath instances, specifying which paths shall be packaged for this
+        particular site.
+
+    """
     paths = get_replication_paths()[:]
 
     # Remove Event Console settings, if this site does not want it (might
@@ -2205,3 +2276,80 @@ class AutomationReceiveConfigSync(AutomationCommand):
                     raise
 
         _unpack_sync_archive(sync_archive, base_dir)
+
+
+def activate_changes_start(
+        sites,  # type: List[SiteId]
+        comment=None,  # type: Optional[str]
+        force_foreign_changes=False,  # type: bool
+):
+    # type: (...) -> ActivationId
+    """Start activation of configuration changes on specific or "dirty" sites.
+
+    A "dirty" site is defined by having pending configuration changes to be activated.
+
+    Args:
+        sites:
+            A list of site names which to activate.
+
+        comment:
+            A comment which shall be associated with this activation.
+
+        force_foreign_changes:
+            Will activate changes even if the user who made those changes is not the currently
+            logged in user.
+
+    Returns:
+
+    """
+    changes = ActivateChanges()
+    changes.load()
+
+    if changes.has_foreign_changes():
+        if not config.user.may("wato.activateforeign"):
+            raise MKAuthException(_("You are not allowed to activate changes of other users."))
+        if not force_foreign_changes:
+            raise MKAuthException(
+                _("There are changes from other users and foreign changes are "
+                  "not allowed in this API call."))
+
+    known_sites = config.allsites().keys()
+    for site in sites:
+        if site not in known_sites:
+            raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(site))
+
+    manager = ActivateChangesManager()
+    manager.load()
+    if manager.is_running():
+        raise MKUserError(None, _("There is an activation already running."))
+
+    if not manager.has_changes():
+        raise MKUserError(None, _("Currently there are no changes to activate."))
+
+    if not sites:
+        sites = manager.dirty_and_active_activation_sites()
+
+    return manager.start(sites, comment=comment, activate_foreign=force_foreign_changes)
+
+
+def activate_changes_wait(activation_id, timeout=None):
+    # type: (ActivationId, Optional[Union[float, int]]) -> Optional[ActivationState]
+    """Wait for configuration changes to complete activating.
+
+    Args:
+        activation_id:
+            The activation_id representing the activation to wait for.
+
+        timeout:
+            An optional timeout for the waiting time. If timeout is set to None, it will run
+            until finished. A timeout set to 0 will time out immediately.
+
+    Returns:
+        The activation-state when finished, if not yet finished it will return None
+    """
+    manager = ActivateChangesManager()
+    manager.load()
+    manager.load_activation(activation_id)
+    if manager.wait_for_completion(timeout=timeout):
+        return manager.get_state()
+    return None

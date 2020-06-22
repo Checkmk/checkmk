@@ -13,15 +13,14 @@ from typing import Any, Generator, List, Optional, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
+from cmk.utils.type_defs import PluginName
 
-from cmk.snmplib.type_defs import OIDSpec, SNMPTree
+from cmk.snmplib.type_defs import OIDSpec, SNMPDetectSpec, SNMPTree
 
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,
-    SNMPDetectSpec,
     SNMPParseFunction,
     SNMPSectionPlugin,
 )

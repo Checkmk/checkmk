@@ -12,8 +12,8 @@
 from typing import Optional
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels
-from cmk.base.check_utils import CheckParameters, CheckPluginName, Item
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.base.check_utils import CheckParameters
+from cmk.utils.type_defs import CheckPluginName, Item, HostName, ServiceName
 
 # Symbolic representations of states in plugin output
 state_markers = ["", "(!)", "(!!)", "(?)"]
@@ -30,6 +30,7 @@ _check_type = None  # type: Optional[CheckPluginName]
 _service_description = None  # type: Optional[ServiceName]
 
 
+# Obsolete! Do not confuse with the Service object exposed by the new API.
 class Service:
     """Can be used to by the discovery function to tell Checkmk about a new service"""
     def __init__(self, item, parameters=None, service_labels=None, host_labels=None):

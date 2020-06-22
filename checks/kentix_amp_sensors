@@ -32,7 +32,7 @@
 def parse_kentix_amp_sensors(info):
     info_flattened = []
 
-    for i in xrange(0, len(info[0]), 10):
+    for i in range(0, len(info[0]), 10):
         info_flattened.append([a[0] for a in info[0][i:i + 10]])
 
     parsed = {}

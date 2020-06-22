@@ -107,7 +107,7 @@ def inventory_win_dhcp_pools(info):
 
         if len(pool_stats) == 3:
             in_block = False
-            used, free, pending = pool_stats
+            used, free, pending = pool_stats  # pylint: disable=unbalanced-tuple-unpacking
             size = used + free + pending
             if size > 0 or discover_empty:
                 inventory.append((last_pool, 'win_dhcp_pools_default_levels'))

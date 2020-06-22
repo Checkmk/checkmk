@@ -15,45 +15,40 @@ var active_popup = popup_context();
 function popup_context() {
     const popup = {
         id: null,
+        container: null,
+        popup: null,
         data: null,
-        onclose: null
-    };
-
-    popup.popup = function() {
-        return document.getElementById("popup_menu");
-    };
-
-    popup.container = function() {
-        // FIXME: Ideally we could use getElementById directly to get the
-        //        container. Unfortunately, many HTML elements used for
-        //        popups do NOT have a unique ID. An example is the hamburger
-        //        menu in the "All services" view where all menus share the
-        //        same ID.
-        //        This also causes the bug that two clicks are necessary to
-        //        close the active popup and to open a popup of the same
-        //        kind.
-        //        To fix this issues all call sites of (render_)popup_trigger
-        //        have to berefactored so that all IDs are unique.
-        const popup = this.popup();
-        return popup ? popup.parentNode : null;
+        onclose: null,
+        remove_on_close: false,
     };
 
     popup.register = function(spec) {
         spec = spec || {};
         this.id = spec.id || null;
         this.data = spec.data || null;
-        this.conclose = spec.onclose || null;
+        this.onclose = spec.onclose || null;
+        this.remove_on_close = spec.remove_on_close || false;
 
         if (this.id) {
             utils.add_event_handler("click", handle_popup_close);
         }
+
+        if (spec.trigger_obj) {
+            this.container = spec.trigger_obj ? spec.trigger_obj.parentNode : null;
+            this.popup = this.container ? this.container.lastChild : null;
+        }
+
+        if (this.container) {
+            utils.add_class(this.container, "active");
+        }
     };
 
     popup.close = function() {
-        const popup = this.popup();
-        const container = this.container();
-        if (popup && container) {
-            container.removeChild(popup);
+        if (this.container) {
+            utils.remove_class(this.container, "active");
+            if (this.remove_on_close && this.popup) {
+                this.container.removeChild(this.popup);
+            }
         }
 
         if (this.id) {
@@ -65,8 +60,11 @@ function popup_context() {
         }
 
         this.id = null;
+        this.container = null;
+        this.popup = null;
         this.data = null;
         this.onclose = null;
+        this.remove_on_close = false;
     };
 
     return popup;
@@ -79,10 +77,10 @@ export function close_popup() {
 // Registerd as click handler on the page while the popup menu is opened
 // This is used to close the menu when the user clicks elsewhere
 function handle_popup_close(event) {
-    const container = active_popup.container();
+    const container = active_popup.container;
     const target = utils.get_target(event);
 
-    if (container.contains(target)) {
+    if (container && container.contains(target)) {
         return true; // clicked menu or statusicon
     }
 
@@ -103,8 +101,11 @@ function handle_popup_close(event) {
 //                    added to ajax_popup_*.py calls for rendering the popup menu.
 //                    The url_vars may be null.
 //
-//              inline: The attribute content contains the string representation of
-//                      the popup menu content.
+//              inline: The popup is already a hidden element in the DOM. It only
+//                      has to be made visible. This can be achieved with CSS that
+//                      uses the "active" class that is set on the container when
+//                      the popup is registered.
+//                      The object contains no further attributes.
 //
 //              colorpicker: Used to render color pickers. The object contains the
 //                           attributes varprefix and value used to determine the
@@ -128,22 +129,18 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, r
         }
     }
 
-    active_popup.register({
-        id: ident,
-        data: data,
-        onclose: onclose,
-    });
-
     const container = trigger_obj.parentNode;
-    const content = generate_menu(container, resizable);
 
+    // Add the popup to the DOM if required by the method.
     if (method.type === "colorpicker") {
         const rgb = trigger_obj.firstChild.style.backgroundColor;
         if (rgb !== "") {
             method.value = rgb2hex(rgb);
         }
+        const content = generate_menu(container, resizable);
         generate_colorpicker_body(content, method.varprefix, method.value);
     } else if (method.type === "ajax") {
+        const content = generate_menu(container, resizable);
         content.innerHTML = "<img src=\"themes/facelift/images/icon_reload.png\" class=\"icon reloading\">";
         const url_vars = !method.url_vars ? "" : "?" + method.url_vars;
         ajax.get_url("ajax_popup_" + method.endpoint + ".py" + url_vars, handle_render_popup_contents, {
@@ -151,10 +148,15 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, r
             content: content,
             event: event,
         });
-    } else if (method.type === "inline") {
-        content.innerHTML = method.content;
-        utils.execute_javascript_by_object(content);
     }
+
+    active_popup.register({
+        id: ident,
+        trigger_obj: trigger_obj,
+        data: data,
+        onclose: onclose,
+        remove_on_close: method.type !== "inline",
+    });
 }
 
 function generate_menu(container, resizable) {

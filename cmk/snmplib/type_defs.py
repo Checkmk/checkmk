@@ -64,6 +64,9 @@ SNMPCredentials = Union[SNMPCommunity, Tuple[str, ...]]
 # TODO: Cleanup to named tuple
 SNMPTiming = Dict
 
+SNMPDetectAtom = Tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
+SNMPDetectSpec = List[List[SNMPDetectAtom]]
+
 
 # Wraps the configuration of a host into a single object for the SNMP code
 class SNMPHostConfig(

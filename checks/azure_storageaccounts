@@ -25,7 +25,10 @@ factory_settings['levels_azure_storageaccounts'] = {}
 def check_azure_storageaccounts(_item, params, resource):
     iter_attrs = azure_iter_informative_attrs(resource, include_keys=('kind', 'location'))
     # kind first
-    yield 0, "%s: %s" % next(iter_attrs)
+    try:
+        yield 0, "%s: %s" % next(iter_attrs)
+    except StopIteration:
+        pass
 
     levels = params.get("used_capacity_levels", (None, None))
     mcheck = check_azure_metric(resource,

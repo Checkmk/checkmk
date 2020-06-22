@@ -2837,7 +2837,7 @@ class html(ABCHTMLGenerator):
             onclick=onclick,
         )
 
-        return self.render_div(atag,
+        return self.render_div(atag + method.content,
                                class_=["popup_trigger", cssclass],
                                id_="popup_trigger_%s" % ident,
                                style=style)

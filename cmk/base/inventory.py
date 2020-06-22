@@ -10,7 +10,7 @@ In the future all inventory code should be moved to this module."""
 
 import functools
 import os
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -22,16 +22,17 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.type_defs import (
-    CheckPluginName,
     HostAddress,
     HostName,
     Metric,
+    PluginName,
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
 )
 
-from cmk.base.api import PluginName
+import cmk.snmplib.snmp_scan as snmp_scan
+
 import cmk.base.check_api as check_api
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -39,7 +40,6 @@ import cmk.base.data_sources as data_sources
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
-import cmk.base.snmp_scan as snmp_scan
 from cmk.base.data_sources.snmp import SNMPHostSections
 from cmk.base.discovered_labels import HostLabel
 
@@ -284,12 +284,11 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
             data_sources.SNMPDataSource.disable_data_source_cache()
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
-            source.set_check_plugin_name_filter(
-                functools.partial(
-                    snmp_scan.gather_available_raw_section_names,
-                    for_inventory=True,
-                    for_mgmt_board=False,
-                ))
+            source.set_check_plugin_name_filter(functools.partial(
+                snmp_scan.gather_available_raw_section_names,
+                for_mgmt_board=False,
+            ),
+                                                inventory=True)
             if multi_host_sections is not None:
                 # Status data inventory already provides filled multi_host_sections object.
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be

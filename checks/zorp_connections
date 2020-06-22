@@ -21,13 +21,10 @@ def parse_zorp_connections(info):
      ["Instance <name>:", "walking"], ["zorp.stats.active_connections:", "<Number|'None'>"],
      ...]
     """
-    try:
-        return {
-            instance[1].rstrip(":"): int(state[1]) if state[1] != "None" else 0
-            for instance, state in zip(info[::2], info[1::2])
-        }
-    except:
-        return {}
+    return {
+        instance[1].rstrip(":"): int(state[1]) if state[1] != "None" else 0
+        for instance, state in zip(info[::2], info[1::2])
+    }
 
 
 def check_zorp_connections(item, params, parsed):

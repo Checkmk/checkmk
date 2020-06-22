@@ -8,9 +8,8 @@ import collections
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import SourceType
+from cmk.utils.type_defs import PluginName, SourceType
 
-from cmk.base.api import PluginName
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

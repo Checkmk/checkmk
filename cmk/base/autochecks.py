@@ -16,7 +16,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckVariables
+from cmk.utils.type_defs import CheckVariables, PluginName
 from cmk.utils.log import console
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
@@ -26,7 +26,7 @@ from cmk.base.check_utils import CheckPluginName, CheckParameters, DiscoveredSer
 ComputeCheckParameters = Callable[[HostName, CheckPluginName, Item, CheckParameters],
                                   Optional[CheckParameters]]
 GetCheckVariables = Callable[[], CheckVariables]
-GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
+GetServiceDescription = Callable[[HostName, Union[CheckPluginName, PluginName], Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
 
 
@@ -319,7 +319,7 @@ def _parse_discovered_service_label_from_ast(ast_service_labels):
     return labels
 
 
-def set_autochecks_of_real_hosts(hostname, new_items, service_description):
+def set_autochecks_of_real_hosts(hostname, new_services, service_description):
     # type: (HostName, List[DiscoveredService], GetServiceDescription) -> None
     new_autochecks = []  # type: List[DiscoveredService]
 
@@ -327,10 +327,10 @@ def set_autochecks_of_real_hosts(hostname, new_items, service_description):
     # for those checks which are kept
     for existing_service in parse_autochecks_file(hostname, service_description):
         # TODO: Need to implement a list class that realizes in / not in correctly
-        if existing_service in new_items:
+        if existing_service in new_services:
             new_autochecks.append(existing_service)
 
-    for discovered_service in new_items:
+    for discovered_service in new_services:
         if discovered_service not in new_autochecks:
             new_autochecks.append(discovered_service)
 
@@ -338,7 +338,7 @@ def set_autochecks_of_real_hosts(hostname, new_items, service_description):
     save_autochecks_file(hostname, new_autochecks)
 
 
-def set_autochecks_of_cluster(nodes, hostname, new_items, host_of_clustered_service,
+def set_autochecks_of_cluster(nodes, hostname, new_services, host_of_clustered_service,
                               service_description):
     # type: (List[HostName], HostName, List[DiscoveredService], HostOfClusteredService, GetServiceDescription) -> None
     """A Cluster does not have an autochecks file. All of its services are located
@@ -350,7 +350,7 @@ def set_autochecks_of_cluster(nodes, hostname, new_items, host_of_clustered_serv
             if hostname != host_of_clustered_service(node, existing_service.description):
                 new_autochecks.append(existing_service)
 
-        for discovered_service in new_items:
+        for discovered_service in new_services:
             new_autochecks.append(discovered_service)
 
         new_autochecks = _remove_duplicate_autochecks(new_autochecks)

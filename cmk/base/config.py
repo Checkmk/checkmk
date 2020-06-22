@@ -67,6 +67,7 @@ from cmk.utils.type_defs import (
     LabelSources,
     Ruleset,
     RulesetName,
+    PluginName,
     ServicegroupName,
     ServiceName,
     TagGroups,
@@ -77,8 +78,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
-    OIDBytes, OIDCached, SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming,
-)
+    OIDBytes, OIDCached, SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming)
 
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
@@ -90,7 +90,6 @@ from cmk.base.check_utils import CheckParameters, DiscoveredService, SectionName
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 try:
-    from cmk.base.api import PluginName
     from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
     from cmk.base.api.agent_based.register.section_plugins_legacy import (
         create_agent_section_plugin_from_legacy,
@@ -3219,16 +3218,26 @@ class HostConfig:
             return None
         return entries[0]
 
-    def set_autochecks(self, new_items):
-        # type: (List[DiscoveredService]) -> None
+    def set_autochecks(
+        self,
+        new_services: List[DiscoveredService],
+    ) -> None:
         """Merge existing autochecks with the given autochecks for a host and save it"""
         if self.is_cluster:
             if self.nodes:
-                autochecks.set_autochecks_of_cluster(self.nodes, self.hostname, new_items,
-                                                     self._config_cache.host_of_clustered_service,
-                                                     service_description)
+                autochecks.set_autochecks_of_cluster(
+                    self.nodes,
+                    self.hostname,
+                    new_services,
+                    self._config_cache.host_of_clustered_service,
+                    service_description,  # wtf?
+                )
         else:
-            autochecks.set_autochecks_of_real_hosts(self.hostname, new_items, service_description)
+            autochecks.set_autochecks_of_real_hosts(
+                self.hostname,
+                new_services,
+                service_description,  # of what?
+            )
 
     def remove_autochecks(self):
         # type: () -> int
@@ -3306,7 +3315,6 @@ class ConfigCache:
         self.check_table_cache = _config_cache.get_dict("check_tables")
 
         self._cache_is_snmp_check = _runtime_cache.get_dict("is_snmp_check")
-        self._cache_is_tcp_check = _runtime_cache.get_dict("is_tcp_check")
         self._cache_section_name_of = {}  # type: Dict[CheckPluginName, SectionName]
 
         self._cache_match_object_service = {
@@ -3581,10 +3589,12 @@ class ConfigCache:
 
     def service_level_of_service(self, hostname, description):
         # type: (HostName, ServiceName) -> Optional[int]
-        return self.get_service_ruleset_value(hostname,
-                                              description,
-                                              service_service_levels,
-                                              deflt=None)
+        return self.get_service_ruleset_value(
+            hostname,
+            description,
+            service_service_levels,
+            deflt=None,
+        )
 
     def check_period_of_service(self, hostname, description):
         # type: (HostName, ServiceName) -> Optional[TimeperiodName]
@@ -3618,10 +3628,11 @@ class ConfigCache:
         if cache_id in self._cache_match_object_service:
             return self._cache_match_object_service[cache_id]
 
-        result = RulesetMatchObject(host_name=hostname,
-                                    service_description=svc_desc,
-                                    service_labels=self.labels.labels_of_service(
-                                        self.ruleset_matcher, hostname, svc_desc))
+        result = RulesetMatchObject(
+            host_name=hostname,
+            service_description=svc_desc,
+            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+        )
         self._cache_match_object_service[cache_id] = result
         return result
 
@@ -3639,10 +3650,11 @@ class ConfigCache:
         if cache_id in self._cache_match_object_service_checkgroup:
             return self._cache_match_object_service_checkgroup[cache_id]
 
-        result = RulesetMatchObject(host_name=hostname,
-                                    service_description=item,
-                                    service_labels=self.labels.labels_of_service(
-                                        self.ruleset_matcher, hostname, svc_desc))
+        result = RulesetMatchObject(
+            host_name=hostname,
+            service_description=item,
+            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+        )
         self._cache_match_object_service_checkgroup[cache_id] = result
         return result
 
@@ -3665,8 +3677,12 @@ class ConfigCache:
 
     def get_autochecks_of(self, hostname):
         # type: (HostName) -> List[cmk.base.check_utils.Service]
-        return self._autochecks_manager.get_autochecks_of(hostname, compute_check_parameters,
-                                                          service_description, get_check_variables)
+        return self._autochecks_manager.get_autochecks_of(
+            hostname,
+            compute_check_parameters,
+            service_description,
+            get_check_variables,
+        )
 
     def section_name_of(self, section):
         # type: (CheckPluginName) -> SectionName
@@ -3687,26 +3703,21 @@ class ConfigCache:
             self._cache_is_snmp_check[check_plugin_name] = result
             return result
 
-    def is_tcp_check(self, check_plugin_name):
-        # type: (CheckPluginName) -> bool
-        try:
-            return self._cache_is_tcp_check[check_plugin_name]
-        except KeyError:
-            tcp_checks = _runtime_cache.get_set("check_type_tcp")
-            result = self.section_name_of(check_plugin_name) in tcp_checks
-            self._cache_is_tcp_check[check_plugin_name] = result
-            return result
-
     def host_extra_conf_merged(self, hostname, ruleset):
         # type: (HostName, Ruleset) -> Dict[str, Any]
         return self.ruleset_matcher.get_host_ruleset_merged_dict(
-            self.ruleset_match_object_of_host(hostname), ruleset)
+            self.ruleset_match_object_of_host(hostname),
+            ruleset,
+        )
 
     def host_extra_conf(self, hostname, ruleset):
         # type: (HostName, Ruleset) -> List
         return list(
             self.ruleset_matcher.get_host_ruleset_values(
-                self.ruleset_match_object_of_host(hostname), ruleset, is_binary=False))
+                self.ruleset_match_object_of_host(hostname),
+                ruleset,
+                is_binary=False,
+            ))
 
     # TODO: Cleanup external in_binary_hostlist call sites
     def in_binary_hostlist(self, hostname, ruleset):
@@ -3718,19 +3729,21 @@ class ConfigCache:
         # type: (HostName, ServiceName, Ruleset) -> List
         """Compute outcome of a service rule set that has an item."""
         return list(
-            self.ruleset_matcher.get_service_ruleset_values(self.ruleset_match_object_of_service(
-                hostname, description),
-                                                            ruleset,
-                                                            is_binary=False))
+            self.ruleset_matcher.get_service_ruleset_values(
+                self.ruleset_match_object_of_service(hostname, description),
+                ruleset,
+                is_binary=False,
+            ))
 
     def get_service_ruleset_value(self, hostname, description, ruleset, deflt):
         # type: (HostName, ServiceName, Ruleset, Any) -> Any
         """Compute first match service ruleset outcome with fallback to a default value"""
         return next(
-            self.ruleset_matcher.get_service_ruleset_values(self.ruleset_match_object_of_service(
-                hostname, description),
-                                                            ruleset,
-                                                            is_binary=False), deflt)
+            self.ruleset_matcher.get_service_ruleset_values(
+                self.ruleset_match_object_of_service(hostname, description),
+                ruleset,
+                is_binary=False,
+            ), deflt)
 
     def service_extra_conf_merged(self, hostname, description, ruleset):
         # type: (HostName, ServiceName, Ruleset) -> Dict[str, Any]
@@ -3787,8 +3800,11 @@ class ConfigCache:
         # type: () -> Set[HostName]
         """Returns a set of all hosts, regardless if currently disabled or monitored on a remote site."""
         hosts = set()  # type: Set[HostName]
-        hosts.update(self.all_configured_realhosts(), self.all_configured_clusters(),
-                     self._get_all_configured_shadow_hosts())
+        hosts.update(
+            self.all_configured_realhosts(),
+            self.all_configured_clusters(),
+            self._get_all_configured_shadow_hosts(),
+        )
         return hosts
 
     def _setup_clusters_nodes_cache(self):

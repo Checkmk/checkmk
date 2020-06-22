@@ -9,8 +9,9 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 import functools
 import itertools
 
+from cmk.utils.type_defs import PluginName
+
 from cmk.base import item_state
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.checking_types import (
     CheckPlugin,
     Metric,
@@ -48,8 +49,10 @@ CONSIDERED_KEYS = {
 }
 
 
-def _create_discovery_function(check_info_dict, default_parameters):
-    # type: (Dict[str, Any], Optional[Dict[str, Any]]) -> Callable
+def _create_discovery_function(
+    check_name: str,
+    check_info_dict: Dict[str, Any],
+) -> Callable:
     """Create an API compliant discovery function"""
 
     # 1) ensure we have the correct signature
@@ -75,7 +78,7 @@ def _create_discovery_function(check_info_dict, default_parameters):
                     labels=list(element.service_labels),
                 )
             elif isinstance(element, tuple) and len(element) in (2, 3):
-                parameters = default_parameters if isinstance(element[-1], str) else element[-1]
+                parameters = _resolve_string_parameters(element[-1], check_name)
                 service = Service(
                     item=element[0] or None,
                     parameters=wrap_parameters(parameters or {}),
@@ -89,6 +92,19 @@ def _create_discovery_function(check_info_dict, default_parameters):
                 yield element
 
     return discovery_migration_wrapper
+
+
+def _resolve_string_parameters(params_unresolved: Any, check_name: str) -> Any:
+    if not isinstance(params_unresolved, str):
+        return params_unresolved
+
+    try:
+        context = config.get_check_context(check_name)
+        # string may look like '{"foo": bar}', in the worst case.
+        return eval(params_unresolved, context, context)
+    except Exception:
+        raise ValueError("Invalid check parameter string '%s' found in discovered service %r" %
+                         (params_unresolved, check_name))
 
 
 def _create_check_function(name, check_info_dict, ruleset_name):
@@ -217,7 +233,7 @@ def _create_wrapped_parameters(check_plugin_name, check_info_dict):
         return wrap_parameters(parameters)
 
     # look in check context
-    parameters = config.get_check_context(check_plugin_name).get(var_name)
+    parameters = _resolve_string_parameters(var_name, check_plugin_name)
     if isinstance(parameters, dict):
         return parameters
     if parameters is not None:
@@ -261,7 +277,7 @@ def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidde
 
     check_default_parameters = _create_wrapped_parameters(check_plugin_name, check_info_dict)
 
-    discovery_function = _create_discovery_function(check_info_dict, check_default_parameters)
+    discovery_function = _create_discovery_function(check_plugin_name, check_info_dict)
 
     check_ruleset_name = check_info_dict.get("group")
     if check_ruleset_name is None and check_default_parameters is not None:

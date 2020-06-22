@@ -10,12 +10,12 @@ import pytest  # type: ignore[import]
 from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES
 
 from cmk.utils.check_utils import section_name_of
+from cmk.utils.type_defs import PluginName
 
 from cmk.snmplib.type_defs import SNMPTree
 
 import cmk.base.check_api as check_api
 import cmk.base.config as config
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     _explicit_conversions,

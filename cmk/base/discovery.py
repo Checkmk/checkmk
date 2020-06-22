@@ -44,16 +44,19 @@ from cmk.utils.type_defs import (
     HostState,
     Item,
     Metric,
+    PluginName,
     RulesetName,
     SourceType,
 )
 import cmk.utils.cleanup
 
-from cmk.base.api import PluginName
+import cmk.snmplib.snmp_scan as snmp_scan
+
 from cmk.base.api.agent_based import checking_types
 from cmk.base.api.agent_based.register.check_plugins import MANAGEMENT_NAME_PREFIX
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     maincheckify,
+    resolve_legacy_name,
     wrap_parameters,
 )
 import cmk.base.autochecks as autochecks
@@ -68,7 +71,6 @@ import cmk.base.data_sources as data_sources
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
-import cmk.base.snmp_scan as snmp_scan
 import cmk.base.utils
 
 from cmk.base.caching import config_cache as _config_cache
@@ -999,7 +1001,8 @@ def _get_sources_for_discovery(
             if for_check_discovery and source.get_may_use_cache_file():
                 data_sources.SNMPDataSource.disable_data_source_cache()
 
-            source.set_check_plugin_name_filter(snmp_scan.gather_available_raw_section_names)
+            source.set_check_plugin_name_filter(snmp_scan.gather_available_raw_section_names,
+                                                inventory=False)
 
     return sources
 
@@ -1074,7 +1077,7 @@ def _enriched_discovered_services(
             continue
 
         yield DiscoveredService(
-            check_plugin_name=str(check_plugin_name),
+            check_plugin_name=resolve_legacy_name(check_plugin_name),
             item=service.item,
             description=description,
             parameters_unresolved=service.parameters,
@@ -1184,28 +1187,41 @@ def _merge_manual_services(host_config, services, on_error):
     # Find manual checks. These can override discovered checks -> "manual"
     manual_items = check_table.get_check_table(hostname, skip_autochecks=True)
     for service in manual_items.values():
-        services[(service.check_plugin_name,
-                  service.item)] = ('manual',
-                                    DiscoveredService(service.check_plugin_name,
-                                                      service.item, service.description,
-                                                      repr(service.parameters)))
+        services[(service.check_plugin_name, service.item)] = (
+            'manual',
+            DiscoveredService(
+                service.check_plugin_name,
+                service.item,
+                service.description,
+                repr(service.parameters),
+            ),
+        )
 
     # Add custom checks -> "custom"
     for entry in host_config.custom_checks:
-        services[('custom',
-                  entry['service_description'])] = ('custom',
-                                                    DiscoveredService('custom',
-                                                                      entry['service_description'],
-                                                                      entry['service_description'],
-                                                                      'None'))
+        services[('custom', entry['service_description'])] = (
+            'custom',
+            DiscoveredService(
+                'custom',
+                entry['service_description'],
+                entry['service_description'],
+                'None',
+            ),
+        )
 
     # Similar for 'active_checks', but here we have parameters
     for plugin_name, entries in host_config.active_checks:
         for params in entries:
             descr = config.active_check_service_description(hostname, plugin_name, params)
-            services[(plugin_name, descr)] = ('active',
-                                              DiscoveredService(plugin_name, descr, descr,
-                                                                repr(params)))
+            services[(plugin_name, descr)] = (
+                'active',
+                DiscoveredService(
+                    plugin_name,
+                    descr,
+                    descr,
+                    repr(params),
+                ),
+            )
 
     # Handle disabled services -> "ignored"
     for check_source, discovered_service in services.values():
@@ -1218,8 +1234,10 @@ def _merge_manual_services(host_config, services, on_error):
 
         if config.service_ignored(hostname, discovered_service.check_plugin_name,
                                   discovered_service.description):
-            services[(discovered_service.check_plugin_name,
-                      discovered_service.item)] = ("ignored", discovered_service)
+            services[(discovered_service.check_plugin_name, discovered_service.item)] = (
+                "ignored",
+                discovered_service,
+            )
 
     return services
 
@@ -1303,15 +1321,21 @@ def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
 
     table = []  # type: CheckPreviewTable
     for check_source, discovered_service in services.values():
-        params = _preview_params(host_name, discovered_service, check_source)
+        # TODO (mo): centralize maincheckify: CMK-4295
+        plugin_name = PluginName(maincheckify(discovered_service.check_plugin_name))
+        plugin = config.get_registered_check_plugin(plugin_name)
+        params = _preview_params(host_name, discovered_service, plugin, check_source)
+
         if check_source in ['legacy', 'active', 'custom']:
             exitcode = None
             output = u"WAITING - %s check, cannot be done offline" % check_source.title()
             perfdata = []  # type: List[Metric]
+            ruleset_name = None  # type: Optional[RulesetName]
         else:
-            if discovered_service.check_plugin_name not in config.check_info:
+            if plugin is None:
                 continue  # Skip not existing check silently
 
+            ruleset_name = str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
             wrapped_params = checking_types.Parameters(wrap_parameters(params))
 
             _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
@@ -1319,13 +1343,14 @@ def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
                 host_config,
                 ip_address,
                 discovered_service,
+                plugin,
                 lambda p=wrapped_params: p,  # type: ignore[misc]  # can't infer "type of lambda"
             )
 
         table.append((
             _preview_check_source(host_name, discovered_service, check_source),
             discovered_service.check_plugin_name,
-            _preview_ruleset_name(host_name, discovered_service, check_source),
+            ruleset_name,
             discovered_service.item,
             discovered_service.parameters_unresolved,
             params,
@@ -1350,25 +1375,16 @@ def _preview_check_source(
     return check_source
 
 
-def _preview_ruleset_name(
-    host_name: HostName,
-    discovered_service: DiscoveredService,
-    check_source: str,
-) -> Optional[RulesetName]:
-    if check_source in ["legacy", "active", "custom"]:
-        return None
-    return config.check_info[discovered_service.check_plugin_name]["group"]
-
-
 def _preview_params(
     host_name: HostName,
     discovered_service: DiscoveredService,
+    plugin: Optional[checking_types.CheckPlugin],
     check_source: str,
 ) -> Optional[CheckParameters]:
     params = None  # type: Optional[CheckParameters]
 
     if check_source not in ['legacy', 'active', 'custom']:
-        if discovered_service.check_plugin_name not in config.check_info:
+        if plugin is None:
             return params
         params = _get_check_parameters(discovered_service)
         if check_source != 'manual':
@@ -1414,7 +1430,8 @@ def _get_check_parameters(discovered_service):
         return params
     try:
         check_context = config.get_check_context(discovered_service.check_plugin_name)
-        # TODO: Can't we simply access check_context[paramstring]?
+        # We can't simply access check_context[paramstring], because we may have
+        # something like '{"foo": bar}'
         return eval(params, check_context, check_context)
     except Exception:
         raise MKGeneralException(

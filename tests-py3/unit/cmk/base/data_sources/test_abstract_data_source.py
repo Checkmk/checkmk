@@ -27,16 +27,19 @@ def test_normalize_ip():
     assert _abstract._normalize_ip_addresses("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]
 
 
-@pytest.mark.parametrize("headerline, section_name, section_options", [
-    (b"norris", "norris", {}),
-    (b"norris:chuck", "norris", {
-        "chuck": None
-    }),
-    (b"my_section:sep(0):cached(23,42)", "my_section", {
-        "sep": "0",
-        "cached": "23,42"
-    }),
-])
+@pytest.mark.parametrize(
+    "headerline, section_name, section_options",
+    [
+        (b"norris", "norris", {}),
+        (b"norris:chuck", "norris", {
+            "chuck": None
+        }),
+        (b"my_section:sep(0):cached(23,42)", "my_section", {
+            "sep": "0",
+            "cached": "23,42"
+        }),
+        (b"my.section:sep(0):cached(23,42)", None, {}),  # invalid section name
+    ])
 def test_parse_section_header(headerline, section_name, section_options):
     parsed_name, parsed_options = _abstract.CheckMKAgentDataSource._parse_section_header(headerline)
     assert parsed_name == section_name

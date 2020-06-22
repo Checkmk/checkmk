@@ -184,12 +184,14 @@ def test_automation_discovery_with_cache_option(test_cfg, site):
 
 
 def test_automation_analyse_service_autocheck(test_cfg, site):
-    data = _execute_automation(site, "analyse-service", args=["modes-test-host", "CPU load"])
+    data = _execute_automation(site,
+                               "analyse-service",
+                               args=["modes-test-host", "Apache 127.0.0.1:5000 Status"])
 
     assert data["origin"] == "auto"
-    assert data["checktype"] == "cpu.loads"
-    assert data["item"] is None
-    assert data["checkgroup"] == "cpu_load"
+    assert data["checktype"] == "apache_status"
+    assert data["item"] == "127.0.0.1:5000"
+    assert data["checkgroup"] == "apache_status"
 
 
 def test_automation_analyse_service_no_check(test_cfg, site):
@@ -431,7 +433,8 @@ def test_automation_get_service_configurations(test_cfg, site):
     assert isinstance(data, dict)
     assert data["checkgroup_of_checks"]
     assert data["hosts"]["modes-test-host"]
-    assert ('cpu.loads', u'CPU load', (5.0, 10.0)) in data["hosts"]["modes-test-host"]["checks"]
+    assert ('apache_status', u'Apache 127.0.0.1:5000 Status',
+            {}) in data["hosts"]["modes-test-host"]["checks"]
 
 
 def test_automation_create_diagnostics_dump(test_cfg, site):

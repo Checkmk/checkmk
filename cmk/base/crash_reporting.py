@@ -8,7 +8,7 @@
 import os
 import sys
 import traceback
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from pathlib import Path
 
 import cmk.utils.debug
@@ -18,14 +18,12 @@ import cmk.utils.crash_reporting as crash_reporting
 from cmk.utils.type_defs import (
     HostName,
     CheckPluginName,
-    Item,
     ServiceName,
 )
 
 import cmk.base.check_utils
 import cmk.base.config as config
-from cmk.base.data_sources.host_sections import FinalSectionContent
-from cmk.base.check_utils import CheckParameters, RawAgentData
+from cmk.base.check_utils import RawAgentData
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -46,9 +44,13 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
         })
 
 
-def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, params, description,
-                            info):
-    # type: (HostName, CheckPluginName, Item, bool, CheckParameters, ServiceName, FinalSectionContent) -> str
+def create_check_crash_dump(
+    hostname: HostName,
+    check_plugin_name: CheckPluginName,
+    check_plugin_kwargs: Dict[str, Any],
+    is_manual_check: bool,
+    description: ServiceName,
+) -> str:
     """Create a crash dump from an exception occured during check execution
 
     The crash dump is put into a tarball, base64 encoded and appended to the long output
@@ -60,11 +62,9 @@ def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, 
         crash = CheckCrashReport.from_exception_and_context(
             hostname=hostname,
             check_plugin_name=check_plugin_name,
-            item=item,
+            check_plugin_kwargs=check_plugin_kwargs,
             is_manual_check=is_manual_check,
-            params=params,
             description=description,
-            info=info,
             text=text,
         )
         CrashReportStore().save(crash)
@@ -84,18 +84,20 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         return "check"
 
     @classmethod
-    def from_exception_and_context(cls, hostname, check_plugin_name, item, is_manual_check, params,
-                                   description, info, text):
-        # type: (HostName, CheckPluginName, Item, bool, CheckParameters, ServiceName, FinalSectionContent, str) -> crash_reporting.ABCCrashReport
+    def from_exception_and_context(
+        cls,
+        hostname: HostName,
+        check_plugin_name: CheckPluginName,
+        check_plugin_kwargs: Dict[str, Any],
+        is_manual_check: bool,
+        description: ServiceName,
+        text: str,
+    ) -> crash_reporting.ABCCrashReport:
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
 
-        snmp_info = None  # type: Optional[bytes]
-        agent_output = None  # type: Optional[bytes]
-        if cmk.base.check_utils.is_snmp_check(check_plugin_name):
-            snmp_info = _read_snmp_info(hostname)
-        else:
-            agent_output = _read_agent_output(hostname)
+        snmp_info = _read_snmp_info(hostname)
+        agent_output = _read_agent_output(hostname)
 
         return cls.from_exception(
             details={
@@ -104,11 +106,10 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 "is_cluster": host_config.is_cluster,
                 "description": description,
                 "check_type": check_plugin_name,
-                "item": item,
-                "params": params,
                 "uses_snmp": cmk.base.check_utils.is_snmp_check(check_plugin_name),
                 "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
                 "manual_check": is_manual_check,
+                **check_plugin_kwargs,
             },
             type_specific_attributes={
                 "snmp_info": snmp_info,

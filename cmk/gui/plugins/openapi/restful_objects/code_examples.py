@@ -12,7 +12,7 @@ import jinja2
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
-from cmk.gui.plugins.openapi.restful_objects.utils import fill_out_path_template
+from cmk.gui.plugins.openapi.restful_objects.utils import fill_out_path_template, ParamDict
 
 CODE_TEMPLATES_LOCK = threading.Lock()
 
@@ -125,6 +125,11 @@ def to_dict(schema):
     return ret
 
 
+def _is_parameter(param):
+    is_primitive_param = isinstance(param, dict) and 'name' in param and 'in' in param
+    return isinstance(param, ParamDict) or is_primitive_param
+
+
 def _transform_params(param_list):
     """Transform a list of parameters to a dict addressable by name.
 
@@ -134,13 +139,36 @@ def _transform_params(param_list):
 
     Examples:
 
-        >>> _transform_params([{'name': 'foo'}, 'bar'])
-        {'foo': {'name': 'foo'}}
+        >>> _transform_params([
+        ...     {'name': 'foo', 'in': 'query'},
+        ...     'bar',
+        ...     {'name': 'ETag', 'in': 'header'},
+        ... ])
+        {'foo': {'name': 'foo', 'in': 'query'}}
+
+        >>> transformed = _transform_params([
+        ...      ParamDict.create('foo', 'query'),
+        ...      ParamDict.create('bar', 'header'),
+        ... ])
+        >>> expected = {
+        ...     'foo': {
+        ...         'name': 'foo',
+        ...         'in': 'query',
+        ...         'required': True,
+        ...         'allowEmptyValue': False,
+        ...         'schema': {'type': 'string'},
+        ...     }
+        ... }
+        >>> assert expected == transformed, transformed
 
     Returns:
         A dict with the key being the parameters name and the value being the parameter.
     """
-    return {param['name']: param for param in param_list if isinstance(param, dict)}
+    return {
+        param['name']: param
+        for param in param_list
+        if _is_parameter(param) and param['in'] != 'header'
+    }
 
 
 # noinspection PyDefaultArgument
@@ -229,10 +257,57 @@ def _build_code_templates():
 
 @jinja2.contextfilter
 def fill_out_parameters(ctx, val):
-    try:
-        return fill_out_path_template(val, ctx['endpoint_parameters'])
-    except KeyError:
-        return fill_out_path_template(val, ctx['parameters'])
+    """Fill out path parameters, either using the global parameter or the endpoint defined ones.
+
+    This assumes the parameters to be defined as such:
+
+        ctx['parameters']: Dict[str, ParamDict]
+        ctx['endpoint_parameters']: Dict[str, ParamDict]
+
+    Args:
+        ctx: A Jinja2 context
+        val: The path template.
+
+    Examples:
+
+        This does a lot of Jinja2 setup. We may want to move this to a "proper" test-file.
+
+        >>> parameters = {}
+        >>> env = jinja2.Environment()
+        >>> env.filters['fill_out_parameters'] = fill_out_parameters
+        >>> env.globals['parameters'] = parameters
+
+        >>> global_host_param = ParamDict.create('host', 'path', example='global_host')
+        >>> host = ParamDict.create('host', 'path', example='host')
+        >>> service = ParamDict.create('service', 'path', example='service')
+
+        >>> tmpl_source = '{{ "/{host}/{service}" | fill_out_parameters }}'
+        >>> tmpl = env.from_string(tmpl_source)
+
+        >>> tmpl.render(endpoint_parameters={})
+        Traceback (most recent call last):
+        ...
+        KeyError: 'host'
+
+        >>> tmpl.render(endpoint_parameters={'host': host, 'service': service})
+        '/host/service'
+
+        >>> parameters['host'] = global_host_param
+        >>> tmpl.render(endpoint_parameters={'host': host, 'service': service})
+        '/host/service'
+
+        >>> parameters['host'] = global_host_param
+        >>> tmpl.render(endpoint_parameters={'service': service})
+        '/global_host/service'
+
+
+    Returns:
+        A filled out string.
+    """
+    parameters = {}
+    parameters.update(ctx['parameters'])
+    parameters.update(ctx['endpoint_parameters'])
+    return fill_out_path_template(val, parameters)
 
 
 def indent(s, skip_lines=0, spaces=2):

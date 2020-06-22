@@ -7,7 +7,10 @@
 """
 from typing import Any, Iterator, MutableMapping, Optional
 from contextlib import contextmanager
-from cmk.base.api import PluginName
+
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import PluginName
+
 from cmk.base.item_state import (
     set_item_state,  # for __setitem__
     clear_item_state,  # for __delitem__
@@ -15,7 +18,6 @@ from cmk.base.item_state import (
     get_item_state_prefix,  # for __repr__, context
     set_item_state_prefix,  # for context
 )
-from cmk.utils.exceptions import MKGeneralException
 
 
 class _ValueStore(MutableMapping[str, Any]):

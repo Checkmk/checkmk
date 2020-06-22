@@ -11,7 +11,8 @@ import inspect
 import itertools
 from inspect import signature
 
-from cmk.base.api import PluginName
+from cmk.utils.type_defs import PluginName
+
 from cmk.base.api.agent_based.checking_types import (
     CheckPlugin,
     IgnoreResults,

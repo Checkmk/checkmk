@@ -5,26 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import contextlib
 
-import cmk.utils.debug
+from testlib.debug_utils import cmk_debug_enabled
+
 import cmk.base.config as config
 import cmk.base.check_api as check_api
-
-
-@contextlib.contextmanager
-def _cmk_debug_enabled():
-    cmk.utils.debug.enable()
-    try:
-        yield
-    finally:
-        cmk.utils.debug.disable()
 
 
 class CheckHandler:
     """Collect the info on all checks"""
     def __init__(self):
-        with _cmk_debug_enabled():  # fail if any check plugin cannot be loaded!
+        with cmk_debug_enabled():  # fail if any check plugin cannot be loaded!
             config.load_all_checks(check_api.get_check_api_context)
 
         self.info = copy.deepcopy(config.check_info)

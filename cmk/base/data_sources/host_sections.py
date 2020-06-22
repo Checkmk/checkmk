@@ -10,13 +10,12 @@ from typing import Any, Callable, cast, Union, Tuple, Dict, Set, List, Optional,
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import HostName, HostAddress, ServiceName, SourceType
+from cmk.utils.type_defs import HostName, HostAddress, PluginName, ServiceName, SourceType
 
 import cmk.base.config as config
 import cmk.base.caching as caching
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.utils import parse_string_table
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
@@ -478,24 +477,21 @@ class MultiHostSections:
         Please note that this is not a check/subcheck individual setting. This option is related
         to the agent section.
         """
-        if section_name not in config.check_info or not config.check_info[section_name][
-                "extra_sections"]:
+        extra_sections = config.check_info.get(str(section_name), {}).get("extra_sections", [])
+        if not extra_sections:
             return section_content
 
         # In case of extra_sections the existing info is wrapped into a new list to which all
         # extra sections are appended
-        section_contents = [section_content]
-        for extra_section_name in config.check_info[section_name]["extra_sections"]:
-            section_contents.append(
-                self.get_section_content(
-                    hostname,
-                    ipaddress,
-                    management_board_info,
-                    extra_section_name,
-                    for_discovery,
-                ),)
-
-        return section_contents
+        return [section_content] + [
+            self.get_section_content(
+                hostname,
+                ipaddress,
+                management_board_info,
+                extra_section_name,
+                for_discovery,
+            ) for extra_section_name in extra_sections
+        ]
 
     def _update_with_parse_function(self, section_content, section_name):
         # type: (AbstractSectionContent, SectionName) -> ParsedSectionContent

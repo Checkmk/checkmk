@@ -40,6 +40,7 @@ log_dir = _omd_path("var/log")
 precompiled_checks_dir = _omd_path("var/check_mk/precompiled_checks")
 core_autochecks_dir = _omd_path("var/check_mk/core/autochecks")
 base_autochecks_dir = _omd_path("var/check_mk/autochecks")
+core_fetcher_config_dir = _omd_path("var/check_mk/core/fetcher-config")
 autochecks_dir = base_autochecks_dir
 precompiled_hostchecks_dir = _omd_path("var/check_mk/precompiled")
 snmpwalks_dir = _omd_path("var/check_mk/snmpwalks")

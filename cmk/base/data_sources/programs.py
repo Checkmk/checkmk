@@ -7,20 +7,19 @@
 import abc
 import os
 from pathlib import Path
-from typing import Dict, Optional, Set
+from typing import Dict, Optional
 
 from six import ensure_str
 
 from cmk.fetchers import ProgramDataFetcher
 
 import cmk.utils.paths
+from cmk.utils.type_defs import PluginName
 
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.exceptions import MKAgentError
-from cmk.base.check_utils import CheckPluginName
 from cmk.utils.type_defs import HostName, HostAddress
 
 from .abstract import CheckMKAgentDataSource, RawAgentData

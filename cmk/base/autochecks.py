@@ -326,7 +326,6 @@ def set_autochecks_of_real_hosts(hostname, new_services, service_description):
     # write new autochecks file, but take parameters_unresolved from existing ones
     # for those checks which are kept
     for existing_service in parse_autochecks_file(hostname, service_description):
-        # TODO: Need to implement a list class that realizes in / not in correctly
         if existing_service in new_services:
             new_autochecks.append(existing_service)
 

@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import PluginName, SectionName
 
 
 @pytest.mark.parametrize("str_name",
@@ -50,3 +50,8 @@ def test_plugin_name_sort():
     }
 
     assert sorted(plugin_dict) == [PluginName("Bob"), PluginName("Dave"), PluginName("Stuart")]
+
+
+def test_cross_class_comparison_fails():
+    with pytest.raises(TypeError):
+        _ = PluginName("foo") == SectionName("foo")

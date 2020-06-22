@@ -67,7 +67,7 @@ def test_discovered_service_eq():
     },
 ])
 def test__get_item_filter_func_no_lists(parameters_rediscovery):
-    assert discovery._get_item_filter_func(parameters_rediscovery) is None
+    assert discovery._get_item_filter_func(parameters_rediscovery) is discovery._accept_all_services
 
 
 @pytest.mark.parametrize("whitelist, result", [

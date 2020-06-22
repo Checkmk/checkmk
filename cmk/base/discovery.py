@@ -91,7 +91,77 @@ DiscoveryEntry = Union[check_api_utils.Service, DiscoveredHostLabels, HostLabel,
                        Tuple[Item, LegacyCheckParameters]]
 DiscoveryResult = List[DiscoveryEntry]
 DiscoveryFunction = Callable[[FinalSectionContent], DiscoveryResult]
+ServiceFilter = Callable[[HostName, CheckPluginName, Item], bool]
 
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   |  Various helper functions                                            |
+#   '----------------------------------------------------------------------'
+
+
+# TODO: Move to livestatus module!
+def schedule_discovery_check(hostname):
+    # type: (HostName) -> None
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(cmk.utils.paths.livestatus_unix_socket)
+        now = int(time.time())
+        if 'cmk-inventory' in config.use_new_descriptions_for:
+            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK Discovery;%d" % (hostname, now)
+        else:
+            # TODO: Remove this old name handling one day
+            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK inventory;%d" % (hostname, now)
+
+        # Ignore missing check and avoid warning in cmc.log
+        if config.monitoring_core == "cmc":
+            command += ";TRY"
+
+        s.send(ensure_binary("COMMAND [%d] %s\n" % (now, command)))
+    except Exception:
+        if cmk.utils.debug.enabled():
+            raise
+
+
+def _get_item_filter_func(params_rediscovery):
+    # type: (Dict[str, Any]) -> ServiceFilter
+    service_whitelist = params_rediscovery.get("service_whitelist")  # type: Optional[List[str]]
+    service_blacklist = params_rediscovery.get("service_blacklist")  # type: Optional[List[str]]
+
+    if not service_whitelist and not service_blacklist:
+        return _accept_all_services
+
+    if not service_whitelist:
+        # whitelist. if none is specified, this matches everything
+        service_whitelist = [".*"]
+
+    if not service_blacklist:
+        # blacklist. if none is specified, this matches nothing
+        service_blacklist = ["(?!x)x"]
+
+    whitelist = regex("|".join(["(%s)" % p for p in service_whitelist]))
+    blacklist = regex("|".join(["(%s)" % p for p in service_blacklist]))
+
+    return lambda hostname, check_plugin_name, item: _discovery_filter_by_lists(
+        hostname, check_plugin_name, item, whitelist, blacklist)
+
+
+def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist):
+    # type: (HostName, CheckPluginName, Item, Pattern[str], Pattern[str]) -> bool
+    description = config.service_description(hostname, check_plugin_name, item)
+    return whitelist.match(description) is not None and blacklist.match(description) is None
+
+
+def _accept_all_services(_hostname, _check_plugin_name, _item):
+    return True
+
+
+#.
 #   .--cmk -I--------------------------------------------------------------.
 #   |                                  _           ___                     |
 #   |                    ___ _ __ ___ | | __      |_ _|                    |
@@ -300,7 +370,7 @@ def discover_on_host(
         do_snmp_scan,  # type: bool
         use_caches,  # type: bool
         on_error="ignore",  # type: str
-        service_filter=None,  # type: Callable
+        service_filter=_accept_all_services,  # type: ServiceFilter
 ):
     # type: (...) -> Tuple[Dict[str, int], Optional[str]]
     hostname = host_config.hostname
@@ -318,9 +388,6 @@ def discover_on_host(
 
     if hostname not in config_cache.all_active_hosts():
         return counts, ""
-
-    if service_filter is None:
-        service_filter = _accept_all_services
 
     err = None
     discovered_host_labels = DiscoveredHostLabels()
@@ -409,10 +476,6 @@ def discover_on_host(
     return counts, err
 
 
-def _accept_all_services(_hostname, _check_plugin_name, _item):
-    return True
-
-
 #.
 #   .--Discovery Check-----------------------------------------------------.
 #   |           ____  _                   _               _                |
@@ -480,8 +543,8 @@ def check_discovery(
                 affected_check_plugin_names.setdefault(discovered_service.check_plugin_name, 0)
                 affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
-                if not unfiltered and (item_filters is None or item_filters(
-                        hostname, discovered_service.check_plugin_name, discovered_service.item)):
+                if not unfiltered and item_filters(hostname, discovered_service.check_plugin_name,
+                                                   discovered_service.item):
                     unfiltered = True
 
                 long_infotexts.append(
@@ -785,71 +848,6 @@ def _may_rediscover(params, now_ts, oldest_queued):
         return "last activation is too recent"
 
     return None
-
-
-def _get_item_filter_func(params_rediscovery):
-    # type: (Dict[str, Any]) -> Optional[Callable[[HostName, CheckPluginName, Item], bool]]
-    service_whitelist = params_rediscovery.get("service_whitelist")  # type: Optional[List[str]]
-    service_blacklist = params_rediscovery.get("service_blacklist")  # type: Optional[List[str]]
-
-    if not service_whitelist and not service_blacklist:
-        return None
-
-    if not service_whitelist:
-        # whitelist. if none is specified, this matches everything
-        service_whitelist = [".*"]
-
-    if not service_blacklist:
-        # blacklist. if none is specified, this matches nothing
-        service_blacklist = ["(?!x)x"]
-
-    whitelist = regex("|".join(["(%s)" % p for p in service_whitelist]))
-    blacklist = regex("|".join(["(%s)" % p for p in service_blacklist]))
-
-    return lambda hostname, check_plugin_name, item: _discovery_filter_by_lists(
-        hostname, check_plugin_name, item, whitelist, blacklist)
-
-
-def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist):
-    # type: (HostName, CheckPluginName, Item, Pattern[str], Pattern[str]) -> bool
-    description = config.service_description(hostname, check_plugin_name, item)
-    return whitelist.match(description) is not None and blacklist.match(description) is None
-
-
-#.
-#   .--Helpers-------------------------------------------------------------.
-#   |                  _   _      _                                        |
-#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
-#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
-#   +----------------------------------------------------------------------+
-#   |  Various helper functions                                            |
-#   '----------------------------------------------------------------------'
-
-
-# TODO: Move to livestatus module!
-def schedule_discovery_check(hostname):
-    # type: (HostName) -> None
-    try:
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(cmk.utils.paths.livestatus_unix_socket)
-        now = int(time.time())
-        if 'cmk-inventory' in config.use_new_descriptions_for:
-            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK Discovery;%d" % (hostname, now)
-        else:
-            # TODO: Remove this old name handling one day
-            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK inventory;%d" % (hostname, now)
-
-        # Ignore missing check and avoid warning in cmc.log
-        if config.monitoring_core == "cmc":
-            command += ";TRY"
-
-        s.send(ensure_binary("COMMAND [%d] %s\n" % (now, command)))
-    except Exception:
-        if cmk.utils.debug.enabled():
-            raise
 
 
 #.

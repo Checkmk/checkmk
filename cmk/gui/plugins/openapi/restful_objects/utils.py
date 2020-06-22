@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from typing import Optional
+from typing import Optional, Union, Dict, Any, List
 
-from cmk.gui.plugins.openapi.restful_objects.type_defs import LocationType
+from cmk.gui.plugins.openapi.restful_objects.type_defs import LocationType, HTTPMethod
 from cmk.gui.type_defs import SetOnceDict
 
 # This is the central store for all our endpoints. We use this to determine the correct URLs at
@@ -222,3 +222,31 @@ def fill_out_path_template(orig_path, parameters):
         except KeyError:
             raise KeyError("Param %s of path %r has no example" % (path_param, orig_path))
     return path
+
+
+Parameter = Union[ParamDict, str]
+PrimitiveParameter = Union[Dict[str, Any], str]
+AnyParameter = Union[ParamDict, Dict[str, Any], str]
+
+
+def make_endpoint_entry(method: HTTPMethod, path, parameters: List[AnyParameter]):
+    """Create an entry necessary for the ENDPOINT_REGISTRY
+
+    Args:
+        method:
+            The HTTP method of the endpoint.
+        path:
+            The Path template the endpoint uses.
+        parameters:
+            The parameters as a list of dicts or strings.
+
+    Returns:
+        A dict.
+
+    """
+    # TODO: Subclass Endpoint-Registry to have this as a method?
+    return {
+        'path': path,
+        'method': method,
+        'parameters': parameters,
+    }

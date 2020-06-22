@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, Any, Text, Union, List, Literal, TypedDict
 
-# We don't differentiate between raw and cee versions here. It's a unified list of types.
+
+
 DomainType = Literal[
     'agent',
     'activation_run',
@@ -76,7 +77,7 @@ RestfulEndpointName = Literal[
     ".../version",
 ]  # yapf: disable
 
-HTTPMethod = Literal["GET", "PUT", "POST", "DELETE"]
+HTTPMethod = Literal["get", "put", "post", "delete"]
 
 PropertyFormat = Literal[
     # String values
@@ -110,3 +111,4 @@ CollectionObject = TypedDict('CollectionObject', {
     'extensions': Dict[str, str]
 })
 Serializable = Union[Dict[str, Any], CollectionObject]  # because TypedDict is stricter
+ETagBehaviour = Literal["input", "output", "both"]

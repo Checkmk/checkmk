@@ -180,17 +180,17 @@ def serialize_service_discovery(host, discovered_services, discovery_state):
                         link_rel(rel="cmk/service.move-monitored",
                                  href="/objects/host/%s/service/%s/action/move/monitored" %
                                  (host.ident(), service_hash),
-                                 method='PUT',
+                                 method='put',
                                  title='Move the service to monitored'),
                         link_rel(rel="cmk/service.move-undecided",
                                  href="/objects/host/%s/service/%s/action/move/undecided" %
                                  (host.ident(), service_hash),
-                                 method='PUT',
+                                 method='put',
                                  title='Move the service to undecided'),
                         link_rel(rel="cmk/service.move-ignored",
                                  href="/objects/host/%s/service/%s/action/move/ignored" %
                                  (host.ident(), service_hash),
-                                 method='PUT',
+                                 method='put',
                                  title='Move the service to ignored'),
                     ]),
             }

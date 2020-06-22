@@ -28,17 +28,13 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
 from cmk.gui.plugins.openapi.restful_objects.utils import (
     fill_out_path_template,
     ENDPOINT_REGISTRY,
-    param as param_,
 )
-
-# Export this to the endpoint modules. Must be removed after refactoring.
-param = param_
 
 
 def link_rel(
         rel,  # type: Union[RestfulEndpointName, EndpointName]
         href,  # type: str
-        method='GET',  # type: HTTPMethod
+        method='get',  # type: HTTPMethod
         content_type='application/json',  # type: str
         profile=None,  # type: Optional[str]
         title=None,  # type: Optional[str]
@@ -73,7 +69,7 @@ def link_rel(
     Examples:
 
         >>> link = link_rel('.../update', 'update',
-        ...                 method='GET', profile='.../object', title='Update the object')
+        ...                 method='get', profile='.../object', title='Update the object')
         >>> expected = {
         ...     'domainType': 'link',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
@@ -187,7 +183,7 @@ def object_action(name, parameters, base):
         'links': [
             link_rel('up', base),
             link_rel('.../details', base + _action(name), parameters={'action': name}),
-            link_rel('.../invoke', base + _invoke(name), method='POST',
+            link_rel('.../invoke', base + _invoke(name), method='post',
                      parameters={'action': name}),
         ],
         'parameters': parameters,
@@ -371,12 +367,12 @@ def domain_object(
     if members is None:
         members = {}
     _links = [
-        link_rel('self', uri, method='GET'),
+        link_rel('self', uri, method='get'),
     ]
     if editable:
-        _links.append(link_rel('.../update', uri, method='PUT'))
+        _links.append(link_rel('.../update', uri, method='put'))
     if deletable:
-        _links.append(link_rel('.../delete', uri, method='DELETE'))
+        _links.append(link_rel('.../delete', uri, method='delete'))
     if links:
         _links.extend(links)
     return {
@@ -420,12 +416,64 @@ def collection_object(domain_type: str,
     }
 
 
-def link_endpoint(module_name, rel, **kw):
-    """Link to a specific endpoint by name."""
-    endpoint = ENDPOINT_REGISTRY[(module_name, rel)]
+def link_endpoint(
+    module_name,
+    rel: Union[EndpointName, RestfulEndpointName],
+    parameters: Dict[str, str],
+    _registry=ENDPOINT_REGISTRY,
+):
+    """Link to a specific endpoint by name.
+
+    Args:
+        module_name:
+            The Python dotted path name, where the endpoint to be linked to, is defined.
+
+        rel:
+            The endpoint's rel-name.
+
+        parameters:
+            A dict, mapping parameter names to their desired values. e.g. if the link should have
+            "/foo/{baz}" rendered to "/foo/bar", this mapping should be {'baz': 'bar'}.
+
+        _registry:
+            Internal use only.
+
+    Examples:
+
+        >>> from cmk.gui.plugins.openapi.restful_objects.utils import make_endpoint_entry
+        >>> registry = {
+        ...     ('roll', '.../invoke'): make_endpoint_entry(
+        ...          'post',
+        ...          '/random/{dice_roll_result}',
+        ...          [],  # not needed for this example
+        ...     ),
+        ... }
+        >>> expected = {
+        ...     'rel': 'urn:org.restfulobjects:rels/invoke',
+        ...     'href': '/random/4',
+        ...     'method': 'POST',
+        ...     'type': 'application/json',
+        ...     'domainType': 'link',
+        ... }
+        >>> link = link_endpoint(
+        ...     'roll',
+        ...     '.../invoke',
+        ...     parameters={'dice_roll_result': "4"},
+        ...     _registry=registry,  # for doctest, not be used
+        ... )
+        >>> assert link == expected, link
+
+    """
+    try:
+        endpoint = _registry[(module_name, rel)]
+    except KeyError:
+        raise KeyError(_registry.keys())
+
+    param_values = {key: {'example': value} for key, value in parameters.items()}
+
     return link_rel(
         rel=rel,
-        href=fill_out_path_template(endpoint['path'], kw),
+        href=fill_out_path_template(endpoint['path'], param_values),
         method=endpoint['method'],
         # This one needs more work to get the structure right.
         # parameters=endpoint['parameters']
@@ -463,7 +511,7 @@ def collection_item(collection_type, domain_type, obj):
         parameters={'collection': collection_type},
         href=object_href(domain_type, obj),
         profile=".../object",
-        method='GET',
+        method='get',
         title=obj_title(obj),
     )
 

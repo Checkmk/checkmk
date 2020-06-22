@@ -13,7 +13,7 @@ connexion is disabled.
 
 """
 import functools
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union, Sequence, Literal
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union, Sequence
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -22,15 +22,29 @@ from marshmallow import Schema  # type: ignore[import]
 from werkzeug.utils import import_string
 
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
-from cmk.gui.plugins.openapi.restful_objects.utils import ENDPOINT_REGISTRY, PARAM_RE, ParamDict
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
 from cmk.gui.plugins.openapi.restful_objects.specification import (
     add_operation,
     SPEC,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import ETAG_IF_MATCH_HEADER, \
-    ETAG_HEADER_PARAM
-from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointName, RestfulEndpointName
+from cmk.gui.plugins.openapi.restful_objects.parameters import (
+    ETAG_HEADER_PARAM,
+    ETAG_IF_MATCH_HEADER,
+)
+from cmk.gui.plugins.openapi.restful_objects.type_defs import (
+    EndpointName,
+    ETagBehaviour,
+    HTTPMethod,
+    RestfulEndpointName,
+)
+from cmk.gui.plugins.openapi.restful_objects.utils import (
+    ENDPOINT_REGISTRY,
+    make_endpoint_entry,
+    ParamDict,
+    Parameter,
+    PARAM_RE,
+    PrimitiveParameter,
+)
 
 
 def _constantly(arg):
@@ -38,13 +52,6 @@ def _constantly(arg):
 
 
 _SEEN_PATHS = set()  # type: Set[Tuple[str, str, str]]
-
-ETagBehaviour = Literal["input", "output", "both"]
-
-# We only support these methods.
-HTTPMethod = Literal["get", "post", "put", "delete"]
-Parameter = Union[ParamDict, str]
-PrimitiveParameter = Union[Dict[str, Any], str]
 
 ResponseSchema = Optional[Schema]
 RequestSchema = Optional[Schema]
@@ -167,11 +174,11 @@ def endpoint_schema(
         endpoint_key = (module_name, name)
 
         try:
-            ENDPOINT_REGISTRY[endpoint_key] = {
-                'path': path,
-                'method': method,
-                'parameters': primitive_parameters,
-            }
+            ENDPOINT_REGISTRY[endpoint_key] = make_endpoint_entry(
+                method,
+                path,
+                primitive_parameters,
+            )
         except ValueError:
             raise RuntimeError("The endpoint %r has already been set to %r" %
                                (endpoint_key, ENDPOINT_REGISTRY[endpoint_key]))

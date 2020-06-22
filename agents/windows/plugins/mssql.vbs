@@ -134,6 +134,14 @@ Else
 End If
 Set INST = Nothing
 
+' Get connection and command timeouts if configured
+Dim TIMEOUTS
+If CFG.Exists("timeouts") Then
+    Set TIMEOUTS = CFG("timeouts")
+Else
+    Set TIMEOUTS = CreateObject("Scripting.Dictionary")
+End If
+
 '
 ' Gather instances on this host, store instance in instances and output version section for it
 '
@@ -243,7 +251,7 @@ Function checkConnErrors(conn)
     error_msg = ""
     If conn.Errors.Count > 0 Then
         error_msg = "ERROR: "
-        For Each errObj in CONN.Errors
+        For Each errObj in conn.Errors
             error_msg = error_msg & errObj.Description & " (SQLState: " & _
                         errObj.SQLState & "/NativeError: " & errObj.NativeError & ") "
         Next
@@ -257,8 +265,12 @@ Set CONN      = CreateObject("ADODB.Connection")
 Set RS        = CreateObject("ADODB.Recordset")
 
 CONN.Provider = "sqloledb"
-' It's a local connection. 2 seconds should be enough!
-CONN.ConnectionTimeout = 2
+If TIMEOUTS.Exists("timeout_connection") Then
+    CONN.ConnectionTimeout = CInt(TIMEOUTS("timeout_connection"))
+End If
+If TIMEOUTS.Exists("timeout_command") Then
+    CONN.CommandTimeout = CInt(TIMEOUTS("timeout_command"))
+End If
 
 
 ' Loop all found server instances and connect to them
@@ -574,7 +586,9 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
-        addOutput(instance_id & "|-|" & errMsg & "|-|-|-")
+        For Each dbName in dbNames.Keys
+            addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & errMsg & "|-|-|-")
+        Next
     Else
         Do While Not RS.Eof
             ' instance db_name status recovery auto_close auto_shrink

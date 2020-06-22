@@ -14,7 +14,7 @@ checkname = 'mssql_tablespaces'
 info = [
     ['MSSQL_SQLEXPRESS', 'master', '5.25', 'MB', '1.59', 'MB', '2464',
      'KB', '1096', 'KB', '1024', 'KB', '344', 'KB'],
-    ['MSSQL_Katze', 'Kitty'] + ['-'] * 12 + ['ERROR: Kitty ist auf die Nase gefallen!'],
+    ['MSSQL_Katze', 'Kitty'] + ['-'] * 12 + 'ERROR: Kitty ist auf die Nase gefallen!'.split(' '),
 ]
 
 

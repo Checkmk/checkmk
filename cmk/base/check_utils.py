@@ -98,6 +98,10 @@ class ABCService(abc.ABC):
     def __repr__(self) -> str:
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def dump_autocheck(self) -> str:
+        raise NotImplementedError()
+
 
 class Service(ABCService):
     __slots__ = ["_parameters"]
@@ -121,6 +125,14 @@ class Service(ABCService):
         return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_lables=%r)" % (
             self._check_plugin_name, self._item, self._description, self._parameters,
             self._service_labels)
+
+    def dump_autocheck(self) -> str:
+        return "{'check_plugin_name': %r, 'item': %r, 'parameters': %r, 'service_labels': %r}" % (
+            self.check_plugin_name,
+            self.item,
+            self.parameters,
+            self.service_labels.to_dict(),
+        )
 
 
 CheckTable = Dict[Tuple[CheckPluginName, Item], Service]
@@ -160,6 +172,14 @@ class DiscoveredService(ABCService):
                 "parameters_unresolved=%r, service_lables=%r)") % (
                     self._check_plugin_name, self._item, self._description,
                     self._parameters_unresolved, self._service_labels)
+
+    def dump_autocheck(self) -> str:
+        return "{'check_plugin_name': %r, 'item': %r, 'parameters': %s, 'service_labels': %r}" % (
+            self.check_plugin_name,
+            self.item,
+            self.parameters_unresolved,
+            self.service_labels.to_dict(),
+        )
 
 
 DiscoveredCheckTable = Dict[Tuple[CheckPluginName, Item], DiscoveredService]

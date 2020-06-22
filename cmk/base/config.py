@@ -28,6 +28,7 @@ from typing import (
     List,
     NamedTuple,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Union,
@@ -87,7 +88,7 @@ import cmk.base.check_utils
 import cmk.base.default_config as default_config
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.caching import runtime_cache as _runtime_cache
-from cmk.base.check_utils import LegacyCheckParameters, DiscoveredService
+from cmk.base.check_utils import LegacyCheckParameters, ABCService
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 try:
@@ -3215,7 +3216,7 @@ class HostConfig:
 
     def set_autochecks(
         self,
-        new_services: List[DiscoveredService],
+        new_services: Sequence[ABCService],
     ) -> None:
         """Merge existing autochecks with the given autochecks for a host and save it"""
         if self.is_cluster:
@@ -3225,13 +3226,13 @@ class HostConfig:
                     self.hostname,
                     new_services,
                     self._config_cache.host_of_clustered_service,
-                    service_description,  # wtf?
+                    service_description,  # top level function!
                 )
         else:
             autochecks.set_autochecks_of_real_hosts(
                 self.hostname,
                 new_services,
-                service_description,  # of what?
+                service_description,  # top level function!
             )
 
     def remove_autochecks(self):

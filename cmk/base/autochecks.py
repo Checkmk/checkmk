@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Caring about persistance of the discovered services (aka autochecks)"""
 
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Union
 import sys
 import ast
 from pathlib import Path
@@ -20,8 +20,8 @@ from cmk.utils.type_defs import CheckVariables, PluginName
 from cmk.utils.log import console
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
-from cmk.utils.type_defs import HostName, ServiceName
-from cmk.base.check_utils import CheckPluginName, LegacyCheckParameters, DiscoveredService, Item, Service
+from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceName
+from cmk.base.check_utils import ABCService, DiscoveredService, LegacyCheckParameters, Service
 
 ComputeCheckParameters = Callable[[HostName, CheckPluginName, Item, LegacyCheckParameters],
                                   Optional[LegacyCheckParameters]]
@@ -320,8 +320,8 @@ def _parse_discovered_service_label_from_ast(ast_service_labels):
 
 
 def set_autochecks_of_real_hosts(hostname, new_services, service_description):
-    # type: (HostName, List[DiscoveredService], GetServiceDescription) -> None
-    new_autochecks = []  # type: List[DiscoveredService]
+    # type: (HostName, Sequence[ABCService], GetServiceDescription) -> None
+    new_autochecks = []  # type: List[ABCService]
 
     # write new autochecks file, but take parameters_unresolved from existing ones
     # for those checks which are kept
@@ -334,17 +334,20 @@ def set_autochecks_of_real_hosts(hostname, new_services, service_description):
             new_autochecks.append(discovered_service)
 
     # write new autochecks file for that host
-    save_autochecks_file(hostname, new_autochecks)
+    save_autochecks_file(
+        hostname,
+        new_autochecks,
+    )
 
 
 def set_autochecks_of_cluster(nodes, hostname, new_services, host_of_clustered_service,
                               service_description):
-    # type: (List[HostName], HostName, List[DiscoveredService], HostOfClusteredService, GetServiceDescription) -> None
+    # type: (List[HostName], HostName, Sequence[ABCService], HostOfClusteredService, GetServiceDescription) -> None
     """A Cluster does not have an autochecks file. All of its services are located
     in the nodes instead. For clusters we cycle through all nodes remove all
     clustered service and add the ones we've got as input."""
     for node in nodes:
-        new_autochecks = []  # type: List[DiscoveredService]
+        new_autochecks = []  # type: List[ABCService]
         for existing_service in parse_autochecks_file(node, service_description):
             if hostname != host_of_clustered_service(node, existing_service.description):
                 new_autochecks.append(existing_service)
@@ -364,9 +367,9 @@ def set_autochecks_of_cluster(nodes, hostname, new_services, host_of_clustered_s
 
 
 def _remove_duplicate_autochecks(autochecks):
-    # type: (List[DiscoveredService]) -> List[DiscoveredService]
+    # type: (Sequence[ABCService]) -> List[ABCService]
     """ Cleanup routine. Earlier versions (<1.6.0p8) may have introduced duplicates in the autochecks file"""
-    seen = set()  # type: Set[DiscoveredService]
+    seen = set()  # type: Set[ABCService]
     cleaned_autochecks = []
     for service in autochecks:
         if service not in seen:
@@ -375,17 +378,16 @@ def _remove_duplicate_autochecks(autochecks):
     return cleaned_autochecks
 
 
-def save_autochecks_file(hostname, items):
-    # type: (HostName, List[DiscoveredService]) -> None
+def save_autochecks_file(
+    hostname: HostName,
+    services: Sequence[ABCService],
+) -> None:
     path = _autochecks_path_for(hostname)
     path.parent.mkdir(parents=True, exist_ok=True)
     content = []
     content.append("[")
-    for discovered_service in sorted(items, key=lambda s: (s.check_plugin_name, s.item)):
-        content.append(
-            "  {'check_plugin_name': %r, 'item': %r, 'parameters': %s, 'service_labels': %r}," %
-            (discovered_service.check_plugin_name, discovered_service.item,
-             discovered_service.parameters_unresolved, discovered_service.service_labels.to_dict()))
+    for service in sorted(services, key=lambda s: (s.check_plugin_name, s.item)):
+        content.append("  %s," % service.dump_autocheck())
     content.append("]\n")
     store.save_file(path, "\n".join(content))
 

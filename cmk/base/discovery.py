@@ -183,14 +183,13 @@ def _preprocess_hostnames(arg_host_names, config_cache):
 
 
 def _do_discovery_for(
-        hostname,  # type: str
-        ipaddress,  # type: Optional[str]
-        multi_host_sections,  # type: data_sources.MultiHostSections
-        check_plugin_names,  # type: Optional[Set[PluginName]]
-        only_new,  # type: bool
-        on_error,  # type: str
-):
-    # type: (...) -> None
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    multi_host_sections: data_sources.MultiHostSections,
+    check_plugin_names: Optional[Set[PluginName]],
+    only_new: bool,
+    on_error: str,
+) -> None:
     discovered_services = _discover_services(
         hostname,
         ipaddress,
@@ -267,7 +266,7 @@ def _do_discovery_for(
 
 
 def _perform_host_label_discovery(hostname, discovered_host_labels, only_new):
-    # type: (str, DiscoveredHostLabels, bool) -> Tuple[DiscoveredHostLabels, Dict[check_table.CheckPluginName, int]]
+    # type: (HostName, DiscoveredHostLabels, bool) -> Tuple[DiscoveredHostLabels, Dict[check_table.CheckPluginName, int]]
 
     # Take over old items if -I is selected
     if only_new:
@@ -428,8 +427,10 @@ def _accept_all_services(_hostname, _check_plugin_name, _item):
 
 
 @cmk.base.decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
-def check_discovery(hostname, ipaddress):
-    # type: (str, Optional[str]) -> Tuple[int, List[str], List[str], List[Tuple]]
+def check_discovery(
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+) -> Tuple[int, List[str], List[str], List[Tuple]]:
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
@@ -929,13 +930,12 @@ def _discover_host_labels(
 # "warn"   -> output a warning on stderr
 # "raise"  -> let the exception come through
 def _discover_services(
-        hostname,  # type: str
-        ipaddress,  # type: Optional[str]
-        multi_host_sections,  # type: data_sources.MultiHostSections
-        on_error,  # type: str
-        check_plugin_whitelist,  # type: Optional[Set[PluginName]]
-):
-    # type: (...) -> List[DiscoveredService]
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    multi_host_sections: data_sources.MultiHostSections,
+    on_error: str,
+    check_plugin_whitelist: Optional[Set[PluginName]],
+) -> List[DiscoveredService]:
     # Set host name for host_name()-function (part of the Check API)
     # (used e.g. by ps-discovery)
     check_api_utils.set_hostname(hostname)
@@ -1014,13 +1014,12 @@ def _get_host_sections_for_discovery(sources, use_caches):
 
 
 def _execute_discovery(
-        multi_host_sections,  # type: data_sources.MultiHostSections
-        hostname,  # type: str
-        ipaddress,  # type: Optional[str]
-        check_plugin_name,  # type: PluginName
-        on_error,  # type: str
-):
-    # type: (...) -> Iterator[DiscoveredService]
+    multi_host_sections: data_sources.MultiHostSections,
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    check_plugin_name: PluginName,
+    on_error: str,
+) -> Iterator[DiscoveredService]:
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_plugin_name, None):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
@@ -1099,8 +1098,12 @@ def _enriched_discovered_services(
 #    "clustered_new" : New service found on a node that belongs to a cluster
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
-def _get_host_services(host_config, ipaddress, multi_host_sections, on_error):
-    # type: (config.HostConfig, Optional[str], data_sources.MultiHostSections, str) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
+def _get_host_services(
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    multi_host_sections: data_sources.MultiHostSections,
+    on_error: str,
+) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]:
     if host_config.is_cluster:
         return _get_cluster_services(host_config, ipaddress, multi_host_sections, on_error)
 
@@ -1110,7 +1113,7 @@ def _get_host_services(host_config, ipaddress, multi_host_sections, on_error):
 # Do the actual work for a non-cluster host or node
 def _get_node_services(
         host_config,  # type: config.HostConfig
-        ipaddress,  # type: Optional[str]
+        ipaddress,  # type: Optional[HostAddress]
         multi_host_sections,  # type: data_sources.MultiHostSections
         on_error,  # type: str
 ):
@@ -1136,12 +1139,11 @@ def _get_node_services(
 
 # Part of _get_node_services that deals with discovered services
 def _get_discovered_services(
-        hostname,  # type: str
-        ipaddress,  # type: Optional[str]
-        multi_host_sections,  # type: data_sources.MultiHostSections
-        on_error,  # type: str
-):
-    # type: (...) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    multi_host_sections: data_sources.MultiHostSections,
+    on_error: str,
+) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]:
     # Create a dict from check_plugin_name/item to check_source/paramstring
     services = {}  # type: DiscoveredServicesTable
 

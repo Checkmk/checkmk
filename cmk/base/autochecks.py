@@ -366,12 +366,11 @@ def set_autochecks_of_cluster(nodes, hostname, new_services, host_of_clustered_s
 def _remove_duplicate_autochecks(autochecks):
     # type: (List[DiscoveredService]) -> List[DiscoveredService]
     """ Cleanup routine. Earlier versions (<1.6.0p8) may have introduced duplicates in the autochecks file"""
-    seen = set()  # type: Set[Tuple[CheckPluginName, Item]]
+    seen = set()  # type: Set[DiscoveredService]
     cleaned_autochecks = []
     for service in autochecks:
-        service_id = (service.check_plugin_name, service.item)
-        if service_id not in seen:
-            seen.add(service_id)
+        if service not in seen:
+            seen.add(service)
             cleaned_autochecks.append(service)
     return cleaned_autochecks
 

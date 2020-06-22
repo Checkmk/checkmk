@@ -36,9 +36,9 @@ global:
     # password
     passphrase: secret
 
-    # Do only execute programs and scripts with
-    # the following suffixes (in local and plugins).
-    execute: [exe, bat, vbs, cmd, ps1]
+    # Allowed file extensions. The agent launches the program(script) only 
+    # when its extension is on the list of allowed ones. 
+    execute: [exe, bat, vbs, cmd, ps1] # Supported: vbs, ps1, py, pl, exe, cmd, bat
 
     # Run sync scripts in parallel (to each other). Default is "async"
     async: yes

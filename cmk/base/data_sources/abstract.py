@@ -101,7 +101,7 @@ class SectionStore:
             else:
                 raise
 
-        store.save_object_to_file(self.path, sections, pretty=False)
+        store.save_object_to_file(self.path, {str(k): v for k, v in sections.items()}, pretty=False)
         self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
 
     # TODO: This is not race condition free when modifying the data. Either remove
@@ -109,7 +109,10 @@ class SectionStore:
     # reading and unlock after writing
     def load(self, keep_outdated):
         # type: (bool) -> BoundedAbstractPersistedSections
-        sections = store.load_object_from_file(self.path, default={})
+        raw_sections_data = store.load_object_from_file(self.path, default={})
+        sections: BoundedAbstractPersistedSections = {  # type: ignore[assignment]
+            SectionName(k): v for k, v in raw_sections_data.items()
+        }
         if not keep_outdated:
             sections = self._filter(sections)
 

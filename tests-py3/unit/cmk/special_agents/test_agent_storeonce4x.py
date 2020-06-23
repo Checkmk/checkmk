@@ -24,12 +24,12 @@ SECRET = "top-secret"
 
 NOW_SIMULATED = "1988-06-08 17:00:00.000000"
 EXP_IN_ABS_SIMULATED = "1988-06-08 17:01:00.000000"
-INVALID_TOKEN = "{\"I AM NOT A TOKEN FILE\":\"000\"}"
-VALID_TOKEN = "{\"expires_in_abs\":\"%s\",\"expires_in\":\"2700\"," \
-              "\"refresh_token\":\"0c91fcbf-8ca0-452d-be06-0d49446defcc\"," \
-              "\"access_token\":\"105190b1-2497-440c-8f55-c4a4f466bfc7\"," \
-              "\"sessionID\":\"6e608d07-0aa9-4a36-84ab-6be6f1dc5d89\"," \
-              "\"userName\":\"user\"}" % EXP_IN_ABS_SIMULATED
+INVALID_TOKEN = '{"I AM NOT A TOKEN FILE":"000"}'
+VALID_TOKEN = ('{"expires_in_abs":"%s","expires_in":"2700",'
+               '"refresh_token":"0c91fcbf-8ca0-452d-be06-0d49446defcc",'
+               '"access_token":"105190b1-2497-440c-8f55-c4a4f466bfc7",'
+               '"sessionID":"6e608d07-0aa9-4a36-84ab-6be6f1dc5d89",'
+               '"userName":"user"}' % EXP_IN_ABS_SIMULATED)
 
 EXPIRES_IN = '30'
 TOKEN_JSON_FROM_STOREONCE = {

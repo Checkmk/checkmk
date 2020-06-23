@@ -152,12 +152,12 @@ def _read_snmp_info(hostname):
 def _read_agent_output(hostname):
     # type: (str) -> Optional[RawAgentData]
     try:
-        import cmk.base.cee.real_time_checks as real_time_checks  # pylint: disable=import-outside-toplevel
+        import cmk.base.cee.keepalive_rtc as rtc  # pylint: disable=import-outside-toplevel
     except ImportError:
-        real_time_checks = None  # type: ignore[assignment]
+        rtc = None  # type: ignore[assignment]
 
-    if real_time_checks and real_time_checks.is_real_time_check_helper():
-        return real_time_checks.get_rtc_package()
+    if rtc and rtc.is_real_time_check_helper():
+        return rtc.get_rtc_package()
 
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
     try:

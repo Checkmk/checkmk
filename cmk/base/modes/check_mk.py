@@ -1640,8 +1640,10 @@ def mode_check(options, args):
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
     try:
         import cmk.base.cee.keepalive as keepalive  # pylint: disable=import-outside-toplevel
+        import cmk.base.cee.keepalive_check as check  # pylint: disable=import-outside-toplevel
     except ImportError:
         keepalive = None  # type: ignore[assignment]
+        check = None  # type: ignore[assignment]
 
     if keepalive and "keepalive" in options:
         # handle CMC check helper
@@ -1649,7 +1651,7 @@ def mode_check(options, args):
         if "keepalive-fd" in options:
             keepalive.set_keepalive_fd(options["keepalive-fd"])
 
-        keepalive.do_check_keepalive()
+        check.do_keepalive()
         return
 
     if "perfdata" in options:

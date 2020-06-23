@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict
+import ipaddress
 
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ServiceName
@@ -35,8 +36,12 @@ def _translate(translation: TranslationOptions, name: str) -> str:
         name = name.lower()
 
     # 2. Drop domain part (not applied to IP addresses!)
-    if translation.get("drop_domain") and not name[0].isdigit():
-        name = name.split(".", 1)[0]
+    if translation.get("drop_domain"):
+        try:
+            ipaddress.ip_address(name)
+        except ValueError:
+            # Drop domain if "name " is not a valid IP address
+            name = name.split(".", 1)[0]
 
     # 3. Multiple regular expression conversion
     if isinstance(translation.get("regex"), tuple):

@@ -817,8 +817,7 @@ def _do_submit_to_core(
     if _in_keepalive_mode():
         cached_at, cache_interval = cache_info or (None, None)
         # Regular case for the CMC - check helpers are running in keepalive mode
-        keepalive.add_keepalive_check_result(host, service, state, output, cached_at,
-                                             cache_interval)
+        keepalive.add_check_result(host, service, state, output, cached_at, cache_interval)
 
     elif config.check_submission == "pipe" or config.monitoring_core == "cmc":
         # In case of CMC this is used when running "cmk" manually

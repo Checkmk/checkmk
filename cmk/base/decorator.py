@@ -75,7 +75,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
             output_txt += "\n"
 
             if _in_keepalive_mode():
-                keepalive.add_keepalive_active_check_result(hostname, output_txt)
+                keepalive.add_active_check_result(hostname, output_txt)
                 console.verbose(ensure_str(output_txt))
             else:
                 out.output(ensure_str(output_txt))

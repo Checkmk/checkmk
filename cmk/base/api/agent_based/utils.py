@@ -188,7 +188,7 @@ def check_levels(
     :param boundaries:   Minimum and maximum to add to the metric.
     """
     if render_func is None:
-        render_func = "%.2f".format
+        render_func = lambda f: "%.2f" % f
 
     info_text = str(render_func(value))  # forgive wrong output type
     if label:

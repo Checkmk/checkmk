@@ -16,12 +16,20 @@ def _parse_systemparameter(info):
 
     parsed = {}  # type: Dict [str, List]
 
+    # Add here specific V$SYSTEMPARAMETERS which should not be tracked in the Inventory History
+    # (e.g. because they are changing often)
+    vsys_params_to_exclude = {"resource_manager_plan"}
+
     for line in info:
 
         if len(line) != 4:
             continue
 
         SID, param_name, value, isdefault = line
+
+        if param_name in vsys_params_to_exclude:
+            continue
+
         inst_data = parsed.setdefault(SID, [])
         inst_data.append({"param_name": param_name, "value": value, "isdefault": isdefault})
     return parsed

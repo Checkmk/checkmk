@@ -20,6 +20,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
 )
+from cmk.gui.plugins.wato import may_edit_ruleset
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -1211,3 +1212,15 @@ def test_monitoring_user_permissions(mocker, monitoring_user):
     monitoring_user.need_permission('general.edit_views')
     with pytest.raises(MKAuthException):
         monitoring_user.need_permission('unknown_permission')
+
+
+@pytest.mark.parametrize("varname", [
+    "custom_checks",
+    "datasource_programs",
+    "agent_config:mrpe",
+    "agent_config:agent_paths",
+    "agent_config:runas",
+    "agent_config:only_from",
+])
+def test_ruleset_permissions_with_commandline_access(monitoring_user, varname):
+    assert may_edit_ruleset(varname) is False

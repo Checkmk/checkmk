@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
@@ -124,6 +124,7 @@ def check_plugin(
     check_function: CheckFunction,
     check_default_parameters: Optional[Dict[str, Any]] = None,
     check_ruleset_name: Optional[str] = None,
+    cluster_check_function: Optional[Callable] = None,
 ) -> None:
     """Register a check plugin to checkmk.
 
@@ -159,6 +160,7 @@ def check_plugin(
         check_function=check_function,
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_ruleset_name,
+        cluster_check_function=cluster_check_function,
         forbidden_names=list(config.registered_check_plugins),
     )
 

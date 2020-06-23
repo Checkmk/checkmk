@@ -2389,9 +2389,10 @@ mk_ora_sqlplus () {
         logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "OUTPUT '$output'"
         output=$(echo -e "$output" | "${GREP}" -v "^ERROR at line" | tr '\n' ' ' |\
                                      sed "s/^/$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|/" ; echo)
-        if [ "$MK_ORA_DEBUG_CONNECT" ]; then
-            echo "Logindetails: ${DBCONNECT}" >&2
-            echo -e "$output"
+
+        if $MK_ORA_DEBUG_CONNECT; then
+            echo "    Logindetails:           ${MK_DB_CONNECT}" >&2
+            echo -e "    Error Message:          ${output:0:100}"
         else
             echo '<<<oracle_instance:sep(124)>>>'
             echo -e "$output"

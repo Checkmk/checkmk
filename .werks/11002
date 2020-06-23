@@ -1,0 +1,16 @@
+Title: Hostname Translation: Fix wrongly detected IP address if drop domain
+Knowledge: doc
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1592895891
+
+Within the ruleset {{Hostname translation for piggybacked hosts}} the option
+{{Convert FQHN}} drops the domain part, eg. "host123.foobar.de -> host123".  If
+a hostname begins with a number then the translation failed because this name
+was wrongly detected as an IP address, eg. "123host.foobar.de" -> "123host.foobar.de".
+This has been fixed.

@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import ipaddress
+
 from cmk.utils.regex import regex
 
 
@@ -49,8 +51,13 @@ def _translate(translation, name):
         name = name.lower()
 
     # 2. Drop domain part (not applied to IP addresses!)
-    if translation.get("drop_domain") and not name[0].isdigit():
-        name = name.split(".", 1)[0]
+    if translation.get("drop_domain"):
+        try:
+            # Python2: ip_address expects a unicode string
+            ipaddress.ip_address(name.decode("utf-8") if isinstance(name, str) else name)
+        except ValueError:
+            # Drop domain if "name " is not a valid IP address
+            name = name.split(".", 1)[0]
 
     # 3. Multiple regular expression conversion
     if isinstance(translation.get("regex"), tuple):

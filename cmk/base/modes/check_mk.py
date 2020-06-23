@@ -1649,7 +1649,7 @@ def mode_check(options, args):
         # handle CMC check helper
         keepalive.enable()
         if "keepalive-fd" in options:
-            keepalive.set_keepalive_fd(options["keepalive-fd"])
+            keepalive.keepalive_fd.set_(options["keepalive-fd"])
 
         check.do_keepalive()
         return

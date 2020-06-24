@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Callable, cast, Dict, Iterator, List, Optional, Set, Tuple, TypeVar
+from typing import Callable, cast, Dict, Iterator, List, Optional, Set, Tuple
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import PluginName
@@ -21,12 +21,9 @@ from cmk.base.check_utils import (
     LegacyCheckParameters,
     CheckPluginName,
     CheckTable,
-    DiscoveredCheckTable,
     Item,
     Service,
 )
-
-AbstractCheckTable = TypeVar("AbstractCheckTable", CheckTable, DiscoveredCheckTable)
 
 # Add WATO-configured explicit checks to (possibly empty) checks
 # statically defined in checks.
@@ -260,11 +257,10 @@ def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
     return params
 
 
-def remove_duplicate_checks(check_table):
-    # type: (AbstractCheckTable) -> AbstractCheckTable
-    have_with_tcp = {}  # type: Dict[str, Tuple[CheckPluginName, Item]]
-    have_with_snmp = {}  # type: Dict[str, Tuple[CheckPluginName, Item]]
-    without_duplicates = {}  # type: AbstractCheckTable
+def remove_duplicate_checks(check_table: CheckTable) -> CheckTable:
+    have_with_tcp: Dict[str, Tuple[CheckPluginName, Item]] = {}
+    have_with_snmp: Dict[str, Tuple[CheckPluginName, Item]] = {}
+    without_duplicates: CheckTable = {}
     for key, service in check_table.items():
         if cmk.base.check_utils.is_snmp_check(service.check_plugin_name):
             if service.description in have_with_tcp:

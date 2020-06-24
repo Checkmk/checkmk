@@ -286,7 +286,7 @@ def _do_discovery_for(
     #    --> just add new services
     #        only_new is True
 
-    new_services = []  # type: List[DiscoveredService]
+    new_services = []  # type: List[ABCService]
 
     if not check_plugin_names and not only_new:
         existing_services = []  # type: List[DiscoveredService]
@@ -958,7 +958,7 @@ def _discover_services(
     multi_host_sections: data_sources.MultiHostSections,
     on_error: str,
     check_plugin_whitelist: Optional[Set[PluginName]],
-) -> List[DiscoveredService]:
+) -> List[Service]:
     # Set host name for host_name()-function (part of the Check API)
     # (used e.g. by ps-discovery)
     check_api_utils.set_hostname(hostname)
@@ -970,14 +970,12 @@ def _discover_services(
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
 
-    service_table = {}  # type: cmk.base.check_utils.DiscoveredCheckTable
+    service_table = {}  # type: cmk.base.check_utils.CheckTable
     try:
         for check_plugin_name in sorted(plugin_candidates):
             try:
                 for service in _execute_discovery(multi_host_sections, hostname, ipaddress,
                                                   check_plugin_name, on_error):
-                    if not isinstance(service, DiscoveredService):
-                        raise TypeError("unexpectedly discovered %r" % type(service))
                     service_table[(service.check_plugin_name, service.item)] = service
             except (KeyboardInterrupt, MKTimeout):
                 raise
@@ -1042,7 +1040,7 @@ def _execute_discovery(
     ipaddress: Optional[HostAddress],
     check_plugin_name: PluginName,
     on_error: str,
-) -> Iterator[DiscoveredService]:
+) -> Iterator[Service]:
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_plugin_name, None):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
@@ -1089,7 +1087,7 @@ def _enriched_discovered_services(
         check_plugin_name,  # type: PluginName
         plugins_services,  # type: Iterable[checking_types.Service]
 ):
-    # type: (...) -> Generator[DiscoveredService, None, None]
+    # type: (...) -> Generator[Service, None, None]
     for service in plugins_services:
         description = config.service_description(hostname, check_plugin_name, service.item)
         # make sanity check
@@ -1098,11 +1096,11 @@ def _enriched_discovered_services(
                           (hostname, check_plugin_name))
             continue
 
-        yield DiscoveredService(
+        yield Service(
             check_plugin_name=resolve_legacy_name(check_plugin_name),
             item=service.item,
             description=description,
-            parameters_unresolved=service.parameters,
+            parameters=service.parameters,
             service_labels=service.labels,
         )
 

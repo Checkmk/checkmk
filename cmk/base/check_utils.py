@@ -182,9 +182,6 @@ class DiscoveredService(ABCService):
         )
 
 
-DiscoveredCheckTable = Dict[Tuple[CheckPluginName, Item], DiscoveredService]
-
-
 def is_snmp_check(check_plugin_name):
     # type: (str) -> bool
     cache = _runtime_cache.get_dict("is_snmp_check")

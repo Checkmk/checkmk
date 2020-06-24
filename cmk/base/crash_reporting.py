@@ -152,7 +152,7 @@ def _read_snmp_info(hostname):
 def _read_agent_output(hostname):
     # type: (str) -> Optional[RawAgentData]
     try:
-        import cmk.base.cee.keepalive_rtc as rtc  # pylint: disable=import-outside-toplevel
+        from cmk.base.cee.keepalive import rtc  # pylint: disable=import-outside-toplevel
     except ImportError:
         rtc = None  # type: ignore[assignment]
 

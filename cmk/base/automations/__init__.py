@@ -30,8 +30,7 @@ class MKAutomationError(MKException):
 class Automations:
     def __init__(self):
         # type: () -> None
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(Automations, self).__init__()  # pylint: disable=bad-super-call
+        super(Automations, self).__init__()
         self._automations = {}  # type: Dict[str, Automation]
 
     def register(self, automation):

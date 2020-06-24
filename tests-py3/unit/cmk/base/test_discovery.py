@@ -137,4 +137,3 @@ def test__get_item_filter_func(monkeypatch, params_rediscovery, result):
     item_filter_func = discovery._get_item_filter_func(params_rediscovery)
     assert item_filter_func is not None
     assert item_filter_func("hostname", "check_plugin_name", "item") is result
-    #https://review.lan.tribe29.com/c/check_mk/+/1422/1/cmk_base/discovery.py

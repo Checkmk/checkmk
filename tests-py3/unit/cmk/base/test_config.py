@@ -1399,7 +1399,7 @@ def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "test-host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(u"""[
-    {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u'äzzzz': u'eeeeez'}},
+    {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': (5.0, 10.0), 'service_labels': {u'äzzzz': u'eeeeez'}},
 ]""")
 
     config_cache = ts.apply(monkeypatch)

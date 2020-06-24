@@ -3270,11 +3270,16 @@ class ConfigCache:
         # Keep HostConfig instances created with the current configuration cache
         self._host_configs: Dict[HostName, HostConfig] = {}
 
-    def _discovered_labels_of_service(self, hostname: HostName,
-                                      service_desc: ServiceName) -> Labels:
-        return self._autochecks_manager.discovered_labels_of(hostname, service_desc,
-                                                             service_description,
-                                                             get_check_variables).to_dict()
+    def _discovered_labels_of_service(
+        self,
+        hostname: HostName,
+        service_desc: ServiceName,
+    ) -> Labels:
+        return self._autochecks_manager.discovered_labels_of(
+            hostname,
+            service_desc,
+            service_description,  # this is the global function!
+        ).to_dict()
 
     def get_tag_to_group_map(self) -> TagGroups:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
@@ -3589,8 +3594,7 @@ class ConfigCache:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
             compute_check_parameters,
-            service_description,
-            get_check_variables,
+            service_description,  # this is the global function!
         )
 
     def section_name_of(self, section: CheckPluginNameStr) -> str:

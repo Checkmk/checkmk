@@ -31,6 +31,7 @@ import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
 import cmk.utils.debug
+from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
 import cmk.utils
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
@@ -132,10 +133,20 @@ class UpdateConfig:
         root_folder.rewrite_hosts_files()
 
     def _rewrite_autochecks(self):
+        check_variables = cmk.base.config.get_check_variables()
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = autocheck_file.stem
-            autochecks = cmk.base.autochecks.parse_autochecks_file(
-                hostname, cmk.base.config.service_description)
+            try:
+                autochecks = cmk.base.autochecks.parse_autochecks_file(
+                    hostname,
+                    cmk.base.config.service_description,
+                    check_variables,
+                )
+            except MKGeneralException as exc:
+                raise MKGeneralException(
+                    "%s\nIf you encounter this error during the update process "
+                    "you need to replace the the variable by its actual value, e.g. "
+                    "replace `my_custom_levels` by `{'levels': (23, 42)}`." % exc)
             cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
 
     def _rewrite_wato_rulesets(self):

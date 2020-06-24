@@ -7,7 +7,6 @@
 
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Union
 import sys
-import ast
 from pathlib import Path
 
 from six import ensure_str
@@ -55,11 +54,10 @@ class AutochecksManager:
         hostname: str,
         compute_check_parameters: ComputeCheckParameters,
         service_description: GetServiceDescription,
-        get_check_variables: GetCheckVariables,
     ) -> List[Service]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = self._get_autochecks_of_uncached(
-                hostname, compute_check_parameters, service_description, get_check_variables)
+                hostname, compute_check_parameters, service_description)
         return self._autochecks[hostname]
 
     def _get_autochecks_of_uncached(
@@ -67,7 +65,6 @@ class AutochecksManager:
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         service_description: GetServiceDescription,
-        get_check_variables: GetCheckVariables,
     ) -> List[Service]:
         """Read automatically discovered checks of one host"""
         return [
@@ -82,8 +79,7 @@ class AutochecksManager:
                     service.parameters,
                 ),
                 service_labels=service.service_labels,
-            ) for service in self._read_raw_autochecks(hostname, service_description,
-                                                       get_check_variables)
+            ) for service in self._read_raw_autochecks(hostname, service_description)
         ]
 
     def discovered_labels_of(
@@ -91,13 +87,12 @@ class AutochecksManager:
         hostname: HostName,
         service_desc: ServiceName,
         service_description: GetServiceDescription,
-        get_check_variables: GetCheckVariables,
     ) -> DiscoveredServiceLabels:
         if hostname not in self._discovered_labels_of:
             # Only read the raw autochecks here, do not compute the effective
             # check parameters. The latter would involve ruleset matching which
             # in turn would require already computed labels.
-            self._read_raw_autochecks(hostname, service_description, get_check_variables)
+            self._read_raw_autochecks(hostname, service_description)
         if service_desc not in self._discovered_labels_of[hostname]:
             self._discovered_labels_of[hostname][service_desc] = DiscoveredServiceLabels()
         return self._discovered_labels_of[hostname][service_desc]
@@ -106,13 +101,11 @@ class AutochecksManager:
         self,
         hostname: HostName,
         service_description: GetServiceDescription,
-        get_check_variables: GetCheckVariables,
     ) -> List[Service]:
         if hostname not in self._raw_autochecks_cache:
             self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_uncached(
                 hostname,
                 service_description,
-                get_check_variables,
             )
             # create cache from autocheck labels
             self._discovered_labels_of.setdefault(hostname, {})
@@ -126,15 +119,13 @@ class AutochecksManager:
         self,
         hostname: HostName,
         service_description: GetServiceDescription,
-        get_check_variables: GetCheckVariables,
     ) -> List[Service]:
         """Read automatically discovered checks of one host"""
         path = _autochecks_path_for(hostname)
-        check_variables = get_check_variables()
         try:
             autochecks_raw = _load_raw_autochecks(
                 path=path,
-                check_variables=check_variables,
+                check_variables=None,
             )
         except SyntaxError as e:
             console.verbose("Syntax error in file %s: %s\n", path, e, stream=sys.stderr)
@@ -210,73 +201,72 @@ def _load_raw_autochecks(
     with path.open(encoding="utf-8") as f:
         raw_file_content = f.read()
 
-    return eval(raw_file_content, check_variables, check_variables)
+    if not raw_file_content.strip():
+        return []
+
+    try:
+        return eval(raw_file_content, check_variables or {}, check_variables or {})
+    except NameError as exc:
+        raise MKGeneralException(
+            "%s in an autocheck entry of host '%s' (%s). This entry is in pre Checkmk 1.7 "
+            "format and needs to be converted. This is normally done by "
+            "\"cmk-update-config -v\" during \"omd update\". Please execute "
+            "\"cmk-update-config -v\" for converting the old configuration." %
+            (str(exc).capitalize(), path.stem, path))
 
 
 def parse_autochecks_file(
     hostname: HostName,
     service_description: GetServiceDescription,
+    check_variables: Optional[Dict[str, Any]] = None,
 ) -> List[DiscoveredService]:
     """Read autochecks, but do not compute final check parameters"""
     path = _autochecks_path_for(hostname)
-    if not path.exists():
-        return []
-
     try:
-        with path.open(encoding="utf-8") as f:
-            tree = ast.parse(f.read())
+        raw_autochecks = _load_raw_autochecks(
+            path=path,
+            check_variables=check_variables,
+        )
     except SyntaxError as e:
         if cmk.utils.debug.enabled():
             raise
-        raise MKGeneralException("Unable to parse autochecks file %s: %s" % (path, e))
+        raise MKGeneralException("Unable to parse autochecks of host %s (%s): %s" %
+                                 (hostname, path, e))
 
     services: List[DiscoveredService] = []
-    for child in ast.iter_child_nodes(tree):
-        # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
-        if not isinstance(child, ast.Expr) and isinstance(
-                child.value,  # type: ignore[attr-defined]
-                ast.List):
-            continue  # We only care about top level list
+    for entry in raw_autochecks:
+        if not isinstance(entry, (tuple, dict)):
+            continue
 
-        # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
-        for entry in child.value.elts:  # type: ignore[attr-defined]
-            if not isinstance(entry, (ast.Tuple, ast.Dict)):
-                continue
-
-            service = _parse_autocheck_entry(hostname, entry, service_description)
-            if service:
-                services.append(service)
+        service = _parse_autocheck_entry(hostname, entry, service_description)
+        if service:
+            services.append(service)
 
     return services
 
 
 def _parse_autocheck_entry(
-        hostname: HostName, entry: Union[ast.Tuple, ast.Dict],
-        service_description: GetServiceDescription) -> Optional[DiscoveredService]:
-    if isinstance(entry, ast.Tuple):
-        ast_check_plugin_name, ast_item, ast_parameters_unresolved = _parse_pre_16_tuple_autocheck_entry(
-            entry)
-        ast_service_labels = ast.Dict()
-    elif isinstance(entry, ast.Dict):
-        ast_check_plugin_name, ast_item, ast_parameters_unresolved, ast_service_labels = \
+    hostname: HostName,
+    entry: Union[Tuple, Dict],
+    service_description: GetServiceDescription,
+) -> Optional[DiscoveredService]:
+    if isinstance(entry, tuple):
+        check_plugin_name, item, parameters = _parse_pre_16_tuple_autocheck_entry(entry)
+        dict_service_labels = {}
+    elif isinstance(entry, dict):
+        check_plugin_name, item, parameters, dict_service_labels = \
             _parse_dict_autocheck_entry(entry)
     else:
         raise Exception("Invalid autocheck: Wrong type: %r" % entry)
 
-    if not isinstance(ast_check_plugin_name, ast.Str):
-        raise Exception("Invalid autocheck: Wrong check plugin type: %r" % ast_check_plugin_name)
-    check_plugin_name: str = ast_check_plugin_name.s
+    if not isinstance(check_plugin_name, str):
+        raise Exception("Invalid autocheck: Wrong check plugin type: %r" % check_plugin_name)
 
-    item: Item = None
-    if isinstance(ast_item, ast.Str):
-        item = ast_item.s
-    elif isinstance(ast_item, ast.Num) and isinstance(ast_item.n, (int, float)):
+    if isinstance(item, (int, float)):
         # NOTE: We exclude complex here. :-)
-        item = "%s" % int(ast_item.n)
-    elif _ast_node_is_none(ast_item):
-        item = None
-    else:
-        raise Exception("Invalid autocheck: Wrong item type: %r" % ast_item)
+        item = str(int(item))
+    elif not isinstance(item, (str, type(None))):
+        raise Exception("Invalid autocheck: Wrong item type: %r" % item)
 
     try:
         # TODO (mo): centralize maincheckify: CMK-4295
@@ -288,85 +278,42 @@ def _parse_autocheck_entry(
     except Exception:
         return None  # ignore
 
+    # TODO: we can now create an actual Service instance and nuke DiscoveredService
     return DiscoveredService(
         check_plugin_name=check_plugin_name,
         item=item,
         description=description,
-        parameters_unresolved=_parse_unresolved_parameters_from_ast(ast_parameters_unresolved),
-        service_labels=_parse_discovered_service_label_from_ast(ast_service_labels),
+        parameters_unresolved=repr(parameters),
+        service_labels=_parse_discovered_service_label_from_dict(dict_service_labels),
     )
 
 
-def _ast_node_is_none(node):
-    return isinstance(node, ast.NameConstant) and node.value is None
-
-
-def _parse_pre_16_tuple_autocheck_entry(entry: ast.Tuple) -> Union[List, Tuple]:
+def _parse_pre_16_tuple_autocheck_entry(entry: Tuple) -> Union[List, Tuple]:
     # drop hostname, legacy format with host in first column
-    parts = entry.elts[1:] if len(entry.elts) == 4 else entry.elts
+    parts = entry[1:] if len(entry) == 4 else entry
 
     if len(parts) != 3:
         raise Exception("Invalid autocheck: Wrong length %d instead of 3" % len(parts))
     return parts
 
 
-def _parse_dict_autocheck_entry(entry: ast.Dict) -> Tuple:
-    values: Dict[str, Any] = {}
-    for index, key in enumerate(entry.keys):
-        if isinstance(key, ast.Str):
-            values[key.s] = entry.values[index]
+def _parse_dict_autocheck_entry(entry: Dict) -> Tuple:
+    if set(entry) != {"check_plugin_name", "item", "parameters", "service_labels"}:
+        raise MKGeneralException("Invalid autocheck: Wrong keys found: %r" % list(entry))
 
-    if set(values) != {"check_plugin_name", "item", "parameters", "service_labels"}:
-        raise MKGeneralException("Invalid autocheck: Wrong keys found: %r" % list(values))
-
-    return values["check_plugin_name"], values["item"], values["parameters"], values[
-        "service_labels"]
+    return entry["check_plugin_name"], entry["item"], entry["parameters"], entry["service_labels"]
 
 
-def _parse_unresolved_parameters_from_ast(ast_parameters_unresolved: Any) -> str:
-    if isinstance(ast_parameters_unresolved, ast.Name):
-        # Keep check variable names as they are: No evaluation of check parameters
-        return ast_parameters_unresolved.id
-
-    # The if64 was writing structures like this:
-    # {
-    #   "errors" : if_default_error_levels,
-    #   "traffic" : if_default_traffic_levels,
-    #   "average" : if_default_average ,
-    #   "state" : "1",
-    #   "speed" : 1000000000
-    # }
-    # where the variables are values in a dictionary. Also convert this kind of structure
-    # without evaluating the variables.
-    if isinstance(ast_parameters_unresolved, ast.Dict):
-        values = []
-        for index, key in enumerate(ast_parameters_unresolved.keys):
-            if not isinstance(key, ast.Str):
-                continue
-
-            value = _parse_unresolved_parameters_from_ast(ast_parameters_unresolved.values[index])
-            values.append((key.s, value))
-        return "{%s}" % ", ".join(["'%s': %s" % p for p in sorted(values, key=lambda x: x[0])])
-
-    # Other structures, like dicts, lists and so on should also be loaded as repr() str
-    # instead of an interpreted structure
-    return repr(
-        eval(compile(ast.Expression(ast_parameters_unresolved), filename="<ast>", mode="eval")))
-
-
-def _parse_discovered_service_label_from_ast(
-        ast_service_labels: ast.Dict) -> DiscoveredServiceLabels:
+def _parse_discovered_service_label_from_dict(dict_service_labels: Dict) -> DiscoveredServiceLabels:
     labels = DiscoveredServiceLabels()
-    if not hasattr(ast_service_labels, "keys"):
+    if not isinstance(dict_service_labels, dict):
         return labels
-    for key, value in zip(ast_service_labels.keys, ast_service_labels.values):
+    for key, value in dict_service_labels.items():
         if key is not None:
-            # mypy does not get the types of the ast objects here
-            labels.add_label(
-                ServiceLabel(
-                    ensure_str(key.s),  # type: ignore[attr-defined]
-                    ensure_str(value.s),  # type: ignore[attr-defined]
-                ))
+            labels.add_label(ServiceLabel(
+                ensure_str(key),
+                ensure_str(value),
+            ))
     return labels
 
 

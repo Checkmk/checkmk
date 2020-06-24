@@ -63,15 +63,13 @@ def do_inv(hostnames):
     for hostname in hostnames:
         section.section_begin(hostname)
         try:
-            config_cache = config.get_config_cache()
-            host_config = config_cache.get_host_config(hostname)
-
+            host_config = config.HostConfig.make_host_config(hostname)
             if host_config.is_cluster:
                 ipaddress = None
             else:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-            sources = data_sources.DataSources(hostname, ipaddress)
+            sources = data_sources.DataSources(host_config, hostname, ipaddress)
             inventory_tree, status_data_tree = _do_inv_for(
                 sources,
                 multi_host_sections=None,
@@ -107,9 +105,7 @@ def do_inv_check(hostname, options):
     _inv_sw_missing = options.get("sw-missing", 0)
     _inv_fail_status = options.get("inv-fail-status", 1)
 
-    config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)  # type: config.HostConfig
-
+    host_config = config.HostConfig.make_host_config(hostname)
     if host_config.is_cluster:
         ipaddress = None
     else:
@@ -120,7 +116,7 @@ def do_inv_check(hostname, options):
     long_infotexts = []  # type: List[str]
     perfdata = []  # type: List[Tuple]
 
-    sources = data_sources.DataSources(hostname, ipaddress)
+    sources = data_sources.DataSources(host_config, hostname, ipaddress)
     inventory_tree, status_data_tree = _do_inv_for(
         sources,
         multi_host_sections=None,
@@ -218,13 +214,10 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     inventory_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
 
-    config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
-
     _inventory_tree, status_data_tree = _do_inv_for(
         sources,
         multi_host_sections=multi_host_sections,
-        host_config=host_config,
+        host_config=config.HostConfig.make_host_config(hostname),
         ipaddress=ipaddress,
     )
     _save_status_data_tree(hostname, status_data_tree)

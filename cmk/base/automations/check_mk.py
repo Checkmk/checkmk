@@ -1204,7 +1204,7 @@ class AutomationDiagHost(Automation):
                 return self._execute_ping(host_config, ipaddress)
 
             if test == 'agent':
-                return self._execute_agent(hostname, ipaddress, agent_port, cmd,
+                return self._execute_agent(host_config, hostname, ipaddress, agent_port, cmd,
                                            tcp_connect_timeout)
 
             if test == 'traceroute':
@@ -1248,9 +1248,10 @@ class AutomationDiagHost(Automation):
         response = p.stdout.read()
         return p.wait(), response
 
-    def _execute_agent(self, hostname, ipaddress, agent_port, cmd, tcp_connect_timeout):
-        # type: (str, str, int, str, Optional[float]) -> Tuple[int, str]
-        sources = data_sources.DataSources(hostname, ipaddress)
+    def _execute_agent(self, host_config, hostname, ipaddress, agent_port, cmd,
+                       tcp_connect_timeout):
+        # type: (config.HostConfig, str, str, int, str, Optional[float]) -> Tuple[int, str]
+        sources = data_sources.DataSources(host_config, hostname, ipaddress)
         sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
         state, output = 0, u""
@@ -1534,6 +1535,7 @@ class AutomationGetAgentOutput(Automation):
     def execute(self, args):
         # type: (List[str]) -> Tuple[bool, ServiceDetails, bytes]
         hostname, ty = args
+        host_config = config.HostConfig.make_host_config(hostname)
 
         success = True
         output = u""
@@ -1545,7 +1547,7 @@ class AutomationGetAgentOutput(Automation):
                 data_sources.abstract.DataSource.set_may_use_cache_file(
                     not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
-                sources = data_sources.DataSources(hostname, ipaddress)
+                sources = data_sources.DataSources(host_config, hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
                 agent_output = b""
@@ -1564,8 +1566,8 @@ class AutomationGetAgentOutput(Automation):
             else:
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-                host_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
-                backend = factory.backend(host_config, use_cache=False)
+                snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
+                backend = factory.backend(snmp_config, use_cache=False)
 
                 lines = []
                 for walk_oid in snmp_modes.oids_to_walk():

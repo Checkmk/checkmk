@@ -387,7 +387,7 @@ def mode_dump_agent(hostname):
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = ip_lookup.lookup_ip_address(hostname)
-        sources = data_sources.DataSources(hostname, ipaddress)
+        sources = data_sources.DataSources(host_config, hostname, ipaddress)
         sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
         output = b"".join(source.run_raw()

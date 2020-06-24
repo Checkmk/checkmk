@@ -6,6 +6,7 @@
 
 import pytest  # type: ignore[import]
 
+import cmk.base.config as config
 from cmk.base.data_sources import DataSources
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
 from cmk.base.data_sources.programs import DSProgramDataSource, SpecialAgentDataSource
@@ -57,4 +58,8 @@ def test_get_sources(monkeypatch, hostname, tags, sources):
     ts = make_scenario(hostname, tags)
     ts.apply(monkeypatch)
 
-    assert [s.__class__ for s in DataSources(hostname, "127.0.0.1").get_data_sources()] == sources
+    host_config = config.get_config_cache().get_host_config(hostname)
+
+    assert [
+        s.__class__ for s in DataSources(host_config, hostname, "127.0.0.1").get_data_sources()
+    ] == sources

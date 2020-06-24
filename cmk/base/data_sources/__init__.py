@@ -26,6 +26,7 @@ from cmk.utils.log import console
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 import cmk.base.config as config
+from cmk.base.config import HostConfig, SectionPlugin
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 from cmk.base.check_utils import CheckPluginName
@@ -61,25 +62,24 @@ if TYPE_CHECKING:
 class DataSources:
     def __init__(
             self,
+            host_config,  # type: HostConfig
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
             # optional set: None -> no selection, empty -> select *nothing*
-        selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
+        selected_raw_sections=None,  # type: Optional[Dict[SectionName, SectionPlugin]]
     ):
         # type: (...) -> None
         super(DataSources, self).__init__()
         self._hostname = hostname
         self._ipaddress = ipaddress
-
-        self._config_cache = config.get_config_cache()
-        self._host_config = self._config_cache.get_host_config(hostname)
+        assert host_config.hostname == hostname
+        self._host_config = host_config
+        self._sources = {}  # type: Dict[str, DataSource]
 
         self._initialize_data_sources(selected_raw_sections)
 
     def _initialize_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[SectionName, config.SectionPlugin]]) -> None
-        self._sources = {}  # type: Dict[str, DataSource]
-
+        # type: (Optional[Dict[SectionName, SectionPlugin]]) -> None
         if self._host_config.is_cluster:
             # Cluster hosts do not have any actual data sources
             # Instead all data is provided by the nodes
@@ -90,7 +90,7 @@ class DataSources:
         self._initialize_management_board_data_sources(selected_raw_sections)
 
     def _initialize_agent_based_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[SectionName, config.SectionPlugin]]) -> None
+        # type: (Optional[Dict[SectionName, SectionPlugin]]) -> None
         if self._host_config.is_all_agents_host:
             source = self._get_agent_data_source(
                 ignore_special_agents=True,
@@ -123,7 +123,7 @@ class DataSources:
             self._add_source(piggy_source)
 
     def _initialize_snmp_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[SectionName, config.SectionPlugin]]) -> None
+        # type: (Optional[Dict[SectionName, SectionPlugin]]) -> None
         if not self._host_config.is_snmp_host:
             return
         snmp_source = SNMPDataSource(
@@ -134,7 +134,7 @@ class DataSources:
         self._add_source(snmp_source)
 
     def _initialize_management_board_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[SectionName, config.SectionPlugin]]) -> None
+        # type: (Optional[Dict[SectionName, SectionPlugin]]) -> None
         protocol = self._host_config.management_protocol
         if protocol is None:
             return
@@ -182,7 +182,7 @@ class DataSources:
     def _get_agent_data_source(
             self,
             ignore_special_agents,  # type: bool
-            selected_raw_sections,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
+            selected_raw_sections,  # type: Optional[Dict[SectionName, SectionPlugin]]
     ):
         # type: (...) -> CheckMKAgentDataSource
         if not ignore_special_agents:
@@ -208,7 +208,7 @@ class DataSources:
 
     def _get_special_agent_data_sources(
             self,
-            selected_raw_sections,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
+            selected_raw_sections,  # type: Optional[Dict[SectionName, SectionPlugin]]
     ):
         # type: (...) -> List[SpecialAgentDataSource]
         return [
@@ -262,6 +262,7 @@ class DataSources:
                     PluginName(maincheckify(n)) for n in node_check_names)
 
                 node_data_sources = DataSources(
+                    self._host_config,
                     node_hostname,
                     node_ipaddress,
                     node_needed_raw_sections,

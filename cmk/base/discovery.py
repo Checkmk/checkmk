@@ -1003,6 +1003,7 @@ def _get_sources_for_discovery(
 ):
     # type: (...) -> data_sources.DataSources
     sources = data_sources.DataSources(
+        config.HostConfig.make_host_config(hostname),
         hostname,
         ipaddress,
         selected_raw_sections=selected_raw_sections,

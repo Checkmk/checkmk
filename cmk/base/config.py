@@ -2521,6 +2521,11 @@ class HostConfig:
         # type: (HostName, HostAddress) -> SNMPHostConfig
         return get_config_cache().get_host_config(hostname).snmp_config(address)
 
+    @staticmethod
+    def make_host_config(hostname):
+        # type: (HostName) -> HostConfig
+        return get_config_cache().get_host_config(hostname)
+
     @property
     def has_piggyback_data(self):
         # type: () -> bool

@@ -141,7 +141,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
         item_state.load(hostname)
 
-        sources = data_sources.DataSources(hostname, ipaddress, selected_raw_sections)
+        sources = data_sources.DataSources(host_config, hostname, ipaddress, selected_raw_sections)
 
         num_success, missing_sections = \
             _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_names)

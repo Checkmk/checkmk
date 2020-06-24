@@ -71,6 +71,15 @@ class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSectio
         self.piggybacked_raw_data = piggybacked_raw_data
         self.persisted_sections = persisted_sections
 
+    def __repr__(self):
+        return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r, persisted_sections=%r)" % (
+            type(self).__name__,
+            self.sections,
+            self.cache_info,
+            self.piggybacked_raw_data,
+            self.persisted_sections,
+        )
+
     # TODO: It should be supported that different sources produce equal sections.
     # this is handled for the self.sections data by simply concatenating the lines
     # of the sections, but for the self.cache_info this is not done. Why?
@@ -119,6 +128,9 @@ class MultiHostSections:
         # It holy holds the result of individual calls of the parse_function.
         self._parsed_sections = caching.DictCache()
         self._parsed_to_raw_map = caching.DictCache()
+
+    def __repr__(self):
+        return "%s(data=%r)" % (type(self).__name__, self._multi_host_sections)
 
     def setdefault_host_sections(
             self,

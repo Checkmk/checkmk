@@ -88,8 +88,7 @@ from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
 
-DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.Item],
-                               Tuple[str, DiscoveredService]]
+ServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.Item], Tuple[str, ABCService]]
 CheckPreviewEntry = Tuple[str, CheckPluginName, Optional[RulesetName], check_table.Item,
                           check_table.LegacyCheckParameters, check_table.LegacyCheckParameters, str,
                           Optional[int], str, List[Metric], Dict[str, str]]
@@ -455,7 +454,7 @@ def _empty_counts() -> Dict[str, int]:
 
 def _get_new_services(
     hostname: HostName,
-    services: DiscoveredServicesTable,
+    services: ServicesTable,
     service_filter: ServiceFilter,
     counts: Dict,
     mode: str,
@@ -1127,7 +1126,7 @@ def _get_host_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: data_sources.MultiHostSections,
     on_error: str,
-) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]:
+) -> Tuple[ServicesTable, DiscoveredHostLabels]:
     if host_config.is_cluster:
         return _get_cluster_services(host_config, ipaddress, multi_host_sections, on_error)
 
@@ -1141,7 +1140,7 @@ def _get_node_services(
         multi_host_sections,  # type: data_sources.MultiHostSections
         on_error,  # type: str
 ):
-    # type: (...) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
+    # type: (...) -> Tuple[ServicesTable, DiscoveredHostLabels]
     hostname = host_config.hostname
     services, discovered_host_labels = _get_discovered_services(hostname, ipaddress,
                                                                 multi_host_sections, on_error)
@@ -1167,9 +1166,9 @@ def _get_discovered_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: data_sources.MultiHostSections,
     on_error: str,
-) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]:
+) -> Tuple[ServicesTable, DiscoveredHostLabels]:
     # Create a dict from check_plugin_name/item to check_source/paramstring
-    services = {}  # type: DiscoveredServicesTable
+    services = {}  # type: ServicesTable
 
     # Handle discovered services -> "new"
     discovered_services = _discover_services(
@@ -1206,7 +1205,7 @@ def _get_discovered_services(
 
 # TODO: Rename or extract disabled services handling
 def _merge_manual_services(host_config, services, on_error):
-    # type: (config.HostConfig, DiscoveredServicesTable, str) -> DiscoveredServicesTable
+    # type: (config.HostConfig, ServicesTable, str) -> ServicesTable
     """Add/replace manual and active checks and handle ignoration"""
     hostname = host_config.hostname
 
@@ -1274,8 +1273,8 @@ def _get_cluster_services(
         multi_host_sections,  # type: data_sources.MultiHostSections
         on_error,  # type: str
 ):
-    # type: (...) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
-    cluster_items = {}  # type: DiscoveredServicesTable
+    # type: (...) -> Tuple[ServicesTable, DiscoveredHostLabels]
+    cluster_items = {}  # type: ServicesTable
     cluster_host_labels = DiscoveredHostLabels()
     if not host_config.nodes:
         return cluster_items, cluster_host_labels
@@ -1346,11 +1345,11 @@ def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
                                                           multi_host_sections, on_error)
 
     table = []  # type: CheckPreviewTable
-    for check_source, discovered_service in services.values():
+    for check_source, service in services.values():
         # TODO (mo): centralize maincheckify: CMK-4295
-        plugin_name = PluginName(maincheckify(discovered_service.check_plugin_name))
+        plugin_name = PluginName(maincheckify(service.check_plugin_name))
         plugin = config.get_registered_check_plugin(plugin_name)
-        params = _preview_params(host_name, discovered_service, plugin, check_source)
+        params = _preview_params(host_name, service, plugin, check_source)
 
         if check_source in ['legacy', 'active', 'custom']:
             exitcode = None
@@ -1368,23 +1367,23 @@ def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
                 multi_host_sections,
                 host_config,
                 ip_address,
-                discovered_service,
+                service,
                 plugin,
                 lambda p=wrapped_params: p,  # type: ignore[misc]  # can't infer "type of lambda"
             )
 
         table.append((
-            _preview_check_source(host_name, discovered_service, check_source),
-            discovered_service.check_plugin_name,
+            _preview_check_source(host_name, service, check_source),
+            service.check_plugin_name,
             ruleset_name,
-            discovered_service.item,
-            discovered_service.parameters_unresolved,
+            service.item,
+            _preview_unresolved_params(service),
             params,
-            discovered_service.description,
+            service.description,
             exitcode,
             output,
             perfdata,
-            discovered_service.service_labels.to_dict(),
+            service.service_labels.to_dict(),
         ))
 
     return table, discovered_host_labels
@@ -1399,6 +1398,13 @@ def _preview_check_source(
             config.service_ignored(host_name, None, service.description)):
         return "%s_ignored" % check_source
     return check_source
+
+
+def _preview_unresolved_params(service: ABCService) -> str:
+    if isinstance(service, DiscoveredService):
+        return service.parameters_unresolved
+    assert isinstance(service, Service)
+    return repr(service.parameters)
 
 
 def _preview_params(

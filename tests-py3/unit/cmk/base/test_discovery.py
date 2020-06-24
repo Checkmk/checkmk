@@ -264,7 +264,7 @@ def test__get_new_services(monkeypatch, mode, parameters_rediscovery, result_new
             ("vanished",
              discovery.DiscoveredService("check_plugin_name", "Vanished Item 2",
                                          "Test Description Vanished Item 2", "{}")),
-    }  # type: discovery.DiscoveredServicesTable
+    }  # type: discovery.ServicesTable
 
     service_filter = discovery._get_service_filter_func(parameters_rediscovery)
 

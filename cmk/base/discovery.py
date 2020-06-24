@@ -1213,11 +1213,11 @@ def _merge_manual_services(host_config, services, on_error):
     for service in manual_items.values():
         services[(service.check_plugin_name, service.item)] = (
             'manual',
-            DiscoveredService(
-                service.check_plugin_name,
-                service.item,
-                service.description,
-                repr(service.parameters),
+            Service(
+                check_plugin_name=service.check_plugin_name,
+                item=service.item,
+                description=service.description,
+                parameters=service.parameters,
             ),
         )
 
@@ -1225,11 +1225,11 @@ def _merge_manual_services(host_config, services, on_error):
     for entry in host_config.custom_checks:
         services[('custom', entry['service_description'])] = (
             'custom',
-            DiscoveredService(
-                'custom',
-                entry['service_description'],
-                entry['service_description'],
-                'None',
+            Service(
+                check_plugin_name='custom',
+                item=entry['service_description'],
+                description=entry['service_description'],
+                parameters=None,
             ),
         )
 
@@ -1239,11 +1239,11 @@ def _merge_manual_services(host_config, services, on_error):
             descr = config.active_check_service_description(hostname, plugin_name, params)
             services[(plugin_name, descr)] = (
                 'active',
-                DiscoveredService(
-                    plugin_name,
-                    descr,
-                    descr,
-                    repr(params),
+                Service(
+                    check_plugin_name=plugin_name,
+                    item=descr,
+                    description=descr,
+                    parameters=params,
                 ),
             )
 

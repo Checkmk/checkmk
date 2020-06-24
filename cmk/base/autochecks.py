@@ -96,28 +96,25 @@ class AutochecksManager:
     def _read_raw_autochecks_uncached(self, hostname, service_description, get_check_variables):
         # type: (HostName, GetServiceDescription, GetCheckVariables) -> List[Service]
         """Read automatically discovered checks of one host"""
-        result = []  # type: List[Service]
         path = _autochecks_path_for(hostname)
-        if not path.exists():
-            return result
-
         check_variables = get_check_variables()
         try:
-            console.vverbose("Loading autochecks from %s\n", path)
-            with path.open(encoding="utf-8") as f:
-                autochecks_raw = eval(f.read(), check_variables,
-                                      check_variables)  # type: List[Dict]
+            autochecks_raw = _load_raw_autochecks(
+                path=path,
+                check_variables=check_variables,
+            )
         except SyntaxError as e:
             console.verbose("Syntax error in file %s: %s\n", path, e, stream=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
-            return result
+            return []
         except Exception as e:
             console.verbose("Error in file %s:\n%s\n", path, e, stream=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
-            return result
+            return []
 
+        services: List[Service] = []
         for entry in autochecks_raw:
             if isinstance(entry, tuple):
                 raise MKGeneralException(
@@ -146,7 +143,7 @@ class AutochecksManager:
             except Exception:
                 continue  # ignore
 
-            result.append(
+            services.append(
                 Service(
                     check_plugin_name=check_plugin_name,
                     item=item,
@@ -155,7 +152,7 @@ class AutochecksManager:
                     service_labels=labels,
                 ))
 
-        return result
+        return services
 
 
 def _autochecks_path_for(hostname):
@@ -168,13 +165,30 @@ def has_autochecks(hostname):
     return _autochecks_path_for(hostname).exists()
 
 
-def parse_autochecks_file(hostname, service_description):
-    # type: (HostName, GetServiceDescription) -> List[DiscoveredService]
+def _load_raw_autochecks(
+    *,
+    path: Path,
+    check_variables: Optional[Dict[str, Any]],
+) -> Union[List[Dict[str, Any]], Tuple]:
+    """Read raw autochecks and resolve parameters"""
+    if not path.exists():
+        return []
+
+    console.vverbose("Loading autochecks from %s\n", path)
+    with path.open(encoding="utf-8") as f:
+        raw_file_content = f.read()
+
+    return eval(raw_file_content, check_variables, check_variables)
+
+
+def parse_autochecks_file(
+    hostname: HostName,
+    service_description: GetServiceDescription,
+) -> List[DiscoveredService]:
     """Read autochecks, but do not compute final check parameters"""
-    services = []  # type: List[DiscoveredService]
     path = _autochecks_path_for(hostname)
     if not path.exists():
-        return services
+        return []
 
     try:
         with path.open(encoding="utf-8") as f:
@@ -184,6 +198,7 @@ def parse_autochecks_file(hostname, service_description):
             raise
         raise MKGeneralException("Unable to parse autochecks file %s: %s" % (path, e))
 
+    services: List[DiscoveredService] = []
     for child in ast.iter_child_nodes(tree):
         # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
         if not isinstance(child, ast.Expr) and isinstance(

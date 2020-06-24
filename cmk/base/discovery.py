@@ -129,7 +129,7 @@ def schedule_discovery_check(hostname):
             raise
 
 
-def _get_item_filter_func(params_rediscovery):
+def _get_service_filter_func(params_rediscovery):
     # type: (Dict[str, Any]) -> ServiceFilter
     service_whitelist = params_rediscovery.get("service_whitelist")  # type: Optional[List[str]]
     service_blacklist = params_rediscovery.get("service_blacklist")  # type: Optional[List[str]]
@@ -148,11 +148,11 @@ def _get_item_filter_func(params_rediscovery):
     whitelist = regex("|".join(["(%s)" % p for p in service_whitelist]))
     blacklist = regex("|".join(["(%s)" % p for p in service_blacklist]))
 
-    return lambda hostname, check_plugin_name, item: _discovery_filter_by_lists(
+    return lambda hostname, check_plugin_name, item: _filter_service_by_patterns(
         hostname, check_plugin_name, item, whitelist, blacklist)
 
 
-def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist):
+def _filter_service_by_patterns(hostname, check_plugin_name, item, whitelist, blacklist):
     # type: (HostName, CheckPluginName, Item, Pattern[str], Pattern[str]) -> bool
     description = config.service_description(hostname, check_plugin_name, item)
     return whitelist.match(description) is not None and blacklist.match(description) is None
@@ -525,7 +525,7 @@ def check_discovery(
 
     need_rediscovery = False
 
-    item_filters = _get_item_filter_func(params.get("inventory_rediscovery", {}))
+    service_filter = _get_service_filter_func(params.get("inventory_rediscovery", {}))
 
     for check_state, title, params_key, default_state in [
         ("new", "unmonitored", "severity_unmonitored", config.inventory_check_severity),
@@ -542,8 +542,8 @@ def check_discovery(
                 affected_check_plugin_names.setdefault(discovered_service.check_plugin_name, 0)
                 affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
-                if not unfiltered and item_filters(hostname, discovered_service.check_plugin_name,
-                                                   discovered_service.item):
+                if not unfiltered and service_filter(hostname, discovered_service.check_plugin_name,
+                                                     discovered_service.item):
                     unfiltered = True
 
                 long_infotexts.append(
@@ -759,7 +759,7 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
         console.verbose("  failed: discovery check disabled\n")
         return False
 
-    item_filters = _get_item_filter_func(params.get("inventory_rediscovery", {}))
+    service_filter = _get_service_filter_func(params.get("inventory_rediscovery", {}))
 
     why_not = _may_rediscover(params, now_ts, oldest_queued)
     if not why_not:
@@ -770,7 +770,7 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
                                          mode_table[redisc_params["mode"]],
                                          do_snmp_scan=params["inventory_check_do_scan"],
                                          use_caches=True,
-                                         service_filter=item_filters)
+                                         service_filter=service_filter)
         if error is not None:
             if error:
                 console.verbose("failed: %s\n" % error)
@@ -968,13 +968,13 @@ def _discover_services(
 
 
 def _get_sources_for_discovery(
-        hostname,  # type: HostName
-        ipaddress,  # type: Optional[HostAddress]
-        do_snmp_scan,  # type: bool
-        on_error,  # type: str
-        for_check_discovery=False,  # type: bool
-        *,
-        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
+    hostname,  # type: HostName
+    ipaddress,  # type: Optional[HostAddress]
+    do_snmp_scan,  # type: bool
+    on_error,  # type: str
+    for_check_discovery=False,  # type: bool
+    *,
+    selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
 ):
     # type: (...) -> data_sources.DataSources
     sources = data_sources.DataSources(

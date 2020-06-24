@@ -66,8 +66,9 @@ def test_discovered_service_eq():
         "service_blacklist": [],
     },
 ])
-def test__get_item_filter_func_no_lists(parameters_rediscovery):
-    assert discovery._get_item_filter_func(parameters_rediscovery) is discovery._accept_all_services
+def test__get_service_filter_func_no_lists(parameters_rediscovery):
+    assert discovery._get_service_filter_func(
+        parameters_rediscovery) is discovery._accept_all_services
 
 
 @pytest.mark.parametrize("whitelist, result", [
@@ -76,23 +77,23 @@ def test__get_item_filter_func_no_lists(parameters_rediscovery):
     ([".*Description"], True),
     ([".*Descript$"], False),
 ])
-def test__get_item_filter_func_same_lists(monkeypatch, whitelist, result):
+def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
     monkeypatch.setattr(config, "service_description", lambda h, c, i: "Test Description")
 
-    item_filter_func = discovery._get_item_filter_func({"service_whitelist": whitelist})
-    assert item_filter_func is not None
-    assert item_filter_func("hostname", "check_plugin_name", "item") is result
+    service_filter = discovery._get_service_filter_func({"service_whitelist": whitelist})
+    assert service_filter is not None
+    assert service_filter("hostname", "check_plugin_name", "item") is result
 
-    item_filter_func_inverse = discovery._get_item_filter_func({"service_blacklist": whitelist})
-    assert item_filter_func_inverse is not None
-    assert item_filter_func_inverse("hostname", "check_plugin_name", "item") is not result
+    service_filter_inverse = discovery._get_service_filter_func({"service_blacklist": whitelist})
+    assert service_filter_inverse is not None
+    assert service_filter_inverse("hostname", "check_plugin_name", "item") is not result
 
-    item_filter_func_both = discovery._get_item_filter_func({
+    service_filter_both = discovery._get_service_filter_func({
         "service_whitelist": whitelist,
         "service_blacklist": whitelist,
     })
-    assert item_filter_func_both is not None
-    assert item_filter_func_both("hostname", "check_plugin_name", "item") is False
+    assert service_filter_both is not None
+    assert service_filter_both("hostname", "check_plugin_name", "item") is False
 
 
 @pytest.mark.parametrize(
@@ -131,9 +132,9 @@ def test__get_item_filter_func_same_lists(monkeypatch, whitelist, result):
             },
             False),
     ])
-def test__get_item_filter_func(monkeypatch, params_rediscovery, result):
+def test__get_service_filter_func(monkeypatch, params_rediscovery, result):
     monkeypatch.setattr(config, "service_description", lambda h, c, i: "Test Description")
 
-    item_filter_func = discovery._get_item_filter_func(params_rediscovery)
-    assert item_filter_func is not None
-    assert item_filter_func("hostname", "check_plugin_name", "item") is result
+    service_filter = discovery._get_service_filter_func(params_rediscovery)
+    assert service_filter is not None
+    assert service_filter("hostname", "check_plugin_name", "item") is result

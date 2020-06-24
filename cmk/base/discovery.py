@@ -75,7 +75,13 @@ import cmk.base.section as section
 import cmk.base.utils
 
 from cmk.base.caching import config_cache as _config_cache
-from cmk.base.check_utils import LegacyCheckParameters, DiscoveredService, FinalSectionContent
+from cmk.base.check_utils import (
+    ABCService,
+    DiscoveredService,
+    FinalSectionContent,
+    LegacyCheckParameters,
+    Service,
+)
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
@@ -453,9 +459,9 @@ def _get_new_services(
     service_filter: ServiceFilter,
     counts: Dict,
     mode: str,
-) -> List[DiscoveredService]:
+) -> List[ABCService]:
 
-    new_services = []  # type: List[DiscoveredService]
+    new_services: List[ABCService] = []
     for check_source, discovered_service in services.values():
         if check_source in ("custom", "legacy", "active", "manual"):
             # This is not an autocheck or ignored and currently not
@@ -1386,18 +1392,18 @@ def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
 
 def _preview_check_source(
     host_name: HostName,
-    discovered_service: DiscoveredService,
+    service: ABCService,
     check_source: str,
 ) -> str:
     if (check_source in ["legacy", "active", "custom"] and
-            config.service_ignored(host_name, None, discovered_service.description)):
+            config.service_ignored(host_name, None, service.description)):
         return "%s_ignored" % check_source
     return check_source
 
 
 def _preview_params(
     host_name: HostName,
-    discovered_service: DiscoveredService,
+    service: ABCService,
     plugin: Optional[checking_types.CheckPlugin],
     check_source: str,
 ) -> Optional[LegacyCheckParameters]:
@@ -1406,29 +1412,29 @@ def _preview_params(
     if check_source not in ['legacy', 'active', 'custom']:
         if plugin is None:
             return params
-        params = _get_check_parameters(discovered_service)
+        params = _get_check_parameters(service)
         if check_source != 'manual':
             params = check_table.get_precompiled_check_parameters(
                 host_name,
-                discovered_service.item,
+                service.item,
                 config.compute_check_parameters(
                     host_name,
-                    discovered_service.check_plugin_name,
-                    discovered_service.item,
+                    service.check_plugin_name,
+                    service.item,
                     params,
                 ),
-                discovered_service.check_plugin_name,
+                service.check_plugin_name,
             )
         else:
             params = check_table.get_precompiled_check_parameters(
                 host_name,
-                discovered_service.item,
+                service.item,
                 params,
-                discovered_service.check_plugin_name,
+                service.check_plugin_name,
             )
 
     if check_source == "active":
-        params = _get_check_parameters(discovered_service)
+        params = _get_check_parameters(service)
 
     if isinstance(params, config.TimespecificParamList):
         params = {
@@ -1441,19 +1447,24 @@ def _preview_params(
     return params
 
 
-def _get_check_parameters(discovered_service):
-    # type: (DiscoveredService) -> LegacyCheckParameters
+def _get_check_parameters(service):
+    # type: (ABCService) -> LegacyCheckParameters
     """Retrieves the check parameters (read from autochecks), possibly resolving a
     string to its actual value."""
-    params = discovered_service.parameters_unresolved
+    # deal with Service and DiscoveredService instances until we can get rid of the latter.
+    if isinstance(service, Service):
+        return service.parameters
+    assert isinstance(service, DiscoveredService)
+
+    params = service.parameters_unresolved
     if not isinstance(params, str):
         return params
     try:
-        check_context = config.get_check_context(discovered_service.check_plugin_name)
+        check_context = config.get_check_context(service.check_plugin_name)
         # We can't simply access check_context[paramstring], because we may have
         # something like '{"foo": bar}'
         return eval(params, check_context, check_context)
     except Exception:
         raise MKGeneralException(
             "Invalid check parameter string '%s' found in discovered service %r" %
-            (discovered_service.parameters_unresolved, discovered_service))
+            (service.parameters_unresolved, service))

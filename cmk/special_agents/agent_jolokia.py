@@ -8,6 +8,7 @@
 import os
 import sys
 import argparse
+from typing import List, Tuple
 from cmk.special_agents.utils import vcrtrace
 
 # TODO: is there a better way to do this?
@@ -27,7 +28,10 @@ def parse_arguments(argv):
     parser.add_argument("--vcrtrace",
                         action=vcrtrace(**mk_jolokia.JolokiaInstance.FILTER_SENSITIVE))
 
-    opts_with_help = (t for t in mk_jolokia.DEFAULT_CONFIG_TUPLES if len(t) == 3)
+    opts_with_help = []  # type: List[List[str]]
+    for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES:
+        if len(opt) == 3:
+            opts_with_help.append([str(elem) for elem in opt])
 
     for key, default, help_str in opts_with_help:
         if default is not None:

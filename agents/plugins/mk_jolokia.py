@@ -8,6 +8,12 @@ import os
 import socket
 import sys
 
+# Continue if typing cannot be imported, e.g. for running unit tests
+try:
+    from typing import List, Dict, Tuple, Any, Optional, Union, Callable
+except:
+    pass
+
 if sys.version_info[0] >= 3:
     from urllib.parse import quote  # pylint: disable=import-error,no-name-in-module
 else:
@@ -48,7 +54,7 @@ MBEAN_SECTIONS = {
     'jvm_runtime': ("java.lang:type=Runtime/Uptime,Name",),
     'jvm_garbagecollectors':
         ("java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name",),
-}
+}  # type: Dict[str, Tuple[str, ...]]
 
 MBEAN_SECTIONS_SPECIFIC = {
     'tomcat': {
@@ -98,7 +104,7 @@ QUERY_SPECS_LEGACY = [
      "", [], True),
     ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits", "",
      [], True),
-]
+]  # type: List[Tuple[str, str, str, List, bool]]
 
 QUERY_SPECS_SPECIFIC_LEGACY = {
     "weblogic": [
@@ -151,7 +157,7 @@ DEFAULT_CONFIG_TUPLES = (
     # List of instances to monitor. Each instance is a dict where
     # the global configuration values can be overridden.
     ("instances", [{}]),
-)
+)  # type: Tuple[Tuple[Union[Optional[str], float, List[Any]], ...], ...]
 
 
 class SkipInstance(RuntimeError):
@@ -163,7 +169,7 @@ class SkipMBean(RuntimeError):
 
 
 def get_default_config_dict():
-    return dict(tup[:2] for tup in DEFAULT_CONFIG_TUPLES)
+    return dict([(elem[0], elem[1]) for elem in DEFAULT_CONFIG_TUPLES])
 
 
 def write_section(name, iterable):
@@ -173,7 +179,7 @@ def write_section(name, iterable):
 
 
 def cached(function):
-    cache = {}
+    cache = {}  # type: Dict[str, Callable]
 
     def cached_function(*args):
         key = repr(args)
@@ -278,7 +284,7 @@ class JolokiaInstance(object):
         session.verify = self._config["verify"]
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
-        session.timeout = self._config["timeout"]
+        session.timeout = self._config["timeout"]  # type: ignore[attr-defined]
 
         auth_method = self._config.get("mode")
         if auth_method is None:
@@ -415,7 +421,7 @@ def extract_item(key, itemspec):
     components = path.split(",")
     comp_dict = dict(c.split('=') for c in components if c.count('=') == 1)
 
-    item = ()
+    item = ()  # type: Tuple[Any, ...]
     for pathkey in itemspec:
         if pathkey in comp_dict:
             right = comp_dict[pathkey]
@@ -502,8 +508,8 @@ def query_instance(inst):
     sections_specific = MBEAN_SECTIONS_SPECIFIC.get(inst.product, {})
     for section_name, mbeans in sections_specific.items():
         write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
-    for section_name, mbeans in MBEAN_SECTIONS.items():
-        write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
+    for section_name, mbeans_tups in MBEAN_SECTIONS.items():
+        write_section('jolokia_%s' % section_name, generate_json(inst, mbeans_tups))
 
     write_section('jolokia_generic', generate_values(inst, inst.custom_vars))
 

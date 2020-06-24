@@ -28,7 +28,6 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout, MKSNMPError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
-    CheckPluginName,
     HostAddress,
     HostName,
     Metric,

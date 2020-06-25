@@ -10,7 +10,7 @@ from typing import List
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import PluginName, SectionName
+from cmk.utils.type_defs import ParsedSectionName, SectionName
 
 from cmk.snmplib.type_defs import OIDEnd, SNMPTree
 
@@ -104,7 +104,7 @@ def test_create_agent_section_plugin():
     assert isinstance(plugin, section_types.AgentSectionPlugin)
     assert len(plugin) == 5
     assert plugin.name == SectionName("norris")
-    assert plugin.parsed_section_name == PluginName("norris")  # "chuck")
+    assert plugin.parsed_section_name == ParsedSectionName("norris")  # "chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
     assert plugin.supersedes == []  # [SectionName("Bar"), SectionName("Foo")]
@@ -158,7 +158,7 @@ def test_create_snmp_section_plugin():
     assert isinstance(plugin, section_types.SNMPSectionPlugin)
     assert len(plugin) == 7
     assert plugin.name == SectionName("norris")
-    assert plugin.parsed_section_name == PluginName("norris")  # "chuck")
+    assert plugin.parsed_section_name == ParsedSectionName("norris")  # "chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
     assert plugin.detect_spec == detect

@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a check plugin
 """
-from typing import Any, Callable, Dict, Generator, List, Optional, Union
 import functools
 import inspect
 import itertools
 from inspect import signature
+from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import ParsedSectionName, PluginName
 
 from cmk.base.api.agent_based.checking_types import (
     CheckPlugin,
@@ -56,18 +56,18 @@ def _requires_item(service_name):
 
 
 def _create_sections(sections, plugin_name):
-    # type: (Optional[List[str]], PluginName) -> List[PluginName]
+    # type: (Optional[List[str]], PluginName) -> List[ParsedSectionName]
     if sections is None:
-        return [plugin_name]
+        return [ParsedSectionName(str(plugin_name))]
     if not isinstance(sections, list):
         raise TypeError("[%s]: 'sections' must be a list of str, got %r" % (plugin_name, sections))
     if not sections:
         raise ValueError("[%s]: 'sections' must not be empty" % plugin_name)
-    return [PluginName(n) for n in sections]
+    return [ParsedSectionName(n) for n in sections]
 
 
 def _validate_function_args(plugin_name, func_type, function, has_item, has_params, sections):
-    # type: (str, str, Callable, bool, bool, List[PluginName]) -> None
+    # type: (str, str, Callable, bool, bool, List[ParsedSectionName]) -> None
     """Validate the functions signature and type"""
 
     if not inspect.isgeneratorfunction(function):

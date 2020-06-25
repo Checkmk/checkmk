@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types and classes used by the API for check plugins
 """
+import enum
 from collections.abc import Mapping
 from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
-import enum
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.type_defs import EvalableFloat, PluginName
+from cmk.utils.type_defs import EvalableFloat, ParsedSectionName, PluginName
 
 from cmk.base.discovered_labels import ServiceLabel
 
@@ -306,7 +306,7 @@ CheckFunction = Callable[..., Generator[Union[Result, Metric, IgnoreResults], No
 
 CheckPlugin = NamedTuple("CheckPlugin", [
     ("name", PluginName),
-    ("sections", List[PluginName]),
+    ("sections", List[ParsedSectionName]),
     ("service_name", str),
     ("discovery_function", DiscoveryFunction),
     ("discovery_default_parameters", Optional[Dict]),

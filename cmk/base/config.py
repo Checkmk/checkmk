@@ -60,6 +60,7 @@ from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     CheckPluginNameStr,
     CheckVariables,
+    ParsedSectionName,
     ContactgroupName,
     HostAddress,
     HostgroupName,
@@ -1324,7 +1325,7 @@ def get_registered_check_plugin(plugin_name):
 def get_relevant_raw_sections(check_plugin_names):
     # type: (Iterable[PluginName]) -> Dict[SectionName, SectionPlugin]
     """return the raw sections potentially relevant for the given check plugins"""
-    parsed_section_names = set()  # type: Set[PluginName]
+    parsed_section_names = set()  # type: Set[ParsedSectionName]
     for check_plugin_name in check_plugin_names:
         plugin = get_registered_check_plugin(check_plugin_name)
         if plugin:
@@ -1343,7 +1344,7 @@ def get_relevant_raw_sections(check_plugin_names):
 
 
 def get_parsed_section_creator(parsed_section_name, available_raw_sections):
-    # type: (PluginName, List[SectionName]) -> Optional[SectionPlugin]
+    # type: (ParsedSectionName, List[SectionName]) -> Optional[SectionPlugin]
     """return the section definition required to create the enquired parsed section"""
     section_defs = (get_registered_section_plugin(name) for name in available_raw_sections)
     candidates = [

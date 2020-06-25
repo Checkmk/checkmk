@@ -13,7 +13,7 @@ from typing import Any, Generator, List, Optional, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import PluginName, SectionName
+from cmk.utils.type_defs import ParsedSectionName, SectionName
 
 from cmk.snmplib.type_defs import OIDSpec, SNMPDetectSpec, SNMPTree
 
@@ -167,7 +167,7 @@ def create_agent_section_plugin(
 
     return AgentSectionPlugin(
         section_name,
-        PluginName(parsed_section_name if parsed_section_name else str(section_name)),
+        ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
         parse_function,
         _create_host_label_function(host_label_function),
         _create_supersedes(supersedes),
@@ -205,7 +205,7 @@ def create_snmp_section_plugin(
 
     return SNMPSectionPlugin(
         section_name,
-        PluginName(parsed_section_name if parsed_section_name else str(section_name)),
+        ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
         parse_function,
         _create_host_label_function(host_label_function),
         _create_supersedes(supersedes),

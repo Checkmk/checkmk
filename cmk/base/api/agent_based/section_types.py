@@ -7,7 +7,7 @@
 """
 from typing import Any, Callable, Generator, List, NamedTuple
 
-from cmk.utils.type_defs import PluginName, SectionName
+from cmk.utils.type_defs import SectionName, ParsedSectionName
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTable, SNMPTree
 
@@ -24,7 +24,7 @@ HostLabelFunction = Callable[[Any], Generator[HostLabel, None, None]]
 
 AgentSectionPlugin = NamedTuple("AgentSectionPlugin", [
     ("name", SectionName),
-    ("parsed_section_name", PluginName),
+    ("parsed_section_name", ParsedSectionName),
     ("parse_function", AgentParseFunction),
     ("host_label_function", HostLabelFunction),
     ("supersedes", List[SectionName]),
@@ -32,7 +32,7 @@ AgentSectionPlugin = NamedTuple("AgentSectionPlugin", [
 
 SNMPSectionPlugin = NamedTuple("SNMPSectionPlugin", [
     ("name", SectionName),
-    ("parsed_section_name", PluginName),
+    ("parsed_section_name", ParsedSectionName),
     ("parse_function", SNMPParseFunction),
     ("host_label_function", HostLabelFunction),
     ("supersedes", List[SectionName]),

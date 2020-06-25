@@ -125,6 +125,13 @@ class ABCPluginName(abc.ABC):
 
 
 @functools.total_ordering
+class ParsedSectionName(ABCPluginName):
+    @property
+    def _legacy_naming_exceptions(self) -> Set[str]:
+        return set()
+
+
+@functools.total_ordering
 class SectionName(ABCPluginName):
     @property
     def _legacy_naming_exceptions(self) -> Set[str]:

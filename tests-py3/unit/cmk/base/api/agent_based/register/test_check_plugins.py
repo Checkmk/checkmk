@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import ParsedSectionName, PluginName
 
 import cmk.base.api.agent_based.register.check_plugins as check_plugins
 
@@ -87,8 +87,12 @@ def test_create_sections_invalid(sections):
 
 
 @pytest.mark.parametrize("sections, plugin_name, expected", [
-    (None, PluginName("Foo"), [PluginName("Foo")]),
-    (["Jim", "Jill"], None, [PluginName("Jim"), PluginName("Jill")]),
+    (None, PluginName("Foo"), [ParsedSectionName("Foo")]),
+    (
+        ["Jim", "Jill"],
+        None,
+        [ParsedSectionName("Jim"), ParsedSectionName("Jill")],
+    ),
 ])
 def test_create_sections(sections, plugin_name, expected):
     assert check_plugins._create_sections(sections, plugin_name) == expected
@@ -152,7 +156,7 @@ def test_create_check_plugin():
     plugin = check_plugins.create_check_plugin(**MINIMAL_CREATION_KWARGS)
 
     assert plugin.name == PluginName(MINIMAL_CREATION_KWARGS["name"])
-    assert plugin.sections == [PluginName(MINIMAL_CREATION_KWARGS["name"])]
+    assert plugin.sections == [ParsedSectionName(MINIMAL_CREATION_KWARGS["name"])]
     assert plugin.service_name == MINIMAL_CREATION_KWARGS["service_name"]
     assert plugin.discovery_function.__name__ == MINIMAL_CREATION_KWARGS[
         "discovery_function"].__name__

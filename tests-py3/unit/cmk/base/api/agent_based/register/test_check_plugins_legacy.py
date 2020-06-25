@@ -10,7 +10,7 @@ import inspect
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import ParsedSectionName, PluginName
 
 import cmk.base.api.agent_based.checking_types as checking_types
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
@@ -118,7 +118,7 @@ def test_create_check_plugin_from_legacy_wo_params(monkeypatch):
     )
 
     assert plugin.name == PluginName("norris")
-    assert plugin.sections == [PluginName("norris")]
+    assert plugin.sections == [ParsedSectionName("norris")]
     assert plugin.service_name == MINIMAL_CHECK_INFO["service_description"]
     assert plugin.discovery_function.__name__ == 'discovery_migration_wrapper'
     assert plugin.discovery_default_parameters is None
@@ -149,7 +149,7 @@ def test_create_check_plugin_from_legacy_with_params(monkeypatch):
     )
 
     assert plugin.name == PluginName("norris")
-    assert plugin.sections == [PluginName("norris")]
+    assert plugin.sections == [ParsedSectionName("norris")]
     assert plugin.service_name == MINIMAL_CHECK_INFO["service_description"]
     assert plugin.discovery_function.__name__ == 'discovery_migration_wrapper'
     assert plugin.discovery_default_parameters is None

@@ -6,42 +6,46 @@
 
 import abc
 import sys
-from typing import Any, Callable, cast, Union, Tuple, Dict, Set, List, Optional, Generic
+from typing import Any, Callable, cast, Dict, Generic, List, Optional, Set, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import HostName, HostAddress, PluginName, ServiceName, SourceType
+from cmk.utils.type_defs import (
+    HostAddress,
+    HostName,
+    ParsedSectionName,
+    PluginName,
+    ServiceName,
+    SourceType,
+)
 
-import cmk.base.config as config
 import cmk.base.caching as caching
+import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
-from cmk.base.api.agent_based.utils import parse_string_table
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
     AgentSectionPlugin,
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
-from cmk.base.check_api_utils import (
-    MGMT_ONLY as LEGACY_MGMT_ONLY,
-    HOST_ONLY as LEGACY_HOST_ONLY,
-    HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE,
-)
+from cmk.base.api.agent_based.utils import parse_string_table
+from cmk.base.check_api_utils import HOST_ONLY as LEGACY_HOST_ONLY
+from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
+from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import (
-    CheckPluginNameStr,
-    SectionCacheInfo,
-    PiggybackRawData,
     AbstractSectionContent,
-    SectionName,
-    ParsedSectionContent,
-    BoundedAbstractRawData,
-    BoundedAbstractSections,
     BoundedAbstractPersistedSections,
+    BoundedAbstractRawData,
     BoundedAbstractSectionContent,
+    BoundedAbstractSections,
+    CheckPluginNameStr,
     FinalSectionContent,
+    ParsedSectionContent,
+    PiggybackRawData,
+    SectionCacheInfo,
+    SectionName,
 )
-
 from cmk.base.exceptions import MKParseFunctionError
 
 HostKey = Tuple[HostName, Optional[HostAddress], SourceType]
@@ -147,7 +151,7 @@ class MultiHostSections:
     def get_section_kwargs(
             self,
             host_key,  # type: HostKey
-            subscribed_sections,  # type: List[PluginName]
+            parsed_section_names,  # type: List[ParsedSectionName]
     ):
         # type: (...) -> Dict[str, Any]
         """Prepares section keyword arguments for a non-cluster host
@@ -155,13 +159,12 @@ class MultiHostSections:
         It returns a dictionary containing one entry (may be None) for each
         of the required sections, or an empty dictionary if no data was found at all.
         """
-        kwarg_keys = ["section"] if len(subscribed_sections) == 1 else [
-            "section_%s" % s for s in subscribed_sections
-        ]
+        keys = (["section"] if len(parsed_section_names) == 1 else
+                ["section_%s" % s for s in parsed_section_names])
 
         kwargs = {
-            kwarg_key: self.get_parsed_section(host_key, sec_name)
-            for kwarg_key, sec_name in zip(kwarg_keys, subscribed_sections)
+            key: self.get_parsed_section(host_key, parsed_section_name)
+            for key, parsed_section_name in zip(keys, parsed_section_names)
         }
         # empty it, if nothing was found:
         if all(v is None for v in kwargs.values()):
@@ -173,7 +176,7 @@ class MultiHostSections:
             self,
             host_name,  # type: HostName
             source_type,  # type: SourceType
-            subscribed_sections,  # type: List[PluginName]
+            parsed_section_names,  # type: List[ParsedSectionName]
             service_description,  # type: ServiceName
     ):
         """Prepares section keyword arguments for a cluster host
@@ -191,7 +194,7 @@ class MultiHostSections:
         for node_name, node_ip in used_entries:
             node_kwargs = self.get_section_kwargs(
                 (node_name, node_ip, source_type),
-                subscribed_sections,
+                parsed_section_names,
             )
             for key, sections_node_data in node_kwargs.items():
                 kwargs.setdefault(key, {})[node_name] = sections_node_data
@@ -201,14 +204,14 @@ class MultiHostSections:
 
         return kwargs
 
-    def get_cache_info(self, section_names):
-        # type: (List[PluginName]) -> Optional[Tuple[int, int]]
+    def get_cache_info(self, parsed_section_names):
+        # type: (List[ParsedSectionName]) -> Optional[Tuple[int, int]]
         """Aggregate information about the age of the data in the agent sections
         """
         cached_ats = []  # type: List[int]
         intervals = []  # type: List[int]
         for host_key, host_sections in self._multi_host_sections.items():
-            for parsed_section_name in section_names:
+            for parsed_section_name in parsed_section_names:
                 raw_section = self._get_raw_section(host_key, parsed_section_name)
                 if raw_section is None:
                     continue
@@ -222,17 +225,17 @@ class MultiHostSections:
     def get_parsed_section(
             self,
             host_key,  # type: HostKey
-            section_name,  # type: PluginName
+            parsed_section_name,  # type: ParsedSectionName
     ):
         # type: (...) -> Optional[ParsedSectionContent]
-        cache_key = host_key + (section_name,)
+        cache_key = host_key + (parsed_section_name,)
         if cache_key in self._parsed_sections:
             return self._parsed_sections[cache_key]
 
-        section_def = self._get_raw_section(host_key, section_name)
+        section_def = self._get_raw_section(host_key, parsed_section_name)
         if section_def is None:
             # no section creating the desired one was found, assume a 'default' section:
-            raw_section_name = SectionName(str(section_name))
+            raw_section_name = SectionName(str(parsed_section_name))
             parse_function = parse_string_table  # type: Union[SNMPParseFunction, AgentParseFunction]
         else:
             raw_section_name = section_def.name
@@ -248,8 +251,8 @@ class MultiHostSections:
 
         return self._parsed_sections.setdefault(cache_key, parsed)
 
-    def _get_raw_section(self, host_key, section_name):
-        # type: (HostKey, PluginName) -> Union[AgentSectionPlugin, SNMPSectionPlugin]
+    def _get_raw_section(self, host_key, parsed_section_name):
+        # type: (HostKey, ParsedSectionName) -> Union[AgentSectionPlugin, SNMPSectionPlugin]
         """Get the raw sections name that will be parsed into the required section
 
         Raw sections may get renamed once they are parsed, if they declare it. This function
@@ -257,7 +260,7 @@ class MultiHostSections:
         up with the desired parsed section.
         This depends on the available raw sections, and thus on the host.
         """
-        cache_key = host_key + (section_name,)
+        cache_key = host_key + (parsed_section_name,)
         if cache_key in self._parsed_to_raw_map:
             return self._parsed_to_raw_map[cache_key]
 
@@ -266,7 +269,8 @@ class MultiHostSections:
         except KeyError:
             return self._parsed_to_raw_map.setdefault(cache_key, None)
 
-        section_def = config.get_parsed_section_creator(section_name, list(hosts_raw_sections))
+        section_def = config.get_parsed_section_creator(parsed_section_name,
+                                                        list(hosts_raw_sections))
         return self._parsed_to_raw_map.setdefault(cache_key, section_def)
 
     def get_section_content(
@@ -563,7 +567,7 @@ class MultiHostSections:
         ]
 
         parsed_section_names = {
-            PluginName(str(name)) if section is None else section.parsed_section_name
+            ParsedSectionName(str(name)) if section is None else section.parsed_section_name
             for name, section in raw_sections
         }
 

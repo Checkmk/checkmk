@@ -8,7 +8,7 @@ import collections
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import PluginName, SectionName, SourceType
+from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -23,7 +23,7 @@ _TestSection = collections.namedtuple(
 
 SECTION_ONE = _TestSection(
     SectionName("one"),
-    PluginName("parsed"),
+    ParsedSectionName("parsed"),
     lambda x: {
         "parsed_by": "one",
         "node": x[0][0]
@@ -33,17 +33,17 @@ SECTION_ONE = _TestSection(
 
 SECTION_TWO = _TestSection(
     SectionName("two"),
-    PluginName("parsed"),
+    ParsedSectionName("parsed"),
     lambda x: {
         "parsed_by": "two",
         "node": x[0][0]
     },
-    [PluginName("one")],
+    [ParsedSectionName("one")],
 )
 
 SECTION_THREE = _TestSection(
     SectionName("three"),
-    PluginName("parsed2"),
+    ParsedSectionName("parsed2"),
     lambda x: {
         "parsed_by": "three",
         "node": x[0][0]
@@ -119,7 +119,7 @@ def test_get_parsed_section(monkeypatch, node_section_content, expected_result):
 
     content = multi_host_sections.get_parsed_section(
         ("node1", "127.0.0.1", SourceType.HOST),
-        PluginName("parsed"),
+        ParsedSectionName("parsed"),
     )
 
     assert expected_result == content,\
@@ -172,7 +172,7 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
 
     kwargs = multi_host_sections.get_section_kwargs(
         host_key,
-        [PluginName(n) for n in required_sections],
+        [ParsedSectionName(n) for n in required_sections],
     )
 
     assert expected_result == kwargs,\
@@ -260,7 +260,7 @@ def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_res
     kwargs = multi_host_sections.get_section_cluster_kwargs(
         "cluster",
         SourceType.HOST,
-        [PluginName(n) for n in required_sections],
+        [ParsedSectionName(n) for n in required_sections],
         "_service_description",
     )
 

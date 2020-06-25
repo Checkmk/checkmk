@@ -118,6 +118,12 @@ check_info["test_check_1"] = {
     assert stderr == ''
     assert p.returncode == 0
 
+    # rediscover with the setting in the config
+    site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
+    web.discover_services("modes-test-host")
+    services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
+    assert services[0].parameters_unresolved == "{'auto-migration-wrapper-key': (5.0, 30.1)}"
+
 
 # Test whether or not registration of discovery variables work
 def test_test_check_2(request, test_cfg, site, web):

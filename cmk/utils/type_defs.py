@@ -110,7 +110,7 @@ class ABCPluginName(abc.ABC):
     def __eq__(self, other):
         # type: (Any) -> bool
         if not isinstance(other, self.__class__):
-            raise TypeError("can only be compared with %s objects" % self.__class__)
+            raise TypeError("cannot compare %r and %r" % (self, other))
         return self._value == other._value
 
     def __lt__(self, other):

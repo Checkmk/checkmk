@@ -477,12 +477,12 @@ def _get_new_services(
         elif check_source == "vanished":
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
-            if mode not in ("fixall", "remove") or not service_filter(
+            if mode in ("fixall", "remove") and service_filter(
                     hostname, discovered_service.check_plugin_name, discovered_service.item):
+                counts["self_removed"] += 1
+            else:
                 new_services.append(discovered_service)
                 counts["self_kept"] += 1
-            else:
-                counts["self_removed"] += 1
 
         elif check_source.startswith("clustered_"):
             # Silently keep clustered services

@@ -251,11 +251,12 @@ def _parse_autocheck_entry(hostname, entry, service_description):
         return None  # ignore
 
     return DiscoveredService(
-        check_plugin_name,
-        item,
-        description,
-        _parse_unresolved_parameters_from_ast(ast_parameters_unresolved),
-        service_labels=_parse_discovered_service_label_from_ast(ast_service_labels))
+        check_plugin_name=check_plugin_name,
+        item=item,
+        description=description,
+        parameters_unresolved=_parse_unresolved_parameters_from_ast(ast_parameters_unresolved),
+        service_labels=_parse_discovered_service_label_from_ast(ast_service_labels),
+    )
 
 
 def _ast_node_is_none(node):

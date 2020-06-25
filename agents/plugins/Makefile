@@ -23,7 +23,10 @@ PYTHON3_PLUGINS := $(wildcard *.py) \
 
 PYTHON2_PLUGINS := $(addsuffix .py2,$(patsubst %.py,%,$(PYTHON3_PLUGINS)))
 
-all: $(PYTHON2_PLUGINS)
+all: clean $(PYTHON2_PLUGINS)
+
+clean:
+	-rm -f *.py2
 
 %.py: %
 	cp "$<" "$@"
@@ -31,5 +34,5 @@ all: $(PYTHON2_PLUGINS)
 %.py2: %.py
 	mkdir -p "$(dir $@)"
 	cp "$<" "$@"
-	sed -i '0,/^$$/{s/^$$/\n# Do not test generated 2.6 files\n# type: ignore\n&/}' "$@"
+	gawk -i inplace -v text="# Do not test generated 2.6 files\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' "$@"
 	$(3TO2) -x str -n -w "$@" >/dev/null

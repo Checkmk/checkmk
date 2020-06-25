@@ -31,6 +31,7 @@ SHELL_FILES := \
 
 clean:
 	rm -rf .mypy_cache
+	-rm -r $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 
 help:
 	@echo "test-agent-plugin-unit-py%-docker - Run Agent plugin tests in container (py version specific)"
@@ -68,7 +69,7 @@ test-agent-plugin-unit-py2.6-docker: $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 agent-plugin-unit/py26/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
 	cp "$<" "$@"
-	sed -i '0,/^$$/{s/^$$/\n# Do not test generated 2.6 files\n# type: ignore\n&/}' "$@"
+	gawk -i inplace -v text="# Do not test generated 2.6 files\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' "$@"
 	$(THREE_TO_TWO) -x str -n -w "$@" >/dev/null
 
 test-agent-plugin-unit-py%-docker:

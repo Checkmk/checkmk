@@ -46,7 +46,7 @@ def DOCKER_BUILDS = [:]
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def BRANCH_VERSION
-
+def WS_ARCHIVE="WS-${JOB_NAME}-${BUILD_NUMBER}.tar.gz".replaceAll("/","-")
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
 def UPLOAD_DEST = 'bauwelt@mathias-kettner.de:/bauwelt/download/'
@@ -162,6 +162,9 @@ try {
                 cleanup_source_package(DAILY_DATA, FINAL_SOURCE_PACKAGE_PATH)
                 test_package(FINAL_SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
                 upload_package(FINAL_SOURCE_PACKAGE_PATH, SOURCE_PACKAGE_NAME, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+
+                create_workspace_package(DAILY_DATA, WS_ARCHIVE)
+                stash_package(WORKSPACE, WS_ARCHIVE, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
             }
         }
     }
@@ -172,6 +175,9 @@ try {
             node(NODE) {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
+                        clean_workpace()
+                        unstash_package(WS_ARCHIVE)
+                        unpack_workspace_package("dest", WS_ARCHIVE)
                         withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
                             versioning.print_image_tag()
                             build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS)
@@ -229,19 +235,6 @@ def get_agent_list(EDITION) {
 
 def shall_publish_package(scm, JOB_BASE_NAME) {
     return (scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized'
-}
-
-def mount_overlay(LOWER_DIR, UPPER_DIR) {
-    sh """
-        mkdir -p ${UPPER_DIR} ${UPPER_DIR}-work
-        mount -t overlay overlay -o \
-        lowerdir=${LOWER_DIR},upperdir=${UPPER_DIR},workdir=${UPPER_DIR}-work \
-        ${UPPER_DIR}
-   """
-}
-
-def unmount_overlay(UPPER_DIR) {
-    sh "until umount ${UPPER_DIR}; do sleep 1; done"
 }
 
 def cleanup_work_directories(DAILY_DATA) {
@@ -406,11 +399,6 @@ def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS) {
     stage(DISTRO + ' build package') {
         def DEST_DIR = "${WORKSPACE}/dest"
 
-        sh 'rm -rf ${WORKSPACE}/*'
-
-        // Overlay mount git directory
-        mount_overlay("${DAILY_DATA}/git", DEST_DIR)
-
         dir('dest') {
             sh """
                 case $DISTRO in
@@ -426,10 +414,6 @@ def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS) {
                 esac
             """
         }
-
-        // Cleanup overlay stuff
-        unmount_overlay(DEST_DIR)
-        sh "rm -rf ${DEST_DIR}-work"
 
         // Copy results to target directory
         sh "rm -rf ${DAILY_DATA}/${DISTRO}-dest"
@@ -490,6 +474,32 @@ def test_package(PACKAGE_PATH, NAME, DAILY_DATA, CMK_VERS) {
     }
 }
 
+def clean_workpace() {
+    sh('rm -rf ${WORKSPACE}/*')
+}
+
+def create_workspace_package(DIR, ARCHIVE_NAME) {
+    sh("tar -cz -C ${DIR}/git/ -f ${ARCHIVE_NAME} .")
+}
+
+def unpack_workspace_package(DIR, ARCHIVE_NAME) {
+    sh("mkdir -p ${DIR}")
+    sh("tar -x -C ${DIR} -f ${ARCHIVE_NAME}")
+}
+
+def stash_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS) {
+    stage(NAME + ' upload package') {
+        def FILE_BASE = sh(script: "dirname ${FILE_PATH}", returnStdout: true).toString().trim()
+        def ARCHIVE_BASE = sh(script: "dirname ${FILE_BASE}", returnStdout: true).toString().trim()
+
+        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+            sh """
+                curl -sSf -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" --upload-file "${FILE_PATH}/${FILE_NAME}" "${NEXUS_ARCHIVES_URL}"
+            """
+        }
+    }
+}
+
 def upload_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS) {
     stage(NAME + ' upload package') {
         def FILE_BASE = sh(script: "dirname ${FILE_PATH}", returnStdout: true).toString().trim()
@@ -509,6 +519,20 @@ def upload_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_P
                 // we always archive all available files
                 archiveArtifacts("*")
             }
+        }
+    }
+}
+
+
+def unstash_package(FILE_NAME) {
+    stage(FILE_NAME + ' download package') {
+        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+            print("""
+                curl -1 -sSf -o "${FILE_NAME}" "${NEXUS_ARCHIVES_URL}${FILE_NAME}"
+""")
+            sh """
+                curl -1 -sSf -o "${FILE_NAME}" "${NEXUS_ARCHIVES_URL}${FILE_NAME}"
+            """
         }
     }
 }

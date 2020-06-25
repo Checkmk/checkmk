@@ -93,7 +93,7 @@ check_info["test_check_1"] = {
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     assert services[0].check_plugin_name == "test_check_1"
     assert services[0].item is None
-    assert services[0].parameters_unresolved == "(10.0, 20.0)"
+    assert services[0].parameters == (10.0, 20.0)
     assert services[0].service_labels.to_dict() == {}
 
     # Now execute the check function to verify the variable is available
@@ -122,7 +122,7 @@ check_info["test_check_1"] = {
     site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
     web.discover_services("modes-test-host")
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
-    assert services[0].parameters_unresolved == "(5.0, 30.1)"
+    assert services[0].parameters == (5.0, 30.1)
 
 
 # Test whether or not registration of discovery variables work
@@ -184,7 +184,7 @@ check_info["test_check_2"] = {
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     assert services[0].check_plugin_name == "test_check_2"
     assert services[0].item is None
-    assert services[0].parameters_unresolved == "{}"
+    assert services[0].parameters == {}
     assert services[0].service_labels.to_dict() == {}
 
 
@@ -239,7 +239,7 @@ check_info["test_check_3"] = {
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     assert services[0].check_plugin_name == "test_check_3"
     assert services[0].item is None
-    assert services[0].parameters_unresolved == "{}"
+    assert services[0].parameters == {}
     assert services[0].service_labels.to_dict() == {}
 
     # Now execute the check function to verify the variable is available

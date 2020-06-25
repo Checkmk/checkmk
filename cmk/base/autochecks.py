@@ -27,7 +27,7 @@ from cmk.utils.type_defs import (
 from cmk.utils.log import console
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
-from cmk.base.check_utils import ABCService, DiscoveredService, LegacyCheckParameters, Service
+from cmk.base.check_utils import LegacyCheckParameters, Service
 
 ComputeCheckParameters = Callable[[HostName, CheckPluginNameStr, Item, LegacyCheckParameters],
                                   Optional[LegacyCheckParameters]]
@@ -219,7 +219,7 @@ def parse_autochecks_file(
     hostname: HostName,
     service_description: GetServiceDescription,
     check_variables: Optional[Dict[str, Any]] = None,
-) -> List[DiscoveredService]:
+) -> List[Service]:
     """Read autochecks, but do not compute final check parameters"""
     path = _autochecks_path_for(hostname)
     try:
@@ -233,7 +233,7 @@ def parse_autochecks_file(
         raise MKGeneralException("Unable to parse autochecks of host %s (%s): %s" %
                                  (hostname, path, e))
 
-    services: List[DiscoveredService] = []
+    services: List[Service] = []
     for entry in raw_autochecks:
         if not isinstance(entry, (tuple, dict)):
             continue
@@ -249,7 +249,7 @@ def _parse_autocheck_entry(
     hostname: HostName,
     entry: Union[Tuple, Dict],
     service_description: GetServiceDescription,
-) -> Optional[DiscoveredService]:
+) -> Optional[Service]:
     if isinstance(entry, tuple):
         check_plugin_name, item, parameters = _parse_pre_16_tuple_autocheck_entry(entry)
         dict_service_labels = {}
@@ -278,12 +278,11 @@ def _parse_autocheck_entry(
     except Exception:
         return None  # ignore
 
-    # TODO: we can now create an actual Service instance and nuke DiscoveredService
-    return DiscoveredService(
+    return Service(
         check_plugin_name=check_plugin_name,
         item=item,
         description=description,
-        parameters_unresolved=repr(parameters),
+        parameters=parameters,
         service_labels=_parse_discovered_service_label_from_dict(dict_service_labels),
     )
 
@@ -317,9 +316,9 @@ def _parse_discovered_service_label_from_dict(dict_service_labels: Dict) -> Disc
     return labels
 
 
-def set_autochecks_of_real_hosts(hostname: HostName, new_services: Sequence[ABCService],
+def set_autochecks_of_real_hosts(hostname: HostName, new_services: Sequence[Service],
                                  service_description: GetServiceDescription) -> None:
-    new_autochecks: List[ABCService] = []
+    new_autochecks: List[Service] = []
 
     # write new autochecks file, but take parameters_unresolved from existing ones
     # for those checks which are kept
@@ -339,14 +338,14 @@ def set_autochecks_of_real_hosts(hostname: HostName, new_services: Sequence[ABCS
 
 
 def set_autochecks_of_cluster(nodes: List[HostName], hostname: HostName,
-                              new_services: Sequence[ABCService],
+                              new_services: Sequence[Service],
                               host_of_clustered_service: HostOfClusteredService,
                               service_description: GetServiceDescription) -> None:
     """A Cluster does not have an autochecks file. All of its services are located
     in the nodes instead. For clusters we cycle through all nodes remove all
     clustered service and add the ones we've got as input."""
     for node in nodes:
-        new_autochecks: List[ABCService] = []
+        new_autochecks: List[Service] = []
         for existing_service in parse_autochecks_file(node, service_description):
             if hostname != host_of_clustered_service(node, existing_service.description):
                 new_autochecks.append(existing_service)
@@ -365,9 +364,9 @@ def set_autochecks_of_cluster(nodes: List[HostName], hostname: HostName,
     remove_autochecks_file(hostname)
 
 
-def _remove_duplicate_autochecks(autochecks: Sequence[ABCService]) -> List[ABCService]:
+def _remove_duplicate_autochecks(autochecks: Sequence[Service]) -> List[Service]:
     """ Cleanup routine. Earlier versions (<1.6.0p8) may have introduced duplicates in the autochecks file"""
-    seen: Set[ABCService] = set()
+    seen: Set[Service] = set()
     cleaned_autochecks = []
     for service in autochecks:
         if service not in seen:
@@ -378,7 +377,7 @@ def _remove_duplicate_autochecks(autochecks: Sequence[ABCService]) -> List[ABCSe
 
 def save_autochecks_file(
     hostname: HostName,
-    services: Sequence[ABCService],
+    services: Sequence[Service],
 ) -> None:
     path = _autochecks_path_for(hostname)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -400,7 +399,7 @@ def remove_autochecks_file(hostname: HostName) -> None:
 def remove_autochecks_of_host(hostname: HostName, host_of_clustered_service: HostOfClusteredService,
                               service_description: GetServiceDescription) -> int:
     removed = 0
-    new_items: List[DiscoveredService] = []
+    new_items: List[Service] = []
     for existing_service in parse_autochecks_file(hostname, service_description):
         if hostname != host_of_clustered_service(hostname, existing_service.description):
             new_items.append(existing_service)

@@ -234,8 +234,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     # Set the new list of autochecks. This list is specified by a
     # table of (checktype, item). No parameters are specified. Those
     # are either (1) kept from existing autochecks or (2) computed
-    # from a new inventory. Note: we must never convert check parameters
-    # from python source code to actual values.
+    # from a new inventory.
     def execute(self, args: List[str]) -> None:
         hostname = args[0]
         new_items = ast.literal_eval(sys.stdin.read())

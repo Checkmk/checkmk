@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 from cmk.utils.check_utils import section_name_of
@@ -47,20 +46,22 @@ BoundedAbstractPersistedSections = TypeVar("BoundedAbstractPersistedSections",
                                            bound=AbstractPersistedSections)
 
 
-class ABCService(abc.ABC):
-    __slots__ = ["_check_plugin_name", "_item", "_description", "_service_labels"]
+class Service:
+    __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
 
     def __init__(
         self,
         check_plugin_name: CheckPluginNameStr,
         item: Item,
         description: str,
+        parameters: LegacyCheckParameters,
         service_labels: DiscoveredServiceLabels = None,
     ) -> None:
         self._check_plugin_name = check_plugin_name
         self._item = item
         self._description = description
         self._service_labels = service_labels or DiscoveredServiceLabels()
+        self._parameters = parameters
 
     @property
     def check_plugin_name(self) -> CheckPluginNameStr:
@@ -75,6 +76,10 @@ class ABCService(abc.ABC):
         return self._description
 
     @property
+    def parameters(self) -> LegacyCheckParameters:
+        return self._parameters
+
+    @property
     def service_labels(self) -> DiscoveredServiceLabels:
         return self._service_labels
 
@@ -84,7 +89,7 @@ class ABCService(abc.ABC):
     def __eq__(self, other: Any) -> bool:
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""
-        if not isinstance(other, ABCService):
+        if not isinstance(other, Service):
             raise TypeError("Can only be compared with other Service objects")
         return self._service_id() == other._service_id()
 
@@ -92,33 +97,6 @@ class ABCService(abc.ABC):
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""
         return hash(self._service_id())
-
-    @abc.abstractmethod
-    def __repr__(self) -> str:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def dump_autocheck(self) -> str:
-        raise NotImplementedError()
-
-
-class Service(ABCService):
-    __slots__ = ["_parameters"]
-
-    def __init__(
-        self,
-        check_plugin_name: CheckPluginNameStr,
-        item: Item,
-        description: str,
-        parameters: LegacyCheckParameters,
-        service_labels: DiscoveredServiceLabels = None,
-    ) -> None:
-        super(Service, self).__init__(check_plugin_name, item, description, service_labels)
-        self._parameters = parameters
-
-    @property
-    def parameters(self) -> LegacyCheckParameters:
-        return self._parameters
 
     def __repr__(self) -> str:
         return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_lables=%r)" % (
@@ -135,50 +113,6 @@ class Service(ABCService):
 
 
 CheckTable = Dict[Tuple[CheckPluginNameStr, Item], Service]
-
-
-class DiscoveredService(ABCService):
-    """Special form of Service() which holds the unresolved textual representation of the check parameters"""
-
-    __slots__ = ["_parameters_unresolved"]
-
-    def __init__(
-        self,
-        check_plugin_name: CheckPluginNameStr,
-        item: Item,
-        description: str,
-        parameters_unresolved: str,
-        service_labels: DiscoveredServiceLabels = None,
-    ) -> None:
-        super(DiscoveredService, self).__init__(check_plugin_name, item, description,
-                                                service_labels)
-        self._parameters_unresolved = parameters_unresolved
-
-    @property
-    def parameters_unresolved(self) -> str:
-        """Returns the unresolved check parameters discovered for this service
-
-        The reason for this hack is some old check API behaviour: A check may return the name of
-        a default levels variable (as string), for example "cpu_utilization_default_levels".
-        The user is allowed to override the value of this variable in his configuration and
-        the check needs to evaluate this variable after config loading or during check
-        execution. The parameter must not be resolved during discovery.
-        """
-        return self._parameters_unresolved
-
-    def __repr__(self) -> str:
-        return ("DiscoveredService(check_plugin_name=%r, item=%r, description=%r, "
-                "parameters_unresolved=%r, service_lables=%r)") % (
-                    self._check_plugin_name, self._item, self._description,
-                    self._parameters_unresolved, self._service_labels)
-
-    def dump_autocheck(self) -> str:
-        return "{'check_plugin_name': %r, 'item': %r, 'parameters': %s, 'service_labels': %r}" % (
-            self.check_plugin_name,
-            self.item,
-            self.parameters_unresolved,
-            self.service_labels.to_dict(),
-        )
 
 
 def is_snmp_check(check_plugin_name: str) -> bool:

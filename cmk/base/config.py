@@ -91,7 +91,7 @@ import cmk.base.check_utils
 import cmk.base.default_config as default_config
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.caching import runtime_cache as _runtime_cache
-from cmk.base.check_utils import LegacyCheckParameters, ABCService
+from cmk.base.check_utils import LegacyCheckParameters, Service
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 try:
@@ -3147,7 +3147,7 @@ class HostConfig:
 
     def set_autochecks(
         self,
-        new_services: Sequence[ABCService],
+        new_services: Sequence[Service],
     ) -> None:
         """Merge existing autochecks with the given autochecks for a host and save it"""
         if self.is_cluster:

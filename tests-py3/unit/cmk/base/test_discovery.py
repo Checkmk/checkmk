@@ -14,45 +14,45 @@ import cmk.base.config as config
 
 
 def test_discovered_service_init():
-    s = discovery.DiscoveredService("abc", u"Item", u"ABC Item", "None")
-    assert s.check_plugin_name == "abc"
-    assert s.item == u"Item"
-    assert s.description == u"ABC Item"
-    assert s.parameters_unresolved == "None"
-    assert s.service_labels.to_dict() == {}
+    ser = discovery.Service("abc", u"Item", u"ABC Item", None)
+    assert ser.check_plugin_name == "abc"
+    assert ser.item == u"Item"
+    assert ser.description == u"ABC Item"
+    assert ser.parameters is None
+    assert ser.service_labels.to_dict() == {}
 
-    s = discovery.DiscoveredService("abc", u"Item", u"ABC Item", "None",
-                                    DiscoveredServiceLabels(ServiceLabel(u"läbel", u"lübel")))
-    assert s.service_labels.to_dict() == {u"läbel": u"lübel"}
+    ser = discovery.Service("abc", u"Item", u"ABC Item", None,
+                            DiscoveredServiceLabels(ServiceLabel(u"läbel", u"lübel")))
+    assert ser.service_labels.to_dict() == {u"läbel": u"lübel"}
 
     with pytest.raises(AttributeError):
-        s.xyz = "abc"  # type: ignore[attr-defined] # pylint: disable=assigning-non-slot
+        ser.xyz = "abc"  # type: ignore[attr-defined] # pylint: disable=assigning-non-slot
 
 
 def test_discovered_service_eq():
-    s1 = discovery.DiscoveredService("abc", u"Item", u"ABC Item", "None")
-    s2 = discovery.DiscoveredService("abc", u"Item", u"ABC Item", "None")
-    s3 = discovery.DiscoveredService("xyz", u"Item", u"ABC Item", "None")
-    s4 = discovery.DiscoveredService("abc", u"Xtem", u"ABC Item", "None")
-    s5 = discovery.DiscoveredService("abc", u"Item", u"ABC Item", "[]")
+    ser1 = discovery.Service("abc", u"Item", u"ABC Item", None)
+    ser2 = discovery.Service("abc", u"Item", u"ABC Item", None)
+    ser3 = discovery.Service("xyz", u"Item", u"ABC Item", None)
+    ser4 = discovery.Service("abc", u"Xtem", u"ABC Item", None)
+    ser5 = discovery.Service("abc", u"Item", u"ABC Item", [])
 
-    assert s1 == s1  # pylint: disable=comparison-with-itself
-    assert s1 == s2
-    assert s1 != s3
-    assert s1 != s4
-    assert s1 == s5
+    assert ser1 == ser1  # pylint: disable=comparison-with-itself
+    assert ser1 == ser2
+    assert ser1 != ser3
+    assert ser1 != ser4
+    assert ser1 == ser5
 
-    assert s1 in [s1]
-    assert s1 in [s2]
-    assert s1 not in [s3]
-    assert s1 not in [s4]
-    assert s1 in [s5]
+    assert ser1 in [ser1]
+    assert ser1 in [ser2]
+    assert ser1 not in [ser3]
+    assert ser1 not in [ser4]
+    assert ser1 in [ser5]
 
-    assert s1 in {s1}
-    assert s1 in {s2}
-    assert s1 not in {s3}
-    assert s1 not in {s4}
-    assert s1 in {s5}
+    assert ser1 in {ser1}
+    assert ser1 in {ser2}
+    assert ser1 not in {ser3}
+    assert ser1 not in {ser4}
+    assert ser1 in {ser5}
 
 
 def test__get_rediscovery_mode():
@@ -111,7 +111,7 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
 
     params = {"inventory_rediscovery": {"service_whitelist": whitelist}}
     service_filters = discovery.get_service_filter_funcs(params)
-    service = discovery.DiscoveredService("check_plugin_name", "item", "Test Description", "None")
+    service = discovery.Service("check_plugin_name", "item", "Test Description", None)
     assert service_filters.new is not None
     assert service_filters.new("hostname", service) is result
 
@@ -172,7 +172,7 @@ def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
 
     params = {"inventory_rediscovery": parameters_rediscovery}
     service_filters = discovery.get_service_filter_funcs(params)
-    service = discovery.DiscoveredService("check_plugin_name", "item", "Test Description", "None")
+    service = discovery.Service("check_plugin_name", "item", "Test Description", None)
     assert service_filters.new is not None
     assert service_filters.new("hostname", service) is result
 
@@ -180,22 +180,20 @@ def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
 @pytest.fixture
 def service_table() -> discovery.ServicesTable:
     return {
-        ("check_plugin_name", "New Item 1"):
-            ("new",
-             discovery.DiscoveredService("check_plugin_name", "New Item 1",
-                                         "Test Description New Item 1", "{}")),
-        ("check_plugin_name", "New Item 2"):
-            ("new",
-             discovery.DiscoveredService("check_plugin_name", "New Item 2",
-                                         "Test Description New Item 2", "{}")),
+        ("check_plugin_name", "New Item 1"): ("new",
+                                              discovery.Service("check_plugin_name", "New Item 1",
+                                                                "Test Description New Item 1", {})),
+        ("check_plugin_name", "New Item 2"): ("new",
+                                              discovery.Service("check_plugin_name", "New Item 2",
+                                                                "Test Description New Item 2", {})),
         ("check_plugin_name", "Vanished Item 1"):
             ("vanished",
-             discovery.DiscoveredService("check_plugin_name", "Vanished Item 1",
-                                         "Test Description Vanished Item 1", "{}")),
+             discovery.Service("check_plugin_name", "Vanished Item 1",
+                               "Test Description Vanished Item 1", {})),
         ("check_plugin_name", "Vanished Item 2"):
             ("vanished",
-             discovery.DiscoveredService("check_plugin_name", "Vanished Item 2",
-                                         "Test Description Vanished Item 2", "{}")),
+             discovery.Service("check_plugin_name", "Vanished Item 2",
+                               "Test Description Vanished Item 2", {})),
     }
 
 

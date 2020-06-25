@@ -75,8 +75,6 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
     resolve_legacy_name,)
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import (
-    ABCService,
-    DiscoveredService,
     FinalSectionContent,
     LegacyCheckParameters,
     Service,
@@ -88,17 +86,16 @@ from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
 
-ServicesTable = Dict[Tuple[check_table.CheckPluginNameStr, check_table.Item], Tuple[str,
-                                                                                    ABCService]]
+ServicesTable = Dict[Tuple[CheckPluginNameStr, check_table.Item], Tuple[str, Service]]
 CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], check_table.Item,
-                          check_table.LegacyCheckParameters, check_table.LegacyCheckParameters, str,
-                          Optional[int], str, List[Metric], Dict[str, str]]
+                          LegacyCheckParameters, LegacyCheckParameters, str, Optional[int], str,
+                          List[Metric], Dict[str, str]]
 CheckPreviewTable = List[CheckPreviewEntry]
 DiscoveryEntry = Union[check_api_utils.Service, DiscoveredHostLabels, HostLabel,
                        Tuple[Item, LegacyCheckParameters]]
 DiscoveryResult = List[DiscoveryEntry]
 DiscoveryFunction = Callable[[FinalSectionContent], DiscoveryResult]
-ServiceFilter = Callable[[HostName, ABCService], bool]
+ServiceFilter = Callable[[HostName, Service], bool]
 ServiceFilters = NamedTuple("ServiceFilters", [
     ("new", ServiceFilter),
     ("vanished", ServiceFilter),
@@ -255,7 +252,7 @@ def _get_service_filter_func(service_whitelist: Optional[List[str]],
 
 def _filter_service_by_patterns(
     hostname: HostName,
-    service: ABCService,
+    service: Service,
     whitelist: Pattern[str],
     blacklist: Pattern[str],
 ) -> bool:
@@ -268,7 +265,7 @@ def _filter_service_by_patterns(
     return whitelist.match(description) is not None and blacklist.match(description) is None
 
 
-def _accept_all_services(_hostname: HostName, _service: ABCService) -> bool:
+def _accept_all_services(_hostname: HostName, _service: Service) -> bool:
     return True
 
 
@@ -409,13 +406,12 @@ def _do_discovery_for(
     #    --> just add new services
     #        only_new is True
 
-    new_services: List[ABCService] = []
-
     if not check_plugin_names and not only_new:
-        existing_services: List[DiscoveredService] = []
+        existing_services: List[Service] = []
     else:
         existing_services = autochecks.parse_autochecks_file(hostname, config.service_description)
 
+    new_services: List[Service] = []
     # Take over old items if -I is selected or if -II is selected with
     # --checks= and the check type is not one of the listed ones
     for existing_service in existing_services:
@@ -593,9 +589,9 @@ def _get_new_services(
     service_filters: ServiceFilters,
     counts: Dict,
     mode: str,
-) -> List[ABCService]:
+) -> List[Service]:
 
-    new_services: List[ABCService] = []
+    new_services: List[Service] = []
     for check_source, discovered_service in services.values():
         if check_source in ("custom", "legacy", "active", "manual"):
             # This is not an autocheck or ignored and currently not
@@ -1307,15 +1303,13 @@ def _get_node_services(
 
     config_cache = config.get_config_cache()
     # Identify clustered services
-    for check_source, discovered_service in services.values():
-        clustername = config_cache.host_of_clustered_service(hostname,
-                                                             discovered_service.description)
+    for check_source, service in services.values():
+        clustername = config_cache.host_of_clustered_service(hostname, service.description)
         if hostname != clustername:
-            if config.service_ignored(clustername, discovered_service.check_plugin_name,
-                                      discovered_service.description):
+            if config.service_ignored(clustername, service.check_plugin_name, service.description):
                 check_source = "ignored"
-            services[(discovered_service.check_plugin_name,
-                      discovered_service.item)] = ("clustered_" + check_source, discovered_service)
+            services[(service.check_plugin_name, service.item)] = ("clustered_" + check_source,
+                                                                   service)
 
     return _merge_manual_services(host_config, services, on_error), discovered_host_labels
 
@@ -1547,7 +1541,8 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
             service.check_plugin_name,
             ruleset_name,
             service.item,
-            _preview_unresolved_params(service),
+            # this `repr` is a result of various refactorings, I'm not sure it is needed.
+            repr(service.parameters),
             params,
             service.description,
             exitcode,
@@ -1561,7 +1556,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
 
 def _preview_check_source(
     host_name: HostName,
-    service: ABCService,
+    service: Service,
     check_source: str,
 ) -> str:
     if (check_source in ["legacy", "active", "custom"] and
@@ -1570,16 +1565,9 @@ def _preview_check_source(
     return check_source
 
 
-def _preview_unresolved_params(service: ABCService) -> str:
-    if isinstance(service, DiscoveredService):
-        return service.parameters_unresolved
-    assert isinstance(service, Service)
-    return repr(service.parameters)
-
-
 def _preview_params(
     host_name: HostName,
-    service: ABCService,
+    service: Service,
     plugin: Optional[checking_types.CheckPlugin],
     check_source: str,
 ) -> Optional[LegacyCheckParameters]:
@@ -1588,7 +1576,7 @@ def _preview_params(
     if check_source not in ['legacy', 'active', 'custom']:
         if plugin is None:
             return params
-        params = _get_check_parameters(service)
+        params = service.parameters
         if check_source != 'manual':
             params = check_table.get_precompiled_check_parameters(
                 host_name,
@@ -1610,7 +1598,7 @@ def _preview_params(
             )
 
     if check_source == "active":
-        params = _get_check_parameters(service)
+        params = service.parameters
 
     if isinstance(params, config.TimespecificParamList):
         params = {
@@ -1621,32 +1609,3 @@ def _preview_params(
         }
 
     return params
-
-
-def _get_check_parameters(service: ABCService) -> LegacyCheckParameters:
-    """Retrieves the check parameters (read from autochecks), possibly resolving a
-    string to its actual value."""
-    # deal with Service and DiscoveredService instances until we can get rid of the latter.
-    if isinstance(service, Service):
-        return service.parameters
-    assert isinstance(service, DiscoveredService)
-
-    params = service.parameters_unresolved
-    if not isinstance(params, str):
-        return params
-
-    # temporarily use an empty check context. This function will disappear with
-    # the DiscoveredService class
-    try:
-        check_context = config.get_check_context(service.check_plugin_name)
-    except KeyError:
-        check_context = {}
-
-    try:
-        # We can't simply access check_context[paramstring], because we may have
-        # something like '{"foo": bar}'
-        return eval(params, check_context, check_context)
-    except Exception:
-        raise MKGeneralException(
-            "Invalid check parameter string '%s' found in discovered service %r" %
-            (service.parameters_unresolved, service))

@@ -70,7 +70,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
     CLUSTER_LEGACY_MODE_FROM_HELL,
     wrap_parameters,
 )
-from cmk.base.check_utils import ABCService, LegacyCheckParameters, Service
+from cmk.base.check_utils import LegacyCheckParameters, Service
 from cmk.base.data_sources.host_sections import MultiHostSections
 
 if not cmk_version.is_raw_edition():
@@ -403,7 +403,7 @@ def get_aggregated_result(
     multi_host_sections: MultiHostSections,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    service: ABCService,
+    service: Service,
     plugin: Optional[checking_types.CheckPlugin],
     params_function: Callable[[], checking_types.Parameters],
 ) -> Tuple[bool, bool, ServiceCheckResult]:

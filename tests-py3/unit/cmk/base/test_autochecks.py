@@ -148,7 +148,7 @@ def test_parse_autochecks_file_not_existing():
         (u"""[
   ('hostxyz', 'df', '/', {}),
 ]""", [
-            ('df', u'/', "{}"),
+            ('df', u'/', {}),
         ]),
         # Tuple: Convert non unicode item
         (
@@ -156,7 +156,7 @@ def test_parse_autochecks_file_not_existing():
           ('df', '/', {}),
         ]""",
             [
-                ('df', u'/', "{}"),
+                ('df', u'/', {}),
             ],
         ),
         # Tuple: Regular processing
@@ -166,26 +166,27 @@ def test_parse_autochecks_file_not_existing():
           ('df', u'/xyz', "lala"),
           ('df', u'/zzz', ['abc', 'xyz']),
           ('cpu.loads', None, cpuload_default_levels),
-          ('chrony', None, {}),"""
-
-            # TODO: bring this back. currently we cant known the order of keys in the dict to test
-            #('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
-            #('if64', u'00001001', { "errors" : if_default_error_levels, "traffic" : if_default_traffic_levels, "average" : if_default_average , "state" : "1", "speed" : 1000000000}),
-            u"""]""",
+          ('chrony', None, {}),
+          ('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
+          ('if64', u'00001001', { "errors" : if_default_error_levels, "traffic" : if_default_traffic_levels, "average" : if_default_average , "state" : "1", "speed" : 1000000000}),
+        ]""",
             [
-                ('df', u'/', '{}'),
-                ('df', u'/xyz', "'lala'"),
-                ('df', u'/zzz', "['abc', 'xyz']"),
-                ('cpu.loads', None, "(5.0, 10.0)"),
-                ('chrony', None, "{}"),
-                #('lnx_if', u'2', "{'speed': 10000000, 'state': ['1']}"),
-                #('if64', u'00001001', {
-                #    'average': None,
-                #    'errors': (0.01, 0.1),
-                #    'speed': 1000000000,
-                #    'state': '1',
-                #    'traffic': (None, None),
-                #}),
+                ('df', u'/', {}),
+                ('df', u'/xyz', 'lala'),
+                ('df', u'/zzz', ['abc', 'xyz']),
+                ('cpu.loads', None, (5.0, 10.0)),
+                ('chrony', None, {}),
+                ('lnx_if', u'2', {
+                    'speed': 10000000,
+                    'state': ['1']
+                }),
+                ('if64', u'00001001', {
+                    'average': None,
+                    'errors': (0.01, 0.1),
+                    'speed': 1000000000,
+                    'state': '1',
+                    'traffic': (None, None),
+                }),
             ],
         ),
         # Dict: Regular processing
@@ -195,20 +196,19 @@ def test_parse_autochecks_file_not_existing():
           {'check_plugin_name': 'df', 'item': u'/xyz', 'parameters': "lala", 'service_labels': {u"x": u"y"}},
           {'check_plugin_name': 'df', 'item': u'/zzz', 'parameters': ['abc', 'xyz'], 'service_labels': {u"x": u"y"}},
           {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u"x": u"y"}},
-          {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}, 'service_labels': {u"x": u"y"}},"""
-
-            # TODO: bring this back. currently we cant known the order of keys in the dict to test
-            #{'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed':
-            # 10000000}, 'service_labels': {u"x": u"y"}},
-            u"""]""",
+          {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}, 'service_labels': {u"x": u"y"}},
+          {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {u"x": u"y"}},
+        ]""",
             [
-                ('df', u'/', '{}'),
-                ('df', u'/xyz', "'lala'"),
-                ('df', u'/zzz', "['abc', 'xyz']"),
-                ('cpu.loads', None, '(5.0, 10.0)'),
-                ('chrony', None, '{}'),
-                # can't know speed/state v.s. state/speed
-                # ('lnx_if', u'2', "{'speed': 10000000, 'state': ['1']}"),
+                ('df', u'/', {}),
+                ('df', u'/xyz', "lala"),
+                ('df', u'/zzz', ['abc', 'xyz']),
+                ('cpu.loads', None, (5.0, 10.0)),
+                ('chrony', None, {}),
+                ('lnx_if', u'2', {
+                    'speed': 10000000,
+                    'state': ['1']
+                }),
             ],
         ),
     ])
@@ -238,7 +238,7 @@ def test_parse_autochecks_file(config_check_variables, test_config, autochecks_c
         expected = expected_result[index]
         assert service.check_plugin_name == expected[0]
         assert service.item == expected[1]
-        assert service.parameters_unresolved == expected[2], service.check_plugin_name
+        assert service.parameters == expected[2], service.check_plugin_name
 
 
 def test_has_autochecks():
@@ -258,14 +258,14 @@ def test_remove_autochecks_file():
 @pytest.mark.parametrize("items,expected_content", [
     ([], "[\n]\n"),
     ([
-        discovery.DiscoveredService('df', u'/xyz', u"Filesystem /xyz", "None",
-                                    DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
-        discovery.DiscoveredService('df', u'/', u"Filesystem /", "{}",
-                                    DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
-        discovery.DiscoveredService('cpu.loads', None, "CPU load", "cpuload_default_levels",
-                                    DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
+        discovery.Service('df', u'/xyz', u"Filesystem /xyz", None,
+                          DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
+        discovery.Service('df', u'/', u"Filesystem /", {},
+                          DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
+        discovery.Service('cpu.loads', None, "CPU load", {},
+                          DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
     ], """[
-  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {'x': 'y'}},
+  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': {}, 'service_labels': {'x': 'y'}},
   {'check_plugin_name': 'df', 'item': '/', 'parameters': {}, 'service_labels': {'x': 'y'}},
   {'check_plugin_name': 'df', 'item': '/xyz', 'parameters': None, 'service_labels': {'x': 'y'}},
 ]\n"""),

@@ -1,0 +1,12 @@
+Title: hitachi_hus_dku: Fixed informational text about component: "Processor" -> "Power Supply"
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p25
+Date: 1593079629
+
+

@@ -253,7 +253,7 @@ Function checkConnErrors(conn)
         error_msg = "ERROR: "
         For Each errObj in conn.Errors
             error_msg = error_msg & errObj.Description & " (SQLState: " & _
-                        errObj.SQLState & "/NativeError: " & errObj.NativeError & ") "
+                        errObj.SQLState & "/NativeError: " & errObj.NativeError & "). "
         Next
     End If
     Err.Clear
@@ -264,7 +264,6 @@ End Function
 Set CONN      = CreateObject("ADODB.Connection")
 Set RS        = CreateObject("ADODB.Recordset")
 
-CONN.Provider = "sqloledb"
 If TIMEOUTS.Exists("timeout_connection") Then
     CONN.ConnectionTimeout = CInt(TIMEOUTS("timeout_connection"))
 End If
@@ -301,35 +300,61 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         Set AUTH = CFG("auth")
     End If
 
-    ' At this place one could implement to use other authentication mechanism
-    If Not AUTH.Exists("type") or AUTH("type") = "system" Then
-        CONN.Properties("Integrated Security").Value = "SSPI"
-    Else
-        CONN.Properties("User ID").Value = AUTH("username")
-        CONN.Properties("Password").Value = AUTH("password")
-    End If
-
-    CONN.Properties("Data Source").Value = sources(instance_id)
-
     ' Try to connect to the instance and catch the error when not able to connect
     ' Then add the instance to the agent output and skip over to the next instance
     ' in case the connection could not be established.
     On Error Resume Next
-    CONN.Open
 
-    ' Collect eventual error messages of errors occured during connecting. Hopefully
-    ' there is only one error in the list of errors.
-    Dim errMsg
-    errMsg = checkConnErrors(CONN)
+    Dim connProv, errMsg
+    errMsg = ""
+
+    For Each connProv in Array("msoledbsql", "sqloledb")
+
+        CONN.Provider = connProv
+
+        ' At this place one could implement other authentication mechanism
+        ' Note that these properties have to be set after setting CONN.Provider
+        If Not AUTH.Exists("type") or AUTH("type") = "system" Then
+            CONN.Properties("Integrated Security").Value = "SSPI"
+        Else
+            CONN.Properties("User ID").Value = AUTH("username")
+            CONN.Properties("Password").Value = AUTH("password")
+        End If
+
+        CONN.Properties("Data Source").Value = sources(instance_id)
+
+        CONN.Open
+
+        ' Note that the user will only see this message in case no connection can be established
+        errMsg = errMsg & "Connecting using provider " & connProv & ". "
+
+        ' If the provider is invalid, errors end up in Err, not in CONN.Errors
+        if Err.Number <> 0 Then
+            errMsg = errMsg & "ERROR: " & Err.Description
+            If Right(errMsg, 1) <> "." Then
+            	errMsg = errMsg & "."
+            End If
+            errMsg = errMsg & " "
+        End If
+
+        ' Collect errors which occurred during connecting. Hopefully there is only one
+        ' error in the list of errors.
+        errMsg = errMsg & checkConnErrors(CONN)
+
+        ' In case the connection is still closed, we try with the next provider
+        ' 0 - closed
+        ' 1 - open
+        ' 2 - connecting
+        ' 4 - executing a command
+        ' 8 - rows are being fetched
+        If CONN.State = 1 Then
+            Exit For
+        End If
+    Next
+
     addOutput(sections("instance"))
-    ' 0 - closed
-    ' 1 - open
-    ' 2 - connecting
-    ' 4 - executing a command
-    ' 8 - rows are being fetched
     addOutput("MSSQL_" & instance_id & "|state|" & CONN.State & "|" & errMsg)
 
-    ' adStateClosed = 0
     If CONN.State = 0 Then
         Exit Do
     End If

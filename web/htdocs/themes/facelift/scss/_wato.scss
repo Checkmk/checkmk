@@ -1039,7 +1039,7 @@ div.varname {
     height: 16px;
     text-align: center;
 
-    &.state_success {
+    &.state_success, &.state_warning {
       color: $dark-font-color;
     }
   }

@@ -1981,7 +1981,7 @@ def validate_host_uniqueness(varname, host_name):
             (host_name, host.folder().url(), host.folder().alias_path()))
 
 
-class SearchFolder(BaseFolder):
+class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     """A virtual folder representing the result of a search."""
     @staticmethod
     def criteria_from_html_vars():

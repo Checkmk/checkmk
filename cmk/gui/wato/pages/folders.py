@@ -449,7 +449,11 @@ class ModeFolder(WatoMode):
             rendered_hosts = []  # type: List[HostName]
 
             # Now loop again over all hosts and display them
+            max_hosts = len(hostnames)
             for hostname in hostnames:
+                if table.limit_reached:
+                    table.limit_hint = max_hosts
+                    continue
                 self._show_host_row(rendered_hosts, table, hostname, search_text, show_checkboxes,
                                     colspan, host_errors, contact_group_names)
 
@@ -463,7 +467,7 @@ class ModeFolder(WatoMode):
         selected = config.user.get_rowselection(weblib.selection_id(),
                                                 'wato-folder-/' + self._folder.path())
 
-        row_count = len(rendered_hosts)
+        row_count = len(hostnames)
         headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
         html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 

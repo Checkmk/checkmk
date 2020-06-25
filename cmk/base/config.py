@@ -191,7 +191,7 @@ def register(name, default_value):
 def _add_check_variables_to_default_config():
     # type: () -> None
     """Add configuration variables registered by checks to config module"""
-    default_config.__dict__.update(get_check_variable_defaults())
+    default_config.__dict__.update(_get_check_variable_defaults())
 
 
 def _clear_check_variables_from_default_config(variable_names):
@@ -656,7 +656,7 @@ class PackedConfig:
         # Add modified check specific Check_MK base settings
         #
 
-        check_variable_defaults = get_check_variable_defaults()
+        check_variable_defaults = _get_check_variable_defaults()
 
         for varname, val in get_check_variables().items():
             if val == check_variable_defaults[varname]:
@@ -1604,25 +1604,14 @@ def load_checks(get_check_api_context, filelist):
 
         # Save check variables for e.g. after config loading that the config can
         # be added to the check contexts
-        for varname, value in new_check_vars.items():
+        _set_check_variable_defaults(
+            variables=new_check_vars,
+            # Keep track of which variable needs to be set to which context
+            context_idents=list(new_checks) + list(new_active_checks),
             # Do not allow checks to override Check_MK builtin global variables. Silently
             # skip them here. The variables will only be locally available to the checks.
-            if varname in cmk_global_vars:
-                continue
-
-            if varname.startswith("_"):
-                continue
-
-            # NOTE: Classes and builtin functions are callable, too!
-            if callable(value) or inspect.ismodule(value):
-                continue
-
-            _check_variable_defaults[varname] = value
-
-            # Keep track of which variable needs to be set to which context
-            context_ident_list = _check_variables.setdefault(varname, [])
-            context_ident_list += new_checks
-            context_ident_list += new_active_checks
+            skip_names=cmk_global_vars,
+        )
 
     # Now convert check_info to new format.
     convert_check_info()
@@ -1875,11 +1864,35 @@ def check_variable_names():
     return list(_check_variables)
 
 
-def get_check_variable_defaults():
+def _get_check_variable_defaults():
     # type: () -> CheckVariables
     """Returns the check variable default settings. These are the settings right
     after loading the checks."""
     return _check_variable_defaults
+
+
+def _set_check_variable_defaults(
+    variables: Dict[str, Any],
+    context_idents: List[str],
+    skip_names: Optional[Set[str]] = None,
+):
+    """Save check variables for e.g. after config loading that the config can
+    be added to the check contexts."""
+    for varname, value in variables.items():
+        if skip_names is not None and varname in skip_names:
+            continue
+
+        if varname.startswith("_"):
+            continue
+
+        # NOTE: Classes and builtin functions are callable, too!
+        if callable(value) or inspect.ismodule(value):
+            continue
+
+        _check_variable_defaults[varname] = value
+
+        # Keep track of which variable needs to be set to which context
+        _check_variables.setdefault(varname, []).extend(context_idents)
 
 
 def set_check_variables(check_variables):

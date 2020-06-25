@@ -524,11 +524,6 @@ def check_discovery(
     if params is None:
         params = host_config.default_discovery_check_parameters()
 
-    status = 0
-    infotexts = []
-    long_infotexts = []
-    perfdata = []  # type: List[Tuple]
-
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
     if ipaddress is None and not host_config.is_cluster:
@@ -547,6 +542,54 @@ def check_discovery(
                                                           multi_host_sections,
                                                           on_error="raise")
 
+    status, infotexts, long_infotexts, perfdata, need_rediscovery = _check_service_table(
+        hostname, services, params)
+
+    _new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(hostname,
+                                                                             discovered_host_labels,
+                                                                             only_new=True)
+
+    if host_labels_per_plugin:
+        infotexts.append("%d new host labels" % sum(host_labels_per_plugin.values()))
+        status = cmk.base.utils.worst_service_state(status,
+                                                    params.get("severity_new_host_label", 1))
+
+        if params.get("inventory_rediscovery", False):
+            mode = params["inventory_rediscovery"]["mode"]
+            if mode in (0, 2, 3):
+                need_rediscovery = True
+    else:
+        infotexts.append("no new host labels")
+
+    if need_rediscovery:
+        if host_config.is_cluster and host_config.nodes:
+            for nodename in host_config.nodes:
+                _set_rediscovery_flag(nodename)
+        else:
+            _set_rediscovery_flag(hostname)
+        infotexts.append(u"rediscovery scheduled")
+
+    # Add data source information to check results
+    for source in sources.get_data_sources():
+        source_state, source_output, _source_perfdata = source.get_summary_result_for_discovery()
+        # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
+        if source_state != 0:
+            status = max(status, source_state)
+            infotexts.append(u"[%s] %s" % (source.id(), source_output))
+
+    return status, infotexts, long_infotexts, perfdata
+
+
+def _check_service_table(
+    hostname: HostName,
+    services: ServicesTable,
+    params: Dict,
+) -> Tuple[int, List[str], List[str], List[Tuple], bool]:
+
+    status = 0
+    infotexts = []
+    long_infotexts = []
+    perfdata = []  # type: List[Tuple]
     need_rediscovery = False
 
     service_filter = _get_service_filter_func(params.get("inventory_rediscovery", {}))
@@ -598,37 +641,7 @@ def check_discovery(
                 u"ignored: %s: %s" %
                 (discovered_service.check_plugin_name, discovered_service.description))
 
-    _new_host_labels, host_labels_per_plugin = \
-        _perform_host_label_discovery(hostname, discovered_host_labels, only_new=True)
-    if host_labels_per_plugin:
-        infotexts.append("%d new host labels" % sum(host_labels_per_plugin.values()))
-        status = cmk.base.utils.worst_service_state(status,
-                                                    params.get("severity_new_host_label", 1))
-
-        if params.get("inventory_rediscovery", False):
-            mode = params["inventory_rediscovery"]["mode"]
-            if mode in (0, 2, 3):
-                need_rediscovery = True
-    else:
-        infotexts.append("no new host labels")
-
-    if need_rediscovery:
-        if host_config.is_cluster and host_config.nodes:
-            for nodename in host_config.nodes:
-                _set_rediscovery_flag(nodename)
-        else:
-            _set_rediscovery_flag(hostname)
-        infotexts.append(u"rediscovery scheduled")
-
-    # Add data source information to check results
-    for source in sources.get_data_sources():
-        source_state, source_output, _source_perfdata = source.get_summary_result_for_discovery()
-        # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
-        if source_state != 0:
-            status = max(status, source_state)
-            infotexts.append(u"[%s] %s" % (source.id(), source_output))
-
-    return status, infotexts, long_infotexts, perfdata
+    return status, infotexts, long_infotexts, perfdata, need_rediscovery
 
 
 def _set_rediscovery_flag(hostname):

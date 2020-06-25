@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=redefined-outer-name
+
 import pytest  # type: ignore[import]
 
 import cmk.base.discovery as discovery
@@ -140,6 +142,28 @@ def test__get_service_filter_func(monkeypatch, params_rediscovery, result):
     assert service_filter("hostname", "check_plugin_name", "item") is result
 
 
+@pytest.fixture
+def service_table() -> discovery.ServicesTable:
+    return {
+        ("check_plugin_name", "New Item 1"):
+            ("new",
+             discovery.DiscoveredService("check_plugin_name", "New Item 1",
+                                         "Test Description New Item 1", "{}")),
+        ("check_plugin_name", "New Item 2"):
+            ("new",
+             discovery.DiscoveredService("check_plugin_name", "New Item 2",
+                                         "Test Description New Item 2", "{}")),
+        ("check_plugin_name", "Vanished Item 1"):
+            ("vanished",
+             discovery.DiscoveredService("check_plugin_name", "Vanished Item 1",
+                                         "Test Description Vanished Item 1", "{}")),
+        ("check_plugin_name", "Vanished Item 2"):
+            ("vanished",
+             discovery.DiscoveredService("check_plugin_name", "Vanished Item 2",
+                                         "Test Description Vanished Item 2", "{}")),
+    }
+
+
 @pytest.mark.parametrize(
     "mode, parameters_rediscovery, result_new_item_names, result_counts",
     [
@@ -238,33 +262,14 @@ def test__get_service_filter_func(monkeypatch, params_rediscovery, result):
             "service_blacklist": ["^Test Description Vanished Item 2"],
         }, ["Vanished Item 2"], (0, 1, 1)),
     ])
-def test__get_new_services(monkeypatch, mode, parameters_rediscovery, result_new_item_names,
-                           result_counts):
+def test__get_new_services(monkeypatch, service_table, mode, parameters_rediscovery,
+                           result_new_item_names, result_counts):
     def _get_service_description(_hostname, _check_plugin_name, item):
         return "Test Description %s" % item
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
 
     counts = discovery._empty_counts()
-
-    service_table = {
-        ("check_plugin_name", "New Item 1"):
-            ("new",
-             discovery.DiscoveredService("check_plugin_name", "New Item 1",
-                                         "Test Description New Item 1", "{}")),
-        ("check_plugin_name", "New Item 2"):
-            ("new",
-             discovery.DiscoveredService("check_plugin_name", "New Item 2",
-                                         "Test Description New Item 2", "{}")),
-        ("check_plugin_name", "Vanished Item 1"):
-            ("vanished",
-             discovery.DiscoveredService("check_plugin_name", "Vanished Item 1",
-                                         "Test Description Vanished Item 1", "{}")),
-        ("check_plugin_name", "Vanished Item 2"):
-            ("vanished",
-             discovery.DiscoveredService("check_plugin_name", "Vanished Item 2",
-                                         "Test Description Vanished Item 2", "{}")),
-    }  # type: discovery.ServicesTable
 
     service_filter = discovery._get_service_filter_func(parameters_rediscovery)
 
@@ -284,3 +289,192 @@ def test__get_new_services(monkeypatch, mode, parameters_rediscovery, result_new
     assert counts["self_new"] == count_new
     assert counts["self_kept"] == count_kept
     assert counts["self_removed"] == count_removed
+
+
+@pytest.mark.parametrize(
+    "parameters, result_need_rediscovery",
+    [
+        ({}, False),
+        # New services
+        # Whitelist
+        ({
+            "inventory_rediscovery": {
+                "mode": 0,
+                "service_whitelist": ["^Test Description New Item 1"]
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 1,
+                "service_whitelist": ["^Test Description New Item 1"]
+            },
+        }, False),
+        ({
+            "inventory_rediscovery": {
+                "mode": 2,
+                "service_whitelist": ["^Test Description New Item 1"]
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 3,
+                "service_whitelist": ["^Test Description New Item 1"]
+            },
+        }, True),
+        # Blacklist
+        ({
+            "inventory_rediscovery": {
+                "mode": 0,
+                "service_blacklist": ["^Test Description New Item 1"]
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 1,
+                "service_blacklist": ["^Test Description New Item 1"]
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 2,
+                "service_blacklist": ["^Test Description New Item 1"]
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 3,
+                "service_blacklist": ["^Test Description New Item 1"]
+            },
+        }, True),
+        # White-/blacklist
+        ({
+            "inventory_rediscovery": {
+                "mode": 0,
+                "service_whitelist": ["^Test Description New Item 1"],
+                "service_blacklist": ["^Test Description New Item 2"],
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 1,
+                "service_whitelist": ["^Test Description New Item 1"],
+                "service_blacklist": ["^Test Description New Item 2"],
+            },
+        }, False),
+        ({
+            "inventory_rediscovery": {
+                "mode": 2,
+                "service_whitelist": ["^Test Description New Item 1"],
+                "service_blacklist": ["^Test Description New Item 2"],
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 3,
+                "service_whitelist": ["^Test Description New Item 1"],
+                "service_blacklist": ["^Test Description New Item 2"],
+            },
+        }, True),
+        # Vanished services
+        # Whitelist
+        ({
+            "inventory_rediscovery": {
+                "mode": 0,
+                "service_whitelist": ["^Test Description Vanished Item 1"]
+            },
+        }, False),
+        ({
+            "inventory_rediscovery": {
+                "mode": 1,
+                "service_whitelist": ["^Test Description Vanished Item 1"]
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 2,
+                "service_whitelist": ["^Test Description Vanished Item 1"]
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 3,
+                "service_whitelist": ["^Test Description Vanished Item 1"]
+            },
+        }, True),
+        # Blacklist
+        ({
+            "inventory_rediscovery": {
+                "mode": 0,
+                "service_blacklist": ["^Test Description Vanished Item 1"]
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 1,
+                "service_blacklist": ["^Test Description Vanished Item 1"]
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 2,
+                "service_blacklist": ["^Test Description Vanished Item 1"]
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 3,
+                "service_blacklist": ["^Test Description Vanished Item 1"]
+            },
+        }, True),
+        # White-/blacklist
+        ({
+            "inventory_rediscovery": {
+                "mode": 0,
+                "service_whitelist": ["^Test Description Vanished Item 1"],
+                "service_blacklist": ["^Test Description Vanished Item 2"],
+            },
+        }, False),
+        ({
+            "inventory_rediscovery": {
+                "mode": 1,
+                "service_whitelist": ["^Test Description Vanished Item 1"],
+                "service_blacklist": ["^Test Description Vanished Item 2"],
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 2,
+                "service_whitelist": ["^Test Description Vanished Item 1"],
+                "service_blacklist": ["^Test Description Vanished Item 2"],
+            },
+        }, True),
+        ({
+            "inventory_rediscovery": {
+                "mode": 3,
+                "service_whitelist": ["^Test Description Vanished Item 1"],
+                "service_blacklist": ["^Test Description Vanished Item 2"],
+            },
+        }, True),
+    ])
+def test__check_service_table(monkeypatch, service_table, parameters, result_need_rediscovery):
+    def _get_service_description(_hostname, _check_plugin_name, item):
+        return "Test Description %s" % item
+
+    monkeypatch.setattr(config, "service_description", _get_service_description)
+
+    status, infotexts, long_infotexts, perfdata, need_rediscovery = discovery._check_service_table(
+        "hostname", service_table, parameters)
+
+    assert status == 1
+    assert sorted(infotexts) == sorted([
+        '2 unmonitored services (check_plugin_name:2)(!)',
+        '2 vanished services (check_plugin_name:2)',
+    ])
+    assert sorted(long_infotexts) == sorted([
+        'unmonitored: check_plugin_name: Test Description New Item 1',
+        'unmonitored: check_plugin_name: Test Description New Item 2',
+        'vanished: check_plugin_name: Test Description Vanished Item 1',
+        'vanished: check_plugin_name: Test Description Vanished Item 2',
+    ])
+    assert perfdata == []
+    assert need_rediscovery == result_need_rediscovery

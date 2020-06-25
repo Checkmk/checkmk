@@ -1145,4 +1145,5 @@ def test_all_check_variables_present(_load_all_checks, check_variables_names):
         "'%s' were variables present in config.get_check_variables(). "
         "They may be needed to resolve the default parameters in users autochecks file. "
         "If you are sure this is not the case, you may remove the variables from the "
-        "list above.") % sorted(missing_variables)
+        "list above. If they may still be needed, you may add them to the module "
+        "cmk.utils.migrated_check_variables.") % sorted(missing_variables)

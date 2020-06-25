@@ -52,6 +52,7 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
+import cmk.utils.migrated_check_variables
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -1612,6 +1613,15 @@ def load_checks(get_check_api_context, filelist):
             # skip them here. The variables will only be locally available to the checks.
             skip_names=cmk_global_vars,
         )
+
+    # add variables corresponding to check plugins that may have been migrated to new API
+    _set_check_variable_defaults(
+        {
+            k: v
+            for k, v in vars(cmk.utils.migrated_check_variables).items()
+            if not k.startswith('_')
+        }, ["__migrated_plugins_variables__"])
+    _check_contexts.setdefault("__migrated_plugins_variables__", {})
 
     # Now convert check_info to new format.
     convert_check_info()

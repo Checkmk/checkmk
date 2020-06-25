@@ -16,6 +16,10 @@ pytestmark = pytest.mark.checks
     (['1IET', u'00010001', u'dm-4', u'IET,VIRTUAL-DISK'], '1IET 00010001'),
     (['SDataCoreSANsymphony_DAT05-fscl', u'dm-6', u'DataCore,SANsymphony'
      ], 'SDataCoreSANsymphony_DAT05-fscl'),
+    ([
+        'mpatha', '(HP_iLO_Internal_SD-CARD_000002660A01-0:0)', 'dm-6', 'HP', 'iLO', ',Internal',
+        'SD-CARD'
+    ], "HP_iLO_Internal_SD-CARD_000002660A01-0:0"),
     (['SDDN_S2A_9900_1308xxxxxxxx', u'dm-13', u'DDN,S2A', u'9900'], 'SDDN_S2A_9900_1308xxxxxxxx'),
     (['3600508b40006d7da0001a00004740000', u'dm-0', u'HP,HSV210'
      ], '3600508b40006d7da0001a00004740000'),

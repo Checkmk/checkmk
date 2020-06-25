@@ -154,6 +154,9 @@ def _get_service_filter_func(params_rediscovery):
 
 def _filter_service_by_patterns(hostname, check_plugin_name, item, whitelist, blacklist):
     # type: (HostName, CheckPluginName, Item, Pattern[str], Pattern[str]) -> bool
+    #TODO Call sites: Why do we not use discovered_service.description;
+    # Is discovered_service.description already finalized as
+    # in config.service_description?
     description = config.service_description(hostname, check_plugin_name, item)
     return whitelist.match(description) is not None and blacklist.match(description) is None
 
@@ -373,17 +376,7 @@ def discover_on_host(
 ):
     # type: (...) -> Tuple[Dict[str, int], Optional[str]]
     hostname = host_config.hostname
-    counts = {
-        "self_new": 0,
-        "self_removed": 0,
-        "self_kept": 0,
-        "self_total": 0,
-        "self_new_host_labels": 0,
-        "self_total_host_labels": 0,
-        "clustered_new": 0,
-        "clustered_old": 0,
-        "clustered_vanished": 0,
-    }
+    counts = _empty_counts()
 
     if hostname not in config_cache.all_active_hosts():
         return counts, ""
@@ -418,43 +411,8 @@ def discover_on_host(
                                                               on_error=on_error)
 
         # Create new list of checks
-        new_items = []  # type: List[DiscoveredService]
-        for check_source, discovered_service in services.values():
-            if check_source in ("custom", "legacy", "active", "manual"):
-                # This is not an autocheck or ignored and currently not
-                # checked. Note: Discovered checks that are shadowed by manual
-                # checks will vanish that way.
-                continue
-
-            if check_source == "new":
-                if mode in ("new", "fixall", "refresh") and service_filter(
-                        hostname, discovered_service.check_plugin_name, discovered_service.item):
-                    counts["self_new"] += 1
-                    new_items.append(discovered_service)
-
-            elif check_source in ("old", "ignored"):
-                # keep currently existing valid services in any case
-                new_items.append(discovered_service)
-                counts["self_kept"] += 1
-
-            elif check_source == "vanished":
-                # keep item, if we are currently only looking for new services
-                # otherwise fix it: remove ignored and non-longer existing services
-                if mode not in ("fixall", "remove") or not service_filter(
-                        hostname, discovered_service.check_plugin_name, discovered_service.item):
-                    new_items.append(discovered_service)
-                    counts["self_kept"] += 1
-                else:
-                    counts["self_removed"] += 1
-
-            elif check_source.startswith("clustered_"):
-                # Silently keep clustered services
-                counts[check_source] += 1
-                new_items.append(discovered_service)
-
-            else:
-                raise MKGeneralException("Unknown check source '%s'" % check_source)
-        host_config.set_autochecks(new_items)
+        new_services = _get_new_services(hostname, services, service_filter, counts, mode)
+        host_config.set_autochecks(new_services)
 
     except MKTimeout:
         raise  # let general timeout through
@@ -473,6 +431,67 @@ def discover_on_host(
 
     counts["self_total"] = counts["self_new"] + counts["self_kept"]
     return counts, err
+
+
+def _empty_counts() -> Dict[str, int]:
+    return {
+        "self_new": 0,
+        "self_removed": 0,
+        "self_kept": 0,
+        "self_total": 0,
+        "self_new_host_labels": 0,
+        "self_total_host_labels": 0,
+        "clustered_new": 0,
+        "clustered_old": 0,
+        "clustered_vanished": 0,
+    }
+
+
+def _get_new_services(
+    hostname: HostName,
+    services: DiscoveredServicesTable,
+    service_filter: ServiceFilter,
+    counts: Dict,
+    mode: str,
+) -> List[DiscoveredService]:
+
+    new_services = []  # type: List[DiscoveredService]
+    for check_source, discovered_service in services.values():
+        if check_source in ("custom", "legacy", "active", "manual"):
+            # This is not an autocheck or ignored and currently not
+            # checked. Note: Discovered checks that are shadowed by manual
+            # checks will vanish that way.
+            continue
+
+        if check_source == "new":
+            if mode in ("new", "fixall", "refresh") and service_filter(
+                    hostname, discovered_service.check_plugin_name, discovered_service.item):
+                counts["self_new"] += 1
+                new_services.append(discovered_service)
+
+        elif check_source in ("old", "ignored"):
+            # keep currently existing valid services in any case
+            new_services.append(discovered_service)
+            counts["self_kept"] += 1
+
+        elif check_source == "vanished":
+            # keep item, if we are currently only looking for new services
+            # otherwise fix it: remove ignored and non-longer existing services
+            if mode not in ("fixall", "remove") or not service_filter(
+                    hostname, discovered_service.check_plugin_name, discovered_service.item):
+                new_services.append(discovered_service)
+                counts["self_kept"] += 1
+            else:
+                counts["self_removed"] += 1
+
+        elif check_source.startswith("clustered_"):
+            # Silently keep clustered services
+            counts[check_source] += 1
+            new_services.append(discovered_service)
+
+        else:
+            raise MKGeneralException("Unknown check source '%s'" % check_source)
+    return new_services
 
 
 #.
@@ -546,6 +565,9 @@ def check_discovery(
                                                      discovered_service.item):
                     unfiltered = True
 
+                #TODO In service_filter:we use config.service_description(...)
+                # in order to finalize service_description (translation, etc.).
+                # Why do we use discovered_service.description here?
                 long_infotexts.append(
                     u"%s: %s: %s" %
                     (title, discovered_service.check_plugin_name, discovered_service.description))

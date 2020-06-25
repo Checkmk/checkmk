@@ -138,3 +138,149 @@ def test__get_service_filter_func(monkeypatch, params_rediscovery, result):
     service_filter = discovery._get_service_filter_func(params_rediscovery)
     assert service_filter is not None
     assert service_filter("hostname", "check_plugin_name", "item") is result
+
+
+@pytest.mark.parametrize(
+    "mode, parameters_rediscovery, result_new_item_names, result_counts",
+    [
+        # No params
+        ("new", {}, ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"], (2, 2, 0)),
+        ("fixall", {}, ["New Item 1", "New Item 2"], (2, 0, 2)),
+        ("refresh", {}, ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"],
+         (2, 2, 0)),
+        ("remove", {}, [], (0, 0, 2)),
+        # New services
+        # Whitelist
+        ("new", {
+            "service_whitelist": ["^Test Description New Item 1"]
+        }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
+        ("fixall", {
+            "service_whitelist": ["^Test Description New Item 1"]
+        }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
+        ("refresh", {
+            "service_whitelist": ["^Test Description New Item 1"]
+        }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
+        ("remove", {
+            "service_whitelist": ["^Test Description New Item 1"]
+        }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
+        # Blacklist
+        ("new", {
+            "service_blacklist": ["^Test Description New Item 1"]
+        }, ["New Item 2", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
+        ("fixall", {
+            "service_blacklist": ["^Test Description New Item 1"]
+        }, ["New Item 2"], (1, 0, 2)),
+        ("refresh", {
+            "service_blacklist": ["^Test Description New Item 1"]
+        }, ["New Item 2", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
+        ("remove", {
+            "service_blacklist": ["^Test Description New Item 1"]
+        }, [], (0, 0, 2)),
+        # White-/blacklist
+        ("new", {
+            "service_whitelist": ["^Test Description New Item 1"],
+            "service_blacklist": ["^Test Description New Item 2"],
+        }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
+        ("fixall", {
+            "service_whitelist": ["^Test Description New Item 1"],
+            "service_blacklist": ["^Test Description New Item 2"],
+        }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
+        ("refresh", {
+            "service_whitelist": ["^Test Description New Item 1"],
+            "service_blacklist": ["^Test Description New Item 2"],
+        }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
+        ("remove", {
+            "service_whitelist": ["^Test Description New Item 1"],
+            "service_blacklist": ["^Test Description New Item 2"],
+        }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
+        # Vanished services
+        # Whitelist
+        ("new", {
+            "service_whitelist": ["^Test Description Vanished Item 1"]
+        }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
+        ("fixall", {
+            "service_whitelist": ["^Test Description Vanished Item 1"]
+        }, ["Vanished Item 2"], (0, 1, 1)),
+        ("refresh", {
+            "service_whitelist": ["^Test Description Vanished Item 1"]
+        }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
+        ("remove", {
+            "service_whitelist": ["^Test Description Vanished Item 1"]
+        }, ["Vanished Item 2"], (0, 1, 1)),
+        # Blacklist
+        ("new", {
+            "service_blacklist": ["^Test Description Vanished Item 1"]
+        }, ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"], (2, 2, 0)),
+        ("fixall", {
+            "service_blacklist": ["^Test Description Vanished Item 1"]
+        }, ["New Item 1", "New Item 2", "Vanished Item 1"], (2, 1, 1)),
+        ("refresh", {
+            "service_blacklist": ["^Test Description Vanished Item 1"]
+        }, ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"], (2, 2, 0)),
+        ("remove", {
+            "service_blacklist": ["^Test Description Vanished Item 1"]
+        }, ["Vanished Item 1"], (0, 1, 1)),
+        # White-/blacklist
+        ("new", {
+            "service_whitelist": ["^Test Description Vanished Item 1"],
+            "service_blacklist": ["^Test Description Vanished Item 2"],
+        }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
+        ("fixall", {
+            "service_whitelist": ["^Test Description Vanished Item 1"],
+            "service_blacklist": ["^Test Description Vanished Item 2"],
+        }, ["Vanished Item 2"], (0, 1, 1)),
+        ("refresh", {
+            "service_whitelist": ["^Test Description Vanished Item 1"],
+            "service_blacklist": ["^Test Description Vanished Item 2"],
+        }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
+        ("remove", {
+            "service_whitelist": ["^Test Description Vanished Item 1"],
+            "service_blacklist": ["^Test Description Vanished Item 2"],
+        }, ["Vanished Item 2"], (0, 1, 1)),
+    ])
+def test__get_new_services(monkeypatch, mode, parameters_rediscovery, result_new_item_names,
+                           result_counts):
+    def _get_service_description(_hostname, _check_plugin_name, item):
+        return "Test Description %s" % item
+
+    monkeypatch.setattr(config, "service_description", _get_service_description)
+
+    counts = discovery._empty_counts()
+
+    service_table = {
+        ("check_plugin_name", "New Item 1"):
+            ("new",
+             discovery.DiscoveredService("check_plugin_name", "New Item 1",
+                                         "Test Description New Item 1", "{}")),
+        ("check_plugin_name", "New Item 2"):
+            ("new",
+             discovery.DiscoveredService("check_plugin_name", "New Item 2",
+                                         "Test Description New Item 2", "{}")),
+        ("check_plugin_name", "Vanished Item 1"):
+            ("vanished",
+             discovery.DiscoveredService("check_plugin_name", "Vanished Item 1",
+                                         "Test Description Vanished Item 1", "{}")),
+        ("check_plugin_name", "Vanished Item 2"):
+            ("vanished",
+             discovery.DiscoveredService("check_plugin_name", "Vanished Item 2",
+                                         "Test Description Vanished Item 2", "{}")),
+    }  # type: discovery.DiscoveredServicesTable
+
+    service_filter = discovery._get_service_filter_func(parameters_rediscovery)
+
+    new_item_names = [
+        entry.item for entry in discovery._get_new_services(
+            "hostname",
+            service_table,
+            service_filter,
+            counts,
+            mode,
+        )
+    ]
+
+    count_new, count_kept, count_removed = result_counts
+
+    assert sorted(new_item_names) == sorted(result_new_item_names)
+    assert counts["self_new"] == count_new
+    assert counts["self_kept"] == count_kept
+    assert counts["self_removed"] == count_removed

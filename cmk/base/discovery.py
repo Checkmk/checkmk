@@ -24,6 +24,7 @@ from typing import (
     Tuple,
     Union,
 )
+from enum import Enum
 
 from six import ensure_binary
 
@@ -99,6 +100,14 @@ DiscoveryResult = List[DiscoveryEntry]
 DiscoveryFunction = Callable[[FinalSectionContent], DiscoveryResult]
 ServiceFilter = Callable[[HostName, CheckPluginName, Item], bool]
 
+
+class RediscoveryMode(Enum):
+    new = 0
+    remove = 1
+    fixall = 2
+    refresh = 3
+
+
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
@@ -134,10 +143,11 @@ def schedule_discovery_check(hostname):
             raise
 
 
-def _get_service_filter_func(params_rediscovery):
+def _get_service_filter_func(params):
     # type: (Dict[str, Any]) -> ServiceFilter
-    service_whitelist = params_rediscovery.get("service_whitelist")  # type: Optional[List[str]]
-    service_blacklist = params_rediscovery.get("service_blacklist")  # type: Optional[List[str]]
+    rediscovery_parameters = _get_rediscovery_parameters(params)
+    service_whitelist = rediscovery_parameters.get("service_whitelist")  # type: Optional[List[str]]
+    service_blacklist = rediscovery_parameters.get("service_blacklist")  # type: Optional[List[str]]
 
     if not service_whitelist and not service_blacklist:
         return _accept_all_services
@@ -168,6 +178,18 @@ def _filter_service_by_patterns(hostname, check_plugin_name, item, whitelist, bl
 
 def _accept_all_services(_hostname, _check_plugin_name, _item):
     return True
+
+
+def _get_rediscovery_parameters(params: Dict) -> Dict:
+    return params.get("inventory_rediscovery", {})
+
+
+def _get_rediscovery_mode(params: Dict) -> str:
+    mode_int = _get_rediscovery_parameters(params).get("mode")
+    try:
+        return RediscoveryMode(mode_int).name
+    except ValueError:
+        return ""
 
 
 #.
@@ -380,6 +402,8 @@ def discover_on_host(
         service_filter=_accept_all_services,  # type: ServiceFilter
 ):
     # type: (...) -> Tuple[Dict[str, int], Optional[str]]
+    console.verbose("  Doing discovery with mode '%s'...\n" % mode)
+
     hostname = host_config.hostname
     counts = _empty_counts()
 
@@ -554,10 +578,8 @@ def check_discovery(
         status = cmk.base.utils.worst_service_state(status,
                                                     params.get("severity_new_host_label", 1))
 
-        if params.get("inventory_rediscovery", False):
-            mode = params["inventory_rediscovery"]["mode"]
-            if mode in (0, 2, 3):
-                need_rediscovery = True
+        if _get_rediscovery_mode(params) in ("new", "fixall", "refresh"):
+            need_rediscovery = True
     else:
         infotexts.append("no new host labels")
 
@@ -592,7 +614,8 @@ def _check_service_table(
     perfdata = []  # type: List[Tuple]
     need_rediscovery = False
 
-    service_filter = _get_service_filter_func(params.get("inventory_rediscovery", {}))
+    service_filter = _get_service_filter_func(params)
+    rediscovery_mode = _get_rediscovery_mode(params)
 
     for check_state, title, params_key, default_state in [
         ("new", "unmonitored", "severity_unmonitored", config.inventory_check_severity),
@@ -627,11 +650,11 @@ def _check_service_table(
             infotexts.append(u"%d %s services (%s)%s" %
                              (count, title, info, check_api_utils.state_markers[st]))
 
-            if params.get("inventory_rediscovery", False):
-                mode = params["inventory_rediscovery"]["mode"]
-                if (unfiltered and ((check_state == "new" and mode in (0, 2, 3)) or
-                                    (check_state == "vanished" and mode in (1, 2, 3)))):
-                    need_rediscovery = True
+            if (unfiltered and
+                ((check_state == "new" and rediscovery_mode in ("new", "fixall", "refresh")) or
+                 (check_state == "vanished" and
+                  rediscovery_mode in ("remove", "fixall", "refresh")))):
+                need_rediscovery = True
         else:
             infotexts.append(u"no %s services found" % title)
 
@@ -789,8 +812,6 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
     hostname = host_config.hostname
     something_changed = False
 
-    mode_table = {0: "new", 1: "remove", 2: "fixall", 3: "refresh"}
-
     console.verbose("%s%s%s:\n" % (tty.bold, hostname, tty.normal))
     host_flag_path = os.path.join(_get_autodiscovery_dir(), hostname)
 
@@ -799,15 +820,13 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
         console.verbose("  failed: discovery check disabled\n")
         return False
 
-    service_filter = _get_service_filter_func(params.get("inventory_rediscovery", {}))
+    service_filter = _get_service_filter_func(params)
 
     why_not = _may_rediscover(params, now_ts, oldest_queued)
     if not why_not:
-        redisc_params = params["inventory_rediscovery"]
-        console.verbose("  Doing discovery with mode '%s'...\n" % mode_table[redisc_params["mode"]])
         result, error = discover_on_host(config_cache,
                                          host_config,
-                                         mode_table[redisc_params["mode"]],
+                                         _get_rediscovery_mode(params),
                                          do_snmp_scan=params["inventory_check_do_scan"],
                                          use_caches=True,
                                          service_filter=service_filter)
@@ -836,7 +855,7 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
 
                 # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
                 #       the activation decision is based on the discovery configuration of the node
-                if redisc_params["activation"]:
+                if _get_rediscovery_parameters(params)["activation"]:
                     something_changed = True
 
                 # Enforce base code creating a new host config object after this change
@@ -871,8 +890,9 @@ def _may_rediscover(params, now_ts, oldest_queued):
     if "inventory_rediscovery" not in params:
         return "automatic discovery disabled for this host"
 
+    rediscovery_parameters = _get_rediscovery_parameters(params)
     now = time.gmtime(now_ts)
-    for start_hours_mins, end_hours_mins in params["inventory_rediscovery"]["excluded_time"]:
+    for start_hours_mins, end_hours_mins in rediscovery_parameters["excluded_time"]:
         start_time = time.struct_time(
             (now.tm_year, now.tm_mon, now.tm_mday, start_hours_mins[0], start_hours_mins[1], 0,
              now.tm_wday, now.tm_yday, now.tm_isdst))
@@ -883,7 +903,7 @@ def _may_rediscover(params, now_ts, oldest_queued):
         if start_time <= now <= end_time:
             return "we are currently in a disallowed time of day"
 
-    if now_ts - oldest_queued < params["inventory_rediscovery"]["group_time"]:
+    if now_ts - oldest_queued < rediscovery_parameters["group_time"]:
         return "last activation is too recent"
 
     return None

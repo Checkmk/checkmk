@@ -55,6 +55,21 @@ def test_discovered_service_eq():
     assert s1 in {s5}
 
 
+def test__get_rediscovery_mode():
+    allowed_modes = [
+        ("fixall", 2),
+        ("new", 0),
+        ("refresh", 3),
+        ("remove", 1),
+    ]
+
+    assert sorted(allowed_modes) == sorted(
+        (member.name, member.value) for member in discovery.RediscoveryMode)
+    assert discovery._get_rediscovery_mode({}) == ""
+    assert discovery._get_rediscovery_mode({"inventory_rediscovery": {}}) == ""
+    assert discovery._get_rediscovery_mode({"inventory_rediscovery": {"mode": "UNKNOWN"}}) == ""
+
+
 @pytest.mark.parametrize("parameters_rediscovery", [
     {},
     {
@@ -69,8 +84,8 @@ def test_discovered_service_eq():
     },
 ])
 def test__get_service_filter_func_no_lists(parameters_rediscovery):
-    assert discovery._get_service_filter_func(
-        parameters_rediscovery) is discovery._accept_all_services
+    params = {"inventory_rediscovery": parameters_rediscovery}
+    assert discovery._get_service_filter_func(params) is discovery._accept_all_services
 
 
 @pytest.mark.parametrize("whitelist, result", [
@@ -82,24 +97,29 @@ def test__get_service_filter_func_no_lists(parameters_rediscovery):
 def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
     monkeypatch.setattr(config, "service_description", lambda h, c, i: "Test Description")
 
-    service_filter = discovery._get_service_filter_func({"service_whitelist": whitelist})
+    params = {"inventory_rediscovery": {"service_whitelist": whitelist}}
+    service_filter = discovery._get_service_filter_func(params)
     assert service_filter is not None
     assert service_filter("hostname", "check_plugin_name", "item") is result
 
-    service_filter_inverse = discovery._get_service_filter_func({"service_blacklist": whitelist})
+    params = {"inventory_rediscovery": {"service_blacklist": whitelist}}
+    service_filter_inverse = discovery._get_service_filter_func(params)
     assert service_filter_inverse is not None
     assert service_filter_inverse("hostname", "check_plugin_name", "item") is not result
 
-    service_filter_both = discovery._get_service_filter_func({
-        "service_whitelist": whitelist,
-        "service_blacklist": whitelist,
-    })
+    params = {
+        "inventory_rediscovery": {
+            "service_whitelist": whitelist,
+            "service_blacklist": whitelist,
+        }
+    }
+    service_filter_both = discovery._get_service_filter_func(params)
     assert service_filter_both is not None
     assert service_filter_both("hostname", "check_plugin_name", "item") is False
 
 
 @pytest.mark.parametrize(
-    "params_rediscovery, result",
+    "parameters_rediscovery, result",
     [
         (
             {
@@ -134,10 +154,11 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
             },
             False),
     ])
-def test__get_service_filter_func(monkeypatch, params_rediscovery, result):
+def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
     monkeypatch.setattr(config, "service_description", lambda h, c, i: "Test Description")
 
-    service_filter = discovery._get_service_filter_func(params_rediscovery)
+    params = {"inventory_rediscovery": parameters_rediscovery}
+    service_filter = discovery._get_service_filter_func(params)
     assert service_filter is not None
     assert service_filter("hostname", "check_plugin_name", "item") is result
 
@@ -271,7 +292,8 @@ def test__get_new_services(monkeypatch, service_table, mode, parameters_rediscov
 
     counts = discovery._empty_counts()
 
-    service_filter = discovery._get_service_filter_func(parameters_rediscovery)
+    params = {"inventory_rediscovery": parameters_rediscovery}
+    service_filter = discovery._get_service_filter_func(params)
 
     new_item_names = [
         entry.item for entry in discovery._get_new_services(

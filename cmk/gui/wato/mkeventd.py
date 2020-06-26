@@ -731,6 +731,7 @@ def vs_mkeventd_rule(customer=None):
          RegExpUnicode(
              title=_("Match syslog application (tag)"),
              help=_("Regular expression for matching the syslog tag (case insenstive)"),
+             size=64,
              mode=RegExp.infix,
              case_sensitive=False,
          )),

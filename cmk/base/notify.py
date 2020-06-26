@@ -85,10 +85,10 @@ UUIDs = List[Tuple[float, str]]
 NotifyBulk = Tuple[str, float, Union[None, str, int], Union[None, str, int], int, UUIDs]
 NotifyBulks = List[NotifyBulk]
 
-PluginName = str
+NotificationPluginNameStr = str
 PluginContext = Dict[str, str]
 
-NotificationTableEntry = Dict[str, Union[PluginName, List]]
+NotificationTableEntry = Dict[str, Union[NotificationPluginNameStr, List]]
 NotificationTable = List[NotificationTableEntry]
 
 Event = str
@@ -99,7 +99,7 @@ Contacts = List[Contact]
 ConfigContacts = Dict[ContactName, Contact]
 ContactNames = FrozenSet[ContactName]  # Must be hasable
 
-NotificationKey = Tuple[ContactNames, PluginName]
+NotificationKey = Tuple[ContactNames, NotificationPluginNameStr]
 NotificationValue = Tuple[bool, NotifyPluginParams, Optional[NotifyBulkParameters]]
 Notifications = Dict[NotificationKey, NotificationValue]
 
@@ -672,7 +672,7 @@ def rbn_fallback_contacts():
 
 
 def rbn_finalize_plugin_parameters(hostname, plugin_name, rule_parameters):
-    # type: (HostName, PluginName, NotifyPluginParams) -> NotifyPluginParams
+    # type: (HostName, NotificationPluginNameStr, NotifyPluginParams) -> NotifyPluginParams
     # Right now we are only able to finalize notification plugins with dict parameters..
     if isinstance(rule_parameters, dict):
         host_config = config.get_config_cache().get_host_config(hostname)
@@ -1439,7 +1439,7 @@ def create_bulk_parameter_context(params):
 
 
 def path_to_notification_script(plugin_name):
-    # type: (PluginName) -> Optional[str]
+    # type: (NotificationPluginNameStr) -> Optional[str]
     # Call actual script without any arguments
     local_path = cmk.utils.paths.local_notifications_dir / plugin_name
     if local_path.exists():
@@ -1465,7 +1465,7 @@ def path_to_notification_script(plugin_name):
 #
 # Note: this function is *not* being called for bulk notification.
 def call_notification_script(plugin_name, plugin_context):
-    # type: (PluginName, PluginContext) -> int
+    # type: (NotificationPluginNameStr, PluginContext) -> int
     _log_to_history(
         notification_message(NotificationPluginName(plugin_name or "plain email"),
                              NotificationContext(plugin_context)))
@@ -1641,7 +1641,7 @@ def handle_spoolfile(spoolfile):
 
 
 def do_bulk_notify(plugin_name, params, plugin_context, bulk):
-    # type: (PluginName, NotifyPluginParams, PluginContext, NotifyBulkParameters) -> None
+    # type: (NotificationPluginNameStr, NotifyPluginParams, PluginContext, NotifyBulkParameters) -> None
     # First identify the bulk. The following elements identify it:
     # 1. contact
     # 2. plugin
@@ -1994,7 +1994,7 @@ def notify_bulk(dirname, uuids):
 
 
 def call_bulk_notification_script(plugin_name, context_lines):
-    # type: (PluginName, List[str]) -> Tuple[int, List[str]]
+    # type: (NotificationPluginNameStr, List[str]) -> Tuple[int, List[str]]
     path = path_to_notification_script(plugin_name)
     if not path:
         raise MKGeneralException("Notification plugin %s not found" % plugin_name)

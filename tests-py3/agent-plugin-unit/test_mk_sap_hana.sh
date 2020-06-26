@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-MK_SAP_HANA_PLUGIN_PATH="${DIR}/../../../../agents/plugins/mk_sap_hana"
+MK_SAP_HANA_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/mk_sap_hana"
 
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |
@@ -326,4 +325,4 @@ test_mk_sap_hana_skip_sql_queries() {
 }
 
 # shellcheck disable=SC1090
-. "${DIR}/../../../shunit2"
+. "$UNIT_SH_SHUNIT2"

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+MK_NETSTAT_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/netstat.linux"
 
 netstat(){
     echo '
@@ -24,7 +24,7 @@ udp6       0      0 :::5353                 :::*'
 
 test_netstat_plugin(){
 #    alias netstat='_sample_netstat'
-    response=$(. "${DIR}"/../../../../agents/plugins/netstat.linux)
+    response=$(. "$MK_NETSTAT_PLUGIN_PATH")
     assertEquals "convert LISTEN to LISTENING" "<<<netstat>>>
 tcp        0      0 127.0.0.1:5001          0.0.0.0:*               LISTENING
 tcp        0      0 10.1.1.2:59482          52.41.171.126:443       ESTABLISHED
@@ -38,4 +38,4 @@ udp6       0      0 :::5353                 :::*" "$response"
 
 }
 
-. "${DIR}"/../../../shunit2
+. "$UNIT_SH_SHUNIT2"

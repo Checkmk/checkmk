@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-MK_ORACLE_PLUGIN_PATH="${DIR}/../../../../agents/plugins/mk_oracle"
+MK_ORACLE_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/mk_oracle"
 
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |
@@ -383,4 +382,4 @@ mocked-sql_asm_diskgroup" "$MK_SYNC_SECTIONS_QUERY"
 #   ------------------------------------------------------------------------
 
 # shellcheck disable=SC1090
-. "${DIR}/../../../shunit2"
+. "$UNIT_SH_SHUNIT2"

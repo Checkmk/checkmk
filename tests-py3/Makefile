@@ -27,7 +27,8 @@ SHELL_FILES := \
 	test-composition-docker test-composition-docker-debug test-docker test-format-python3 \
 	test-format-shell test-gui-crawl test-gui-crawl-docker test-integration \
 	test-integration-docker test-integration-docker-debug test-mypy3 test-mypy3-raw \
-	test-packaging test-pipenv-deps test-pylint test-shellcheck test-unit test-unit-coverage-html
+	test-packaging test-pipenv-deps test-pylint test-shellcheck test-unit test-unit-coverage-html \
+	test-unit-sh
 
 clean:
 	rm -rf .mypy_cache
@@ -55,6 +56,7 @@ help:
 	@echo "test-shellcheck               - Run shellcheck tests"
 	@echo "test-unit                     - Run unit tests"
 	@echo "test-unit-coverage-html       - Create HTML coverage report for unit tests"
+	@echo "test-unit-sh		     - Run shell unit tests"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
@@ -181,3 +183,6 @@ test-unit-coverage-html:
 	    --cov-config=.coveragerc_unit \
 	    --no-cov-on-fail \
 	    -T unit unit
+
+test-unit-sh:
+	./sh_test_runner.sh

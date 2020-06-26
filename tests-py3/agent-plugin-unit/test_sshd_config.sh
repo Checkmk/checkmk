@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+MK_SSHD_CONFIG_PLUGIN_PATH="$UNIT_SH_PLUGINS_DIR/mk_sshd_config"
 
 oneTimeSetUp(){
     CONF_FILE="${SHUNIT_TMPDIR}/sshd_config"
@@ -19,7 +19,7 @@ EOF
 }
 
 test_sshd_config() {
-    . "${DIR}"/../../../../agents/plugins/mk_sshd_config > /dev/null
+    . "$MK_SSHD_CONFIG_PLUGIN_PATH" > /dev/null
     result=$(drop_comments_whitespace ${CONF_FILE})
     assertEquals "no stuff" "Hi test
 One First Unique
@@ -28,4 +28,4 @@ Two Second Repeated" "${result}"
 }
 
 
-. "${DIR}"/../../../shunit2
+. "$UNIT_SH_SHUNIT2"

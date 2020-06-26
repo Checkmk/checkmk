@@ -7,9 +7,7 @@
 #
 # Daniel Steinmann, Swisscom, April 2018
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-IBM_PLUGIN_PATH="${DIR}/../../../../agents/plugins/ibm_mq"
-SHUNIT2="${DIR}/../../../shunit2"
+IBM_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/ibm_mq"
 
 test_load_config() {
     MK_CONFDIR=${SHUNIT_TMPDIR}
@@ -124,4 +122,4 @@ runmqsc() {
 }
 
 
-. "$SHUNIT2"
+. "$UNIT_SH_SHUNIT2"

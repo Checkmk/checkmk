@@ -137,18 +137,19 @@ def _serve_host(host):
 
 
 def serialize_host(host):
+    base = constructors.object_href('host_config', host.ident())
+    members = constructors.DomainObjectMembers(base)
+    members.object_property(
+        name='folder_config',
+        value=constructors.object_href('folder_config',
+                                       host.folder().id()),
+        prop_format='string',
+    )
+
     return constructors.domain_object(
         domain_type='host_config',
         identifier=host.id(),
         title=host.alias(),
-        members={
-            'folder_config': constructors.object_property(
-                name='folder_config',
-                value=constructors.object_href('folder_config',
-                                               host.folder().id()),
-                prop_format='string',
-                base=constructors.object_href('host_config', host.ident()),
-            ),
-        },
+        members=members.to_dict(),
         extensions={},
     )

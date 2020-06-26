@@ -123,11 +123,6 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
     exit_spec = host_config.exit_code_spec()
 
-    # If check plugins are specified via command line,
-    # see which raw sections we may need
-    selected_raw_sections = (None if only_check_plugin_names is None else
-                             config.get_relevant_raw_sections(only_check_plugin_names))
-
     status = 0  # type: ServiceState
     infotexts = []  # type: List[ServiceDetails]
     long_infotexts = []  # type: List[ServiceAdditionalDetails]
@@ -141,10 +136,21 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
         item_state.load(hostname)
 
+        services = _get_filtered_services(
+            host_name=hostname,
+            belongs_to_cluster=len(config_cache.clusters_of(hostname)) > 0,
+            config_cache=config_cache,
+            only_check_plugins=only_check_plugin_names,
+        )
+
+        # see which raw sections we may need
+        selected_raw_sections = config.get_relevant_raw_sections(
+            PluginName(maincheckify(s.check_plugin_name)) for s in services)
+
         sources = data_sources.DataSources(host_config, hostname, ipaddress, selected_raw_sections)
 
         num_success, missing_sections = \
-            _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_names)
+            _do_all_checks_on_host(services, sources, host_config, ipaddress, only_check_plugin_names)
 
         if _submit_to_core:
             item_state.save(hostname)
@@ -237,24 +243,17 @@ def _check_missing_sections(missing_sections, exit_spec):
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
 def _do_all_checks_on_host(
+    services: List[Service],
     sources: data_sources.DataSources,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     only_check_plugins: Optional[Set[PluginName]] = None,
 ) -> Tuple[int, List[SectionName]]:
     hostname = host_config.hostname  # type: HostName
-    config_cache = config.get_config_cache()
 
     num_success, missing_sections = 0, set()
 
     check_api_utils.set_hostname(hostname)
-
-    services = _get_filtered_services(
-        host_name=hostname,
-        belongs_to_cluster=len(config_cache.clusters_of(hostname)) > 0,
-        config_cache=config_cache,
-        only_check_plugins=only_check_plugins,
-    )
 
     # Gather the data from the sources
     multi_host_sections = sources.get_host_sections()

@@ -31,7 +31,7 @@ def test_agent_output(capsys):
     )
     main(["--hostname", HOST, "--path", "basic-auth/%s/%s" % AUTH, "-u", "%s:%s" % AUTH])
     assert capsys.readouterr() == (
-        '<<<cisco_prime_connections:sep(0)>>>\n{"authenticated": true, "user": "user"}\n',
+        '<<<cisco_prime_wifi_connections:sep(0)>>>\n{"authenticated": true, "user": "user"}\n',
         '',
     )
 

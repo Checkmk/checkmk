@@ -92,7 +92,7 @@ def write_section_from_get_request(argv):
             args.path,
         )
         logging.info("fetch data from url=%r", url)
-        print("<<<cisco_prime_connections:sep(0)>>>\n%s" % fetch_json_data(url, args))
+        print("<<<cisco_prime_wifi_connections:sep(0)>>>\n%s" % fetch_json_data(url, args))
 
     except Exception as exc:  # pylint: disable=broad-except
         if args.debug:

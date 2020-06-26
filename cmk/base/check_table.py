@@ -170,12 +170,19 @@ class HostCheckTable:
                                                                 service.description) != hostname:
                     continue
 
-                cluster_params = config.compute_check_parameters(hostname,
-                                                                 service.check_plugin_name,
-                                                                 service.item, service.parameters)
-                cluster_service = Service(service.check_plugin_name, service.item,
-                                          service.description, cluster_params,
-                                          service.service_labels)
+                cluster_params = config.compute_check_parameters(
+                    hostname,
+                    service.check_plugin_name,
+                    service.item,
+                    service.parameters,
+                )
+                cluster_service = Service(
+                    service.check_plugin_name,
+                    service.item,
+                    service.description,
+                    cluster_params,
+                    service.service_labels,
+                )
                 check_table.update(self._handle_service(cluster_service))
         return check_table
 

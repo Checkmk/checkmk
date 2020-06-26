@@ -150,8 +150,13 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
         sources = data_sources.DataSources(host_config, hostname, ipaddress, selected_raw_sections)
 
-        num_success, missing_sections = \
-            _do_all_checks_on_host(services, sources, host_config, ipaddress, only_check_plugin_names)
+        num_success, missing_sections = _do_all_checks_on_host(
+            services,
+            sources,
+            host_config,
+            ipaddress,
+            only_check_plugin_names,
+        )
 
         if _submit_to_core:
             item_state.save(hostname)

@@ -18,8 +18,7 @@ import cmk.base.config as config
 import cmk.base.obsolete_output as out
 import cmk.base.crash_reporting
 from cmk.base.exceptions import MKAgentError, MKIPAddressLookupError
-from cmk.base.check_utils import CheckPluginNameStr
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module

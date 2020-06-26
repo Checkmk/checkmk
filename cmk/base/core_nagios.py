@@ -21,13 +21,14 @@ from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
-    ServiceName,
-    HostName,
-    Item,
+    CheckPluginNameStr,
+    ContactgroupName,
     HostAddress,
     HostgroupName,
+    HostName,
+    Item,
     ServicegroupName,
-    ContactgroupName,
+    ServiceName,
 )
 
 import cmk.base.utils
@@ -37,8 +38,6 @@ import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.data_sources as data_sources
 import cmk.base.check_api_utils as check_api_utils
-from cmk.base.check_utils import (
-    CheckPluginNameStr,)
 from cmk.base.config import (
     ConfigCache,
     HostConfig,

@@ -16,11 +16,17 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckVariables, CheckPluginName
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    CheckPluginNameStr,
+    CheckVariables,
+    HostName,
+    Item,
+    ServiceName,
+)
 from cmk.utils.log import console
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
-from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
 from cmk.base.check_utils import ABCService, DiscoveredService, LegacyCheckParameters, Service
 
 ComputeCheckParameters = Callable[[HostName, CheckPluginNameStr, Item, LegacyCheckParameters],
@@ -62,8 +68,12 @@ class AutochecksManager:
                 check_plugin_name=service.check_plugin_name,
                 item=service.item,
                 description=service.description,
-                parameters=compute_check_parameters(hostname, service.check_plugin_name,
-                                                    service.item, service.parameters),
+                parameters=compute_check_parameters(
+                    hostname,
+                    service.check_plugin_name,
+                    service.item,
+                    service.parameters,
+                ),
                 service_labels=service.service_labels,
             ) for service in self._read_raw_autochecks(hostname, service_description,
                                                        get_check_variables)

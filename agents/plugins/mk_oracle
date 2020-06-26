@@ -2748,6 +2748,27 @@ do_testmode_custom_sql() {
     echo "------------------------------------------------------------------------"
 }
 
+fetch_custom_section_variable() {
+    local section_name=$1
+    local section_var=
+    local section_dummy=
+    if declare -p "$1_${ORACLE_SID^^}" > /dev/null 2>&1; then
+        section_dummy="$1_${ORACLE_SID^^}"
+        section_var=${!section_dummy}
+    else
+        if declare -p "$1_${ORACLE_SID,,}" > /dev/null 2>&1; then
+            section_dummy="$1_${ORACLE_SID,,}"
+            section_var=${!section_dummy}
+        else
+            section_var="${!section_name}"
+        fi
+    fi
+
+    echo "$section_var"
+}
+
+
+
 do_checks () {
     local sections=
     local asections=
@@ -2757,12 +2778,13 @@ do_checks () {
         local sections=${SYNC_ASM_SECTIONS}
         local asections=${ASYNC_ASM_SECTIONS}
     else
-        local sync_dummy="SYNC_SECTIONS_${ORACLE_SID}"
-        local SYNC_SECTIONS_SID=${!sync_dummy}
-        local async_dummy="ASYNC_SECTIONS_${ORACLE_SID}"
-        local ASYNC_SECTIONS_SID=${!async_dummy}
+        local SYNC_SECTIONS_SID=
+        local ASYNC_SECTIONS_SID=
         local do_sync_sections=
         local do_async_sections=
+
+        SYNC_SECTIONS_SID=$(fetch_custom_section_variable "SYNC_SECTIONS")
+        ASYNC_SECTIONS_SID=$(fetch_custom_section_variable "ASYNC_SECTIONS")
 
         if [ "$SYNC_SECTIONS_SID" ] && [ "$MK_ORA_SECTIONS" ]; then
             do_sync_sections=$(for section in $SYNC_SECTIONS_SID; do

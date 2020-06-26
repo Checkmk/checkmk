@@ -68,7 +68,7 @@ tearDown () {
     fi
 
     unset SYNC_SECTIONS ASYNC_SECTIONS SYNC_ASM_SECTIONS ASYNC_ASM_SECTIONS CACHE_MAXAGE OLRLOC
-    unset ONLY_SIDS SKIP_SIDS EXCLUDE_MySID EXCLUDE_OtherSID SYNC_SECTIONS_MySID ASYNC_SECTIONS_MySID
+    unset ONLY_SIDS SKIP_SIDS EXCLUDE_MYSID EXCLUDE_OtherSID SYNC_SECTIONS_MYSID ASYNC_SECTIONS_MYSID
     unset MK_SYNC_SECTIONS_QUERY MK_ASYNC_SECTIONS_QUERY
     unset ORACLE_SID MK_SID MK_ORA_SECTIONS
     unset custom_sqls_sections
@@ -138,29 +138,29 @@ EOF
 
     load_config
 
-    assertEquals "yes" "$(skip_sid "MySID")"
+    assertEquals "yes" "$(skip_sid "MYSID")"
 }
 
 
 test_mk_oracle_only_sids1 () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
-ONLY_SIDS="MySID YourSID HisSID HerSID"
+ONLY_SIDS="MYSID YourSID HisSID HerSID"
 EOF
 
     load_config
 
-    assertEquals "no" "$(skip_sid "MySID")"
+    assertEquals "no" "$(skip_sid "MYSID")"
 }
 
 
 test_mk_oracle_skip_sids0 () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
-SKIP_SIDS="MySID YourSID"
+SKIP_SIDS="MYSID YourSID"
 EOF
 
     load_config
 
-    assertEquals "yes" "$(skip_sid "MySID")"
+    assertEquals "yes" "$(skip_sid "MYSID")"
 }
 
 
@@ -171,18 +171,18 @@ EOF
 
     load_config
 
-    assertEquals "no" "$(skip_sid "MySID")"
+    assertEquals "no" "$(skip_sid "MYSID")"
 }
 
 
 test_mk_oracle_exclude_all0 () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
-EXCLUDE_MySID="ALL"
+EXCLUDE_MYSID="ALL"
 EOF
 
     load_config
 
-    assertEquals "yes" "$(skip_sid "MySID")"
+    assertEquals "yes" "$(skip_sid "MYSID")"
 }
 
 
@@ -193,20 +193,20 @@ EOF
 
     load_config
 
-    assertEquals "no" "$(skip_sid "MySID")"
+    assertEquals "no" "$(skip_sid "MYSID")"
 }
 
 
 test_mk_oracle_only_vs_skip () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
-ONLY_SIDS="MySID"
-SKIP_SIDS="MySID"
-EXCLUDE_MySID="ALL"
+ONLY_SIDS="MYSID"
+SKIP_SIDS="MYSID"
+EXCLUDE_MYSID="ALL"
 EOF
 
     load_config
 
-    assertEquals "no" "$(skip_sid "MySID")"
+    assertEquals "no" "$(skip_sid "MYSID")"
 }
 
 test_mk_oracle_load_config_confd () {
@@ -268,15 +268,15 @@ test_mk_oracle_do_checks_exclude_sections () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS="instance sessions logswitches"
 ASYNC_SECTIONS="tablespaces rman jobs"
-EXCLUDE_MySID="logswitches jobs"
+EXCLUDE_MYSID="logswitches jobs"
 EOF
 
     load_config
 
     # shellcheck disable=SC2034
-    ORACLE_SID="MySID"
+    ORACLE_SID="MYSID"
     # shellcheck disable=SC2034
-    MK_SID="MySID"
+    MK_SID="MYSID"
     do_checks
 
     assertEquals "mocked-sql_instance
@@ -290,14 +290,33 @@ test_mk_oracle_do_checks_sid_sections () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks"
 ASYNC_SECTIONS="tablespaces rman jobs resumable"
-SYNC_SECTIONS_MySID="instance sessions"
-ASYNC_SECTIONS_MySID="tablespaces rman"
+SYNC_SECTIONS_MYSID="instance sessions"
+ASYNC_SECTIONS_MYSID="tablespaces rman"
 EOF
 
     load_config
 
     # shellcheck disable=SC2034
-    ORACLE_SID="MySID"
+    ORACLE_SID="MYSID"
+    do_checks
+
+    assertEquals "mocked-sql_instance
+mocked-sql_sessions" "$MK_SYNC_SECTIONS_QUERY"
+    assertEquals "mocked-sql_tablespaces
+mocked-sql_rman" "$MK_ASYNC_SECTIONS_QUERY"
+}
+
+
+test_mk_oracle_case_insensitive_sync_section() {
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
+SYNC_SECTIONS_MYSID="instance sessions"
+ASYNC_SECTIONS_MYSID="tablespaces rman"
+EOF
+
+    load_config
+
+    # shellcheck disable=SC2034
+    ORACLE_SID="mysid"
     do_checks
 
     assertEquals "mocked-sql_instance
@@ -335,17 +354,17 @@ test_mk_oracle_do_checks_sid_sections_excluded () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks"
 ASYNC_SECTIONS="tablespaces rman jobs resumable"
-SYNC_SECTIONS_MySID="instance sessions undostat"
-ASYNC_SECTIONS_MySID="tablespaces rman jobs"
-EXCLUDE_MySID="sessions rman"
+SYNC_SECTIONS_MYSID="instance sessions undostat"
+ASYNC_SECTIONS_MYSID="tablespaces rman jobs"
+EXCLUDE_MYSID="sessions rman"
 EOF
 
     load_config
 
     # shellcheck disable=SC2034
-    ORACLE_SID="MySID"
+    ORACLE_SID="MYSID"
     # shellcheck disable=SC2034
-    MK_SID="MySID"
+    MK_SID="MYSID"
     do_checks
 
     assertEquals "mocked-sql_instance
@@ -365,9 +384,9 @@ EOF
     MK_ORA_SECTIONS="instance logswitches tablespaces"
     load_config
     # shellcheck disable=SC2034
-    ORACLE_SID="MySID"
+    ORACLE_SID="MYSID"
     # shellcheck disable=SC2034
-    MK_SID="MySID"
+    MK_SID="MYSID"
     do_checks
 
     assertEquals "mocked-sql_instance
@@ -379,8 +398,8 @@ mocked-sql_tablespaces" "$MK_SYNC_SECTIONS_QUERY"
 
 test_mk_oracle_do_checks_sid_sections_opt () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
-SYNC_SECTIONS_MySID="instance sessions logswitches undostat"
-ASYNC_SECTIONS_MySID="tablespaces rman jobs"
+SYNC_SECTIONS_MYSID="instance sessions logswitches undostat"
+ASYNC_SECTIONS_MYSID="tablespaces rman jobs"
 SQLS_SECTIONS="section1,section2,section3"
 EOF
 
@@ -389,9 +408,9 @@ EOF
     load_config
 
     # shellcheck disable=SC2034
-    ORACLE_SID="MySID"
+    ORACLE_SID="MYSID"
     # shellcheck disable=SC2034
-    MK_SID="MySID"
+    MK_SID="MYSID"
     do_checks
 
     assertEquals "mocked-sql_instance

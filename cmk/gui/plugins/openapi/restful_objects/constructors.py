@@ -233,6 +233,28 @@ def action_result(
     }
 
 
+class DomainObjectMembers:
+    def __init__(self, base):
+        self.base = base
+        self.members = {}
+
+    def object_property(
+        self,
+        name: str,
+        value: Any,
+        prop_format: PropertyFormat,
+        title: Optional[str] = None,
+        linkable=True,
+        links: Optional[List[LinkType]] = None,
+    ):
+        self.members[name] = object_property(name, value, prop_format, self.base, title, linkable,
+                                             links)
+        return self.members[name]
+
+    def to_dict(self):
+        return self.members
+
+
 def object_property(
         name,  # type: str
         value,  # type: Any

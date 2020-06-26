@@ -76,7 +76,8 @@ REQUIRED_ARGUMENTS = {
     'agent_splunk': ['HOSTNAME'],
     'agent_vsphere': ['HOSTNAME'],
     'agent_proxmox': ['HOSTNAME'],
-    'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST']
+    'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST'],
+    'agent_cisco_prime': ['--hostname', 'HOSTNAME', '--path', 'PATH'],
 }  # type: Dict[str, List[str]]
 
 

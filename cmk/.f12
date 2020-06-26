@@ -64,6 +64,7 @@ PYTHON3_PATHS=(
     special_agents/agent_vnx_quotas.py
     special_agents/agent_vsphere.py
     special_agents/agent_zerto.py
+    special_agents/agent_cisco_prime.py
     special_agents/utils.py
     update_rrd_fs_names.py
 )

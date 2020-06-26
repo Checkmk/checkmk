@@ -128,6 +128,59 @@ rulespec_registry.register(
     ))
 
 
+def _valuespec_special_agents_cisco_prime():
+    return Dictionary(
+        elements=[
+            ("path",
+             TextAscii(
+                 title=_("Path"),
+                 help="Part of the URL which specifies the service "
+                 "e.g. <b>api/json/users?p1=value1&p2=value2</b>",
+             )),
+            ("basicauth",
+             Tuple(
+                 title=_("BasicAuth settings (optional)"),
+                 help=_("The credentials for api calls with authentication."),
+                 elements=[
+                     TextAscii(title=_("Username"), allow_empty=False),
+                     PasswordFromStore(title=_("Password of the user"), allow_empty=False)
+                 ],
+             )),
+            ("port", Integer(title=_("Port"), default_value=8080)),
+            ("no-tls",
+             FixedValue(
+                 True,
+                 title=_("Don't use TLS/SSL/Https (unsecure)"),
+                 totext=_("TLS/SSL/Https disabled"),
+             )),
+            ("no-cert-check",
+             FixedValue(
+                 True,
+                 title=_("Disable SSL certificate validation"),
+                 totext=_("SSL certificate validation is disabled"),
+             )),
+            ("timeout",
+             Integer(
+                 title=_("Connect Timeout"),
+                 help=_("The network timeout in seconds"),
+                 default_value=60,
+                 minvalue=1,
+                 unit=_("seconds"),
+             )),
+        ],
+        required_keys=["path"],
+        title=_("Cisco Prime"),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:cisco_prime",
+        valuespec=_valuespec_special_agents_cisco_prime,
+    ))
+
+
 def _special_agents_kubernetes_transform(value):
     if 'infos' not in value:
         value['infos'] = ['nodes']

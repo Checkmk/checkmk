@@ -41,22 +41,10 @@ def load_all_checks():
     config.load_all_checks(check_api.get_check_api_context)
 
 
-@pytest.fixture(scope="module", name="snmp_scan_functions", autouse=True)
-def _get_snmp_scan_functions(_load_all_checks):
-    assert len(config.snmp_scan_functions) > 400  # sanity check
-    return config.snmp_scan_functions.copy()
-
-
 @pytest.fixture(scope="module", name="snmp_info", autouse=True)
 def _get_snmp_info(_load_all_checks):
     assert len(config.snmp_info) > 400  # sanity check
     return config.snmp_info.copy()
-
-
-@pytest.fixture(scope="module", name="check_info", autouse=True)
-def _get_check_info(_load_all_checks):
-    assert len(config.check_info) > 400  # sanity check
-    return config.check_info.copy()
 
 
 @pytest.fixture(scope="module", name="migrated_agent_sections", autouse=True)
@@ -79,7 +67,7 @@ def _get_check_variables(_load_all_checks):
     return set(config.get_check_variables())
 
 
-def test_management_board_interface_prefix(check_info):
+def test_management_board_interface_prefix(config_check_info):
     mgmt_criteria = (
         ("Name must start with 'mgmt_'", lambda k, c: k.startswith("mgmt_")),
         ("Description must start with 'Management Interface: '",
@@ -88,7 +76,7 @@ def test_management_board_interface_prefix(check_info):
     )
 
     management_checks = [(key, check)
-                         for key, check in check_info.items()
+                         for key, check in config_check_info.items()
                          if (check["service_description"] is not None and any(
                              test(key, check) for _, test in mgmt_criteria))]
 
@@ -98,7 +86,7 @@ def test_management_board_interface_prefix(check_info):
             assert test(key,
                         check), ("%s: Inconsistent management propertiers: %s" % (key, requirement))
 
-        host_check = check_info.get(key[5:])
+        host_check = config_check_info.get(key[5:])
         if host_check is None:
             continue
 
@@ -111,9 +99,9 @@ def test_management_board_interface_prefix(check_info):
             "%s: Inconsistent management propertiers: %s" % (key, requirement))
 
 
-def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent_sections,
+def test_create_section_plugin_from_legacy(config_check_info, snmp_info, migrated_agent_sections,
                                            migrated_snmp_sections):
-    for name, check_info_dict in check_info.items():
+    for name, check_info_dict in config_check_info.items():
         # only test main checks
         if name != section_name_of(name):
             continue
@@ -138,8 +126,8 @@ def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent
             assert original_parse_function.__name__ == section.parse_function.__name__
 
 
-def test_snmp_info_snmp_scan_functions_equal(snmp_info, snmp_scan_functions):
-    assert set(snmp_scan_functions) == set(snmp_info)
+def test_snmp_info_snmp_scan_functions_equal(snmp_info, config_snmp_scan_functions):
+    assert set(config_snmp_scan_functions) == set(snmp_info)
 
 
 def test_snmp_tree_translation(snmp_info):
@@ -150,8 +138,8 @@ def test_snmp_tree_translation(snmp_info):
         assert all(isinstance(tree, SNMPTree) for tree in new_trees)
 
 
-def test_scan_function_translation(snmp_scan_functions):
-    for name, scan_func in snmp_scan_functions.items():
+def test_scan_function_translation(config_snmp_scan_functions):
+    for name, scan_func in config_snmp_scan_functions.items():
         if name in (
                 # these are already migrated manually:
                 "ucd_mem",
@@ -190,16 +178,17 @@ def test_no_subcheck_with_snmp_keywords(snmp_info):
         assert name == section_name_of(name)
 
 
-def test_exception_required(check_info):
-    assert "apc_symmetra_temp" in check_info, (
+def test_exception_required(config_check_info):
+    assert "apc_symmetra_temp" in config_check_info, (
         "In cmk.base.config is an extra condition for 'apc_symmetra_temp'. "
         "If this test fails, you can remove those two lines along with this test.")
 
 
-def test_all_checks_migrated(check_info, migrated_checks):
+def test_all_checks_migrated(config_check_info, migrated_checks):
     migrated = set(str(c.name) for c in migrated_checks.values())
     # we don't expect pure section declarations anymore
-    true_checks = set(n.replace('.', '_') for n, i in check_info.items() if i['check_function'])
+    true_checks = set(
+        n.replace('.', '_') for n, i in config_check_info.items() if i['check_function'])
     # we know these fail:
     known_fails = set(name for type_, name in KNOWN_AUTO_MIGRATION_FAILURES if type_ == "check")
     unexpected = migrated & known_fails

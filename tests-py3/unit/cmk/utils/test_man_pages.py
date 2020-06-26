@@ -144,17 +144,14 @@ def _is_pure_section_declaration(check):
     return check.get('inventory_function') is None and check.get('check_function') is None
 
 
-def test_find_missing_manpages():
+def test_find_missing_manpages(config_check_info, config_active_check_info):
     all_check_manuals = man_pages.all_man_pages()
 
-    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-    import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
-    config.load_all_checks(check_api.get_check_api_context)
     checks_sorted = sorted([(name, entry)
-                            for (name, entry) in config.check_info.items()
+                            for (name, entry) in config_check_info.items()
                             if not _is_pure_section_declaration(entry)] +
                            [("check_" + name, entry)
-                            for (name, entry) in config.active_check_info.items()])
+                            for (name, entry) in config_active_check_info.items()])
     assert len(checks_sorted) > 1000
 
     for check_plugin_name, _check in checks_sorted:

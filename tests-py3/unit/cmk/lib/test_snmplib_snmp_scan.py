@@ -16,14 +16,9 @@ import cmk.snmplib.snmp_scan as snmp_scan
 from cmk.snmplib.snmp_scan import SNMPScanSection
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
 
-import cmk.base.check_api as check_api
 import cmk.base.config as config
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     create_detect_spec,)
-
-config.load_all_checks(check_api.get_check_api_context)
-
-SNMP_SCAN_FUNCTIONS = config.snmp_scan_functions.copy()
 
 
 @pytest.mark.parametrize(
@@ -131,13 +126,14 @@ SNMP_SCAN_FUNCTIONS = config.snmp_scan_functions.copy()
             False,
         ),
     ])
-def test_evaluate_snmp_detection(monkeypatch, name, oids_data, expected_result):
+def test_evaluate_snmp_detection(monkeypatch, config_snmp_scan_functions, name, oids_data,
+                                 expected_result):
     def oid_function(oid, _default=None, _name=None):
         return oids_data.get(oid)
 
     monkeypatch.setattr(snmp_modes, "get_single_oid", lambda oid, *a, **kw: oids_data.get(oid))
 
-    scan_function = SNMP_SCAN_FUNCTIONS[name]
+    scan_function = config_snmp_scan_functions[name]
     assert bool(scan_function(oid_function)) is expected_result
 
     converted_detect_spec = create_detect_spec(name, scan_function, [])

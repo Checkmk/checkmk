@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import socket
 import shutil
 import logging
@@ -16,6 +17,7 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
 from testlib import is_managed_repo, is_enterprise_repo
+from testlib.debug_utils import cmk_debug_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -105,3 +107,37 @@ def fixup_ip_lookup(monkeypatch):
         raise NotImplementedError()
 
     monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def config_load_all_checks():
+    # this is needed in cmk/base *and* checks/ :-(
+    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+    import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
+
+    config._initialize_data_structures()
+    assert config.check_info == {}
+
+    with cmk_debug_enabled():  # fail if a plugin can't be loaded
+        config.load_all_checks(check_api.get_check_api_context)
+
+    assert len(config.check_info) > 1000  # sanitiy check
+
+
+@pytest.fixture(scope="session", autouse=True)
+def config_check_info(config_load_all_checks):
+    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+    return copy.deepcopy(config.check_info)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def config_active_check_info(config_load_all_checks):
+    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+    return copy.deepcopy(config.active_check_info)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def config_snmp_scan_functions(config_load_all_checks):
+    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+    assert len(config.snmp_scan_functions) > 400  # sanity check
+    return copy.deepcopy(config.snmp_scan_functions)

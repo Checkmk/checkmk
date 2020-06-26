@@ -29,7 +29,7 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize("datasetname", generictests.DATASET_NAMES)
-def test_dataset(check_manager, datasetname):
+def test_dataset(check_manager, datasetname, config_check_info):
     with testlib.on_time(1572247138, "CET"):
         dataset = import_module("generictests.datasets.%s" % datasetname)
-        generictests.run(check_manager, dataset)
+        generictests.run(config_check_info, check_manager, dataset)

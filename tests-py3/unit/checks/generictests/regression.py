@@ -193,7 +193,7 @@ def _get_out_filename(datasetfile, inplace):
     return out_name.replace('.py', '_regression.py')
 
 
-def test_main(check_manager, datasetfile, inplace):
+def test_main(config_check_info, check_manager, datasetfile, inplace):
     """Script to create test datasets.
 
     This is a script. But we need the py.test environment, so it comes in the
@@ -213,6 +213,6 @@ def test_main(check_manager, datasetfile, inplace):
 
     regression = WritableDataset(vars(input_data))
 
-    generictests.run(check_manager, regression, write=True)
+    generictests.run(config_check_info, check_manager, regression, write=True)
 
     regression.write(_get_out_filename(datasetfile, inplace))

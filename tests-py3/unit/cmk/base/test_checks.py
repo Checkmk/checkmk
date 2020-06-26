@@ -83,13 +83,6 @@ def test_imports_in_checks():
                                                                   "\n".join(with_from_imports))
 
 
-def test_load_checks():
-    config._initialize_data_structures()
-    assert config.check_info == {}
-    config.load_all_checks(check_api.get_check_api_context)
-    assert len(config.check_info) > 1000
-
-
 def test_is_snmp_check():
     config.load_all_checks(check_api.get_check_api_context)
     assert cmk.base.check_utils.is_snmp_check("xxx") is False

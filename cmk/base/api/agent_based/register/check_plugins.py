@@ -11,7 +11,7 @@ import itertools
 from inspect import signature
 from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
-from cmk.utils.type_defs import ParsedSectionName, PluginName, RuleSetName
+from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
 from cmk.base.api.agent_based.checking_types import (
     CheckPlugin,
@@ -56,7 +56,7 @@ def _requires_item(service_name):
 
 
 def _create_sections(sections, plugin_name):
-    # type: (Optional[List[str]], PluginName) -> List[ParsedSectionName]
+    # type: (Optional[List[str]], CheckPluginName) -> List[ParsedSectionName]
     if sections is None:
         return [ParsedSectionName(str(plugin_name))]
     if not isinstance(sections, list):
@@ -200,7 +200,7 @@ def create_check_plugin(
         check_default_parameters=None,  # type: Optional[Dict]
         check_ruleset_name=None,  # type: Optional[str]
         cluster_check_function=None,  # type:  Optional[Callable]
-        forbidden_names,  # type: List[PluginName]
+        forbidden_names,  # type: List[CheckPluginName]
 ):
     # type: (...) -> CheckPlugin
     """Return an CheckPlugin object after validating and converting the arguments one by one
@@ -208,7 +208,7 @@ def create_check_plugin(
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    plugin_name = PluginName(name, forbidden_names)
+    plugin_name = CheckPluginName(name, forbidden_names)
 
     subscribed_sections = _create_sections(sections, plugin_name)
 
@@ -284,7 +284,7 @@ def create_check_plugin(
 
 def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
     return CheckPlugin(
-        PluginName("%s%s" % (MANAGEMENT_NAME_PREFIX, original_plugin.name)),
+        CheckPluginName("%s%s" % (MANAGEMENT_NAME_PREFIX, original_plugin.name)),
         original_plugin.sections,
         "%s%s" % (MANAGEMENT_DESCR_PREFIX, original_plugin.service_name),
         original_plugin.discovery_function,
@@ -297,5 +297,5 @@ def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
     )
 
 
-def is_management_name(plugin_name: Union[PluginName, str]) -> bool:
+def is_management_name(plugin_name: Union[CheckPluginName, str]) -> bool:
     return str(plugin_name).startswith(MANAGEMENT_NAME_PREFIX)

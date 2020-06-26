@@ -70,7 +70,7 @@ from cmk.utils.type_defs import (
     LabelSources,
     Ruleset,
     RulesetName,
-    PluginName,
+    CheckPluginName,
     SectionName,
     ServicegroupName,
     ServiceName,
@@ -983,9 +983,9 @@ _old_service_descriptions = {
 
 
 def service_description(hostname, check_plugin_name, item):
-    # type: (HostName, Union[CheckPluginNameStr, PluginName], Item) -> ServiceName
+    # type: (HostName, Union[CheckPluginNameStr, CheckPluginName], Item) -> ServiceName
     # TODO (mo): CMK-4576 bring this to the new API
-    if isinstance(check_plugin_name, PluginName):
+    if isinstance(check_plugin_name, CheckPluginName):
         check_plugin_name = resolve_legacy_name(check_plugin_name)
 
     if check_plugin_name not in check_info:
@@ -1084,12 +1084,12 @@ def get_final_service_description(hostname, description):
 
 def service_ignored(
         hostname,  # type: HostName
-        check_plugin_name,  # type: Optional[Union[CheckPluginNameStr, PluginName]]
+        check_plugin_name,  # type: Optional[Union[CheckPluginNameStr, CheckPluginName]]
         description,  # type: Optional[ServiceName]
 ):
     # type: (...) -> bool
-    # TODO (mo): CMK-4573 Clean this up, once a PluginName instance can be in ignored_checktypes
-    if isinstance(check_plugin_name, PluginName):
+    # TODO (mo): CMK-4573 Clean this up, once a CheckPluginName instance can be in ignored_checktypes
+    if isinstance(check_plugin_name, CheckPluginName):
         check_plugin_name = resolve_legacy_name(check_plugin_name)
 
     if check_plugin_name and check_plugin_name in ignored_checktypes:
@@ -1308,13 +1308,13 @@ def get_registered_section_plugin(section_name):
 
 
 def get_registered_check_plugin(plugin_name):
-    # type: (PluginName) -> Optional[CheckPlugin]
+    # type: (CheckPluginName) -> Optional[CheckPlugin]
     plugin = registered_check_plugins.get(plugin_name)
     if plugin is not None or not is_management_name(plugin_name):
         return plugin
 
     # create management board plugin on the fly:
-    non_mgmt_name = PluginName(str(plugin_name)[len(MANAGEMENT_NAME_PREFIX):])
+    non_mgmt_name = CheckPluginName(str(plugin_name)[len(MANAGEMENT_NAME_PREFIX):])
     non_mgmt_plugin = registered_check_plugins.get(non_mgmt_name)
     if non_mgmt_plugin is not None:
         return management_plugin_factory(non_mgmt_plugin)
@@ -1323,7 +1323,7 @@ def get_registered_check_plugin(plugin_name):
 
 
 def get_relevant_raw_sections(check_plugin_names):
-    # type: (Iterable[PluginName]) -> Dict[SectionName, SectionPlugin]
+    # type: (Iterable[CheckPluginName]) -> Dict[SectionName, SectionPlugin]
     """return the raw sections potentially relevant for the given check plugins"""
     parsed_section_names = set()  # type: Set[ParsedSectionName]
     for check_plugin_name in check_plugin_names:
@@ -1446,7 +1446,7 @@ special_agent_info = {}  # type: Dict[str, SpecialAgentInfoFunction]
 # with the correspondig name, e.g. register.agent_section -> registered_agent_sections
 registered_agent_sections = {}  # type: Dict[SectionName, AgentSectionPlugin]
 registered_snmp_sections = {}  # type: Dict[SectionName, SNMPSectionPlugin]
-registered_check_plugins = {}  # type: Dict[PluginName, CheckPlugin]
+registered_check_plugins = {}  # type: Dict[CheckPluginName, CheckPlugin]
 
 # Names of variables registered in the check files. This is used to
 # keep track of the variables needed by each file. Those variables are then
@@ -2180,18 +2180,18 @@ def discoverable_snmp_checks():
 
 
 def compute_check_parameters(host, checktype, item, params):
-    # type: (HostName, Union[CheckPluginNameStr, PluginName], Item, LegacyCheckParameters) -> Optional[LegacyCheckParameters]
+    # type: (HostName, Union[CheckPluginNameStr, CheckPluginName], Item, LegacyCheckParameters) -> Optional[LegacyCheckParameters]
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
     # TODO (mo): The signature of this function has been broadened to accept CheckPluginNameStr
-    # *or* PluginName alternatively (to ease migration).
-    # Once we're ready, it should only accept the PluginName (or even the plugin itself, we will
+    # *or* CheckPluginName alternatively (to ease migration).
+    # Once we're ready, it should only accept the CheckPluginName (or even the plugin itself, we will
     # see)
-    if isinstance(checktype, PluginName):
+    if isinstance(checktype, CheckPluginName):
         plugin_name = checktype
     else:
-        plugin_name = PluginName(maincheckify(checktype))
+        plugin_name = CheckPluginName(maincheckify(checktype))
 
     plugin = get_registered_check_plugin(plugin_name)
     if plugin is None:  # handle vanished check plugin

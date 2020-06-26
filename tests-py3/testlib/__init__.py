@@ -332,7 +332,7 @@ class Check(BaseCheck):
         self.info = config.check_info[self.name]
         self.context = config._check_contexts[self.name]
         self._migrated_plugin = config.get_registered_check_plugin(
-            config.PluginName(self.name.replace('.', '_')))
+            config.CheckPluginName(self.name.replace('.', '_')))
 
     def default_parameters(self):
         if self._migrated_plugin:

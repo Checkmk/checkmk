@@ -9,7 +9,7 @@ from typing import Any, Iterator, MutableMapping, Optional
 from contextlib import contextmanager
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.item_state import (
     set_item_state,  # for __setitem__
@@ -86,7 +86,7 @@ def get_value_store():
 
 @contextmanager
 def context(plugin_name, item):
-    # type: (PluginName, Optional[str]) -> Iterator[None]
+    # type: (CheckPluginName, Optional[str]) -> Iterator[None]
     """Set item state prefix"""
     saved_prefix = get_item_state_prefix()
     set_item_state_prefix(str(plugin_name), item)

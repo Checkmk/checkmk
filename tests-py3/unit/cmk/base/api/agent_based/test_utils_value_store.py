@@ -9,7 +9,7 @@ from typing import Dict, Tuple
 import pytest  # type: ignore[import]
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.api.agent_based.value_store as value_store
 from cmk.base.api.agent_based.utils import GetRateError, get_rate, get_average
@@ -24,7 +24,7 @@ def test_value_store():
 
     saved_prefix = value_store.get_item_state_prefix()
 
-    with value_store.context(PluginName("plugin"), "item"):
+    with value_store.context(CheckPluginName("plugin"), "item"):
 
         assert len(store) == 0
         assert not store

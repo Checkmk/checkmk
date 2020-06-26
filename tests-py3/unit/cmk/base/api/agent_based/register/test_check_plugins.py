@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import ParsedSectionName, PluginName
+from cmk.utils.type_defs import ParsedSectionName, CheckPluginName
 
 import cmk.base.api.agent_based.register.check_plugins as check_plugins
 
@@ -87,7 +87,7 @@ def test_create_sections_invalid(sections):
 
 
 @pytest.mark.parametrize("sections, plugin_name, expected", [
-    (None, PluginName("Foo"), [ParsedSectionName("Foo")]),
+    (None, CheckPluginName("Foo"), [ParsedSectionName("Foo")]),
     (
         ["Jim", "Jill"],
         None,
@@ -99,25 +99,27 @@ def test_create_sections(sections, plugin_name, expected):
 
 
 @pytest.mark.parametrize("function, has_item, has_params, sections, raises", [
-    (dummy_function, False, False, [PluginName("name")], None),
-    (dummy_function, False, True, [PluginName("name")], TypeError),
-    (dummy_function, True, False, [PluginName("name")], TypeError),
-    (dummy_function, True, True, [PluginName("name")], TypeError),
-    (dummy_function_i, False, False, [PluginName("name")], TypeError),
-    (dummy_function_i, False, True, [PluginName("name")], TypeError),
-    (dummy_function_i, True, False, [PluginName("name")], None),
-    (dummy_function_i, True, True, [PluginName("name")], TypeError),
-    (dummy_function_ip, False, False, [PluginName("name")], TypeError),
-    (dummy_function_ip, False, True, [PluginName("name")], TypeError),
-    (dummy_function_ip, True, False, [PluginName("name")], TypeError),
-    (dummy_function_ip, True, True, [PluginName("name")], TypeError),
-    (dummy_function_ips, False, False, [PluginName("name")], TypeError),
-    (dummy_function_ips, False, True, [PluginName("name")], TypeError),
-    (dummy_function_ips, True, False, [PluginName("name")], TypeError),
-    (dummy_function_ips, True, True, [PluginName("name")], None),
-    (dummy_function_jj, False, False, [PluginName("name")], TypeError),
-    (dummy_function_jj, False, False, [PluginName("jill"), PluginName("jim")], TypeError),
-    (dummy_function_jj, False, False, [PluginName("jim"), PluginName("jill")], None),
+    (dummy_function, False, False, [CheckPluginName("name")], None),
+    (dummy_function, False, True, [CheckPluginName("name")], TypeError),
+    (dummy_function, True, False, [CheckPluginName("name")], TypeError),
+    (dummy_function, True, True, [CheckPluginName("name")], TypeError),
+    (dummy_function_i, False, False, [CheckPluginName("name")], TypeError),
+    (dummy_function_i, False, True, [CheckPluginName("name")], TypeError),
+    (dummy_function_i, True, False, [CheckPluginName("name")], None),
+    (dummy_function_i, True, True, [CheckPluginName("name")], TypeError),
+    (dummy_function_ip, False, False, [CheckPluginName("name")], TypeError),
+    (dummy_function_ip, False, True, [CheckPluginName("name")], TypeError),
+    (dummy_function_ip, True, False, [CheckPluginName("name")], TypeError),
+    (dummy_function_ip, True, True, [CheckPluginName("name")], TypeError),
+    (dummy_function_ips, False, False, [CheckPluginName("name")], TypeError),
+    (dummy_function_ips, False, True, [CheckPluginName("name")], TypeError),
+    (dummy_function_ips, True, False, [CheckPluginName("name")], TypeError),
+    (dummy_function_ips, True, True, [CheckPluginName("name")], None),
+    (dummy_function_jj, False, False, [CheckPluginName("name")], TypeError),
+    (dummy_function_jj, False, False, [CheckPluginName("jill"),
+                                       CheckPluginName("jim")], TypeError),
+    (dummy_function_jj, False, False, [CheckPluginName("jim"),
+                                       CheckPluginName("jill")], None),
 ])
 def test_validate_function_args(function, has_item, has_params, sections, raises):
     if raises is None:
@@ -155,7 +157,7 @@ def test_create_check_plugin_mgmt_reserved():
 def test_create_check_plugin():
     plugin = check_plugins.create_check_plugin(**MINIMAL_CREATION_KWARGS)
 
-    assert plugin.name == PluginName(MINIMAL_CREATION_KWARGS["name"])
+    assert plugin.name == CheckPluginName(MINIMAL_CREATION_KWARGS["name"])
     assert plugin.sections == [ParsedSectionName(MINIMAL_CREATION_KWARGS["name"])]
     assert plugin.service_name == MINIMAL_CREATION_KWARGS["service_name"]
     assert plugin.discovery_function.__name__ == MINIMAL_CREATION_KWARGS[

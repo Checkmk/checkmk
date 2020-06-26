@@ -20,7 +20,7 @@ import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
-from cmk.utils.type_defs import HostAddress, HostName, PluginName, SectionName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, CheckPluginName, SectionName, SourceType
 from cmk.utils.log import console
 
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
@@ -259,7 +259,7 @@ class DataSources:
                                                                       filter_mode="only_clustered")
                 node_needed_raw_sections = config.get_relevant_raw_sections(
                     # TODO (mo): centralize maincheckify: CMK-4295
-                    PluginName(maincheckify(n)) for n in node_check_names)
+                    CheckPluginName(maincheckify(n)) for n in node_check_names)
 
                 node_data_sources = DataSources(
                     self._host_config,

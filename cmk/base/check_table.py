@@ -8,7 +8,7 @@
 from typing import Callable, cast, Dict, Iterator, List, Optional, Set, Tuple
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 
@@ -152,7 +152,7 @@ class HostCheckTable:
     def _is_checkname_valid(self, checkname):
         # type: (CheckPluginNameStr) -> bool
         # TODO (mo): centralize maincheckify: CMK-4295
-        plugin_name = PluginName(maincheckify(checkname))
+        plugin_name = CheckPluginName(maincheckify(checkname))
         return config.get_registered_check_plugin(plugin_name) is not None
 
     def _get_clustered_services(self, hostname, skip_autochecks):

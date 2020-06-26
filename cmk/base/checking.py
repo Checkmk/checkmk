@@ -43,7 +43,7 @@ from cmk.utils.type_defs import (
     HostName,
     Item,
     Metric,
-    PluginName,
+    CheckPluginName,
     SectionName,
     ServiceAdditionalDetails,
     ServiceCheckResult,
@@ -114,7 +114,7 @@ CHECK_NOT_IMPLEMENTED = (3, 'Check plugin not implemented', [])  # type: Service
 
 @cmk.base.decorator.handle_check_mk_check_result("mk", "Check_MK")
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
-    # type: (HostName, Optional[HostAddress], Optional[Set[PluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]
+    # type: (HostName, Optional[HostAddress], Optional[Set[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]
     cpu_tracking.start("busy")
     console.verbose("Check_MK version %s\n", cmk_version.__version__)
 
@@ -145,7 +145,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
         # see which raw sections we may need
         selected_raw_sections = config.get_relevant_raw_sections(
-            PluginName(maincheckify(s.check_plugin_name)) for s in services)
+            CheckPluginName(maincheckify(s.check_plugin_name)) for s in services)
 
         sources = data_sources.DataSources(host_config, hostname, ipaddress, selected_raw_sections)
 
@@ -247,7 +247,7 @@ def _do_all_checks_on_host(
     sources: data_sources.DataSources,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    only_check_plugins: Optional[Set[PluginName]] = None,
+    only_check_plugins: Optional[Set[CheckPluginName]] = None,
 ) -> Tuple[int, List[SectionName]]:
     hostname = host_config.hostname  # type: HostName
 
@@ -279,7 +279,7 @@ def _get_filtered_services(
     host_name: HostName,
     belongs_to_cluster: bool,
     config_cache: config.ConfigCache,
-    only_check_plugins: Optional[Set[PluginName]] = None,
+    only_check_plugins: Optional[Set[CheckPluginName]] = None,
 ) -> List[Service]:
 
     services = check_table.get_precompiled_check_table(
@@ -292,9 +292,9 @@ def _get_filtered_services(
     # list of checks defined by the check table.
     if only_check_plugins is None:
         only_check_plugins = {
-            # TODO (mo): make service.check_plugin_name a PluginName instance and thus
+            # TODO (mo): make service.check_plugin_name a CheckPluginName instance and thus
             # TODO (mo): centralize maincheckify: CMK-4295
-            PluginName(maincheckify(service.check_plugin_name)) for service in services
+            CheckPluginName(maincheckify(service.check_plugin_name)) for service in services
         }
 
     def _is_not_of_host(service):
@@ -306,14 +306,14 @@ def _get_filtered_services(
             plugin for plugin in only_check_plugins if all(
                 _is_not_of_host(service) for service in services
                 # TODO (mo): centralize maincheckify: CMK-4295
-                if PluginName(maincheckify(service.check_plugin_name)) == plugin)
+                if CheckPluginName(maincheckify(service.check_plugin_name)) == plugin)
         }
         only_check_plugins -= removed_plugins
 
     return [
         service for service in services if (
             # TODO (mo): centralize maincheckify: CMK-4295
-            PluginName(maincheckify(service.check_plugin_name)) in only_check_plugins and
+            CheckPluginName(maincheckify(service.check_plugin_name)) in only_check_plugins and
             not (belongs_to_cluster and _is_not_of_host(service)) and
             not service_outside_check_period(config_cache, host_name, service.description))
     ]
@@ -338,7 +338,7 @@ def service_outside_check_period(config_cache, hostname, description):
 def execute_check(multi_host_sections, host_config, ipaddress, service):
     # type: (data_sources.MultiHostSections, config.HostConfig, Optional[HostAddress], Service) -> bool
     # TODO (mo): centralize maincheckify: CMK-4295
-    plugin_name = PluginName(maincheckify(service.check_plugin_name))
+    plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
     plugin = config.get_registered_check_plugin(plugin_name)
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and

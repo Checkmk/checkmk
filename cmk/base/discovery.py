@@ -45,7 +45,7 @@ from cmk.utils.type_defs import (
     HostState,
     Item,
     Metric,
-    PluginName,
+    CheckPluginName,
     RulesetName,
     SectionName,
     SourceType,
@@ -211,7 +211,7 @@ def _get_rediscovery_mode(params: Dict) -> str:
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
 def do_discovery(arg_hostnames, check_plugin_names, arg_only_new):
-    # type: (Set[HostName], Optional[Set[PluginName]], bool) -> None
+    # type: (Set[HostName], Optional[Set[CheckPluginName]], bool) -> None
     config_cache = config.get_config_cache()
     use_caches = not arg_hostnames or data_sources.abstract.DataSource.get_may_use_cache_file()
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
@@ -286,7 +286,7 @@ def _do_discovery_for(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     multi_host_sections: data_sources.MultiHostSections,
-    check_plugin_names: Optional[Set[PluginName]],
+    check_plugin_names: Optional[Set[CheckPluginName]],
     only_new: bool,
     on_error: str,
 ) -> None:
@@ -319,7 +319,7 @@ def _do_discovery_for(
     # Take over old items if -I is selected or if -II is selected with
     # --checks= and the check type is not one of the listed ones
     for existing_service in existing_services:
-        service_plugin_name = PluginName(maincheckify(existing_service.check_plugin_name))
+        service_plugin_name = CheckPluginName(maincheckify(existing_service.check_plugin_name))
         if only_new or (check_plugin_names and service_plugin_name not in check_plugin_names):
             new_services.append(existing_service)
 
@@ -991,7 +991,7 @@ def _discover_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: data_sources.MultiHostSections,
     on_error: str,
-    check_plugin_whitelist: Optional[Set[PluginName]],
+    check_plugin_whitelist: Optional[Set[CheckPluginName]],
 ) -> List[Service]:
     # Set host name for host_name()-function (part of the Check API)
     # (used e.g. by ps-discovery)
@@ -1073,7 +1073,7 @@ def _execute_discovery(
     multi_host_sections: data_sources.MultiHostSections,
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    check_plugin_name: PluginName,
+    check_plugin_name: CheckPluginName,
     on_error: str,
 ) -> Iterator[Service]:
     # Skip this check type if is ignored for that host
@@ -1119,7 +1119,7 @@ def _execute_discovery(
 
 def _enriched_discovered_services(
         hostname,  # type: HostName
-        check_plugin_name,  # type: PluginName
+        check_plugin_name,  # type: CheckPluginName
         plugins_services,  # type: Iterable[checking_types.Service]
 ):
     # type: (...) -> Generator[Service, None, None]
@@ -1380,7 +1380,7 @@ def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
     table = []  # type: CheckPreviewTable
     for check_source, service in services.values():
         # TODO (mo): centralize maincheckify: CMK-4295
-        plugin_name = PluginName(maincheckify(service.check_plugin_name))
+        plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
         plugin = config.get_registered_check_plugin(plugin_name)
         params = _preview_params(host_name, service, plugin, check_source)
 

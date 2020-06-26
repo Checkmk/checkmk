@@ -6,52 +6,56 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import PluginName, SectionName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 
 @pytest.mark.parametrize("str_name",
                          ['', 23] + list("\"'^°!²³§$½¬%&/{([])}=?ß\\'`*+~#-.:,;ÜÖÄüöä<>|"))
 def test_invalid_plugin_name(str_name):
     with pytest.raises((TypeError, ValueError)):
-        PluginName(str_name)
+        CheckPluginName(str_name)
 
 
 def test_forbidden_plugin_name():
     with pytest.raises(ValueError):
-        PluginName("Foo", forbidden_names=[PluginName("Foo"), PluginName("Bar")])
+        CheckPluginName("Foo", forbidden_names=[CheckPluginName("Foo"), CheckPluginName("Bar")])
 
 
 def test_plugin_name_repr():
-    assert repr(PluginName("Margo")) == "PluginName('Margo')"
+    assert repr(CheckPluginName("Margo")) == "CheckPluginName('Margo')"
 
 
 def test_plugin_name_str():
-    assert str(PluginName("Margo")) == 'Margo'
+    assert str(CheckPluginName("Margo")) == 'Margo'
 
 
 def test_plugin_name_equal():
-    assert PluginName("Stuart") == PluginName("Stuart")
+    assert CheckPluginName("Stuart") == CheckPluginName("Stuart")
     with pytest.raises(TypeError):
-        _ = PluginName("Stuart") == "Stuart"
+        _ = CheckPluginName("Stuart") == "Stuart"
 
 
 def test_plugin_name_as_key():
     plugin_dict = {
-        PluginName("Stuart"): None,
+        CheckPluginName("Stuart"): None,
     }
-    assert PluginName("Stuart") in plugin_dict
+    assert CheckPluginName("Stuart") in plugin_dict
 
 
 def test_plugin_name_sort():
     plugin_dict = {
-        PluginName("Stuart"): None,
-        PluginName("Bob"): None,
-        PluginName("Dave"): None,
+        CheckPluginName("Stuart"): None,
+        CheckPluginName("Bob"): None,
+        CheckPluginName("Dave"): None,
     }
 
-    assert sorted(plugin_dict) == [PluginName("Bob"), PluginName("Dave"), PluginName("Stuart")]
+    assert sorted(plugin_dict) == [
+        CheckPluginName("Bob"),
+        CheckPluginName("Dave"),
+        CheckPluginName("Stuart")
+    ]
 
 
 def test_cross_class_comparison_fails():
     with pytest.raises(TypeError):
-        _ = PluginName("foo") == SectionName("foo")
+        _ = CheckPluginName("foo") == SectionName("foo")

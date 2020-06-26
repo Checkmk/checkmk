@@ -14,7 +14,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     ParsedSectionName,
-    PluginName,
+    CheckPluginName,
     ServiceName,
     SourceType,
 )
@@ -550,7 +550,7 @@ class MultiHostSections:
             item_state.set_item_state_prefix(*orig_item_state_prefix)
 
     def get_check_plugin_candidates(self):
-        # type: () -> Set[PluginName]
+        # type: () -> Set[CheckPluginName]
         """Return names of check plugins that this multi_host_section may contain data for.
 
         Given this mutli_host_section, there is no point in trying to discover any check plugins

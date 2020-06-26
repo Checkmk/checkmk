@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 import functools
 import itertools
 
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base import item_state
 from cmk.base.api.agent_based.checking_types import (
@@ -247,7 +247,7 @@ def _create_cluster_legacy_mode_from_hell(check_function):
 
 
 def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidden_names):
-    # type: (str, Dict[str, Any], List[PluginName]) -> CheckPlugin
+    # type: (str, Dict[str, Any], List[CheckPluginName]) -> CheckPlugin
 
     if check_info_dict.get('extra_sections'):
         raise NotImplementedError("[%s]: cannot auto-migrate plugins with extra sections" %
@@ -308,7 +308,7 @@ def maincheckify(subcheck_name):
 
 @functools.lru_cache()
 def resolve_legacy_name(plugin_name):
-    # type: (PluginName) -> str
+    # type: (CheckPluginName) -> str
     """Get legacy plugin name back"""
     # TODO (mo): remove this with CMK-4295. Function is only needed during transition
     for legacy_name in config.check_info:

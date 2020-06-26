@@ -155,18 +155,8 @@ class RuleSetName(ABCPluginName):
         }
 
 
-# TODO (mo):
-# At some point, we should have as different classes at least:
-#   * SectionName
-#   * ParsedSectionName
-#   * CheckPluginNameStr
-#   * InventoryPluginName
-#   * RulesetName
-# The relation between the different plugins should be specified in the
-# plugin definitions, s.t. things like 'PluginName(str(section_name))'
-# should never be needed.
 @functools.total_ordering
-class PluginName(ABCPluginName):
+class CheckPluginName(ABCPluginName):
     @property
     def _legacy_naming_exceptions(self) -> Set[str]:
         return set()

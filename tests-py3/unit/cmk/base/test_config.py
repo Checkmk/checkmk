@@ -17,7 +17,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
-from cmk.utils.type_defs import PluginName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based import checking_types
 from cmk.base.caching import config_cache as _config_cache
@@ -1899,7 +1899,7 @@ def test_packed_config(pack_string):
 @pytest.fixture(name="test_plugin")
 def add_test_plugin_to_config():
     test_plugin = checking_types.CheckPlugin(
-        PluginName("check_unit_test"),
+        CheckPluginName("check_unit_test"),
         [],
         "Unit Test",
         None,  # type: ignore  # irrelevant for test
@@ -1921,9 +1921,10 @@ def add_test_plugin_to_config():
 def test_get_registered_check_plugins(test_plugin):
 
     assert config.get_registered_check_plugin(test_plugin.name) is test_plugin
-    assert config.get_registered_check_plugin(PluginName("mgmt_this_should_not_exists")) is None
+    assert config.get_registered_check_plugin(
+        CheckPluginName("mgmt_this_should_not_exists")) is None
 
-    mgmt_plugin = config.get_registered_check_plugin(PluginName("mgmt_%s" % test_plugin.name))
+    mgmt_plugin = config.get_registered_check_plugin(CheckPluginName("mgmt_%s" % test_plugin.name))
     assert mgmt_plugin is not None
     assert str(mgmt_plugin.name).startswith("mgmt_")
     assert mgmt_plugin.service_name.startswith("Management Interface: ")

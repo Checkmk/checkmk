@@ -26,7 +26,7 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostgroupName, HostName, PluginName, TagValue
+from cmk.utils.type_defs import HostAddress, HostgroupName, HostName, CheckPluginName, TagValue
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
@@ -1535,7 +1535,7 @@ modes.register(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-_ChecksOption = Optional[Set[PluginName]]
+_ChecksOption = Optional[Set[CheckPluginName]]
 
 
 def _convert_checks_argument(arg: str) -> _ChecksOption:
@@ -1544,7 +1544,7 @@ def _convert_checks_argument(arg: str) -> _ChecksOption:
         return None
     try:
         # kindly forgive empty strings
-        return {PluginName(maincheckify(n)) for n in arg.split(",") if n}
+        return {CheckPluginName(maincheckify(n)) for n in arg.split(",") if n}
     except ValueError as exc:
         raise MKBailOut("Error in --checks argument: %s" % exc)
 

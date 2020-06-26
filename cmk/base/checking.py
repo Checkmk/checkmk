@@ -249,47 +249,17 @@ def _do_all_checks_on_host(
 
     check_api_utils.set_hostname(hostname)
 
-    belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
-
-    services = check_table.get_precompiled_check_table(
-        hostname,
-        remove_duplicates=True,
-        filter_mode="include_clustered" if belongs_to_cluster else None,
+    services = _get_filtered_services(
+        host_name=hostname,
+        belongs_to_cluster=len(config_cache.clusters_of(hostname)) > 0,
+        config_cache=config_cache,
+        only_check_plugins=only_check_plugins,
     )
-
-    # When check types are specified via command line, enforce them. Otherwise use the
-    # list of checks defined by the check table.
-    if only_check_plugins is None:
-        only_check_plugins = {
-            # TODO (mo): make service.check_plugin_name a PluginName instance and thus
-            # TODO (mo): centralize maincheckify: CMK-4295
-            PluginName(maincheckify(service.check_plugin_name)) for service in services
-        }
 
     # Gather the data from the sources
     multi_host_sections = sources.get_host_sections()
 
-    def _is_not_of_host(service):
-        return hostname != config_cache.host_of_clustered_service(hostname, service.description)
-
-    # Filter out check types which are not used on the node
-    if belongs_to_cluster:
-        removed_plugins = {
-            plugin for plugin in only_check_plugins if all(
-                _is_not_of_host(service) for service in services
-                # TODO (mo): centralize maincheckify: CMK-4295
-                if PluginName(maincheckify(service.check_plugin_name)) == plugin)
-        }
-        only_check_plugins -= removed_plugins
-
     for service in services:
-        # TODO (mo): centralize maincheckify: CMK-4295
-        if PluginName(maincheckify(service.check_plugin_name)) not in only_check_plugins:
-            continue
-        if belongs_to_cluster and _is_not_of_host(service):
-            continue
-        if service_outside_check_period(config_cache, hostname, service.description):
-            continue
 
         success = execute_check(multi_host_sections, host_config, ipaddress, service)
         if success:
@@ -304,6 +274,50 @@ def _do_all_checks_on_host(
 
     missing_section_list = sorted(missing_sections)
     return num_success, missing_section_list
+
+
+def _get_filtered_services(
+    host_name: HostName,
+    belongs_to_cluster: bool,
+    config_cache: config.ConfigCache,
+    only_check_plugins: Optional[Set[PluginName]] = None,
+) -> List[Service]:
+
+    services = check_table.get_precompiled_check_table(
+        host_name,
+        remove_duplicates=True,
+        filter_mode="include_clustered" if belongs_to_cluster else None,
+    )
+
+    # When check types are specified via command line, enforce them. Otherwise use the
+    # list of checks defined by the check table.
+    if only_check_plugins is None:
+        only_check_plugins = {
+            # TODO (mo): make service.check_plugin_name a PluginName instance and thus
+            # TODO (mo): centralize maincheckify: CMK-4295
+            PluginName(maincheckify(service.check_plugin_name)) for service in services
+        }
+
+    def _is_not_of_host(service):
+        return host_name != config_cache.host_of_clustered_service(host_name, service.description)
+
+    # Filter out check types which are not used on the node
+    if belongs_to_cluster:
+        removed_plugins = {
+            plugin for plugin in only_check_plugins if all(
+                _is_not_of_host(service) for service in services
+                # TODO (mo): centralize maincheckify: CMK-4295
+                if PluginName(maincheckify(service.check_plugin_name)) == plugin)
+        }
+        only_check_plugins -= removed_plugins
+
+    return [
+        service for service in services if (
+            # TODO (mo): centralize maincheckify: CMK-4295
+            PluginName(maincheckify(service.check_plugin_name)) in only_check_plugins and
+            not (belongs_to_cluster and _is_not_of_host(service)) and
+            not service_outside_check_period(config_cache, host_name, service.description))
+    ]
 
 
 def service_outside_check_period(config_cache, hostname, description):

@@ -14,7 +14,7 @@ def test_openapi_activate_changes(wsgi_app, suppress_automation_calls, with_auto
 
     host_created = wsgi_app.call_method(
         'post',
-        base + "/collections/host",
+        base + "/domain-types/host_config/collections/all",
         params='{"hostname": "foobar", "folder": "root"}',
         status=200,
         content_type='application/json',
@@ -24,7 +24,7 @@ def test_openapi_activate_changes(wsgi_app, suppress_automation_calls, with_auto
 
     resp = wsgi_app.call_method(
         'post',
-        base + "/domain-types/activation_run/actions/activate-changes",
+        base + "/domain-types/activation_run/actions/activate-changes/invoke",
     )
 
     for _ in range(10):
@@ -51,7 +51,7 @@ def test_openapi_activate_changes(wsgi_app, suppress_automation_calls, with_auto
 
     resp = wsgi_app.call_method(
         'post',
-        base + "/domain-types/activation_run/actions/activate-changes",
+        base + "/domain-types/activation_run/actions/activate-changes/invoke",
     )
 
     for _ in range(10):

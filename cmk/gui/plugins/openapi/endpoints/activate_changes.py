@@ -21,7 +21,7 @@ ACTIVATION_ID = ParamDict.create(
 )
 
 
-@endpoint_schema('/domain-types/activation_run/actions/activate-changes',
+@endpoint_schema(constructors.domain_type_action_href('activation_run', 'activate-changes'),
                  'cmk/activate',
                  method='post',
                  response_schema=response_schemas.DomainObject)
@@ -57,7 +57,8 @@ def _serve_activation_run(activation_id, is_running=False):
 # GET /objects/activation/{activation_id}/actions/wait-for-completion
 
 
-@endpoint_schema('/objects/activation_run/{activation_id}/actions/wait-for-completion',
+@endpoint_schema(constructors.object_action_href('activation_run', '{activation_id}',
+                                                 'wait-for-completion'),
                  'cmk/wait-for-completion',
                  method='get',
                  parameters=[ACTIVATION_ID],
@@ -81,7 +82,7 @@ def activate_changes_state(params):
     return Response(status=204)
 
 
-@endpoint_schema('/objects/activation_run/{activation_id}',
+@endpoint_schema(constructors.object_href('activation_run', '{activation_id}'),
                  'cmk/show',
                  method='get',
                  parameters=[ACTIVATION_ID],
@@ -96,7 +97,7 @@ def show_activation(params):
     return _serve_activation_run(activation_id, is_running=manager.is_running())
 
 
-@endpoint_schema('/collections/activation_run',
+@endpoint_schema(constructors.collection_href('activation_run', 'running'),
                  'cmk/run',
                  method='get',
                  response_schema=response_schemas.DomainObjectCollection)

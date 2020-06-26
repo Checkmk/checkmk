@@ -22,13 +22,12 @@ from cmk.gui.wsgi.type_defs import DomainObject
 
 # TODO: Remove all hard-coded response creation in favour of a generic one
 # TODO: Implement formal description (GET endpoint) of move action
-# TODO: Change scripts/check-yapf to tell which files changed
 # TODO: Replace connexion request validation with marshmallow and hand-rolled one
 # TODO: throw out connexion
 # TODO: add redoc.js
 
 
-@endpoint_schema('/collections/folder',
+@endpoint_schema(constructors.collection_href('folder_config'),
                  'cmk/create',
                  method='post',
                  response_schema=response_schemas.ConcreteFolder,
@@ -53,7 +52,7 @@ def create(params):
     return _serve_folder(folder)
 
 
-@endpoint_schema('/objects/folder/{ident}',
+@endpoint_schema(constructors.object_href('folder_config', '{ident}'),
                  '.../persist',
                  method='put',
                  parameters=['ident'],
@@ -77,7 +76,7 @@ def update(params):
     return _serve_folder(folder)
 
 
-@endpoint_schema('/objects/folder/{ident}',
+@endpoint_schema(constructors.object_href('folder_config', '{ident}'),
                  '.../delete',
                  method='delete',
                  parameters=['ident'],
@@ -93,7 +92,7 @@ def delete(params):
     return Response(status=204)
 
 
-@endpoint_schema('/objects/folder/{ident}/actions/move/invoke',
+@endpoint_schema(constructors.object_action_href('folder_config', '{ident}', action_name='move'),
                  'cmk/move',
                  method='post',
                  parameters=['ident'],
@@ -118,27 +117,29 @@ def move(params):
     return _serve_folder(folder)
 
 
-@endpoint_schema('/collections/folder',
+@endpoint_schema(constructors.collection_href('folder_config'),
                  '.../collection',
                  method='get',
                  response_schema=response_schemas.FolderCollection)
 def list_folders(_params):
     """List folders"""
     folders = [
-        constructors.collection_item('folder', 'folder', folder)
-        for folder in watolib.Folder.root_folder().subfolders()
+        constructors.collection_item('folder_config', 'folder_config', {
+            'title': folder.title(),
+            'id': folder.id()
+        }) for folder in watolib.Folder.root_folder().subfolders()
     ]
 
     collection_object = constructors.collection_object(
-        domain_type='folder',
+        domain_type='folder_config',
         value=folders,
-        links=[constructors.link_rel('self', '/collections/folder')],
+        links=[constructors.link_rel('self', constructors.collection_href('folder_config'))],
     )
 
     return constructors.serve_json(collection_object)
 
 
-@endpoint_schema('/objects/folder/{ident}',
+@endpoint_schema(constructors.object_href('folder_config', '{ident}'),
                  'cmk/show',
                  method='get',
                  response_schema=response_schemas.ConcreteFolder,
@@ -159,19 +160,20 @@ def _serve_folder(folder, profile=None):
 
 
 def _serialize_folder(folder: CREFolder) -> DomainObject:
-    uri = '/objects/folder/%s' % (folder.id(),)
+    uri = constructors.object_href('folder_config', folder.id())
     return constructors.domain_object(
-        domain_type='folder',
+        domain_type='folder_config',
         identifier=folder.id(),
         title=folder.title(),
         members={
             'hosts': constructors.object_collection(
                 name='hosts',
+                domain_type='host_config',
                 entries=[
                     constructors.link_rel(
                         rel='.../value',
                         parameters={'collection': "items"},
-                        href=constructors.object_href('host', host),
+                        href=constructors.object_href('host_config', host),
                     ) for host in folder.hosts().values()
                 ],
                 base=uri,

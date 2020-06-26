@@ -6,13 +6,21 @@
 """Host-groups"""
 from cmk.gui import watolib
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.endpoints.utils import serve_group, serialize_group
-from cmk.gui.plugins.openapi.restful_objects import constructors, endpoint_schema, response_schemas, \
-    request_schemas
+from cmk.gui.plugins.openapi.endpoints.utils import (
+    serve_group,
+    serialize_group,
+    serialize_group_list,
+)
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    endpoint_schema,
+    response_schemas,
+    request_schemas,
+)
 from cmk.gui.watolib.groups import load_host_group_information, edit_group, add_group
 
 
-@endpoint_schema('/collections/host_group',
+@endpoint_schema(constructors.collection_href('host_group_config'),
                  'cmk/create',
                  method='post',
                  etag='output',
@@ -26,10 +34,20 @@ def create(params):
     alias = body.get('alias')
     add_group(name, 'host', {'alias': alias})
     group = _fetch_host_group(name)
-    return serve_group(group, serialize_group('host_group'))
+    return serve_group(group, serialize_group('host_group_config'))
 
 
-@endpoint_schema('/objects/host_group/{name}',
+@endpoint_schema(constructors.collection_href('host_group_config'),
+                 '.../collection',
+                 method='get',
+                 response_schema=response_schemas.DomainObjectCollection)
+def list_groups(params):
+    """List service-groups"""
+    return constructors.serve_json(
+        serialize_group_list('service_group_config', list(load_host_group_information().values())))
+
+
+@endpoint_schema(constructors.object_href('host_group_config', '{name}'),
                  '.../delete',
                  method='delete',
                  parameters=['name'],
@@ -44,7 +62,7 @@ def delete(params):
     return Response(status=204)
 
 
-@endpoint_schema('/objects/host_group/{name}',
+@endpoint_schema(constructors.object_href('host_group_config', '{name}'),
                  '.../update',
                  method='put',
                  parameters=['name'],
@@ -59,10 +77,10 @@ def update(params):
     constructors.require_etag(constructors.etag_of_dict(group))
     edit_group(name, 'host', params['body'])
     group = _fetch_host_group(name)
-    return serve_group(group, serialize_group('host_group'))
+    return serve_group(group, serialize_group('host_group_config'))
 
 
-@endpoint_schema('/objects/host_group/{name}',
+@endpoint_schema(constructors.object_href('host_group_config', '{name}'),
                  'cmk/show',
                  method='get',
                  response_schema=response_schemas.HostGroup,
@@ -72,7 +90,7 @@ def get(params):
     """Show a host-group"""
     name = params['name']
     group = _fetch_host_group(name)
-    return serve_group(group, serialize_group('host_group'))
+    return serve_group(group, serialize_group('host_group_config'))
 
 
 def _fetch_host_group(ident):

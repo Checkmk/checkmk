@@ -186,12 +186,17 @@ def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
     }
 
 
-def object_collection(name: str, entries: List[Union[LinkType, DomainObject]],
-                      base: str) -> Dict[str, Any]:
+def object_collection(
+    name: str,
+    domain_type: DomainType,
+    entries: List[Union[LinkType, DomainObject]],
+    base: str,
+) -> Dict[str, Any]:
     """A collection description to be used as an object member.
 
     Args:
         name:
+        domain_type:
         entries:
         base:
 
@@ -203,7 +208,7 @@ def object_collection(name: str, entries: List[Union[LinkType, DomainObject]],
         'memberType': "collection",
         'value': entries,
         'links': [
-            link_rel('self', base + "/collections/%s" % (name,)),
+            link_rel('self', base + collection_href(domain_type)),
             link_rel('up', base),
         ]
     }
@@ -306,27 +311,102 @@ def object_property(
     return property_obj
 
 
-def object_href(domain_type: str, obj: Any) -> str:
-    """
+def domain_type_action_href(domain_type: DomainType, action: str) -> str:
+    """Constructs a href to a domain-type action.
 
     Args:
         domain_type:
-        obj:
+            The domain-type, the action is part of.
+
+        action:
+            The action-name.
+
+    Examples:
+        >>> domain_type_action_href('activation_run', 'activate-changes')
+        '/domain-types/activation_run/actions/activate-changes/invoke'
+
+    Returns:
+        The href.
+
+    """
+    return "/domain-types/{domain_type}/actions/{action}/invoke".format(domain_type=domain_type,
+                                                                        action=action)
+
+
+def collection_href(domain_type: DomainType, name: str = 'all') -> str:
+    """Constructs a href to a collection.
+
+    Please note that domain-types can have multiple collections.
+
+    Args:
+        domain_type:
+            The domain-type of the collection
+
+        name:
+            The name of the collection itself.
 
     Examples:
 
-        >>> object_href('folder', {'title': 'Main', 'id': 0})
-        '/objects/folder/0'
+        >>> collection_href('folder_config', 'all')
+        '/domain-types/folder_config/collections/all'
+
+    Returns:
+        The href as a string
+
+    """
+    return '/domain-types/{domain_type}/collections/{name}'.format(domain_type=domain_type,
+                                                                   name=name)
+
+
+def object_action_href(domain_type: DomainType, obj_id: Union[int, str], action_name: str) -> str:
+    """Construct a href of a domain-object action.
+
+    Args:
+        domain_type:
+            The domain-type of the object.
+
+        obj_id:
+            The object-id of the domain-object.
+
+        action_name:
+            The action-name to link to.
+
+    Examples:
+
+        Don't try this at home. ;-)
+
+        >>> object_action_href('folder_config', 'root', 'delete')
+        '/objects/folder_config/root/actions/delete/invoke'
+
+    Returns:
+        The href.
+
+    """
+    return object_href(domain_type,
+                       obj_id) + '/actions/{action_name}/invoke'.format(action_name=action_name)
+
+
+def object_href(domain_type: DomainType, obj_id: Union[int, str]) -> str:
+    """Constructs a href to a domain-object.
+
+    Args:
+        domain_type:
+            The domain type of the object.
+
+        obj_id:
+            The identifier of the object
+
+    Examples:
+
+        >>> object_href('folder_config', 5)
+        '/objects/folder_config/5'
+
+        >>> object_href('folder_config', "5")
+        '/objects/folder_config/5'
 
     Returns:
 
     """
-    _id = getattr(obj, 'id', None)
-    if callable(_id):
-        obj_id = _id()
-    else:
-        obj_id = obj['id']
-
     return '/objects/{domain_type}/{obj_id}'.format(
         domain_type=domain_type,
         obj_id=obj_id,
@@ -374,8 +454,8 @@ def domain_object(
         links:
             (optional) A list of `link_rel` dicts.
 
-        """
-    uri = "/objects/%s/%s" % (domain_type, identifier)
+    """
+    uri = object_href(domain_type, identifier)
     if extensions is None:
         extensions = {}
     if members is None:
@@ -399,25 +479,33 @@ def domain_object(
     }
 
 
-def collection_object(domain_type: str,
+def collection_object(domain_type: DomainType,
                       value: List[Union[CollectionItem, LinkType]],
                       links: Optional[List[LinkType]] = None,
-                      extensions: Any = None) -> CollectionObject:
+                      extensions: Optional[Dict[str, Any]] = None) -> CollectionObject:
     """A collection object as specified in C-115 (Page 121)
 
     Args:
         domain_type:
+            The domain-type of the collection.
+
         value:
+            A list of objects. These may be either links or inlined domain-objects.
+
         links:
+            A list of links specified elsewhere in this file.
+
         extensions:
+            Optionally, arbitrary keys to send to the client.
 
     Returns:
+        A collection object.
 
     """
     if extensions is None:
         extensions = {}
     _links = [
-        link_rel('self', "/collections/%s" % (domain_type,)),
+        link_rel('self', collection_href(domain_type)),
     ]
     if links is not None:
         _links.extend(links)
@@ -494,7 +582,11 @@ def link_endpoint(
     )
 
 
-def collection_item(collection_type: str, domain_type: DomainType, obj: Any) -> CollectionItem:
+def collection_item(
+    collection_type: DomainType,
+    domain_type: DomainType,
+    obj: Dict[str, str],
+) -> CollectionItem:
     """A link for use in a collection object.
 
     Args:
@@ -506,13 +598,13 @@ def collection_item(collection_type: str, domain_type: DomainType, obj: Any) -> 
 
         >>> expected = {
         ...     'domainType': 'link',
-        ...     'href': '/objects/folder/3',
+        ...     'href': '/objects/folder_config/3',
         ...     'method': 'GET',
-        ...     'rel': 'urn:org.restfulobjects:rels/value;collection="folder"',
+        ...     'rel': 'urn:org.restfulobjects:rels/value;collection="folder_config"',
         ...     'title': 'Foo',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ... }
-        >>> res = collection_item('folder', 'folder', {'title': 'Foo', 'id': '3'})
+        >>> res = collection_item('folder_config', 'folder_config', {'title': 'Foo', 'id': '3'})
         >>> assert res == expected, res
 
     Returns:
@@ -522,18 +614,11 @@ def collection_item(collection_type: str, domain_type: DomainType, obj: Any) -> 
     return link_rel(
         rel='.../value',
         parameters={'collection': collection_type},
-        href=object_href(domain_type, obj),
+        href=object_href(domain_type, obj['id']),
         profile=".../object",
         method='get',
-        title=obj_title(obj),
+        title=obj['title'],
     )
-
-
-def obj_title(obj):
-    _title = getattr(obj, 'title', None)
-    if callable(_title):
-        return _title()
-    return obj['title']
 
 
 def serve_json(data: Serializable, profile: Dict[str, str] = None) -> Response:

@@ -6,7 +6,11 @@
 """Contact-groups"""
 from cmk.gui import watolib
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.endpoints.utils import serve_group, serialize_group
+from cmk.gui.plugins.openapi.endpoints.utils import (
+    serve_group,
+    serialize_group,
+    serialize_group_list,
+)
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     endpoint_schema,
@@ -16,7 +20,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.watolib.groups import edit_group, add_group, load_contact_group_information
 
 
-@endpoint_schema('/collections/contact_group',
+@endpoint_schema(constructors.collection_href('contact_group_config'),
                  'cmk/create',
                  method='post',
                  etag='output',
@@ -30,26 +34,21 @@ def create(params):
     alias = body.get('alias')
     add_group(name, 'contact', {'alias': alias})
     group = _fetch_contact_group(name)
-    return serve_group(group, serialize_group('contact_group'))
+    return serve_group(group, serialize_group('contact_group_config'))
 
 
-@endpoint_schema('/collections/contact_group',
+@endpoint_schema(constructors.collection_href('contact_group_config'),
                  '.../collection',
                  method='get',
                  response_schema=response_schemas.DomainObjectCollection)
 def list_group(params):
     """List contact-groups"""
-    return constructors.serve_json({
-        'id': 'folders',
-        'value': [
-            constructors.collection_item('contact_group', 'contact_group', group)
-            for group in load_contact_group_information().values()
-        ],
-        'links': [constructors.link_rel('self', '/collections/contact_group')]
-    })
+    return constructors.serve_json(
+        serialize_group_list('contact_group_config',
+                             list(load_contact_group_information().values())),)
 
 
-@endpoint_schema('/objects/contact_group/{name}',
+@endpoint_schema(constructors.object_href('contact_group_config', '{name}'),
                  'cmk/show',
                  method='get',
                  response_schema=response_schemas.ContactGroup,
@@ -59,10 +58,10 @@ def show(params):
     """Show a contact-group"""
     name = params['name']
     group = _fetch_contact_group(name)
-    return serve_group(group, serialize_group('contact_group'))
+    return serve_group(group, serialize_group('contact_group_config'))
 
 
-@endpoint_schema('/objects/contact_group/{name}',
+@endpoint_schema(constructors.object_href('contact_group_config', '{name}'),
                  '.../delete',
                  method='delete',
                  parameters=['name'],
@@ -77,7 +76,7 @@ def delete(params):
     return Response(status=204)
 
 
-@endpoint_schema('/objects/contact_group/{name}',
+@endpoint_schema(constructors.object_href('contact_group_config', '{name}'),
                  '.../update',
                  method='put',
                  parameters=['name'],
@@ -92,7 +91,7 @@ def update(params):
     constructors.require_etag(constructors.etag_of_dict(group))
     edit_group(name, 'contact', params['body'])
     group = _fetch_contact_group(name)
-    return serve_group(group, serialize_group('contact_group'))
+    return serve_group(group, serialize_group('contact_group_config'))
 
 
 def _fetch_contact_group(ident):

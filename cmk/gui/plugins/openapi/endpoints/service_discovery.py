@@ -13,7 +13,7 @@ from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
 from cmk.gui.plugins.openapi.restful_objects import (endpoint_schema, response_schemas)
 from cmk.gui.plugins.openapi.restful_objects.constructors import (domain_object, object_property,
-                                                                  link_rel)
+                                                                  link_rel, collection_href)
 
 SERVICE_DISCOVERY_STATES = {
     "undecided": "new",
@@ -82,7 +82,7 @@ DISCOVERY_MODE = ParamDict.create(
     required=True)
 
 
-@endpoint_schema("/domain-types/service/collections/services",
+@endpoint_schema(collection_href("service", "services"),
                  '.../collection',
                  method='get',
                  response_schema=response_schemas.DomainObject,

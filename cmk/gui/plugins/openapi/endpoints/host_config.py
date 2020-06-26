@@ -14,7 +14,7 @@ from connexion import problem  # type: ignore[import]
 
 from cmk.gui import watolib
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.endpoints.folder import load_folder
+from cmk.gui.plugins.openapi.endpoints.folder_config import load_folder
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     endpoint_schema,
@@ -24,7 +24,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
 
 
-@endpoint_schema('/collections/host',
+@endpoint_schema(constructors.collection_href('host_config'),
                  'cmk/create',
                  method='post',
                  etag='output',
@@ -56,7 +56,7 @@ def create_host(params):
     return _serve_host(host)
 
 
-@endpoint_schema('/domain-types/host/collections/hosts',
+@endpoint_schema(constructors.collection_href('host_config'),
                  '.../collection',
                  method='get',
                  response_schema=response_schemas.HostCollection)
@@ -65,14 +65,16 @@ def list_hosts(param):
     return constructors.serve_json({
         'id': 'host',
         'value': [
-            constructors.collection_item('host', 'host', host)
-            for host in watolib.Folder.root_folder().all_hosts_recursively()
+            constructors.collection_item('host', 'host', {
+                'title': host.name(),
+                'id': host.id()
+            }) for host in watolib.Folder.root_folder().all_hosts_recursively().values()
         ],
-        'links': [constructors.link_rel('self', '/collections/host')]
+        'links': [constructors.link_rel('self', constructors.collection_href('host_config'))],
     })
 
 
-@endpoint_schema('/objects/host/{hostname}',
+@endpoint_schema(constructors.object_href('host_config', '{hostname}'),
                  '.../update',
                  method='put',
                  parameters=['hostname'],
@@ -92,7 +94,7 @@ def update_host(params):
     return _serve_host(host)
 
 
-@endpoint_schema('/objects/host/{hostname}',
+@endpoint_schema(constructors.object_href('host_config', '{hostname}'),
                  '.../delete',
                  method='delete',
                  parameters=['hostname'],
@@ -109,7 +111,7 @@ def delete(params):
     return Response(status=204)
 
 
-@endpoint_schema('/objects/host/{hostname}',
+@endpoint_schema(constructors.object_href('host_config', '{hostname}'),
                  'cmk/show',
                  method='get',
                  parameters=['hostname'],
@@ -135,17 +137,17 @@ def _serve_host(host):
 
 
 def serialize_host(host):
-    base = '/objects/host/%s' % (host.ident(),)
     return constructors.domain_object(
-        domain_type='host',
+        domain_type='host_config',
         identifier=host.id(),
         title=host.alias(),
         members={
-            'folder': constructors.object_property(
-                name='folder',
-                value=constructors.object_href('folder', host.folder()),
+            'folder_config': constructors.object_property(
+                name='folder_config',
+                value=constructors.object_href('folder_config',
+                                               host.folder().id()),
                 prop_format='string',
-                base=base,
+                base=constructors.object_href('host_config', host.ident()),
             ),
         },
         extensions={},

@@ -11,7 +11,7 @@ import itertools
 from inspect import signature
 from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
-from cmk.utils.type_defs import ParsedSectionName, PluginName
+from cmk.utils.type_defs import ParsedSectionName, PluginName, RuleSetName
 
 from cmk.base.api.agent_based.checking_types import (
     CheckPlugin,
@@ -274,10 +274,10 @@ def create_check_plugin(
         service_name,
         _filter_discovery(discovery_function, requires_item),
         discovery_default_parameters,
-        None if discovery_ruleset_name is None else PluginName(discovery_ruleset_name),
+        None if discovery_ruleset_name is None else RuleSetName(discovery_ruleset_name),
         _filter_check(check_function),
         check_default_parameters,
-        None if check_ruleset_name is None else PluginName(check_ruleset_name),
+        None if check_ruleset_name is None else RuleSetName(check_ruleset_name),
         cluster_check_function,
     )
 

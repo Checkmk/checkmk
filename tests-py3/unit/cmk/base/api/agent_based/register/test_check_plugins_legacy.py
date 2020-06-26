@@ -10,7 +10,7 @@ import inspect
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import ParsedSectionName, PluginName
+from cmk.utils.type_defs import ParsedSectionName, PluginName, RuleSetName
 
 import cmk.base.api.agent_based.checking_types as checking_types
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
@@ -159,7 +159,7 @@ def test_create_check_plugin_from_legacy_with_params(monkeypatch):
         "levels": (23, 42),
         "levels_lower": (1, 2),
     }
-    assert plugin.check_ruleset_name == PluginName("norris_rule")
+    assert plugin.check_ruleset_name == RuleSetName("norris_rule")
     assert plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"
 
 

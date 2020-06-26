@@ -188,7 +188,9 @@ def test_all_checks_migrated(config_check_info, migrated_checks):
     migrated = set(str(c.name) for c in migrated_checks.values())
     # we don't expect pure section declarations anymore
     true_checks = set(
-        n.replace('.', '_') for n, i in config_check_info.items() if i['check_function'])
+        n.replace('.', '_').replace('-', '_')
+        for n, i in config_check_info.items()
+        if i['check_function'])
     # we know these fail:
     known_fails = set(name for type_, name in KNOWN_AUTO_MIGRATION_FAILURES if type_ == "check")
     unexpected = migrated & known_fails

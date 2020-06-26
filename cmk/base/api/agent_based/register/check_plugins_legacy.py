@@ -302,7 +302,8 @@ def maincheckify(subcheck_name):
     The new API does not know about "subchecks", so drop the dot notation.
     The validation step will prevent us from having colliding plugins.
     """
-    return subcheck_name.replace('.', '_')
+    return (subcheck_name.replace('.', '_').replace('-', '_')  # "sap.value-groups"
+           )
 
 
 @functools.lru_cache()

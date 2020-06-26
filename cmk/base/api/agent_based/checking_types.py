@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.type_defs import EvalableFloat, ParsedSectionName, PluginName
+from cmk.utils.type_defs import EvalableFloat, ParsedSectionName, PluginName, RuleSetName
 
 from cmk.base.discovered_labels import ServiceLabel
 
@@ -310,9 +310,9 @@ CheckPlugin = NamedTuple("CheckPlugin", [
     ("service_name", str),
     ("discovery_function", DiscoveryFunction),
     ("discovery_default_parameters", Optional[Dict]),
-    ("discovery_ruleset_name", Optional[PluginName]),
+    ("discovery_ruleset_name", Optional[RuleSetName]),
     ("check_function", CheckFunction),
     ("check_default_parameters", Optional[Dict]),
-    ("check_ruleset_name", Optional[PluginName]),
+    ("check_ruleset_name", Optional[RuleSetName]),
     ("cluster_check_function", CheckFunction),
 ])

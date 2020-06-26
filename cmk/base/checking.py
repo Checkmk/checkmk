@@ -269,15 +269,16 @@ def _do_all_checks_on_host(
     # Gather the data from the sources
     multi_host_sections = sources.get_host_sections()
 
-    def _is_not_of_host(host_name, service):
+    def _is_not_of_host(service):
         return hostname != config_cache.host_of_clustered_service(hostname, service.description)
 
     # Filter out check types which are not used on the node
     if belongs_to_cluster:
         removed_plugins = {
             plugin for plugin in only_check_plugins if all(
-                _is_not_of_host(hostname, service) for service in services
-                if service.check_plugin_name == plugin)
+                _is_not_of_host(service) for service in services
+                # TODO (mo): centralize maincheckify: CMK-4295
+                if PluginName(maincheckify(service.check_plugin_name)) == plugin)
         }
         only_check_plugins -= removed_plugins
 
@@ -285,7 +286,7 @@ def _do_all_checks_on_host(
         # TODO (mo): centralize maincheckify: CMK-4295
         if PluginName(maincheckify(service.check_plugin_name)) not in only_check_plugins:
             continue
-        if belongs_to_cluster and _is_not_of_host(hostname, service):
+        if belongs_to_cluster and _is_not_of_host(service):
             continue
         if service_outside_check_period(config_cache, hostname, service.description):
             continue

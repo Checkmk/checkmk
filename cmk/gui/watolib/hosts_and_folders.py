@@ -2248,7 +2248,7 @@ class CREHost(WithPermissions, WithAttributes):
     def id(self):
         return self.name()
 
-    def ident(self):
+    def ident(self) -> str:
         return self.name()
 
     def name(self):

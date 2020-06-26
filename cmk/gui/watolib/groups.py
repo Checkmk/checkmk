@@ -6,7 +6,7 @@
 
 import re
 import copy
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union, Literal
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -56,7 +56,10 @@ def _clear_group_information_request_cache():
     g.pop("group_information", None)
 
 
-def add_group(name, group_type, extra_info):
+GroupType = Literal['service', 'host', 'contact']
+
+
+def add_group(name, group_type: GroupType, extra_info):
     _check_modify_group_permissions(group_type)
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
@@ -78,7 +81,7 @@ def add_group(name, group_type, extra_info):
                       _("Create new %s group %s") % (group_type, name))
 
 
-def edit_group(name, group_type, extra_info):
+def edit_group(name, group_type: GroupType, extra_info):
     _check_modify_group_permissions(group_type)
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
@@ -109,7 +112,7 @@ def edit_group(name, group_type, extra_info):
                           _("Updated properties of %s group %s") % (group_type, name))
 
 
-def delete_group(name, group_type):
+def delete_group(name, group_type: GroupType):
     _check_modify_group_permissions(group_type)
 
     # Check if group exists
@@ -146,7 +149,7 @@ def _add_group_change(group, action_name, text):
     add_change(action_name, text, sites=group_sites)
 
 
-def _check_modify_group_permissions(group_type):
+def _check_modify_group_permissions(group_type: GroupType) -> None:
     required_permissions = {
         "contact": ["wato.users"],
         "host": ["wato.groups"],
@@ -161,7 +164,7 @@ def _check_modify_group_permissions(group_type):
         config.user.need_permission(permission)
 
 
-def _set_group(all_groups, group_type, name, extra_info):
+def _set_group(all_groups, group_type: GroupType, name, extra_info):
     # Check if this alias is used elsewhere
     alias = extra_info.get("alias")
     if not alias:
@@ -225,7 +228,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
     _clear_group_information_request_cache()
 
 
-def find_usages_of_group(name, group_type):
+def find_usages_of_group(name, group_type: GroupType):
     usages = []
     if group_type == 'contact':
         usages = find_usages_of_contact_group(name)

@@ -32,6 +32,7 @@ from cmk.gui.watolib.groups import (
     load_host_group_information,
     load_service_group_information,
     load_contact_group_information,
+    GroupType,
 )
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
@@ -50,7 +51,7 @@ from cmk.gui.plugins.wato import (
 class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def type_name(self):
-        # type: () -> str
+        # type: () -> GroupType
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -132,7 +133,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
 class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def type_name(self):
-        # type: () -> str
+        # type: () -> GroupType
         raise NotImplementedError()
 
     @abc.abstractmethod

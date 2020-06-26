@@ -173,8 +173,6 @@ def check_hp_proliant_cpu(item, params, info):
 #   '----------------------------------------------------------------------'
 
 hp_proliant_fans_status_map = {1: 'other', 2: 'ok', 3: 'degraded', 4: 'failed'}
-hp_proliant_status2nagios_map = {'other': 3, 'ok': 0, 'degraded': 2, 'failed': 2}
-hp_proliant_present_map = {1: 'other', 2: 'absent', 3: 'present'}
 hp_proliant_speed_map = {1: 'other', 2: 'normal', 3: 'high'}
 hp_proliant_fans_locale = {
     1: "other",
@@ -383,7 +381,9 @@ def format_hp_proliant_name(line):
 
 def inventory_hp_proliant_temp(info):
     for line in info:
-        yield format_hp_proliant_name(line), {}
+        if line[-1] != "1":
+            # other(1): Temperature could not be determined
+            yield format_hp_proliant_name(line), {}
 
 
 def check_hp_proliant_temp(item, params, info):

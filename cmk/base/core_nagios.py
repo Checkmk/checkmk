@@ -38,7 +38,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.data_sources as data_sources
 import cmk.base.check_api_utils as check_api_utils
 from cmk.base.check_utils import (
-    CheckPluginName,)
+    CheckPluginNameStr,)
 from cmk.base.config import (
     ConfigCache,
     HostConfig,
@@ -111,8 +111,8 @@ class NagiosConfig:
         self.hostgroups_to_define = set()  # type: Set[HostgroupName]
         self.servicegroups_to_define = set()  # type: Set[ServicegroupName]
         self.contactgroups_to_define = set()  # type: Set[ContactgroupName]
-        self.checknames_to_define = set()  # type: Set[CheckPluginName]
-        self.active_checks_to_define = set()  # type: Set[CheckPluginName]
+        self.checknames_to_define = set()  # type: Set[CheckPluginNameStr]
+        self.active_checks_to_define = set()  # type: Set[CheckPluginNameStr]
         self.custom_commands_to_define = set()  # type: Set[CoreCommandName]
         self.hostcheck_commands_to_define = []  # type: List[Tuple[CoreCommand, str]]
 
@@ -316,7 +316,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
     services = check_table.get_check_table(hostname, remove_duplicates=True).values()
     have_at_least_one_service = False
-    used_descriptions = {}  # type: Dict[ServiceName, Tuple[CheckPluginName, Item]]
+    used_descriptions = {}  # type: Dict[ServiceName, Tuple[CheckPluginNameStr, Item]]
     for service in sorted(services, key=lambda s: (s.check_plugin_name, s.item)):
         if service.check_plugin_name not in config.check_info:
             continue  # simply ignore missing checks
@@ -907,7 +907,7 @@ def _extra_service_conf_of(cfg, config_cache, hostname, description):
 
 
 def _find_check_plugins(checktype):
-    # type: (CheckPluginName) -> List[str]
+    # type: (CheckPluginNameStr) -> List[str]
     """Find files to be included in precompile host check for a certain
     check (for example df or mem.used).
 
@@ -1126,7 +1126,7 @@ if '-d' in sys.argv:
 
 
 def _get_needed_check_plugin_names(host_config):
-    # type: (config.HostConfig) -> Set[CheckPluginName]
+    # type: (config.HostConfig) -> Set[CheckPluginNameStr]
     import cmk.base.check_table as check_table  # pylint: disable=import-outside-toplevel
     needed_check_plugin_names = set([])
 
@@ -1162,7 +1162,7 @@ def _get_needed_check_plugin_names(host_config):
 
 
 def _get_needed_check_file_names(needed_check_plugin_names):
-    # type: (Set[CheckPluginName]) -> List[str]
+    # type: (Set[CheckPluginNameStr]) -> List[str]
     # check info table
     # We need to include all those plugins that are referenced in the host's
     # check table.

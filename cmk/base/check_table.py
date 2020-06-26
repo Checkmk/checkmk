@@ -19,7 +19,7 @@ import cmk.base.check_api_utils as check_api_utils
 from cmk.utils.type_defs import HostName
 from cmk.base.check_utils import (
     LegacyCheckParameters,
-    CheckPluginName,
+    CheckPluginNameStr,
     CheckTable,
     Item,
     Service,
@@ -151,7 +151,7 @@ class HostCheckTable:
         return check_table
 
     def _is_checkname_valid(self, checkname):
-        # type: (CheckPluginName) -> bool
+        # type: (CheckPluginNameStr) -> bool
         # TODO (mo): centralize maincheckify: CMK-4295
         plugin_name = PluginName(maincheckify(checkname))
         return config.get_registered_check_plugin(plugin_name) is not None
@@ -246,7 +246,7 @@ def get_precompiled_check_table(hostname,
 
 
 def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
-    # type: (HostName, Item, LegacyCheckParameters, CheckPluginName) -> LegacyCheckParameters
+    # type: (HostName, Item, LegacyCheckParameters, CheckPluginNameStr) -> LegacyCheckParameters
     precomp_func = config.precompile_params.get(check_plugin_name)
     if precomp_func:
         if not callable(precomp_func):
@@ -258,8 +258,8 @@ def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
 
 
 def remove_duplicate_checks(check_table: CheckTable) -> CheckTable:
-    have_with_tcp: Dict[str, Tuple[CheckPluginName, Item]] = {}
-    have_with_snmp: Dict[str, Tuple[CheckPluginName, Item]] = {}
+    have_with_tcp: Dict[str, Tuple[CheckPluginNameStr, Item]] = {}
+    have_with_snmp: Dict[str, Tuple[CheckPluginNameStr, Item]] = {}
     without_duplicates: CheckTable = {}
     for key, service in check_table.items():
         if cmk.base.check_utils.is_snmp_check(service.check_plugin_name):
@@ -277,7 +277,7 @@ def remove_duplicate_checks(check_table: CheckTable) -> CheckTable:
 
 
 def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
-    # type: (HostName, bool, Optional[str], bool) -> Set[CheckPluginName]
+    # type: (HostName, bool, Optional[str], bool) -> Set[CheckPluginNameStr]
     return {
         s.check_plugin_name for s in get_check_table(hostname,
                                                      remove_duplicates=remove_duplicates,

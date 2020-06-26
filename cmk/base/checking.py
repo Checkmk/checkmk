@@ -38,7 +38,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
-    CheckPluginName,
+    CheckPluginNameStr,
     HostAddress,
     HostName,
     Item,
@@ -606,7 +606,7 @@ def _evaluate_timespecific_entry(entry):
 
 
 def is_manual_check(hostname, check_plugin_name, item):
-    # type: (HostName, CheckPluginName, Item) -> bool
+    # type: (HostName, CheckPluginNameStr, Item) -> bool
     manual_checks = check_table.get_check_table(hostname,
                                                 remove_duplicates=True,
                                                 skip_autochecks=True)

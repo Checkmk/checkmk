@@ -20,13 +20,14 @@ from cmk.utils.type_defs import CheckVariables, PluginName
 from cmk.utils.log import console
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceName
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
 from cmk.base.check_utils import ABCService, DiscoveredService, LegacyCheckParameters, Service
 
-ComputeCheckParameters = Callable[[HostName, CheckPluginName, Item, LegacyCheckParameters],
+ComputeCheckParameters = Callable[[HostName, CheckPluginNameStr, Item, LegacyCheckParameters],
                                   Optional[LegacyCheckParameters]]
 GetCheckVariables = Callable[[], CheckVariables]
-GetServiceDescription = Callable[[HostName, Union[CheckPluginName, PluginName], Item], ServiceName]
+GetServiceDescription = Callable[[HostName, Union[CheckPluginNameStr, PluginName], Item],
+                                 ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
 
 

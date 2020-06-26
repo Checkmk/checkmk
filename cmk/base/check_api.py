@@ -106,7 +106,7 @@ from cmk.utils.rulesets.tuple_rulesets import (  # TODO: Only used by logwatch c
     get_rule_options, hosttags_match_taglist, in_extraconf_hostlist,
 )
 # The class 'as_float' has been moved; import it here under the old name
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginNameStr
 from cmk.utils.type_defs import EvalableFloat as as_float
 from cmk.utils.type_defs import (
     HostName,
@@ -569,7 +569,7 @@ def get_agent_data_time():
 
 
 def _agent_cache_file_age(hostname, check_plugin_name):
-    # type: (HostName, CheckPluginName) -> Optional[float]
+    # type: (HostName, CheckPluginNameStr) -> Optional[float]
     host_config = _config.get_config_cache().get_host_config(hostname)
     if host_config.is_cluster:
         raise MKGeneralException("get_agent_data_time() not valid for cluster")

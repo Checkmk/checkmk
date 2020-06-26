@@ -11,7 +11,7 @@ from typing import cast, Dict, Iterable, List, Optional, Set
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import (
-    CheckPluginName,
+    CheckPluginNameStr,
     HostAddress,
     HostName,
     SectionName,
@@ -83,7 +83,7 @@ class CachedSNMPDetector:
         self._filter_function = None  # type: Optional[SectionNameFilterFunction]
         self._for_inventory = False
         # Optional set: None: we never tried, empty: we tried, but found nothing
-        self._cached_result = None  # type: Optional[Set[CheckPluginName]]
+        self._cached_result = None  # type: Optional[Set[CheckPluginNameStr]]
 
     def set_filter_function(self, filter_function):
         # type: (SectionNameFilterFunction) -> None

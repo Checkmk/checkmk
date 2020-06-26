@@ -20,7 +20,7 @@ import cmk.base.check_utils
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_snmp_section_plugin_from_legacy,)
 
-from cmk.utils.type_defs import CheckPluginName, InventoryPluginName
+from cmk.utils.type_defs import CheckPluginNameStr, InventoryPluginName
 InventoryInfo = Dict[str, Any]
 
 # Inventory plugins have dependencies to check plugins and the inventory
@@ -160,14 +160,14 @@ def is_snmp_plugin(check_plugin_name):
 
 
 def sorted_inventory_plugins():
-    # type: () -> Iterator[Tuple[CheckPluginName, InventoryInfo]]
+    # type: () -> Iterator[Tuple[CheckPluginNameStr, InventoryInfo]]
     # First resolve *all* dependencies. This ensures that there
     # are no cyclic dependencies, and that the 'depends on'
     # relation is transitive.
     resolved_dependencies = {}  # type: Dict[str, Set[str]]
 
     def resolve_plugin_dependencies(plugin_name, known_dependencies=None):
-        # type: (CheckPluginName, Optional[Set[CheckPluginName]]) -> Set[CheckPluginName]
+        # type: (CheckPluginNameStr, Optional[Set[CheckPluginNameStr]]) -> Set[CheckPluginNameStr]
         '''recursively aggregate all plugin dependencies'''
         if known_dependencies is None:
             known_dependencies = set()

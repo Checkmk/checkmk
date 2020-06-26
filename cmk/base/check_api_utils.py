@@ -13,7 +13,7 @@ from typing import Optional
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels
 from cmk.base.check_utils import LegacyCheckParameters
-from cmk.utils.type_defs import CheckPluginName, Item, HostName, ServiceName
+from cmk.utils.type_defs import CheckPluginNameStr, Item, HostName, ServiceName
 
 # Symbolic representations of states in plugin output
 state_markers = ["", "(!)", "(!!)", "(?)"]
@@ -26,7 +26,7 @@ HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. inter
 # Is set before check/discovery function execution
 # Host currently being checked
 _hostname = None  # type: Optional[HostName]
-_check_type = None  # type: Optional[CheckPluginName]
+_check_type = None  # type: Optional[CheckPluginNameStr]
 _service_description = None  # type: Optional[ServiceName]
 
 
@@ -62,14 +62,14 @@ def host_name():
 
 
 def set_service(type_name, descr):
-    # type: (Optional[CheckPluginName], Optional[ServiceName]) -> None
+    # type: (Optional[CheckPluginNameStr], Optional[ServiceName]) -> None
     global _check_type, _service_description
     _check_type = type_name
     _service_description = descr
 
 
 def check_type():
-    # type: () -> CheckPluginName
+    # type: () -> CheckPluginNameStr
     """Returns the name of the check type currently being checked."""
     if _check_type is None:
         raise RuntimeError("check type has not been set")

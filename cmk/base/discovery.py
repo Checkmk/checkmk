@@ -39,7 +39,7 @@ from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
-    CheckPluginName,
+    CheckPluginNameStr,
     HostAddress,
     HostName,
     HostState,
@@ -89,8 +89,9 @@ from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
 
-ServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.Item], Tuple[str, ABCService]]
-CheckPreviewEntry = Tuple[str, CheckPluginName, Optional[RulesetName], check_table.Item,
+ServicesTable = Dict[Tuple[check_table.CheckPluginNameStr, check_table.Item], Tuple[str,
+                                                                                    ABCService]]
+CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], check_table.Item,
                           check_table.LegacyCheckParameters, check_table.LegacyCheckParameters, str,
                           Optional[int], str, List[Metric], Dict[str, str]]
 CheckPreviewTable = List[CheckPreviewEntry]
@@ -98,7 +99,7 @@ DiscoveryEntry = Union[check_api_utils.Service, DiscoveredHostLabels, HostLabel,
                        Tuple[Item, LegacyCheckParameters]]
 DiscoveryResult = List[DiscoveryEntry]
 DiscoveryFunction = Callable[[FinalSectionContent], DiscoveryResult]
-ServiceFilter = Callable[[HostName, CheckPluginName, Item], bool]
+ServiceFilter = Callable[[HostName, CheckPluginNameStr, Item], bool]
 
 
 class RediscoveryMode(Enum):
@@ -168,7 +169,7 @@ def _get_service_filter_func(params):
 
 
 def _filter_service_by_patterns(hostname, check_plugin_name, item, whitelist, blacklist):
-    # type: (HostName, CheckPluginName, Item, Pattern[str], Pattern[str]) -> bool
+    # type: (HostName, CheckPluginNameStr, Item, Pattern[str], Pattern[str]) -> bool
     #TODO Call sites: Why do we not use discovered_service.description;
     # Is discovered_service.description already finalized as
     # in config.service_description?
@@ -322,7 +323,7 @@ def _do_discovery_for(
         if only_new or (check_plugin_names and service_plugin_name not in check_plugin_names):
             new_services.append(existing_service)
 
-    services_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
+    services_per_plugin = {}  # type: Dict[check_table.CheckPluginNameStr, int]
     for discovered_service in discovered_services:
         if discovered_service not in new_services:
             new_services.append(discovered_service)
@@ -365,7 +366,7 @@ def _do_discovery_for(
 
 
 def _perform_host_label_discovery(hostname, discovered_host_labels, only_new):
-    # type: (HostName, DiscoveredHostLabels, bool) -> Tuple[DiscoveredHostLabels, Dict[check_table.CheckPluginName, int]]
+    # type: (HostName, DiscoveredHostLabels, bool) -> Tuple[DiscoveredHostLabels, Dict[check_table.CheckPluginNameStr, int]]
 
     # Take over old items if -I is selected
     if only_new:
@@ -374,7 +375,7 @@ def _perform_host_label_discovery(hostname, discovered_host_labels, only_new):
     else:
         return_host_labels = DiscoveredHostLabels()
 
-    new_host_labels_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
+    new_host_labels_per_plugin = {}  # type: Dict[check_table.CheckPluginNameStr, int]
     for discovered_label in discovered_host_labels.values():
         if discovered_label.name in return_host_labels:
             continue

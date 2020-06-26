@@ -29,7 +29,7 @@ from cmk.base.check_api_utils import (
     HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE,
 )
 from cmk.base.check_utils import (
-    CheckPluginName,
+    CheckPluginNameStr,
     SectionCacheInfo,
     PiggybackRawData,
     AbstractSectionContent,
@@ -274,7 +274,7 @@ class MultiHostSections:
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
             management_board_info,  # type: str
-            check_plugin_name,  # type: CheckPluginName
+            check_plugin_name,  # type: CheckPluginNameStr
             for_discovery,  # type: bool
             service_description=None  # type: Optional[ServiceName]
     ):
@@ -373,7 +373,7 @@ class MultiHostSections:
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
             source_type,  # type: SourceType
-            check_plugin_name,  # type: CheckPluginName
+            check_plugin_name,  # type: CheckPluginNameStr
             section_name,  # type: SectionName
             for_discovery,  # type: bool
             nodes_of_clustered_service,  # type:  Optional[List[HostName]]
@@ -431,7 +431,7 @@ class MultiHostSections:
                 for node_hostname in host_config.nodes]
 
     def _update_with_node_column(self, section_content, check_plugin_name, hostname, for_discovery):
-        # type: (AbstractSectionContent, CheckPluginName, HostName, bool) -> AbstractSectionContent
+        # type: (AbstractSectionContent, CheckPluginNameStr, HostName, bool) -> AbstractSectionContent
         """Add cluster node information to the section content
 
         If the check want's the node column, we add an additional column (as the first column) with the

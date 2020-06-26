@@ -8,7 +8,7 @@ import abc
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, RawAgentData, SectionName
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, RawAgentData, SectionName
 
 from cmk.snmplib.type_defs import (
     SNMPPersistedSections,
@@ -52,7 +52,7 @@ class ABCService(abc.ABC):
 
     def __init__(
         self,
-        check_plugin_name: CheckPluginName,
+        check_plugin_name: CheckPluginNameStr,
         item: Item,
         description: str,
         service_labels: DiscoveredServiceLabels = None,
@@ -63,7 +63,7 @@ class ABCService(abc.ABC):
         self._service_labels = service_labels or DiscoveredServiceLabels()
 
     @property
-    def check_plugin_name(self) -> CheckPluginName:
+    def check_plugin_name(self) -> CheckPluginNameStr:
         return self._check_plugin_name
 
     @property
@@ -79,7 +79,7 @@ class ABCService(abc.ABC):
         # type: () -> DiscoveredServiceLabels
         return self._service_labels
 
-    def _service_id(self) -> Tuple[CheckPluginName, Item]:
+    def _service_id(self) -> Tuple[CheckPluginNameStr, Item]:
         return self.check_plugin_name, self.item
 
     def __eq__(self, other: Any) -> bool:
@@ -108,7 +108,7 @@ class Service(ABCService):
 
     def __init__(
         self,
-        check_plugin_name: CheckPluginName,
+        check_plugin_name: CheckPluginNameStr,
         item: Item,
         description: str,
         parameters: LegacyCheckParameters,
@@ -135,7 +135,7 @@ class Service(ABCService):
         )
 
 
-CheckTable = Dict[Tuple[CheckPluginName, Item], Service]
+CheckTable = Dict[Tuple[CheckPluginNameStr, Item], Service]
 
 
 class DiscoveredService(ABCService):
@@ -145,7 +145,7 @@ class DiscoveredService(ABCService):
 
     def __init__(
         self,
-        check_plugin_name: CheckPluginName,
+        check_plugin_name: CheckPluginNameStr,
         item: Item,
         description: str,
         parameters_unresolved: str,

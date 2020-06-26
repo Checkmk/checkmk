@@ -29,7 +29,7 @@ import cmk.base.config as config
 from cmk.base.config import HostConfig, SectionPlugin
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
-from cmk.base.check_utils import CheckPluginName
+from cmk.base.check_utils import CheckPluginNameStr
 
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .ipmi import IPMIManagementBoardDataSource

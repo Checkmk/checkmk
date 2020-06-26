@@ -10,7 +10,7 @@ from typing import Any, AnyStr, Callable, Dict, List, NamedTuple, Optional, Tupl
 
 from six import ensure_str
 
-from cmk.utils.type_defs import CheckPluginName as _CheckPluginName
+from cmk.utils.type_defs import CheckPluginNameStr as _CheckPluginName
 from cmk.utils.type_defs import HostAddress as _HostAddress
 from cmk.utils.type_defs import HostName as _HostName
 from cmk.utils.type_defs import SectionName as _SectionName

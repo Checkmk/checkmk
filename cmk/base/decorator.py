@@ -18,7 +18,7 @@ import cmk.base.config as config
 import cmk.base.obsolete_output as out
 import cmk.base.crash_reporting
 from cmk.base.exceptions import MKAgentError, MKIPAddressLookupError
-from cmk.base.check_utils import CheckPluginName
+from cmk.base.check_utils import CheckPluginNameStr
 from cmk.utils.type_defs import HostName, ServiceName
 
 if not cmk_version.is_raw_edition():
@@ -28,7 +28,7 @@ else:
 
 
 def handle_check_mk_check_result(check_plugin_name, description):
-    # type: (CheckPluginName, ServiceName) -> Callable
+    # type: (CheckPluginNameStr, ServiceName) -> Callable
     """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
     Main purpose: Equalize the exception handling of all such functions"""
     def wrap(check_func):

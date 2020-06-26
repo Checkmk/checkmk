@@ -12,7 +12,7 @@ from the configuration.
 from typing import Dict
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.type_defs import HostName, Item, CheckPluginName, ServiceName
+from cmk.utils.type_defs import HostName, Item, CheckPluginNameStr, ServiceName
 
 import cmk.base.config as config
 
@@ -35,7 +35,7 @@ def reset_config():
 
 
 def service_description(hostname, check_plugin_name, item):
-    # type: (HostName, CheckPluginName, Item) -> str
+    # type: (HostName, CheckPluginNameStr, Item) -> str
     _load_config()
     return config.service_description(hostname, check_plugin_name, item)
 

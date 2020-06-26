@@ -58,7 +58,7 @@ from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
-    CheckPluginName,
+    CheckPluginNameStr,
     CheckVariables,
     ContactgroupName,
     HostAddress,
@@ -982,7 +982,7 @@ _old_service_descriptions = {
 
 
 def service_description(hostname, check_plugin_name, item):
-    # type: (HostName, Union[CheckPluginName, PluginName], Item) -> ServiceName
+    # type: (HostName, Union[CheckPluginNameStr, PluginName], Item) -> ServiceName
     # TODO (mo): CMK-4576 bring this to the new API
     if isinstance(check_plugin_name, PluginName):
         check_plugin_name = resolve_legacy_name(check_plugin_name)
@@ -1083,7 +1083,7 @@ def get_final_service_description(hostname, description):
 
 def service_ignored(
         hostname,  # type: HostName
-        check_plugin_name,  # type: Optional[Union[CheckPluginName, PluginName]]
+        check_plugin_name,  # type: Optional[Union[CheckPluginNameStr, PluginName]]
         description,  # type: Optional[ServiceName]
 ):
     # type: (...) -> bool
@@ -1105,7 +1105,7 @@ def service_ignored(
 
 
 def _checktype_ignored_for_host(host, checktype):
-    # type: (HostName, CheckPluginName) -> bool
+    # type: (HostName, CheckPluginNameStr) -> bool
     if checktype in ignored_checktypes:
         return True
     ignored = get_config_cache().host_extra_conf(host, ignored_checks)
@@ -1928,7 +1928,7 @@ def get_check_variables():
 
 
 def get_check_context(check_plugin_name):
-    # type: (CheckPluginName) -> CheckContext
+    # type: (CheckPluginNameStr) -> CheckContext
     """Returns the context dictionary of the given check plugin"""
     return _check_contexts[check_plugin_name]
 
@@ -2133,8 +2133,8 @@ def verify_checkgroup_members():
 
 
 def checks_by_checkgroup():
-    # type: () -> Dict[RulesetName, List[Tuple[CheckPluginName, CheckInfo]]]
-    groups = {}  # type: Dict[RulesetName, List[Tuple[CheckPluginName, CheckInfo]]]
+    # type: () -> Dict[RulesetName, List[Tuple[CheckPluginNameStr, CheckInfo]]]
+    groups = {}  # type: Dict[RulesetName, List[Tuple[CheckPluginNameStr, CheckInfo]]]
     for check_plugin_name, check in check_info.items():
         group_name = check["group"]
         if group_name:
@@ -2170,7 +2170,7 @@ def initialize_check_type_caches():
 
 
 def discoverable_snmp_checks():
-    # type: () -> Set[CheckPluginName]
+    # type: () -> Set[CheckPluginNameStr]
     types = set()
     for check_plugin_name, check in check_info.items():
         if cmk.base.check_utils.is_snmp_check(check_plugin_name) and check["inventory_function"]:
@@ -2179,11 +2179,11 @@ def discoverable_snmp_checks():
 
 
 def compute_check_parameters(host, checktype, item, params):
-    # type: (HostName, Union[CheckPluginName, PluginName], Item, LegacyCheckParameters) -> Optional[LegacyCheckParameters]
+    # type: (HostName, Union[CheckPluginNameStr, PluginName], Item, LegacyCheckParameters) -> Optional[LegacyCheckParameters]
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
-    # TODO (mo): The signature of this function has been broadened to accept CheckPluginName
+    # TODO (mo): The signature of this function has been broadened to accept CheckPluginNameStr
     # *or* PluginName alternatively (to ease migration).
     # Once we're ready, it should only accept the PluginName (or even the plugin itself, we will
     # see)
@@ -2311,7 +2311,7 @@ def filter_by_management_board(hostname,
                                for_mgmt_board,
                                for_discovery=False,
                                for_inventory=False):
-    # type: (HostName, Set[CheckPluginName], bool, bool, bool) -> Set[CheckPluginName]
+    # type: (HostName, Set[CheckPluginNameStr], bool, bool, bool) -> Set[CheckPluginNameStr]
     """
     In order to decide which check is used for which data source
     we have to filter the found check plugins. This is done via
@@ -2345,7 +2345,7 @@ def filter_by_management_board(hostname,
     config_cache = get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    final_collection = set()  # type: Set[CheckPluginName]
+    final_collection = set()  # type: Set[CheckPluginNameStr]
     if not host_config.has_management_board:
         if host_config.is_snmp_host:
             final_collection.update(host_precedence_snmp)
@@ -2385,7 +2385,7 @@ def filter_by_management_board(hostname,
 
 
 def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
-    # type: (Set[CheckPluginName], bool) -> Tuple[Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName]]
+    # type: (Set[CheckPluginNameStr], bool) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginNameStr], Set[CheckPluginNameStr], Set[CheckPluginNameStr], Set[CheckPluginNameStr]]
     # Local import needed to prevent import cycle. Sorry for this hack :-/
     import cmk.base.inventory_plugins  # pylint: disable=redefined-outer-name,import-outside-toplevel
 
@@ -2445,7 +2445,7 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
 
 
 def get_management_board_precedence(check_plugin_name, plugins_info):
-    # type: (CheckPluginName, CheckInfo) -> str
+    # type: (CheckPluginNameStr, CheckInfo) -> str
     # TODO(mo): The first .get() has been added as quick fix for an issue during new Check-API
     # development. This should not be kept after the situation in clearer.
     mgmt_board = plugins_info.get(check_plugin_name, {}).get("management_board")
@@ -3014,7 +3014,7 @@ class HostConfig:
         return hooks
 
     def notification_plugin_parameters(self, plugin_name):
-        # type: (CheckPluginName) -> Dict
+        # type: (CheckPluginNameStr) -> Dict
         return self._config_cache.host_extra_conf_merged(
             self.hostname, notification_parameters.get(plugin_name, []))
 
@@ -3049,7 +3049,7 @@ class HostConfig:
 
     @property
     def static_checks(self):
-        # type: () -> List[Tuple[RulesetName, CheckPluginName, Item, LegacyCheckParameters]]
+        # type: () -> List[Tuple[RulesetName, CheckPluginNameStr, Item, LegacyCheckParameters]]
         """Returns a table of all "manual checks" configured for this host"""
         matched = []
         for checkgroup_name in static_checks:
@@ -3339,7 +3339,7 @@ class ConfigCache:
         self.check_table_cache = _config_cache.get_dict("check_tables")
 
         self._cache_is_snmp_check = _runtime_cache.get_dict("is_snmp_check")
-        self._cache_section_name_of = {}  # type: Dict[CheckPluginName, str]
+        self._cache_section_name_of = {}  # type: Dict[CheckPluginNameStr, str]
 
         self._cache_match_object_service = {
         }  # type: Dict[Tuple[HostName, ServiceName], RulesetMatchObject]
@@ -3572,7 +3572,7 @@ class ConfigCache:
         return attrs
 
     def icons_and_actions_of_service(self, hostname, description, checkname, params):
-        # type: (HostName, ServiceName, Optional[CheckPluginName], LegacyCheckParameters) -> List[str]
+        # type: (HostName, ServiceName, Optional[CheckPluginNameStr], LegacyCheckParameters) -> List[str]
         actions = set(self.service_extra_conf(hostname, description, service_icons_and_actions))
 
         # Some WATO rules might register icons on their own
@@ -3709,7 +3709,7 @@ class ConfigCache:
         )
 
     def section_name_of(self, section):
-        # type: (CheckPluginName) -> str
+        # type: (CheckPluginNameStr) -> str
         try:
             return self._cache_section_name_of[section]
         except KeyError:
@@ -3718,7 +3718,7 @@ class ConfigCache:
             return section_name
 
     def is_snmp_check(self, check_plugin_name):
-        # type: (CheckPluginName) -> bool
+        # type: (CheckPluginNameStr) -> bool
         try:
             return self._cache_is_snmp_check[check_plugin_name]
         except KeyError:

@@ -11,7 +11,7 @@ from six import ensure_str
 
 import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginNameStr
 
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -140,7 +140,7 @@ class ModeCheckPlugins(WatoMode):
 
     def _get_manpages_after_search(self):
         collection = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
-        handled_check_names = set()  # type: Set[CheckPluginName]
+        handled_check_names = set()  # type: Set[CheckPluginNameStr]
 
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):

@@ -9,7 +9,7 @@ import re
 
 from six import ensure_str
 
-from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName, Item
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName, Item
 
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -231,7 +231,7 @@ class ModePatternEditor(WatoMode):
             html.end_foldable_container()
 
     def _get_service_description(self, hostname, check_plugin_name, item):
-        # type: (HostName, CheckPluginName, Item) -> ServiceName
+        # type: (HostName, CheckPluginNameStr, Item) -> ServiceName
         # TODO: re-enable once the GUI is using Python3
         #return cmk.base.export.service_description(hostname, check_plugin_name, item)
         assert item is not None

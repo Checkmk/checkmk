@@ -30,7 +30,7 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
-    CheckPluginName,
+    CheckPluginNameStr,
     HostName,
     ServiceDetails,
     ServiceName,
@@ -1004,10 +1004,10 @@ class AutomationGetCheckInformation(Automation):
     needs_checks = True
 
     def execute(self, args):
-        # type: (List[str]) -> Dict[CheckPluginName, Dict[str, Any]]
+        # type: (List[str]) -> Dict[CheckPluginNameStr, Dict[str, Any]]
         manuals = man_pages.all_man_pages()
 
-        check_infos = {}  # type: Dict[CheckPluginName, Dict[str, Any]]
+        check_infos = {}  # type: Dict[CheckPluginNameStr, Dict[str, Any]]
         for check_plugin_name, check in config.check_info.items():
             try:
                 manfile = manuals.get(check_plugin_name)
@@ -1042,7 +1042,7 @@ class AutomationGetRealTimeChecks(Automation):
     needs_checks = True
 
     def execute(self, args):
-        # type: (List[str]) -> List[Tuple[CheckPluginName, str]]
+        # type: (List[str]) -> List[Tuple[CheckPluginNameStr, str]]
         manuals = man_pages.all_man_pages()
 
         rt_checks = []
@@ -1076,7 +1076,7 @@ class AutomationGetCheckManPage(Automation):
         if len(args) != 1:
             raise MKAutomationError("Need exactly one argument.")
 
-        check_plugin_name = args[0]  # type: CheckPluginName
+        check_plugin_name = args[0]  # type: CheckPluginNameStr
         manpage = man_pages.load_man_page(check_plugin_name)
         if manpage is None:
             raise MKAutomationError("Invalid man page: %s" % check_plugin_name)

@@ -13,7 +13,7 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import CheckPluginNameStr, SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
@@ -60,12 +60,12 @@ SectionNameFilterFunction = Callable[[
     NamedArg(bool, 'do_snmp_scan'),
     NamedArg(bool, "binary_host"),
     NamedArg(ABCSNMPBackend, 'backend'),
-], Set[CheckPluginName]]
+], Set[CheckPluginNameStr]]
 
 
 # gather auto_discovered check_plugin_names for this host
 def gather_available_raw_section_names(sections, on_error, do_snmp_scan, *, binary_host, backend):
-    # type: (Iterable[SNMPScanSection], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
+    # type: (Iterable[SNMPScanSection], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginNameStr]
     try:
         return _snmp_scan(
             sections,
@@ -88,7 +88,7 @@ OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 
 
 def _snmp_scan(sections, on_error="ignore", do_snmp_scan=True, *, binary_host, backend):
-    # type: (Iterable[SNMPScanSection], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginName]
+    # type: (Iterable[SNMPScanSection], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginNameStr]
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
     _snmp_scan_cache_description(
@@ -124,8 +124,8 @@ def _snmp_scan_cache_description(binary_host, *, do_snmp_scan, backend):
 
 
 def _snmp_scan_find_plugins(sections, *, do_snmp_scan, on_error, backend):
-    # type: (Iterable[SNMPScanSection], bool, str, ABCSNMPBackend) -> Set[CheckPluginName]
-    found_plugins = set()  # type: Set[CheckPluginName]
+    # type: (Iterable[SNMPScanSection], bool, str, ABCSNMPBackend) -> Set[CheckPluginNameStr]
+    found_plugins = set()  # type: Set[CheckPluginNameStr]
     for name, specs in sections:
         try:
             if _evaluate_snmp_detection(
@@ -148,7 +148,7 @@ def _snmp_scan_find_plugins(sections, *, do_snmp_scan, on_error, backend):
 
 
 def _output_snmp_check_plugins(title, collection):
-    # type: (str, Iterable[CheckPluginName]) -> None
+    # type: (str, Iterable[CheckPluginNameStr]) -> None
     if collection:
         collection_out = " ".join(sorted(collection))
     else:

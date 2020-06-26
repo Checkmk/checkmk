@@ -25,7 +25,7 @@ RuleValue = Any  # TODO: Improve this type
 RuleSpec = Dict[str, Any]  # TODO: Improve this type
 Ruleset = List[RuleSpec]  # TODO: Improve this type
 MetricName = str
-CheckPluginName = str
+CheckPluginNameStr = str
 InventoryPluginName = str
 ActiveCheckPluginName = str
 Item = Optional[str]
@@ -135,7 +135,7 @@ class SectionName(ABCPluginName):
 # At some point, we should have as different classes at least:
 #   * SectionName
 #   * ParsedSectionName
-#   * CheckPluginName
+#   * CheckPluginNameStr
 #   * InventoryPluginName
 #   * RulesetName
 # The relation between the different plugins should be specified in the

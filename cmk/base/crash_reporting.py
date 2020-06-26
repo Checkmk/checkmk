@@ -17,7 +17,7 @@ import cmk.utils.encoding
 import cmk.utils.crash_reporting as crash_reporting
 from cmk.utils.type_defs import (
     HostName,
-    CheckPluginName,
+    CheckPluginNameStr,
     ServiceName,
 )
 
@@ -46,7 +46,7 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
 
 def create_check_crash_dump(
     hostname: HostName,
-    check_plugin_name: CheckPluginName,
+    check_plugin_name: CheckPluginNameStr,
     check_plugin_kwargs: Dict[str, Any],
     is_manual_check: bool,
     description: ServiceName,
@@ -87,7 +87,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
     def from_exception_and_context(
         cls,
         hostname: HostName,
-        check_plugin_name: CheckPluginName,
+        check_plugin_name: CheckPluginNameStr,
         check_plugin_kwargs: Dict[str, Any],
         is_manual_check: bool,
         description: ServiceName,

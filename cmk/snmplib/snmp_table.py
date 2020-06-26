@@ -13,7 +13,7 @@ import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import CheckPluginNameStr, HostName
 
 from .type_defs import (
     ABCSNMPBackend,
@@ -46,12 +46,12 @@ ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
 
 def get_snmp_table(check_plugin_name, oid_info, *, backend):
-    # type: (CheckPluginName, Union[OIDInfo, SNMPTree], ABCSNMPBackend) -> SNMPTable
+    # type: (CheckPluginNameStr, Union[OIDInfo, SNMPTree], ABCSNMPBackend) -> SNMPTable
     return _get_snmp_table(check_plugin_name, oid_info, False, backend=backend)
 
 
 def get_snmp_table_cached(check_plugin_name, oid_info, *, backend):
-    # type: (CheckPluginName, Union[OIDInfo, SNMPTree], ABCSNMPBackend) -> SNMPTable
+    # type: (CheckPluginNameStr, Union[OIDInfo, SNMPTree], ABCSNMPBackend) -> SNMPTable
     return _get_snmp_table(check_plugin_name, oid_info, True, backend=backend)
 
 
@@ -66,7 +66,7 @@ SPECIAL_COLUMNS = [
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def _get_snmp_table(check_plugin_name, oid_info, use_snmpwalk_cache, *, backend):
-    # type: (CheckPluginName, Union[OIDInfo, SNMPTree], bool, ABCSNMPBackend) -> SNMPTable
+    # type: (CheckPluginNameStr, Union[OIDInfo, SNMPTree], bool, ABCSNMPBackend) -> SNMPTable
     oid, suboids, targetcolumns = _make_target_columns(oid_info)
 
     index_column = -1
@@ -243,7 +243,7 @@ def _key_oid_pairs(pair1):
 
 
 def _get_snmpwalk(check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache, *, backend):
-    # type: (CheckPluginName, OID, OID, SNMPColumn, bool, ABCSNMPBackend) -> SNMPRowInfo
+    # type: (CheckPluginNameStr, OID, OID, SNMPColumn, bool, ABCSNMPBackend) -> SNMPRowInfo
     if column in SPECIAL_COLUMNS:
         return []
 
@@ -259,7 +259,7 @@ def _get_snmpwalk(check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache, 
 
 
 def _perform_snmpwalk(check_plugin_name, base_oid, fetchoid, *, backend):
-    # type: (CheckPluginName, OID, OID, ABCSNMPBackend) -> SNMPRowInfo
+    # type: (CheckPluginNameStr, OID, OID, ABCSNMPBackend) -> SNMPRowInfo
     added_oids = set([])  # type: Set[OID]
     rowinfo = []  # type: SNMPRowInfo
 

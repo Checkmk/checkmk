@@ -651,7 +651,6 @@ def test_all_check_variables_present(_load_all_checks, check_variables_names):
         'hp_proliant_mem_status2nagios_map',
         'hp_proliant_mem_status_map',
         'hp_proliant_mem_type_map',
-        'hp_proliant_present_map',
         'hp_proliant_psu_levels',
         'hp_proliant_speed_map',
         'hp_proliant_status2nagios_map',

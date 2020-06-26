@@ -1,0 +1,12 @@
+Title: hp_proliant_temp: Do not discover temperature sensors if temperature could not be determined
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p25
+Date: 1593147360
+Class: fix
+
+If the temperature sensor reports the cpqHeTemperatureCondition status
+"other(1)" ("Temperature could not be determined") then the sensor will not be
+discovered.

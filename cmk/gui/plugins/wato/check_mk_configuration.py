@@ -4641,22 +4641,25 @@ def _valuespec_check_mk_exit_status():
                              "missing_sections",
                              MonitoringState(
                                  default_value=1,
-                                 title=_("State if just <i>some</i> agent sections are missing")),
+                                 title=_("State if just <i>some</i> check plugins received no "
+                                         "monitoring data")),
                          ),
                          (
                              "specific_missing_sections",
                              ListOf(
                                  Tuple(elements=[
                                      RegExpUnicode(help=_(
-                                         'Beside of setting the generic "Missing sections" state above '
-                                         'you can specify a regex pattern to match specific section names and '
-                                         'give them an individual state in case they are missing. '
-                                         'Note that the first match is used.'),
+                                         'Beside of setting the generic "Missing sections" state '
+                                         'above you can specify a regex pattern to match specific '
+                                         'check plugins and give them an individual state in case '
+                                         'they receive no monitoring data. Note that the first '
+                                         'match is used.'),
                                                    mode=RegExpUnicode.prefix),
                                      MonitoringState(),
                                  ],
                                        orientation="horizontal"),
-                                 title=_("State if specific sections are missing"),
+                                 title=_(
+                                     "State if specific check plugins receive no monitoring data."),
                              ),
                          ),
                      ])),

@@ -150,7 +150,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
         sources = data_sources.DataSources(host_config, ipaddress, selected_raw_sections)
 
-        num_success, missing_sections = _do_all_checks_on_host(
+        num_success, plugins_missing_data = _do_all_checks_on_host(
             services,
             sources,
             host_config,
@@ -168,15 +168,14 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
                 infotexts.append("[%s] %s" % (source.id(), source_output))
                 perfdata.extend([_convert_perf_data(p) for p in source_perfdata])
 
-        if missing_sections and num_success > 0:
-            missing_sections_status, missing_sections_infotext = \
-                _check_missing_sections(missing_sections, exit_spec)
-            status = max(status, missing_sections_status)
-            infotexts.append(missing_sections_infotext)
-
-        elif missing_sections:
-            infotexts.append("Got no information from host")
-            status = max(status, cast(int, exit_spec.get("empty_output", 2)))
+        if plugins_missing_data:
+            missing_data_status, missing_data_infotext = _check_plugins_missing_data(
+                plugins_missing_data,
+                exit_spec,
+                bool(num_success),
+            )
+            status = max(status, missing_data_status)
+            infotexts.append(missing_data_infotext)
 
         cpu_tracking.end()
         phase_times = cpu_tracking.get_times()
@@ -215,35 +214,42 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
             inline.snmp_stats_save()
 
 
-def _check_missing_sections(missing_sections, exit_spec):
-    # type: (List[SectionName], config.ExitSpec) -> Tuple[ServiceState, ServiceDetails]
-    specific_missing_sections_spec = \
-        cast(List[config.ExitSpecSection], exit_spec.get("specific_missing_sections", []))
+def _check_plugins_missing_data(
+    plugins_missing_data: List[CheckPluginName],
+    exit_spec: config.ExitSpec,
+    some_success: bool,
+) -> Tuple[ServiceState, ServiceDetails]:
+    if not some_success:
+        return (cast(int, exit_spec.get("empty_output", 2)), "Got no information from host")
 
-    specific_missing_sections, generic_missing_sections = set(), set()
-    for section in missing_sections:
-        match = False
-        for pattern, status in specific_missing_sections_spec:
+    specific_plugins_missing_data_spec = cast(
+        List[config.ExitSpecSection],
+        exit_spec.get("specific_missing_sections", []),
+    )
+
+    specific_plugins, generic_plugins = set(), set()
+    for check_plugin_name in plugins_missing_data:
+        for pattern, status in specific_plugins_missing_data_spec:
             reg = regex(pattern)
-            if reg.match(str(section)):
-                match = True
-                specific_missing_sections.add((section, status))
+            if reg.match(str(check_plugin_name)):
+                specific_plugins.add((check_plugin_name, status))
                 break
-        if not match:
-            generic_missing_sections.add(str(section))
+        else:  # no break
+            generic_plugins.add(str(check_plugin_name))
 
-    generic_missing_sections_status = cast(int, exit_spec.get("missing_sections", 1))
+    generic_plugins_status = cast(int, exit_spec.get("missing_sections", 1))
     infotexts = [
-        "Missing agent sections: %s%s" %
-        (", ".join(sorted(generic_missing_sections)),
-         check_api_utils.state_markers[generic_missing_sections_status])
+        "Missing monitoring data for check plugins: %s%s" % (
+            ", ".join(sorted(generic_plugins)),
+            check_api_utils.state_markers[generic_plugins_status],
+        ),
     ]
 
-    for section, status in sorted(specific_missing_sections):
-        infotexts.append("%s%s" % (section, check_api_utils.state_markers[status]))
-        generic_missing_sections_status = max(generic_missing_sections_status, status)
+    for plugin, status in sorted(specific_plugins):
+        infotexts.append("%s%s" % (plugin, check_api_utils.state_markers[status]))
+        generic_plugins_status = max(generic_plugins_status, status)
 
-    return generic_missing_sections_status, ", ".join(infotexts)
+    return generic_plugins_status, ", ".join(infotexts)
 
 
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
@@ -254,10 +260,11 @@ def _do_all_checks_on_host(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     only_check_plugins: Optional[Set[CheckPluginName]] = None,
-) -> Tuple[int, List[SectionName]]:
+) -> Tuple[int, List[CheckPluginName]]:
     hostname = host_config.hostname  # type: HostName
 
-    num_success, missing_sections = 0, set()
+    num_success = 0
+    plugins_missing_data: Set[CheckPluginName] = set()
 
     check_api_utils.set_hostname(hostname)
 
@@ -270,15 +277,18 @@ def _do_all_checks_on_host(
         if success:
             num_success += 1
         else:
-            # TODO (mo): update semantics: CMK-4310
-            missing_sections.add(SectionName(section_name_of(service.check_plugin_name)))
+            # TODO (mo): centralize maincheckify: CMK-4295
+            plugins_missing_data.add(CheckPluginName(maincheckify(service.check_plugin_name)))
 
     import cmk.base.inventory as inventory  # pylint: disable=import-outside-toplevel
-    inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,
-                                                       ipaddress)
+    inventory.do_inventory_actions_during_checking_for(
+        sources,
+        multi_host_sections,
+        host_config,
+        ipaddress,
+    )
 
-    missing_section_list = sorted(missing_sections)
-    return num_success, missing_section_list
+    return num_success, sorted(plugins_missing_data)
 
 
 def _get_filtered_services(

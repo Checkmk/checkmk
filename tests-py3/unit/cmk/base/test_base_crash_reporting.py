@@ -100,7 +100,6 @@ def test_check_crash_report_from_exception(monkeypatch):
             "check_type": (str, "uptime"),
             "item": (type(None), None),
             "params": (type(None), None),
-            "uses_snmp": (bool, False),
             "inline_snmp": (bool, False),
             "manual_check": (bool, False),
     }.items():

@@ -21,7 +21,6 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-import cmk.base.check_utils
 import cmk.base.config as config
 from cmk.base.check_utils import RawAgentData
 
@@ -106,7 +105,6 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 "is_cluster": host_config.is_cluster,
                 "description": description,
                 "check_type": check_plugin_name,
-                "uses_snmp": cmk.base.check_utils.is_snmp_check(check_plugin_name),
                 "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
                 "manual_check": is_manual_check,
                 **check_plugin_kwargs,

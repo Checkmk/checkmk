@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from pathlib import Path
 import sys
-from typing import Dict, List, Optional, Set, TypedDict
+from typing import Any, Dict, List, Optional, Tuple, TypedDict, Set, Union
 
 from six import ensure_str
 
@@ -32,6 +33,8 @@ import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.fetchers.factory as snmp_factory
 
+from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
+from cmk.base.api.agent_based.register.check_plugins import CheckPlugin
 import cmk.base.backup
 import cmk.base.check_api as check_api
 import cmk.base.check_utils
@@ -51,7 +54,6 @@ import cmk.base.obsolete_output as out
 import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
-from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 
@@ -326,35 +328,46 @@ modes.register(
 def mode_list_checks():
     # type: () -> None
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
-    all_check_manuals = man_pages.all_man_pages()
+    all_check_manuals = {maincheckify(n): k for n, k in man_pages.all_man_pages().items()}
 
-    checks_sorted = sorted(
-        list(config.check_info.items()) +
-        [("check_" + name, entry) for (name, entry) in config.active_check_info.items()])
+    legacy_check_plugins = {maincheckify(name) for name in config.check_info}
 
-    for check_plugin_name, check in checks_sorted:
-        man_filename = all_check_manuals.get(check_plugin_name)
-        try:
-            if 'command_line' in check:
-                what = 'active'
-                ty_color = tty.blue
-            elif cmk.base.check_utils.is_snmp_check(check_plugin_name):
-                what = 'snmp'
+    registered_checks = list(config.registered_check_plugins.items())
+    active_checks = [("check_%s" % name, entry) for name, entry in config.active_check_info.items()]
+    # TODO clean mixed typed list up:
+    all_checks = registered_checks + active_checks  # type: ignore[operator]
+
+    for plugin_name, check in sorted(all_checks, key=lambda x: str(x[0])):
+        if not isinstance(check, CheckPlugin):  # active check
+            what = 'active'
+            ty_color = tty.blue
+        else:
+            if str(plugin_name) in legacy_check_plugins:
+                what = 'auto migrated'
                 ty_color = tty.magenta
             else:
-                what = 'tcp'
+                what = ''
                 ty_color = tty.yellow
 
-            if man_filename:
-                title = open(man_filename).readlines()[0].split(":", 1)[1].strip()
-            else:
-                title = "(no man page present)"
+        title = _get_check_plugin_title(str(plugin_name), all_check_manuals)
 
-            out.output(
-                (tty.bold + "%-44s" + tty.normal + ty_color + " %-6s " + tty.normal + "%s\n") %
-                (check_plugin_name, what, title))
-        except Exception as e:
-            console.error("ERROR in check %r: %s\n" % (check_plugin_name, e))
+        out.output((tty.bold + "%-44s" + tty.normal + ty_color + " %-13s " + tty.normal + "%s\n") %
+                   (plugin_name, what, title))
+
+
+def _get_check_plugin_title(
+    check_plugin_name: str,
+    all_man_pages: Dict[str, str],
+) -> str:
+
+    man_filename = all_man_pages.get(check_plugin_name)
+    if man_filename is None:
+        return "(no man page present)"
+
+    try:
+        return cmk.utils.man_pages.get_title_from_man_page(Path(man_filename))
+    except MKGeneralException:
+        return "(failed to read man page)"
 
 
 modes.register(

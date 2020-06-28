@@ -131,7 +131,9 @@ class HostCheckTable:
         if not self._is_checkname_valid(service.check_plugin_name):
             return {}
 
-        if self.skip_ignored and config.service_ignored(hostname, service.check_plugin_name,
+        # TODO (mo): centralize maincheckify: CMK-4295
+        service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
+        if self.skip_ignored and config.service_ignored(hostname, service_check_plugin_name,
                                                         service.description):
             return {}
 

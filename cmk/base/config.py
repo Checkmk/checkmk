@@ -107,9 +107,7 @@ try:
         management_plugin_factory,
     )
     from cmk.base.api.agent_based.register.check_plugins_legacy import (
-        create_check_plugin_from_legacy,
-        resolve_legacy_name,
-    )
+        create_check_plugin_from_legacy,)
 except ImportError:
     # API is only Python3. This script is still called by python2 modules,
     # which for the moment don't require the API and for the time being we
@@ -430,6 +428,10 @@ def _transform_plugin_names_from_160_to_170(global_dict: Dict[str, Any]) -> None
     if "use_new_descriptions_for" in global_dict:
         global_dict["use_new_descriptions_for"] = [
             maincheckify(n) for n in global_dict["use_new_descriptions_for"]
+        ]
+    if "ignored_checktypes" in global_dict:
+        global_dict["ignored_checktypes"] = [
+            maincheckify(n) for n in global_dict["ignored_checktypes"]
         ]
 
 
@@ -1055,33 +1057,35 @@ def get_final_service_description(hostname: HostName, description: ServiceName) 
 
 
 def service_ignored(
-    hostname: HostName,
-    check_plugin_name: Optional[Union[CheckPluginNameStr, CheckPluginName]],
+    host_name: HostName,
+    check_plugin_name: Optional[CheckPluginName],
     description: Optional[ServiceName],
 ) -> bool:
-    # TODO (mo): CMK-4573 Clean this up, once a CheckPluginName instance can be in ignored_checktypes
-    if isinstance(check_plugin_name, CheckPluginName):
-        check_plugin_name = resolve_legacy_name(check_plugin_name)
+    if check_plugin_name is not None:
+        check_plugin_name_str = str(check_plugin_name)
 
-    if check_plugin_name and check_plugin_name in ignored_checktypes:
-        return True
+        if str(check_plugin_name) in ignored_checktypes:
+            return True
 
-    if check_plugin_name and _checktype_ignored_for_host(hostname, check_plugin_name):
-        return True
+        if _checktype_ignored_for_host(host_name, check_plugin_name_str):
+            return True
 
-    if description is not None \
-       and get_config_cache().in_boolean_serviceconf_list(hostname, description, ignored_services):
-        return True
+    return (description is not None and get_config_cache().in_boolean_serviceconf_list(
+        host_name,
+        description,
+        ignored_services,
+    ))
 
-    return False
 
-
-def _checktype_ignored_for_host(host: HostName, checktype: CheckPluginNameStr) -> bool:
-    if checktype in ignored_checktypes:
-        return True
-    ignored = get_config_cache().host_extra_conf(host, ignored_checks)
+def _checktype_ignored_for_host(
+    host_name: HostName,
+    check_plugin_name_str: str,
+) -> bool:
+    ignored = get_config_cache().host_extra_conf(host_name, ignored_checks)
     for e in ignored:
-        if checktype == e or (isinstance(e, list) and checktype in e):
+        if isinstance(e, str) and check_plugin_name_str == maincheckify(e):
+            return True
+        if isinstance(e, list) and check_plugin_name_str in [maincheckify(n) for n in e]:
             return True
     return False
 

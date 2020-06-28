@@ -1306,7 +1306,9 @@ def _get_node_services(
     for check_source, service in services.values():
         clustername = config_cache.host_of_clustered_service(hostname, service.description)
         if hostname != clustername:
-            if config.service_ignored(clustername, service.check_plugin_name, service.description):
+            # TODO(mo): centralize maincheckify: CMK-4295
+            service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
+            if config.service_ignored(clustername, service_check_plugin_name, service.description):
                 check_source = "ignored"
             services[(service.check_plugin_name, service.item)] = ("clustered_" + check_source,
                                                                    service)
@@ -1411,7 +1413,10 @@ def _merge_manual_services(host_config: config.HostConfig, services: ServicesTab
             # "[source]_ignored" instead of ignored.
             continue
 
-        if config.service_ignored(hostname, discovered_service.check_plugin_name,
+        # TODO(mo): centralize maincheckify: CMK-4295
+        service_check_plugin_name = CheckPluginName(
+            maincheckify(discovered_service.check_plugin_name))
+        if config.service_ignored(hostname, service_check_plugin_name,
                                   discovered_service.description):
             services[(discovered_service.check_plugin_name, discovered_service.item)] = (
                 "ignored",

@@ -135,7 +135,7 @@ def schedule_discovery_check(hostname: HostName) -> None:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect(cmk.utils.paths.livestatus_unix_socket)
         now = int(time.time())
-        if 'cmk-inventory' in config.use_new_descriptions_for:
+        if 'cmk_inventory' in config.use_new_descriptions_for:
             command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK Discovery;%d" % (hostname, now)
         else:
             # TODO: Remove this old name handling one day
@@ -252,12 +252,19 @@ def _get_service_filter_func(service_whitelist: Optional[List[str]],
         hostname, check_plugin_name, item, whitelist, blacklist)
 
 
-def _filter_service_by_patterns(hostname: HostName, check_plugin_name: CheckPluginNameStr,
-                                item: Item, whitelist: Pattern[str],
-                                blacklist: Pattern[str]) -> bool:
+def _filter_service_by_patterns(
+    hostname: HostName,
+    check_plugin_name_str: CheckPluginNameStr,
+    item: Item,
+    whitelist: Pattern[str],
+    blacklist: Pattern[str],
+) -> bool:
     #TODO Call sites: Why do we not use discovered_service.description;
     # Is discovered_service.description already finalized as
     # in config.service_description?
+    # (mo): we should indeed make sure that is the case, and then pass the service as
+    # argument directly.
+    check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
     description = config.service_description(hostname, check_plugin_name, item)
     return whitelist.match(description) is not None and blacklist.match(description) is None
 

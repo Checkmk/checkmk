@@ -94,23 +94,29 @@ class HostCheckTable:
 
     def _get_static_check_entries(self, host_config: config.HostConfig) -> Iterator[Service]:
         entries: List[Service] = []
-        for _checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
+        for _checkgroup_name, check_plugin_name_str, item, params in host_config.static_checks:
             if config.has_timespecific_params(params):
                 timespec_params = [params]
                 params = {}
             else:
                 timespec_params = []
 
-            new_params = config.compute_check_parameters(host_config.hostname, check_plugin_name,
-                                                         item, params)
+            new_params = config.compute_check_parameters(
+                host_config.hostname,
+                check_plugin_name_str,
+                item,
+                params,
+            )
 
             if timespec_params:
                 params = config.set_timespecific_param_list(timespec_params, new_params)
             else:
                 params = new_params
 
+            # TODO (mo): centralize maincheckify: CMK-4295
+            check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
             descr = config.service_description(host_config.hostname, check_plugin_name, item)
-            entries.append(Service(check_plugin_name, item, descr, params))
+            entries.append(Service(check_plugin_name_str, item, descr, params))
 
         # Note: We need to reverse the order of the static_checks. This is
         # because users assume that earlier rules have precedence over later

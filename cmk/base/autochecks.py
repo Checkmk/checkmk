@@ -12,6 +12,7 @@ from pathlib import Path
 
 from six import ensure_str
 
+from cmk.utils.check_utils import maincheckify
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -32,8 +33,7 @@ from cmk.base.check_utils import ABCService, DiscoveredService, LegacyCheckParam
 ComputeCheckParameters = Callable[[HostName, CheckPluginNameStr, Item, LegacyCheckParameters],
                                   Optional[LegacyCheckParameters]]
 GetCheckVariables = Callable[[], CheckVariables]
-GetServiceDescription = Callable[[HostName, Union[CheckPluginNameStr, CheckPluginName], Item],
-                                 ServiceName]
+GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
 
 
@@ -50,18 +50,25 @@ class AutochecksManager:
         self._discovered_labels_of: Dict[HostName, Dict[str, DiscoveredServiceLabels]] = {}
         self._raw_autochecks_cache: Dict[HostName, List[Service]] = {}
 
-    def get_autochecks_of(self, hostname: str, compute_check_parameters: ComputeCheckParameters,
-                          service_description: GetServiceDescription,
-                          get_check_variables: GetCheckVariables) -> List[Service]:
+    def get_autochecks_of(
+        self,
+        hostname: str,
+        compute_check_parameters: ComputeCheckParameters,
+        service_description: GetServiceDescription,
+        get_check_variables: GetCheckVariables,
+    ) -> List[Service]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = self._get_autochecks_of_uncached(
                 hostname, compute_check_parameters, service_description, get_check_variables)
         return self._autochecks[hostname]
 
-    def _get_autochecks_of_uncached(self, hostname: HostName,
-                                    compute_check_parameters: ComputeCheckParameters,
-                                    service_description: GetServiceDescription,
-                                    get_check_variables: GetCheckVariables) -> List[Service]:
+    def _get_autochecks_of_uncached(
+        self,
+        hostname: HostName,
+        compute_check_parameters: ComputeCheckParameters,
+        service_description: GetServiceDescription,
+        get_check_variables: GetCheckVariables,
+    ) -> List[Service]:
         """Read automatically discovered checks of one host"""
         return [
             Service(
@@ -79,9 +86,13 @@ class AutochecksManager:
                                                        get_check_variables)
         ]
 
-    def discovered_labels_of(self, hostname: HostName, service_desc: ServiceName,
-                             service_description: GetServiceDescription,
-                             get_check_variables: GetCheckVariables) -> DiscoveredServiceLabels:
+    def discovered_labels_of(
+        self,
+        hostname: HostName,
+        service_desc: ServiceName,
+        service_description: GetServiceDescription,
+        get_check_variables: GetCheckVariables,
+    ) -> DiscoveredServiceLabels:
         if hostname not in self._discovered_labels_of:
             # Only read the raw autochecks here, do not compute the effective
             # check parameters. The latter would involve ruleset matching which
@@ -91,11 +102,18 @@ class AutochecksManager:
             self._discovered_labels_of[hostname][service_desc] = DiscoveredServiceLabels()
         return self._discovered_labels_of[hostname][service_desc]
 
-    def _read_raw_autochecks(self, hostname: HostName, service_description: GetServiceDescription,
-                             get_check_variables: GetCheckVariables) -> List[Service]:
+    def _read_raw_autochecks(
+        self,
+        hostname: HostName,
+        service_description: GetServiceDescription,
+        get_check_variables: GetCheckVariables,
+    ) -> List[Service]:
         if hostname not in self._raw_autochecks_cache:
             self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_uncached(
-                hostname, service_description, get_check_variables)
+                hostname,
+                service_description,
+                get_check_variables,
+            )
             # create cache from autocheck labels
             self._discovered_labels_of.setdefault(hostname, {})
             for service in self._raw_autochecks_cache[hostname]:
@@ -104,9 +122,12 @@ class AutochecksManager:
 
     # TODO: use store.load_object_from_file()
     # TODO: Common code with parse_autochecks_file? Cleanup.
-    def _read_raw_autochecks_uncached(self, hostname: HostName,
-                                      service_description: GetServiceDescription,
-                                      get_check_variables: GetCheckVariables) -> List[Service]:
+    def _read_raw_autochecks_uncached(
+        self,
+        hostname: HostName,
+        service_description: GetServiceDescription,
+        get_check_variables: GetCheckVariables,
+    ) -> List[Service]:
         """Read automatically discovered checks of one host"""
         path = _autochecks_path_for(hostname)
         check_variables = get_check_variables()
@@ -148,8 +169,9 @@ class AutochecksManager:
                 raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
                                          "The check type must be a string." % (entry, hostname))
 
-            check_plugin_name = str(entry["check_plugin_name"])
-
+            check_plugin_name_str = str(entry["check_plugin_name"])
+            # TODO (mo): centralize maincheckify: CMK-4295
+            check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
             try:
                 description = service_description(hostname, check_plugin_name, item)
             except Exception:
@@ -157,7 +179,7 @@ class AutochecksManager:
 
             services.append(
                 Service(
-                    check_plugin_name=check_plugin_name,
+                    check_plugin_name=check_plugin_name_str,
                     item=item,
                     description=description,
                     parameters=entry["parameters"],

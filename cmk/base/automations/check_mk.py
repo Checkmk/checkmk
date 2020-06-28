@@ -19,17 +19,18 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
+from cmk.utils.check_utils import section_name_of, maincheckify
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.check_utils import section_name_of
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
+    CheckPluginName,
     CheckPluginNameStr,
     HostName,
     ServiceDetails,
@@ -631,7 +632,9 @@ class AutomationAnalyseServices(Automation):
 
         # 1. Manual checks
         for checkgroup_name, checktype, item, params in host_config.static_checks:
-            descr = config.service_description(hostname, checktype, item)
+            # TODO (mo): centralize maincheckify: CMK-4295
+            check_plugin_name = CheckPluginName(maincheckify(checktype))
+            descr = config.service_description(hostname, check_plugin_name, item)
             if descr == servicedesc:
                 return {
                     "origin": "static",
@@ -1683,7 +1686,9 @@ class AutomationGetServiceName(Automation):
     needs_checks = True
 
     def execute(self, args: List[str]) -> ServiceName:
-        hostname, check_plugin_name, item = args
+        hostname, check_plugin_name_str, item = args
+        # TODO (mo): centralize maincheckify: CMK-4295
+        check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
         return config.service_description(hostname, check_plugin_name, item)
 
 

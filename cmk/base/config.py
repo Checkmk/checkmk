@@ -397,6 +397,8 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
     for helper_var in helper_vars:
         del global_dict[helper_var]
 
+    _transform_plugin_names_from_160_to_170(global_dict)
+
     # Revert specialised SetFolderPath classes back to normal, because it improves
     # the lookup performance and the helper_vars are no longer available anyway..
     all_hosts = list(all_hosts)
@@ -416,6 +418,19 @@ def _transform_mgmt_config_vars_from_140_to_150() -> None:
         ]:
             if attributes.get(name):
                 var.setdefault(hostname, attributes[name])
+
+
+def _transform_plugin_names_from_160_to_170(global_dict: Dict[str, Any]) -> None:
+    # Pre 1.7.0 check plugin names may have dots or dashes (one case) in them.
+    # Now they don't, and we have to translate all variables that may use them:
+    if "service_descriptions" in global_dict:
+        global_dict["service_descriptions"] = {
+            maincheckify(k): v for k, v in global_dict["service_descriptions"].items()
+        }
+    if "use_new_descriptions_for" in global_dict:
+        global_dict["use_new_descriptions_for"] = [
+            maincheckify(n) for n in global_dict["use_new_descriptions_for"]
+        ]
 
 
 # Create list of all files to be included during configuration loading
@@ -861,13 +876,13 @@ _old_service_descriptions = {
     # While using the old description, don't append the item, even when discovered
     # with the new check which creates an item.
     "barracuda_mailqueues": lambda item: (False, "Mail Queue"),
-    "brocade_sys.mem": "Memory used",
+    "brocade_sys_mem": "Memory used",
     "casa_cpu_temp": "Temperature %s",
     "cisco_mem": "Mem used %s",
     "cisco_mem_asa": "Mem used %s",
     "cisco_mem_asa64": "Mem used %s",
-    "cmciii.temp": _get_old_cmciii_temp_description,
-    "cmciii.psm_current": "%s",
+    "cmciii_temp": _get_old_cmciii_temp_description,
+    "cmciii_psm_current": "%s",
     "cmciii_lcp_airin": "LCP Fanunit Air IN",
     "cmciii_lcp_airout": "LCP Fanunit Air OUT",
     "cmciii_lcp_water": "LCP Fanunit Water %s",
@@ -878,22 +893,22 @@ _old_service_descriptions = {
     "docker_container_mem": "Memory used",
     "enterasys_temp": lambda item: (False, "Temperature"),
     "esx_vsphere_datastores": "fs_%s",
-    "esx_vsphere_hostsystem.mem_usage": "Memory used",
-    "esx_vsphere_hostsystem.mem_usage_cluster": "Memory usage",
-    "etherbox.temp": "Sensor %s",
+    "esx_vsphere_hostsystem_mem_usage": "Memory used",
+    "esx_vsphere_hostsystem_mem_usage_cluster": "Memory usage",
+    "etherbox_temp": "Sensor %s",
     "fortigate_memory": "Memory usage",
     "fortigate_memory_base": "Memory usage",
-    "fortigate_node.memory": "Memory usage %s",
+    "fortigate_node_memory": "Memory usage %s",
     "hr_fs": "fs_%s",
     "hr_mem": "Memory used",
     "huawei_switch_mem": "Memory used %s",
     "hyperv_vm": "hyperv_vms",
     "ibm_svc_mdiskgrp": "MDiskGrp %s",
     "ibm_svc_system": "IBM SVC Info",
-    "ibm_svc_systemstats.cache": "IBM SVC Cache Total",
-    "ibm_svc_systemstats.diskio": "IBM SVC Throughput %s Total",
-    "ibm_svc_systemstats.disk_latency": "IBM SVC Latency %s Total",
-    "ibm_svc_systemstats.iops": "IBM SVC IOPS %s Total",
+    "ibm_svc_systemstats_cache": "IBM SVC Cache Total",
+    "ibm_svc_systemstats_diskio": "IBM SVC Throughput %s Total",
+    "ibm_svc_systemstats_disk_latency": "IBM SVC Latency %s Total",
+    "ibm_svc_systemstats_iops": "IBM SVC IOPS %s Total",
     "innovaphone_mem": "Memory used",
     "innovaphone_temp": lambda item: (False, "Temperature"),
     "juniper_mem": "Memory Utilization %s",
@@ -901,20 +916,20 @@ _old_service_descriptions = {
     "juniper_trpz_mem": "Memory used",
     "liebert_bat_temp": lambda item: (False, "Battery Temp"),
     "logwatch": "LOG %s",
-    "logwatch.groups": "LOG %s",
-    "mem.used": "Memory used",
-    "mem.win": "Memory and pagefile",
+    "logwatch_groups": "LOG %s",
+    "mem_used": "Memory used",
+    "mem_win": "Memory and pagefile",
     "mknotifyd": "Notification Spooler %s",
-    "mknotifyd.connection": "Notification Connection %s",
+    "mknotifyd_connection": "Notification Connection %s",
     "mssql_backup": "%s Backup",
     "mssql_blocked_sessions": lambda item: (False, "MSSQL Blocked Sessions"),
-    "mssql_counters.cache_hits": "%s",
-    "mssql_counters.file_sizes": "%s File Sizes",
-    "mssql_counters.locks": "%s Locks",
-    "mssql_counters.locks_per_batch": "%s Locks per Batch",
-    "mssql_counters.pageactivity": "%s Page Activity",
-    "mssql_counters.sqlstats": "%s",
-    "mssql_counters.transactions": "%s Transactions",
+    "mssql_counters_cache_hits": "%s",
+    "mssql_counters_file_sizes": "%s File Sizes",
+    "mssql_counters_locks": "%s Locks",
+    "mssql_counters_locks_per_batch": "%s Locks per Batch",
+    "mssql_counters_pageactivity": "%s Page Activity",
+    "mssql_counters_sqlstats": "%s",
+    "mssql_counters_transactions": "%s Transactions",
     "mssql_databases": "%s Database",
     "mssql_datafiles": "Datafile %s",
     "mssql_tablespaces": "%s Sizes",
@@ -922,10 +937,10 @@ _old_service_descriptions = {
     "mssql_versions": "%s Version",
     "netscaler_mem": "Memory used",
     "nullmailer_mailq": lambda item: (False, "Nullmailer Queue"),
-    "nvidia.temp": "Temperature NVIDIA %s",
+    "nvidia_temp": "Temperature NVIDIA %s",
     "postfix_mailq": lambda item: (False, "Postfix Queue"),
     "ps": "proc_%s",
-    "ps.perf": "proc_%s",
+    "ps_perf": "proc_%s",
     "qmail_stats": lambda item: (False, "Qmail Queue"),
     "raritan_emx": "Rack %s",
     "raritan_pdu_inlet": "Input Phase %s",
@@ -935,41 +950,39 @@ _old_service_descriptions = {
     "statgrab_mem": "Memory used",
     "tplink_mem": "Memory used",
     "ups_bat_temp": "Temperature Battery %s",
-    "vms_diskstat.df": "fs_%s",
+    "vms_diskstat_df": "fs_%s",
     "wmic_process": "proc_%s",
     "zfsget": "fs_%s",
 }
 
 
-def service_description(hostname: HostName, check_plugin_name: Union[CheckPluginNameStr,
-                                                                     CheckPluginName],
-                        item: Item) -> ServiceName:
-    # TODO (mo): CMK-4576 bring this to the new API
-    if isinstance(check_plugin_name, CheckPluginName):
-        check_plugin_name = resolve_legacy_name(check_plugin_name)
-
-    if check_plugin_name not in check_info:
+def service_description(
+    hostname: HostName,
+    check_plugin_name: CheckPluginName,
+    item: Item,
+) -> ServiceName:
+    plugin = get_registered_check_plugin(check_plugin_name)
+    if plugin is None:
         if item:
             return "Unimplemented check %s / %s" % (check_plugin_name, item)
         return "Unimplemented check %s" % check_plugin_name
 
+    plugin_name_str = str(plugin.name)
     # use user-supplied service description, if available
     add_item = True
-    descr_format = service_descriptions.get(check_plugin_name)
+    descr_format = service_descriptions.get(plugin_name_str)
     if not descr_format:
+        old_descr = _old_service_descriptions.get(plugin_name_str)
         # handle renaming for backward compatibility
-        if check_plugin_name in _old_service_descriptions and \
-            check_plugin_name not in use_new_descriptions_for:
-
+        if old_descr and plugin_name_str not in use_new_descriptions_for:
             # Can be a function to generate the old description more flexible.
-            old_descr = _old_service_descriptions[check_plugin_name]
             if callable(old_descr):
                 add_item, descr_format = old_descr(item)
             else:
                 descr_format = old_descr
 
         else:
-            descr_format = check_info[check_plugin_name]["service_description"]
+            descr_format = plugin.service_name
 
     descr_format = ensure_str(descr_format)
 
@@ -982,9 +995,9 @@ def service_description(hostname: HostName, check_plugin_name: Union[CheckPlugin
 
     if "%s" in descr:
         raise MKGeneralException(
-            "Found '%%s' in service description (Host: %s, Check type: %s, Item: %s). "
+            "Found '%%s' in service description (Host: %s, Check plugin: %s, Item: %s). "
             "Please try to rediscover the service to fix this issue." %
-            (hostname, check_plugin_name, item))
+            (hostname, plugin.name, item))
 
     return get_final_service_description(hostname, descr)
 
@@ -3764,7 +3777,7 @@ class ConfigCache:
 
     # TODO: Remove old name one day
     def service_discovery_name(self) -> ServiceName:
-        if 'cmk-inventory' in use_new_descriptions_for:
+        if 'cmk_inventory' in use_new_descriptions_for:
             return u'Check_MK Discovery'
         return u'Check_MK inventory'
 

@@ -1599,7 +1599,7 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
 def test_config_cache_service_discovery_name(monkeypatch, use_new_descr, result):
     ts = Scenario()
     if use_new_descr:
-        ts.set_option("use_new_descriptions_for", ["cmk-inventory"])
+        ts.set_option("use_new_descriptions_for", ["cmk_inventory"])
     config_cache = ts.apply(monkeypatch)
 
     assert config_cache.service_discovery_name() == result

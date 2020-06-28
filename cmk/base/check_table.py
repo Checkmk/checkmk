@@ -14,7 +14,6 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 
 import cmk.base.config as config
 import cmk.base.item_state as item_state
-import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
 from cmk.utils.type_defs import HostName
 from cmk.base.check_utils import (
@@ -258,22 +257,14 @@ def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
 
 
 def remove_duplicate_checks(check_table: CheckTable) -> CheckTable:
-    have_with_tcp: Dict[str, Tuple[CheckPluginNameStr, Item]] = {}
-    have_with_snmp: Dict[str, Tuple[CheckPluginNameStr, Item]] = {}
-    without_duplicates: CheckTable = {}
-    for key, service in check_table.items():
-        if cmk.base.check_utils.is_snmp_check(service.check_plugin_name):
-            if service.description in have_with_tcp:
-                continue
-            have_with_snmp[service.description] = key
-        else:
-            if service.description in have_with_snmp:
-                snmp_key = have_with_snmp[service.description]
-                del without_duplicates[snmp_key]
-                del have_with_snmp[service.description]
-            have_with_tcp[service.description] = key
-        without_duplicates[key] = service
-    return without_duplicates
+    service_keys_by_description = {
+        # This will sort by check plugin name and item, which is as good as anything else,
+        # as long as it is konsistent.
+        # If we want to change the precedence, we must falicitate that using the 'supersedes'
+        # feature of the corresponding raw sections.
+        service.description: key for key, service in sorted(check_table.items(), reverse=True)
+    }
+    return {key: check_table[key] for key in service_keys_by_description.values()}
 
 
 def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):

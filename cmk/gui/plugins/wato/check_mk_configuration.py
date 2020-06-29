@@ -6,7 +6,7 @@
 
 import re
 import logging
-from typing import Dict, List
+from typing import Dict, List, Tuple as _Tuple, Any
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
@@ -49,6 +49,7 @@ from cmk.gui.valuespec import (
     LogLevelChoice,
     Labels,
     CascadingDropdownChoice,
+    ValueSpec,
 )
 
 from cmk.gui.plugins.wato import (
@@ -3766,74 +3767,160 @@ def _vs_periodic_discovery() -> Transform:
     )
 
 
-def _valuespec_automatic_rediscover_parameters() -> Dictionary:
-    return Dictionary(
-        title=_("Automatically update service configuration"),
-        help=_("If active the check will not only notify about un-monitored services, "
-               "it will also automatically add/remove them as neccessary."),
-        elements=[
-            ("mode",
-             DropdownChoice(
-                 title=_("Mode"),
-                 choices=[
-                     (0, _("Add unmonitored services, new host labels")),
-                     (1, _("Remove vanished services")),
-                     (2, _("Add unmonitored & remove vanished services and host labels")),
-                     (3, _("Refresh all services and host labels (tabula rasa)")),
-                 ],
-                 default_value=0,
-             )),
-            (
-                "group_time",
-                Age(
-                    title=_("Group discovery and activation for up to"),
-                    help=_("A delay can be configured here so that multiple "
-                           "discoveries can be activated in one go. This avoids frequent core "
-                           "restarts in situations with frequent services changes."),
-                    default_value=15 * 60,
-                    # The cronjob (etc/cron.d/cmk_discovery) is executed every 5 minutes
-                    minvalue=5 * 60,
-                    display=["hours", "minutes"],
-                )),
-            ("excluded_time",
-             ListOfTimeRanges(
-                 title=_("Never do discovery or activate changes in the following time ranges"),
-                 help=_("This avoids automatic changes during these times so "
-                        "that the automatic system doesn't interfere with "
-                        "user activity."),
-             )),
-            ("activation",
-             DropdownChoice(
-                 title=_("Automatic activation"),
-                 choices=[
-                     (True, _("Automatically activate changes")),
-                     (False, _("Do not activate changes")),
-                 ],
-                 default_value=True,
-                 help=_("Here you can have the changes activated whenever services "
-                        "have been added or removed."),
-             )),
-            ("service_whitelist",
-             ListOfStrings(
-                 title=_("Activate only services matching"),
-                 allow_empty=False,
-                 help=_("Set service names or regular expression patterns here to "
-                        "allow only matching services to be activated automatically. "
-                        "If you set both this and \'Don't activate services matching\', "
-                        "both rules have to apply for a service to be activated."),
-             )),
-            ("service_blacklist",
-             ListOfStrings(
-                 title=_("Don't activate services matching"),
-                 allow_empty=False,
-                 help=_("Set service names or regular expression patterns here to "
-                        "prevent matching services from being activated automatically. "
-                        "If you set both this and \'Activate only services matching\', "
-                        "both rules have to apply for a service to be activated."),
-             )),
-        ],
-        optional_keys=["service_whitelist", "service_blacklist"],
+def _transform_automatic_rediscover_parameters(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    # Be compatible to pre 1.7.0 versions; There were only two general pattern lists
+    # which were used for new AND vanished services:
+    # {
+    #     "service_whitelist": [PATTERN],
+    #     "service_blacklist": [PATTERN],
+    # }
+    # New since 1.7.0: A white- and blacklist can be configured for both new and vanished
+    # services as "combined" pattern lists.
+    # Or two separate pattern lists for each new and vanished services are configurable:
+    # {
+    #     "service_filters": (
+    #         "combined",
+    #         {
+    #             "service_whitelist": [PATTERN],
+    #             "service_blacklist": [PATTERN],
+    #         },
+    #     )
+    # } resp.
+    # {
+    #     "service_filters": (
+    #         "dedicated",
+    #         {
+    #             "service_whitelist": [PATTERN],
+    #             "service_blacklist": [PATTERN],
+    #             "vanished_service_whitelist": [PATTERN],
+    #             "vanished_service_blacklist": [PATTERN],
+    #         },
+    #     )
+    # }
+    service_filters = {}
+    for key in ("service_whitelist", "service_blacklist"):
+        if key in parameters:
+            service_filters[key] = parameters.pop(key)
+    if service_filters:
+        parameters["service_filters"] = ("combined", service_filters)
+    return parameters
+
+
+def _valuespec_automatic_rediscover_parameters() -> Transform:
+    return Transform(
+        Dictionary(
+            title=_("Automatically update service configuration"),
+            help=_("If active the check will not only notify about un-monitored services, "
+                   "it will also automatically add/remove them as neccessary."),
+            elements=[
+                ("mode",
+                 DropdownChoice(
+                     title=_("Mode"),
+                     choices=[
+                         (0, _("Add unmonitored services, new host labels")),
+                         (1, _("Remove vanished services")),
+                         (2, _("Add unmonitored & remove vanished services and host labels")),
+                         (3, _("Refresh all services and host labels (tabula rasa)")),
+                     ],
+                     default_value=0,
+                 )),
+                (
+                    "group_time",
+                    Age(
+                        title=_("Group discovery and activation for up to"),
+                        help=_("A delay can be configured here so that multiple "
+                               "discoveries can be activated in one go. This avoids frequent core "
+                               "restarts in situations with frequent services changes."),
+                        default_value=15 * 60,
+                        # The cronjob (etc/cron.d/cmk_discovery) is executed every 5 minutes
+                        minvalue=5 * 60,
+                        display=["hours", "minutes"],
+                    )),
+                ("excluded_time",
+                 ListOfTimeRanges(
+                     title=_("Never do discovery or activate changes in the following time ranges"),
+                     help=_("This avoids automatic changes during these times so "
+                            "that the automatic system doesn't interfere with "
+                            "user activity."),
+                 )),
+                ("activation",
+                 DropdownChoice(
+                     title=_("Automatic activation"),
+                     choices=[
+                         (True, _("Automatically activate changes")),
+                         (False, _("Do not activate changes")),
+                     ],
+                     default_value=True,
+                     help=_("Here you can have the changes activated whenever services "
+                            "have been added or removed."),
+                 )),
+                ("service_filters",
+                 CascadingDropdown(
+                     title=_("Service Filters"),
+                     choices=[
+                         (
+                             "combined",
+                             _("Combined white-/blacklist for new and vanished services"),
+                             Dictionary(
+                                 elements=_get_periodic_discovery_dflt_service_filter_lists()),
+                         ),
+                         (
+                             "dedicated",
+                             _("Dedicated white-/blacklists for new and vanished services"),
+                             Dictionary(elements=_get_periodic_discovery_dflt_service_filter_lists(
+                             ) + [
+                                 ("vanished_service_whitelist",
+                                  ListOfStrings(
+                                      title=_("Remove only matching vanished services"),
+                                      allow_empty=False,
+                                      help=
+                                      _("Set service names or regular expression patterns here to "
+                                        "remove matching vanished services automatically. "
+                                        "If you set both this and \'Don't remove matching vanished services\', "
+                                        "both rules have to apply for a service to be removed."),
+                                  )),
+                                 ("vanished_service_blacklist",
+                                  ListOfStrings(
+                                      title=_("Don't remove matching vanished services"),
+                                      allow_empty=False,
+                                      help=
+                                      _("Set service names or regular expression patterns here to "
+                                        "prevent removing of matching vanished services automatically. "
+                                        "If you set both this and \'Remove only matching vanished services\', "
+                                        "both rules have to apply for a service to be removed."),
+                                  )),
+                             ],),
+                         ),
+                     ],
+                 )),
+            ],
+            optional_keys=["service_filters"],
+        ),
+        forth=_transform_automatic_rediscover_parameters,
     )
+
+
+def _get_periodic_discovery_dflt_service_filter_lists() -> List[_Tuple[str, ValueSpec]]:
+    return [
+        ("service_whitelist",
+         ListOfStrings(
+             title=_("Activate only services matching"),
+             allow_empty=False,
+             help=_("Set service names or regular expression patterns here to "
+                    "allow only matching services to be activated automatically. "
+                    "If you set both this and \'Don't activate services matching\', "
+                    "both rules have to apply for a service to be activated."),
+         )),
+        ("service_blacklist",
+         ListOfStrings(
+             title=_("Don't activate services matching"),
+             allow_empty=False,
+             help=_("Set service names or regular expression patterns here to "
+                    "prevent matching services from being activated automatically. "
+                    "If you set both this and \'Activate only services matching\', "
+                    "both rules have to apply for a service to be activated."),
+         )),
+    ]
 
 
 rulespec_registry.register(

@@ -82,10 +82,22 @@ def test__get_rediscovery_mode():
         "service_whitelist": [],
         "service_blacklist": [],
     },
+    {
+        "vanished_service_whitelist": [],
+    },
+    {
+        "vanished_service_blacklist": [],
+    },
+    {
+        "vanished_service_whitelist": [],
+        "vanished_service_blacklist": [],
+    },
 ])
 def test__get_service_filter_func_no_lists(parameters_rediscovery):
     params = {"inventory_rediscovery": parameters_rediscovery}
-    assert discovery._get_service_filter_func(params) is discovery._accept_all_services
+    service_filters = discovery.get_service_filter_funcs(params)
+    assert service_filters.new is discovery._accept_all_services
+    assert service_filters.vanished is discovery._accept_all_services
 
 
 @pytest.mark.parametrize("whitelist, result", [
@@ -98,14 +110,14 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
     monkeypatch.setattr(config, "service_description", lambda h, c, i: "Test Description")
 
     params = {"inventory_rediscovery": {"service_whitelist": whitelist}}
-    service_filter = discovery._get_service_filter_func(params)
-    assert service_filter is not None
-    assert service_filter("hostname", "check_plugin_name", "item") is result
+    service_filters = discovery.get_service_filter_funcs(params)
+    assert service_filters.new is not None
+    assert service_filters.new("hostname", "check_plugin_name", "item") is result
 
     params = {"inventory_rediscovery": {"service_blacklist": whitelist}}
-    service_filter_inverse = discovery._get_service_filter_func(params)
-    assert service_filter_inverse is not None
-    assert service_filter_inverse("hostname", "check_plugin_name", "item") is not result
+    service_filters_inverse = discovery.get_service_filter_funcs(params)
+    assert service_filters_inverse.new is not None
+    assert service_filters_inverse.new("hostname", "check_plugin_name", "item") is not result
 
     params = {
         "inventory_rediscovery": {
@@ -113,9 +125,9 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
             "service_blacklist": whitelist,
         }
     }
-    service_filter_both = discovery._get_service_filter_func(params)
-    assert service_filter_both is not None
-    assert service_filter_both("hostname", "check_plugin_name", "item") is False
+    service_filters_both = discovery.get_service_filter_funcs(params)
+    assert service_filters_both.new is not None
+    assert service_filters_both.new("hostname", "check_plugin_name", "item") is False
 
 
 @pytest.mark.parametrize(
@@ -158,9 +170,9 @@ def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
     monkeypatch.setattr(config, "service_description", lambda h, c, i: "Test Description")
 
     params = {"inventory_rediscovery": parameters_rediscovery}
-    service_filter = discovery._get_service_filter_func(params)
-    assert service_filter is not None
-    assert service_filter("hostname", "check_plugin_name", "item") is result
+    service_filters = discovery.get_service_filter_funcs(params)
+    assert service_filters.new is not None
+    assert service_filters.new("hostname", "check_plugin_name", "item") is result
 
 
 @pytest.fixture
@@ -293,13 +305,13 @@ def test__get_new_services(monkeypatch, service_table, mode, parameters_rediscov
     counts = discovery._empty_counts()
 
     params = {"inventory_rediscovery": parameters_rediscovery}
-    service_filter = discovery._get_service_filter_func(params)
+    service_filters = discovery.get_service_filter_funcs(params)
 
     new_item_names = [
         entry.item for entry in discovery._get_new_services(
             "hostname",
             service_table,
-            service_filter,
+            service_filters,
             counts,
             mode,
         )
@@ -500,3 +512,193 @@ def test__check_service_table(monkeypatch, service_table, parameters, result_nee
     ])
     assert perfdata == []
     assert need_rediscovery == result_need_rediscovery
+
+
+@pytest.mark.parametrize(
+    "parameters, new_whitelist, new_blacklist, vanished_whitelist, vanished_blacklist", [
+        ({}, None, None, None, None),
+        ({
+            "inventory_rediscovery": {}
+        }, None, None, None, None),
+        ({
+            "inventory_rediscovery": {
+                "service_whitelist": ["white"],
+            }
+        }, ["white"], None, ["white"], None),
+        ({
+            "inventory_rediscovery": {
+                "service_blacklist": ["black"],
+            }
+        }, None, ["black"], None, ["black"]),
+        ({
+            "inventory_rediscovery": {
+                "service_whitelist": ["white"],
+                "service_blacklist": ["black"],
+            }
+        }, ["white"], ["black"], ["white"], ["black"]),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("combined", {}),
+            }
+        }, None, None, None, None),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("combined", {
+                    "service_whitelist": ["white"],
+                }),
+            }
+        }, ["white"], None, ["white"], None),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("combined", {
+                    "service_blacklist": ["black"],
+                }),
+            }
+        }, None, ["black"], None, ["black"]),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("combined", {
+                    "service_whitelist": ["white"],
+                    "service_blacklist": ["black"],
+                }),
+            }
+        }, ["white"], ["black"], ["white"], ["black"]),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {}),
+            }
+        }, None, None, None, None),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_whitelist": ["white"],
+                }),
+            }
+        }, ["white"], None, None, None),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_blacklist": ["black"],
+                }),
+            }
+        }, None, ["black"], None, None),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_whitelist": ["white"],
+                    "service_blacklist": ["black"],
+                }),
+            }
+        }, ["white"], ["black"], None, None),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "vanished_service_whitelist": ["white"],
+                }),
+            }
+        }, None, None, ["white"], None),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "vanished_service_blacklist": ["black"],
+                }),
+            }
+        }, None, None, None, ["black"]),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "vanished_service_whitelist": ["white"],
+                    "vanished_service_blacklist": ["black"],
+                }),
+            }
+        }, None, None, ["white"], ["black"]),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_whitelist": ["white_new"],
+                    "vanished_service_whitelist": ["white_vanished"],
+                }),
+            }
+        }, ["white_new"], None, ["white_vanished"], None),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_whitelist": ["white_new"],
+                    "vanished_service_blacklist": ["black_vanished"],
+                }),
+            }
+        }, ["white_new"], None, None, ["black_vanished"]),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_blacklist": ["black_new"],
+                    "vanished_service_whitelist": ["white_vanished"],
+                }),
+            }
+        }, None, ["black_new"], ["white_vanished"], None),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_blacklist": ["black_new"],
+                    "vanished_service_blacklist": ["black_vanished"],
+                }),
+            }
+        }, None, ["black_new"], None, ["black_vanished"]),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_whitelist": ["white_new"],
+                    "service_blacklist": ["black_new"],
+                    "vanished_service_whitelist": ["white_vanished"],
+                }),
+            }
+        }, ["white_new"], ["black_new"], ["white_vanished"], None),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_whitelist": ["white_new"],
+                    "service_blacklist": ["black_new"],
+                    "vanished_service_blacklist": ["black_vanished"],
+                }),
+            }
+        }, ["white_new"], ["black_new"], None, ["black_vanished"]),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_whitelist": ["white_new"],
+                    "service_blacklist": ["black_new"],
+                    "vanished_service_whitelist": ["white_vanished"],
+                    "vanished_service_blacklist": ["black_vanished"],
+                }),
+            }
+        }, ["white_new"], ["black_new"], ["white_vanished"], ["black_vanished"]),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_whitelist": ["white_new"],
+                    "vanished_service_whitelist": ["white_vanished"],
+                    "vanished_service_blacklist": ["black_vanished"],
+                }),
+            }
+        }, ["white_new"], None, ["white_vanished"], ["black_vanished"]),
+        ({
+            "inventory_rediscovery": {
+                "service_filters": ("dedicated", {
+                    "service_blacklist": ["black_new"],
+                    "vanished_service_whitelist": ["white_vanished"],
+                    "vanished_service_blacklist": ["black_vanished"],
+                }),
+            }
+        }, None, ["black_new"], ["white_vanished"], ["black_vanished"]),
+    ])
+def test__get_service_filters_lists(parameters, new_whitelist, new_blacklist, vanished_whitelist,
+                                    vanished_blacklist):
+    service_filter_lists = discovery._get_service_filter_lists(parameters)
+    assert service_filter_lists.new_whitelist == new_whitelist
+    assert service_filter_lists.new_blacklist == new_blacklist
+    assert service_filter_lists.vanished_whitelist == vanished_whitelist
+    assert service_filter_lists.vanished_blacklist == vanished_blacklist
+
+    service_filters = discovery.get_service_filter_funcs(parameters)
+    assert service_filters.new is not None
+    assert service_filters.vanished is not None

@@ -15,7 +15,8 @@ from cmk.gui.valuespec import (
     DropdownChoice,)
 
 from cmk.gui.plugins.wato.check_mk_configuration import (ConfigVariableGroupUserInterface,
-                                                         agent_config_mk_agent_sections)
+                                                         agent_config_mk_agent_sections,
+                                                         _transform_automatic_rediscover_parameters)
 
 from cmk.gui.plugins.wato import (
     config_variable_registry,
@@ -57,3 +58,50 @@ def test_exclude_section_options():
         for skip_section in agent_skip_functions.split("\n")
         if "$MK_SKIP_" in skip_section)
     assert expected == actual
+
+
+@pytest.mark.parametrize(
+    "parameters, result",
+    [
+        ({}, {}),
+        # These params have to be transformed
+        ({
+            "other_opt": "other opt",
+            "service_whitelist": ["white"],
+        }, {
+            "other_opt": "other opt",
+            "service_filters": ("combined", {
+                "service_whitelist": ["white"],
+            })
+        }),
+        ({
+            "other_opt": "other opt",
+            "service_blacklist": ["black"],
+        }, {
+            "other_opt": "other opt",
+            "service_filters": ("combined", {
+                "service_blacklist": ["black"],
+            })
+        }),
+        ({
+            "other_opt": "other opt",
+            "service_whitelist": ["white"],
+            "service_blacklist": ["black"],
+        }, {
+            "other_opt": "other opt",
+            "service_filters": ("combined", {
+                "service_whitelist": ["white"],
+                "service_blacklist": ["black"],
+            })
+        }),
+        # These params go through the transform func
+        ({
+            "other_opt": "other opt",
+            "service_filters": "service filters",
+        }, {
+            "other_opt": "other opt",
+            "service_filters": "service filters",
+        }),
+    ])
+def test__transform_automatic_rediscover_parameters(parameters, result):
+    assert _transform_automatic_rediscover_parameters(parameters) == result

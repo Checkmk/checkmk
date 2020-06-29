@@ -89,7 +89,7 @@ class AutomationDiscovery(DiscoveryAutomation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    # Does discovery for a list of hosts. Possible values for how:
+    # Does discovery for a list of hosts. Possible values for mode:
     # "new" - find only new services (like -I)
     # "remove" - remove exceeding services
     # "fixall" - find new, remove exceeding
@@ -123,8 +123,9 @@ class AutomationDiscovery(DiscoveryAutomation):
         if len(args) < 2:
             raise MKAutomationError("Need two arguments: new|remove|fixall|refresh HOSTNAME")
 
-        how = args[0]
+        mode = args[0]
         hostnames = args[1:]
+        service_filters = discovery.get_service_filter_funcs({})
 
         config_cache = config.get_config_cache()
 
@@ -133,8 +134,15 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         for hostname in hostnames:
             host_config = config_cache.get_host_config(hostname)
-            result, error = discovery.discover_on_host(config_cache, host_config, how, do_snmp_scan,
-                                                       use_caches, on_error)
+            result, error = discovery.discover_on_host(
+                config_cache,
+                host_config,
+                mode,
+                do_snmp_scan,
+                use_caches,
+                service_filters,
+                on_error=on_error,
+            )
             counts[hostname] = [
                 result["self_new"],
                 result["self_removed"],

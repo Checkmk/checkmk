@@ -129,14 +129,26 @@ def process_level_elements():
                  Percentage(title=_("Critical at"), default_value=98, maxvalue=10000),
              ],
          )),
+        ("min_age",
+         Tuple(
+             title=_("Minimum allowed age"),
+             help=_("Set lower levels on the age of the process (not the consumed CPU time, "
+                    "but the real time)."),
+             elements=[
+                 Age(title=_("Warning at"), default_value=3600),
+                 Age(title=_("Critical at"), default_value=1800),
+             ],
+         )),
         ("max_age",
-         Tuple(title=_("Maximum allowed age"),
-               help=_("Alarms you if the age of the process (not the consumed CPU "
-                      "time, but the real time) exceed the configured levels."),
-               elements=[
-                   Age(title=_("Warning at"), default_value=3600),
-                   Age(title=_("Critical at"), default_value=7200),
-               ])),
+         Tuple(
+             title=_("Maximum allowed age"),
+             help=_("Set upper levels on the age of the process (not the consumed CPU time, "
+                    "but the real time)."),
+             elements=[
+                 Age(title=_("Warning at"), default_value=3600),
+                 Age(title=_("Critical at"), default_value=7200),
+             ],
+         )),
         ("virtual_levels",
          Tuple(
              title=_("Virtual memory usage"),

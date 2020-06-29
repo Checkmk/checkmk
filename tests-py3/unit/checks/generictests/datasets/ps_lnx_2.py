@@ -54,7 +54,12 @@ checks = {
                 ), (0, 'CPU: 0%', [('pcpu', 0.0, None, None, None, None)]),
                 (
                     0,
-                    'youngest running for: 1.00 s, oldest running for: 10 h',
+                    'youngest running for: 1.00 s',
+                    []
+                ),
+                (
+                    0,
+                    'oldest running for: 10 h',
                     []
                 )
             ]
@@ -85,9 +90,51 @@ checks = {
                     ]
                 ), (0, 'CPU: 0%', [('pcpu', 0.0, None, None, None, None)]),
                 (
+                    0,
+                    'youngest running for: 1.00 s',
+                    []
+                ),
+                (
                     1,
-                    'youngest running for: 1.00 s, oldest running for: 10 h (warn/crit at 300 m/15 '
-                    'h)',
+                    'oldest running for: 10 h (warn/crit at 300 m/15 h)',
+                    []
+                )
+            ]
+        ),
+        (
+            'something', {
+                'process': None,
+                'match_groups': (),
+                'user': None,
+                'cgroup': (None, False),
+                'cpu_rescale_max': True,
+                'levels': (1, 2, 3, 4),
+                'min_age': (172800, 86400),
+                'max_age': (18000, 54000),
+            }, [
+                (
+                    2, 'Processes: 5 (warn/crit at 4/5)', [
+                        ('count', 5, 4.0, 5.0, 0.0, None)
+                    ]
+                ),
+                (
+                    0, 'virtual: 60.67 MB', [
+                        ('vsz', 62124, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'physical: 29.81 MB', [
+                        ('rss', 30528, None, None, None, None)
+                    ]
+                ), (0, 'CPU: 0%', [('pcpu', 0.0, None, None, None, None)]),
+                (
+                    2,
+                    'youngest running for: 1.00 s (warn/crit below 2 d/24 h)',
+                    []
+                ),
+                (
+                    1,
+                    'oldest running for: 10 h (warn/crit at 300 m/15 h)',
                     []
                 )
             ]

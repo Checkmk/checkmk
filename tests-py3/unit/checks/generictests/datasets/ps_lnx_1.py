@@ -81,6 +81,61 @@ checks = {
                 (2, 'running for: 314 m (warn/crit at 10.0 s/20.0 s)', [])
             ]
         ),
+        ('moooo', {
+            'cgroup': ('~.*systemd', False),
+            'cpu_rescale_max': None,
+            'levels': (1, 1, 99999, 99999),
+            'match_groups': (),
+            'process': None,
+            'user': None,
+            'max_age': (10, 20),
+            'min_age': (86400, 43200),
+        }, [
+             (
+                 0, 'Processes: 1 [running on NODE]', [
+                     ('count', 1, 100000.0, 100000.0, 0.0, None)
+                 ]
+             ),
+             (
+                 0, 'virtual: 220.74 MB', [
+                     ('vsz', 226036, None, None, None, None)
+                 ]
+             ),
+             (
+                 0, 'physical: 9.51 MB', [
+                     ('rss', 9736, None, None, None, None)
+                 ]
+             ), (0, 'CPU: 0%', [('pcpu', 0.0, None, None, None, None)]),
+             (2, 'running for: 314 m (warn/crit at 10.0 s/20.0 s)', [])
+         ]
+         ),
+        ('moooo', {
+            'cgroup': ('~.*systemd', False),
+            'cpu_rescale_max': None,
+            'levels': (1, 1, 99999, 99999),
+            'match_groups': (),
+            'process': None,
+            'user': None,
+            'min_age': (86400, 43200),
+        }, [
+             (
+                 0, 'Processes: 1 [running on NODE]', [
+                     ('count', 1, 100000.0, 100000.0, 0.0, None)
+                 ]
+             ),
+             (
+                 0, 'virtual: 220.74 MB', [
+                     ('vsz', 226036, None, None, None, None)
+                 ]
+             ),
+             (
+                 0, 'physical: 9.51 MB', [
+                     ('rss', 9736, None, None, None, None)
+                 ]
+             ), (0, 'CPU: 0%', [('pcpu', 0.0, None, None, None, None)]),
+             (2, 'running for: 314 m (warn/crit below 24 h/12 h)', [])
+         ]
+         )
     ]
 }
 

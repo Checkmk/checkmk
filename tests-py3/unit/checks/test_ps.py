@@ -671,7 +671,8 @@ check_results = [
         (0, "virtual: 21.84 MB", [("vsz", 22360, None, None, None, None)]),
         (0, "physical: 2.33 MB", [("rss", 2388, None, None, None, None)]),
         (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]),
-        (0, "youngest running for: 157 m, oldest running for: 234 m", []),
+        (0, "youngest running for: 157 m", []),
+        (0, "oldest running for: 234 m", []),
         (0, "\nname /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB, resident size 1144kB, creation time 2018-10-24 08:08:12, pid 10884, cpu usage 0.0%\r\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB, resident size 1244kB, creation time 2018-10-24 09:24:43, pid 30136, cpu usage 0.0%\r\n",
          [])
     ]),
@@ -702,7 +703,8 @@ check_results = [
         (0, "CPU: 0%", [("pcpu", 0.0, 90.0, 98.0, None, None)]),
         (1, "process handles: 1204 (warn/crit at 1000/2000)", [("process_handles", 1204, 1000, 2000,
                                                                 None, None)]),
-        (1, "youngest running for: 12.0 s, oldest running for: 71 m (warn/crit at 60 m/120 m)", []),
+        (0, "youngest running for: 12.0 s", []),
+        (1, "oldest running for: 71 m (warn/crit at 60 m/120 m)", []),
     ]),
     CheckResult([
         (0, "Processes: 1", [("count", 1, 100000, 100000, 0, None)]),
@@ -926,7 +928,8 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
         (0, "virtual: 13.00 GB", [("vsz", 13631104, None, None, None, None)]),
         (0, "physical: 1.06 GB", [("rss", 1106568, None, None, None, None)]),
         (0, "CPU: %s" % cpu_util_s, [('pcpu', cpu_util, None, None, None, None)]),
-        (0, 'youngest running for: 6 m, oldest running for: 26 m', []),
+        (0, 'youngest running for: 6 m', []),
+        (0, 'oldest running for: 26 m', []),
         (0, "\r\n".join([
             '\nname firefox, user on, virtual size 2275004kB, resident size 434008kB, creation time 1970-01-01 00:34:02, pid 25576, cpu usage 0.0%',
             'name firefox, user on, virtual size 1869920kB, resident size 359836kB, creation time 1970-01-01 00:54:03, pid 25664, cpu usage 0.0%',

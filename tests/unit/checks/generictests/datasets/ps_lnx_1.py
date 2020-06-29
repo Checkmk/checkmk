@@ -53,7 +53,7 @@ checks = {
             (0, '220.74 MB virtual', [('vsz', 226036, None, None, None, None)]),
             (0, '9.51 MB physical', [('rss', 9736, None, None, None, None)]),
             (0, '0.0% CPU', [('pcpu', 0.0, None, None, None, None)]),
-            (0, 'running for 314 m', []),
+            (0, 'running for: 314 m', []),
         ]),
         ('moooo', {
             'cgroup': ('~.*systemd', False),
@@ -70,7 +70,42 @@ checks = {
              (0, '220.74 MB virtual', [('vsz', 226036, None, None, None, None)]),
              (0, '9.51 MB physical', [('rss', 9736, None, None, None, None)]),
              (0, '0.0% CPU', [('pcpu', 0.0, None, None, None, None)]),
-             (2, 'running for 314 m: (warn/crit at 10.0 s/20.0 s)', []),
+             (2, 'running for: 314 m (warn/crit at 10.0 s/20.0 s)', []),
+         ]),
+        ('moooo', {
+            'cgroup': ('~.*systemd', False),
+            'cpu_rescale_max': None,
+            'levels': (1, 1, 99999, 99999),
+            'match_groups': (),
+            'process': None,
+            'user': None,
+            'max_age': (10, 20),
+            'min_age': (86400, 43200),
+        }, [
+             (0, '1 process [running on NODE]', [
+                 ('count', 1, 100000, 100000, 0, None),
+             ]),
+             (0, '220.74 MB virtual', [('vsz', 226036, None, None, None, None)]),
+             (0, '9.51 MB physical', [('rss', 9736, None, None, None, None)]),
+             (0, '0.0% CPU', [('pcpu', 0.0, None, None, None, None)]),
+             (2, 'running for: 314 m (warn/crit at 10.0 s/20.0 s)', []),
+         ]),
+        ('moooo', {
+            'cgroup': ('~.*systemd', False),
+            'cpu_rescale_max': None,
+            'levels': (1, 1, 99999, 99999),
+            'match_groups': (),
+            'process': None,
+            'user': None,
+            'min_age': (86400, 43200),
+        }, [
+             (0, '1 process [running on NODE]', [
+                 ('count', 1, 100000, 100000, 0, None),
+             ]),
+             (0, '220.74 MB virtual', [('vsz', 226036, None, None, None, None)]),
+             (0, '9.51 MB physical', [('rss', 9736, None, None, None, None)]),
+             (0, '0.0% CPU', [('pcpu', 0.0, None, None, None, None)]),
+             (2, 'running for: 314 m (warn/crit below 24 h/12 h)', []),
          ]),
     ],
 }

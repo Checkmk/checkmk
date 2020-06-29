@@ -315,7 +315,8 @@ def check_ps_common(item, params, parsed, cpu_cores=1, info_name="process", tota
         yield handle_count_check(processes, params)
 
     if processes.min_elapsed is not None:
-        yield uptime_check(processes, params)
+        for res in uptime_check(processes, params):
+            yield res
 
     if params.get("process_info", None):
         infotext = "\n" + format_process_list(processes, params["process_info"] == "html")
@@ -446,20 +447,30 @@ def individual_process_check(processes, params):
 
 def uptime_check(times, params):
     """Check how long the process is running"""
-    state = 0
     if times.min_elapsed == times.max_elapsed:
-        infotext = "running for %s" % get_age_human_readable(times.min_elapsed)
+        yield check_levels(
+            times.min_elapsed,
+            None,
+            params.get("max_age", (None, None)) + params.get("min_age", (None, None)),
+            human_readable_func=get_age_human_readable,
+            infoname="running for",
+        )
+
     else:
-        infotext = "youngest running for {}, oldest running for {}".format(
-            *map(get_age_human_readable, [times.min_elapsed, times.max_elapsed]))
-
-    if "max_age" in params:
-        warn_age, crit_age = params["max_age"]
-        state, levelstext = upperlevels(times.max_elapsed, warn_age, crit_age,
-                                        get_age_human_readable)
-        infotext += levelstext
-
-    return state, infotext
+        yield check_levels(
+            times.min_elapsed,
+            None,
+            (None, None) + params.get("min_age", (None, None)),
+            human_readable_func=get_age_human_readable,
+            infoname="youngest running for",
+        )
+        yield check_levels(
+            times.max_elapsed,
+            None,
+            params.get("max_age", (None, None)),
+            human_readable_func=get_age_human_readable,
+            infoname="oldest running for",
+        )
 
 
 def handle_count_check(processes, params):

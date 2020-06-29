@@ -7,4 +7,5 @@ ROOT=/omd/sites/$SITE
 
 echo "OpenAPI spec f12d"
 sudo cp checkmk.yaml $ROOT/share/check_mk/web/htdocs/openapi/
+sudo chmod 755 $ROOT/share/check_mk/web/htdocs/openapi/checkmk.yaml
 sudo omd restart $SITE apache

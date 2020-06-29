@@ -11,17 +11,17 @@ from typing import Dict, Optional
 
 from six import ensure_str
 
+import cmk.utils.paths
+from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, SectionName
+
 from cmk.fetchers import ProgramDataFetcher
 
-import cmk.utils.paths
-from cmk.utils.type_defs import HostName, HostAddress, SectionName
-
-from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 import cmk.base.config as config
 import cmk.base.core_config as core_config
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 from cmk.base.exceptions import MKAgentError
 
-from .abstract import CheckMKAgentDataSource, RawAgentData
+from .agent import AgentDataSource
 
 #.
 #   .--Datasoure Programs--------------------------------------------------.
@@ -36,7 +36,7 @@ from .abstract import CheckMKAgentDataSource, RawAgentData
 #   '----------------------------------------------------------------------'
 
 
-class ProgramDataSource(CheckMKAgentDataSource):
+class ProgramDataSource(AgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
     @property
     @abc.abstractmethod

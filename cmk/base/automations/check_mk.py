@@ -1256,9 +1256,9 @@ class AutomationDiagHost(Automation):
 
         state, output = 0, u""
         for source in sources.get_data_sources():
-            if isinstance(source, data_sources.DSProgramDataSource) and cmd:
-                source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
-            elif isinstance(source, data_sources.TCPDataSource):
+            if isinstance(source, data_sources.programs.DSProgramDataSource) and cmd:
+                source = data_sources.programs.DSProgramDataSource(hostname, ipaddress, cmd)
+            elif isinstance(source, data_sources.tcp.TCPDataSource):
                 source.port = agent_port
                 if tcp_connect_timeout is not None:
                     source.timeout = tcp_connect_timeout
@@ -1269,9 +1269,9 @@ class AutomationDiagHost(Automation):
 
             # We really receive a byte string here. The agent sections
             # may have different encodings and are normally decoded one
-            # by one (CheckMKAgentDataSource._parse_host_section).  For the
+            # by one (AgentDataSource._parse_host_section).  For the
             # moment we use UTF-8 with fallback to latin-1 by default,
-            # similar to the CheckMKAgentDataSource, but we do not
+            # similar to the AgentDataSource, but we do not
             # respect the ecoding options of sections.
             # If this is a problem, we would have to apply parse and
             # decode logic and unparse the decoded output again.
@@ -1552,7 +1552,7 @@ class AutomationGetAgentOutput(Automation):
 
                 agent_output = b""
                 for source in sources.get_data_sources():
-                    if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
+                    if isinstance(source, data_sources.agent.AgentDataSource):
                         agent_output += source.run_raw()
                 info = agent_output
 

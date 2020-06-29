@@ -38,12 +38,12 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
+    CheckPluginName,
     CheckPluginNameStr,
     HostAddress,
     HostName,
     Item,
     Metric,
-    CheckPluginName,
     SectionName,
     ServiceAdditionalDetails,
     ServiceCheckResult,
@@ -70,7 +70,8 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
     maincheckify,
     wrap_parameters,
 )
-from cmk.base.check_utils import LegacyCheckParameters, ABCService, Service
+from cmk.base.check_utils import ABCService, LegacyCheckParameters, Service
+from cmk.base.data_sources.host_sections import MultiHostSections
 from cmk.base.exceptions import MKParseFunctionError
 
 if not cmk_version.is_raw_edition():
@@ -336,7 +337,7 @@ def service_outside_check_period(config_cache, hostname, description):
 
 
 def execute_check(multi_host_sections, host_config, ipaddress, service):
-    # type: (data_sources.MultiHostSections, config.HostConfig, Optional[HostAddress], Service) -> bool
+    # type: (MultiHostSections, config.HostConfig, Optional[HostAddress], Service) -> bool
     # TODO (mo): centralize maincheckify: CMK-4295
     plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
     plugin = config.get_registered_check_plugin(plugin_name)
@@ -373,7 +374,7 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
 
 
 def get_aggregated_result(
-    multi_host_sections: data_sources.MultiHostSections,
+    multi_host_sections: MultiHostSections,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     service: ABCService,
@@ -433,7 +434,7 @@ def get_aggregated_result(
 
 
 def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service):
-    # type: (data_sources.MultiHostSections, HostName, Optional[HostAddress], Service) -> bool
+    # type: (MultiHostSections, HostName, Optional[HostAddress], Service) -> bool
     check_function = config.check_info[service.check_plugin_name].get("check_function")
     if check_function is None:
         _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
@@ -514,7 +515,7 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
 
 
 def _legacy_determine_cache_info(multi_host_sections, section_name):
-    # type: (data_sources.MultiHostSections, SectionName) -> Optional[Tuple[int, int]]
+    # type: (MultiHostSections, SectionName) -> Optional[Tuple[int, int]]
     """Aggregate information about the age of the data in the agent sections
 
     This is in data_sources.g_agent_cache_info. For clusters we use the oldest

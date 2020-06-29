@@ -5,22 +5,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
-from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, SectionName, ServiceCheckResult
-
-from cmk.base.api.agent_based.section_types import AgentSectionPlugin
-import cmk.base.config as config
-from cmk.base.exceptions import MKAgentError
+from cmk.utils.type_defs import (
+    HostAddress,
+    HostName,
+    RawAgentData,
+    SectionName,
+    ServiceCheckResult,
+)
 
 from cmk.fetchers import PiggyBackDataFetcher
 
-from .abstract import CheckMKAgentDataSource
+import cmk.base.config as config
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin
+from cmk.base.exceptions import MKAgentError
+
+from .agent import AgentDataSource
 
 
-class PiggyBackDataSource(CheckMKAgentDataSource):
+class PiggyBackDataSource(AgentDataSource):
     def __init__(
             self,
             hostname,  # type: HostName

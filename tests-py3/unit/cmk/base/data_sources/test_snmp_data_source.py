@@ -13,13 +13,15 @@ from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
 from testlib.base import Scenario
 
+import cmk.utils.store as store
 from cmk.utils.type_defs import SectionName, SourceType
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources.abstract import DataSource, FileCache, management_board_ipaddress, store
+from cmk.base.data_sources import management_board_ipaddress
+from cmk.base.data_sources.abstract import DataSource
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
 
@@ -78,14 +80,14 @@ def test_disable_read_to_file_cache(monkeypatch, fs):
     monkeypatch.setattr(store, "save_file",
                         lambda path, contents: fs.create_file(path, contents=contents))
 
-    file_cache = FileCache.from_source(source)
+    file_cache = source._make_file_cache()
     table = []  # type: SNMPTable
     raw_data = {SectionName("X"): table}  # type: SNMPRawData
     # End of setup.
 
     assert not source.is_agent_cache_disabled()
 
-    file_cache = FileCache.from_source(source)
+    file_cache = source._make_file_cache()
     file_cache.write(raw_data)
 
     assert file_cache.path.exists()
@@ -94,7 +96,7 @@ def test_disable_read_to_file_cache(monkeypatch, fs):
     source.disable_data_source_cache()
     assert source.is_agent_cache_disabled()
 
-    file_cache = FileCache.from_source(source)
+    file_cache = source._make_file_cache()
     assert file_cache.read() is None
 
 
@@ -111,7 +113,7 @@ def test_disable_write_to_file_cache(monkeypatch, fs):
     monkeypatch.setattr(store, "save_file",
                         lambda path, contents: fs.create_file(path, contents=contents))
 
-    file_cache = FileCache.from_source(source)
+    file_cache = source._make_file_cache()
     table = []  # type: SNMPTable
     raw_data = {SectionName("X"): table}  # type: SNMPRawData
     # End of setup.
@@ -120,7 +122,7 @@ def test_disable_write_to_file_cache(monkeypatch, fs):
     assert source.is_agent_cache_disabled()
 
     # Another one bites the dust.
-    file_cache = FileCache.from_source(source)
+    file_cache = source._make_file_cache()
     file_cache.write(raw_data)
 
     assert not file_cache.path.exists()
@@ -140,7 +142,7 @@ def test_write_and_read_file_cache(monkeypatch, fs):
     monkeypatch.setattr(store, "save_file",
                         lambda path, contents: fs.create_file(path, contents=contents))
 
-    file_cache = FileCache.from_source(source)
+    file_cache = source._make_file_cache()
 
     table = []  # type: SNMPTable
     raw_data = {SectionName("X"): table}  # type: SNMPRawData
@@ -155,7 +157,7 @@ def test_write_and_read_file_cache(monkeypatch, fs):
     assert file_cache.read() == raw_data
 
     # Another one bites the dust.
-    file_cache = FileCache.from_source(source)
+    file_cache = source._make_file_cache()
     assert file_cache.read() == raw_data
 
 

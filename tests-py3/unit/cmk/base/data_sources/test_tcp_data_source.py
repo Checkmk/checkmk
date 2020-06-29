@@ -10,7 +10,7 @@ from testlib.base import Scenario
 
 from cmk.utils.type_defs import ServiceCheckResult
 
-import cmk.base.data_sources.abstract as _abstract
+from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.tcp import TCPDataSource
 
 
@@ -65,7 +65,7 @@ def test_get_summary_result_requires_host_sections(monkeypatch, ipaddress):
     with pytest.raises(AssertionError):
         source.get_summary_result_for_checking()
 
-    source._host_sections = _abstract.AgentHostSections()
+    source._host_sections = AgentHostSections()
 
     defaults = (0, "Version: unknown, OS: unknown", [])  # type: ServiceCheckResult
     assert source.get_summary_result_for_discovery() == defaults

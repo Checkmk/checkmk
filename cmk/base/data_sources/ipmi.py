@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, cast
+from typing import cast, Dict, Optional
 
 from cmk.utils.type_defs import (
     HostAddress,
@@ -16,16 +16,16 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.fetchers import IPMIDataFetcher
+
 from cmk.base.config import IPMICredentials, SectionPlugin
 from cmk.base.exceptions import MKAgentError
 
-from cmk.fetchers import IPMIDataFetcher
-
-from .abstract import CheckMKAgentDataSource
+from .agent import AgentDataSource
 
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
-class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
+class IPMIManagementBoardDataSource(AgentDataSource):
     source_type = SourceType.MANAGEMENT
 
     _raw_sections = {SectionName("mgmt_ipmi_sensors")}

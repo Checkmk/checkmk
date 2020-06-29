@@ -39,6 +39,7 @@ import cmk.base.data_sources as data_sources
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
+from cmk.base.data_sources.host_sections import MultiHostSections
 from cmk.base.data_sources.snmp import SNMPHostSections
 from cmk.base.discovered_labels import HostLabel
 
@@ -200,7 +201,7 @@ def _all_sources_fail(host_config, sources):
 
 
 def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config, ipaddress):
-    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[HostAddress]) -> None
+    # type: (data_sources.DataSources, MultiHostSections, config.HostConfig, Optional[HostAddress]) -> None
     hostname = host_config.hostname
     do_status_data_inventory = not host_config.is_cluster and host_config.do_status_data_inventory
 
@@ -233,7 +234,7 @@ def _cleanup_status_data(hostname):
 
 
 def _do_inv_for(sources, multi_host_sections, host_config, ipaddress):
-    # type: (data_sources.DataSources, Optional[data_sources.MultiHostSections], config.HostConfig, Optional[HostAddress]) -> Tuple[StructuredDataTree, StructuredDataTree]
+    # type: (data_sources.DataSources, Optional[MultiHostSections], config.HostConfig, Optional[HostAddress]) -> Tuple[StructuredDataTree, StructuredDataTree]
     hostname = host_config.hostname
 
     _initialize_inventory_tree()
@@ -268,12 +269,12 @@ def _do_inv_for_cluster(host_config, inventory_tree):
 
 def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ipaddress,
                          inventory_tree, status_data_tree):
-    # type: (config.HostConfig, data_sources.DataSources, Optional[data_sources.MultiHostSections], HostName, Optional[HostAddress], StructuredDataTree, StructuredDataTree) -> None
+    # type: (config.HostConfig, data_sources.DataSources, Optional[MultiHostSections], HostName, Optional[HostAddress], StructuredDataTree, StructuredDataTree) -> None
     for source in sources.get_data_sources():
-        if isinstance(source, data_sources.SNMPDataSource):
+        if isinstance(source, data_sources.snmp.SNMPDataSource):
             source.set_on_error("raise")
             source.set_do_snmp_scan(True)
-            data_sources.SNMPDataSource.disable_data_source_cache()
+            data_sources.snmp.SNMPDataSource.disable_data_source_cache()
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
             source.set_check_plugin_name_filter(functools.partial(

@@ -10,13 +10,7 @@ import time
 from typing import cast, Dict, Iterable, List, Optional, Set
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import (
-    CheckPluginNameStr,
-    HostAddress,
-    HostName,
-    SectionName,
-    SourceType,
-)
+from cmk.utils.type_defs import CheckPluginNameStr, HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.snmp_scan import SectionNameFilterFunction, SNMPScanSection
 from cmk.snmplib.type_defs import (
@@ -38,7 +32,8 @@ from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
 
-from .abstract import DataSource, verify_ipaddress
+from ._utils import verify_ipaddress
+from .abstract import DataSource
 from .host_sections import AbstractHostSections
 
 #.

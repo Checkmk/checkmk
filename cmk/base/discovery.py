@@ -8,6 +8,7 @@ import os
 import signal
 import socket
 import time
+from enum import Enum
 from types import FrameType
 from typing import (
     Any,
@@ -24,12 +25,12 @@ from typing import (
     Tuple,
     Union,
 )
-from enum import Enum
 
 from six import ensure_binary
 
 import livestatus
 
+import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
@@ -39,28 +40,20 @@ from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
+    CheckPluginName,
     CheckPluginNameStr,
     HostAddress,
     HostName,
     HostState,
     Item,
     Metric,
-    CheckPluginName,
     RulesetName,
     SectionName,
     SourceType,
 )
-import cmk.utils.cleanup
 
 import cmk.snmplib.snmp_scan as snmp_scan
 
-from cmk.base.api.agent_based import checking_types
-from cmk.base.api.agent_based.register.check_plugins import MANAGEMENT_NAME_PREFIX
-from cmk.base.api.agent_based.register.check_plugins_legacy import (
-    maincheckify,
-    resolve_legacy_name,
-    wrap_parameters,
-)
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
@@ -74,7 +67,13 @@ import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 import cmk.base.utils
-
+from cmk.base.api.agent_based import checking_types
+from cmk.base.api.agent_based.register.check_plugins import MANAGEMENT_NAME_PREFIX
+from cmk.base.api.agent_based.register.check_plugins_legacy import (
+    maincheckify,
+    resolve_legacy_name,
+    wrap_parameters,
+)
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import (
     ABCService,
@@ -84,6 +83,7 @@ from cmk.base.check_utils import (
     Service,
 )
 from cmk.base.core_config import MonitoringCore
+from cmk.base.data_sources.host_sections import MultiHostSections
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
 # Run the discovery queued by check_discovery() - if any
@@ -285,7 +285,7 @@ def _preprocess_hostnames(arg_host_names, config_cache):
 def _do_discovery_for(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: data_sources.MultiHostSections,
+    multi_host_sections: MultiHostSections,
     check_plugin_names: Optional[Set[CheckPluginName]],
     only_new: bool,
     on_error: str,
@@ -925,7 +925,7 @@ def _may_rediscover(params, now_ts, oldest_queued):
 
 def _discover_host_labels(
         host_key,  # type: data_sources.host_sections.HostKey
-        multi_host_sections,  # type: data_sources.MultiHostSections
+        multi_host_sections,  # type: MultiHostSections
         on_error,  # type: str
 ):
     # type: (...) -> DiscoveredHostLabels
@@ -989,7 +989,7 @@ def _discover_host_labels(
 def _discover_services(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: data_sources.MultiHostSections,
+    multi_host_sections: MultiHostSections,
     on_error: str,
     check_plugin_whitelist: Optional[Set[CheckPluginName]],
 ) -> List[Service]:
@@ -1044,7 +1044,7 @@ def _get_sources_for_discovery(
     )
 
     for source in sources.get_data_sources():
-        if isinstance(source, data_sources.SNMPDataSource):
+        if isinstance(source, data_sources.snmp.SNMPDataSource):
             source.set_on_error(on_error)
             source.set_do_snmp_scan(do_snmp_scan)
             source.set_use_snmpwalk_cache(False)
@@ -1055,7 +1055,7 @@ def _get_sources_for_discovery(
             # We can not disable the data_source_cache per default when caching is set
             # since this would affect the WATO service discovery page.
             if for_check_discovery and source.get_may_use_cache_file():
-                data_sources.SNMPDataSource.disable_data_source_cache()
+                data_sources.snmp.SNMPDataSource.disable_data_source_cache()
 
             source.set_check_plugin_name_filter(snmp_scan.gather_available_raw_section_names,
                                                 inventory=False)
@@ -1064,13 +1064,13 @@ def _get_sources_for_discovery(
 
 
 def _get_host_sections_for_discovery(sources, use_caches):
-    # type: (data_sources.DataSources, bool) -> data_sources.MultiHostSections
+    # type: (data_sources.DataSources, bool) -> MultiHostSections
     max_cachefile_age = config.inventory_max_cachefile_age if use_caches else 0
     return sources.get_host_sections(max_cachefile_age)
 
 
 def _execute_discovery(
-    multi_host_sections: data_sources.MultiHostSections,
+    multi_host_sections: MultiHostSections,
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     check_plugin_name: CheckPluginName,
@@ -1157,7 +1157,7 @@ def _enriched_discovered_services(
 def _get_host_services(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: data_sources.MultiHostSections,
+    multi_host_sections: MultiHostSections,
     on_error: str,
 ) -> Tuple[ServicesTable, DiscoveredHostLabels]:
     if host_config.is_cluster:
@@ -1170,7 +1170,7 @@ def _get_host_services(
 def _get_node_services(
         host_config,  # type: config.HostConfig
         ipaddress,  # type: Optional[HostAddress]
-        multi_host_sections,  # type: data_sources.MultiHostSections
+        multi_host_sections,  # type: MultiHostSections
         on_error,  # type: str
 ):
     # type: (...) -> Tuple[ServicesTable, DiscoveredHostLabels]
@@ -1197,7 +1197,7 @@ def _get_node_services(
 def _get_discovered_services(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: data_sources.MultiHostSections,
+    multi_host_sections: MultiHostSections,
     on_error: str,
 ) -> Tuple[ServicesTable, DiscoveredHostLabels]:
     # Create a dict from check_plugin_name/item to check_source/paramstring
@@ -1303,7 +1303,7 @@ def _merge_manual_services(host_config, services, on_error):
 def _get_cluster_services(
         host_config,  # type: config.HostConfig
         ipaddress,  # type: Optional[str]
-        multi_host_sections,  # type: data_sources.MultiHostSections
+        multi_host_sections,  # type: MultiHostSections
         on_error,  # type: str
 ):
     # type: (...) -> Tuple[ServicesTable, DiscoveredHostLabels]

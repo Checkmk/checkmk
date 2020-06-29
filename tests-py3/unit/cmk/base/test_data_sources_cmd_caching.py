@@ -13,28 +13,29 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
 from testlib import InventoryPluginManager  # , CheckManager
+from testlib.base import Scenario
 from testlib.debug_utils import cmk_debug_enabled
 from testlib.utils import get_standard_linux_agent_output
 
+import cmk.utils.paths
+from cmk.utils.log import logger
+
 import cmk.base.automations
 import cmk.base.automations.check_mk
+import cmk.base.check_api as check_api
 import cmk.base.config as config
+import cmk.base.data_sources
 import cmk.base.data_sources.abstract
 import cmk.base.inventory_plugins
 import cmk.base.modes
 import cmk.base.modes.check_mk
-import cmk.utils.paths
-from cmk.utils.log import logger
 
 # TODO: These tests need to be tuned, because they involve a lot of checks being loaded which takes
 # too much time.
 
 # TODO (mo): now it's worse, we need to load all checks. remove this with CMK-4295
 #            after removing this, bring back the commented line below.
-
-import cmk.base.check_api as check_api
 
 
 # Load some common checks to have at least some for the test execution
@@ -84,7 +85,7 @@ def restore_default_caching_config():
     cmk.base.data_sources.abstract.DataSource._no_cache = False
 
     assert hasattr(cmk.base.data_sources.abstract.DataSource, "_use_outdated_persisted_sections")
-    cmk.base.data_sources.abstract.CheckMKAgentDataSource._use_outdated_persisted_sections = False
+    cmk.base.data_sources.agent.AgentDataSource._use_outdated_persisted_sections = False
 
     assert hasattr(cmk.base.data_sources.abstract.DataSource, "_use_outdated_cache_file")
     cmk.base.data_sources.abstract.DataSource._use_outdated_cache_file = False
@@ -116,11 +117,11 @@ def _patch_data_source_run(monkeypatch, **kwargs):
         assert self._max_cachefile_age == defaults["_max_cachefile_age"]
         assert self._use_outdated_cache_file == defaults["_use_outdated_cache_file"]
 
-        if isinstance(self, cmk.base.data_sources.abstract.CheckMKAgentDataSource):
+        if isinstance(self, cmk.base.data_sources.agent.AgentDataSource):
             assert self._use_outdated_persisted_sections == defaults[
                 "_use_outdated_persisted_sections"]
 
-        elif isinstance(self, cmk.base.data_sources.SNMPDataSource):
+        elif isinstance(self, cmk.base.data_sources.snmp.SNMPDataSource):
             assert self._do_snmp_scan == defaults["_do_snmp_scan"]
             assert self._on_error == defaults["_on_error"]
             assert self._use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]

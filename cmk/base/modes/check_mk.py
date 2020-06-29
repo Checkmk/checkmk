@@ -6,7 +6,7 @@
 
 import os
 import sys
-from typing import Dict, List, Optional, TypedDict, Set
+from typing import Dict, List, Optional, Set, TypedDict
 
 from six import ensure_str
 
@@ -18,11 +18,11 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
+    DiagnosticsOptionalParameters,
+    OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
-    OPT_CHECKMK_OVERVIEW,
-    DiagnosticsOptionalParameters,
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
@@ -32,7 +32,6 @@ import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.fetchers.factory as snmp_factory
 
-from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 import cmk.base.backup
 import cmk.base.check_api as check_api
 import cmk.base.check_utils
@@ -52,6 +51,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
+from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 
@@ -392,7 +392,7 @@ def mode_dump_agent(hostname):
 
         output = b"".join(source.run_raw()
                           for source in sources.get_data_sources()
-                          if isinstance(source, data_sources.abstract.CheckMKAgentDataSource))
+                          if isinstance(source, data_sources.agent.AgentDataSource))
 
         # Show errors of problematic data sources
         has_errors = False
@@ -1310,7 +1310,7 @@ def mode_inventory(options, args):
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
-        data_sources.abstract.CheckMKAgentDataSource.use_outdated_persisted_sections()
+        data_sources.agent.AgentDataSource.use_outdated_persisted_sections()
 
     inventory.do_inv(hostnames)
 

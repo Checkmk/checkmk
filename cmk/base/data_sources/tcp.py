@@ -7,15 +7,17 @@
 import socket
 from typing import Dict, Optional
 
-from cmk.utils.type_defs import HostName, HostAddress, SectionName
+from cmk.utils.type_defs import HostAddress, HostName, SectionName
+
+from cmk.fetchers import TCPDataFetcher
 
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 from cmk.base.check_utils import RawAgentData
 from cmk.base.config import SectionPlugin
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
-from cmk.fetchers import TCPDataFetcher
 
-from .abstract import CheckMKAgentDataSource, verify_ipaddress
+from ._utils import verify_ipaddress
+from .agent import AgentDataSource
 
 #.
 #   .--Agent---------------------------------------------------------------.
@@ -30,7 +32,7 @@ from .abstract import CheckMKAgentDataSource, verify_ipaddress
 #   '----------------------------------------------------------------------'
 
 
-class TCPDataSource(CheckMKAgentDataSource):
+class TCPDataSource(AgentDataSource):
     _use_only_cache = False
 
     def __init__(

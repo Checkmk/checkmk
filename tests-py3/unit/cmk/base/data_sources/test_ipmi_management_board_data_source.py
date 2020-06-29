@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from testlib.base import Scenario
+
 from cmk.utils.type_defs import SourceType
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources.abstract import management_board_ipaddress
+from cmk.base.data_sources._utils import management_board_ipaddress
 from cmk.base.data_sources.ipmi import IPMIManagementBoardDataSource
-from testlib.base import Scenario
 
 
 def test_attribute_defaults(monkeypatch):

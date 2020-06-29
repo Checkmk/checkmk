@@ -6,6 +6,7 @@
 import collections
 
 import pytest  # type: ignore[import]
+
 from testlib.base import Scenario
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
@@ -13,8 +14,8 @@ from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import MultiHostSections
-from cmk.base.data_sources.abstract import AgentHostSections
 
 _TestSection = collections.namedtuple(
     "TestSection",

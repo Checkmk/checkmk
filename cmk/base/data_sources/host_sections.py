@@ -4,9 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 import sys
-from typing import Any, Callable, cast, Dict, Generic, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Set, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
@@ -35,85 +34,18 @@ from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import (
     AbstractSectionContent,
-    BoundedAbstractPersistedSections,
-    BoundedAbstractRawData,
-    BoundedAbstractSectionContent,
-    BoundedAbstractSections,
     CheckPluginNameStr,
     FinalSectionContent,
     ParsedSectionContent,
-    PiggybackRawData,
-    SectionCacheInfo,
     SectionName,
 )
 from cmk.base.exceptions import MKParseFunctionError
 
+from .abstract import AbstractHostSections
+
 HostKey = Tuple[HostName, Optional[HostAddress], SourceType]
 
-MultiHostSectionsData = Dict[HostKey, "AbstractHostSections"]
-
-
-class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
-                                   BoundedAbstractPersistedSections, BoundedAbstractSectionContent],
-                           metaclass=abc.ABCMeta):
-    """A wrapper class for the host information read by the data sources
-
-    It contains the following information:
-
-        1. sections:                A dictionary from section_name to a list of rows,
-                                    the section content
-        2. piggybacked_raw_data:    piggy-backed data for other hosts
-        3. persisted_sections:      Sections to be persisted for later usage
-        4. cache_info:              Agent cache information
-                                    (dict section name -> (cached_at, cache_interval))
-    """
-    def __init__(self, sections, cache_info, piggybacked_raw_data, persisted_sections):
-        # type: (BoundedAbstractSections, SectionCacheInfo, PiggybackRawData, BoundedAbstractPersistedSections) -> None
-        super(AbstractHostSections, self).__init__()
-        self.sections = sections
-        self.cache_info = cache_info
-        self.piggybacked_raw_data = piggybacked_raw_data
-        self.persisted_sections = persisted_sections
-
-    def __repr__(self):
-        return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r, persisted_sections=%r)" % (
-            type(self).__name__,
-            self.sections,
-            self.cache_info,
-            self.piggybacked_raw_data,
-            self.persisted_sections,
-        )
-
-    # TODO: It should be supported that different sources produce equal sections.
-    # this is handled for the self.sections data by simply concatenating the lines
-    # of the sections, but for the self.cache_info this is not done. Why?
-    # TODO: checking.execute_check() is using the oldest cached_at and the largest interval.
-    #       Would this be correct here?
-    def update(self, host_sections):
-        # type: (AbstractHostSections) -> None
-        """Update this host info object with the contents of another one"""
-        for section_name, section_content in host_sections.sections.items():
-            self._extend_section(section_name, section_content)
-
-        for hostname, raw_lines in host_sections.piggybacked_raw_data.items():
-            self.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
-
-        if host_sections.cache_info:
-            self.cache_info.update(host_sections.cache_info)
-
-        if host_sections.persisted_sections:
-            self.persisted_sections.update(host_sections.persisted_sections)
-
-    @abc.abstractmethod
-    def _extend_section(self, section_name, section_content):
-        # type: (SectionName, BoundedAbstractSectionContent) -> None
-        raise NotImplementedError()
-
-    def add_cached_section(self, section_name, section, persisted_from, persisted_until):
-        # type: (SectionName, BoundedAbstractSectionContent , int, int) -> None
-        self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
-        # TODO: Find out why mypy complains about this
-        self.sections[section_name] = section  # type: ignore[assignment]
+MultiHostSectionsData = Dict[HostKey, AbstractHostSections]
 
 
 class MultiHostSections:

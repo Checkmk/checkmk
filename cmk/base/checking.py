@@ -148,7 +148,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
         selected_raw_sections = config.get_relevant_raw_sections(
             CheckPluginName(maincheckify(s.check_plugin_name)) for s in services)
 
-        sources = data_sources.DataSources(host_config, hostname, ipaddress, selected_raw_sections)
+        sources = data_sources.DataSources(host_config, ipaddress, selected_raw_sections)
 
         num_success, missing_sections = _do_all_checks_on_host(
             services,

@@ -153,6 +153,7 @@ CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
 SectionPlugin = Union[SNMPSectionPlugin, AgentSectionPlugin]
+SelectedRawSections = Dict[SectionName, SectionPlugin]
 
 
 class TimespecificParamList(list):
@@ -1324,7 +1325,7 @@ def get_registered_check_plugin(plugin_name):
 
 
 def get_relevant_raw_sections(check_plugin_names):
-    # type: (Iterable[CheckPluginName]) -> Dict[SectionName, SectionPlugin]
+    # type: (Iterable[CheckPluginName]) -> SelectedRawSections
     """return the raw sections potentially relevant for the given check plugins"""
     parsed_section_names = set()  # type: Set[ParsedSectionName]
     for check_plugin_name in check_plugin_names:

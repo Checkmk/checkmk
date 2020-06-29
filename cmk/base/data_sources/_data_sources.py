@@ -15,13 +15,13 @@ import cmk.utils.paths
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SectionName, SourceType
+from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SourceType
 
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
-from cmk.base.config import HostConfig, SectionPlugin
+from cmk.base.config import HostConfig, SelectedRawSections
 
 from ._utils import management_board_ipaddress
 from .abstract import DataSource
@@ -36,27 +36,27 @@ from .tcp import TCPDataSource
 __all__ = ["DataSources"]
 
 
-class DataSources:
-    def __init__(
-            self,
-            host_config,  # type: HostConfig
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            # optional set: None -> no selection, empty -> select *nothing*
-        selected_raw_sections=None,  # type: Optional[Dict[SectionName, SectionPlugin]]
-    ):
-        # type: (...) -> None
-        super(DataSources, self).__init__()
-        self._hostname = hostname
-        self._ipaddress = ipaddress
-        assert host_config.hostname == hostname
+class SourceBuilder:
+    """Build the source list from host config and raw sections."""
+    def __init__(self, host_config, ipaddress, selected_raw_sections):
+        # type: (HostConfig, Optional[HostAddress], Optional[SelectedRawSections]) -> None
+        super(SourceBuilder, self).__init__()
         self._host_config = host_config
+        self._hostname = host_config.hostname
+        self._ipaddress = ipaddress
         self._sources = {}  # type: Dict[str, DataSource]
 
         self._initialize_data_sources(selected_raw_sections)
 
+    @property
+    def sources(self):
+        # type: () -> Iterable[DataSource]
+        # Always execute piggyback at the end
+        return sorted(self._sources.values(),
+                      key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
+
     def _initialize_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[SectionName, SectionPlugin]]) -> None
+        # type: (Optional[SelectedRawSections]) -> None
         if self._host_config.is_cluster:
             # Cluster hosts do not have any actual data sources
             # Instead all data is provided by the nodes
@@ -67,15 +67,14 @@ class DataSources:
         self._initialize_management_board_data_sources(selected_raw_sections)
 
     def _initialize_agent_based_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[SectionName, SectionPlugin]]) -> None
+        # type: (Optional[SelectedRawSections]) -> None
         if self._host_config.is_all_agents_host:
-            source = self._get_agent_data_source(
-                ignore_special_agents=True,
-                selected_raw_sections=selected_raw_sections,
-            )
-            source.set_main_agent_data_source()
-            self._add_source(source)
-
+            self._add_source(
+                self._get_agent_data_source(
+                    ignore_special_agents=True,
+                    selected_raw_sections=selected_raw_sections,
+                    main_data_source=True,
+                ))
             self._add_sources(
                 self._get_special_agent_data_sources(selected_raw_sections=selected_raw_sections,))
 
@@ -84,34 +83,34 @@ class DataSources:
                 self._get_special_agent_data_sources(selected_raw_sections=selected_raw_sections,))
 
         elif self._host_config.is_tcp_host:
-            source = self._get_agent_data_source(
-                ignore_special_agents=False,
-                selected_raw_sections=selected_raw_sections,
-            )
-            source.set_main_agent_data_source()
-            self._add_source(source)
+            self._add_source(
+                self._get_agent_data_source(
+                    ignore_special_agents=False,
+                    selected_raw_sections=selected_raw_sections,
+                    main_data_source=True,
+                ))
 
         if "no-piggyback" not in self._host_config.tags:
-            piggy_source = PiggyBackDataSource(
+            self._add_source(
+                PiggyBackDataSource(
+                    self._hostname,
+                    self._ipaddress,
+                    selected_raw_sections=selected_raw_sections,
+                ))
+
+    def _initialize_snmp_data_sources(self, selected_raw_sections):
+        # type: (Optional[SelectedRawSections]) -> None
+        if not self._host_config.is_snmp_host:
+            return
+        self._add_source(
+            SNMPDataSource(
                 self._hostname,
                 self._ipaddress,
                 selected_raw_sections=selected_raw_sections,
-            )
-            self._add_source(piggy_source)
-
-    def _initialize_snmp_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[SectionName, SectionPlugin]]) -> None
-        if not self._host_config.is_snmp_host:
-            return
-        snmp_source = SNMPDataSource(
-            self._hostname,
-            self._ipaddress,
-            selected_raw_sections=selected_raw_sections,
-        )
-        self._add_source(snmp_source)
+            ))
 
     def _initialize_management_board_data_sources(self, selected_raw_sections):
-        # type: (Optional[Dict[SectionName, SectionPlugin]]) -> None
+        # type: (Optional[SelectedRawSections]) -> None
         protocol = self._host_config.management_protocol
         if protocol is None:
             return
@@ -143,23 +142,11 @@ class DataSources:
         # type: (DataSource) -> None
         self._sources[source.id()] = source
 
-    def describe_data_sources(self):
-        # type: () -> str
-        if self._host_config.is_all_agents_host:
-            return "Normal Checkmk agent, all configured special agents"
-
-        if self._host_config.is_all_special_agents_host:
-            return "No Checkmk agent, all configured special agents"
-
-        if self._host_config.is_tcp_host:
-            return "Normal Checkmk agent, or special agent if configured"
-
-        return "No agent"
-
     def _get_agent_data_source(
             self,
             ignore_special_agents,  # type: bool
-            selected_raw_sections,  # type: Optional[Dict[SectionName, SectionPlugin]]
+            selected_raw_sections,  # type: Optional[SelectedRawSections]
+            main_data_source,  # type: bool
     ):
         # type: (...) -> AgentDataSource
         if not ignore_special_agents:
@@ -175,17 +162,19 @@ class DataSources:
                 self._ipaddress,
                 datasource_program,
                 selected_raw_sections=selected_raw_sections,
+                main_data_source=main_data_source,
             )
 
         return TCPDataSource(
             self._hostname,
             self._ipaddress,
             selected_raw_sections=selected_raw_sections,
+            main_data_source=main_data_source,
         )
 
     def _get_special_agent_data_sources(
             self,
-            selected_raw_sections,  # type: Optional[Dict[SectionName, SectionPlugin]]
+            selected_raw_sections,  # type: Optional[SelectedRawSections]
     ):
         # type: (...) -> List[SpecialAgentDataSource]
         return [
@@ -198,16 +187,58 @@ class DataSources:
             ) for agentname, params in self._host_config.special_agents
         ]
 
-    def get_data_sources(self):
-        # type: () -> Iterable[DataSource]
-        # Always execute piggyback at the end
-        return sorted(self._sources.values(),
-                      key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
+
+def make_sources(host_config, ipaddress, selected_raw_sections):
+    # type: (HostConfig, Optional[HostAddress], Optional[SelectedRawSections]) -> Iterable[DataSource]
+    return SourceBuilder(host_config, ipaddress, selected_raw_sections).sources
+
+
+def make_description(host_config):
+    # type: (HostConfig) -> str
+    if host_config.is_all_agents_host:
+        return "Normal Checkmk agent, all configured special agents"
+
+    if host_config.is_all_special_agents_host:
+        return "No Checkmk agent, all configured special agents"
+
+    if host_config.is_tcp_host:
+        return "Normal Checkmk agent, or special agent if configured"
+
+    return "No agent"
+
+
+class DataSources:
+    def __init__(
+            self,
+            host_config,  # type: HostConfig
+            ipaddress,  # type: Optional[HostAddress]
+            # optional set: None -> no selection, empty -> select *nothing*
+        selected_raw_sections=None,  # type: Optional[SelectedRawSections]
+    ):
+        # type: (...) -> None
+        super(DataSources, self).__init__()
+        self._ipaddress = ipaddress
+        self._host_config = host_config
+        self._sources = make_sources(host_config, ipaddress, selected_raw_sections)
+        self._description = make_description(host_config)
+
+    @property
+    def _hostname(self):
+        # type: () -> HostName
+        return self._host_config.hostname
+
+    def describe_data_sources(self):
+        # type: () -> str
+        return self._description
 
     def set_max_cachefile_age(self, max_cachefile_age):
         # type: (int) -> None
         for source in self.get_data_sources():
             source.set_max_cachefile_age(max_cachefile_age)
+
+    def get_data_sources(self):
+        # type: () -> Iterable[DataSource]
+        return self._sources
 
     def get_host_sections(self, max_cachefile_age=None):
         # type: (Optional[int]) -> MultiHostSections
@@ -240,7 +271,6 @@ class DataSources:
 
                 node_data_sources = DataSources(
                     self._host_config,
-                    node_hostname,
                     node_ipaddress,
                     node_needed_raw_sections,
                 )

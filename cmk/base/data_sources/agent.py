@@ -84,14 +84,11 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
             selected_raw_section_names=None,  # type: Optional[Set[SectionName]]
+            main_data_source=False,  # type: bool
     ):
         # type: (...) -> None
         super(AgentDataSource, self).__init__(hostname, ipaddress, selected_raw_section_names)
-        self._is_main_agent_data_source = False
-
-    # TODO: We should cleanup these old directories one day. Then we can remove this special case
-    def set_main_agent_data_source(self):
-        # type: () -> None
+        self._is_main_agent_data_source = main_data_source
         """Tell the data source that it's the main agent based data source
 
         The data source that is the "main" agent based data source uses the
@@ -99,7 +96,7 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
         concept has been added where each data source has it's own set of
         directories.
         """
-        self._is_main_agent_data_source = True
+        # TODO: We should cleanup these old directories one day. Then we can remove this special case
 
     def _cpu_tracking_id(self):
         # type: () -> str

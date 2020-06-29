@@ -40,13 +40,15 @@ class TCPDataSource(AgentDataSource):
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
             selected_raw_sections=None,  # type: Optional[Dict[SectionName, SectionPlugin]]
+            main_data_source=False,  # type: bool
     ):
         # type: (...) -> None
         super(TCPDataSource, self).__init__(
             hostname,
             ipaddress,
-            None if selected_raw_sections is None else
+            selected_raw_section_names=None if selected_raw_sections is None else
             {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
+            main_data_source=main_data_source,
         )
         self._port = None  # type: Optional[int]
         self._timeout = None  # type: Optional[float]

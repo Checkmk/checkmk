@@ -48,7 +48,6 @@ from cmk.utils.type_defs import (
     Item,
     Metric,
     RulesetName,
-    SectionName,
     SourceType,
 )
 
@@ -1034,12 +1033,11 @@ def _get_sources_for_discovery(
     on_error,  # type: str
     for_check_discovery=False,  # type: bool
     *,
-    selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
+    selected_raw_sections: Optional[config.SelectedRawSections] = None,
 ):
     # type: (...) -> data_sources.DataSources
     sources = data_sources.DataSources(
         config.HostConfig.make_host_config(hostname),
-        hostname,
         ipaddress,
         selected_raw_sections=selected_raw_sections,
     )

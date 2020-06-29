@@ -70,7 +70,7 @@ def do_inv(hostnames):
             else:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-            sources = data_sources.DataSources(host_config, hostname, ipaddress)
+            sources = data_sources.DataSources(host_config, ipaddress)
             inventory_tree, status_data_tree = _do_inv_for(
                 sources,
                 multi_host_sections=None,
@@ -117,7 +117,7 @@ def do_inv_check(hostname, options):
     long_infotexts = []  # type: List[str]
     perfdata = []  # type: List[Tuple]
 
-    sources = data_sources.DataSources(host_config, hostname, ipaddress)
+    sources = data_sources.DataSources(host_config, ipaddress)
     inventory_tree, status_data_tree = _do_inv_for(
         sources,
         multi_host_sections=None,

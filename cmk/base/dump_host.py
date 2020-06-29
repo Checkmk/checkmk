@@ -84,7 +84,7 @@ def dump_host(hostname):
                ", ".join(host_config.contactgroups) + "\n")
 
     agenttypes = []
-    sources = data_sources.DataSources(host_config, hostname, ipaddress)
+    sources = data_sources.DataSources(host_config, ipaddress)
     for source in sources.get_data_sources():
         agenttypes.append(source.describe())
 

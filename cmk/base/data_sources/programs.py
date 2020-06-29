@@ -83,13 +83,15 @@ class DSProgramDataSource(ProgramDataSource):
             ipaddress,  # type: Optional[HostAddress]
             command_template,  # type: str
             selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
+            main_data_source=False,  # type: bool
     ):
         # type: (...) -> None
         super(DSProgramDataSource, self).__init__(
             hostname,
             ipaddress,
-            None if selected_raw_sections is None else
+            selected_raw_section_names=None if selected_raw_sections is None else
             {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
+            main_data_source=main_data_source,
         )
         self._command_template = command_template
 
@@ -143,14 +145,16 @@ class SpecialAgentDataSource(ProgramDataSource):
             special_agent_id,  # type: str
             params,  # type: Dict
             selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
+            main_data_source=False,  # type: bool
     ):
         # type: (...) -> None
         self._special_agent_id = special_agent_id
         super(SpecialAgentDataSource, self).__init__(
             hostname,
             ipaddress,
-            None if selected_raw_sections is None else
+            selected_raw_section_names=None if selected_raw_sections is None else
             {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
+            main_data_source=main_data_source,
         )
         self._params = params
 

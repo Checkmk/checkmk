@@ -63,9 +63,8 @@ def test_get_sources(monkeypatch, hostname, tags, sources):
 
     host_config = config.HostConfig.make_host_config(hostname)
 
-    assert [
-        s.__class__ for s in DataSources(host_config, hostname, "127.0.0.1").get_data_sources()
-    ] == sources
+    assert [s.__class__ for s in DataSources(host_config, "127.0.0.1").get_data_sources()
+           ] == sources
 
 
 def test_get_host_sections(monkeypatch):
@@ -75,7 +74,7 @@ def test_get_host_sections(monkeypatch):
     make_scenario(hostname, tags).apply(monkeypatch)
     host_config = config.HostConfig.make_host_config(hostname)
 
-    sources = DataSources(host_config, hostname, address)
+    sources = DataSources(host_config, address)
     multi_host_sections = sources.get_host_sections()
     data = multi_host_sections._multi_host_sections
     assert len(data) == 1

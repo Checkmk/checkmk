@@ -32,6 +32,7 @@ class PiggyBackDataSource(AgentDataSource):
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
             selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
+            main_data_source=False,  # type: bool
     ):
         # type: (...) -> None
         super(PiggyBackDataSource, self).__init__(
@@ -39,6 +40,7 @@ class PiggyBackDataSource(AgentDataSource):
             ipaddress,
             None if selected_raw_sections is None else
             {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
+            main_data_source=main_data_source,
         )
         self._summary = None  # type: Optional[ServiceCheckResult]
         self._time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings(

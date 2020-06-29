@@ -1251,7 +1251,7 @@ class AutomationDiagHost(Automation):
     def _execute_agent(self, host_config, hostname, ipaddress, agent_port, cmd,
                        tcp_connect_timeout):
         # type: (config.HostConfig, str, str, int, str, Optional[float]) -> Tuple[int, str]
-        sources = data_sources.DataSources(host_config, hostname, ipaddress)
+        sources = data_sources.DataSources(host_config, ipaddress)
         sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
         state, output = 0, u""
@@ -1547,7 +1547,7 @@ class AutomationGetAgentOutput(Automation):
                 data_sources.abstract.DataSource.set_may_use_cache_file(
                     not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
-                sources = data_sources.DataSources(host_config, hostname, ipaddress)
+                sources = data_sources.DataSources(host_config, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
                 agent_output = b""

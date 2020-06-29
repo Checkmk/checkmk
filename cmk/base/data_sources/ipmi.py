@@ -35,12 +35,15 @@ class IPMIManagementBoardDataSource(AgentDataSource):
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
             selected_raw_sections=None,  # type: Optional[Dict[SectionName, SectionPlugin]]
+            main_data_source=False,  # type: bool
     ):
         # type: (...) -> None
         super(IPMIManagementBoardDataSource, self).__init__(
             hostname,
             ipaddress,
-            None if selected_raw_sections is None else self._raw_sections,
+            selected_raw_section_names=None
+            if selected_raw_sections is None else self._raw_sections,
+            main_data_source=main_data_source,
         )
         self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
 

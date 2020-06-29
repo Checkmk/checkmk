@@ -125,12 +125,8 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             # yet (do not have autochecks), we enable SNMP scan.
             do_snmp_scan = not use_caches or not autochecks.has_autochecks(hostname)
 
-            sources = _get_sources_for_discovery(hostname,
-                                                 ipaddress,
-                                                 check_plugin_names,
-                                                 do_snmp_scan,
-                                                 on_error,
-                                                 for_check_discovery=True)
+            sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names,
+                                                 do_snmp_scan, on_error)
             multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
             _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,
@@ -414,7 +410,8 @@ def check_discovery(hostname, ipaddress):
                                          ipaddress,
                                          check_plugin_names=None,
                                          do_snmp_scan=params["inventory_check_do_scan"],
-                                         on_error="raise")
+                                         on_error="raise",
+                                         for_check_discovery=True)
 
     multi_host_sections = _get_host_sections_for_discovery(
         sources, use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())

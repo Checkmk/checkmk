@@ -38,8 +38,8 @@ DISCOVERY_ACTION = {"tabula-rasa": "refresh", "full-scan": "refresh"}
 
 DISCOVERY_HOST = ParamDict.create(
     'host',
-    schema_pattern="[a-zA-Z][a-zA-Z0-9_-]+",
-    location='query',
+    'query',
+    schema_string_pattern="[a-zA-Z][a-zA-Z0-9_-]+",
     description=('Optionally the hostname for which a certain agent has '
                  'been configured. If omitted you may only download this agent if you '
                  'have the rights for all agents.'),
@@ -48,41 +48,41 @@ DISCOVERY_HOST = ParamDict.create(
 
 DISCOVERY_SOURCE_STATE = ParamDict.create(
     'discovery_state',
-    location='query',
+    'query',
     description=('The discovery state of the services. May be one of the following: ' +
                  ', '.join(sorted(SERVICE_DISCOVERY_STATES.keys()))),
-    schema_pattern='|'.join(sorted(SERVICE_DISCOVERY_STATES.keys())),
+    schema_string_pattern='|'.join(sorted(SERVICE_DISCOVERY_STATES.keys())),
     example='monitored',
     required=True)
 
 DISCOVERY_SERVICE_HASH = ParamDict.create(
     "service_hash",
-    location='path',
-    description='A name used as an identifier. Can be of arbitratry length',
-    schema_pattern="[a-zA-Z][a-zA-Z0-9_-]+",
+    'path',
+    description='A name used as an identifier. Can be of arbitrary length',
+    schema_string_pattern="[a-zA-Z][a-zA-Z0-9_-]+",
     example='asoidjfo2jifa09',
     required=True)
 
 DISCOVERY_TARGET_STATE = ParamDict.create(
     'target_state',
-    location='path',
+    'path',
     description=('The discovery state of the services. May be one of the following: ' +
                  ', '.join(sorted(SERVICE_DISCOVERY_STATES.keys()))),
-    schema_pattern='|'.join(sorted(SERVICE_DISCOVERY_STATES.keys())),
+    schema_string_pattern='|'.join(sorted(SERVICE_DISCOVERY_STATES.keys())),
     example='monitored',
     required=True)
 
 DISCOVERY_MODE = ParamDict.create(
     'discover_mode',
-    location='path',
+    'path',
     description=('The mode of the discovery action. May be one of the following: ' +
                  ', '.join(sorted(DISCOVERY_ACTION.keys()))),
-    schema_pattern='|'.join(sorted(DISCOVERY_ACTION.keys())),
+    schema_string_pattern='|'.join(sorted(DISCOVERY_ACTION.keys())),
     example='tabula-rasa',
     required=True)
 
 
-@endpoint_schema('/domain-types/service/collections/services',
+@endpoint_schema("/domain-types/service/collections/services",
                  '.../collection',
                  method='get',
                  response_schema=response_schemas.DomainObject,

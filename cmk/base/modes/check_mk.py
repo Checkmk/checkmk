@@ -1570,9 +1570,8 @@ modes.register(
              "If configured to do so, this will queue those hosts for automatic "
              "discover-marked-hosts",
              "Can be restricted to certain check types. Write '--checks df -I' if "
-             "you just want to look for new filesystems. Use 'check_mk -L' for a "
-             "list of all check types. Use 'tcp' for all TCP based checks and "
-             "'snmp' for all SNMP based checks.",
+             "you just want to look for new filesystems. Use 'cmk -L' for a "
+             "list of all check types.",
              "-II does the same as -I but deletes all existing checks of the "
              "specified types and hosts."
          ],

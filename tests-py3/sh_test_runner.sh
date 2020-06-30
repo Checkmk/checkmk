@@ -6,6 +6,13 @@
 export UNIT_SH_SHUNIT2="./shunit2"
 export UNIT_SH_PLUGINS_DIR="../agents/plugins"
 
-for f in $(find ./agent-plugin-unit -name "test*.sh"); do
-    $f
-done
+_failed_tests=""
+while IFS= read -r -d '' test_file
+do
+    "$test_file" || _failed_tests="$_failed_tests $test_file"
+done <  <(find ./agent-plugin-unit -name "test*.sh" -print0)
+
+if [ -n "$_failed_tests" ]; then
+    echo "Failed shell unit tests: $_failed_tests" >&2
+    exit 1
+fi

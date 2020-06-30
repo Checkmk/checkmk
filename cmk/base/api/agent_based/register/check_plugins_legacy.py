@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 import functools
 import itertools
 
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base import item_state
@@ -293,17 +294,6 @@ def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidde
         cluster_check_function=_create_cluster_legacy_mode_from_hell(check_function),
         forbidden_names=forbidden_names,
     )
-
-
-def maincheckify(subcheck_name):
-    # type: (str) -> str
-    """Get new plugin name
-
-    The new API does not know about "subchecks", so drop the dot notation.
-    The validation step will prevent us from having colliding plugins.
-    """
-    return (subcheck_name.replace('.', '_').replace('-', '_')  # "sap.value-groups"
-           )
 
 
 @functools.lru_cache()

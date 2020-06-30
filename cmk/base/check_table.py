@@ -5,12 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Callable, cast, Dict, Iterator, List, Optional, Set, Tuple
+from typing import Callable, cast, Dict, Iterator, List, Optional, Set
 
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 
 import cmk.base.config as config
 import cmk.base.item_state as item_state

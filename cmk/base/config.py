@@ -37,6 +37,7 @@ from typing import (
 from six import ensure_str
 
 import cmk.utils
+from cmk.utils.check_utils import maincheckify
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
@@ -107,7 +108,6 @@ try:
     )
     from cmk.base.api.agent_based.register.check_plugins_legacy import (
         create_check_plugin_from_legacy,
-        maincheckify,
         resolve_legacy_name,
     )
 except ImportError:

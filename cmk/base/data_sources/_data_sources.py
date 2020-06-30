@@ -10,6 +10,7 @@
 
 from typing import Dict, Iterable, List, Optional
 
+from cmk.utils.check_utils import maincheckify
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.piggyback
@@ -20,7 +21,6 @@ from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SourceTy
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.config import HostConfig, SelectedRawSections
 
 from ._utils import management_board_ipaddress

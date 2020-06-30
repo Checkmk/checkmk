@@ -29,6 +29,7 @@ from typing import (
 
 from six import ensure_binary, ensure_str
 
+from cmk.utils.check_utils import maincheckify
 import cmk.utils.debug
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
@@ -67,7 +68,6 @@ import cmk.base.utils
 from cmk.base.api.agent_based import checking_types, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     CLUSTER_LEGACY_MODE_FROM_HELL,
-    maincheckify,
     wrap_parameters,
 )
 from cmk.base.check_utils import ABCService, LegacyCheckParameters, Service

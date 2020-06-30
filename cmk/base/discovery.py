@@ -30,6 +30,7 @@ from six import ensure_binary
 
 import livestatus
 
+from cmk.utils.check_utils import maincheckify
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.misc
@@ -69,7 +70,6 @@ import cmk.base.utils
 from cmk.base.api.agent_based import checking_types
 from cmk.base.api.agent_based.register.check_plugins import MANAGEMENT_NAME_PREFIX
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
-    maincheckify,
     resolve_legacy_name,
     wrap_parameters,
 )

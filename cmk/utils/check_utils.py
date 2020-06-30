@@ -7,3 +7,15 @@
 
 def section_name_of(check_plugin_name: str) -> str:
     return check_plugin_name.split(".")[0]
+
+
+def maincheckify(subcheck_name):
+    # type: (str) -> str
+    """Get new plugin name
+
+    The new API does not know about "subchecks", so drop the dot notation.
+    The validation step will prevent us from having colliding plugins.
+    """
+    return (subcheck_name.replace('.', '_')  # subchecks don't exist anymore
+            .replace('-', '_')  # "sap.value-groups"
+           )

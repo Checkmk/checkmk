@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple, TypedDict, Set, Union
 
 from six import ensure_str
 
+from cmk.utils.check_utils import maincheckify
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.paths
@@ -33,7 +34,6 @@ import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.fetchers.factory as snmp_factory
 
-from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
 from cmk.base.api.agent_based.register.check_plugins import CheckPlugin
 import cmk.base.backup
 import cmk.base.check_api as check_api

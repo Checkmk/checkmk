@@ -23,39 +23,49 @@ SHELL_FILES := \
 	agents/check_mk_agent.linux \
 	agents/check_mk_caching_agent.linux
 
-.PHONY: clean help format-shell prepare-node-modules test-bandit test-composition \
-	test-composition-docker test-composition-docker-debug test-docker test-format-python3 \
-	test-format-shell test-gui-crawl test-gui-crawl-docker test-integration \
-	test-integration-docker test-integration-docker-debug test-mypy3 test-mypy3-raw \
-	test-packaging test-pipenv-deps test-pylint test-shellcheck test-unit test-unit-coverage-html \
-	test-unit-sh
-
+.PHONY: clean format-shell help prepare-node-modules test-agent-plugin-unit-py2.6-docker \
+	test-agent-plugin-unit-py2.7-docker test-agent-plugin-unit-py3.3-docker \
+	test-agent-plugin-unit-py3.4-docker test-agent-plugin-unit-py3.5-docker \
+	test-agent-plugin-unit-py3.6-docker test-agent-plugin-unit-py3.7-docker \
+	test-agent-plugin-unit-py3.8-docker test-bandit test-composition test-composition-docker \
+	test-composition-docker-debug test-docker test-format-python3 test-format-shell \
+	test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
+	test-integration-docker-debug test-mypy3 test-mypy3-raw test-packaging test-pipenv-deps \
+	test-pylint test-shellcheck test-unit test-unit-coverage-html test-unit-sh
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 
 help:
-	@echo "test-agent-plugin-unit-py%-docker - Run Agent plugin tests in container (py version specific)"
-	@echo "test-bandit                   - Run bandit (security) tests"
-	@echo "test-composition              - Run composition tests locally"
-	@echo "test-composition-docker       - Run composition tests in container"
-	@echo "test-composition-docker-debug - Run test container for manual debugging"
-	@echo "test-docker                   - Run docker tests"
-	@echo "test-format-python3           - Run Python 3 formatting tests"
-	@echo "test-format-shell             - Run the shell formatting"
-	@echo "test-gui-crawl                - Run GUI crawl locally"
-	@echo "test-gui-crawl-docker         - Run GUI crawl in container"
-	@echo "test-integration              - Run integration tests locally"
-	@echo "test-integration-docker       - Run integration tests in container"
-	@echo "test-integration-docker-debug - Run test container for manual debugging"
-	@echo "test-mypy3                    - Run mypy tests for Python 3"
-	@echo "test-mypy3-raw                - Run mypy tests for Python 3 with raw edition config"
-	@echo "test-packaging                - Run packaging tests"
-	@echo "test-pipenv-deps              - Run pipenv dependency issue test"
-	@echo "test-pylint                   - Run pylint based tests"
-	@echo "test-shellcheck               - Run shellcheck tests"
-	@echo "test-unit                     - Run unit tests"
-	@echo "test-unit-coverage-html       - Create HTML coverage report for unit tests"
-	@echo "test-unit-sh		     - Run shell unit tests"
+	@echo "format-shell                        - Format shell agents"
+	@echo "test-agent-plugin-unit-py2.6-docker - Run Agent plugin tests in container with Python 2.6"
+	@echo "test-agent-plugin-unit-py2.7-docker - Run Agent plugin tests in container with Python 2.7"
+	@echo "test-agent-plugin-unit-py3.3-docker - Run Agent plugin tests in container with Python 3.3"
+	@echo "test-agent-plugin-unit-py3.4-docker - Run Agent plugin tests in container with Python 3.4"
+	@echo "test-agent-plugin-unit-py3.5-docker - Run Agent plugin tests in container with Python 3.5"
+	@echo "test-agent-plugin-unit-py3.6-docker - Run Agent plugin tests in container with Python 3.6"
+	@echo "test-agent-plugin-unit-py3.7-docker - Run Agent plugin tests in container with Python 3.7"
+	@echo "test-agent-plugin-unit-py3.8-docker - Run Agent plugin tests in container with Python 3.8"
+	@echo "test-bandit                         - Run bandit (security) tests"
+	@echo "test-composition                    - Run composition tests locally"
+	@echo "test-composition-docker             - Run composition tests in container"
+	@echo "test-composition-docker-debug       - Run test container for manual debugging"
+	@echo "test-docker                         - Run docker tests"
+	@echo "test-format-python3                 - Run Python 3 formatting tests"
+	@echo "test-format-shell                   - Run the shell formatting"
+	@echo "test-gui-crawl                      - Run GUI crawl locally"
+	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
+	@echo "test-integration                    - Run integration tests locally"
+	@echo "test-integration-docker             - Run integration tests in container"
+	@echo "test-integration-docker-debug       - Run test container for manual debugging"
+	@echo "test-mypy3                          - Run mypy tests for Python 3"
+	@echo "test-mypy3-raw                      - Run mypy tests for Python 3 with raw edition config"
+	@echo "test-packaging                      - Run packaging tests"
+	@echo "test-pipenv-deps                    - Run pipenv dependency issue test"
+	@echo "test-pylint                         - Run pylint based tests"
+	@echo "test-shellcheck                     - Run shellcheck tests"
+	@echo "test-unit                           - Run unit tests"
+	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
+	@echo "test-unit-sh		           - Run shell unit tests"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \

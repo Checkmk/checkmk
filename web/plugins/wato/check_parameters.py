@@ -4705,9 +4705,9 @@ register_check_parameters(
             ),
             ( "numerical_sensor_levels", ListOf(Tuple(
                 elements = [
-                    TextAscii(title = _("Sensor name (only summary)"),
-                              help  = _("In summary mode you have to state the sensor name. "
-                                        "In single mode the sensor name comes from service description.")
+                    TextAscii(title = _("Sensor name"),
+                              help  = _("Enter the name of the sensor. In single mode, this can be read off "
+                                        "from the service descriptions of the services 'IPMI Sensor ...'.")
                     ),
                     Dictionary(
                         elements = [

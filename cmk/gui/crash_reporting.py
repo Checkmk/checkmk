@@ -547,7 +547,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
 
         html.response.headers['Content-Disposition'] = 'Attachment; filename=%s' % filename
         html.response.headers['Content-Type'] = 'application/x-tar'
-        html.write(ensure_str(_pack_crash_report(self._get_serialized_crash_report())))
+        html.write_binary(_pack_crash_report(self._get_serialized_crash_report()))
 
 
 def _pack_crash_report(serialized_crash_report: Mapping[str, Optional[bytes]]) -> bytes:

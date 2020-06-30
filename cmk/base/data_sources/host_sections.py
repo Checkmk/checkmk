@@ -67,12 +67,12 @@ class MultiHostSections:
     def __repr__(self):
         return "%s(data=%r)" % (type(self).__name__, self._multi_host_sections)
 
-    def setdefault_host_sections(
+    def set_default_host_sections(
         self,
         host_key: HostKey,
         default: AbstractHostSections,
-    ) -> AbstractHostSections:
-        return self._multi_host_sections.setdefault(host_key, default)
+    ) -> None:
+        self._multi_host_sections.setdefault(host_key, default)
 
     def get_host_sections(self) -> MultiHostSectionsData:
         return self._multi_host_sections

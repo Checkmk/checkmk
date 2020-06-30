@@ -26,8 +26,7 @@ MK_STATUS = {
 }
 
 
-def bearer_auth(token):
-    # type: (str) ->  Optional[RFC7662]
+def bearer_auth(token: str) -> Optional[RFC7662]:
     try:
         user_id, secret = token.split(' ', 1)
     except ValueError:
@@ -49,8 +48,7 @@ def bearer_auth(token):
     return None
 
 
-def _subject(user_id):
-    # type: (str) -> RFC7662
+def _subject(user_id: str) -> RFC7662:
     # noinspection PyTypeChecker
     return {'sub': user_id, 'iat': int(time.time()), 'active': True}
 

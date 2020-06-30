@@ -96,27 +96,23 @@ def host_attribute_matches(crit, value):
 # to false to configure that this host is monitored by another site (that we don't
 # know about).
 # TODO: Find a better place later. Find a less depressing return type.
-def default_site():
-    # type: () -> Union[bool, None, SiteId]
+def default_site() -> Union[bool, None, SiteId]:
     if config.is_wato_slave_site():
         return False
     return config.default_site()
 
 
-def format_config_value(value):
-    # type: (Any) -> str
+def format_config_value(value: Any) -> str:
     return pprint.pformat(value) if config.wato_pprint_config else repr(value)
 
 
-def mk_repr(x):
-    # type: (Any) -> bytes
+def mk_repr(x: Any) -> bytes:
     r = pickle.dumps(x) if config.wato_legacy_eval else ensure_binary(repr(x))
     return base64.b64encode(r)
 
 
 # TODO: Deprecate this legacy format with 1.4.0 or later?!
-def mk_eval(s):
-    # type: (Union[bytes, str]) -> Any
+def mk_eval(s: Union[bytes, str]) -> Any:
     try:
         d = base64.b64decode(s)
         return pickle.loads(d) if config.wato_legacy_eval else ast.literal_eval(ensure_str(d))

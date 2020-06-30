@@ -28,14 +28,12 @@ class OutputFunnel:
                 html_code = html.drain()
              print html_code
     """
-    def __init__(self, response):
-        # type: (Response) -> None
+    def __init__(self, response: Response) -> None:
         super(OutputFunnel, self).__init__()
         self._response = response
-        self.plug_text = []  # type: List[List[str]]
+        self.plug_text: List[List[str]] = []
 
-    def write(self, text):
-        # type: (OutputFunnelInput) -> None
+    def write(self, text: OutputFunnelInput) -> None:
         if not text:
             return
 
@@ -54,17 +52,14 @@ class OutputFunnel:
             self._lowlevel_write(ensure_binary(text))
 
     # Please note that this does not work with the plugs at the moment (The plugs store text)
-    def write_binary(self, data):
-        # type: (bytes) -> None
+    def write_binary(self, data: bytes) -> None:
         self._response.stream.write(data)
 
-    def _lowlevel_write(self, text):
-        # type: (bytes) -> None
+    def _lowlevel_write(self, text: bytes) -> None:
         self._response.stream.write(text)
 
     @contextmanager
-    def plugged(self):
-        # type: () -> Iterator[None]
+    def plugged(self) -> Iterator[None]:
         self.plug_text.append([])
         try:
             yield
@@ -73,12 +68,10 @@ class OutputFunnel:
             self.plug_text.pop()
             self.write(text)
 
-    def _is_plugged(self):
-        # type: () -> bool
+    def _is_plugged(self) -> bool:
         return bool(self.plug_text)
 
-    def drain(self):
-        # type: () -> str
+    def drain(self) -> str:
         """Get the sink content in order to do something with it."""
         if not self._is_plugged():  # TODO: Raise exception or even remove "if"?
             return ''

@@ -279,8 +279,8 @@ def cluster_check_local(item, params, section):
 
 def _aggregate_worst(results_by_node):
 
-    global_worst_state = state.worst(*(sum_state
-                                       for sum_state, _results in results_by_node.values()))
+    global_worst_state = state.worst(
+        *(sum_state for sum_state, _results in results_by_node.values()))
 
     worst_node = sorted(node for node, (sum_state, _results) in results_by_node.items()
                         if sum_state == global_worst_state)[0]

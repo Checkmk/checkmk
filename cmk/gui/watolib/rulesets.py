@@ -56,13 +56,13 @@ _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
 
 class RuleConditions:
     def __init__(
-            self,
-            host_folder,  # type: str
-            host_tags=None,  # type: Tags
-            host_labels=None,  # type: Labels
-            host_name=None,  # type: HostNameConditions
-            service_description=None,  # type: ServiceNameConditions
-            service_labels=None,  # type: Labels
+        self,
+        host_folder: str,
+        host_tags: Tags = None,
+        host_labels: Labels = None,
+        host_name: HostNameConditions = None,
+        service_description: ServiceNameConditions = None,
+        service_labels: Labels = None,
     ):
         self.host_folder = host_folder
         self.host_tags = host_tags or {}
@@ -83,8 +83,7 @@ class RuleConditions:
     # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
     # strings.  After reading the config into the GUI ensure we really
     # process the host names as str. TODO: Can be removed with Python 3.
-    def _fixup_unicode_hosts(self, host_conditions):
-        # type: (HostNameConditions) -> HostNameConditions
+    def _fixup_unicode_hosts(self, host_conditions: HostNameConditions) -> HostNameConditions:
         if not host_conditions:
             return host_conditions
 
@@ -128,7 +127,7 @@ class RuleConditions:
         return self._to_config()
 
     def _to_config(self):
-        cfg = {}  # type: RuleSpec
+        cfg: RuleSpec = {}
 
         if self.host_tags:
             cfg["host_tags"] = self.host_tags
@@ -315,7 +314,7 @@ class RulesetCollection:
 
     # Groups the rulesets in 3 layers (main group, sub group, rulesets)
     def get_grouped(self):
-        grouped_dict = {}  # type: Dict[str, Dict[str, List[Ruleset]]]
+        grouped_dict: Dict[str, Dict[str, List[Ruleset]]] = {}
         for ruleset in self._rulesets.values():
             main_group = grouped_dict.setdefault(ruleset.rulespec.main_group_name, {})
             group_rulesets = main_group.setdefault(ruleset.rulespec.group_name, [])
@@ -716,7 +715,7 @@ class Ruleset:
     # of rule_folder and rule_number
     def analyse_ruleset(self, hostname, svc_desc_or_item, svc_desc):
         resultlist = []
-        resultdict = {}  # type: Dict[str, Any]
+        resultdict: Dict[str, Any] = {}
         effectiverules = []
         for folder, rule_index, rule in self.get_rules():
             if rule.is_disabled():
@@ -1075,8 +1074,7 @@ class Rule:
     def comment(self):
         return self.rule_options.get("comment", "")
 
-    def predefined_condition_id(self):
-        # type: () -> Optional[str]
+    def predefined_condition_id(self) -> Optional[str]:
         """When a rule refers to a predefined condition return the ID
 
         The predefined conditions are a pure WATO feature. These are resolved when writing
@@ -1086,12 +1084,10 @@ class Rule:
         #TODO: Once we switched the rule format to be dict base, we can move this key to the conditions dict
         return self.rule_options.get("predefined_condition_id")
 
-    def update_conditions(self, conditions):
-        # type: (RuleConditions) -> None
+    def update_conditions(self, conditions: RuleConditions) -> None:
         self.conditions = conditions
 
-    def get_rule_conditions(self):
-        # type: () -> RuleConditions
+    def get_rule_conditions(self) -> RuleConditions:
         return self.conditions
 
     def is_discovery_rule_of(self, host):

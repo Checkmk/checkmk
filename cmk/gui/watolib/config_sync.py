@@ -38,8 +38,7 @@ class ReplicationPath(
             ("site_path", str),
             ("excludes", List[str]),
         ])):
-    def __new__(cls, ty, ident, site_path, excludes):
-        # type: (str, str, str, List[str]) -> ReplicationPath
+    def __new__(cls, ty: str, ident: str, site_path: str, excludes: List[str]) -> 'ReplicationPath':
 
         if site_path.startswith("/"):
             raise Exception("ReplicationPath.path must be a path relative to the site root")
@@ -61,22 +60,20 @@ class ReplicationPath(
 
 
 class SnapshotCreationBase:
-    def __init__(self, activation_work_dir):
-        # type: (str) -> None
+    def __init__(self, activation_work_dir: str) -> None:
         super(SnapshotCreationBase, self).__init__()
         self._logger = logger.getChild("SnapshotCreationBase")
         self._multitar_workdir = os.path.join(activation_work_dir, "multitar_workdir")
         self._rsync_target_dir = os.path.join(self._multitar_workdir, "synced_files")
         self._tarfile_dir = os.path.join(self._multitar_workdir, "subtars")
 
-        self._available_snapshots = {}  # type: Dict[Tuple[str, ...], str]
+        self._available_snapshots: Dict[Tuple[str, ...], str] = {}
 
         # Debugging stuff
-        self._statistics_rsync = []  # type: List[str]
-        self._statistics_tar = {}  # type: Dict[str, List[str]]
+        self._statistics_rsync: List[str] = []
+        self._statistics_tar: Dict[str, List[str]] = {}
 
-    def output_statistics(self):
-        # type: () -> None
+    def output_statistics(self) -> None:
         self._logger.debug("============= Snapshot creation statistics =============")
         for line in self._statistics_rsync:
             self._logger.debug("RSYNC: %s" % line)
@@ -86,9 +83,10 @@ class SnapshotCreationBase:
             for line in lines:
                 self._logger.debug("TAR:     - %s" % line)
 
-    def _generate_snapshot(self, snapshot_work_dir, target_filepath, generic_components,
-                           custom_components, reuse_identical_snapshots):
-        # type: (str, str, List[ReplicationPath], List[ReplicationPath], bool) -> None
+    def _generate_snapshot(self, snapshot_work_dir: str, target_filepath: str,
+                           generic_components: List[ReplicationPath],
+                           custom_components: List[ReplicationPath],
+                           reuse_identical_snapshots: bool) -> None:
         generate_start_time = time.time()
         target_basename = os.path.basename(target_filepath)
         store.makedirs(os.path.dirname(target_filepath))
@@ -138,8 +136,8 @@ class SnapshotCreationBase:
         self._logger.debug("Snapshot %-30s took %.4fsec" % (target_basename,
                                                             (time.time() - generate_start_time)))
 
-    def _get_rsync_and_tar_commands(self, component, rsync_target_dir, tarfile_target_dir):
-        # type: (ReplicationPath, str, str) -> List[Command]
+    def _get_rsync_and_tar_commands(self, component: ReplicationPath, rsync_target_dir: str,
+                                    tarfile_target_dir: str) -> List[Command]:
         bash_commands = []
 
         # Rsync from source
@@ -150,8 +148,7 @@ class SnapshotCreationBase:
             self._get_subtar_command(component, rsync_target_dir, tarfile_target_dir))
         return bash_commands
 
-    def _get_rsync_command(self, component, rsync_target_dir):
-        # type: (ReplicationPath, str) -> Command
+    def _get_rsync_command(self, component: ReplicationPath, rsync_target_dir: str) -> Command:
         exclude_args = list(
             itertools.chain.from_iterable([("--exclude", f) for f in component.excludes]))
 
@@ -162,8 +159,8 @@ class SnapshotCreationBase:
 
         return ["rsync", "-av", "--delete", source_path, rsync_target_dir] + exclude_args
 
-    def _get_subtar_command(self, component, source_dir, tarfile_target_dir):
-        # type: (ReplicationPath, str, str) -> Command
+    def _get_subtar_command(self, component: ReplicationPath, source_dir: str,
+                            tarfile_target_dir: str) -> Command:
         if component.ty == "dir":
             files_location = [source_dir, "."]
         else:
@@ -174,8 +171,7 @@ class SnapshotCreationBase:
             os.path.join(tarfile_target_dir, component.ident + ".tar"), "--force-local", "-C"
         ] + files_location
 
-    def _execute_bash_commands(self, commands, debug=False):
-        # type: (List[Command], bool) -> None
+    def _execute_bash_commands(self, commands: List[Command], debug: bool = False) -> None:
         if not commands:
             return
 
@@ -201,8 +197,9 @@ class SnapshotCreationBase:
                     _("Activate changes error. Unable to prepare site snapshots. Failed command: %r, Exception: %s"
                      ) % (command, e))
 
-    def _create_custom_components_tarfiles(self, snapshot_work_dir, custom_components, tarfile_dir):
-        # type: (str, List[ReplicationPath], str) -> None
+    def _create_custom_components_tarfiles(self, snapshot_work_dir: str,
+                                           custom_components: List[ReplicationPath],
+                                           tarfile_dir: str) -> None:
         # Add any custom_components
         custom_components_commands = []
         for component in custom_components:
@@ -220,22 +217,22 @@ class SnapshotCreationBase:
                 self._get_subtar_command(component, base_dir, tarfile_dir))
         self._execute_bash_commands(custom_components_commands)
 
-    def _get_snapshot_fingerprint(self, snapshot_work_dir, generic_components, custom_components):
-        # type: (str, List[ReplicationPath], List[ReplicationPath]) -> Tuple[str, ...]
+    def _get_snapshot_fingerprint(self, snapshot_work_dir: str,
+                                  generic_components: List[ReplicationPath],
+                                  custom_components: List[ReplicationPath]) -> Tuple[str, ...]:
         custom_components_md5sum = self._get_custom_components_md5sum(snapshot_work_dir,
                                                                       custom_components)
         return tuple(sorted(c.ident for c in generic_components) + [custom_components_md5sum])
 
-    def _get_custom_components_md5sum(self, snapshot_work_dir, custom_components):
-        # type: (str, List[ReplicationPath]) -> str
+    def _get_custom_components_md5sum(self, snapshot_work_dir: str,
+                                      custom_components: List[ReplicationPath]) -> str:
         if not custom_components:
             return ""
 
         # Note: currently there is only one custom component, the sitespecific.mk
         #       If there additional custom components in the future this call will fail
         #       This function raises an exception in case of an unknown component
-        def is_supported(component):
-            # type: (ReplicationPath) -> bool
+        def is_supported(component: ReplicationPath) -> bool:
             return (component.ident == "sitespecific" and  #
                     component.ty == "file" and  #
                     component.site_path.endswith("sitespecific.mk"))
@@ -252,25 +249,25 @@ class SnapshotCreationBase:
 
 
 class SnapshotCreator(SnapshotCreationBase):
-    def __init__(self, activation_work_dir, all_generic_components):
-        # type: (str, List[ReplicationPath]) -> None
+    def __init__(self, activation_work_dir: str,
+                 all_generic_components: List[ReplicationPath]) -> None:
         super(SnapshotCreator, self).__init__(activation_work_dir)
         self._setup_directories()
         self._generic_components = all_generic_components
-        self._worker_subprocesses = []  # type: List[multiprocessing.Process]
+        self._worker_subprocesses: List[multiprocessing.Process] = []
 
-    def generate_snapshot(self, snapshot_work_dir, target_filepath, generic_components,
-                          custom_components, reuse_identical_snapshots):
-        # type: (str, str, List[ReplicationPath], List[ReplicationPath], bool) -> None
+    def generate_snapshot(self, snapshot_work_dir: str, target_filepath: str,
+                          generic_components: List[ReplicationPath],
+                          custom_components: List[ReplicationPath],
+                          reuse_identical_snapshots: bool) -> None:
         self._generate_snapshot(snapshot_work_dir, target_filepath, generic_components,
                                 custom_components, reuse_identical_snapshots)
 
-    def generate_snapshot_in_subprocess(self, snapshot_work_dir, target_filepath,
-                                        generic_components, custom_components,
-                                        reuse_identical_snapshots):
-        # type: (str, str, List[ReplicationPath], List[ReplicationPath], bool) -> None
-        def myworker():
-            # type: () -> None
+    def generate_snapshot_in_subprocess(self, snapshot_work_dir: str, target_filepath: str,
+                                        generic_components: List[ReplicationPath],
+                                        custom_components: List[ReplicationPath],
+                                        reuse_identical_snapshots: bool) -> None:
+        def myworker() -> None:
             log = logger.getChild("SnapshotWorker(%d)" % os.getpid())
             try:
                 self._generate_snapshot(snapshot_work_dir, target_filepath, generic_components,
@@ -283,26 +280,24 @@ class SnapshotCreator(SnapshotCreationBase):
         worker.daemon = True
         self._worker_subprocesses.append(worker)
 
-    def _setup_directories(self):
-        # type: () -> None
+    def _setup_directories(self) -> None:
         for path in [self._rsync_target_dir, self._tarfile_dir]:
             if not os.path.exists(path):
                 os.makedirs(path)
 
-    def __enter__(self):
-        # type: () -> SnapshotCreator
+    def __enter__(self) -> SnapshotCreator:
         self._prepare_generic_tar_files()
         return self
 
-    def __exit__(self, exception_type, exception_value, tb):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> None
+    def __exit__(self, exception_type: Optional[Type[BaseException]],
+                 exception_value: Optional[BaseException], tb: Optional[TracebackType]) -> None:
         max_workers = 10
         try:
             max_workers = max(1, multiprocessing.cpu_count() - 1)
         except NotImplementedError:
             pass
 
-        running_jobs = []  # type: List[multiprocessing.Process]
+        running_jobs: List[multiprocessing.Process] = []
         while self._worker_subprocesses or len(running_jobs) > 0:
             # Housekeeping, remove finished jobs
             for job in running_jobs[:]:
@@ -327,9 +322,8 @@ class SnapshotCreator(SnapshotCreationBase):
 
         self.output_statistics()
 
-    def _prepare_generic_tar_files(self):
-        # type: () -> None
-        bash_commands = []  # type: List[Command]
+    def _prepare_generic_tar_files(self) -> None:
+        bash_commands: List[Command] = []
         prepare_start_time = time.time()
         for component in self._generic_components:
             rsync_target_dir = os.path.join(self._rsync_target_dir, component.ident)
@@ -351,8 +345,7 @@ class SnapshotCreator(SnapshotCreationBase):
             _("RSync of generic files took %.4fsec") % (time.time() - prepare_start_time))
 
 
-def extract_from_buffer(buffer_, base_dir, elements):
-    # type: (bytes, Path, List[ReplicationPath]) -> None
+def extract_from_buffer(buffer_: bytes, base_dir: Path, elements: List[ReplicationPath]) -> None:
     """Called during activate changes on the remote site to apply the received configuration"""
     if not isinstance(elements, list):
         raise NotImplementedError()
@@ -363,8 +356,7 @@ def extract_from_buffer(buffer_, base_dir, elements):
     _extract(tarfile.open(None, "r", stream), base_dir, elements)
 
 
-def _extract(tar, base_dir, components):
-    # type: (tarfile.TarFile, Path, List[ReplicationPath]) -> None
+def _extract(tar: tarfile.TarFile, base_dir: Path, components: List[ReplicationPath]) -> None:
     """Extract a tar archive with the new site configuration received from a central site"""
     for component in components:
         try:
@@ -405,8 +397,7 @@ def _extract(tar, base_dir, components):
                                      (component.ident, traceback.format_exc()))
 
 
-def _wipe_directory(path):
-    # type: (str) -> None
+def _wipe_directory(path: str) -> None:
     for entry in os.listdir(path):
         p = path + "/" + entry
         if os.path.isdir(p):
@@ -490,10 +481,10 @@ def _update_check_mk(path, tar_file):
 
     tar_file.extractall(path, members=members)
 
-    master_vars = {"contacts": {}}  # type: Dict[str, Any]
+    master_vars: Dict[str, Any] = {"contacts": {}}
     eval(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
 
-    site_vars = {"contacts": {}}  # type: Dict[str, Any]
+    site_vars: Dict[str, Any] = {"contacts": {}}
     with Path(path).joinpath("contacts.mk").open(encoding="utf-8") as f:
         eval(f.read(), {}, site_vars)
 
@@ -502,8 +493,7 @@ def _update_check_mk(path, tar_file):
     store.save_to_mk_file(os.path.join(path, "contacts.mk"), "contacts", site_contacts)
 
 
-def _update_contacts_dict(master, site):
-    # type: (Dict, Dict) -> Dict
+def _update_contacts_dict(master: Dict, site: Dict) -> Dict:
 
     site_contacts = {}
 

@@ -152,8 +152,7 @@ class SiteChanges:
         super(SiteChanges, self).__init__()
         self._site_id = site_id
 
-    def _site_changes_path(self):
-        # type: () -> Path
+    def _site_changes_path(self) -> Path:
         return Path(var_dir) / ("replication_changes_%s.mk" % self._site_id)
 
     # TODO: Implement this locking as context manager
@@ -226,8 +225,7 @@ def add_service_change(host, action_name, text, need_sync=False):
     add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=need_sync)
 
 
-def activation_sites():
-    # type: () -> Dict[SiteId, SiteConfiguration]
+def activation_sites() -> Dict[SiteId, SiteConfiguration]:
     """Returns the list of sites that are affected by WATO changes
     These sites are shown on activation page and get change entries
     added during WATO changes."""

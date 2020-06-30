@@ -382,8 +382,7 @@ def checkbox_id(check_type, item):
     return sha256(key.encode('utf-8')).hexdigest()
 
 
-def get_check_table(discovery_request):
-    # type: (StartDiscoveryRequest) -> DiscoveryResult
+def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult:
     """Gathers the check table using a background job
 
     Cares about handling local / remote sites using an automation call. In both cases
@@ -419,8 +418,7 @@ def get_check_table(discovery_request):
     return discovery_result
 
 
-def execute_discovery_job(request):
-    # type: (StartDiscoveryRequest) -> DiscoveryResult
+def execute_discovery_job(request: StartDiscoveryRequest) -> DiscoveryResult:
     """Either execute the discovery job to scan the host or return the discovery result
     based on the currently cached data"""
     job = ServiceDiscoveryBackgroundJob(request.host.name())
@@ -440,8 +438,7 @@ def execute_discovery_job(request):
 
 # 1.6.0b4 introduced the service labels column which might be missing when
 # fetching information from remote sites.
-def _add_missing_service_labels(discovery_result):
-    # type: (DiscoveryResult) -> DiscoveryResult
+def _add_missing_service_labels(discovery_result: DiscoveryResult) -> DiscoveryResult:
     d = discovery_result._asdict()
     d["check_table"] = [(e + ({},) if len(e) < 11 else e) for e in d["check_table"]]
     return DiscoveryResult(**d)
@@ -507,8 +504,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Service discovery")
 
-    def __init__(self, host_name):
-        # type: (str) -> None
+    def __init__(self, host_name: str) -> None:
         job_id = "%s-%s" % (self.job_prefix, host_name)
         last_job_status = WatoBackgroundJob(job_id).get_status()
 
@@ -520,8 +516,8 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             estimated_duration=last_job_status.get("duration"),
         )
 
-    def discover(self, request, job_interface):
-        # type: (StartDiscoveryRequest, BackgroundProcessInterface) -> None
+    def discover(self, request: StartDiscoveryRequest,
+                 job_interface: BackgroundProcessInterface) -> None:
         """Target function of the background job"""
         print("Starting job...")
         if request.options.action == DiscoveryAction.SCAN:
@@ -554,8 +550,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         #            (request.host.name(), count_added)
         #watolib.add_service_change(request.host, "refresh-autochecks", message)
 
-    def _get_automation_options(self, request):
-        # type: (StartDiscoveryRequest) -> List[str]
+    def _get_automation_options(self, request: StartDiscoveryRequest) -> List[str]:
         if request.options.action == DiscoveryAction.SCAN:
             options = ["@scan"]
         else:

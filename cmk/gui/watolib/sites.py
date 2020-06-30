@@ -60,10 +60,9 @@ from cmk.gui.watolib.utils import (
 
 class SiteManagementFactory:
     @staticmethod
-    def factory():
-        # type: () -> SiteManagement
+    def factory() -> 'SiteManagement':
         if cmk_version.is_raw_edition():
-            cls = CRESiteManagement  # type: Type[SiteManagement]
+            cls: 'Type[SiteManagement]' = CRESiteManagement
         else:
             cls = CEESiteManagement
 
@@ -277,8 +276,7 @@ class SiteManagement:
         user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
 
     @classmethod
-    def load_sites(cls):
-        # type: () -> SiteConfigurations
+    def load_sites(cls) -> SiteConfigurations:
         if not os.path.exists(cls._sites_mk()):
             return config.default_single_site_configuration()
 
@@ -696,8 +694,7 @@ class AutomationPushSnapshot(AutomationCommand):
     def command_name(self):
         return "push-snapshot"
 
-    def get_request(self):
-        # type: () -> PushSnapshotRequest
+    def get_request(self) -> PushSnapshotRequest:
         site_id = html.request.get_ascii_input_mandatory("siteid")
         cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
 
@@ -707,8 +704,7 @@ class AutomationPushSnapshot(AutomationCommand):
 
         return PushSnapshotRequest(site_id=site_id, tar_content=ensure_binary(snapshot[2]))
 
-    def execute(self, request):
-        # type: (PushSnapshotRequest) -> bool
+    def execute(self, request: PushSnapshotRequest) -> bool:
         with store.lock_checkmk_configuration():
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
                 request.site_id, request.tar_content, Path(cmk.utils.paths.omd_root),

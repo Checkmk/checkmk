@@ -18,8 +18,7 @@ from cmk.gui.globals import g
 TimeperiodSpecs = Dict[TimeperiodName, TimeperiodSpec]
 
 
-def builtin_timeperiods():
-    # type: () -> TimeperiodSpecs
+def builtin_timeperiods() -> TimeperiodSpecs:
     return {
         "24X7": {
             "alias": _("Always"),
@@ -34,8 +33,7 @@ def builtin_timeperiods():
     }
 
 
-def load_timeperiods():
-    # type: () -> TimeperiodSpecs
+def load_timeperiods() -> TimeperiodSpecs:
     if "timeperiod_information" in g:
         return g.timeperiod_information
     timeperiods = store.load_from_mk_file(wato_root_dir() + "timeperiods.mk", "timeperiods", {})
@@ -45,8 +43,7 @@ def load_timeperiods():
     return timeperiods
 
 
-def save_timeperiods(timeperiods):
-    # type: (TimeperiodSpecs) -> None
+def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
     store.mkdir(wato_root_dir())
     store.save_to_mk_file(wato_root_dir() + "timeperiods.mk",
                           "timeperiods",
@@ -55,8 +52,7 @@ def save_timeperiods(timeperiods):
     g.timeperiod_information = timeperiods
 
 
-def _filter_builtin_timeperiods(timeperiods):
-    # type: (TimeperiodSpecs) -> TimeperiodSpecs
+def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
     builtin_keys = builtin_timeperiods().keys()
     return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
 

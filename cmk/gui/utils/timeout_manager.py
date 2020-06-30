@@ -30,10 +30,8 @@ class TimeoutManager:
     first try to write anything to the client) which will result in an
     exception.
     """
-    def enable_timeout(self, duration):
-        # type: (int) -> None
-        def handle_request_timeout(signum, frame):
-            # type: (int, Optional[FrameType]) -> None
+    def enable_timeout(self, duration: int) -> None:
+        def handle_request_timeout(signum: int, frame: Optional[FrameType]) -> None:
             raise RequestTimeout(
                 _("Your request timed out after %d seconds. This issue may be "
                   "related to a local configuration problem or a request which works "
@@ -43,6 +41,5 @@ class TimeoutManager:
         signal.signal(signal.SIGALRM, handle_request_timeout)
         signal.alarm(duration)
 
-    def disable_timeout(self):
-        # type: () -> None
+    def disable_timeout(self) -> None:
         signal.alarm(0)

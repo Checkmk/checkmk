@@ -29,10 +29,9 @@ from cmk.gui.watolib.automation_commands import (
 
 
 class ACResult:
-    status = None  # type: Optional[int]
+    status: Optional[int] = None
 
-    def __init__(self, text):
-        # type: (str) -> None
+    def __init__(self, text: str) -> None:
         super(ACResult, self).__init__()
         self.text = text
         self.site_id = config.omd_site()
@@ -62,15 +61,13 @@ class ACResult:
 
         return worst_cls(", ".join(texts))
 
-    def status_name(self):
-        # type: () -> str
+    def status_name(self) -> str:
         if self.status is None:
             return u""
         return cmk.utils.defines.short_service_state_name(self.status)
 
     @classmethod
-    def from_repr(cls, repr_data):
-        # type: (Dict[str, Any]) -> ACResult
+    def from_repr(cls, repr_data: Dict[str, Any]) -> ACResult:
         result_class_name = repr_data.pop("class_name")
         result = globals()[result_class_name](repr_data["text"])
 
@@ -79,8 +76,7 @@ class ACResult:
 
         return result
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return repr({
             "site_id": self.site_id,
             "class_name": self.__class__.__name__,
@@ -132,37 +128,30 @@ class ACTestCategories:
 
 
 class ACTest:
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         self._executed = False
-        self._results = []  # type: List[ACResult]
+        self._results: List[ACResult] = []
 
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         return self.__class__.__name__
 
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         """Return the internal name of the category the BP test is associated with"""
         raise NotImplementedError()
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         raise NotImplementedError()
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         raise NotImplementedError()
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         """A test can check whether or not is relevant for the current evnironment.
         In case this method returns False, the check will not be executed and not
         be shown to the user."""
         raise NotImplementedError()
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         """Implement the test logic here. The method needs to add one or more test
         results like this:
 
@@ -170,8 +159,7 @@ class ACTest:
         """
         raise NotImplementedError()
 
-    def run(self):
-        # type: () -> Iterator[ACResult]
+    def run(self) -> Iterator[ACResult]:
         self._executed = True
         try:
             # Do not merge results that have been gathered on one site for different sites
@@ -195,30 +183,25 @@ class ACTest:
             result.from_test(self)
             yield result
 
-    def status(self):
-        # type: () -> int
+    def status(self) -> int:
         return max([0] + [(r.status or 0) for r in self.results])
 
-    def status_name(self):
-        # type: () -> str
+    def status_name(self) -> str:
         return cmk.utils.defines.short_service_state_name(self.status())
 
     @property
-    def results(self):
-        # type: () -> List[ACResult]
+    def results(self) -> List[ACResult]:
         if not self._executed:
             raise MKGeneralException(_("The test has not been executed yet"))
         return self._results
 
-    def _uses_microcore(self):
-        # type: () -> bool
+    def _uses_microcore(self) -> bool:
         """Whether or not the local site is using the CMC"""
         local_connection = LocalConnection()
         version = local_connection.query_value("GET status\nColumns: program_version\n", deflt="")
         return version.startswith("Check_MK")
 
-    def _get_effective_global_setting(self, varname):
-        # type: (str) -> Any
+    def _get_effective_global_setting(self, varname: str) -> Any:
         global_settings = load_configuration_settings()
         default_values = ABCConfigDomain.get_all_default_globals()
 
@@ -236,12 +219,10 @@ class ACTest:
 
 
 class ACTestRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[ACTest]
+    def plugin_base_class(self) -> Type[ACTest]:
         return ACTest
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[ACTest]) -> str
+    def plugin_name(self, plugin_class: Type[ACTest]) -> str:
         return plugin_class.__name__
 
 
@@ -250,16 +231,14 @@ ac_test_registry = ACTestRegistry()
 
 @automation_command_registry.register
 class AutomationCheckAnalyzeConfig(AutomationCommand):
-    def command_name(self):
-        # type: () -> str
+    def command_name(self) -> str:
         return "check-analyze-config"
 
     def get_request(self):
         return None
 
-    def execute(self, _unused_request):
-        # type: (None) -> List[ACResult]
-        results = []  # type: List[ACResult]
+    def execute(self, _unused_request: None) -> List[ACResult]:
+        results: List[ACResult] = []
         for test_cls in ac_test_registry.values():
             test = test_cls()
 

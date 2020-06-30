@@ -185,8 +185,8 @@ def _set_group(all_groups, group_type: GroupType, name, extra_info):
 
 def save_group_information(all_groups, custom_default_config_dir=None):
     # Split groups data into Check_MK/Multisite parts
-    check_mk_groups = {}  # type: Dict[str, Dict[Any, Any]]
-    multisite_groups = {}  # type: Dict[str, Dict[Any, Any]]
+    check_mk_groups: Dict[str, Dict[Any, Any]] = {}
+    multisite_groups: Dict[str, Dict[Any, Any]] = {}
 
     if custom_default_config_dir:
         check_mk_config_dir = "%s/conf.d/wato" % custom_default_config_dir
@@ -316,9 +316,8 @@ def _find_usages_of_contact_group_in_hosts_and_folders(name, folder):
     return used_in
 
 
-def _find_usages_of_contact_group_in_notification_rules(name):
-    # type: (str) -> List[Tuple[str, str]]
-    used_in = []  # type: List[Tuple[str, str]]
+def _find_usages_of_contact_group_in_notification_rules(name: str) -> List[Tuple[str, str]]:
+    used_in: List[Tuple[str, str]] = []
     for rule in load_notification_rules():
         if _used_in_notification_rule(name, rule):
             title = "%s: %s" % (_("Notification rule"), rule.get("description", ""))
@@ -334,8 +333,7 @@ def _find_usages_of_contact_group_in_notification_rules(name):
     return used_in
 
 
-def _used_in_notification_rule(name, rule):
-    # type: (str, Dict) -> bool
+def _used_in_notification_rule(name: str, rule: Dict) -> bool:
     return name in rule.get('contact_groups', []) or name in rule.get("match_contactgroups", [])
 
 
@@ -425,7 +423,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def paint(self, value, hostname):
         value = convert_cgroups_from_tuple(value)
-        texts = []  # type: List[str]
+        texts: List[str] = []
         self.load_data()
         if self._contactgroups is None:  # conditional caused by horrible API
             raise Exception("invalid contact groups")
@@ -435,7 +433,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
                 display_name = cgroup.get("alias", name)
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' %
                              (name, display_name))
-        result = ", ".join(texts)  # type: Union[str, HTML]
+        result: Union[str, HTML] = ", ".join(texts)
         if texts and value["use"]:
             result += html.render_span(
                 html.render_b("*"),

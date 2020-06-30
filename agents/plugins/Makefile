@@ -1,5 +1,5 @@
 PIPENV3 := ../../scripts/run-pipenv 3
-3TO2 := $(PIPENV3) run 3to2
+THREE_TO_TWO := $(PIPENV3) run 3to2
 
 # New plugins are expected to all have a .py extension. This will discover them
 # automatically.  Old plugins without extension are explicitly whitelistet here
@@ -31,4 +31,4 @@ clean:
 
 %.py2: %.py
 	cat "$<" | gawk -v text="# Do not test generated 2.6 files\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
-	$(3TO2) --nofix=str --nobackups --write "$@" >/dev/null
+	$(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null

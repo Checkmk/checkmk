@@ -31,8 +31,7 @@ SHELL_FILES := \
 	test-unit-sh
 
 clean:
-	rm -rf .mypy_cache
-	-rm -r $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
+	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 
 help:
 	@echo "test-agent-plugin-unit-py%-docker - Run Agent plugin tests in container (py version specific)"
@@ -66,13 +65,12 @@ bandit.ini:
 format-shell:
 	sudo docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
 
-test-agent-plugin-unit-py2.6-docker: $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
-
 agent-plugin-unit/py26/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
-	cp "$<" "$@"
-	gawk -i inplace -v text="# Do not test generated 2.6 files\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' "$@"
-	$(THREE_TO_TWO) -x str -n -w "$@" >/dev/null
+	cat "$<" | gawk -v text="# Do not test generated 2.6 files\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
+	$(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
+
+test-agent-plugin-unit-py2.6-docker: $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 
 test-agent-plugin-unit-py%-docker:
 	make -C ../agents/plugins

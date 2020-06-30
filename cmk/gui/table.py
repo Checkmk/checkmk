@@ -88,6 +88,8 @@ class Table(object):
         self.rows = []
         self.limit = limit
         self.headers = []
+        self.limit_reached = False
+        self.limit_hint = None
         self.options = {
             "collect_headers": False,  # also: True, "finished"
             "omit_if_empty": kwargs.get("omit_if_empty", False),
@@ -140,6 +142,9 @@ class Table(object):
                   colspan=None,
                   sortable=True,
                   escape_text=False):
+
+        self.limit_reached = False if self.limit is None else len(self.rows) > self.limit
+
         if escape_text:
             text = html.permissive_attrencode(text)
         else:
@@ -208,7 +213,10 @@ class Table(object):
         # Render header
         show_action_row = self.options["searchable"] or (self.options["sortable"] and
                                                          self._get_sort_column(user_opts[self.id]))
-        self._write_table(rows, show_action_row, actions_visible, search_term)
+
+        if self.limit_hint is not None:
+            num_rows_unlimited = self.limit_hint
+        self._write_table(rows, num_rows_unlimited, show_action_row, actions_visible, search_term)
 
         if self.title and self.options["foldable"]:
             html.end_foldable_container()
@@ -276,8 +284,8 @@ class Table(object):
     def _get_sort_column(self, table_opts):
         return html.request.var('_%s_sort' % self.id, table_opts.get('sort'))
 
-    def _write_table(self, rows, actions_enabled, actions_visible, search_term):
-        headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % len(rows)
+    def _write_table(self, rows, num_rows_unlimited, actions_enabled, actions_visible, search_term):
+        headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
         html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
         table_id = self.id

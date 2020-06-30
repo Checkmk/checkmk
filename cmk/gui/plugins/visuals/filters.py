@@ -989,6 +989,70 @@ class FilterHostgroupVisibility(Filter):
 
 
 @filter_registry.register
+class FilterHostgroupProblems(Filter):
+    @property
+    def ident(self):
+        return "hostsgroups_having_problems"
+
+    @property
+    def title(self):
+        return _("Hostgroups having certain problems")
+
+    @property
+    def sort_index(self):
+        return 103
+
+    def __init__(self):
+        Filter.__init__(self, "hostgroup", [
+            "hostsgroups_having_hosts_down",
+            "hostsgroups_having_hosts_unreach",
+            "hostsgroups_having_hosts_pending",
+            "hostsgroups_having_services_warn",
+            "hostsgroups_having_services_crit",
+            "hostsgroups_having_services_pending",
+            "hostsgroups_having_services_unknown",
+        ], [])
+
+    def display(self):
+        # type: () -> None
+        html.begin_checkbox_group()
+        html.write_text("Service states:" + " ")
+        for svc_var, svc_text in [
+            ("warn", _("WARN")),
+            ("crit", _("CRIT")),
+            ("pending", _("PEND")),
+            ("unknown", _("UNKNOWN")),
+        ]:
+            html.checkbox("hostgroups_having_services_%s" % svc_var, True, label=svc_text)
+
+        html.br()
+        html.write_text("Host states:" + " ")
+        for host_var, host_text in [
+            ("down", _("DOWN")),
+            ("unreach", _("UNREACH")),
+            ("pending", _("PEND")),
+        ]:
+            html.checkbox("hostgroups_having_hosts_%s" % host_var, True, label=host_text)
+        html.end_checkbox_group()
+
+    def filter(self, infoname):
+        headers = []
+        for svc_var in ["warn", "crit", "pending", "unknown"]:
+            if html.get_checkbox("hostgroups_having_services_%s" % svc_var):
+                headers.append("Filter: num_services_%s > 0\n" % svc_var)
+
+        for host_var in ["down", "unreach", "pending"]:
+            if html.get_checkbox("hostgroups_having_hosts_%s" % host_var):
+                headers.append("Filter: num_hosts_%s > 0\n" % host_var)
+
+        len_headers = len(headers)
+        if len_headers > 0:
+            headers.append("Or: %d\n" % len_headers)
+            return "".join(headers)
+        return ""
+
+
+@filter_registry.register
 class FilterServicegroupnameregex(FilterRegExp):
     @property
     def ident(self):

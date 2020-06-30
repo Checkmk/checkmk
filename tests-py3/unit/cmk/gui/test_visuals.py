@@ -971,6 +971,23 @@ expected_filters = {
         'sort_index': 102,
         'title': u'Empty Hostgroup Visibilitiy'
     },
+    'hostsgroups_having_problems': {
+        'comment': u'Selection of multiple host groups',
+        'filter_class': 'FilterHostgroupProblems',
+        'htmlvars': [
+            'hostgroups_having_hosts_down',
+            'hostgroups_having_hosts_pending',
+            'hostgroups_having_hosts_unreach',
+            'hostgroups_having_services__warn',
+            'hostgroups_having_services_crit',
+            'hostgroups_having_services_pending',
+            'hostgroups_having_services_unknown'
+            ],
+        'info': 'hostgroup',
+        'link_columns': [],
+        'sort_index': 103,
+        'title': u'Hostgroups having certain problems'
+    },
     'hostnameoralias': {
         'column': ['host_alias', 'host_name'],
         'comment': u'Search field allowing regular expressions and partial matches',

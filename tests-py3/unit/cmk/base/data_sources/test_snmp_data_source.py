@@ -6,48 +6,21 @@
 
 # pylint: disable=protected-access
 
-from contextlib import suppress
-
 import pytest  # type: ignore[import]
 from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
 from testlib.base import Scenario
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import SectionName, SourceType
+from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources import management_board_ipaddress
-from cmk.base.data_sources.abstract import DataSource
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
-
-
-@pytest.fixture(autouse=True)
-def reset_mutable_global_state():
-    def reset(cls, attr, value):
-        # Make sure we are not *adding* any field.
-        assert hasattr(cls, attr)
-        setattr(cls, attr, value)
-
-    def delete(cls, attr):
-        with suppress(AttributeError):
-            delattr(cls, attr)
-
-    yield
-    delete(SNMPDataSource, "_no_cache")
-    delete(SNMPDataSource, "_use_outdated_persisted_sections")
-
-    reset(DataSource, "source_type", SourceType.HOST)
-    reset(DataSource, "_no_cache", False)
-    reset(DataSource, "_may_use_cache_file", False)
-    reset(DataSource, "_use_outdated_cache_file", False)
-    reset(DataSource, "_use_outdated_persisted_sections", False)
-
-    reset(SNMPDataSource, "source_type", SourceType.HOST)
 
 
 def test_data_source_cache_default(monkeypatch):

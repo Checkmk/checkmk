@@ -243,6 +243,12 @@ class DataSources:
         """
         console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
 
+        if max_cachefile_age is None:
+            # In case a max_cachefile_age is given with the function call, always use this one
+            # instead of the host individual one. This is only used in discovery mode.
+            max_cachefile_age = (config.check_max_cachefile_age if self._host_config.nodes is None
+                                 else config.cluster_max_cachefile_age)
+
         # First abstract clusters/nodes/hosts
         hosts = []
         nodes = self._host_config.nodes
@@ -262,10 +268,11 @@ class DataSources:
                     node_ipaddress,
                     node_needed_raw_sections,
                 )
-                hosts.append((node_hostname, node_ipaddress, node_data_sources,
-                              config.cluster_max_cachefile_age))
+                node_data_sources.set_max_cachefile_age(max_cachefile_age)
+                hosts.append((node_hostname, node_ipaddress, node_data_sources))
         else:
-            hosts.append((self._hostname, self._ipaddress, self, config.check_max_cachefile_age))
+            self.set_max_cachefile_age(max_cachefile_age)
+            hosts.append((self._hostname, self._ipaddress, self))
 
         if nodes:
             import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
@@ -274,14 +281,7 @@ class DataSources:
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
         # the section lines need to be extended
         multi_host_sections = MultiHostSections()
-        for this_hostname, this_ipaddress, these_sources, this_max_cachefile_age in hosts:
-            # In case a max_cachefile_age is given with the function call, always use this one
-            # instead of the host individual one. This is only used in discovery mode.
-            if max_cachefile_age is not None:
-                these_sources.set_max_cachefile_age(max_cachefile_age)
-            else:
-                these_sources.set_max_cachefile_age(this_max_cachefile_age)
-
+        for this_hostname, this_ipaddress, these_sources in hosts:
             for source in these_sources.get_data_sources():
                 host_sections = AgentHostSections()
                 host_sections.update(source.run())

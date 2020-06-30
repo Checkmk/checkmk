@@ -37,7 +37,7 @@ from typing import (
 from six import ensure_str
 
 import cmk.utils
-from cmk.utils.check_utils import maincheckify
+from cmk.utils.check_utils import maincheckify, unwrap_parameters
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
@@ -2136,10 +2136,16 @@ def _update_with_default_check_parameters(plugin: CheckPlugin,
         params = {}
 
     if not isinstance(params, dict):
+        # if discovered params is not updateable, it wins
+        return params
+
+    default_params = unwrap_parameters(plugin.check_default_parameters)
+    if not isinstance(default_params, dict):
+        # if default params are not updatetable, discovered params win
         return params
 
     # Merge params from inventory onto default parameters (if params is not updateable, it wins):
-    return {**plugin.check_default_parameters, **params}
+    return {**default_params, **params}
 
 
 def _update_with_configured_check_parameters(

@@ -30,7 +30,7 @@ from six import ensure_binary
 
 import livestatus
 
-from cmk.utils.check_utils import maincheckify
+from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_parameters
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.misc
@@ -70,9 +70,7 @@ import cmk.base.utils
 from cmk.base.api.agent_based import checking_types
 from cmk.base.api.agent_based.register.check_plugins import MANAGEMENT_NAME_PREFIX
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
-    resolve_legacy_name,
-    wrap_parameters,
-)
+    resolve_legacy_name,)
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import (
     ABCService,
@@ -1119,7 +1117,7 @@ def _enriched_discovered_services(
             check_plugin_name=resolve_legacy_name(check_plugin_name),
             item=service.item,
             description=description,
-            parameters=service.parameters,
+            parameters=unwrap_parameters(service.parameters),
             service_labels=service.labels,
         )
 

@@ -6,10 +6,11 @@
 """Helper to register a new-style section based on config.check_info
 """
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+import copy
 import functools
 import itertools
 
-from cmk.utils.check_utils import maincheckify
+from cmk.utils.check_utils import maincheckify, wrap_parameters, unwrap_parameters
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base import item_state
@@ -128,7 +129,13 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any],
     def check_result_generator(*args, **kwargs):
         assert not args, "pass arguments as keywords to check function"
         if "params" in kwargs:
-            kwargs["params"] = unwrap_parameters(kwargs["params"])
+            parameters = kwargs["params"]
+            if isinstance(parameters, Parameters):
+                # In the new API check_functions will be passed an immutable mapping
+                # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
+                # call sites to introduce this into legacy code, so use the plain dict.
+                parameters = copy.deepcopy(parameters._data)
+            kwargs["params"] = unwrap_parameters(parameters)
 
         item_state.reset_wrapped_counters()  # not supported by the new API!
 
@@ -302,25 +309,3 @@ def resolve_legacy_name(plugin_name: CheckPluginName) -> str:
             return legacy_name
     # nothing found, it may be a new plugin, which is OK.
     return str(plugin_name)
-
-
-PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"
-
-
-def wrap_parameters(parameters: Any) -> Dict[str, Any]:
-    if isinstance(parameters, dict):
-        return parameters
-    return {PARAMS_WRAPPER_KEY: parameters}
-
-
-def unwrap_parameters(parameters: Union[Dict[str, Any], Parameters]) -> Any:
-    if isinstance(parameters, Parameters):
-        # In the new API check_functions will be passed an immutable mapping
-        # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
-        # call sites to introduce this into legacy code, so use the plain dict.
-        parameters = parameters._data
-
-    if PARAMS_WRAPPER_KEY not in parameters:
-        return parameters
-    assert len(parameters) == 1, "unexpected keys in parameters: %r" % (parameters,)
-    return parameters[PARAMS_WRAPPER_KEY]

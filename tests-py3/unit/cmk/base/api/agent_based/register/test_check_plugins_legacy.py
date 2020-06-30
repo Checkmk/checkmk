@@ -8,8 +8,6 @@
 
 import inspect
 
-import pytest  # type: ignore[import]
-
 from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
 import cmk.base.api.agent_based.checking_types as checking_types
@@ -161,13 +159,3 @@ def test_create_check_plugin_from_legacy_with_params(monkeypatch):
     }
     assert plugin.check_ruleset_name == RuleSetName("norris_rule")
     assert plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"
-
-
-@pytest.mark.parametrize("params", [
-    "foo_levels",
-    (1, 2),
-])
-def test_un_wrap_parameters(params):
-    wrapped = check_plugins_legacy.wrap_parameters(params)
-    assert isinstance(wrapped, dict)
-    assert check_plugins_legacy.unwrap_parameters(wrapped) is params

@@ -2,7 +2,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List
+from typing import List, Dict, Generator, Any
 
 from cmk.gui.plugins.openapi.livestatus_helpers.base import BaseQuery
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
@@ -11,6 +11,24 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
     QueryExpression,
 )
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
+
+
+class ResultRow(dict):
+    """
+
+    >>> d = ResultRow({'a': 'b'})
+    >>> d.a
+    'b'
+
+    """
+    def __getattr__(self, item):
+        try:
+            return self[item]
+        except KeyError as exc:
+            raise AttributeError(str(exc))
+
+
+ResultEntry = Dict[str, Any]
 
 
 class Query(BaseQuery):
@@ -54,9 +72,17 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         ...       Hosts.parents.empty()).compile()
         'GET hosts\\nColumns: name\\nFilter: parents = '
 
-        >>> Query([Hosts.name],
-        ...       Hosts.parents == []).compile()
-        'GET hosts\\nColumns: name\\nFilter: parents = '
+        >>> q = Query([Hosts.name, Hosts.name.label('id')],
+        ...       Hosts.parents == [])
+
+        >>> q.compile()
+        'GET hosts\\nColumns: name name\\nFilter: parents = '
+
+        >>> q.column_names
+        ['name', 'id']
+
+        >>> id(Hosts.name) == id(Hosts.name.label('id'))
+        False
 
     """
     def __init__(self, columns: List[Column], filter_expr: QueryExpression = NothingExpression()):
@@ -73,6 +99,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         """
         self.columns = columns
+        self.column_names = [col.query_name for col in columns]
         self.filter_expr = filter_expr
         tables = {column.table for column in columns}
         assert len(tables) == 1
@@ -86,6 +113,11 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
     def __str__(self) -> str:
         return self.compile()
+
+    def iterate(self, sites) -> Generator[ResultEntry, None, None]:
+        names = self.column_names
+        for entry in sites.query(self.compile()):
+            yield ResultRow(iter(zip(names, entry)))
 
     def compile(self) -> str:
         _query = []

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-from typing import Literal
+from typing import Literal, Optional
 
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
     ScalarExpression,
@@ -18,7 +18,6 @@ class Table(abc.ABC):
 
     This class doesn't do much, it just acts as a container for `Column` instances.
     """
-
     @property
     @abc.abstractmethod
     def __tablename__(self):
@@ -58,9 +57,9 @@ class Column:
     # implementation-complexity this solution wins though.
     def __init__(
         self,
-        name,
+        name: str,
         col_type: LivestatusType,
-        description,
+        description: Optional[str] = None,
     ):
         """A representation of a livestatus column.
 
@@ -92,12 +91,42 @@ class Column:
         Returns:
             object:
         """
-        self.name: str = name
-        self.type: str = col_type
+        self.name = name
+        self.label_name: Optional[str] = None
+        self.type: LivestatusType = col_type
         self.expr = (ListExpression(name) if col_type == 'list' else ScalarExpression(name))
         self.table: Table = NoTable()
 
         self.__doc__ = description
+
+    @property
+    def query_name(self) -> str:
+        """This represents the name to be used in the Response.
+
+        In case you want to use `iterate` to get a sequence of dicts, you can set the key within
+        this dict by calling `label(label_name)`. The supplied name will be emitted here for use
+        in response generation.
+
+        Returns:
+            The name to be used in the query response.
+        """
+        return self.label_name if self.label_name is not None else self.name
+
+    def label(self, label_name: str) -> 'Column':
+        """Set the label for use in the response.
+
+        Args:
+            label_name:
+                The name which the column should have in the response.
+
+        Returns:
+            A copy of this column, with the label set.
+
+        """
+        copy = Column(self.name, self.type, self.__doc__)
+        copy.table = self.table
+        copy.label_name = label_name
+        return copy
 
     def __get__(self, obj, obj_type):
         # As we don't know on which Table this Column is located, we use

@@ -80,8 +80,9 @@ class ABCPluginName(abc.ABC):
         """we allow to maintain a list of exceptions"""
         return set()
 
-    def __init__(self, plugin_name, forbidden_names=None):
-        # type: (str, Optional[Iterable[ABCPluginName]]) -> None
+    def __init__(self,
+                 plugin_name: str,
+                 forbidden_names: Optional[Iterable['ABCPluginName']] = None) -> None:
         self._value = plugin_name
         if plugin_name in self._legacy_naming_exceptions:
             return
@@ -99,28 +100,23 @@ class ABCPluginName(abc.ABC):
         if forbidden_names and any(plugin_name == str(fn) for fn in forbidden_names):
             raise ValueError("duplicate plugin name: %r" % (plugin_name,))
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return "%s(%r)" % (self.__class__.__name__, self._value)
 
-    def __str__(self):
-        # type: () -> str
+    def __str__(self) -> str:
         return self._value
 
-    def __eq__(self, other):
-        # type: (Any) -> bool
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
             raise TypeError("cannot compare %r and %r" % (self, other))
         return self._value == other._value
 
-    def __lt__(self, other):
-        # type: (Any) -> bool
+    def __lt__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
             raise TypeError("Can only be compared with %s objects" % self.__class__)
         return self._value < other._value
 
-    def __hash__(self):
-        # type: () -> int
+    def __hash__(self) -> int:
         return hash(type(self).__name__ + self._value)
 
 

@@ -60,6 +60,28 @@ try {
     graphs = null;
 }
 
+var ntop_interface_details;
+try {
+    ntop_interface_details = require("ntop_interface_details");
+} catch(e) {
+    ntop_interface_details = null;
+}
+
+var ntop_alerts;
+try {
+    ntop_alerts = require("ntop_alerts");
+} catch(e) {
+    ntop_alerts = null;
+}
+
+var ntop_flows;
+try {
+    ntop_flows = require("ntop_flows");
+} catch(e) {
+    ntop_flows = null;
+}
+
+
 $(() => {
     utils.update_header_timer();
     forms.enable_dynamic_form_elements();
@@ -111,5 +133,11 @@ export const cmk_export = {
         node_visualization: node_visualization,
         figures: cmk_figures,
         tabs: cmk_tabs,
+        ntop: {
+            interface_details: ntop_interface_details,
+            alerts: ntop_alerts,
+            flows: ntop_flows
+        },
+
     }
 };

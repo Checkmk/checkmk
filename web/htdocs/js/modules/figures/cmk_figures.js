@@ -177,7 +177,7 @@ export class MultiDataFetcher {
 
     _fetch_callback(post_url, post_body, api_response) {
         let response = api_response.result;
-        let data = response.data;
+        let data = response.figure_response;
 
         let now = Math.floor(new Date().getTime()/1000);
 

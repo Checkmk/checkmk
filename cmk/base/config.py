@@ -1001,7 +1001,7 @@ def service_description(hostname, check_plugin_name, item):
         if check_plugin_name in _old_service_descriptions and \
             check_plugin_name not in use_new_descriptions_for:
 
-            # Can be a fucntion to generate the old description more flexible.
+            # Can be a function to generate the old description more flexible.
             old_descr = _old_service_descriptions[check_plugin_name]
             if callable(old_descr):
                 add_item, descr_format = old_descr(item)
@@ -1013,10 +1013,6 @@ def service_description(hostname, check_plugin_name, item):
 
     descr_format = ensure_str(descr_format)
 
-    # Note: we strip the service description (remove spaces).
-    # One check defines "Pages %s" as a description, but the item
-    # can by empty in some cases. Nagios silently drops leading
-    # and trailing spaces in the configuration file.
     if add_item and isinstance(item, (str, numbers.Integral)):
         if "%s" not in descr_format:
             descr_format += " %s"
@@ -1069,8 +1065,13 @@ def get_final_service_description(hostname, description):
         description = cmk.utils.translations.translate_service_description(
             translations, description)
 
-    # Sanitize; Remove illegal characters from a service description
+    # Note: we strip the service description (remove spaces).
+    # One check defines "Pages %s" as a description, but the item
+    # can by empty in some cases. Nagios silently drops leading
+    # and trailing spaces in the configuration file.
     description = description.strip()
+
+    # Sanitize; Remove illegal characters from a service description
     cache = _config_cache.get_dict("final_service_description")
     try:
         new_description = cache[description]

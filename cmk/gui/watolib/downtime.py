@@ -8,10 +8,10 @@ import livestatus
 
 
 class DowntimeSchedule:
-    def __init__(self, start_time, end_time, duration, delayed_duration=None, comment=None):
+    def __init__(self, start_time, end_time, mode, delayed_duration=None, comment=None):
         self.start_time = start_time
         self.end_time = end_time
-        self.duration = duration
+        self.mode = mode
         if delayed_duration is None:
             delayed_duration = 0
         self.delayed_duration = delayed_duration
@@ -21,7 +21,7 @@ class DowntimeSchedule:
         return ("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % specification) + ("%d;%d;%d;0;%d;%s;" % (
             self.start_time,
             self.end_time,
-            self.duration,
+            self.mode,
             self.delayed_duration,
             config.user.id,
         )) + livestatus.lqencode(self.comment)

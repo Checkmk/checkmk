@@ -285,7 +285,7 @@ class SnapshotCreator(SnapshotCreationBase):
             if not os.path.exists(path):
                 os.makedirs(path)
 
-    def __enter__(self) -> SnapshotCreator:
+    def __enter__(self) -> 'SnapshotCreator':
         self._prepare_generic_tar_files()
         return self
 

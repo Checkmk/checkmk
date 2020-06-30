@@ -821,7 +821,7 @@ class ActivateChangesManager(ActivateChanges):
 class SnapshotManager:
     @staticmethod
     def factory(work_dir: str, site_snapshot_settings: Dict[SiteId,
-                                                            SnapshotSettings]) -> SnapshotManager:
+                                                            SnapshotSettings]) -> 'SnapshotManager':
         if cmk_version.is_managed_edition():
             import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
             return SnapshotManager(
@@ -1223,7 +1223,7 @@ class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
         except Exception:
             return 1
 
-    def _get_queued_jobs(self) -> List[ActivateChangesSite]:
+    def _get_queued_jobs(self) -> 'List[ActivateChangesSite]':
         queued_jobs = []
         for site_id, snapshot_settings in sorted(self._site_snapshot_settings.items(),
                                                  key=lambda e: e[0]):
@@ -1514,8 +1514,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._set_result(PHASE_SYNC, _("Synchronizing"), status_details=status_details)
 
     def _get_config_sync_state(
-            self,
-            replication_paths: List[ReplicationPath]) -> Tuple[Dict[str, ConfigSyncFileInfo], int]:
+            self, replication_paths: List[ReplicationPath]
+    ) -> 'Tuple[Dict[str, ConfigSyncFileInfo], int]':
         """Get the config file states from the remote sites
 
         Calls the automation call "get-config-sync-state" on the remote site,
@@ -1976,8 +1976,9 @@ def _add_pre_17_sitespecific_excludes(paths: List[ReplicationPath]) -> List[Repl
 
 
 def _get_file_names_to_sync(
-        site_logger: Logger, central_file_infos: Dict[str, ConfigSyncFileInfo],
-        remote_file_infos: Dict[str, ConfigSyncFileInfo]) -> Tuple[List[str], List[str], List[str]]:
+        site_logger: Logger, central_file_infos: 'Dict[str, ConfigSyncFileInfo]',
+        remote_file_infos: 'Dict[str, ConfigSyncFileInfo]'
+) -> Tuple[List[str], List[str], List[str]]:
     """Compare the response with the site_config directory of the site
 
     Comparing both file lists and returning all files for synchronization that

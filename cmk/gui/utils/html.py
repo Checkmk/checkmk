@@ -60,16 +60,16 @@ class HTML:
     def to_json(self) -> str:
         return self.value
 
-    def __add__(self, other: HTMLInput) -> HTML:
+    def __add__(self, other: HTMLInput) -> 'HTML':
         return HTML(self.value + self._ensure_str(other))
 
-    def __iadd__(self, other: HTMLInput) -> HTML:
+    def __iadd__(self, other: HTMLInput) -> 'HTML':
         return self.__add__(other)
 
-    def __radd__(self, other: HTMLInput) -> HTML:
+    def __radd__(self, other: HTMLInput) -> 'HTML':
         return HTML(self._ensure_str(other) + self.value)
 
-    def join(self, iterable: Iterable[HTMLInput]) -> HTML:
+    def join(self, iterable: Iterable[HTMLInput]) -> 'HTML':
         return HTML(self.value.join(map(self._ensure_str, iterable)))
 
     def __eq__(self, other: Any) -> bool:
@@ -81,7 +81,7 @@ class HTML:
     def __len__(self) -> int:
         return len(self.value)
 
-    def __getitem__(self, index: int) -> HTML:
+    def __getitem__(self, index: int) -> 'HTML':
         return HTML(self.value[index])
 
     def __contains__(self, item: HTMLInput) -> bool:
@@ -105,10 +105,10 @@ class HTML:
         args = tuple(map(self._ensure_str, args[:1])) + args[1:]
         return HTML(self.value.strip(*args))
 
-    def lower(self) -> HTML:
+    def lower(self) -> 'HTML':
         return HTML(self.value.lower())
 
-    def upper(self) -> HTML:
+    def upper(self) -> 'HTML':
         return HTML(self.value.upper())
 
     def startswith(self, prefix, *args):

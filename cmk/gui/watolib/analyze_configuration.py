@@ -67,7 +67,7 @@ class ACResult:
         return cmk.utils.defines.short_service_state_name(self.status)
 
     @classmethod
-    def from_repr(cls, repr_data: Dict[str, Any]) -> ACResult:
+    def from_repr(cls, repr_data: Dict[str, Any]) -> 'ACResult':
         result_class_name = repr_data.pop("class_name")
         result = globals()[result_class_name](repr_data["text"])
 

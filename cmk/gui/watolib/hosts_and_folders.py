@@ -300,7 +300,7 @@ class BaseFolder:
     def is_root(self):
         return not self.has_parent()
 
-    def parent_folder_chain(self) -> List[CREFolder]:
+    def parent_folder_chain(self) -> 'List[CREFolder]':
         folders = []
         folder = self.parent()
         while folder:
@@ -579,7 +579,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     # the later case we call .current() of SearchFolder() to let it decide whether
     # this is a host search. This method has to return a folder in all cases.
     @staticmethod
-    def current() -> CREFolder:
+    def current() -> 'CREFolder':
         if 'wato_current_folder' in g:
             return g.wato_current_folder
 
@@ -662,7 +662,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def set_root_dir(self, root_dir):
         self._root_dir = _ensure_trailing_slash(root_dir)
 
-    def parent(self) -> CREFolder:
+    def parent(self) -> 'CREFolder':
         """Give the parent instance.
 
         Returns:
@@ -1186,7 +1186,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             hosts.update(subfolder.all_hosts_recursively())
         return hosts
 
-    def subfolders(self, only_visible: bool = False) -> List[CREFolder]:
+    def subfolders(self, only_visible: bool = False) -> 'List[CREFolder]':
         """Filter subfolder collection by various means.
 
         Args:
@@ -1204,7 +1204,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         return subfolders
 
-    def subfolder(self, name: str) -> CREFolder:
+    def subfolder(self, name: str) -> 'CREFolder':
         """Find a Folder by its name-part.
 
         Args:
@@ -1215,7 +1215,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         """
         return self._subfolders[name]
 
-    def subfolder_by_title(self, title: str) -> Optional[CREFolder]:
+    def subfolder_by_title(self, title: str) -> 'Optional[CREFolder]':
         """Find a Folder by its title.
 
         Args:
@@ -1412,7 +1412,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         return permitted_groups, host_contact_groups, cgconf.get("use_for_services", False)
 
-    def find_host_recursively(self, host_name: str) -> Optional[CREHost]:
+    def find_host_recursively(self, host_name: str) -> 'Optional[CREHost]':
         host: Optional[CREHost] = self.host(host_name)
         if host:
             return host
@@ -1494,7 +1494,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         url_vars += add_vars
         return html.makeuri_contextless(url_vars, filename="wato.py")
 
-    def edit_url(self, backfolder: Optional[CREFolder] = None) -> str:
+    def edit_url(self, backfolder: 'Optional[CREFolder]' = None) -> str:
         if backfolder is None:
             if self.has_parent():
                 backfolder = self.parent()
@@ -1967,7 +1967,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         folders_by_id.clear_cache()
 
     @classmethod
-    def _mapped_by_id(cls) -> Dict[str, Type[CREFolder]]:
+    def _mapped_by_id(cls) -> 'Dict[str, Type[CREFolder]]':
         return folders_by_id()
 
 

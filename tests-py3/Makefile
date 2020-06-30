@@ -23,28 +23,23 @@ SHELL_FILES := \
 	agents/check_mk_agent.linux \
 	agents/check_mk_caching_agent.linux
 
-.PHONY: clean format-shell help prepare-node-modules test-agent-plugin-unit-py2.6-docker \
-	test-agent-plugin-unit-py2.7-docker test-agent-plugin-unit-py3.3-docker \
-	test-agent-plugin-unit-py3.4-docker test-agent-plugin-unit-py3.5-docker \
-	test-agent-plugin-unit-py3.6-docker test-agent-plugin-unit-py3.7-docker \
-	test-agent-plugin-unit-py3.8-docker test-bandit test-composition test-composition-docker \
-	test-composition-docker-debug test-docker test-format-python3 test-format-shell \
-	test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
-	test-integration-docker-debug test-mypy3 test-mypy3-raw test-packaging test-pipenv-deps \
-	test-pylint test-shellcheck test-unit test-unit-coverage-html test-unit-sh
+PYTHON_VERSIONS := 2.6 2.7 3.3 3.4 3.5 3.6 3.7 3.8
+
+.PHONY: clean format-shell help prepare-node-modules \
+	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
+	test-bandit test-composition test-composition-docker test-composition-docker-debug \
+	test-docker test-format-python3 test-format-shell test-gui-crawl test-gui-crawl-docker \
+	test-integration test-integration-docker test-integration-docker-debug test-mypy3 \
+	test-mypy3-raw test-packaging test-pipenv-deps test-pylint test-shellcheck test-unit \
+	test-unit-coverage-html test-unit-sh
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 
 help:
 	@echo "format-shell                        - Format shell agents"
-	@echo "test-agent-plugin-unit-py2.6-docker - Run Agent plugin tests in container with Python 2.6"
-	@echo "test-agent-plugin-unit-py2.7-docker - Run Agent plugin tests in container with Python 2.7"
-	@echo "test-agent-plugin-unit-py3.3-docker - Run Agent plugin tests in container with Python 3.3"
-	@echo "test-agent-plugin-unit-py3.4-docker - Run Agent plugin tests in container with Python 3.4"
-	@echo "test-agent-plugin-unit-py3.5-docker - Run Agent plugin tests in container with Python 3.5"
-	@echo "test-agent-plugin-unit-py3.6-docker - Run Agent plugin tests in container with Python 3.6"
-	@echo "test-agent-plugin-unit-py3.7-docker - Run Agent plugin tests in container with Python 3.7"
-	@echo "test-agent-plugin-unit-py3.8-docker - Run Agent plugin tests in container with Python 3.8"
+	@for i in $(PYTHON_VERSIONS); do \
+	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
+	done
 	@echo "test-bandit                         - Run bandit (security) tests"
 	@echo "test-composition                    - Run composition tests locally"
 	@echo "test-composition-docker             - Run composition tests in container"
@@ -80,16 +75,18 @@ agent-plugin-unit/py26/test_%.py: agent-plugin-unit/test_%.py
 	cat "$<" | gawk -v text="# Do not test generated 2.6 files\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
 	$(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
 
-test-agent-plugin-unit-py2.6-docker: $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
+$(foreach VERS,$(filter 2.%,$(PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 
-test-agent-plugin-unit-py%-docker:
-	make -C ../agents/plugins
-	if [ "$*" = "2.6" ]; then \
-	    TEST_PATH="$(realpath agent-plugin-unit)/py26" ; \
-	else \
-	    TEST_PATH="$(realpath agent-plugin-unit)" ; \
-	fi && \
-	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION="$*" -q "$(realpath agent-plugin-unit)")" && \
+$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
+	# Recursive Makefiles suck big time...
+	flock ../agents/plugins $(MAKE) -C ../agents/plugins
+	PYTHON_VERSION="$(patsubst test-agent-plugin-unit-py%-docker,%,$@)" ; \
+	case $$PYTHON_VERSION in \
+	    2.*) SUFFIX="/py26" ;; \
+	    *) SUFFIX="" ;; \
+	esac ; \
+	TEST_PATH="$(realpath agent-plugin-unit)$$SUFFIX" ; \
+	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
 	docker run \
 	    $(DOCKER_ADDOPTS) \
 	    -e "PYTEST_ADDOPTS" \
@@ -99,7 +96,7 @@ test-agent-plugin-unit-py%-docker:
 	    -v "$(realpath agent-plugin-unit)/datasets:/tests/datasets" \
 	    -v "$(realpath ../agents/plugins):/plugins" \
 	    $$IMAGE_HASH \
-	    python$* -m pytest --ignore=tests/py26/ "/tests"
+	    python$$PYTHON_VERSION -m pytest --ignore=tests/py26/ "/tests"
 
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,

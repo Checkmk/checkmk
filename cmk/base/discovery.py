@@ -1498,8 +1498,15 @@ def _get_check_parameters(service):
     params = service.parameters_unresolved
     if not isinstance(params, str):
         return params
+
+    # temporarily use an empty check context. This function will disappear with
+    # the DiscoveredService class
     try:
         check_context = config.get_check_context(service.check_plugin_name)
+    except KeyError:
+        check_context = {}
+
+    try:
         # We can't simply access check_context[paramstring], because we may have
         # something like '{"foo": bar}'
         return eval(params, check_context, check_context)

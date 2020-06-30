@@ -379,9 +379,10 @@ builtin_dashboards['cmk_host'] = {
         },
         'link_from': {},
         'type': 'single_metric',
+        'time_range': 'current',
         'metric': u'load5',
         'add_context_to_title': True,
-        'metric_render_options': {
+        'render_options': {
             'show_site': 'false',
             'font_size': 'dynamic',
             'show_state_color': 'background',
@@ -523,9 +524,10 @@ builtin_dashboards['cmk_host'] = {
         },
         'link_from': {},
         'type': 'single_metric',
+        'time_range': 'current',
         'metric': u'fs_used',
         'add_context_to_title': True,
-        'metric_render_options': {
+        'render_options': {
             'show_site': 'false',
             'font_size': 'dynamic',
             'show_state_color': 'background',

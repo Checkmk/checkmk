@@ -73,7 +73,7 @@ OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-linux format-python format-python2 format-python3 \
+        format-linux format-python \
 	format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
         am--refresh skel .venv .venv-3.8 openapi openapi-doc

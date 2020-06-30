@@ -84,9 +84,9 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib
 	$(LN) -s python3/cmk $(DESTDIR)$(OMD_ROOT)/lib/check_mk
-        # ... and link the local path into the python path
-        $(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/local/lib/python3/cmk/base/plugins/agent_based
-        $(LN) -s $(DESTDIR)$(OMD_ROOT)/local/lib/check_mk $(DESTDIR)$(OMD_ROOT)/local/lib/python3/cmk
+	# ... and link the local path into the python path
+	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/local/lib/python3/cmk/base/plugins/agent_based
+	$(LN) -s $(DESTDIR)$(OMD_ROOT)/local/lib/check_mk $(DESTDIR)$(OMD_ROOT)/local/lib/python3/cmk
 
 	# Install the diskspace cleanup plugin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace

@@ -8,4 +8,6 @@ Knowledge: doc
 Level: 1
 Version: 1.7.0i1
 
-Prevously, all rows of a view in wato where rendered, even there was a limit set (default: 100). From now on, only the rows within the limit are shown. This should be a performance improvement, e.g. in folders with a lot of hosts.
+Previously, all rows of a view in wato where rendered, even there was a limit
+set (default: 100). From now on, only the rows within the limit are shown. This
+should be a performance improvement, e.g. in folders with a lot of hosts.

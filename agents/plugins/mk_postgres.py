@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -13,13 +13,23 @@ import subprocess
 import re
 import os
 import abc
-from typing import Dict, List, Optional, Tuple
 import sys
 import logging
 import argparse
 from collections import namedtuple
+import six
+try:
+    from typing import Dict, List, Optional, Tuple
+except ImportError:
+    # We need typing only for testing
+    pass
 
-import psutil  # type: ignore[import]
+try:
+    import psutil  # type: ignore[import]
+except ImportError:
+    sys.stderr.write(
+        "mk_postgres.py needs psutil python module. Please install it via 'pip install psutil'")
+    sys.exit(1)
 
 if psutil.LINUX:
     import resource
@@ -39,7 +49,7 @@ ENCODING = "utf-8"
 #   +----------------------------------------------------------------------+
 
 
-class PostgresBase(abc.ABC):
+class PostgresBase:
     """
     Base class for x-plattform postgres queries
     :param db_user: The postgres db user
@@ -49,6 +59,7 @@ class PostgresBase(abc.ABC):
     which runs postgres.
     All non-abstract methods are meant to work on all OS types which were subclassed.
     """
+    __metaclass__ = abc.ABCMeta
     _supported_pg_versions = ["12"]
     _agent_prefix = "postgres"
 
@@ -61,7 +72,7 @@ class PostgresBase(abc.ABC):
         else:
             self.instance = {}
         self.my_env = os.environ.copy()
-        self.my_env["PGPASSFILE"] = self.instance.get("pgpass_file", "")
+        self.my_env["PGPASSFILE"] = self.instance.get("pg_passfile", "")
         self.get_pg_env()
         self.sep = os.sep
         self.psql, self.bin_path = self.get_psql_and_bin_path()
@@ -208,14 +219,12 @@ class PostgresBase(abc.ABC):
         out = subprocess.check_output([
             "%s%spg_isready" % (self.bin_path, self.sep), "-p",
             self.instance.get("pg_port", "5432")
-        ],
-                                      encoding=ENCODING)
-        sys.stdout.write("%s\n" % out)
+        ],)
+
+        sys.stdout.write("%s\n" % six.ensure_str(out, encoding=ENCODING))
 
     def execute_all_queries(self):
         """Executes all queries and writes the output formatted to stdout"""
-
-        database_text = "\n[databases_start]\n%s\n[databases_end]" % "\n".join(self.databases)
 
         query_template = namedtuple("query", ["method", "section", "has_db_text"])
         queries = [
@@ -231,18 +240,20 @@ class PostgresBase(abc.ABC):
             query_template(self.get_bloat, "bloat:sep(59)", True)
         ]
 
+        database_text = "\n[databases_start]\n%s\n[databases_end]" % "\n".join(self.databases)
+
         if self.instance.get("name"):
             instance = "\n[[[%s]]]" % self.instance["name"]
         else:
             instance = ""
 
         for query in queries:
-            out = "\n<<<%s_%s>>>" % (self._agent_prefix, query.section)
+            out = "<<<%s_%s>>>" % (self._agent_prefix, query.section)
             out += instance
             if query.has_db_text:
                 out += database_text
             out += "\n%s" % query.method()
-            sys.stdout.write("%s" % out)
+            sys.stdout.write("%s\n" % out)
 
 
 #   .--Postgres Win--------------------------------------------------------.
@@ -287,8 +298,12 @@ class PostgresWin(PostgresBase):
             cmd_str = "cmd /c \"\"%s\" -X %s -A -F\"%s\" -U %s -c \"%s\"\" " % (
                 self.psql, extra_args, field_sep, self.db_user, sql_cmd)
 
-        proc = subprocess.Popen(cmd_str, env=self.my_env, stdout=subprocess.PIPE)
-        out = proc.communicate()[0].decode(ENCODING)
+        proc = subprocess.Popen(
+            cmd_str,
+            env=self.my_env,
+            stdout=subprocess.PIPE,
+        )
+        out = six.ensure_str(proc.communicate()[0], encoding=ENCODING)
         return out.rstrip()
 
     def get_psql_and_bin_path(self):
@@ -302,21 +317,23 @@ class PostgresWin(PostgresBase):
             if os.path.isfile(psql_path):
                 return psql_path, bin_path
 
-        raise FileNotFoundError("Could not determine psql bin and its path.")
+        raise IOError("Could not determine psql bin and its path.")
 
     def get_pg_env(self):
         # type: () -> None
 
         try:
-            with open(self.instance.get("env_file", "")) as env_file:
-                for line in env_file:
-                    for key, match_string in (("pg_database", '@SET PGDATABASE='),
-                                              ("pg_port", '@SET PGPORT=')):
-                        if match_string in line:
-                            line = line.split("=")[-1]
-                            self.instance[key] = line.strip().rstrip()
+            env_file = open_wrapper(self.instance.get("env_file", ""))
+            for line in env_file:
+                for key, match_string in (
+                    ("pg_database", '@SET PGDATABASE='),
+                    ("pg_port", '@SET PGPORT='),
+                ):
+                    if match_string in line:
+                        line = line.split("=")[-1]
+                        self.instance[key] = line.strip().rstrip()
 
-        except FileNotFoundError:
+        except IOError:
             LOGGER.debug("No postgres .env file, using fallback values.")
             self.instance["pg_database"] = "postgres"
             self.instance["pg_port"] = "5432"
@@ -583,30 +600,30 @@ class PostgresLinux(PostgresBase):
                                               stdin=cmd_to_pipe.stdout,
                                               stdout=subprocess.PIPE,
                                               env=self.my_env)
-            out = receiving_pipe.communicate()[0].decode(ENCODING)
+            out = six.ensure_str(receiving_pipe.communicate()[0], encoding=ENCODING)
 
         else:
             base_cmd_list[-1] = base_cmd_list[-1] % (self.psql, extra_args, field_sep,
                                                      " -c \"%s\" " % sql_cmd)
-            out = subprocess.check_output(base_cmd_list, encoding=ENCODING, env=self.my_env)
+            proc = subprocess.Popen(base_cmd_list, env=self.my_env, stdout=subprocess.PIPE)
+            out = six.ensure_str(proc.communicate()[0], encoding=ENCODING)
 
         return out.rstrip()
 
     def get_pg_env(self):
 
         try:
-            with open(self.instance.get("env_file", "")) as env_file:
-                for line in env_file:
+            env_file = open_wrapper(self.instance.get("env_file", ""))
+            for line in env_file:
 
-                    for key, match_string in (("pg_database", 'export PGDATABASE='),
-                                              ("pg_port", 'export PGPORT=')):
+                for key, match_string in (("pg_database", 'export PGDATABASE='),
+                                          ("pg_port", 'export PGPORT=')):
 
-                        if match_string in line:
-                            line = line.split("=")[-1]
-                            self.instance[key] = re.sub(re.compile("#.*"), "",
-                                                        line).strip().rstrip()
+                    if match_string in line:
+                        line = line.split("=")[-1]
+                        self.instance[key] = re.sub(re.compile("#.*"), "", line).strip().rstrip()
 
-        except FileNotFoundError:
+        except IOError:
             LOGGER.debug("No postgres .env file, using fallback values.")
             self.instance["pg_database"] = "postgres"
             self.instance["pg_port"] = "5432"
@@ -614,7 +631,8 @@ class PostgresLinux(PostgresBase):
     def get_psql_and_bin_path(self):
         # type: () -> Tuple[str, str]
         try:
-            out = subprocess.check_output(["which", "psql"], encoding=ENCODING)
+            proc = subprocess.Popen(["which", "psql"], stdout=subprocess.PIPE)
+            out = six.ensure_str(proc.communicate()[0], encoding=ENCODING)
         except subprocess.CalledProcessError:
             raise RuntimeError("Could not determine psql executable.")
 
@@ -892,7 +910,7 @@ class PostgresConfig:
     """
 
     _cfg_name = "postgres.cfg"
-    _default_win = "c:\\Program Files (x86)\\check_mk"
+    _default_win = "c:\\ProgramData\\checkmk\\agent\\config"
     _default_linux = "/etc/check_mk"
 
     def __init__(self):
@@ -914,22 +932,25 @@ class PostgresConfig:
 
     def try_parse_config(self):
         try:
-            with open(self.path_to_config) as config:
-                for line in config:
-                    if line.startswith("#"):
-                        continue
-                    key, value = line.split("=")
-                    if key == "DBUSER":
-                        self.dbuser = value.rstrip()
-                    if key == "INSTANCE":
-                        env_file, pg_user, pg_passfile = value.split(self.conf_sep)
-                        self.instances.append({
-                            "env_file": env_file,
-                            "name": env_file.split(os.sep)[-1].split(".")[0],
-                            "pg_user": pg_user,
-                            "pgpass_file": pg_passfile.rstrip()
-                        })
-        except (FileNotFoundError, TypeError):
+            config = open_wrapper(self.path_to_config)
+            for line in config:
+                if line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=")
+
+                if key == "DBUSER":
+                    self.dbuser = value.rstrip()
+                if key == "INSTANCE":
+
+                    env_file, pg_user, pg_passfile = value.split(self.conf_sep)
+                    self.instances.append({
+                        "env_file": env_file,
+                        "name": env_file.split(os.sep)[-1].split(".")[0],
+                        "pg_user": pg_user,
+                        "pg_passfile": pg_passfile.rstrip()
+                    })
+
+        except (IOError, TypeError):
             LOGGER.debug("Config file \"%s\" not found. Continuing with fall back.",
                          self.path_to_config)
             self.get_fall_back()
@@ -943,9 +964,13 @@ class PostgresConfig:
         if psutil.LINUX:
             for user_id in ("pgsql", "postgres"):
                 try:
-                    subprocess.check_output(["id", user_id], stderr=subprocess.DEVNULL)
-                    self.dbuser = user_id.rstrip()
-                    return
+                    proc = subprocess.Popen(["id", user_id],
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
+                    proc.communicate()
+                    if proc.returncode == 0:
+                        self.dbuser = user_id.rstrip()
+                        return
                 except subprocess.CalledProcessError:
                     pass
             raise ValueError("Could not determine postgres user!")
@@ -973,6 +998,11 @@ def parse_arguments(argv):
                         help="Test if postgres is ready")
 
     return parser.parse_args(argv)
+
+
+def open_wrapper(file_to_open):
+    """Wrapper around built-in open to be able to monkeypatch through all python versions"""
+    return open(file_to_open).readlines()
 
 
 #   .--Main----------------------------------------------------------------.

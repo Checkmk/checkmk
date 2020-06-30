@@ -121,10 +121,10 @@ def test_create_check_plugin_from_legacy_wo_params(monkeypatch):
     assert plugin.sections == [ParsedSectionName("norris")]
     assert plugin.service_name == MINIMAL_CHECK_INFO["service_description"]
     assert plugin.discovery_function.__name__ == 'discovery_migration_wrapper'
-    assert plugin.discovery_default_parameters is None
+    assert plugin.discovery_default_parameters == {}
     assert plugin.discovery_ruleset_name is None
     assert plugin.check_function.__name__ == 'check_migration_wrapper'
-    assert plugin.check_default_parameters is None
+    assert plugin.check_default_parameters == {}
     assert plugin.check_ruleset_name is None
     assert plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"
 
@@ -152,7 +152,7 @@ def test_create_check_plugin_from_legacy_with_params(monkeypatch):
     assert plugin.sections == [ParsedSectionName("norris")]
     assert plugin.service_name == MINIMAL_CHECK_INFO["service_description"]
     assert plugin.discovery_function.__name__ == 'discovery_migration_wrapper'
-    assert plugin.discovery_default_parameters is None
+    assert plugin.discovery_default_parameters == {}
     assert plugin.discovery_ruleset_name is None
     assert plugin.check_function.__name__ == 'check_migration_wrapper'
     assert plugin.check_default_parameters == {

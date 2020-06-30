@@ -309,10 +309,10 @@ CheckPlugin = NamedTuple("CheckPlugin", [
     ("sections", List[ParsedSectionName]),
     ("service_name", str),
     ("discovery_function", DiscoveryFunction),
-    ("discovery_default_parameters", Optional[Dict]),
+    ("discovery_default_parameters", Dict[str, Any]),
     ("discovery_ruleset_name", Optional[RuleSetName]),
     ("check_function", CheckFunction),
-    ("check_default_parameters", Optional[Dict]),
+    ("check_default_parameters", Dict[str, Any]),
     ("check_ruleset_name", Optional[RuleSetName]),
     ("cluster_check_function", CheckFunction),
 ])

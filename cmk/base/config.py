@@ -2205,9 +2205,6 @@ def compute_check_parameters(host, checktype, item, params):
 
 def _update_with_default_check_parameters(plugin, params):
     # type: (CheckPlugin, LegacyCheckParameters) -> LegacyCheckParameters
-    # Handle dictionary based checks
-    if plugin.check_default_parameters is None:
-        return params
 
     # Handle case where parameter is None but the type of the
     # default value is a dictionary. This is for example the
@@ -2220,8 +2217,11 @@ def _update_with_default_check_parameters(plugin, params):
     if params is None:
         params = {}
 
+    if not isinstance(params, dict):
+        return params
+
     # Merge params from inventory onto default parameters (if params is not updateable, it wins):
-    return {**plugin.check_default_parameters, **params} if isinstance(params, dict) else params
+    return {**plugin.check_default_parameters, **params}
 
 
 def _update_with_configured_check_parameters(host, plugin, item, params):

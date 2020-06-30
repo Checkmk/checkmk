@@ -273,10 +273,10 @@ def create_check_plugin(
         subscribed_sections,
         service_name,
         _filter_discovery(discovery_function, requires_item),
-        discovery_default_parameters,
+        discovery_default_parameters or {},
         None if discovery_ruleset_name is None else RuleSetName(discovery_ruleset_name),
         _filter_check(check_function),
-        check_default_parameters,
+        check_default_parameters or {},
         None if check_ruleset_name is None else RuleSetName(check_ruleset_name),
         cluster_check_function,
     )

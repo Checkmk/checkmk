@@ -162,8 +162,8 @@ def test_create_check_plugin():
     assert plugin.service_name == MINIMAL_CREATION_KWARGS["service_name"]
     assert plugin.discovery_function.__name__ == MINIMAL_CREATION_KWARGS[
         "discovery_function"].__name__
-    assert plugin.discovery_default_parameters is None
+    assert plugin.discovery_default_parameters == {}
     assert plugin.discovery_ruleset_name is None
     assert plugin.check_function.__name__ == MINIMAL_CREATION_KWARGS["check_function"].__name__
-    assert plugin.check_default_parameters is None
+    assert plugin.check_default_parameters == {}
     assert plugin.check_ruleset_name is None

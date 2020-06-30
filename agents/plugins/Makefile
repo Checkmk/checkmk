@@ -1,8 +1,6 @@
 PIPENV3 := ../../scripts/run-pipenv 3
 3TO2 := $(PIPENV3) run 3to2
 
-.PHONY: all
-
 # New plugins are expected to all have a .py extension. This will discover them
 # automatically.  Old plugins without extension are explicitly whitelistet here
 # to be found.
@@ -21,18 +19,16 @@ PYTHON3_PLUGINS := $(wildcard *.py) \
     plesk_domains \
     unitrends_replication
 
-PYTHON2_PLUGINS := $(addsuffix .py2,$(patsubst %.py,%,$(PYTHON3_PLUGINS)))
+.PHONY: all clean
 
-all: clean $(PYTHON2_PLUGINS)
+all: $(addsuffix .py2,$(PYTHON3_PLUGINS:.py=))
 
 clean:
-	-rm -f *.py2
+	$(RM) *.py2
 
 %.py: %
 	cp "$<" "$@"
 
 %.py2: %.py
-	mkdir -p "$(dir $@)"
-	cp "$<" "$@"
-	gawk -i inplace -v text="# Do not test generated 2.6 files\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' "$@"
-	$(3TO2) -x str -n -w "$@" >/dev/null
+	cat "$<" | gawk -v text="# Do not test generated 2.6 files\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
+	$(3TO2) --nofix=str --nobackups --write "$@" >/dev/null

@@ -108,7 +108,6 @@ def list_activations(params):
     for activation_id, change in manager.activations():
         activations.append(
             constructors.collection_item(
-                collection_type='activation_run',
                 domain_type='activation_run',
                 obj={
                     'id': activation_id,

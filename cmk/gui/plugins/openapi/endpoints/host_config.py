@@ -65,10 +65,13 @@ def list_hosts(param):
     return constructors.serve_json({
         'id': 'host',
         'value': [
-            constructors.collection_item('host', 'host', {
-                'title': host.name(),
-                'id': host.id()
-            }) for host in watolib.Folder.root_folder().all_hosts_recursively().values()
+            constructors.collection_item(
+                domain_type='host',
+                obj={
+                    'title': host.name(),
+                    'id': host.id()
+                },
+            ) for host in watolib.Folder.root_folder().all_hosts_recursively().values()
         ],
         'links': [constructors.link_rel('self', constructors.collection_href('host_config'))],
     })

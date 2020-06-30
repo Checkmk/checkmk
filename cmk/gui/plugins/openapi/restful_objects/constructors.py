@@ -196,21 +196,49 @@ def object_collection(
 
     Args:
         name:
+            The name of the collection.
+
         domain_type:
+            The domain-type the collection is a part of.
+
         entries:
+            The entries in that collection.
+
         base:
+            The base-level URI. May be an object's URI for example
+
+    Examples:
+        >>> expected = {
+        ...     'id': 'all',
+        ...     'memberType': 'collection',
+        ...     'value': [],
+        ...     'links': [
+        ...         {
+        ...             'rel': 'self',
+        ...             'href': '/domain-types/host/collections/all',
+        ...             'method': 'GET',
+        ...             'type': 'application/json',
+        ...             'domainType': 'link',
+        ...         }
+        ...     ]
+        ... }
+        >>> result = object_collection('all', 'host', [], '')
+        >>> assert result == expected, result
 
     Returns:
+        The object_collection structure.
 
     """
+    links = [
+        link_rel('self', base + collection_href(domain_type)),
+    ]
+    if base:
+        links.append(link_rel('up', base))
     return {
         'id': name,
         'memberType': "collection",
         'value': entries,
-        'links': [
-            link_rel('self', base + collection_href(domain_type)),
-            link_rel('up', base),
-        ]
+        'links': links,
     }
 
 
@@ -583,16 +611,18 @@ def link_endpoint(
 
 
 def collection_item(
-    collection_type: DomainType,
     domain_type: DomainType,
     obj: Dict[str, str],
+    collection_name: str = 'all',
 ) -> CollectionItem:
     """A link for use in a collection object.
 
     Args:
-        collection_type:
         domain_type:
         obj:
+        collection_name:
+            The name of the collection. Domain types can have multiple collections, this enables
+            us to link to the correct one properly.
 
     Examples:
 
@@ -600,11 +630,11 @@ def collection_item(
         ...     'domainType': 'link',
         ...     'href': '/objects/folder_config/3',
         ...     'method': 'GET',
-        ...     'rel': 'urn:org.restfulobjects:rels/value;collection="folder_config"',
+        ...     'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
         ...     'title': 'Foo',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ... }
-        >>> res = collection_item('folder_config', 'folder_config', {'title': 'Foo', 'id': '3'})
+        >>> res = collection_item('folder_config', {'title': 'Foo', 'id': '3'})
         >>> assert res == expected, res
 
     Returns:
@@ -613,7 +643,7 @@ def collection_item(
     """
     return link_rel(
         rel='.../value',
-        parameters={'collection': collection_type},
+        parameters={'collection': collection_name},
         href=object_href(domain_type, obj['id']),
         profile=".../object",
         method='get',

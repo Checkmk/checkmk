@@ -32,10 +32,13 @@ def serialize_group_list(
     return constructors.collection_object(
         domain_type=domain_type,
         value=[
-            constructors.collection_item(domain_type, domain_type, {
-                'title': group['alias'],
-                'id': group['id'],
-            }) for group in collection
+            constructors.collection_item(
+                domain_type=domain_type,
+                obj={
+                    'title': group['alias'],
+                    'id': group['id'],
+                },
+            ) for group in collection
         ],
         links=[constructors.link_rel('self', constructors.collection_href(domain_type))],
     )

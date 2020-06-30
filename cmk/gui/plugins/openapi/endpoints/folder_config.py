@@ -124,10 +124,13 @@ def move(params):
 def list_folders(_params):
     """List folders"""
     folders = [
-        constructors.collection_item('folder_config', 'folder_config', {
-            'title': folder.title(),
-            'id': folder.id()
-        }) for folder in watolib.Folder.root_folder().subfolders()
+        constructors.collection_item(
+            domain_type='folder_config',
+            obj={
+                'title': folder.title(),
+                'id': folder.id()
+            },
+        ) for folder in watolib.Folder.root_folder().subfolders()
     ]
 
     collection_object = constructors.collection_object(

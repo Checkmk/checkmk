@@ -20,7 +20,7 @@ PYTHON3_MODULES_LIST :=
 
 PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
-PYTHON3_MODULES_LIST += six-1.14.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL
+PYTHON3_MODULES_LIST += six-1.15.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL, python-active-directory
 PYTHON3_MODULES_LIST += python-dateutil-2.8.1.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += PyYAML-5.3.1.tar.gz # needed by vcrpy
@@ -40,7 +40,7 @@ PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency, used for SFTP
 PYTHON3_MODULES_LIST += pyasn1-0.4.8.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pyasn1-modules-0.2.8.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += pycryptodomex-3.9.3.tar.gz # needed by pysnmp
-PYTHON3_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi
+PYTHON3_MODULES_LIST += ply-3.8.tar.gz # needed by pysmi, python-active-directory
 PYTHON3_MODULES_LIST += pysmi-0.3.4.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pysnmp-4.4.12.tar.gz # needed by Event Console
 PYTHON3_MODULES_LIST += snmpsim-0.4.7.tar.gz # needed by SNMP integration tests
@@ -85,7 +85,7 @@ PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure
 
 PYTHON3_MODULES_LIST += Pillow-7.0.0.tar.gz # needed by GUI, reportlab
-PYTHON3_MODULES_LIST += python-ldap-3.2.0.tar.gz # needed by GUI (User sync)
+PYTHON3_MODULES_LIST += python-ldap-3.3.1.tar.gz # needed by GUI (User sync), python-active-directory
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
 PYTHON3_MODULES_LIST += Cython-0.29.19.tar.gz # needed by numpy
 PYTHON3_MODULES_LIST += numpy-1.18.4.tar.gz # needed by GUI (forecast graphs)
@@ -115,9 +115,11 @@ PYTHON3_MODULES_LIST += marshmallow-2.20.5.tar.gz
 PYTHON3_MODULES_LIST += marshmallow-oneofschema-1.0.6.tar.gz
 PYTHON3_MODULES_LIST += apispec-oneofschema-2.1.1.tar.gz
 
-
 PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
 PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
+
+PYTHON3_MODULES_LIST += dnspython-1.16.0.zip  # needed by python-active-directory
+PYTHON3_MODULES_LIST += python-active-directory-1.0.3.tar.gz  # direct dependency
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target

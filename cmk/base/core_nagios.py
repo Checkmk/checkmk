@@ -1000,6 +1000,7 @@ def _precompile_hostcheck(config_cache, hostname):
     output.write("import cmk.base.checking as checking\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")
+    output.write("import cmk.base.plugins.agent_based.local\n")  # TODO (mo): do this properly!
 
     # Self-compile: replace symlink with precompiled python-code, if
     # we are run for the first time
@@ -1140,6 +1141,9 @@ def _get_needed_check_plugin_names(host_config):
     for check_plugin_name in check_table.get_needed_check_names(host_config.hostname,
                                                                 filter_mode="include_clustered",
                                                                 skip_ignored=False):
+        if check_plugin_name not in config.check_info:
+            continue  # TODO (mo): do this properly
+
         if config.check_info[check_plugin_name].get("extra_sections"):
             for section_name in config.check_info[check_plugin_name]["extra_sections"]:
                 if section_name in config.check_info:

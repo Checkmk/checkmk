@@ -11,15 +11,19 @@ from .agent_based_api.v0 import register
 def parse_systemtime(string_table: List[List[str]]) -> Dict[str, float]:
     """
     >>> parse_systemtime([['12345']])
-    {'systemtime': 12345.0}
+    {'foreign_systemtime': 12345.0}
+    >>> parse_systemtime([['12345.2', '567.3']])
+    {'foreign_systemtime': 12345.2, 'our_systemtime': 567.3}
     >>> parse_systemtime([[]])
     {}
     """
-
-    try:
-        return {'systemtime': float(string_table[0][0])}
-    except IndexError:
-        return {}
+    parsed = {}
+    for idx, key in enumerate(['foreign_systemtime', 'our_systemtime']):
+        try:
+            parsed[key] = float(string_table[0][idx])
+        except IndexError:
+            return parsed
+    return parsed
 
 
 register.agent_section(

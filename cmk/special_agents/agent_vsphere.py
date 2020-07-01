@@ -1633,7 +1633,7 @@ def get_section_systemtime(connection, opt):
             naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
             utc = naive.replace(tzinfo=tz.tzutc())
             localtime = utc.astimezone(tz.tzlocal())
-            return ["<<<systemtime>>>", localtime.strftime("%s")]
+            return ["<<<systemtime>>>", localtime.strftime("%s") + " " + str(time.time())]
     except Exception:
         if opt.debug:
             raise

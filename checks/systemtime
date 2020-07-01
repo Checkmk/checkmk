@@ -12,13 +12,15 @@ def check_systemtime(item, params, parsed):
     if not parsed:
         return
 
-    systemtime = parsed['systemtime']
-    try:
-        systemtime += get_agent_data_time()
-    except (NameError, TypeError):
-        pass
-
-    offset = systemtime - time.time()
+    systemtime = parsed['foreign_systemtime']
+    if 'our_systemtime' in parsed:
+        offset = systemtime - parsed['our_systemtime']
+    else:
+        try:
+            systemtime += get_agent_data_time()
+        except (NameError, TypeError):
+            pass
+        offset = systemtime - time.time()
 
     warn, crit = params if isinstance(params, tuple) else params['levels']
     yield check_levels(

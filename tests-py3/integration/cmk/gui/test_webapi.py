@@ -382,14 +382,14 @@ def test_write_host_tags(web, site):
         assert hosts["test-host-lan"]["attributes"]["tag_networking"] == "lan"
         assert hosts["test-host-lan2"]["attributes"]["tag_networking"] == "lan"
 
-        cfg = {
+        cfg: Dict[str, Any] = {
             "FOLDER_PATH": "/",
             "all_hosts": [],
             "host_tags": {},
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
-        }  # type: Dict[str, Any]
+        }
 
         exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
@@ -420,14 +420,14 @@ def test_write_host_labels(web, site):
         hosts = web.get_all_hosts(effective_attributes=True)
         assert hosts["test-host-lan"]["attributes"]["labels"] == {u'blä': u'blüb'}
 
-        cfg = {
+        cfg: Dict[str, Any] = {
             "FOLDER_PATH": "/",
             "all_hosts": [],
             "host_tags": {},
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
-        }  # type: Dict[str, Any]
+        }
 
         exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
@@ -849,7 +849,7 @@ def test_get_graph_notification_image(web, graph_test_config):
 
 
 def test_get_graph_hover(web, graph_test_config):
-    metrics = [{
+    metrics: List[Dict[str, Any]] = [{
         u'color': u'#87f058',
         u'line_type': u'stack',
         u'expression': [
@@ -899,7 +899,7 @@ def test_get_graph_hover(web, graph_test_config):
         ],
         u'unit': u's',
         u'title': u'Total execution time'
-    }]  # type: List[Dict[str, Any]]
+    }]
     graph_context = {
         u'definition': {
             u'explicit_vertical_range': [None, None],

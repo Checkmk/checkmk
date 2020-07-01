@@ -735,7 +735,7 @@ def test_structured_data_StructuredDataTree_building_tree():
     def plugin_nested_list():
         node = struct_tree.get_list("level0_2.level1_nested_list:")
         for index in range(10):
-            array = {"foo": []}  # type: Dict[str, List[Dict[str, str]]]
+            array: Dict[str, List[Dict[str, str]]] = {"foo": []}
             for a, b in [("nl1", "NL1"), ("nl2", "NL2")]:
                 array["foo"].append({a: "%s-%s" % (b, index)})
             node.append(array)

@@ -212,7 +212,7 @@ def test_legacy_register_command_group(monkeypatch):
 
 
 def test_registered_commands():
-    expected = {
+    expected: Dict[str, Dict[str, Any]] = {
         'acknowledge': {
             'group': 'acknowledge',
             'permission': 'action.acknowledge',
@@ -311,7 +311,7 @@ def test_registered_commands():
             'tables': ['crash'],
             'title': u'Delete crash reports',
         },
-    }  # type: Dict[str, Dict[str, Any]]
+    }
 
     if not cmk_version.is_raw_edition():
         expected.update({'edit_downtimes': {
@@ -361,7 +361,7 @@ def test_legacy_register_command(monkeypatch):
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_datasources():
-    expected = {
+    expected: Dict[str, Dict[str, Any]] = {
         'alert_stats': {
             'add_columns': [
                 'log_alerts_ok', 'log_alerts_warn', 'log_alerts_crit', 'log_alerts_unknown',
@@ -687,7 +687,7 @@ def test_registered_datasources():
             'table': 'servicesbyhostgroup',
             'title': u'Services grouped by host groups'
         },
-    }  # type: Dict[str, Dict[str, Any]]
+    }
 
     names = cmk.gui.plugins.views.data_source_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
@@ -712,7 +712,7 @@ def test_registered_datasources():
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_painters():
-    expected = {
+    expected: Dict[str, Dict[str, Any]] = {
         'aggr_acknowledged': {
             'columns': ['aggr_effective_state'],
             'title': u'Acknowledged'
@@ -4000,7 +4000,7 @@ def test_registered_painters():
             'sorter': 'inv_software_packages',
             'title': u'Inventory: Software \u27a4 Packages'
         },
-    }  # type: Dict[str, Dict[str, Any]]
+    }
 
     #xx = {}
     #for ident, p in cmk.gui.plugins.views.multisite_painters.items():
@@ -4092,7 +4092,7 @@ def test_legacy_register_painter(monkeypatch):
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_sorters():
-    expected = {
+    expected: Dict[str, Dict[str, Any]] = {
         'aggr_group': {
             'columns': ['aggr_group'],
             'title': u'Aggregation group'
@@ -5693,7 +5693,7 @@ def test_registered_sorters():
             'columns': ['host_filename'],
             'title': u'WATO folder - relative path'
         },
-    }  # type: Dict[str, Dict[str, Any]]
+    }
 
     for sorter_class in cmk.gui.plugins.views.sorter_registry.values():
         sorter = sorter_class()

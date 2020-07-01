@@ -674,7 +674,7 @@ def test_check_discovery(execute):
 
 
 def test_check(execute):
-    opts = [["--check"], []]  # type: List[List[str]]
+    opts: List[List[str]] = [["--check"], []]
     for opt in opts:
         p = execute(["cmk"] + opt + ["modes-test-host"])
         assert p.returncode == 0

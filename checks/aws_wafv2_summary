@@ -7,7 +7,7 @@
 
 def check_aws_wafv2_summary(item, params, parsed):
 
-    web_acls_by_region = {}  # type: Dict[str, Dict]
+    web_acls_by_region: Dict[str, Dict] = {}
 
     for web_acl in parsed:
         try:

@@ -101,7 +101,7 @@ def test_registered_visual_type_attributes():
         assert plugin.title == spec["title"]
 
 
-expected_filters = {
+expected_filters: Dict[str, Dict[str, Any]] = {
     'address_families': {
         'comment': None,
         'filter_class': 'FilterAddressFamilies',
@@ -3478,7 +3478,7 @@ expected_filters = {
         'sort_index': 10,
         'title': u'WATO Folder'
     },
-}  # type: Dict[str, Dict[str, Any]]
+}
 
 
 # These tests make adding new elements needlessly painful.
@@ -3504,7 +3504,7 @@ def test_registered_filters(load_plugins):
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases
 
-expected_infos = {
+expected_infos: Dict[str, Dict[str, Any]] = {
     'aggr': {
         'single_spec': [('aggr_name', 'TextUnicode')],
         'title': u'BI Aggregation',
@@ -3679,7 +3679,7 @@ expected_infos = {
         'title': u'Service Group',
         'title_plural': u'Service Groups'
     },
-}  # type: Dict[str, Dict[str, Any]]
+}
 
 
 # These tests make adding new elements needlessly painful.
@@ -3820,18 +3820,18 @@ def test_get_merged_context(register_builtin_html, uri_vars, visual, expected_co
 
 
 def test_verify_single_infos_has_context():
-    visual = {"single_infos": ["host"], "context": {"host": "abc"},}  # type: Visual
+    visual: Visual = {"single_infos": ["host"], "context": {"host": "abc"},}
     visuals.verify_single_infos(visual, visual["context"])
 
 
 def test_verify_single_infos_missing_context():
-    visual = {"single_infos": ["host"], "context": {},}  # type: Visual
+    visual: Visual = {"single_infos": ["host"], "context": {},}
     with pytest.raises(MKUserError, match="Missing context information"):
         visuals.verify_single_infos(visual, visual["context"])
 
 
 def test_context_uri_vars(register_builtin_html):
-    visual = {
+    visual: Visual = {
         "single_infos": ["host"],
         "context": {
             "host": "abc",
@@ -3839,14 +3839,14 @@ def test_context_uri_vars(register_builtin_html):
                 "ag": "1"
             },
         },
-    }  # type: Visual
+    }
 
-    visual2 = {
+    visual2: Visual = {
         "single_infos": [],
         "context": {
             "hu_filter": {"hu": "hu"},
         },
-    }  # type: Visual
+    }
 
     html.request.set_var("bla", "blub")
     assert html.request.var("bla") == "blub"

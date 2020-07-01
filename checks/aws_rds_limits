@@ -24,7 +24,7 @@ factory_settings['aws_rds_limits_default_levels'] = {
 
 
 def parse_aws_rds_limits(info):
-    limits_by_region = {}  # type: AWSLimitsByRegion
+    limits_by_region: AWSLimitsByRegion = {}
     for line in parse_aws(info):
         resource_key, resource_title, limit, amount, region = line
 

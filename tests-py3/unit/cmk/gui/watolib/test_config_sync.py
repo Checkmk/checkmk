@@ -342,7 +342,7 @@ def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, wit
 
     assert sorted(f.name for f in unpack_dir.iterdir()) == sorted(expected_subtars)
 
-    expected_files = {
+    expected_files: Dict[str, List[str]] = {
         'mkeventd_mkp.tar': [],
         'multisite.tar': ["global.mk", "users.mk"],
         'usersettings.tar': [with_user_login],
@@ -356,7 +356,7 @@ def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, wit
         'auth.serials.tar': ["auth.serials"],
         'mknotify.tar': [],
         'diskspace.tar': [],
-    }  # type: Dict[str, List[str]]
+    }
 
     if cmk_version.is_managed_edition():
         expected_files.update({

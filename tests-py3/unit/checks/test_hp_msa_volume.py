@@ -74,7 +74,7 @@ def test_health_check_accepts_volume_name_and_durable_id_as_item(check_manager):
 
 def test_df_discovery_yields_volume_name_as_item(check_manager):
     parsed = {'Foo': {'durable-id': 'Bar'}}
-    expected_yield = ('Foo', {})  # type: Tuple[str, Dict[Any, Any]]
+    expected_yield: Tuple[str, Dict[Any, Any]] = ('Foo', {})
     check = check_manager.get_check("hp_msa_volume.df")
     for item in check.run_discovery(parsed):
         assert item == expected_yield

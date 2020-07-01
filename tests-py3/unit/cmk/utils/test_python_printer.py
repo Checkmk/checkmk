@@ -11,7 +11,7 @@ from cmk.utils.python_printer import pformat
 
 
 def test_same_as_repr():
-    objs = [
+    objs: List[object] = [
         None,
         True,
         False,
@@ -32,7 +32,7 @@ def test_same_as_repr():
         {
             (11,): (33, 44, 22),
         },
-    ]  # type: List[object]
+    ]
     for obj in objs:
         assert pformat(obj) == repr(obj)
 

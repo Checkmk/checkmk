@@ -28,14 +28,12 @@ import contextlib
 from typing import Iterator
 
 
-def is_dockerized():
-    # type: () -> bool
+def is_dockerized() -> bool:
     return os.path.exists("/.dockerenv")
 
 
 @contextlib.contextmanager
-def chdir(path):
-    # type: (str) -> Iterator[None]
+def chdir(path: str) -> Iterator[None]:
     """Change working directory and return on exit"""
     prev_cwd = os.getcwd()
     os.chdir(path)

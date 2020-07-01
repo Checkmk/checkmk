@@ -33,7 +33,7 @@ class Scenario:
         self.unreachable_enabled = unreachable_enabled
 
         if core == "cmc":
-            self.log = "var/check_mk/core/history"  # type: Optional[str]
+            self.log: Optional[str] = "var/check_mk/core/history"
         elif core == "nagios":
             self.log = "var/nagios/nagios.log"
         else:

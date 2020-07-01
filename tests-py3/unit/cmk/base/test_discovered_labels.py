@@ -124,7 +124,7 @@ def test_discovered_host_labels_to_list():
 
 
 def test_discovered_host_labels_from_dict():
-    label_dict = {
+    label_dict: DiscoveredHostLabelsDict = {
         u"äbc": {
             "value": u"123",
             "plugin_name": "plugin_1",
@@ -133,7 +133,7 @@ def test_discovered_host_labels_from_dict():
             "value": u"blä",
             "plugin_name": "plugin_2",
         },
-    }  # type: DiscoveredHostLabelsDict
+    }
     labels = DiscoveredHostLabels.from_dict(label_dict)
     assert labels.to_dict() == label_dict
 

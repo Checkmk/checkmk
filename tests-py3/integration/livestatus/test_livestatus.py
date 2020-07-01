@@ -33,7 +33,7 @@ def default_cfg_fixture(request, site, web):  # noqa: F811 # pylint: disable=red
 # Simply detects all tables by querying the columns table and then
 # queries each of those tables without any columns and filters
 def test_tables(default_cfg, site):
-    columns_per_table = {}  # type: Dict[str, List[str]]
+    columns_per_table: Dict[str, List[str]] = {}
     for row in site.live.query_table_assoc("GET columns\n"):
         columns_per_table.setdefault(row["table"], []).append(row["name"])
     assert len(columns_per_table) > 5

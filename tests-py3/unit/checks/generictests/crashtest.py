@@ -96,7 +96,7 @@ class CrashDataset(WritableDataset):
             raise SkipReport("no local_vars")
 
         # can't use json.loads here :-(
-        exec_scope = {}  # type: Dict[str, Any]
+        exec_scope: Dict[str, Any] = {}
         exec_command = 'local_vars = ' + base64.b64decode(local_vars_encoded).decode('utf-8')
         try:
             exec(exec_command, exec_scope)  # pylint: disable=exec-used

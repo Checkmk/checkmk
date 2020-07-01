@@ -237,8 +237,7 @@ def test_print_man_page(capsys):
     assert "\n License: " in out
 
 
-def test_missing_catalog_entries_of_man_pages():
-    # type: () -> None
+def test_missing_catalog_entries_of_man_pages() -> None:
     catalog_titles = set(man_pages.catalog_titles.keys())
     found_catalog_entries_from_man_pages = set()
     for name in man_pages.all_man_pages():

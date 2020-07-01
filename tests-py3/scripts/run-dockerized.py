@@ -73,8 +73,7 @@ def _os_environ_get(key: str, default: str) -> str:
     return result
 
 
-def _parse_arguments(args):
-    # type: (List[str]) -> argparse.Namespace
+def _parse_arguments(args: List[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("make_target",
                    metavar="MAKE_TARGET",

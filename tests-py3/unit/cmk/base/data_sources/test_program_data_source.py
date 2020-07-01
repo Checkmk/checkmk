@@ -17,36 +17,40 @@ from cmk.base.data_sources.programs import (
 )
 from testlib.base import Scenario
 
-info_func_result_and_expected = [
-    (
-        "arg0 arg1",
-        ("arg0 arg1", None),
-    ),
-    (
-        ["arg0", "arg1"],
-        ("'arg0' 'arg1'", None),
-    ),
-    (
-        SpecialAgentConfiguration("arg0", None),
-        ("arg0", None),
-    ),
-    (
-        SpecialAgentConfiguration("arg0 arg1", None),
-        ("arg0 arg1", None),
-    ),
-    (
-        SpecialAgentConfiguration(["list0", "list1"], None),
-        ("'list0' 'list1'", None),
-    ),
-    (
-        SpecialAgentConfiguration("arg0 arg1", "stdin_blob"),
-        ("arg0 arg1", "stdin_blob"),
-    ),
-    (
-        SpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
-        ("'list0' 'list1'", "stdin_blob"),
-    ),
-]  # type: List[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]]
+info_func_result_and_expected: List[Tuple[SpecialAgentInfoFunctionResult,
+                                          Tuple[str, Optional[str]]]] = [
+                                              (
+                                                  "arg0 arg1",
+                                                  ("arg0 arg1", None),
+                                              ),
+                                              (
+                                                  ["arg0", "arg1"],
+                                                  ("'arg0' 'arg1'", None),
+                                              ),
+                                              (
+                                                  SpecialAgentConfiguration("arg0", None),
+                                                  ("arg0", None),
+                                              ),
+                                              (
+                                                  SpecialAgentConfiguration("arg0 arg1", None),
+                                                  ("arg0 arg1", None),
+                                              ),
+                                              (
+                                                  SpecialAgentConfiguration(["list0", "list1"],
+                                                                            None),
+                                                  ("'list0' 'list1'", None),
+                                              ),
+                                              (
+                                                  SpecialAgentConfiguration(
+                                                      "arg0 arg1", "stdin_blob"),
+                                                  ("arg0 arg1", "stdin_blob"),
+                                              ),
+                                              (
+                                                  SpecialAgentConfiguration(["list0", "list1"],
+                                                                            "stdin_blob"),
+                                                  ("'list0' 'list1'", "stdin_blob"),
+                                              ),
+                                          ]
 
 
 @pytest.mark.parametrize("info_func_result,expected", info_func_result_and_expected)
@@ -94,7 +98,7 @@ class TestSpecialAgentDataSource:
     def test_attribute_defaults(self, monkeypatch, ipaddress):
         the_id = "my_id"
         hostname = "testhost"
-        params = {}  # type: Dict[Any, Any]
+        params: Dict[Any, Any] = {}
         Scenario().add_host(hostname).apply(monkeypatch)
         source = SpecialAgentDataSource(hostname, ipaddress, the_id, params)
 
@@ -106,7 +110,7 @@ class TestSpecialAgentDataSource:
     def test_unconfigured_command_line_raise_KeyError(self, monkeypatch, ipaddress):
         the_id = "my_id"
         hostname = "testhost"
-        params = {}  # type: Dict[Any, Any]
+        params: Dict[Any, Any] = {}
         Scenario().add_host(hostname).apply(monkeypatch)
         source = SpecialAgentDataSource(hostname, ipaddress, the_id, params)
 

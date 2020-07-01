@@ -45,7 +45,7 @@ def test_sync_plugins(load_config):
 
 
 def _ldap_tree():
-    tree = {
+    tree: Dict[str, Dict[str, Union[str, List[str]]]] = {
         "dc=org": {
             "objectclass": ["domain"],
             "objectcategory": ["domain"],
@@ -70,9 +70,9 @@ def _ldap_tree():
             "dn": ["ou=groups,dc=check-mk,dc=org"],
             "ou": "groups",
         },
-    }  # type: Dict[str, Dict[str, Union[str, List[str]]]]
+    }
 
-    users = {
+    users: Dict[str, Dict[str, Union[str, List[str]]]] = {
         "cn=admin,ou=users,dc=check-mk,dc=org": {
             "objectclass": ["user"],
             "objectcategory": ["person"],
@@ -99,9 +99,9 @@ def _ldap_tree():
             "samaccountname": ["sync-user"],
             "userPassword": ["sync-secret"],
         },
-    }  # type: Dict[str, Dict[str, Union[str, List[str]]]]
+    }
 
-    groups = {
+    groups: Dict[str, Dict[str, Union[str, List[str]]]] = {
         "cn=admins,ou=groups,dc=check-mk,dc=org": {
             "objectclass": ["group"],
             "objectcategory": ["group"],
@@ -204,7 +204,7 @@ def _ldap_tree():
                 "cn=admin,ou=users,dc=check-mk,dc=org",
             ],
         },
-    }  # type: Dict[str, Dict[str, Union[str, List[str]]]]
+    }
 
     tree.update(users)
     tree.update(groups)

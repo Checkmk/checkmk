@@ -55,8 +55,7 @@ def main():
     return 0
 
 
-def get_omd_distro_name():
-    # type: () -> str
+def get_omd_distro_name() -> str:
     if os.path.exists("/etc/cma"):
         raise NotImplementedError()
 
@@ -88,8 +87,7 @@ def get_omd_distro_name():
     raise NotImplementedError()
 
 
-def _read_os_release():
-    # type: () -> Optional[Dict[str, str]]
+def _read_os_release() -> Optional[Dict[str, str]]:
     os_release = Path("/etc/os-release")
     if not os_release.exists():
         return None
@@ -107,8 +105,7 @@ def _read_os_release():
 
 class ABCPackageManager(abc.ABC):
     @classmethod
-    def factory(cls):
-        # type: () -> ABCPackageManager
+    def factory(cls) -> ABCPackageManager:
         distro_name = get_omd_distro_name()
         logger.info("Distro: %s", distro_name)
 
@@ -120,17 +117,14 @@ class ABCPackageManager(abc.ABC):
 
         return PackageManagerDEB(distro_name)
 
-    def __init__(self, distro_name):
-        # type: (str) -> None
+    def __init__(self, distro_name: str) -> None:
         self.distro_name = distro_name
 
     @classmethod
-    def _is_debuntu(cls):
-        # type: () -> bool
+    def _is_debuntu(cls) -> bool:
         return Path("/etc/debian_version").exists()
 
-    def install(self, version, edition):
-        # type: (str, str) -> None
+    def install(self, version: str, edition: str) -> None:
         package_name = self._package_name(edition, version)
         build_system_path = self._build_system_package_path(version, package_name)
 
@@ -145,16 +139,13 @@ class ABCPackageManager(abc.ABC):
             os.unlink(package_path)
 
     @abc.abstractmethod
-    def _package_name(self, edition, version):
-        # type: (str, str) -> str
+    def _package_name(self, edition: str, version: str) -> str:
         raise NotImplementedError()
 
-    def _build_system_package_path(self, version, package_name):
-        # type: (str, str) -> Path
+    def _build_system_package_path(self, version: str, package_name: str) -> Path:
         return Path("/bauwelt/download").joinpath(version, package_name)
 
-    def _download_package(self, version, package_name):
-        # type: (str, str) -> Path
+    def _download_package(self, version: str, package_name: str) -> Path:
         temp_package_path = Path("/tmp", package_name)
         package_url = self._package_url(version, package_name)
 
@@ -168,17 +159,14 @@ class ABCPackageManager(abc.ABC):
 
         return temp_package_path
 
-    def _package_url(self, version, package_name):
-        # type: (str, str) -> str
+    def _package_url(self, version: str, package_name: str) -> str:
         return "https://checkmk.com/support/%s/%s" % (version, package_name)
 
     @abc.abstractmethod
-    def _install_package(self, package_path):
-        # type: (Path) -> None
+    def _install_package(self, package_path: Path) -> None:
         raise NotImplementedError()
 
-    def _execute(self, cmd):
-        # type: (List[str]) -> None
+    def _execute(self, cmd: List[str]) -> None:
         logger.debug("Executing: %s", subprocess.list2cmdline(list(map(str, cmd))))
 
         # Workaround to fix package installation issues

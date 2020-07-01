@@ -12,8 +12,9 @@ import cmk.snmplib.utils as snmp_utils
 from cmk.snmplib.type_defs import OID, SNMPDecodedString
 
 
-def oid_kea(_arg, _decoded=None, _name=None):
-    # type: (OID, Optional[SNMPDecodedString], Optional[CheckPluginNameStr]) -> Optional[SNMPDecodedString]
+def oid_kea(_arg: OID,
+            _decoded: Optional[SNMPDecodedString] = None,
+            _name: Optional[CheckPluginNameStr] = None) -> Optional[SNMPDecodedString]:
     """OID function of a Kea"""
     return "Kea"
 

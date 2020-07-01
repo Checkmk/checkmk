@@ -115,7 +115,7 @@ def test_user_config_move_snapin_before(mocker, move_id, before_id, result):
         raise
 
     try:
-        before = user_config.get_snapin(before_id)  # type: Optional[UserSidebarSnapin]
+        before: Optional[UserSidebarSnapin] = user_config.get_snapin(before_id)
     except KeyError:
         before = None
 

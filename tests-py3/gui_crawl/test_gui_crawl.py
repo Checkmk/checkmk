@@ -281,7 +281,7 @@ class Worker(threading.Thread):
 
 class SetQueue(queue.Queue):
     def _init(self, maxsize):
-        self._set = set()  # type: Set[Url]
+        self._set: Set[Url] = set()
 
     def _qsize(self):
         return len(self._set)

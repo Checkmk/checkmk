@@ -13,16 +13,13 @@ from cmk.special_agents.utils import DataCache
 
 class KeksDose(DataCache):
     @property
-    def cache_interval(self):
-        # type: () -> int
+    def cache_interval(self) -> int:
         return 5
 
-    def get_validity_from_args(self, *args):
-        # type: (Any) -> bool
+    def get_validity_from_args(self, *args: Any) -> bool:
         return bool(args[0])
 
-    def get_live_data(self, *args):
-        # type: (Any) -> Any
+    def get_live_data(self, *args: Any) -> Any:
         return "live data"
 
 

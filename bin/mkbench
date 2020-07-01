@@ -194,7 +194,7 @@ def ip_int_from_string(ip_str):
 
 
 def string_from_ip_int(ip_int):
-    octets = []  # type: List[str]
+    octets: List[str] = []
     for _ in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
@@ -276,8 +276,8 @@ class Test:
         self.version = __version__
         self.state = Test.STATE_INITIALIZING
         self._measurements = []
-        self.result = None  # type: Optional[str]
-        self.result_msg = None  # type: Optional[str]
+        self.result: Optional[str] = None
+        self.result_msg: Optional[str] = None
         self.system_info = SystemInfo()
 
         if id_ is None:
@@ -381,8 +381,8 @@ class Test:
         return bool(self._measurements)
 
     def get_measurements_by_test_case(self):
-        by_test_case = collections.OrderedDict(
-        )  # type: collections.OrderedDict[TestAgentBasedStandardHosts, List[Measurement]]
+        by_test_case: collections.OrderedDict[TestAgentBasedStandardHosts,
+                                              List[Measurement]] = collections.OrderedDict()
         for m in self._measurements:
             if m.test_case:
                 l = by_test_case.setdefault(m.test_case, [])
@@ -434,7 +434,7 @@ class TestRunner(threading.Thread):
         self.name = "test-runner"
         self._stop = threading.Event()
         self.test = Test()
-        self.test_case = None  # type: Optional[TestAgentBasedStandardHosts]
+        self.test_case: Optional[TestAgentBasedStandardHosts] = None
 
         # Helper vars needed for test case generator
         self._num_hosts = num_hosts
@@ -589,8 +589,7 @@ class TestRunner(threading.Thread):
     def _increase_helpers(self):
         self._num_helpers += 40
 
-    def _generate_test_cases(self):
-        # type: () -> Iterable[TestAgentBasedStandardHosts]
+    def _generate_test_cases(self) -> Iterable[TestAgentBasedStandardHosts]:
         while not self._stop.is_set():
             yield TestAgentBasedStandardHosts(self,
                                               num_hosts=self._num_hosts,
@@ -779,7 +778,7 @@ class SystemInfo:
     def __init__(self):
         super(SystemInfo, self).__init__()
         self.cpu_count = 0
-        self.cpu_info = {}  # type: Dict[str, Any]
+        self.cpu_info: Dict[str, Any] = {}
         self.memory = 0.0
         self.block_device = ""
         self.linux_distro = ""
@@ -828,7 +827,7 @@ class SystemInfo:
         return None
 
     def _get_cpu_info(self):
-        node = {}  # type: Dict[str, Any]
+        node: Dict[str, Any] = {}
         num_threads_total = 0
         sockets = set([])
         for l in open("/proc/cpuinfo"):
@@ -896,7 +895,7 @@ class Measurement:
             for m in measurements:
                 values.append(getattr(m, k))
 
-            averaged = None  # type: Union[None, Tuple[float, ...], Dict[str, Union[str, float]]]
+            averaged: Union[None, Tuple[float, ...], Dict[str, Union[str, float]]] = None
             if values:
                 if isinstance(values[0], tuple):
                     # averages of equal length tuples
@@ -925,15 +924,15 @@ class Measurement:
         super(Measurement, self).__init__()
         self._runner = runner
 
-        self.test_case = None  # type: Optional[TestAgentBasedStandardHosts]
+        self.test_case: Optional[TestAgentBasedStandardHosts] = None
         self.disk_counters = None
         self.site_state = None
 
-        self.time = None  # type: Optional[float]
-        self.cpu_load = None  # type: Optional[Tuple[float, float, float]]
-        self.memory = None  # type: Optional[svmem]
-        self.disk_usage = None  # type: Optional[sdiskusage]
-        self.disk_io = None  # type: Optional[sdiskio]
+        self.time: Optional[float] = None
+        self.cpu_load: Optional[Tuple[float, float, float]] = None
+        self.memory: Optional[svmem] = None
+        self.disk_usage: Optional[sdiskusage] = None
+        self.disk_io: Optional[sdiskio] = None
         self.site_stats = None
 
     def measure(self, last=None):
@@ -3115,8 +3114,8 @@ class ConsoleRenderer(npyscreen.NPSApp):
         self._runner = runner
 
         # GUI widgets
-        self._window = None  # type: Optional[Window]
-        self._help = None  # type: Optional[HelpText]
+        self._window: Optional[Window] = None
+        self._help: Optional[HelpText] = None
 
     def main(self):
         npyscreen.setTheme(npyscreen.Themes.ElegantTheme)

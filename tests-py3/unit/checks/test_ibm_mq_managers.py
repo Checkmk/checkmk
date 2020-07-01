@@ -13,7 +13,7 @@ pytestmark = pytest.mark.checks
 
 CHECK_NAME = "ibm_mq_managers"
 
-factory_settings = {}  # type: Dict[str, Any]
+factory_settings: Dict[str, Any] = {}
 factory_settings["ibm_mq_managers_default_levels"] = {
     "status": {
         "STARTING": 0,

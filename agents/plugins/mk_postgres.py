@@ -52,8 +52,7 @@ class PostgresBase(abc.ABC):
     _supported_pg_versions = ["12"]
     _agent_prefix = "postgres"
 
-    def __init__(self, db_user, instance=None):
-        # type: (str, Dict) -> None
+    def __init__(self, db_user: str, instance: Dict = None) -> None:
         self.db_user = db_user
 
         if instance:
@@ -72,13 +71,12 @@ class PostgresBase(abc.ABC):
 
     @abc.abstractmethod
     def run_sql_as_db_user(self,
-                           sql_cmd,
-                           extra_args="",
-                           field_sep=";",
-                           quiet=True,
-                           rows_only=True,
-                           mixed_cmd=False):
-        # type: (str, str, str, bool, bool, bool) -> str
+                           sql_cmd: str,
+                           extra_args: str = "",
+                           field_sep: str = ";",
+                           quiet: bool = True,
+                           rows_only: bool = True,
+                           mixed_cmd: bool = False) -> str:
         """This method implements the system specific way to call the psql interface"""
 
     @abc.abstractmethod
@@ -257,13 +255,12 @@ class PostgresBase(abc.ABC):
 
 class PostgresWin(PostgresBase):
     def run_sql_as_db_user(self,
-                           sql_cmd,
-                           extra_args="",
-                           field_sep=";",
-                           quiet=True,
-                           rows_only=True,
-                           mixed_cmd=False):
-        # type: (str, str, str, Optional[bool], Optional[bool],Optional[bool]) -> str
+                           sql_cmd: str,
+                           extra_args: str = "",
+                           field_sep: str = ";",
+                           quiet: Optional[bool] = True,
+                           rows_only: Optional[bool] = True,
+                           mixed_cmd: Optional[bool] = False) -> str:
         """This method implements the system specific way to call the psql interface"""
         if self.instance.get("pg_user"):
             extra_args += " -U %s" % self.instance.get("pg_user")
@@ -291,8 +288,7 @@ class PostgresWin(PostgresBase):
         out = proc.communicate()[0].decode(ENCODING)
         return out.rstrip()
 
-    def get_psql_and_bin_path(self):
-        # type: () -> Tuple[str, str]
+    def get_psql_and_bin_path(self) -> Tuple[str, str]:
         """This method returns the system specific psql interface binary as callable string"""
 
         # TODO: Make this more clever...
@@ -304,8 +300,7 @@ class PostgresWin(PostgresBase):
 
         raise FileNotFoundError("Could not determine psql bin and its path.")
 
-    def get_pg_env(self):
-        # type: () -> None
+    def get_pg_env(self) -> None:
 
         try:
             with open(self.instance.get("env_file", "")) as env_file:
@@ -321,8 +316,7 @@ class PostgresWin(PostgresBase):
             self.instance["pg_database"] = "postgres"
             self.instance["pg_port"] = "5432"
 
-    def get_instances(self):
-        # type: () -> str
+    def get_instances(self) -> str:
         """Gets all instances"""
 
         # TODO: Clarify if this is really the windows pendant
@@ -332,8 +326,7 @@ class PostgresWin(PostgresBase):
                 out += "%s %s\n" % (proc.pid(), proc.binpath())
         return out.rstrip()
 
-    def get_connections(self):
-        # type: () -> str
+    def get_connections(self) -> str:
         """Gets the connections"""
         # Previously part of simple_queries
         # "<>" was replaced by "!=" in order not to confuse cmd with redirect
@@ -350,8 +343,7 @@ class PostgresWin(PostgresBase):
                                        rows_only=False,
                                        extra_args="-P footer=off")
 
-    def get_stats(self):
-        # type: () -> str
+    def get_stats(self) -> str:
         """Get the stats"""
         # The next query had to be slightly modified:
         # As cmd.exe interprets > as redirect and we need <> as "not equal", this was changed to
@@ -381,8 +373,7 @@ class PostgresWin(PostgresBase):
 
         return self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
 
-    def get_version_and_connection_time(self):
-        # type: () -> Tuple[str, str]
+    def get_version_and_connection_time(self) -> Tuple[str, str]:
         """Get the pg version and the time for the query connection"""
         cmd = "SELECT version() AS v"
 
@@ -392,8 +383,7 @@ class PostgresWin(PostgresBase):
         diff = time.time() - start_time
         return out, '%.3f' % diff
 
-    def get_bloat(self):
-        # type: () -> str
+    def get_bloat(self) -> str:
         """Get the db bloats"""
         # Bloat index and tables
         # Supports versions <9.0, >=9.0
@@ -550,13 +540,12 @@ class PostgresLinux(PostgresBase):
         super(PostgresLinux, self).__init__(db_user, pg_instance)
 
     def run_sql_as_db_user(self,
-                           sql_cmd,
-                           extra_args="",
-                           field_sep=";",
-                           quiet=True,
-                           rows_only=True,
-                           mixed_cmd=False):
-        # type: (str, str, str, bool, bool, bool) -> str
+                           sql_cmd: str,
+                           extra_args: str = "",
+                           field_sep: str = ";",
+                           quiet: bool = True,
+                           rows_only: bool = True,
+                           mixed_cmd: bool = False) -> str:
         base_cmd_list = ["su", "-", self.db_user, "-c", r"""%s -X %s -A -F'%s'%s"""]
 
         if self.instance.get("pg_user"):
@@ -611,8 +600,7 @@ class PostgresLinux(PostgresBase):
             self.instance["pg_database"] = "postgres"
             self.instance["pg_port"] = "5432"
 
-    def get_psql_and_bin_path(self):
-        # type: () -> Tuple[str, str]
+    def get_psql_and_bin_path(self) -> Tuple[str, str]:
         try:
             out = subprocess.check_output(["which", "psql"], encoding=ENCODING)
         except subprocess.CalledProcessError:
@@ -620,8 +608,7 @@ class PostgresLinux(PostgresBase):
 
         return out.split("/")[-1].rstrip(), out.replace("psql", "").rstrip()
 
-    def get_instances(self):
-        # type: () -> str
+    def get_instances(self) -> str:
         out = ""
 
         procs_to_match = [
@@ -633,8 +620,7 @@ class PostgresLinux(PostgresBase):
                 out += "%s %s\n" % (proc.pid, " ".join(proc.cmdline()))
         return out.rstrip()
 
-    def get_query_duration(self):
-        # type: () -> str
+    def get_query_duration(self) -> str:
         # Previously part of simple_queries
 
         if self.numeric_version > 9.2:
@@ -660,8 +646,7 @@ class PostgresLinux(PostgresBase):
                                        rows_only=False,
                                        extra_args="-P footer=off")
 
-    def get_connections(self):
-        # type: () -> str
+    def get_connections(self) -> str:
         # Previously part of simple_queries
         condition = "%s <> %s" % (self.row, self.idle)
 
@@ -675,8 +660,7 @@ class PostgresLinux(PostgresBase):
                                        rows_only=False,
                                        extra_args="-P footer=off")
 
-    def get_stats(self):
-        # type: () -> str
+    def get_stats(self) -> str:
         sql_cmd_lastvacuum = ("SELECT "
                               "current_database() AS datname, nspname AS sname, "
                               "relname AS tname, CASE WHEN v IS NULL THEN -1 "
@@ -702,8 +686,7 @@ class PostgresLinux(PostgresBase):
 
         return self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
 
-    def get_version_and_connection_time(self):
-        # type: () -> Tuple[str, str]
+    def get_version_and_connection_time(self) -> Tuple[str, str]:
         cmd = "SELECT version() AS v"
         usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
         out = self.run_sql_as_db_user(cmd)
@@ -715,8 +698,7 @@ class PostgresLinux(PostgresBase):
 
         return out, '%.3f' % real
 
-    def get_bloat(self):
-        # type: () -> str
+    def get_bloat(self) -> str:
         # Bloat index and tables
         # Supports versions <9.0, >=9.0
         # This huge query has been gratefully taken from Greg Sabino Mullane's check_postgres.pl
@@ -861,8 +843,7 @@ class PostgresLinux(PostgresBase):
 #   +----------------------------------------------------------------------+
 
 
-def postgres_factory(db_user, pg_instance=None):
-    # type: (str, Dict[str, str]) -> PostgresBase
+def postgres_factory(db_user: str, pg_instance: Dict[str, str] = None) -> PostgresBase:
     if psutil.LINUX:
         return PostgresLinux(db_user, pg_instance)
     if psutil.WINDOWS:
@@ -908,7 +889,7 @@ class PostgresConfig:
         self.path_to_config = os.path.join(os.getenv("MK_CONFDIR", default_path), self._cfg_name)
         self.conf_sep = conf_sep
 
-        self.instances = []  # type: List[Dict[str, str]]
+        self.instances: List[Dict[str, str]] = []
         self.dbuser = ""
         self.try_parse_config()
 
@@ -961,8 +942,7 @@ class PostgresConfig:
 #   +----------------------------------------------------------------------+
 
 
-def parse_arguments(argv):
-    # type: (List[str]) -> argparse.Namespace
+def parse_arguments(argv: List[str]) -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verbose', '-v', action="count", default=0)
@@ -985,8 +965,7 @@ def parse_arguments(argv):
 #   +----------------------------------------------------------------------+
 
 
-def main(argv=None):
-    # type: (Optional[List]) -> int
+def main(argv: Optional[List] = None) -> int:
 
     if argv is None:
         argv = sys.argv[1:]

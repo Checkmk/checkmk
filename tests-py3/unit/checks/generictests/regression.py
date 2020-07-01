@@ -168,7 +168,7 @@ class WritableDataset:
             pass
 
         if isinstance(value, dict):
-            iterate = value.items()  # type: Iterable[Any]
+            iterate: Iterable[Any] = value.items()
         elif isinstance(value, (tuple, list)):
             iterate = value
         else:

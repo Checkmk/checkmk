@@ -112,12 +112,12 @@ def test_create_agent_section_plugin():
 
 def test_create_snmp_section_plugin():
 
-    trees = [
+    trees: List[SNMPTree] = [
         section_types.SNMPTree(
             base='.1.2.3',
             oids=[OIDEnd(), '2.3'],
         ),
-    ]  # type: List[SNMPTree]
+    ]
 
     detect = [
         [('.1.2.3.4.5', 'Foo.*', True)],

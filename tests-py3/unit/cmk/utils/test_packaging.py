@@ -19,8 +19,7 @@ import cmk.utils.paths
 import cmk.utils.packaging as packaging
 
 
-def _read_package_info(pacname):
-    # type: (packaging.PackageName) -> packaging.PackageInfo
+def _read_package_info(pacname: packaging.PackageName) -> packaging.PackageInfo:
     package_info = packaging.read_package_info(pacname)
     assert package_info is not None
     return package_info

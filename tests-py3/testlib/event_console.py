@@ -19,7 +19,7 @@ class CMKEventConsole:
         self.web_session = CMKWebSession(site)
 
     def _config(self):
-        cfg = {}  # type: Dict[str, Any]
+        cfg: Dict[str, Any] = {}
         content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
         exec(content, {}, cfg)
         return cfg

@@ -11,13 +11,11 @@ from typing import Callable, List, Tuple
 from testlib import cmk_path
 
 
-def is_executable(path):
-    # type: (Path) -> bool
+def is_executable(path: Path) -> bool:
     return path.is_file() and os.access(path, os.X_OK)
 
 
-def is_not_executable(path):
-    # type: (Path) -> bool
+def is_not_executable(path: Path) -> bool:
     return path.is_file() and not os.access(path, os.X_OK)
 
 
@@ -26,7 +24,7 @@ _GLOBAL_EXCLUDES = [
     ".f12",
 ]
 
-_PERMISSIONS = [
+_PERMISSIONS: List[Tuple[str, Callable[[Path], bool], List[str]]] = [
     # globbing pattern                check function,   excludes
     ('active_checks/*', is_executable, ['Makefile', 'check_mkevents.cc']),
     ('agents/special/agent_*', is_executable, []),
@@ -51,11 +49,10 @@ _PERMISSIONS = [
     ]),
     ('enterprise/alert_handlers/*', is_executable, []),
     ('enterprise/alert_handlers/*', is_executable, []),
-]  # type: List[Tuple[str, Callable[[Path], bool], List[str]]]
+]
 
 
-def test_permissions():
-    #type: () -> None
+def test_permissions() -> None:
     for pattern, check_func, excludes in _PERMISSIONS:
         git_dir = Path(cmk_path())
         for f in git_dir.glob(pattern):

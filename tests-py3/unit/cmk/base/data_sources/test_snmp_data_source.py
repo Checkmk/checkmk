@@ -81,8 +81,8 @@ def test_disable_read_to_file_cache(monkeypatch, fs):
                         lambda path, contents: fs.create_file(path, contents=contents))
 
     file_cache = source._make_file_cache()
-    table = []  # type: SNMPTable
-    raw_data = {SectionName("X"): table}  # type: SNMPRawData
+    table: SNMPTable = []
+    raw_data: SNMPRawData = {SectionName("X"): table}
     # End of setup.
 
     assert not source.is_agent_cache_disabled()
@@ -114,8 +114,8 @@ def test_disable_write_to_file_cache(monkeypatch, fs):
                         lambda path, contents: fs.create_file(path, contents=contents))
 
     file_cache = source._make_file_cache()
-    table = []  # type: SNMPTable
-    raw_data = {SectionName("X"): table}  # type: SNMPRawData
+    table: SNMPTable = []
+    raw_data: SNMPRawData = {SectionName("X"): table}
     # End of setup.
 
     source.disable_data_source_cache()
@@ -144,8 +144,8 @@ def test_write_and_read_file_cache(monkeypatch, fs):
 
     file_cache = source._make_file_cache()
 
-    table = []  # type: SNMPTable
-    raw_data = {SectionName("X"): table}  # type: SNMPRawData
+    table: SNMPTable = []
+    raw_data: SNMPRawData = {SectionName("X"): table}
     # End of setup.
 
     assert not source.is_agent_cache_disabled()

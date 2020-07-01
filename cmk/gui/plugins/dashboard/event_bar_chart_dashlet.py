@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Type
+from typing import Type
 from livestatus import lqencode
 from cmk.utils.render import date_and_time
 import cmk.gui.sites as sites

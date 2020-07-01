@@ -94,8 +94,7 @@ def _parse_docker_container_diskstat_agent(info):
     return sections
 
 
-def _prepare_diskdata(device_name, timestamp, device):
-    # type: (str, int, dict) -> Tuple(bool, dict)
+def _prepare_diskdata(device_name: str, timestamp: int, device: dict) -> Tuple[bool, dict]:
     uninitialized = False
 
     diskdata = {}

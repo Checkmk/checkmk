@@ -148,8 +148,8 @@ def test_patch_package_code_with_state(conf_dir):
     assert _id == ""
 
 
-def check_content(new_content, base_content, pos, uuid, marker):
-    # type: (bytes, bytes, int, str, bytes) -> None
+def check_content(new_content: bytes, base_content: bytes, pos: int, uuid: str,
+                  marker: bytes) -> None:
     assert new_content.find(marker) == -1
     new_pos = new_content.decode('utf-8').find(uuid)
     assert new_pos == pos

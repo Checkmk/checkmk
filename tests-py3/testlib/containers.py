@@ -30,8 +30,8 @@ _DOCKER_BUILD_ID = 1
 logger = logging.getLogger()
 
 
-def execute_tests_in_container(distro_name, docker_tag, version, result_path, command, interactive):
-    # type: (str, str, CMKVersion, Path, List[str], bool) -> int
+def execute_tests_in_container(distro_name: str, docker_tag: str, version: CMKVersion,
+                               result_path: Path, command: List[str], interactive: bool) -> int:
     client = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
@@ -119,8 +119,8 @@ def _docker_client():
     return docker.from_env(timeout=1200)
 
 
-def _get_or_load_image(client, image_name_with_tag):
-    # type: (docker.DockerClient, str) -> Optional[docker.Image]
+def _get_or_load_image(client: docker.DockerClient,
+                       image_name_with_tag: str) -> Optional[docker.Image]:
     try:
         image = client.images.get(image_name_with_tag)
         logger.info("  Available locally (%s)", image.short_id)
@@ -171,8 +171,8 @@ def _handle_api_error(e):
     raise e
 
 
-def _create_cmk_image(client, base_image_name, docker_tag, version):
-    # type: (docker.DockerClient, str, str, CMKVersion) -> str
+def _create_cmk_image(client: docker.DockerClient, base_image_name: str, docker_tag: str,
+                      version: CMKVersion) -> str:
     base_image_name_with_tag = "%s:%s" % (base_image_name, docker_tag)
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
@@ -319,8 +319,7 @@ def _runtime_volumes():
     return volumes
 
 
-def _container_env(version):
-    # type: (CMKVersion) -> Dict[str, str]
+def _container_env(version: CMKVersion) -> Dict[str, str]:
     return {
         "LANG": "C",
         "PIPENV_PIPFILE": "/git/Pipfile",
@@ -456,8 +455,8 @@ class ContainerExec:
         return self.poll()
 
 
-def _copy_directory(container, src_path, dest_path):
-    # type: (docker.types.containers.Container, Path, Path) -> None
+def _copy_directory(container: docker.types.containers.Container, src_path: Path,
+                    dest_path: Path) -> None:
     logger.info("Copying %s from container to %s", src_path, dest_path)
 
     tar_stream = BytesIO()

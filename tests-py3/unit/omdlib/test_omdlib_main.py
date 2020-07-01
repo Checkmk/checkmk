@@ -99,8 +99,8 @@ def test_main_help(site_context, capsys, version_info):
 def test_main_version_of_current_site(site_context, capsys, monkeypatch, version_info):
     monkeypatch.setattr(omdlib, "__version__", "1.2.3p4")
     global_opts = omdlib.main.default_global_options()
-    args = []  # type: omdlib.main.Arguments
-    options = {}  # type: CommandOptions
+    args: omdlib.main.Arguments = []
+    options: CommandOptions = {}
     omdlib.main.main_version(version_info, site_context, global_opts, args, options)
 
     stdout = capsys.readouterr()[0]
@@ -110,8 +110,8 @@ def test_main_version_of_current_site(site_context, capsys, monkeypatch, version
 def test_main_version_root(capsys, monkeypatch, version_info):
     monkeypatch.setattr(omdlib, "__version__", "1.2.3p4")
     global_opts = omdlib.main.default_global_options()
-    args = []  # type: omdlib.main.Arguments
-    options = {}  # type: CommandOptions
+    args: omdlib.main.Arguments = []
+    options: CommandOptions = {}
     omdlib.main.main_version(version_info, omdlib.main.RootContext(), global_opts, args, options)
 
     stdout = capsys.readouterr()[0]

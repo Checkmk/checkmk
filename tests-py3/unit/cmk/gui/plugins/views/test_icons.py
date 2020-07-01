@@ -65,14 +65,14 @@ def test_builtin_icons_and_actions():
 
 
 def test_legacy_icon_plugin():
-    icon = {
+    icon: Dict[str, Any] = {
         "columns": ["column"],
         "host_columns": ["hcol"],
         "service_columns": ["scol"],
         "paint": lambda: "bla",
         "sort_index": 10,
         "toplevel": True,
-    }  # type: Dict[str, Any]
+    }
     cmk.gui.views.multisite_icons_and_actions["legacy"] = icon
     cmk.gui.views.transform_old_dict_based_icons()
 

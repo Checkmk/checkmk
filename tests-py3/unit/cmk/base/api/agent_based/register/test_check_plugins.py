@@ -18,13 +18,13 @@ def dummy_generator(section):  # pylint: disable=unused-argument
     yield  # pylint: disable=unreachable
 
 
-MINIMAL_CREATION_KWARGS = {
+MINIMAL_CREATION_KWARGS: Dict[str, Any] = {
     "name": "norris",
     "service_name": "Norris Device",
     "discovery_function": dummy_generator,
     "check_function": dummy_generator,
     "forbidden_names": []
-}  # type: Dict[str, Any]
+}
 
 
 def dummy_function(section):  # pylint: disable=unused-argument

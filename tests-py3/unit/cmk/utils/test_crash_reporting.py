@@ -54,7 +54,7 @@ def test_crash_report_local_crash_report_url(crash):
 
 
 def test_format_var_for_export_strip_nested_dict():
-    orig_var = {
+    orig_var: Dict[str, Any] = {
         "a": {
             "b": {
                 "c": {
@@ -62,7 +62,7 @@ def test_format_var_for_export_strip_nested_dict():
                 },
             },
         },
-    }  # type: Dict[str, Any]
+    }
 
     var = copy.deepcopy(orig_var)
     formated = _format_var_for_export(var)
@@ -92,13 +92,13 @@ def test_format_var_for_export_strip_large_data():
 
 
 def test_format_var_for_export_strip_nested_dict_with_list():
-    orig_var = {
+    orig_var: Dict[str, Any] = {
         "a": {
             "b": {
                 "c": [{}],
             },
         },
-    }  # type: Dict[str, Any]
+    }
 
     var = copy.deepcopy(orig_var)
     formated = _format_var_for_export(var)

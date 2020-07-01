@@ -36,8 +36,8 @@ from omdlib.type_defs import CommandOptions
 from omdlib.contexts import SiteContext
 
 
-def backup_site_to_tarfile(site, fh, mode, options, verbose):
-    # type: (SiteContext, BinaryIO, str, CommandOptions, bool) -> None
+def backup_site_to_tarfile(site: SiteContext, fh: BinaryIO, mode: str, options: CommandOptions,
+                           verbose: bool) -> None:
 
     # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile", same for "site".
     tar = cast(
@@ -55,8 +55,7 @@ def backup_site_to_tarfile(site, fh, mode, options, verbose):
     tar.close()
 
 
-def get_exclude_patterns(options):
-    # type: (CommandOptions) -> List[str]
+def get_exclude_patterns(options: CommandOptions) -> List[str]:
     excludes = []
     if "no-rrds" in options or "no-past" in options:
         excludes.append("var/pnp4nagios/perfdata/*")
@@ -87,8 +86,8 @@ def get_exclude_patterns(options):
     return excludes
 
 
-def _backup_site_files_to_tarfile(site, tar, options):
-    # type: (SiteContext, BackupTarFile, CommandOptions) -> None
+def _backup_site_files_to_tarfile(site: SiteContext, tar: 'BackupTarFile',
+                                  options: CommandOptions) -> None:
     exclude = get_exclude_patterns(options)
     exclude.append("tmp/*")  # Exclude all tmpfs files
 
@@ -164,26 +163,22 @@ class BackupTarFile(tarfile.TarFile):
             if is_rrd:
                 self._resume_rrd_update(rrd_file_path)
 
-    def _suspend_rrd_update(self, path):
-        # type: (str) -> None
+    def _suspend_rrd_update(self, path: str) -> None:
         if self._verbose:
             sys.stdout.write("Pausing RRD updates for %s\n" % path)
         self._send_rrdcached_command("SUSPEND %s" % path)
 
-    def _resume_rrd_update(self, path):
-        # type: (str) -> None
+    def _resume_rrd_update(self, path: str) -> None:
         if self._verbose:
             sys.stdout.write("Resuming RRD updates for %s\n" % path)
         self._send_rrdcached_command("RESUME %s" % path)
 
-    def _resume_all_rrds(self):
-        # type: () -> None
+    def _resume_all_rrds(self) -> None:
         if self._verbose:
             sys.stdout.write("Resuming RRD updates for ALL\n")
         self._send_rrdcached_command("RESUMEALL")
 
-    def _send_rrdcached_command(self, cmd):
-        # type: (str) -> None
+    def _send_rrdcached_command(self, cmd: str) -> None:
         if not self._sock:
             self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
@@ -232,8 +227,7 @@ class BackupTarFile(tarfile.TarFile):
         elif self._verbose:
             sys.stdout.write("rrdcached response: %r\n" % (answer))
 
-    def close(self):
-        # type: () -> None
+    def close(self) -> None:
         super(BackupTarFile, self).close()
 
         if self._sock:
@@ -241,8 +235,7 @@ class BackupTarFile(tarfile.TarFile):
             self._sock.close()
 
 
-def get_site_and_version_from_backup(tar):
-    # type: (tarfile.TarFile) -> Tuple[str, str]
+def get_site_and_version_from_backup(tar: tarfile.TarFile) -> Tuple[str, str]:
     """Get the first file of the tar archive. Expecting <site>/version symlink
     for validation reasons."""
     site_tarinfo = tar.next()

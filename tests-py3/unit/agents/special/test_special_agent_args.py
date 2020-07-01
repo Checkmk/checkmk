@@ -47,7 +47,7 @@ AGENTS_WITHOUT_PARSE_ARGUMENTS = {
     'agent_ibmsvc',
 }
 
-REQUIRED_ARGUMENTS = {
+REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_allnet_ip_sensoric': ['HOSTNAME'],
     'agent_aws': [
         '--access-key-id', 'ACCESS_KEY_ID', '--secret-access-key', 'SECRET_ACCESS_KEY',
@@ -78,7 +78,7 @@ REQUIRED_ARGUMENTS = {
     'agent_proxmox': ['HOSTNAME'],
     'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST'],
     'agent_cisco_prime': ['--hostname', 'HOSTNAME', '--path', 'PATH'],
-}  # type: Dict[str, List[str]]
+}
 
 
 def test_all_agents_tested():

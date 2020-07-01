@@ -21,18 +21,15 @@ from testlib import on_time  # type: ignore[import]
 pytestmark = pytest.mark.checks
 
 
-def _optionalize(lst):
-    # type: (List[str]) -> List[Optional[str]]
+def _optionalize(lst: List[str]) -> List[Optional[str]]:
     return [x for x in lst]  # pylint: disable=unnecessary-comprehension
 
 
-def splitter(text, split_symbol=None, node=None):
-    # type: (str, Optional[str], Optional[str]) -> List[List[Optional[str]]]
+def splitter(text: str, split_symbol: Optional[str] = None, node: Optional[str] = None) -> List[List[Optional[str]]]:
     return [[node] + _optionalize(line.split(split_symbol)) for line in text.split("\n")]
 
 
-def generate_inputs():
-    # type: () -> List[List[List[Optional[str]]]]
+def generate_inputs() -> List[List[List[Optional[str]]]]:
     return [
         # CMK 1.5
         # linux, openwrt agent(5 entry, cmk>=1.2.7)
@@ -601,7 +598,7 @@ def test_inventory_common(check_manager):
     parsed = check.context['parse_ps'](info)[1]
 
     # Ugly contortions caused by horrible typing...
-    expected = []  # type: List[object]
+    expected: List[object] = []
     for psdi in PS_DISCOVERED_ITEMS:
         expected.append(psdi)
     for psdhl in PS_DISCOVERED_HOST_LABELS:
@@ -836,14 +833,14 @@ def test_subset_patterns(check_manager):
 (user,0,0,0.5) main_test"""))[1]
 
     # Boundary in match is necessary otherwise main instance accumulates all
-    wato_rule = [({
+    wato_rule: List[Tuple[Dict, List, List, Dict]] = [({
         'default_params': {
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999)
         },
         'match': '~(main.*)\\b',
         'descr': '%s'
-    }, [], ["@all"], {})]  # type: List[Tuple[Dict, List, List, Dict]]
+    }, [], ["@all"], {})]
 
     discovered = [
         ('main', {
@@ -897,13 +894,13 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
 
     check = check_manager.get_check("ps")
 
-    params = {
+    params: Dict[str, Any] = {
         'process': '~.*firefox',
         'process_info': "text",
         'cpu_rescale_max': True,
         'levels': (1, 1, 99999, 99999),
         'single_cpulevels': (45.0, 80.0),
-    }  # type: Dict[str, Any]
+    }
 
     def run_check_ps_common_with_elapsed_time(check_time, cputime):
         with on_time(check_time, "CET"):

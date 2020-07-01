@@ -57,10 +57,10 @@ def test_get_simple_snmp_table_not_resolvable(backend):
         pytest.skip("Not relevant")
 
     backend.config = backend.config.update(ipaddress="bla.local")
-    oid_info = (
+    oid_info: OIDWithColumns = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],
-    )  # type: OIDWithColumns
+    )
 
     # TODO: Unify different error messages
     if backend.config.is_inline_snmp_host:
@@ -81,10 +81,10 @@ def test_get_simple_snmp_table_wrong_credentials(backend):
         pytest.skip("Not relevant")
 
     backend.config = backend.config.update(credentials="dingdong")
-    oid_info = (
+    oid_info: OIDWithColumns = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],
-    )  # type: OIDWithColumns
+    )
 
     # TODO: Unify different error messages
     if backend.config.is_inline_snmp_host:
@@ -103,10 +103,10 @@ def test_get_simple_snmp_table_wrong_credentials(backend):
 @pytest.mark.parametrize("bulk", [True, False])
 def test_get_simple_snmp_table_bulkwalk(backend, bulk):
     backend.config = backend.config.update(is_bulkwalk_host=bulk)
-    oid_info = (
+    oid_info: OIDWithColumns = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],
-    )  # type: OIDWithColumns
+    )
     table = snmp_table.get_snmp_table(
         check_plugin_name="",
         oid_info=oid_info,
@@ -124,10 +124,10 @@ def test_get_simple_snmp_table_bulkwalk(backend, bulk):
 
 
 def test_get_simple_snmp_table(backend):
-    oid_info = (
+    oid_info: OIDWithColumns = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],
-    )  # type: OIDWithColumns
+    )
     table = snmp_table.get_snmp_table(
         check_plugin_name="",
         oid_info=oid_info,
@@ -145,10 +145,10 @@ def test_get_simple_snmp_table(backend):
 
 
 def test_get_simple_snmp_table_oid_end(backend):
-    oid_info = (
+    oid_info: OIDWithColumns = (
         ".1.3.6.1.2.1.2.2.1",
         ["1", "2", "3", OID_END],
-    )  # type: OIDWithColumns
+    )
     table = snmp_table.get_snmp_table(
         check_plugin_name="",
         oid_info=oid_info,
@@ -162,10 +162,10 @@ def test_get_simple_snmp_table_oid_end(backend):
 
 
 def test_get_simple_snmp_table_oid_string(backend):
-    oid_info = (
+    oid_info: OIDWithColumns = (
         ".1.3.6.1.2.1.2.2.1",
         ["1", "2", "3", OID_STRING],
-    )  # type: OIDWithColumns
+    )
     table = snmp_table.get_snmp_table(
         check_plugin_name="",
         oid_info=oid_info,
@@ -179,10 +179,10 @@ def test_get_simple_snmp_table_oid_string(backend):
 
 
 def test_get_simple_snmp_table_oid_bin(backend):
-    oid_info = (
+    oid_info: OIDWithColumns = (
         ".1.3.6.1.2.1.2.2.1",
         ["1", "2", "3", OID_BIN],
-    )  # type: OIDWithColumns
+    )
     table = snmp_table.get_snmp_table(
         check_plugin_name="",
         oid_info=oid_info,
@@ -196,10 +196,10 @@ def test_get_simple_snmp_table_oid_bin(backend):
 
 
 def test_get_simple_snmp_table_oid_end_bin(backend):
-    oid_info = (
+    oid_info: OIDWithColumns = (
         ".1.3.6.1.2.1.2.2.1",
         ["1", "2", "3", OID_END_BIN],
-    )  # type: OIDWithColumns
+    )
     table = snmp_table.get_snmp_table(
         check_plugin_name="",
         oid_info=oid_info,
@@ -213,12 +213,12 @@ def test_get_simple_snmp_table_oid_end_bin(backend):
 
 
 def test_get_simple_snmp_table_with_hex_str(backend):
-    oid_info = (
+    oid_info: OIDWithColumns = (
         ".1.3.6.1.2.1.2.2.1",
         [
             "6",
         ],
-    )  # type: OIDWithColumns
+    )
 
     table = snmp_table.get_snmp_table(
         check_plugin_name="",

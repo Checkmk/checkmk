@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Callable, cast, Dict, Iterator, List, Optional, Set
+from typing import Callable, cast, Iterator, List, Optional, Set
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException

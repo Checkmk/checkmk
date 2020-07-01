@@ -37,7 +37,7 @@ def ts(monkeypatch):
 
 
 def test_service_extra_conf(ts):
-    ruleset = [
+    ruleset: List[Tuple[str, List[str], List[str], List[str], Dict]] = [
         ("1", [], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
         ("2", [], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES,
          {}),  # Duplicate test to detect caching issues
@@ -51,7 +51,7 @@ def test_service_extra_conf(ts):
         ("10", [], ["host1"], ["^serv$"], {}),
         ("11", [], ["~host"], tuple_rulesets.ALL_SERVICES, {}),
         ("12", [], ["!host2"] + tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
-    ]  # type: List[Tuple[str, List[str], List[str], List[str], Dict]]
+    ]
 
     assert ts.config_cache.service_extra_conf("host1", "service1", ruleset) == \
             [ "1", "2", "3", "4", "7", "8", "11", "12" ]
@@ -228,20 +228,18 @@ def test_in_extraconf_hostlist():
 
 def test_get_rule_options_regular_rule():
     options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = ('all', [], tuple_rulesets.ALL_HOSTS, options
-            )  # type: Tuple[str, List[str], List[str], Dict]
+    entry: Tuple[str, List[str], List[str], Dict] = ('all', [], tuple_rulesets.ALL_HOSTS, options)
     assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_empty_options():
-    options = {}  # type: Dict
-    entry = ('all', [], tuple_rulesets.ALL_HOSTS, options
-            )  # type: Tuple[str, List[str], List[str], Dict]
+    options: Dict = {}
+    entry: Tuple[str, List[str], List[str], Dict] = ('all', [], tuple_rulesets.ALL_HOSTS, options)
     assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_missing_options():
-    entry = ('all', [], tuple_rulesets.ALL_HOSTS)  # type: Tuple[str, List[str], List[str]]
+    entry: Tuple[str, List[str], List[str]] = ('all', [], tuple_rulesets.ALL_HOSTS)
     assert tuple_rulesets.get_rule_options(entry) == (entry, {})
 
 

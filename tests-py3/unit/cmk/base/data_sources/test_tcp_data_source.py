@@ -67,7 +67,7 @@ def test_get_summary_result_requires_host_sections(monkeypatch, ipaddress):
 
     source._host_sections = AgentHostSections()
 
-    defaults = (0, "Version: unknown, OS: unknown", [])  # type: ServiceCheckResult
+    defaults: ServiceCheckResult = (0, "Version: unknown, OS: unknown", [])
     assert source.get_summary_result_for_discovery() == defaults
     assert source.get_summary_result_for_inventory() == defaults
     assert source.get_summary_result_for_checking() == defaults

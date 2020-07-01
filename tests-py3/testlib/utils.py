@@ -44,8 +44,7 @@ def is_managed_repo():
     return os.path.exists(cme_path())
 
 
-def virtualenv_path(version=None):
-    # type: (Optional[int]) -> Path
+def virtualenv_path(version: Optional[int] = None) -> Path:
     if version is None:
         version = sys.version_info[0]
 
@@ -55,8 +54,7 @@ def virtualenv_path(version=None):
     return Path(ensure_str(venv).rstrip("\n"))
 
 
-def find_git_rm_mv_files(dirpath):
-    # type: (Path) -> List[str]
+def find_git_rm_mv_files(dirpath: Path) -> List[str]:
     del_files = []
 
     out = ensure_str(subprocess.check_output([
@@ -78,8 +76,7 @@ def find_git_rm_mv_files(dirpath):
     return del_files
 
 
-def current_branch_name():
-    # type: () -> str
+def current_branch_name() -> str:
     branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     return ensure_str(branch_name).split("\n", 1)[0]
 

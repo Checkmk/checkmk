@@ -318,13 +318,13 @@ class TestCheckVersion:
         assert expected == actual
 
     def test_unparseable_without_wato_rule(self):
-        params = {}  # type: Dict[str, Any]
+        params: Dict[str, Any] = {}
         actual = ibm_mq_check_version('2.x', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
         expected = (0, "MyLabel: 2.x")
         assert expected == actual
 
     def test_no_version(self):
-        params = {}  # type: Dict[str, Any]
+        params: Dict[str, Any] = {}
         actual = ibm_mq_check_version(None, params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
         expected = (3, "MyLabel: None (no agent info)")
         assert expected == actual

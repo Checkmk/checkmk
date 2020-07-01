@@ -18,8 +18,7 @@ from cmk.gui.utils.html import HTML
 # custom subclass of the JSONEncoder.
 #
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
-def _default(self, obj):
-    # type: (json.JSONEncoder, object) -> str
+def _default(self: json.JSONEncoder, obj: object) -> str:
     # ignore attr-defined: See hack below
     return getattr(obj.__class__, "to_json", _default.default)(obj)  # type: ignore[attr-defined]
 

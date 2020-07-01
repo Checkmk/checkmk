@@ -52,8 +52,8 @@ opt_debug = False
 host = None
 warn_level = None
 crit_level = None
-fromtime = None  # type: Optional[float]
-untiltime = None  # type: Optional[float]
+fromtime: Optional[float] = None
+untiltime: Optional[float] = None
 
 for o, a in opts:
     if o in ['-v']:

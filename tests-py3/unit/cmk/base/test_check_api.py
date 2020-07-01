@@ -39,7 +39,7 @@ def check_foo(item, params, parsed_item_data):
 
 
 def test_get_parsed_item_data():
-    params = {}  # type: Dict[Any, Any]
+    params: Dict[Any, Any] = {}
     parsed = {1: "one", 3: {}, 4: [], 5: ""}
     info = [[1, "one"], [2, "two"]]
     assert check_foo(1, params, parsed) == (2, "bar")

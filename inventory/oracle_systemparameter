@@ -14,7 +14,7 @@ from typing import Dict, List
 
 def _parse_systemparameter(info):
 
-    parsed = {}  # type: Dict [str, List]
+    parsed: Dict[str, List] = {}
 
     # Add here specific V$SYSTEMPARAMETERS which should not be tracked in the Inventory History
     # (e.g. because they are changing often)

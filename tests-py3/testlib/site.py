@@ -253,8 +253,7 @@ class Site:
         kwargs["shell"] = True
         return subprocess.Popen(cmd_txt, *args, **kwargs)
 
-    def omd(self, mode, *args):
-        # type: (str, str) -> int
+    def omd(self, mode: str, *args: str) -> int:
         sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
         cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
         sys.stdout.write("Executing: %s\n" % subprocess.list2cmdline(cmd))

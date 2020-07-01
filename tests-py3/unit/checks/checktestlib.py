@@ -318,11 +318,9 @@ class DiscoveryResult:
 
     # TODO: Very questionable __repr__ conversion, leading to even more
     # interesting typing Kung Fu...
-    def __repr__(self):
-        # type: () -> str
-        entries = [o for o in self.entries if isinstance(o, object)]  # type: List[object]
-        host_labels = [HostLabel(str(k), str(self.labels[k])) for k in self.labels
-                      ]  # type: List[object]
+    def __repr__(self) -> str:
+        entries: List[object] = [o for o in self.entries if isinstance(o, object)]
+        host_labels: List[object] = [HostLabel(str(k), str(self.labels[k])) for k in self.labels]
         return "DiscoveryResult(%r)" % (entries + host_labels,)
 
     # TODO: Very obscure and inconsistent __str__ conversion...

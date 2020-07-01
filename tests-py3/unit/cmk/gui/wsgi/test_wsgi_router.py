@@ -24,7 +24,7 @@ if typing.TYPE_CHECKING:
 
 def test_normal_auth(wsgi_app, with_user):
     username, password = with_user
-    login = wsgi_app.get('/NO_SITE/check_mk/login.py')  # type: webtest.TestResponse
+    login: 'webtest.TestResponse' = wsgi_app.get('/NO_SITE/check_mk/login.py')
     login.form['_username'] = username
     login.form['_password'] = password
     resp = login.form.submit('_login', index=1)

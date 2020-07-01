@@ -119,7 +119,7 @@ def test_check(check_manager):
 
 def test_stale_service_for_not_running_qmgr(check_manager):
     check = check_manager.get_check(CHECK_NAME)
-    params = {}  # type: Dict[str, Any]
+    params: Dict[str, Any] = {}
     parsed = {'QM1': {'STATUS': 'ENDED NORMALLY'}}
     with pytest.raises(MKCounterWrapped, match=r"Stale because queue manager ENDED NORMALLY"):
         list(check.run_check('QM1:MY.QUEUE', params, parsed))
@@ -127,7 +127,7 @@ def test_stale_service_for_not_running_qmgr(check_manager):
 
 def test_vanished_service_for_running_qmgr(check_manager):
     check = check_manager.get_check(CHECK_NAME)
-    params = {}  # type: Dict[str, Any]
+    params: Dict[str, Any] = {}
     parsed = {
         'QM1': {
             'STATUS': 'RUNNING'
@@ -144,21 +144,21 @@ def test_vanished_service_for_running_qmgr(check_manager):
 # CURDEPTH, MAXDEPTH
 #
 def test_depth_no_params(check_manager):
-    params = {}  # type: Dict[str, Any]
+    params: Dict[str, Any] = {}
     curdepth, maxdepth = 0, 5000
     expected = (0, 'Queue depth: 0', [('messages_in_queue', 0, None, None, 0, 5000)])
     assert_depth(check_manager, curdepth, maxdepth, params, expected)
 
 
 def test_depth_with_percentage(check_manager):
-    params = {}  # type: Dict[str, Any]
+    params: Dict[str, Any] = {}
     curdepth, maxdepth = 50, 5000
     expected = (0, 'Queue depth: 50 (1.0%)', [('messages_in_queue', 50, None, None, 0, 5000)])
     assert_depth(check_manager, curdepth, maxdepth, params, expected)
 
 
 def test_depth_no_max_depth(check_manager):
-    params = {}  # type: Dict[str, Any]
+    params: Dict[str, Any] = {}
     curdepth, maxdepth = 50, None
     expected = (0, 'Queue depth: 50', [('messages_in_queue', 50, None, None, 0, None)])
     assert_depth(check_manager, curdepth, maxdepth, params, expected)
@@ -264,16 +264,16 @@ def assert_depth(check_manager, curdepth, maxdepth, params, expected):
 
 
 def test_age_no_params(check_manager):
-    params = {}  # type: Dict[str, Any]
+    params: Dict[str, Any] = {}
     msgage = 1800
     expected = (0, 'Oldest message: 30 m', [('age_oldest', 1800, None, None)])
     assert_age(check_manager, msgage, params, expected)
 
 
 def test_age_no_msgage(check_manager):
-    params = {}  # type: Dict[str, Any]
+    params: Dict[str, Any] = {}
     msgage = None
-    expected = (0, 'Oldest message: n/a', [])  # type: Tuple[int, str, List[Tuple]]
+    expected: Tuple[int, str, List[Tuple]] = (0, 'Oldest message: n/a', [])
     assert_age(check_manager, msgage, params, expected)
 
 
@@ -326,16 +326,16 @@ def assert_age(check_manager, msgage, params, expected):
 def test_lget_ok_no_params(check_manager):
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "11.19.05")
-    params = {}  # type: Dict[str, Any]
-    expected = (0, 'Last get: 60 m', [])  # type: Tuple[int, str, List[Tuple]]
+    params: Dict[str, Any] = {}
+    expected: Tuple[int, str, List[Tuple]] = (0, 'Last get: 60 m', [])
     assert_last_get_age(check_manager, lget, now, params, expected)
 
 
 def test_lget_ok_no_info(check_manager):
     lget = ("", "")
     now = ("2018-04-19", "11.19.05")
-    params = {}  # type: Dict[str, Any]
-    expected = (0, 'Last get: n/a', [])  # type: Tuple[int, str, List[Tuple]]
+    params: Dict[str, Any] = {}
+    expected: Tuple[int, str, List[Tuple]] = (0, 'Last get: n/a', [])
     assert_last_get_age(check_manager, lget, now, params, expected)
 
 
@@ -343,7 +343,7 @@ def test_lget_ok(check_manager):
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected = (0, 'Last get: 10.0 s', [])  # type: Tuple[int, str, List[Tuple]]
+    expected: Tuple[int, str, List[Tuple]] = (0, 'Last get: 10.0 s', [])
     assert_last_get_age(check_manager, lget, now, params, expected)
 
 
@@ -351,8 +351,7 @@ def test_lget_warn(check_manager):
     lget = ("2018-04-19", "09.49.14")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected = (1, 'Last get: 30 m (warn/crit at 30 m/60 m)', []
-               )  # type: Tuple[int, str, List[Tuple]]
+    expected: Tuple[int, str, List[Tuple]] = (1, 'Last get: 30 m (warn/crit at 30 m/60 m)', [])
     assert_last_get_age(check_manager, lget, now, params, expected)
 
 
@@ -360,7 +359,7 @@ def test_lget_no_info_with_params(check_manager):
     lget = ("", "")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected = (0, 'Last get: n/a', [])  # type: Tuple[int, str, List[Tuple]]
+    expected: Tuple[int, str, List[Tuple]] = (0, 'Last get: n/a', [])
     assert_last_get_age(check_manager, lget, now, params, expected)
 
 
@@ -368,8 +367,7 @@ def test_lget_crit(check_manager):
     lget = ("2018-04-19", "09.19.14")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected = (2, 'Last get: 60 m (warn/crit at 30 m/60 m)', []
-               )  # type: Tuple[int, str, List[Tuple]]
+    expected: Tuple[int, str, List[Tuple]] = (2, 'Last get: 60 m (warn/crit at 30 m/60 m)', [])
     assert_last_get_age(check_manager, lget, now, params, expected)
 
 
@@ -400,7 +398,7 @@ def assert_last_get_age(check_manager, lget, now, params, expected):
 
 
 def test_procs_no_params(check_manager):
-    params = {}  # type: Dict[str, Any]
+    params: Dict[str, Any] = {}
     opprocs = 3
     expected = (0, 'Open output count: 3', [('writing', 3, None, None)])
     assert_procs(check_manager, opprocs, params, expected)

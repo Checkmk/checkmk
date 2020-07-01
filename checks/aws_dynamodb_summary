@@ -7,7 +7,7 @@
 
 def check_aws_dynamodb_summary(item, params, parsed):
 
-    tables_by_region = {}  # type: Dict[str, Dict]
+    tables_by_region: Dict[str, Dict] = {}
 
     for table in parsed:
         tables_by_region.setdefault(AWSRegions[table['Region']], {})[table['TableName']] = table

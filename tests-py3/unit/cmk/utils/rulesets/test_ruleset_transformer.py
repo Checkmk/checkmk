@@ -16,10 +16,10 @@ from cmk.utils.exceptions import MKGeneralException
 
 
 def test_transform_tuple_ruleset():
-    ruleset = [
+    ruleset: Union[List[Tuple[str, List[str]]], List[Dict[str, List[str]]]] = [
         ("VAL1", ["HOSTLIST1"]),
         ("VAL2", ["HOSTLIST2"]),
-    ]  # type: Union[List[Tuple[str, List[str]]], List[Dict[str, List[str]]]]
+    ]
 
     ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
         ruleset, is_binary=False, is_service=False)

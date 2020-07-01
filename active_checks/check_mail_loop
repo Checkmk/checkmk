@@ -363,7 +363,7 @@ def close_mailbox():
 
 
 # TODO: Nuke these global variables, just pass them around...
-g_M = None  # type: Union[None, poplib.POP3, imaplib.IMAP4]
+g_M: Union[None, poplib.POP3, imaplib.IMAP4] = None
 opt_debug = False
 fetch_proto = 'IMAP'
 

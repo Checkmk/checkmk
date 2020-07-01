@@ -101,7 +101,7 @@ def test_get_rate(pre_state, time, value, raise_of, expected):
     ]),
 ])
 def test_get_average(backlog_min, timeseries):
-    store = {}  # type: Dict[str, Tuple[float, float, float]]
+    store: Dict[str, Tuple[float, float, float]] = {}
     for idx, (this_time, this_value, expected_average) in enumerate(timeseries):
         avg = get_average(
             store,

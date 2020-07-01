@@ -33,8 +33,7 @@ MiB = KiB * KiB
 Memory = collections.namedtuple('Memory', ['private', 'pss', 'rss'])
 
 
-def _get_python_stdlib():
-    # type: () -> Iterator[str]
+def _get_python_stdlib() -> Iterator[str]:
     std_lib = sysconfig.get_python_lib(standard_lib=True)
     # noinspection PyTypeChecker
     for top, _dirs, files in os.walk(std_lib):
@@ -99,7 +98,7 @@ class JSONFormatter:
         self.open = args.open
         self.metric = {"name": "root"}
         # TODO: The stack is an almost untypeable mess...
-        self.stack = [self.metric]  # type: List[Any]
+        self.stack: List[Any] = [self.metric]
 
     def push(self, from_, module):
         node = {"name": module}
@@ -173,7 +172,7 @@ class GraphVizFormatter:
 
     def finish(self):
         filename = "import-graph.%d.dot" % (os.getpid(),)
-        args = []  # type: List[str]
+        args: List[str] = []
         with open(filename, "w") as dot:
             dot.write("digraph G {\n")
             dot.write("   overlap = false;\n")
@@ -235,7 +234,7 @@ FORMATTERS = {
     'console': ConsoleFormatter,
 }
 
-_FORMATTER = None  # type: Optional[Formatter]
+_FORMATTER: Optional[Formatter] = None
 
 
 class Formatter:
@@ -264,8 +263,7 @@ class Formatter:
             formatter.setsize(_size)
 
 
-def _get_mem(pid):
-    # type: (int) -> Memory
+def _get_mem(pid: int) -> Memory:
     private = 0
     pss = 0
     rss = 0
@@ -303,8 +301,7 @@ def _get_mem(pid):
     return Memory(private=private, pss=pss, rss=rss)
 
 
-def _get_delta(mem1, mem2):
-    # type: (Memory, Memory) -> Memory
+def _get_delta(mem1: Memory, mem2: Memory) -> Memory:
     return Memory(
         private=mem2.private - mem1.private,
         pss=mem2.pss - mem1.pss,
@@ -353,16 +350,18 @@ __imp = __import__
 stack = ['__main__']
 
 
-def _back(frame):
-    # type: (Optional[FrameType]) -> FrameType
+def _back(frame: Optional[FrameType]) -> FrameType:
     assert frame is not None
     b = frame.f_back
     assert b is not None
     return b
 
 
-def _importer(name, _globals=None, _locals=None, fromlist=None, level=-1):
-    # type: (str, Optional[dict], Optional[dict], Optional[list], int) -> Any
+def _importer(name: str,
+              _globals: Optional[dict] = None,
+              _locals: Optional[dict] = None,
+              fromlist: Optional[list] = None,
+              level: int = -1) -> Any:
     # Wrap __import__ and do some shenanigans to actually track what's happening.
     if fromlist is None:
         fromlist = []
@@ -480,8 +479,7 @@ def _spawn(*args):
                      start_new_session=True)
 
 
-def remove_zeros(param):
-    # type: (dict) -> dict
+def remove_zeros(param: dict) -> dict:
     if 'children' not in param:
         return param
 
@@ -499,10 +497,10 @@ def remove_zeros(param):
     return param
 
 
-def remove_importlib(val):
-    # type: (Union[Dict[Any, Any], List[Any], str]) -> Union[Dict[Any, Any], List[Any], str]
+def remove_importlib(
+        val: Union[Dict[Any, Any], List[Any], str]) -> Union[Dict[Any, Any], List[Any], str]:
     if isinstance(val, list):
-        ret = []  # type: List
+        ret: List = []
         for entry in val:
             if entry['name'] == 'importlib':
                 ret.extend(entry.get('children', []))
@@ -516,8 +514,7 @@ def remove_importlib(val):
     return val
 
 
-def sum_values(node):
-    # type: (dict) -> None
+def sum_values(node: dict) -> None:
     """
     >>> node = {'value': 0, 'children': [
     ...    {'value': 1}, {'value': -2, 'children': [{'value': 5}]}
@@ -535,8 +532,7 @@ def sum_values(node):
         child.get('value', 0) + child.get('child_value', 0) for child in node.get('children', []))
 
 
-def adjust_values(node):
-    # type: (dict) -> None
+def adjust_values(node: dict) -> None:
     """
     >>> node = {
     ...     u'child_value': 4,

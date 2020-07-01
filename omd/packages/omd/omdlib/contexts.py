@@ -40,87 +40,72 @@ from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions
 
 class AbstractSiteContext(metaclass=abc.ABCMeta):
     """Object wrapping site specific information"""
-    def __init__(self, sitename):
-        # type: (Optional[str]) -> None
+    def __init__(self, sitename: Optional[str]) -> None:
         super(AbstractSiteContext, self).__init__()
         self._sitename = sitename
         self._config_loaded = False
-        self._config = {}  # type: Config
+        self._config: Config = {}
 
     @property
-    def name(self):
-        # type: () -> Optional[str]
+    def name(self) -> Optional[str]:
         return self._sitename
 
     @abc.abstractproperty
-    def version(self):
-        # type: () -> Optional[str]
+    def version(self) -> Optional[str]:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def dir(self):
-        # type: () -> str
+    def dir(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def tmp_dir(self):
-        # type: () -> str
+    def tmp_dir(self) -> str:
         raise NotImplementedError()
 
     @property
-    def version_meta_dir(self):
-        # type: () -> str
+    def version_meta_dir(self) -> str:
         return "%s/.version_meta" % self.dir
 
     @property
-    def conf(self):
-        # type: () -> Config
+    def conf(self) -> Config:
         """{ "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)"""
         if not self._config_loaded:
             raise Exception("Config not loaded yet")
         return self._config
 
     @abc.abstractmethod
-    def load_config(self):
-        # type: () -> None
+    def load_config(self) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def exists(self):
-        # type: () -> bool
+    def exists(self) -> bool:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def is_empty(self):
-        # type: () -> bool
+    def is_empty(self) -> bool:
         raise NotImplementedError()
 
     @staticmethod
     @abc.abstractmethod
-    def is_site_context():
-        # type: () -> bool
+    def is_site_context() -> bool:
         raise NotImplementedError()
 
 
 class SiteContext(AbstractSiteContext):
     @property
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         return cast(str, self._sitename)
 
     @property
-    def dir(self):
-        # type: () -> str
+    def dir(self) -> str:
         return "/omd/sites/" + cast(str, self._sitename)
 
     @property
-    def tmp_dir(self):
-        # type: () -> str
+    def tmp_dir(self) -> str:
         return "%s/tmp" % self.dir
 
     @property
-    def version(self):
-        # type: () -> Optional[str]
+    def version(self) -> Optional[str]:
         """The version of a site is solely determined by the link ~SITE/version
         In case the version of a site can not be determined, it reports None."""
         version_link = self.dir + "/version"
@@ -130,16 +115,14 @@ class SiteContext(AbstractSiteContext):
             return None
 
     @property
-    def replacements(self):
-        # type: () -> Replacements
+    def replacements(self) -> Replacements:
         """Dictionary of key/value for replacing macros in skel files"""
         return {
             "###SITE###": self.name,
             "###ROOT###": self.dir,
         }
 
-    def load_config(self):
-        # type: () -> None
+    def load_config(self) -> None:
         """Load all variables from omd/sites.conf. These variables always begin with
         CONFIG_. The reason is that this file can be sources with the shell.
 
@@ -159,10 +142,9 @@ class SiteContext(AbstractSiteContext):
 
         self._config_loaded = True
 
-    def read_site_config(self):
-        # type: () -> Config
+    def read_site_config(self) -> Config:
         """Read and parse the file site.conf of a site into a dictionary and returns it"""
-        config = {}  # type: Config
+        config: Config = {}
         confpath = "%s/etc/omd/site.conf" % (self.dir)
         if not os.path.exists(confpath):
             return {}
@@ -179,8 +161,7 @@ class SiteContext(AbstractSiteContext):
 
         return config
 
-    def exists(self):
-        # type: () -> bool
+    def exists(self) -> bool:
         # In dockerized environments the tmpfs may be managed by docker (when
         # using the --tmpfs option).  In this case the site directory is
         # created as parent of the tmp directory to mount the tmpfs during
@@ -195,37 +176,31 @@ class SiteContext(AbstractSiteContext):
 
         return os.path.exists(self.dir)
 
-    def is_empty(self):
-        # type: () -> bool
+    def is_empty(self) -> bool:
         for entry in os.listdir(self.dir):
             if entry not in ['.', '..']:
                 return False
         return True
 
-    def is_autostart(self):
-        # type: () -> bool
+    def is_autostart(self) -> bool:
         """Determines whether a specific site is set to autostart."""
         return self.conf.get('AUTOSTART', 'on') == 'on'
 
-    def is_disabled(self):
-        # type: () -> bool
+    def is_disabled(self) -> bool:
         """Whether or not this site has been disabled with 'omd disable'"""
         apache_conf = "/omd/apache/%s.conf" % self.name
         return not os.path.exists(apache_conf)
 
-    def is_stopped(self):
-        # type: () -> bool
+    def is_stopped(self) -> bool:
         """Check if site is completely stopped"""
         return check_status(self, display=False) == 1
 
     @staticmethod
-    def is_site_context():
-        # type: () -> bool
+    def is_site_context() -> bool:
         return True
 
     @property
-    def skel_permissions(self):
-        # type: () -> Permissions
+    def skel_permissions(self) -> Permissions:
         """Returns the skeleton permissions. Load either from version meta directory
         or from the original version skel.permissions file"""
         if not self._has_version_meta_data():
@@ -236,8 +211,7 @@ class SiteContext(AbstractSiteContext):
         return load_skel_permissions_from(self.version_meta_dir + "/skel.permissions")
 
     @property
-    def version_skel_dir(self):
-        # type: () -> str
+    def version_skel_dir(self) -> str:
         """Returns the current version skel directory. In case the meta data is
         available and fits the sites version use that one instead of the version
         skel directory."""
@@ -245,8 +219,7 @@ class SiteContext(AbstractSiteContext):
             return "/omd/versions/%s/skel" % self.version
         return self.version_meta_dir + "/skel"
 
-    def _has_version_meta_data(self):
-        # type: () -> bool
+    def _has_version_meta_data(self) -> bool:
         if not os.path.exists(self.version_meta_dir):
             return False
 
@@ -255,45 +228,36 @@ class SiteContext(AbstractSiteContext):
 
         return True
 
-    def _version_meta_data_version(self):
-        # type: () -> str
+    def _version_meta_data_version(self) -> str:
         with open(self.version_meta_dir + "/version") as f:
             return f.read().strip()
 
 
 class RootContext(AbstractSiteContext):
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(RootContext, self).__init__(sitename=None)
 
     @property
-    def dir(self):
-        # type: () -> str
+    def dir(self) -> str:
         return "/"
 
     @property
-    def tmp_dir(self):
-        # type: () -> str
+    def tmp_dir(self) -> str:
         return "/tmp"
 
     @property
-    def version(self):
-        # type: () -> str
+    def version(self) -> str:
         return omdlib.__version__
 
-    def load_config(self):
-        # type: () -> None
+    def load_config(self) -> None:
         pass
 
-    def exists(self):
-        # type: () -> bool
+    def exists(self) -> bool:
         return False
 
-    def is_empty(self):
-        # type: () -> bool
+    def is_empty(self) -> bool:
         return False
 
     @staticmethod
-    def is_site_context():
-        # type: () -> bool
+    def is_site_context() -> bool:
         return False

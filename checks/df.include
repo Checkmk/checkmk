@@ -108,7 +108,7 @@ def transform_filesystem_groups(groups):
 
 
 def df_inventory(mplist):
-    group_patterns = {}  # type: Dict[str, Tuple[List[str]]]
+    group_patterns: Dict[str, Tuple[List[str]]] = {}
     for groups in host_extra_conf(host_name(), filesystem_groups):
         for group in transform_filesystem_groups(groups):
             grouping_entry = group_patterns.setdefault(group['group_name'], ([], []))

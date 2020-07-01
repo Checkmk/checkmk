@@ -309,16 +309,15 @@ TempParamType = Union[None, TwoLevelsType, FourLevelsType, TempParamDict]
 
 
 def check_temperature(
-        reading,  # type: Number
-        params,  # type: TempParamType
-        unique_name,  # type: Optional[AnyStr]
-        dev_unit="c",  # type: AnyStr
-        dev_levels=None,  # type: Optional[TwoLevelsType]
-        dev_levels_lower=None,  # type: Optional[TwoLevelsType]
-        dev_status=None,  # type: Optional[StatusType]
-        dev_status_name=None,  # type: AnyStr
-):
-    # type: (...) -> CheckType
+    reading: Number,
+    params: TempParamType,
+    unique_name: Optional[AnyStr],
+    dev_unit: AnyStr = "c",
+    dev_levels: Optional[TwoLevelsType] = None,
+    dev_levels_lower: Optional[TwoLevelsType] = None,
+    dev_status: Optional[StatusType] = None,
+    dev_status_name: AnyStr = None,
+) -> CheckType:
     """Check temperature levels and trends.
 
     The function will check the supplied data and supplied user configuration against the
@@ -487,8 +486,7 @@ def check_temperature(
     return status, infotext, perfdata
 
 
-def _migrate_params(params):
-    # type: (TempParamType) -> TempParamDict
+def _migrate_params(params: TempParamType) -> TempParamDict:
     """Migrate legacy params values to the current one.
 
     Args:

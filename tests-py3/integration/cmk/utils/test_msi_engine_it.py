@@ -56,8 +56,7 @@ def test_export_msi_file(site, tmp_path):
             shutil.rmtree(str(out_dir))
 
 
-def test_update_package_code(tmp_path):
-    # type: (Path) -> None
+def test_update_package_code(tmp_path: Path) -> None:
     # we use in this test msi file from the tst_files, not from site
     tgt = tmp_path / "check_mk_agent.msi"
     try:
@@ -105,8 +104,7 @@ def test_update_package_code(tmp_path):
             tgt.unlink()
 
 
-def test_copy_or_create(tmp_path):
-    # type: (Path) -> None
+def test_copy_or_create(tmp_path: Path) -> None:
     src_file = tmp_path / "temp.x.in"
     dst_file = tmp_path / "temp.x.out"
 
@@ -132,8 +130,7 @@ def test_generate_product_versions():
         assert a == result
 
 
-def test_make_msi_copy(tmp_path):
-    # type: (Path) -> None
+def test_make_msi_copy(tmp_path: Path) -> None:
     src_file = Path(tmp_path, "temp.in")
     with src_file.open('w') as s:
         s.write("+++")

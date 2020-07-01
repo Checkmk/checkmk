@@ -23,8 +23,7 @@ cmk.base.utils.register_sigint_handler()
 
 
 class ArgumentParser(argparse.ArgumentParser):
-    def error(self, message):
-        # type: (str) -> NoReturn
+    def error(self, message: str) -> NoReturn:
         """fetcher output is always protocol compatible, even when arguments are bad"""
 
         sys.stdout.write(
@@ -32,8 +31,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self.exit(21)
 
 
-def parse_arguments():
-    # type: () -> argparse.Namespace
+def parse_arguments() -> argparse.Namespace:
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -48,8 +46,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def main():
-    # type: () -> int
+def main() -> int:
 
     try:
         args = parse_arguments()

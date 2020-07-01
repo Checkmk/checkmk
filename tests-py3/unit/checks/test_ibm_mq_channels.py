@@ -153,8 +153,8 @@ def test_check(check_manager):
     }
 
     actual = list(check.run_check('QM1:CHAN1', params, parsed))
-    expected = [(1, u'Status: RETRYING, Type: SDR, Xmitq: MY.XMIT.Q', [])
-               ]  # type: List[Tuple[int, str, List[Any]]]
+    expected: List[Tuple[int, str,
+                         List[Any]]] = [(1, u'Status: RETRYING, Type: SDR, Xmitq: MY.XMIT.Q', [])]
     assert actual == expected
 
     actual = list(check.run_check('QM1:CHAN2', params, parsed))
@@ -195,7 +195,7 @@ def test_no_xmit_queue_defined(check_manager):
         },
     }
     actual = list(check.run_check('MQSWISSFPMP1:LXFPMS.TO.RESA', params, parsed))
-    expected = [(0, u'Status: INACTIVE, Type: SDR', [])]  # type: List[Tuple[int, str, List[Any]]]
+    expected: List[Tuple[int, str, List[Any]]] = [(0, u'Status: INACTIVE, Type: SDR', [])]
     assert actual == expected
 
 

@@ -70,8 +70,7 @@ grep_colors = [
 ]
 
 
-def parse_arguments(argv):
-    # type: (List[str]) -> argparse.Namespace
+def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
@@ -223,8 +222,7 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def get_tty_size():
-    # type: () -> Tuple[int, int]
+def get_tty_size() -> Tuple[int, int]:
     try:
         ws = bytearray(8)
         fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
@@ -236,8 +234,7 @@ def get_tty_size():
     return (24, 99999)
 
 
-def bail_out(text):
-    # type: (str) -> NoReturn
+def bail_out(text: str) -> NoReturn:
     sys.stderr.write(text + "\n")
     sys.exit(1)
 
@@ -245,8 +242,7 @@ def bail_out(text):
 g_base_dir = ""
 
 
-def goto_werksdir():
-    # type: () -> None
+def goto_werksdir() -> None:
     global g_base_dir
     g_base_dir = os.path.abspath('.')
     while not os.path.exists(".werks") and os.path.abspath('.') != '/':
@@ -259,18 +255,16 @@ def goto_werksdir():
         sys.exit(1)
 
 
-g_last_werk = None  # type: Optional[int]
+g_last_werk: Optional[int] = None
 
 
-def get_last_werk():
-    # type: () -> int
+def get_last_werk() -> int:
     if g_last_werk is None:
         bail_out("No last werk known. Please specify id.")
     return g_last_werk
 
 
-def load_config():
-    # type: () -> None
+def load_config() -> None:
     global g_last_werk
     with open("config") as f_config:
         exec(f_config.read(), globals(), globals())
@@ -281,11 +275,10 @@ def load_config():
         g_last_werk = None
 
 
-g_werks = {}  # type: Dict[int, Werk]
+g_werks: Dict[int, Werk] = {}
 
 
-def load_werks():
-    # type: () -> None
+def load_werks() -> None:
     global g_werks
     g_werks = {}
     check_modified()
@@ -300,16 +293,14 @@ def load_werks():
             continue
 
 
-def save_last_werkid(wid):
-    # type: (int) -> None
+def save_last_werkid(wid: int) -> None:
     try:
         open(".last", "w").write("%d\n" % int(wid))
     except Exception:
         pass
 
 
-def load_current_version():
-    # type: () -> str
+def load_current_version() -> str:
     for line in open("../defines.make"):
         if line.startswith("VERSION"):
             version = line.split("=", 1)[1].strip()
@@ -318,11 +309,10 @@ def load_current_version():
     bail_out("Failed to read VERSION from defines.make")
 
 
-g_modified = set()  # type: Set[int]
+g_modified: Set[int] = set()
 
 
-def check_modified():
-    # type: () -> None
+def check_modified() -> None:
     global g_modified
     g_modified = set([])
     for line in os.popen("git status --porcelain"):
@@ -334,19 +324,16 @@ def check_modified():
                 pass
 
 
-def werk_is_modified(werkid):
-    # type: (int) -> bool
+def werk_is_modified(werkid: int) -> bool:
     return werkid in g_modified
 
 
-def werk_exists(werkid):
-    # type: (int) -> bool
+def werk_exists(werkid: int) -> bool:
     return os.path.exists(str(werkid))
 
 
-def load_werk(werkid):
-    # type: (int) -> Werk
-    werk = {
+def load_werk(werkid: int) -> Werk:
+    werk: Werk = {
         "id": str(werkid),
         "state": "unknown",
         "title": "unknown",
@@ -354,7 +341,7 @@ def load_werk(werkid):
         "compatible": "compat",
         "edition": "cre",
         "knowledge": "undoc",
-    }  # type: Werk
+    }
 
     f = open(str(werkid))
     for line in f:
@@ -369,8 +356,7 @@ def load_werk(werkid):
     return werk
 
 
-def save_werk(werk):
-    # type: (Werk) -> None
+def save_werk(werk: Werk) -> None:
     f = open(werk["id"], "w")
     f.write("Title: %s\n" % werk["title"])
     for key, val in sorted(werk.items()):
@@ -383,21 +369,18 @@ def save_werk(werk):
     save_last_werkid(int(werk["id"]))
 
 
-def change_werk_version(werk_id, new_version):
-    # type: (int, str) -> None
+def change_werk_version(werk_id: int, new_version: str) -> None:
     werk = g_werks[werk_id]
     werk["version"] = new_version
     save_werk(werk)
     git_add(werk)
 
 
-def git_add(werk):
-    # type: (Werk) -> None
+def git_add(werk: Werk) -> None:
     os.system("git add %s" % werk["id"])  # nosec
 
 
-def git_commit(werk, custom_files):
-    # type: (Werk, List[str]) -> None
+def git_commit(werk: Werk, custom_files: List[str]) -> None:
     title = werk["title"]
     for classid, _classname, prefix in classes:
         if werk["class"] == classid:
@@ -429,27 +412,23 @@ def git_commit(werk, custom_files):
         os.system(cmd)  # nosec
 
 
-def git_top_level():
-    # type: () -> str
+def git_top_level() -> str:
     info = subprocess.Popen(["git", "rev-parse", "--show-toplevel"], stdout=subprocess.PIPE)
     return str(info.communicate()[0].split()[0])
 
 
-def something_in_git_index():
-    # type: () -> bool
+def something_in_git_index() -> bool:
     for line in os.popen("git status --porcelain"):
         if line[0] == 'M':
             return True
     return False
 
 
-def quote_shell_string(s):
-    # type: (str) -> str
+def quote_shell_string(s: str) -> str:
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
-def next_werk_id():
-    # type: () -> int
+def next_werk_id() -> int:
     my_werk_ids = get_werk_ids()
     if not my_werk_ids:
         bail_out(
@@ -458,15 +437,13 @@ def next_werk_id():
     return my_werk_ids[0]
 
 
-def add_comment(werk, title, comment):
-    # type: (Werk, str, str) -> None
+def add_comment(werk: Werk, title: str, comment: str) -> None:
     werk["description"] += """
 %s: %s
 %s""" % (time.strftime("%F %T"), title, comment)
 
 
-def num_color(n, colors, inverse):
-    # type: (int, List[int], bool) -> str
+def num_color(n: int, colors: List[int], inverse: bool) -> str:
     if inverse:
         b = 40
     else:
@@ -476,8 +453,7 @@ def num_color(n, colors, inverse):
     return tty_colors([b + c, 1])
 
 
-def list_werk(werk):
-    # type: (Werk) -> None
+def list_werk(werk: Werk) -> None:
     if werk_is_modified(int(werk["id"])):
         bold = tty_bold + tty_cyan + "(*) "
     else:
@@ -492,13 +468,11 @@ def list_werk(werk):
          werk["level"], tty_normal, werk["version"], bold, title, tty_normal))
 
 
-def format_werk_id(werk_id):
-    # type: (Union[int, str]) -> str
+def format_werk_id(werk_id: Union[int, str]) -> str:
     return tty_bgwhite + tty_blue + ("#%05d" % int(werk_id)) + tty_normal
 
 
-def format_knw_state(knw_state):
-    # type: (str) -> str
+def format_knw_state(knw_state: str) -> str:
     return {
         "undoc": tty_bgblue + tty_white + tty_bold + "?D?" + tty_normal,
         "todoc": tty_bgred + tty_white + tty_bold + "!D!" + tty_normal,
@@ -506,24 +480,21 @@ def format_knw_state(knw_state):
     }.get(knw_state, knw_state)
 
 
-def colored_class(classname, digits):
-    # type: (str, int) -> str
+def colored_class(classname: str, digits: int) -> str:
     if classname == "fix":
         return tty_bold + tty_red + ("%-" + str(digits) + "s") % classname + tty_normal
     return ("%-" + str(digits) + "s") % classname
 
 
-def show_werk(werk):
-    # type: (Werk) -> None
+def show_werk(werk: Werk) -> None:
     list_werk(werk)
     sys.stdout.write("\n%s\n" % werk["description"])
 
 
-def main_list(args, fmt):
-    # type: (argparse.Namespace, str) -> None
+def main_list(args: argparse.Namespace, fmt: str) -> None:
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
-    filters = {}  # type: Dict[str, List]
+    filters: Dict[str, List] = {}
 
     for a in args.filter:
 
@@ -573,8 +544,7 @@ def main_list(args, fmt):
 
 # CSV Table has the following columns:
 # Component;ID;Title;Class;Effort
-def output_csv(werks):
-    # type: (List[Werk]) -> None
+def output_csv(werks: List[Werk]) -> None:
     def line(*l):
         sys.stdout.write('"' + '";"'.join(map(str, l)) + '"\n')
 
@@ -602,8 +572,7 @@ def output_csv(werks):
                 line("", werk["description"].replace("\n", " ").replace('"', "'"), "", "")
 
 
-def werk_class(werk):
-    # type: (Werk) -> str
+def werk_class(werk: Werk) -> str:
     cl = werk["class"]
     for entry in classes:
         # typing: why would this be? LH: Tuple[str, str, str], RH: str
@@ -615,13 +584,11 @@ def werk_class(werk):
     return cl
 
 
-def werk_effort(werk):
-    # type: (Werk) -> int
+def werk_effort(werk: Werk) -> int:
     return int(werk.get("effort", "0"))
 
 
-def main_show(args):
-    # type: (argparse.Namespace) -> None
+def main_show(args: argparse.Namespace) -> None:
     if 'all' in args.ids:
         ids = [wid for (wid, _werk) in g_werks.items()]
     else:
@@ -638,8 +605,7 @@ def main_show(args):
     save_last_werkid(ids[-1])
 
 
-def get_input(what, default=""):
-    # type: (str, str) -> str
+def get_input(what: str, default: str = "") -> str:
     sys.stdout.write("%s: " % what)
     sys.stdout.flush()
     value = sys.stdin.readline().strip()
@@ -660,8 +626,7 @@ def get_long_input(what):
     return usertext
 
 
-def getch():
-    # type: () -> str
+def getch() -> str:
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
@@ -674,8 +639,9 @@ def getch():
     return ch
 
 
-def input_choice(what, choices):
-    # type: (str, Union[List[str], List[Tuple[str, str]], List[Tuple[str, str, str]]]) -> str
+def input_choice(
+        what: str, choices: Union[List[str], List[Tuple[str, str]], List[Tuple[str, str,
+                                                                               str]]]) -> str:
     next_index = 0
     ctc = {}
     texts = []
@@ -710,13 +676,11 @@ def input_choice(what, choices):
         sys.stdout.write("\n")
 
 
-def get_edition_components(edition):
-    # type: (str) -> List[Tuple[str, str]]
+def get_edition_components(edition: str) -> List[Tuple[str, str]]:
     return components + edition_components.get(edition, [])
 
 
-def all_components():
-    # type: () -> List[Tuple[str, str]]
+def all_components() -> List[Tuple[str, str]]:
     c = components
     for ed_components in edition_components.values():
         c += ed_components
@@ -737,11 +701,10 @@ werk_notes = """
 """
 
 
-def main_new(args):
-    # type: (argparse.Namespace) -> None
+def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(tty_green + werk_notes + tty_normal)
 
-    werk = {}  # type: Werk
+    werk: Werk = {}
     werk["id"] = str(next_werk_id())
     werk["date"] = str(int(time.time()))
     werk["version"] = g_current_version
@@ -768,8 +731,7 @@ def main_new(args):
     sys.stdout.write("Werk %s saved.\n" % format_werk_id(werk["id"]))
 
 
-def get_werk_arg(arg):
-    # type: (Optional[Union[str, int]]) -> int
+def get_werk_arg(arg: Optional[Union[str, int]]) -> int:
     wid = get_last_werk() if arg is None else int(arg)
 
     werk = g_werks.get(wid)
@@ -779,20 +741,17 @@ def get_werk_arg(arg):
     return wid
 
 
-def main_blame(args):
-    # type: (argparse.Namespace) -> None
+def main_blame(args: argparse.Namespace) -> None:
     wid = get_werk_arg(args.id)
     os.system("git blame %d" % wid)  # nosec
 
 
-def main_url(args):
-    # type: (argparse.Namespace) -> None
+def main_url(args: argparse.Namespace) -> None:
     wid = get_werk_arg(args.id)
     sys.stdout.write(online_url % wid + "\n")
 
 
-def main_delete(args):
-    # type: (argparse.Namespace) -> None
+def main_delete(args: argparse.Namespace) -> None:
     werks = args.ids or [get_last_werk()]
 
     for werk_id in werks:
@@ -809,8 +768,7 @@ def main_delete(args):
                              format_werk_id(werk_id))
 
 
-def grep(line, kw, n):
-    # type: (str, str, int) -> Optional[str]
+def grep(line: str, kw: str, n: int) -> Optional[str]:
     lc = kw.lower()
     i = line.lower().find(lc)
     if i == -1:
@@ -819,8 +777,7 @@ def grep(line, kw, n):
     return line[0:i] + col + line[i:i + len(kw)] + tty_normal + line[i + len(kw):]
 
 
-def main_grep(args):
-    # type: (argparse.Namespace) -> None
+def main_grep(args: argparse.Namespace) -> None:
     for werk in g_werks.values():
         one_kw_didnt_match = False
         title = werk["title"]
@@ -859,8 +816,7 @@ def main_grep(args):
                     sys.stdout.write("  %s\n" % lines[x])
 
 
-def main_knowledge(args):
-    # type: (argparse.Namespace) -> None
+def main_knowledge(args: argparse.Namespace) -> None:
     if not werk_exists(args.id):
         bail_out("No such werk.")
     save_last_werkid(args.id)
@@ -870,15 +826,13 @@ def main_knowledge(args):
     save_werk(werk)
 
 
-def main_edit(args):
-    # type: (argparse.Namespace) -> None
+def main_edit(args: argparse.Namespace) -> None:
     werkid = args.id or get_last_werk()
     edit_werk(werkid, None, commit=False)  # custom files are pointless if commit=False
     save_last_werkid(werkid)
 
 
-def edit_werk(werkid, custom_files=None, commit=True):
-    # type: (int, Optional[List[str]], bool) -> None
+def edit_werk(werkid: int, custom_files: Optional[List[str]] = None, commit: bool = True) -> None:
     if custom_files is None:
         custom_files = []
     if not os.path.exists(str(werkid)):
@@ -900,14 +854,12 @@ def edit_werk(werkid, custom_files=None, commit=True):
             git_commit(werk, custom_files)
 
 
-def main_pick(args):
-    # type: (argparse.Namespace) -> None
+def main_pick(args: argparse.Namespace) -> None:
     for commit_id in args.commit:
         werk_cherry_pick(commit_id, args.no_commit)
 
 
-def werk_cherry_pick(commit_id, no_commit):
-    # type: (str, bool) -> None
+def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
     # Cherry-pick the commit in question from the other branch
     os.system("git cherry-pick --no-commit '%s'" % commit_id)  # nosec
 
@@ -934,33 +886,28 @@ def werk_cherry_pick(commit_id, no_commit):
         os.system("git status")
 
 
-def get_werk_ids():
-    # type: () -> List[int]
+def get_werk_ids() -> List[int]:
     try:
         return eval(open('.my_ids', 'r').read())
     except Exception:
         return []
 
 
-def invalidate_my_werkid(wid):
-    # type: (int) -> None
+def invalidate_my_werkid(wid: int) -> None:
     ids = get_werk_ids()
     ids.remove(wid)
     store_werk_ids(ids)
 
 
-def store_werk_ids(l):
-    # type: (List[int]) -> None
+def store_werk_ids(l: List[int]) -> None:
     open('.my_ids', 'w').write(repr(l) + "\n")
 
 
-def current_branch():
-    # type: () -> str
+def current_branch() -> str:
     return [l for l in os.popen("git branch") if l.startswith("*")][0].split()[-1]
 
 
-def main_fetch_ids(args):
-    # type: (argparse.Namespace) -> None
+def main_fetch_ids(args: argparse.Namespace) -> None:
     if args.count is None:
         sys.stdout.write('You have %d reserved IDs.\n' % (len(get_werk_ids())))
         sys.exit(0)
@@ -1017,16 +964,16 @@ def main_fetch_ids(args):
 #
 
 # default config
-editions = []  # type: List[Tuple[str, str]]
-components = []  # type: List[Tuple[str, str]]
-edition_components = {}  # type: Dict[str, List[Tuple[str, str]]]
-classes = []  # type: List[Tuple[str, str, str]]
-levels = []  # type: List[Tuple[str, str]]
-compatible = []  # type: List[Tuple[str, str]]
-knowledge = []  # type: List[Tuple[str, str]]
+editions: List[Tuple[str, str]] = []
+components: List[Tuple[str, str]] = []
+edition_components: Dict[str, List[Tuple[str, str]]] = {}
+classes: List[Tuple[str, str, str]] = []
+levels: List[Tuple[str, str]] = []
+compatible: List[Tuple[str, str]] = []
+knowledge: List[Tuple[str, str]] = []
 online_url = ""
 
-versions = set([])  # type: Set[str]
+versions: Set[str] = set([])
 goto_werksdir()
 load_config()
 load_werks()

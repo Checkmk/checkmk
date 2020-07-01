@@ -15,8 +15,7 @@ from cmk.utils.exceptions import MKTerminate
 # TODO: Try to find a better place for them.
 
 
-def worst_service_state(*states):
-    # type: (int) -> int
+def worst_service_state(*states: int) -> int:
     """Aggregates several monitoring states to the worst state"""
     if 2 in states:
         return 2
@@ -37,11 +36,9 @@ def worst_service_state(*states):
 
 
 # register SIGINT handler for consistent CTRL+C handling
-def _handle_keepalive_interrupt(signum, frame):
-    # type: (int, Optional[FrameType]) -> NoReturn
+def _handle_keepalive_interrupt(signum: int, frame: Optional[FrameType]) -> NoReturn:
     raise MKTerminate()
 
 
-def register_sigint_handler():
-    # type: () -> None
+def register_sigint_handler() -> None:
     signal.signal(signal.SIGINT, _handle_keepalive_interrupt)

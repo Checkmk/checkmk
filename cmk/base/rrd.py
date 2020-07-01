@@ -17,45 +17,40 @@ from cmk.utils.type_defs import MetricName, HostName
 RRDServiceName = str
 
 
-def rrd_pnp_host_dir(hostname):
-    # type: (HostName) -> str
+def rrd_pnp_host_dir(hostname: HostName) -> str:
     # We need /opt here because of bug in rrdcached
     return "/opt" + cmk.utils.paths.omd_root + "/var/pnp4nagios/perfdata/" + cmk.utils.pnp_cleanup(
         hostname)
 
 
-def xml_path_for(hostname, servicedesc="_HOST_"):
-    # type: (HostName, RRDServiceName) -> str
+def xml_path_for(hostname: HostName, servicedesc: RRDServiceName = "_HOST_") -> str:
     host_dir = rrd_pnp_host_dir(hostname)
     return host_dir + "/" + cmk.utils.pnp_cleanup(servicedesc) + ".xml"
 
 
-def text_attr(node, attr_name):
-    # type: (ET.Element, str) -> Optional[str]
+def text_attr(node: ET.Element, attr_name: str) -> Optional[str]:
     attr = node.find(attr_name)
     if attr is None:
         raise AttributeError()
     return attr.text
 
 
-def set_text_attr(node, attr_name, value):
-    # type: (ET.Element, str, Optional[str]) -> None
+def set_text_attr(node: ET.Element, attr_name: str, value: Optional[str]) -> None:
     attr = node.find(attr_name)
     if attr is None:
         raise AttributeError()
     attr.text = value
 
 
-def write_xml(element, filepath):
-    # type: (ET.Element, str) -> None
+def write_xml(element: ET.Element, filepath: str) -> None:
     with Path(filepath).open('w', encoding="utf-8") as fid:
         fid.write(u'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
         # TODO: Can be set to encoding="unicode" with Python3
         fid.write(ensure_str(ET.tostring(element, method='html', encoding='UTF-8')) + u'\n')
 
 
-def update_metric_pnp_xml_info_file(perfvar, newvar, filepath):
-    # type: (MetricName, MetricName, str) -> Tuple[str, str]
+def update_metric_pnp_xml_info_file(perfvar: MetricName, newvar: MetricName,
+                                    filepath: str) -> Tuple[str, str]:
     """Update xml file related to the service described in filepath
 
     - Change DATASOURCE: NAME & LABEL to newvar

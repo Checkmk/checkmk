@@ -30,13 +30,13 @@ CrashReportStore = crash_reporting.CrashReportStore
 @crash_reporting.crash_report_registry.register
 class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
-    def type(cls):
-        # type: () -> str
+    def type(cls) -> str:
         return "base"
 
     @classmethod
-    def from_exception(cls, details=None, type_specific_attributes=None):
-        # type: (Dict, Dict) -> crash_reporting.ABCCrashReport
+    def from_exception(cls,
+                       details: Dict = None,
+                       type_specific_attributes: Dict = None) -> crash_reporting.ABCCrashReport:
         return super(CMKBaseCrashReport, cls).from_exception(details={
             "argv": sys.argv,
             "env": dict(os.environ),
@@ -78,8 +78,7 @@ def create_check_crash_dump(
 @crash_reporting.crash_report_registry.register
 class CheckCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
-    def type(cls):
-        # type: () -> str
+    def type(cls) -> str:
         return "check"
 
     @classmethod
@@ -115,14 +114,15 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
             },
         )
 
-    def __init__(self, crash_info, snmp_info=None, agent_output=None):
-        # type: (Dict, Optional[bytes], Optional[bytes]) -> None
+    def __init__(self,
+                 crash_info: Dict,
+                 snmp_info: Optional[bytes] = None,
+                 agent_output: Optional[bytes] = None) -> None:
         super(CheckCrashReport, self).__init__(crash_info)
         self.snmp_info = snmp_info
         self.agent_output = agent_output
 
-    def _serialize_attributes(self):
-        # type: () -> Dict
+    def _serialize_attributes(self) -> Dict:
         """Serialize object type specific attributes for transport"""
         attributes = super(CheckCrashReport, self)._serialize_attributes()
 
@@ -136,8 +136,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         return attributes
 
 
-def _read_snmp_info(hostname):
-    # type: (str) -> Optional[bytes]
+def _read_snmp_info(hostname: str) -> Optional[bytes]:
     cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", hostname)
     try:
         with cache_path.open(mode="rb") as f:
@@ -147,8 +146,7 @@ def _read_snmp_info(hostname):
     return None
 
 
-def _read_agent_output(hostname):
-    # type: (str) -> Optional[RawAgentData]
+def _read_agent_output(hostname: str) -> Optional[RawAgentData]:
     try:
         from cmk.base.cee.keepalive import rtc  # pylint: disable=import-outside-toplevel
     except ImportError:

@@ -41,7 +41,7 @@ class Header:
     fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
     length = 32
 
-    def __init__(self, name: str, state: 'Union[Header.State, str]', hint: str,
+    def __init__(self, name: str, state: Union['Header.State', str], hint: str,
                  payload_length: int) -> None:
         self.name = name
         self.state = Header.State(state) if isinstance(state, str) else state

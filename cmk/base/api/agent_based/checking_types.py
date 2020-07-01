@@ -47,10 +47,13 @@ class Service:
         labels=[ServiceLabel(...)],
     )
     """
-    def __init__(self, *, item=None, parameters=None, labels=None):
-        # type: (Optional[str], Optional[Dict], Optional[List[ServiceLabel]]) -> None
+    def __init__(self,
+                 *,
+                 item: Optional[str] = None,
+                 parameters: Optional[Dict] = None,
+                 labels: Optional[List[ServiceLabel]] = None) -> None:
         self._item = item
-        self._parameters = parameters or {}  # type: Dict[str, Any]
+        self._parameters: Dict[str, Any] = parameters or {}
         self._labels = labels or []
 
         self._validate_item(item)
@@ -116,8 +119,7 @@ class state(enum.Enum):
         return int(self.value)
 
 
-def state_worst(*args):
-    # type: (*state) -> state
+def state_worst(*args: state) -> state:
     """Returns the worst of all passed states
 
     You can pass an arbitrary number of arguments, and the return value will be
@@ -144,8 +146,7 @@ class Metric:
             raise TypeError("invalid character(s) in metric name: %r" % offenders)
 
     @staticmethod
-    def _sanitize_single_value(field, value):
-        # type: (str, Optional[float]) -> Optional[EvalableFloat]
+    def _sanitize_single_value(field: str, value: Optional[float]) -> Optional[EvalableFloat]:
         if value is None:
             return None
         if isinstance(value, (int, float)):
@@ -153,11 +154,10 @@ class Metric:
         raise TypeError("%s values for metric must be float, int or None" % field)
 
     def _sanitize_optionals(
-            self,
-            field,  # type: str
-            values,  # type: _OptionalPair
-    ):
-        # type: (...) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]
+        self,
+        field: str,
+        values: _OptionalPair,
+    ) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]:
         if values is None:
             return None, None
 
@@ -170,14 +170,13 @@ class Metric:
         )
 
     def __init__(
-            self,
-            name,  # type: str
-            value,  # type: float
-            *,
-            levels=None,  # type: _OptionalPair
-            boundaries=None,  # type: _OptionalPair
-    ):
-        # type: (...) -> None
+        self,
+        name: str,
+        value: float,
+        *,
+        levels: _OptionalPair = None,
+        boundaries: _OptionalPair = None,
+    ) -> None:
         self.validate_name(name)
 
         if not isinstance(value, (int, float)):
@@ -189,13 +188,11 @@ class Metric:
         self._boundaries = self._sanitize_optionals('boundaries', boundaries)
 
     @property
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         return self._name
 
     @property
-    def value(self):
-        # type: () -> EvalableFloat
+    def value(self) -> EvalableFloat:
         return self._value
 
     @property
@@ -233,14 +230,13 @@ class Result(NamedTuple("ResultTuple", [
     _state_class = state  # avoid shadowing by keyword called "state"
 
     def __new__(  # pylint: disable=redefined-outer-name
-            cls,
-            *,
-            state,  # type: state
-            summary=None,  # type: Optional[str]
-            notice=None,  # type: Optional[str]
-            details=None,  # type: Optional[str]
-    ):
-        # type: (...) -> Result
+        cls,
+        *,
+        state: state,
+        summary: Optional[str] = None,
+        notice: Optional[str] = None,
+        details: Optional[str] = None,
+    ) -> 'Result':
         if not isinstance(state, cls._state_class):
             raise TypeError("'state' must be a checkmk state constant, got %r" % (state,))
 
@@ -287,16 +283,13 @@ class IgnoreResultsError(RuntimeError):
 
 
 class IgnoreResults:
-    def __init__(self, value="currently no results"):
-        # type: (str) -> None
+    def __init__(self, value: str = "currently no results") -> None:
         self._value = value
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return "%s(%r)" % (self.__class__.__name__, self._value)
 
-    def __str__(self):
-        # type: () -> str
+    def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
 
 

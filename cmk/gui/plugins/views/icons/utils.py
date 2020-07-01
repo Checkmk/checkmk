@@ -58,7 +58,7 @@ class Icon(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def render(self, what: str, row: dict, tags: list,
-               custom_vars: dict) -> 'Union[None, HTML, Tuple, str]':
+               custom_vars: dict) -> Union[None, 'HTML', Tuple, str]:
         raise NotImplementedError()
 
     def columns(self) -> List[str]:

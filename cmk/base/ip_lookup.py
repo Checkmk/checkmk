@@ -25,29 +25,25 @@ NewIPLookupCache = Dict[IPLookupCacheId, str]
 LegacyIPLookupCache = Dict[str, str]
 UpdateDNSCacheResult = Tuple[int, List[HostName]]
 
-_fake_dns = None  # type: Optional[HostAddress]
+_fake_dns: Optional[HostAddress] = None
 _enforce_localhost = False
 
 
-def enforce_fake_dns(address):
-    # type: (HostAddress) -> None
+def enforce_fake_dns(address: HostAddress) -> None:
     global _fake_dns
     _fake_dns = address
 
 
-def enforce_localhost():
-    # type: () -> None
+def enforce_localhost() -> None:
     global _enforce_localhost
     _enforce_localhost = True
 
 
-def lookup_ipv4_address(hostname):
-    # type: (HostName) -> Optional[str]
+def lookup_ipv4_address(hostname: HostName) -> Optional[str]:
     return lookup_ip_address(hostname, 4)
 
 
-def lookup_ipv6_address(hostname):
-    # type: (HostName) -> Optional[str]
+def lookup_ipv6_address(hostname: HostName) -> Optional[str]:
     return lookup_ip_address(hostname, 6)
 
 
@@ -57,8 +53,7 @@ def lookup_ipv6_address(hostname):
 # try to resolve a hostname. On later tries to resolve a hostname  it
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
-def lookup_ip_address(hostname, family=None):
-    # type: (HostName, Optional[int]) -> Optional[str]
+def lookup_ip_address(hostname: HostName, family: Optional[int] = None) -> Optional[str]:
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
@@ -97,8 +92,7 @@ def lookup_ip_address(hostname, family=None):
 
 
 # Variables needed during the renaming of hosts (see automation.py)
-def cached_dns_lookup(hostname, family):
-    # type: (HostName, int) -> Optional[str]
+def cached_dns_lookup(hostname: HostName, family: int) -> Optional[str]:
     cache = _config_cache.get_dict("cached_dns_lookup")
     cache_id = hostname, family
 
@@ -151,13 +145,11 @@ def cached_dns_lookup(hostname, family):
 
 
 class IPLookupCache(cmk.base.caching.DictCache):
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(IPLookupCache, self).__init__()
         self.persist_on_update = True
 
-    def load_persisted(self):
-        # type: () -> None
+    def load_persisted(self) -> None:
         try:
             self.update(_load_ip_lookup_cache(lock=False))
         except (MKTerminate, MKTimeout):
@@ -170,8 +162,7 @@ class IPLookupCache(cmk.base.caching.DictCache):
                 raise
             # TODO: Would be better to log it somewhere to make the failure transparent
 
-    def update_cache(self, cache_id, ipa):
-        # type: (IPLookupCacheId, str) -> None
+    def update_cache(self, cache_id: IPLookupCacheId, ipa: str) -> None:
         """Updates the cache with a new / changed entry
 
         When self.persist_on_update update is disabled, this simply updates the in-memory
@@ -201,13 +192,11 @@ class IPLookupCache(cmk.base.caching.DictCache):
         finally:
             store.release_lock(_cache_path())
 
-    def save_persisted(self):
-        # type: () -> None
+    def save_persisted(self) -> None:
         store.save_object_to_file(_cache_path(), self, pretty=False)
 
 
-def _get_ip_lookup_cache():
-    # type: () -> IPLookupCache
+def _get_ip_lookup_cache() -> IPLookupCache:
     """A file based fall-back DNS cache in case resolution fails"""
     if _config_cache.exists("ip_lookup"):
         # Return already created and initialized cache
@@ -218,14 +207,13 @@ def _get_ip_lookup_cache():
     return cache
 
 
-def _load_ip_lookup_cache(lock):
-    # type: (bool) -> NewIPLookupCache
+def _load_ip_lookup_cache(lock: bool) -> NewIPLookupCache:
     return _convert_legacy_ip_lookup_cache(
         store.load_object_from_file(_cache_path(), default={}, lock=lock))
 
 
-def _convert_legacy_ip_lookup_cache(cache):
-    # type: (Union[LegacyIPLookupCache, NewIPLookupCache]) -> NewIPLookupCache
+def _convert_legacy_ip_lookup_cache(
+        cache: Union[LegacyIPLookupCache, NewIPLookupCache]) -> NewIPLookupCache:
     """be compatible to old caches which were created by Check_MK without IPv6 support"""
     if not cache:
         return {}
@@ -236,19 +224,17 @@ def _convert_legacy_ip_lookup_cache(cache):
 
     cache = cast(LegacyIPLookupCache, cache)
 
-    new_cache = {}  # type: NewIPLookupCache
+    new_cache: NewIPLookupCache = {}
     for key, val in cache.items():
         new_cache[(key, 4)] = val
     return new_cache
 
 
-def _cache_path():
-    # type: () -> str
+def _cache_path() -> str:
     return cmk.utils.paths.var_dir + "/ipaddresses.cache"
 
 
-def update_dns_cache():
-    # type: () -> UpdateDNSCacheResult
+def update_dns_cache() -> UpdateDNSCacheResult:
     failed = []
 
     ip_lookup_cache = _get_ip_lookup_cache()
@@ -282,8 +268,7 @@ def update_dns_cache():
     return len(ip_lookup_cache), failed
 
 
-def _clear_ip_lookup_cache(ip_lookup_cache):
-    # type: (IPLookupCache) -> None
+def _clear_ip_lookup_cache(ip_lookup_cache: IPLookupCache) -> None:
     """Clear the persisted AND in memory cache"""
     try:
         os.unlink(_cache_path())
@@ -294,8 +279,7 @@ def _clear_ip_lookup_cache(ip_lookup_cache):
     ip_lookup_cache.clear()
 
 
-def _get_dns_cache_lookup_hosts():
-    # type: () -> List[IPLookupCacheId]
+def _get_dns_cache_lookup_hosts() -> List[IPLookupCacheId]:
     config_cache = config.get_config_cache()
     hosts = []
     for hostname in config_cache.all_active_hosts():

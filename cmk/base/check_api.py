@@ -157,8 +157,7 @@ Crit = Union[None, int, float]
 Levels = Tuple  # Has length 2 or 4
 
 
-def get_check_api_context():
-    # type: () -> _config.CheckContext
+def get_check_api_context() -> _config.CheckContext:
     """This is called from cmk.base code to get the Check API things. Don't
     use this from checks."""
     return {k: v for k, v in globals().items() if not k.startswith("_")}
@@ -186,8 +185,7 @@ CACHED_OID = lambda x: OIDCached(str(x))
 network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
 
 
-def saveint(i):
-    # type: (Any) -> int
+def saveint(i: Any) -> int:
     """Tries to cast a string to an integer and return it. In case this
     fails, it returns 0.
 
@@ -200,8 +198,7 @@ def saveint(i):
         return 0
 
 
-def savefloat(f):
-    # type: (Any) -> float
+def savefloat(f: Any) -> float:
     """Tries to cast a string to an float and return it. In case this fails,
     it returns 0.0.
 
@@ -215,48 +212,41 @@ def savefloat(f):
 
 
 # Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()
-def service_extra_conf(hostname, service, ruleset):
-    # type: (HostName, ServiceName, _config.Ruleset) -> List
+def service_extra_conf(hostname: HostName, service: ServiceName, ruleset: _config.Ruleset) -> List:
     return _config.get_config_cache().service_extra_conf(hostname, service, ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()
-def host_extra_conf(hostname, ruleset):
-    # type: (HostName, _config.Ruleset) -> List
+def host_extra_conf(hostname: HostName, ruleset: _config.Ruleset) -> List:
     return _config.get_config_cache().host_extra_conf(hostname, ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant config.in_binary_hostlist()
-def in_binary_hostlist(hostname, ruleset):
-    # type: (HostName, _config.Ruleset) -> bool
+def in_binary_hostlist(hostname: HostName, ruleset: _config.Ruleset) -> bool:
     return _config.get_config_cache().in_binary_hostlist(hostname, ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()
-def host_extra_conf_merged(hostname, conf):
-    # type: (HostName, _config.Ruleset) -> Dict[str, Any]
+def host_extra_conf_merged(hostname: HostName, conf: _config.Ruleset) -> Dict[str, Any]:
     return _config.get_config_cache().host_extra_conf_merged(hostname, conf)
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
-def all_matching_hosts(condition, with_foreign_hosts):
-    # type: (Dict[str, Any], bool) -> Set[HostName]
+def all_matching_hosts(condition: Dict[str, Any], with_foreign_hosts: bool) -> Set[HostName]:
     return _config.get_config_cache().ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         condition, with_foreign_hosts)
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
-def tags_of_host(hostname):
-    # type: (HostName) -> Set[str]
+def tags_of_host(hostname: HostName) -> Set[str]:
     return _config.get_config_cache().get_host_config(hostname).tags
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
-def is_ipv6_primary(hostname):
-    # type: (HostName) -> bool
+def is_ipv6_primary(hostname: HostName) -> bool:
     return _config.get_config_cache().get_host_config(hostname).is_ipv6_primary
 
 
@@ -271,14 +261,12 @@ get_number_with_precision = render.fmt_number_with_precision
 quote_shell_string = _cmk_utils.quote_shell_string
 
 
-def get_checkgroup_parameters(group, deflt=None):
-    # type: (str, Optional[str]) -> Optional[str]
+def get_checkgroup_parameters(group: str, deflt: Optional[str] = None) -> Optional[str]:
     return _config.checkgroup_parameters.get(group, deflt)
 
 
 # TODO: Replace by some render.* function / move to render module?
-def get_filesize_human_readable(size):
-    # type: (float) -> str
+def get_filesize_human_readable(size: float) -> str:
     """Format size of a file for humans.
 
     Similar to get_bytes_human_readable, but optimized for file
@@ -294,8 +282,7 @@ def get_filesize_human_readable(size):
 
 
 # TODO: Replace by some render.* function / move to render module?
-def get_timestamp_human_readable(timestamp):
-    # type: (float) -> str
+def get_timestamp_human_readable(timestamp: float) -> str:
     """Format a time stamp for humans in "%Y-%m-%d %H:%M:%S" format.
     In case None is given or timestamp is 0, it returns "never"."""
     if timestamp:
@@ -304,8 +291,7 @@ def get_timestamp_human_readable(timestamp):
 
 
 # TODO: Replace by some render.* function / move to render module?
-def get_relative_date_human_readable(timestamp):
-    # type: (float) -> str
+def get_relative_date_human_readable(timestamp: float) -> str:
     """Formats the given timestamp for humans "in ..." for future times
     or "... ago" for past timestamps."""
     now = time.time()
@@ -335,8 +321,7 @@ ZERO = _item_state.ZERO
 MKCounterWrapped = _item_state.MKCounterWrapped
 
 
-def _normalize_levels(levels):
-    # type: (Levels) -> Levels
+def _normalize_levels(levels: Levels) -> Levels:
     if len(levels) == 2:  # upper warn and crit
         warn_upper, crit_upper = levels[0], levels[1]
         warn_lower, crit_lower = None, None
@@ -348,8 +333,8 @@ def _normalize_levels(levels):
     return warn_upper, crit_upper, warn_lower, crit_lower
 
 
-def _do_check_levels(value, levels, human_readable_func, unit_info):
-    # type: (Union[int, float], Levels, Callable, str) -> Tuple[ServiceState, ServiceDetails]
+def _do_check_levels(value: Union[int, float], levels: Levels, human_readable_func: Callable,
+                     unit_info: str) -> Tuple[ServiceState, ServiceDetails]:
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
@@ -365,14 +350,18 @@ def _do_check_levels(value, levels, human_readable_func, unit_info):
     return 0, ""
 
 
-def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
-    # type: (str, Warn, Crit, Callable, str) -> str
+def _levelsinfo_ty(ty: str, warn: Warn, crit: Crit, human_readable_func: Callable,
+                   unit_info: str) -> str:
     return u" (warn/crit {0} {1}{3}/{2}{3})".format(ty, human_readable_func(warn),
                                                     human_readable_func(crit), unit_info)
 
 
-def _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value=None):
-    # type: (Union[None, MetricName], Union[int, float], Callable, Levels, Optional[Tuple], Union[None, int, float]) -> List
+def _build_perfdata(dsname: Union[None, MetricName],
+                    value: Union[int, float],
+                    scale_value: Callable,
+                    levels: Levels,
+                    boundaries: Optional[Tuple],
+                    ref_value: Union[None, int, float] = None) -> List:
     if not dsname:
         return []
 
@@ -385,17 +374,16 @@ def _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value=No
     return perfdata
 
 
-def check_levels(value,
-                 dsname,
-                 params,
-                 unit="",
-                 factor=1.0,
-                 scale=1.0,
-                 statemarkers=False,
-                 human_readable_func=None,
-                 infoname=None,
-                 boundaries=None):
-    # type: (Union[int, float], Union[None, MetricName], Any, str, Union[int, float], Union[int, float], bool, Optional[Callable], Optional[str], Optional[Tuple]) -> ServiceCheckResult
+def check_levels(value: Union[int, float],
+                 dsname: Union[None, MetricName],
+                 params: Any,
+                 unit: str = "",
+                 factor: Union[int, float] = 1.0,
+                 scale: Union[int, float] = 1.0,
+                 statemarkers: bool = False,
+                 human_readable_func: Optional[Callable] = None,
+                 infoname: Optional[str] = None,
+                 boundaries: Optional[Tuple] = None) -> ServiceCheckResult:
     """Generic function for checking a value against levels
 
     This also supports predictive levels.
@@ -441,7 +429,7 @@ def check_levels(value,
     boundaries: Add minimum and maximum to performance data.
     """
     if unit.startswith('/'):
-        unit_info = unit  # type: str
+        unit_info: str = unit
     elif unit:
         unit_info = " %s" % unit
     else:
@@ -450,8 +438,7 @@ def check_levels(value,
     if human_readable_func is None:
         human_readable_func = lambda x: "%.2f" % (x / scale)
 
-    def scale_value(v):
-        # type: (Union[None, int, float]) -> Union[None, int, float]
+    def scale_value(v: Union[None, int, float]) -> Union[None, int, float]:
         if v is None:
             return None
         return v * factor * scale
@@ -512,8 +499,7 @@ def check_levels(value,
     return state, infotext, perfdata
 
 
-def get_effective_service_level():
-    # type: () -> ServiceState
+def get_effective_service_level() -> ServiceState:
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
     config_cache = _config.get_config_cache()
@@ -528,15 +514,13 @@ def get_effective_service_level():
     return 0
 
 
-def utc_mktime(time_struct):
-    # type: (time.struct_time) -> int
+def utc_mktime(time_struct: time.struct_time) -> int:
     """Works like time.mktime() but assumes the time_struct to be in UTC,
     not in local time."""
     return calendar.timegm(time_struct)
 
 
-def passwordstore_get_cmdline(fmt, pw):
-    # type: (str, Union[Tuple, str]) -> Union[str, Tuple[str, str, str]]
+def passwordstore_get_cmdline(fmt: str, pw: Union[Tuple, str]) -> Union[str, Tuple[str, str, str]]:
     """Use this to prepare a command line argument for using a password from the
     Check_MK password store or an explicitly configured password."""
     if not isinstance(pw, tuple):
@@ -548,8 +532,7 @@ def passwordstore_get_cmdline(fmt, pw):
     return ("store", pw[1], fmt)
 
 
-def get_http_proxy(http_proxy):
-    # type: (Tuple[str, str]) -> Optional[str]
+def get_http_proxy(http_proxy: Tuple[str, str]) -> Optional[str]:
     """Returns proxy URL to be used for HTTP requests
 
     Pass a value configured by the user using the HTTPProxyReference valuespec to this function
@@ -559,8 +542,7 @@ def get_http_proxy(http_proxy):
     return _config.get_http_proxy(http_proxy)
 
 
-def get_agent_data_time():
-    # type: () -> Optional[float]
+def get_agent_data_time() -> Optional[float]:
     """Use this function to get the age of the agent data cache file
     of tcp or snmp hosts or None in case of piggyback data because
     we do not exactly know the latest agent data. Maybe one time
@@ -568,8 +550,8 @@ def get_agent_data_time():
     return _agent_cache_file_age(host_name(), check_type())
 
 
-def _agent_cache_file_age(hostname, check_plugin_name):
-    # type: (HostName, CheckPluginNameStr) -> Optional[float]
+def _agent_cache_file_age(hostname: HostName,
+                          check_plugin_name: CheckPluginNameStr) -> Optional[float]:
     host_config = _config.get_config_cache().get_host_config(hostname)
     if host_config.is_cluster:
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
@@ -592,8 +574,7 @@ def _agent_cache_file_age(hostname, check_plugin_name):
     return None
 
 
-def get_parsed_item_data(check_function):
-    # type: (Callable) -> Callable
+def get_parsed_item_data(check_function: Callable) -> Callable:
     """Use this decorator to determine the parsed item data outside
     of the respective check function.
 
@@ -611,9 +592,8 @@ def get_parsed_item_data(check_function):
     (see cmk/base/checking.py).
     """
     @functools.wraps(check_function)
-    def wrapped_check_function(item, params, parsed):
+    def wrapped_check_function(item: str, params: Any, parsed: Any) -> Any:
         # TODO
-        # type: (str, Any, Any) -> Any
         if not isinstance(parsed, dict):
             return 3, "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict"
         if item not in parsed or not parsed[item]:
@@ -623,16 +603,14 @@ def get_parsed_item_data(check_function):
     return wrapped_check_function
 
 
-def discover_single(info):
-    # type: (Union[List, Dict]) -> Optional[List]
+def discover_single(info: Union[List, Dict]) -> Optional[List]:
     """Return a discovered item in case there is info text or parsed"""
     if info:
         return [(None, {})]
     return None
 
 
-def validate_filter(filter_function):
-    # type: (Any) -> Callable
+def validate_filter(filter_function: Any) -> Callable:
     """Validate function argument is a callable and return it"""
     if callable(filter_function):
         return filter_function
@@ -642,8 +620,8 @@ def validate_filter(filter_function):
         type(filter_function)))
 
 
-def discover(selector=None, default_params=None):
-    # type: (Optional[Callable], Union[None, Dict[Any, Any], str]) -> Callable
+def discover(selector: Optional[Callable] = None,
+             default_params: Union[None, Dict[Any, Any], str] = None) -> Callable:
     """Helper function to assist with service discoveries
 
     The discovery function is in many cases just a boilerplate function to
@@ -702,11 +680,11 @@ def discover(selector=None, default_params=None):
 
             check_info["chk"] = {'inventory_function': inventory_thecheck}
     """
-    def _discovery(filter_function):
-        # type: (Callable) -> Callable
+    def _discovery(filter_function: Callable) -> Callable:
         @functools.wraps(filter_function)
-        def discoverer(parsed):
-            # type: (Union[Dict[Any, Any], List[Any], Tuple]) -> Iterable[Tuple[str, Union[Dict[Any, Any], str]]]
+        def discoverer(
+            parsed: Union[Dict[Any, Any], List[Any], Tuple]
+        ) -> Iterable[Tuple[str, Union[Dict[Any, Any], str]]]:
             params = default_params if isinstance(default_params, (str, dict)) else {}
             if isinstance(parsed, dict):
                 filterer = validate_filter(filter_function)
@@ -740,8 +718,7 @@ def discover(selector=None, default_params=None):
     return _discovery
 
 
-def _get_discovery_iter(name, get_name):
-    # type: (Any, Callable[[], str]) -> Iterable[str]
+def _get_discovery_iter(name: Any, get_name: Callable[[], str]) -> Iterable[str]:
     if isinstance(name, str):
         return iter((ensure_str(name),))
     if name is True:

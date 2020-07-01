@@ -42,26 +42,26 @@ class AutochecksManager:
 
     Autochecks of a host are once read and cached for the whole lifetime of the
     AutochecksManager."""
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(AutochecksManager, self).__init__()
-        self._autochecks = {}  # type: Dict[HostName, List[Service]]
+        self._autochecks: Dict[HostName, List[Service]] = {}
         # Extract of the autochecks: This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
-        self._discovered_labels_of = {}  # type: Dict[HostName, Dict[str, DiscoveredServiceLabels]]
-        self._raw_autochecks_cache = {}  # type: Dict[HostName, List[Service]]
+        self._discovered_labels_of: Dict[HostName, Dict[str, DiscoveredServiceLabels]] = {}
+        self._raw_autochecks_cache: Dict[HostName, List[Service]] = {}
 
-    def get_autochecks_of(self, hostname, compute_check_parameters, service_description,
-                          get_check_variables):
-        # type: (str, ComputeCheckParameters, GetServiceDescription, GetCheckVariables) -> List[Service]
+    def get_autochecks_of(self, hostname: str, compute_check_parameters: ComputeCheckParameters,
+                          service_description: GetServiceDescription,
+                          get_check_variables: GetCheckVariables) -> List[Service]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = self._get_autochecks_of_uncached(
                 hostname, compute_check_parameters, service_description, get_check_variables)
         return self._autochecks[hostname]
 
-    def _get_autochecks_of_uncached(self, hostname, compute_check_parameters, service_description,
-                                    get_check_variables):
-        # type: (HostName, ComputeCheckParameters, GetServiceDescription, GetCheckVariables) -> List[Service]
+    def _get_autochecks_of_uncached(self, hostname: HostName,
+                                    compute_check_parameters: ComputeCheckParameters,
+                                    service_description: GetServiceDescription,
+                                    get_check_variables: GetCheckVariables) -> List[Service]:
         """Read automatically discovered checks of one host"""
         return [
             Service(
@@ -79,9 +79,9 @@ class AutochecksManager:
                                                        get_check_variables)
         ]
 
-    def discovered_labels_of(self, hostname, service_desc, service_description,
-                             get_check_variables):
-        # type: (HostName, ServiceName, GetServiceDescription, GetCheckVariables) -> DiscoveredServiceLabels
+    def discovered_labels_of(self, hostname: HostName, service_desc: ServiceName,
+                             service_description: GetServiceDescription,
+                             get_check_variables: GetCheckVariables) -> DiscoveredServiceLabels:
         if hostname not in self._discovered_labels_of:
             # Only read the raw autochecks here, do not compute the effective
             # check parameters. The latter would involve ruleset matching which
@@ -91,8 +91,8 @@ class AutochecksManager:
             self._discovered_labels_of[hostname][service_desc] = DiscoveredServiceLabels()
         return self._discovered_labels_of[hostname][service_desc]
 
-    def _read_raw_autochecks(self, hostname, service_description, get_check_variables):
-        # type: (HostName, GetServiceDescription, GetCheckVariables) -> List[Service]
+    def _read_raw_autochecks(self, hostname: HostName, service_description: GetServiceDescription,
+                             get_check_variables: GetCheckVariables) -> List[Service]:
         if hostname not in self._raw_autochecks_cache:
             self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_uncached(
                 hostname, service_description, get_check_variables)
@@ -104,8 +104,9 @@ class AutochecksManager:
 
     # TODO: use store.load_object_from_file()
     # TODO: Common code with parse_autochecks_file? Cleanup.
-    def _read_raw_autochecks_uncached(self, hostname, service_description, get_check_variables):
-        # type: (HostName, GetServiceDescription, GetCheckVariables) -> List[Service]
+    def _read_raw_autochecks_uncached(self, hostname: HostName,
+                                      service_description: GetServiceDescription,
+                                      get_check_variables: GetCheckVariables) -> List[Service]:
         """Read automatically discovered checks of one host"""
         path = _autochecks_path_for(hostname)
         check_variables = get_check_variables()
@@ -166,13 +167,11 @@ class AutochecksManager:
         return services
 
 
-def _autochecks_path_for(hostname):
-    # type: (HostName) -> Path
+def _autochecks_path_for(hostname: HostName) -> Path:
     return Path(cmk.utils.paths.autochecks_dir, hostname + ".mk")
 
 
-def has_autochecks(hostname):
-    # type: (HostName) -> bool
+def has_autochecks(hostname: HostName) -> bool:
     return _autochecks_path_for(hostname).exists()
 
 
@@ -229,8 +228,9 @@ def parse_autochecks_file(
     return services
 
 
-def _parse_autocheck_entry(hostname, entry, service_description):
-    # type: (HostName, Union[ast.Tuple, ast.Dict], GetServiceDescription) -> Optional[DiscoveredService]
+def _parse_autocheck_entry(
+        hostname: HostName, entry: Union[ast.Tuple, ast.Dict],
+        service_description: GetServiceDescription) -> Optional[DiscoveredService]:
     if isinstance(entry, ast.Tuple):
         ast_check_plugin_name, ast_item, ast_parameters_unresolved = _parse_pre_16_tuple_autocheck_entry(
             entry)
@@ -245,7 +245,7 @@ def _parse_autocheck_entry(hostname, entry, service_description):
         raise Exception("Invalid autocheck: Wrong check plugin type: %r" % ast_check_plugin_name)
     check_plugin_name = ast_check_plugin_name.s
 
-    item = None  # type: Item
+    item: Item = None
     if isinstance(ast_item, ast.Str):
         item = ast_item.s
     elif isinstance(ast_item, ast.Num) and isinstance(ast_item.n, (int, float)):
@@ -274,8 +274,7 @@ def _ast_node_is_none(node):
     return isinstance(node, ast.NameConstant) and node.value is None
 
 
-def _parse_pre_16_tuple_autocheck_entry(entry):
-    # type: (ast.Tuple) -> Union[List, Tuple]
+def _parse_pre_16_tuple_autocheck_entry(entry: ast.Tuple) -> Union[List, Tuple]:
     # drop hostname, legacy format with host in first column
     parts = entry.elts[1:] if len(entry.elts) == 4 else entry.elts
 
@@ -284,9 +283,8 @@ def _parse_pre_16_tuple_autocheck_entry(entry):
     return parts
 
 
-def _parse_dict_autocheck_entry(entry):
-    # type: (ast.Dict) -> Tuple
-    values = {}  # type: Dict[str, Any]
+def _parse_dict_autocheck_entry(entry: ast.Dict) -> Tuple:
+    values: Dict[str, Any] = {}
     for index, key in enumerate(entry.keys):
         if isinstance(key, ast.Str):
             values[key.s] = entry.values[index]
@@ -298,8 +296,7 @@ def _parse_dict_autocheck_entry(entry):
         "service_labels"]
 
 
-def _parse_unresolved_parameters_from_ast(ast_parameters_unresolved):
-    # type: (Any) -> str
+def _parse_unresolved_parameters_from_ast(ast_parameters_unresolved: Any) -> str:
     if isinstance(ast_parameters_unresolved, ast.Name):
         # Keep check variable names as they are: No evaluation of check parameters
         return ast_parameters_unresolved.id
@@ -330,8 +327,8 @@ def _parse_unresolved_parameters_from_ast(ast_parameters_unresolved):
         eval(compile(ast.Expression(ast_parameters_unresolved), filename="<ast>", mode="eval")))
 
 
-def _parse_discovered_service_label_from_ast(ast_service_labels):
-    # type: (ast.Dict) -> DiscoveredServiceLabels
+def _parse_discovered_service_label_from_ast(
+        ast_service_labels: ast.Dict) -> DiscoveredServiceLabels:
     labels = DiscoveredServiceLabels()
     if not hasattr(ast_service_labels, "keys"):
         return labels
@@ -346,9 +343,9 @@ def _parse_discovered_service_label_from_ast(ast_service_labels):
     return labels
 
 
-def set_autochecks_of_real_hosts(hostname, new_services, service_description):
-    # type: (HostName, Sequence[ABCService], GetServiceDescription) -> None
-    new_autochecks = []  # type: List[ABCService]
+def set_autochecks_of_real_hosts(hostname: HostName, new_services: Sequence[ABCService],
+                                 service_description: GetServiceDescription) -> None:
+    new_autochecks: List[ABCService] = []
 
     # write new autochecks file, but take parameters_unresolved from existing ones
     # for those checks which are kept
@@ -367,14 +364,15 @@ def set_autochecks_of_real_hosts(hostname, new_services, service_description):
     )
 
 
-def set_autochecks_of_cluster(nodes, hostname, new_services, host_of_clustered_service,
-                              service_description):
-    # type: (List[HostName], HostName, Sequence[ABCService], HostOfClusteredService, GetServiceDescription) -> None
+def set_autochecks_of_cluster(nodes: List[HostName], hostname: HostName,
+                              new_services: Sequence[ABCService],
+                              host_of_clustered_service: HostOfClusteredService,
+                              service_description: GetServiceDescription) -> None:
     """A Cluster does not have an autochecks file. All of its services are located
     in the nodes instead. For clusters we cycle through all nodes remove all
     clustered service and add the ones we've got as input."""
     for node in nodes:
-        new_autochecks = []  # type: List[ABCService]
+        new_autochecks: List[ABCService] = []
         for existing_service in parse_autochecks_file(node, service_description):
             if hostname != host_of_clustered_service(node, existing_service.description):
                 new_autochecks.append(existing_service)
@@ -393,10 +391,9 @@ def set_autochecks_of_cluster(nodes, hostname, new_services, host_of_clustered_s
     remove_autochecks_file(hostname)
 
 
-def _remove_duplicate_autochecks(autochecks):
-    # type: (Sequence[ABCService]) -> List[ABCService]
+def _remove_duplicate_autochecks(autochecks: Sequence[ABCService]) -> List[ABCService]:
     """ Cleanup routine. Earlier versions (<1.6.0p8) may have introduced duplicates in the autochecks file"""
-    seen = set()  # type: Set[ABCService]
+    seen: Set[ABCService] = set()
     cleaned_autochecks = []
     for service in autochecks:
         if service not in seen:
@@ -419,18 +416,17 @@ def save_autochecks_file(
     store.save_file(path, "\n".join(content))
 
 
-def remove_autochecks_file(hostname):
-    # type: (HostName) -> None
+def remove_autochecks_file(hostname: HostName) -> None:
     try:
         _autochecks_path_for(hostname).unlink()
     except OSError:
         pass
 
 
-def remove_autochecks_of_host(hostname, host_of_clustered_service, service_description):
-    # type: (HostName, HostOfClusteredService, GetServiceDescription) -> int
+def remove_autochecks_of_host(hostname: HostName, host_of_clustered_service: HostOfClusteredService,
+                              service_description: GetServiceDescription) -> int:
     removed = 0
-    new_items = []  # type: List[DiscoveredService]
+    new_items: List[DiscoveredService] = []
     for existing_service in parse_autochecks_file(hostname, service_description):
         if hostname != host_of_clustered_service(hostname, existing_service.description):
             new_items.append(existing_service)

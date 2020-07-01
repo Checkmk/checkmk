@@ -109,8 +109,8 @@ def _resolve_string_parameters(params_unresolved: Any, check_name: str) -> Any:
                          (params_unresolved, check_name))
 
 
-def _create_check_function(name, check_info_dict, ruleset_name):
-    # type: (str, Dict[str, Any], Optional[str]) -> Callable
+def _create_check_function(name: str, check_info_dict: Dict[str, Any],
+                           ruleset_name: Optional[str]) -> Callable:
     """Create an API compliant check function"""
     service_descr = check_info_dict["service_description"]
     if not isinstance(service_descr, str):
@@ -161,18 +161,17 @@ def _create_check_function(name, check_info_dict, ruleset_name):
 
 
 def _create_new_result(
-        is_details,  # type: bool
-        legacy_state,  # type: int
-        legacy_text,  # type: str
-        legacy_metrics=(),  # type: Union[Tuple, List]
-):
-    # type: (...) -> Generator[Union[Metric, Result], None, bool]
+        is_details: bool,
+        legacy_state: int,
+        legacy_text: str,
+        legacy_metrics: Union[Tuple, List] = (),
+) -> Generator[Union[Metric, Result], None, bool]:
     result_state = state(legacy_state)
 
     if legacy_state or legacy_text:  # skip "Null"-Result
         if is_details:
-            summary = None  # type: Optional[str]
-            details = legacy_text  # type: Optional[str]
+            summary: Optional[str] = None
+            details: Optional[str] = legacy_text
         else:
             is_details = "\n" in legacy_text
             summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, None)
@@ -192,11 +191,10 @@ def _create_new_result(
 
 
 def _create_signature_check_function(
-        requires_item,  # type: bool
-        requires_params,  # type: bool
-        original_function,  # type: Callable
-):
-    # type: (...) -> Callable
+    requires_item: bool,
+    requires_params: bool,
+    original_function: Callable,
+) -> Callable:
     """Create the function for a check function with the required signature"""
     if requires_item:
         if requires_params:
@@ -220,8 +218,8 @@ def _create_signature_check_function(
     return check_migration_wrapper
 
 
-def _create_wrapped_parameters(check_plugin_name, check_info_dict):
-    # type: (str, Dict[str, Any]) -> Optional[Dict[str, Any]]
+def _create_wrapped_parameters(check_plugin_name: str,
+                               check_info_dict: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """compute default parameters and wrap them in a dictionary"""
     default_parameters = get_default_parameters(
         check_info_dict,
@@ -236,8 +234,7 @@ def _create_wrapped_parameters(check_plugin_name, check_info_dict):
     return wrap_parameters(default_parameters)
 
 
-def _create_cluster_legacy_mode_from_hell(check_function):
-    # type: (Callable) -> Callable
+def _create_cluster_legacy_mode_from_hell(check_function: Callable) -> Callable:
     @functools.wraps(check_function)
     def cluster_legacy_mode_from_hell(*args, **kwargs):
         raise NotImplementedError("This just a dummy to pass validation.")
@@ -247,8 +244,8 @@ def _create_cluster_legacy_mode_from_hell(check_function):
     return cluster_legacy_mode_from_hell
 
 
-def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidden_names):
-    # type: (str, Dict[str, Any], List[CheckPluginName]) -> CheckPlugin
+def create_check_plugin_from_legacy(check_plugin_name: str, check_info_dict: Dict[str, Any],
+                                    forbidden_names: List[CheckPluginName]) -> CheckPlugin:
 
     if check_info_dict.get('extra_sections'):
         raise NotImplementedError("[%s]: cannot auto-migrate plugins with extra sections" %
@@ -297,8 +294,7 @@ def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidde
 
 
 @functools.lru_cache()
-def resolve_legacy_name(plugin_name):
-    # type: (CheckPluginName) -> str
+def resolve_legacy_name(plugin_name: CheckPluginName) -> str:
     """Get legacy plugin name back"""
     # TODO (mo): remove this with CMK-4295. Function is only needed during transition
     for legacy_name in config.check_info:
@@ -311,15 +307,13 @@ def resolve_legacy_name(plugin_name):
 PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"
 
 
-def wrap_parameters(parameters):
-    # type: (Any) -> Dict[str, Any]
+def wrap_parameters(parameters: Any) -> Dict[str, Any]:
     if isinstance(parameters, dict):
         return parameters
     return {PARAMS_WRAPPER_KEY: parameters}
 
 
-def unwrap_parameters(parameters):
-    # type: (Union[Dict[str, Any], Parameters]) -> Any
+def unwrap_parameters(parameters: Union[Dict[str, Any], Parameters]) -> Any:
     if isinstance(parameters, Parameters):
         # In the new API check_functions will be passed an immutable mapping
         # instead of a dict. However, we have way too many 'if isinsance(params, dict)'

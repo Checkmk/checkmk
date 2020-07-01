@@ -8,7 +8,7 @@
 import os
 import sys
 import argparse
-from typing import List, Tuple
+from typing import List
 from cmk.special_agents.utils import vcrtrace
 
 # TODO: is there a better way to do this?

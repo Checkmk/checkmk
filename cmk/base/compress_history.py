@@ -19,8 +19,7 @@ import cmk.utils.debug
 logger = logging.getLogger("cmk.base.compress_history")
 
 
-def do_compress_history(args):
-    # type: (List[str]) -> None
+def do_compress_history(args: List[str]) -> None:
     if not args:
         raise MKBailOut("Please specify files to compress.")
 
@@ -34,9 +33,8 @@ def do_compress_history(args):
             raise MKBailOut("%s" % e)
 
 
-def compress_history_file(input_path, output_path):
-    # type: (str, str) -> None
-    known_services = {}  # type: Dict[str, Set[Optional[str]]]
+def compress_history_file(input_path: str, output_path: str) -> None:
+    known_services: Dict[str, Set[Optional[str]]] = {}
     machine_state = "START"
 
     output = io.open(output_path, "wt")
@@ -50,7 +48,7 @@ def compress_history_file(input_path, output_path):
         if line_type in ("RESTART", "LOGGING_INITIAL"):
             if machine_state != "START":
                 machine_state = "AFTER_RESTART"
-                services_after_reload = {}  # type: Dict[str, Set[Optional[str]]]
+                services_after_reload: Dict[str, Set[Optional[str]]] = {}
             if line_type == "LOGGING_INITIAL":
                 skip_this_line = True
 
@@ -105,8 +103,7 @@ def compress_history_file(input_path, output_path):
             output.write(line)
 
 
-def parse_history_line(line):
-    # type: (str) -> Tuple[str, Optional[str], Optional[str]]
+def parse_history_line(line: str) -> Tuple[str, Optional[str], Optional[str]]:
     command = get_line_command(line)
     if "INITIAL" in command:
         host, service = get_host_service_from_history_line(command, line)
@@ -121,23 +118,20 @@ def parse_history_line(line):
     return "OPERATION", None, None
 
 
-def get_host_service_from_history_line(command, line):
-    # type: (str, str) -> Tuple[str, Optional[str]]
+def get_host_service_from_history_line(command: str, line: str) -> Tuple[str, Optional[str]]:
     arguments = line.split(":")[1].strip().split(";")
     if "HOST" in command:
         return arguments[0], None
     return arguments[0], arguments[1]
 
 
-def get_line_command(line):
-    # type: (str) -> str
+def get_line_command(line: str) -> str:
     if ":" in line:
         return line.split(":")[0].split("]")[1].strip()
     return line.split("]")[1].strip()
 
 
-def log_vanished_object(output, timestamp, host, service):
-    # type: (IO[str], int, str, Optional[str]) -> None
+def log_vanished_object(output: IO[str], timestamp: int, host: str, service: Optional[str]) -> None:
     if service:
         output.write("[%s] VANISHED SERVICE: %s;%s\n" % (timestamp, host, service))
     else:

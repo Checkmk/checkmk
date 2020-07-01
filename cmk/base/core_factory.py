@@ -10,8 +10,7 @@ import cmk.base.config
 from cmk.base.core_config import MonitoringCore
 
 
-def create_core(options=None):
-    # type: (Optional[Dict]) -> MonitoringCore
+def create_core(options: Optional[Dict] = None) -> MonitoringCore:
     if cmk.base.config.monitoring_core == "cmc":
         from cmk.base.cee.core_cmc import CMC  # pylint: disable=no-name-in-module,import-outside-toplevel
         return CMC(options)

@@ -10,26 +10,22 @@ import cmk.utils.log.console as console
 
 # Note: section_begin|success|error|step is a naive and incomplete
 # finite-state machine.  The four functions should be used together.
-def section_begin(text):
-    # type: (str) -> None
+def section_begin(text: str) -> None:
     console.verbose("%s%s%s:\n", tty.bold, text, tty.normal)
 
 
-def section_success(text):
-    # type: (str) -> None
+def section_success(text: str) -> None:
     console.verbose("%sSUCCESS%s - %s\n", tty.green, tty.normal, text)
 
 
-def section_error(text, verbose=True):
-    # type: (str, bool) -> None
+def section_error(text: str, verbose: bool = True) -> None:
     if verbose:
         console.verbose("%s - %s\n", tty.error, text)
     else:
         console.info("%s - %s\n", tty.error, text)
 
 
-def section_step(text, add_info="", verbose=True):
-    # type: (str, str, bool) -> None
+def section_step(text: str, add_info: str = "", verbose: bool = True) -> None:
     if add_info:
         # Additional information, not titlecased
         add_info = " (%s)" % add_info

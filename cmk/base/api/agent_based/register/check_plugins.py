@@ -29,8 +29,7 @@ MANAGEMENT_NAME_PREFIX = "mgmt_"
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
 
-def _validate_service_name(plugin_name, service_name):
-    # type: (str, str) -> None
+def _validate_service_name(plugin_name: str, service_name: str) -> None:
     if not isinstance(service_name, str):
         raise TypeError("[%s]: service_name must be str, got %r" % (plugin_name, service_name))
     if not service_name:
@@ -49,14 +48,13 @@ def _validate_service_name(plugin_name, service_name):
             (plugin_name, MANAGEMENT_NAME_PREFIX, MANAGEMENT_DESCR_PREFIX))
 
 
-def _requires_item(service_name):
-    # type: (str) -> bool
+def _requires_item(service_name: str) -> bool:
     """See if this check requires an item"""
     return ITEM_VARIABLE in service_name
 
 
-def _create_sections(sections, plugin_name):
-    # type: (Optional[List[str]], CheckPluginName) -> List[ParsedSectionName]
+def _create_sections(sections: Optional[List[str]],
+                     plugin_name: CheckPluginName) -> List[ParsedSectionName]:
     if sections is None:
         return [ParsedSectionName(str(plugin_name))]
     if not isinstance(sections, list):
@@ -66,8 +64,8 @@ def _create_sections(sections, plugin_name):
     return [ParsedSectionName(n) for n in sections]
 
 
-def _validate_function_args(plugin_name, func_type, function, has_item, has_params, sections):
-    # type: (str, str, Callable, bool, bool, List[ParsedSectionName]) -> None
+def _validate_function_args(plugin_name: str, func_type: str, function: Callable, has_item: bool,
+                            has_params: bool, sections: List[ParsedSectionName]) -> None:
     """Validate the functions signature and type"""
 
     if not inspect.isgeneratorfunction(function):
@@ -118,9 +116,8 @@ def _filter_discovery(
 
 
 def _filter_check(
-        generator,  # type: Callable[..., Generator[Any, None, None]]
-):
-    # type: (...) -> Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]
+    generator: Callable[..., Generator[Any, None, None]],
+) -> Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]:
     """Only let Result, Metric and IgnoreResults through
 
     This allows for better typing in base code.
@@ -135,8 +132,8 @@ def _filter_check(
     return filtered_generator
 
 
-def _validate_default_parameters(plugin_name, params_type, ruleset_name, default_parameters):
-    # type: (str, str, Optional[str], Optional[Dict]) -> None
+def _validate_default_parameters(plugin_name: str, params_type: str, ruleset_name: Optional[str],
+                                 default_parameters: Optional[Dict]) -> None:
     if default_parameters is None:
         if ruleset_name is None:
             return
@@ -151,8 +148,8 @@ def _validate_default_parameters(plugin_name, params_type, ruleset_name, default
                         (plugin_name, params_type))
 
 
-def _validate_discovery_ruleset(ruleset_name, default_parameters):
-    # type: (Optional[str], Optional[dict]) -> None
+def _validate_discovery_ruleset(ruleset_name: Optional[str],
+                                default_parameters: Optional[dict]) -> None:
     if ruleset_name is None:
         return
 
@@ -163,8 +160,8 @@ def _validate_discovery_ruleset(ruleset_name, default_parameters):
     return
 
 
-def _validate_check_ruleset(ruleset_name, default_parameters):
-    # type: (Optional[str], Optional[dict]) -> None
+def _validate_check_ruleset(ruleset_name: Optional[str],
+                            default_parameters: Optional[dict]) -> None:
     if ruleset_name is None:
         return
 
@@ -189,20 +186,19 @@ def unfit_for_clustering_wrapper(check_function):
 
 
 def create_check_plugin(
-        *,
-        name,  # type: str
-        sections=None,  # type: Optional[List[str]]
-        service_name,  # type: str
-        discovery_function,  # type: Callable
-        discovery_default_parameters=None,  # type: Optional[Dict]
-        discovery_ruleset_name=None,  # type: Optional[str]
-        check_function,  # type: Callable
-        check_default_parameters=None,  # type: Optional[Dict]
-        check_ruleset_name=None,  # type: Optional[str]
-        cluster_check_function=None,  # type:  Optional[Callable]
-        forbidden_names,  # type: List[CheckPluginName]
-):
-    # type: (...) -> CheckPlugin
+    *,
+    name: str,
+    sections: Optional[List[str]] = None,
+    service_name: str,
+    discovery_function: Callable,
+    discovery_default_parameters: Optional[Dict] = None,
+    discovery_ruleset_name: Optional[str] = None,
+    check_function: Callable,
+    check_default_parameters: Optional[Dict] = None,
+    check_ruleset_name: Optional[str] = None,
+    cluster_check_function: Optional[Callable] = None,
+    forbidden_names: List[CheckPluginName],
+) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one
 
     For a detailed description of the parameters please refer to the exposed function in the

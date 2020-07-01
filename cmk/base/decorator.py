@@ -26,14 +26,12 @@ else:
     keepalive = None  # type: ignore[assignment]
 
 
-def handle_check_mk_check_result(check_plugin_name, description):
-    # type: (CheckPluginNameStr, ServiceName) -> Callable
+def handle_check_mk_check_result(check_plugin_name: CheckPluginNameStr,
+                                 description: ServiceName) -> Callable:
     """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
     Main purpose: Equalize the exception handling of all such functions"""
-    def wrap(check_func):
-        # type: (Callable) -> Callable
-        def wrapped_check_func(hostname, *args, **kwargs):
-            # type: (HostName, Any, Any) -> int
+    def wrap(check_func: Callable) -> Callable:
+        def wrapped_check_func(hostname: HostName, *args: Any, **kwargs: Any) -> int:
             host_config = config.get_config_cache().get_host_config(hostname)
             exit_spec = host_config.exit_code_spec()
 
@@ -86,6 +84,5 @@ def handle_check_mk_check_result(check_plugin_name, description):
     return wrap
 
 
-def _in_keepalive_mode():
-    # type: () -> bool
+def _in_keepalive_mode() -> bool:
     return bool(keepalive and keepalive.enabled())

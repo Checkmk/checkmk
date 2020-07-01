@@ -49,8 +49,7 @@ ObjectSpec = Dict[str, Any]
 
 
 class NagiosCore(core_config.MonitoringCore):
-    def create_config(self):
-        # type: () -> None
+    def create_config(self) -> None:
         """Tries to create a new Check_MK object configuration file for the Nagios core
 
         During create_config() exceptions may be raised which are caused by configuration issues.
@@ -81,8 +80,7 @@ class NagiosCore(core_config.MonitoringCore):
                     pass
             raise
 
-    def precompile(self):
-        # type: () -> None
+    def precompile(self) -> None:
         out.output("Precompiling host checks...")
         precompile_hostchecks()
         out.output(tty.ok + "\n")
@@ -101,28 +99,25 @@ class NagiosCore(core_config.MonitoringCore):
 
 
 class NagiosConfig:
-    def __init__(self, outfile, hostnames):
-        # type: (IO[str], Optional[List[HostName]]) -> None
+    def __init__(self, outfile: IO[str], hostnames: Optional[List[HostName]]) -> None:
         super(NagiosConfig, self).__init__()
         self._outfile = outfile
         self.hostnames = hostnames
 
-        self.hostgroups_to_define = set()  # type: Set[HostgroupName]
-        self.servicegroups_to_define = set()  # type: Set[ServicegroupName]
-        self.contactgroups_to_define = set()  # type: Set[ContactgroupName]
-        self.checknames_to_define = set()  # type: Set[CheckPluginNameStr]
-        self.active_checks_to_define = set()  # type: Set[CheckPluginNameStr]
-        self.custom_commands_to_define = set()  # type: Set[CoreCommandName]
-        self.hostcheck_commands_to_define = []  # type: List[Tuple[CoreCommand, str]]
+        self.hostgroups_to_define: Set[HostgroupName] = set()
+        self.servicegroups_to_define: Set[ServicegroupName] = set()
+        self.contactgroups_to_define: Set[ContactgroupName] = set()
+        self.checknames_to_define: Set[CheckPluginNameStr] = set()
+        self.active_checks_to_define: Set[CheckPluginNameStr] = set()
+        self.custom_commands_to_define: Set[CoreCommandName] = set()
+        self.hostcheck_commands_to_define: List[Tuple[CoreCommand, str]] = []
 
-    def write(self, x):
-        # type: (str) -> None
+    def write(self, x: str) -> None:
         # TODO: Something seems to be mixed up in our call sites...
         self._outfile.write(ensure_str(x))
 
 
-def create_config(outfile, hostnames):
-    # type: (IO[str], Optional[List[HostName]]) -> None
+def create_config(outfile: IO[str], hostnames: Optional[List[HostName]]) -> None:
     if config.host_notification_periods != []:
         core_config.warning(
             "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
@@ -166,8 +161,7 @@ def create_config(outfile, hostnames):
         cfg.write(config.extra_nagios_conf)
 
 
-def _output_conf_header(cfg):
-    # type: (NagiosConfig) -> None
+def _output_conf_header(cfg: NagiosConfig) -> None:
     cfg.write("""#
 # Created by Check_MK. Do not edit.
 #
@@ -175,8 +169,8 @@ def _output_conf_header(cfg):
 """)
 
 
-def _create_nagios_config_host(cfg, config_cache, hostname):
-    # type: (NagiosConfig, ConfigCache, HostName) -> None
+def _create_nagios_config_host(cfg: NagiosConfig, config_cache: ConfigCache,
+                               hostname: HostName) -> None:
     cfg.write("\n# ----------------------------------------------------\n")
     cfg.write("# %s\n" % hostname)
     cfg.write("# ----------------------------------------------------\n")
@@ -187,8 +181,8 @@ def _create_nagios_config_host(cfg, config_cache, hostname):
     _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs)
 
 
-def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
-    # type: (NagiosConfig, ConfigCache, HostName, ObjectAttributes) -> ObjectSpec
+def _create_nagios_host_spec(cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName,
+                             attrs: ObjectAttributes) -> ObjectSpec:
     host_config = config_cache.get_host_config(hostname)
 
     ip = attrs["address"]
@@ -215,8 +209,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
         if key[0] == '_':
             host_spec[key] = value
 
-    def host_check_via_service_status(service):
-        # type: (ServiceName) -> CoreCommand
+    def host_check_via_service_status(service: ServiceName) -> CoreCommand:
         command = "check-mk-host-custom-%d" % (len(cfg.hostcheck_commands_to_define) + 1)
         cfg.hostcheck_commands_to_define.append(
             (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
@@ -224,8 +217,8 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
               host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
         return command
 
-    def host_check_via_custom_check(command_name, command):
-        # type: (CoreCommandName, CoreCommand) -> CoreCommand
+    def host_check_via_custom_check(command_name: CoreCommandName,
+                                    command: CoreCommand) -> CoreCommand:
         cfg.custom_commands_to_define.add(command_name)
         return command
 
@@ -276,8 +269,8 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
     return host_spec
 
 
-def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
-    # type: (NagiosConfig, ConfigCache, HostName, ObjectAttributes) -> None
+def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName,
+                               host_attrs: ObjectAttributes) -> None:
     import cmk.base.check_table as check_table  # pylint: disable=import-outside-toplevel
 
     host_config = config_cache.get_host_config(hostname)
@@ -290,16 +283,14 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
     #   ___) |
     #  |____/   3. Services
 
-    def do_omit_service(hostname, description):
-        # type: (HostName, ServiceName) -> bool
+    def do_omit_service(hostname: HostName, description: ServiceName) -> bool:
         if config.service_ignored(hostname, None, description):
             return True
         if hostname != config_cache.host_of_clustered_service(hostname, description):
             return True
         return False
 
-    def get_dependencies(hostname, servicedesc):
-        # type: (HostName, ServiceName) -> str
+    def get_dependencies(hostname: HostName, servicedesc: ServiceName) -> str:
         result = ""
         for dep in config.service_depends_on(hostname, servicedesc):
             result += _format_nagios_object(
@@ -315,7 +306,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
     services = check_table.get_check_table(hostname, remove_duplicates=True).values()
     have_at_least_one_service = False
-    used_descriptions = {}  # type: Dict[ServiceName, Tuple[CheckPluginNameStr, Item]]
+    used_descriptions: Dict[ServiceName, Tuple[CheckPluginNameStr, Item]] = {}
     for service in sorted(services, key=lambda s: (s.check_plugin_name, s.item)):
         if service.check_plugin_name not in config.check_info:
             continue  # simply ignore missing checks
@@ -571,8 +562,9 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                               "PING IPv6", host_attrs.get("_NODEIPS_6"))
 
 
-def _add_ping_service(cfg, config_cache, host_config, ipaddress, family, descr, node_ips):
-    # type: (NagiosConfig, ConfigCache, HostConfig, HostAddress, int, ServiceName, Optional[str]) -> None
+def _add_ping_service(cfg: NagiosConfig, config_cache: ConfigCache, host_config: HostConfig,
+                      ipaddress: HostAddress, family: int, descr: ServiceName,
+                      node_ips: Optional[str]) -> None:
     hostname = host_config.hostname
     arguments = core_config.check_icmp_arguments_of(config_cache, hostname, family=family)
 
@@ -594,8 +586,7 @@ def _add_ping_service(cfg, config_cache, host_config, ipaddress, family, descr, 
     cfg.write(_format_nagios_object("service", service_spec))
 
 
-def _format_nagios_object(object_type, object_spec):
-    # type: (str, ObjectSpec) -> str
+def _format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:
     cfg = ["define %s {" % object_type]
     for key, val in sorted(object_spec.items(), key=lambda x: x[0]):
         # Use a base16 encoding for names and values of tags, labels and label
@@ -612,21 +603,18 @@ def _format_nagios_object(object_type, object_spec):
     return "\n".join(cfg) + "\n\n"
 
 
-def _b16encode(b):
-    # type: (str) -> str
+def _b16encode(b: str) -> str:
     return ensure_str(base64.b16encode(ensure_binary(b)))
 
 
-def _simulate_command(cfg, command):
-    # type: (NagiosConfig, CoreCommand) -> CoreCommand
+def _simulate_command(cfg: NagiosConfig, command: CoreCommand) -> CoreCommand:
     if config.simulation_mode:
         cfg.custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
     return command
 
 
-def _create_nagios_config_hostgroups(cfg):
-    # type: (NagiosConfig) -> None
+def _create_nagios_config_hostgroups(cfg: NagiosConfig) -> None:
     if config.define_hostgroups:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Host groups (controlled by define_hostgroups)\n")
@@ -653,8 +641,7 @@ def _create_nagios_config_hostgroups(cfg):
             }))
 
 
-def _create_nagios_config_servicegroups(cfg):
-    # type: (NagiosConfig) -> None
+def _create_nagios_config_servicegroups(cfg: NagiosConfig) -> None:
     if config.define_servicegroups:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Service groups (controlled by define_servicegroups)\n")
@@ -673,8 +660,7 @@ def _create_nagios_config_servicegroups(cfg):
                 }))
 
 
-def _create_nagios_config_contactgroups(cfg):
-    # type: (NagiosConfig) -> None
+def _create_nagios_config_contactgroups(cfg: NagiosConfig) -> None:
     # TODO: According to our types, define_contactgroups can NEVER be False,
     # but to be sure (old user configs lying around???) we keep the test and
     # shut up mypy. :-/
@@ -706,8 +692,7 @@ def _create_nagios_config_contactgroups(cfg):
         cfg.write(_format_nagios_object("contactgroup", contactgroup_spec))
 
 
-def _create_nagios_config_commands(cfg):
-    # type: (NagiosConfig) -> None
+def _create_nagios_config_commands(cfg: NagiosConfig) -> None:
     if config.generate_dummy_commands:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Dummy check commands and active check commands\n")
@@ -747,8 +732,7 @@ def _create_nagios_config_commands(cfg):
             }))
 
 
-def _create_nagios_config_timeperiods(cfg):
-    # type: (NagiosConfig) -> None
+def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
     if len(config.timeperiods) > 0:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
@@ -775,8 +759,7 @@ def _create_nagios_config_timeperiods(cfg):
             cfg.write(_format_nagios_object("timeperiod", timeperiod_spec))
 
 
-def _create_nagios_config_contacts(cfg, hostnames):
-    # type: (NagiosConfig, List[HostName]) -> None
+def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: List[HostName]) -> None:
     if len(config.contacts) > 0:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Contact definitions (controlled by variable 'contacts')\n")
@@ -857,17 +840,16 @@ def _create_nagios_config_contacts(cfg, hostnames):
                 }))
 
 
-def _quote_nagios_string(s):
-    # type: (str) -> str
+def _quote_nagios_string(s: str) -> str:
     """Quote string for use in a nagios command execution.  Please note that also
     quoting for ! and backslash for Nagios itself takes place here."""
     return "'" + s.replace('\\', '\\\\').replace("'", "'\"'\"'").replace('!', '\\!') + "'"
 
 
-def _extra_service_conf_of(cfg, config_cache, hostname, description):
-    # type: (NagiosConfig, ConfigCache, HostName, ServiceName) -> ObjectSpec
+def _extra_service_conf_of(cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName,
+                           description: ServiceName) -> ObjectSpec:
     """Collect all extra configuration data for a service"""
-    service_spec = {}  # type: ObjectSpec
+    service_spec: ObjectSpec = {}
 
     # Add contact groups to the config only if the user has defined them.
     # Otherwise inherit the contact groups from the host.
@@ -905,8 +887,7 @@ def _extra_service_conf_of(cfg, config_cache, hostname, description):
 #   '----------------------------------------------------------------------'
 
 
-def _find_check_plugins(checktype):
-    # type: (CheckPluginNameStr) -> List[str]
+def _find_check_plugins(checktype: CheckPluginNameStr) -> List[str]:
     """Find files to be included in precompile host check for a certain
     check (for example df or mem.used).
 
@@ -931,8 +912,7 @@ def _find_check_plugins(checktype):
     return paths
 
 
-def precompile_hostchecks():
-    # type: () -> None
+def precompile_hostchecks() -> None:
     console.verbose("Creating precompiled host check config...\n")
     config.PackedConfig().save()
 
@@ -952,8 +932,7 @@ def precompile_hostchecks():
             sys.exit(5)
 
 
-def _precompile_hostcheck(config_cache, hostname):
-    # type: (ConfigCache, HostName) -> None
+def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None:
     host_config = config_cache.get_host_config(hostname)
 
     console.verbose("%s%s%-16s%s:", tty.bold, tty.blue, hostname, tty.normal, stream=sys.stderr)
@@ -1125,8 +1104,7 @@ if '-d' in sys.argv:
     console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
 
-def _get_needed_check_plugin_names(host_config):
-    # type: (config.HostConfig) -> Set[CheckPluginNameStr]
+def _get_needed_check_plugin_names(host_config: config.HostConfig) -> Set[CheckPluginNameStr]:
     import cmk.base.check_table as check_table  # pylint: disable=import-outside-toplevel
     needed_check_plugin_names = set([])
 
@@ -1164,12 +1142,11 @@ def _get_needed_check_plugin_names(host_config):
     return needed_check_plugin_names
 
 
-def _get_needed_check_file_names(needed_check_plugin_names):
-    # type: (Set[CheckPluginNameStr]) -> List[str]
+def _get_needed_check_file_names(needed_check_plugin_names: Set[CheckPluginNameStr]) -> List[str]:
     # check info table
     # We need to include all those plugins that are referenced in the host's
     # check table.
-    filenames = []  # type: List[str]
+    filenames: List[str] = []
     for check_plugin_name in needed_check_plugin_names:
         section_name = section_name_of(check_plugin_name)
         # Add library files needed by check (also look in local)

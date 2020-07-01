@@ -75,8 +75,7 @@ class ABCService(abc.ABC):
         return self._description
 
     @property
-    def service_labels(self):
-        # type: () -> DiscoveredServiceLabels
+    def service_labels(self) -> DiscoveredServiceLabels:
         return self._service_labels
 
     def _service_id(self) -> Tuple[CheckPluginNameStr, Item]:
@@ -182,8 +181,7 @@ class DiscoveredService(ABCService):
         )
 
 
-def is_snmp_check(check_plugin_name):
-    # type: (str) -> bool
+def is_snmp_check(check_plugin_name: str) -> bool:
     cache = _runtime_cache.get_dict("is_snmp_check")
     try:
         return cache[check_plugin_name]

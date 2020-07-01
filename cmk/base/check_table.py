@@ -32,14 +32,13 @@ from cmk.base.check_utils import (
 # - Check all call sites and cleanup the different
 # - Make this a helper object of HostConfig?
 class HostCheckTable:
-    def __init__(self, config_cache, host_config):
-        # type: (config.ConfigCache, config.HostConfig) -> None
+    def __init__(self, config_cache: config.ConfigCache, host_config: config.HostConfig) -> None:
         super(HostCheckTable, self).__init__()
         self._config_cache = config_cache
         self._host_config = host_config
 
-    def get(self, remove_duplicates, use_cache, skip_autochecks, filter_mode, skip_ignored):
-        # type: (bool, bool, bool, Optional[str], bool) -> CheckTable
+    def get(self, remove_duplicates: bool, use_cache: bool, skip_autochecks: bool,
+            filter_mode: Optional[str], skip_ignored: bool) -> CheckTable:
         """Returns check table for a specific host
 
         Format of check table is: {(checkname, item): (params, description)}
@@ -71,7 +70,7 @@ class HostCheckTable:
                 return remove_duplicate_checks(check_table_cache[table_cache_id])
             return check_table_cache[table_cache_id]
 
-        check_table = {}  # type: CheckTable
+        check_table: CheckTable = {}
 
         # Now process all entries that are specific to the host
         # in search (single host) or that might match the host.
@@ -93,9 +92,8 @@ class HostCheckTable:
             return remove_duplicate_checks(check_table)
         return check_table
 
-    def _get_static_check_entries(self, host_config):
-        # type: (config.HostConfig) -> Iterator[Service]
-        entries = []  # type: List[Service]
+    def _get_static_check_entries(self, host_config: config.HostConfig) -> Iterator[Service]:
+        entries: List[Service] = []
         for _checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
             if config.has_timespecific_params(params):
                 timespec_params = [params]
@@ -120,9 +118,8 @@ class HostCheckTable:
         # a host with the same combination of check type and item.
         return reversed(entries)
 
-    def _handle_service(self, service):
-        # type: (Service) -> CheckTable
-        check_table = {}  # type: CheckTable
+    def _handle_service(self, service: Service) -> CheckTable:
+        check_table: CheckTable = {}
         hostname = self._host_config.hostname
 
         if not self._is_checkname_valid(service.check_plugin_name):
@@ -148,15 +145,13 @@ class HostCheckTable:
 
         return check_table
 
-    def _is_checkname_valid(self, checkname):
-        # type: (CheckPluginNameStr) -> bool
+    def _is_checkname_valid(self, checkname: CheckPluginNameStr) -> bool:
         # TODO (mo): centralize maincheckify: CMK-4295
         plugin_name = CheckPluginName(maincheckify(checkname))
         return config.get_registered_check_plugin(plugin_name) is not None
 
-    def _get_clustered_services(self, hostname, skip_autochecks):
-        # type: (str, bool) -> CheckTable
-        check_table = {}  # type: CheckTable
+    def _get_clustered_services(self, hostname: str, skip_autochecks: bool) -> CheckTable:
+        check_table: CheckTable = {}
         for node in self._host_config.nodes or []:
             # TODO: Cleanup this to work exactly like the logic above (for a single host)
             node_config = self._config_cache.get_host_config(node)
@@ -186,13 +181,12 @@ class HostCheckTable:
         return check_table
 
 
-def get_check_table(hostname,
-                    remove_duplicates=False,
-                    use_cache=True,
-                    skip_autochecks=False,
-                    filter_mode=None,
-                    skip_ignored=True):
-    # type: (str, bool, bool, bool, Optional[str], bool) -> CheckTable
+def get_check_table(hostname: str,
+                    remove_duplicates: bool = False,
+                    use_cache: bool = True,
+                    skip_autochecks: bool = False,
+                    filter_mode: Optional[str] = None,
+                    skip_ignored: bool = True) -> CheckTable:
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
@@ -200,11 +194,10 @@ def get_check_table(hostname,
     return table.get(remove_duplicates, use_cache, skip_autochecks, filter_mode, skip_ignored)
 
 
-def get_precompiled_check_table(hostname,
-                                remove_duplicates=True,
-                                filter_mode=None,
-                                skip_ignored=True):
-    # type: (str, bool, Optional[str], bool) -> List[Service]
+def get_precompiled_check_table(hostname: str,
+                                remove_duplicates: bool = True,
+                                filter_mode: Optional[str] = None,
+                                skip_ignored: bool = True) -> List[Service]:
     """The precompiled check table is somehow special compared to the regular check table.
 
     a) It is sorted by the service dependencies (which are only relevant for Nagios). The
@@ -235,7 +228,7 @@ def get_precompiled_check_table(hostname,
                                           remove_duplicates,
                                           filter_mode=filter_mode,
                                           skip_ignored=skip_ignored)
-    services = []  # type: List[Service]
+    services: List[Service] = []
     for service in host_checks:
         # make these globals available to the precompile function
         check_api_utils.set_service(service.check_plugin_name, service.description)
@@ -250,8 +243,9 @@ def get_precompiled_check_table(hostname,
     return services
 
 
-def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
-    # type: (HostName, Item, LegacyCheckParameters, CheckPluginNameStr) -> LegacyCheckParameters
+def get_precompiled_check_parameters(
+        hostname: HostName, item: Item, params: LegacyCheckParameters,
+        check_plugin_name: CheckPluginNameStr) -> LegacyCheckParameters:
     precomp_func = config.precompile_params.get(check_plugin_name)
     if precomp_func:
         if not callable(precomp_func):
@@ -273,8 +267,10 @@ def remove_duplicate_checks(check_table: CheckTable) -> CheckTable:
     return {key: check_table[key] for key in service_keys_by_description.values()}
 
 
-def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
-    # type: (HostName, bool, Optional[str], bool) -> Set[CheckPluginNameStr]
+def get_needed_check_names(hostname: HostName,
+                           remove_duplicates: bool = False,
+                           filter_mode: Optional[str] = None,
+                           skip_ignored: bool = True) -> Set[CheckPluginNameStr]:
     return {
         s.check_plugin_name for s in get_check_table(hostname,
                                                      remove_duplicates=remove_duplicates,
@@ -284,8 +280,10 @@ def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, 
 
 
 # TODO: Clean this up!
-def _get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
-    # type: (HostName, bool, Optional[str], bool) -> List[Service]
+def _get_sorted_check_table(hostname: HostName,
+                            remove_duplicates: bool = False,
+                            filter_mode: Optional[str] = None,
+                            skip_ignored: bool = True) -> List[Service]:
     # Convert from dictionary into simple tuple list. Then sort it according to
     # the service dependencies.
     # TODO: Use the Service objects from get_check_table once it returns these objects
@@ -299,7 +297,7 @@ def _get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None,
 
     unsorted.sort(key=lambda x: x[0].description)
 
-    ordered = []  # type: List[Service]
+    ordered: List[Service] = []
     while len(unsorted) > 0:
         unsorted_descrs = {entry[0].description for entry in unsorted}
         left = []

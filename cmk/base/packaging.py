@@ -41,8 +41,7 @@ _pac_ext = ".mkp"
 PackageName = str
 
 
-def packaging_usage():
-    # type: () -> None
+def packaging_usage() -> None:
     sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
@@ -64,8 +63,7 @@ Package files are located in %s.
 """ % package_dir())
 
 
-def do_packaging(args):
-    # type: (List[str]) -> None
+def do_packaging(args: List[str]) -> None:
     if len(args) == 0:
         packaging_usage()
         sys.exit(1)
@@ -97,8 +95,7 @@ def do_packaging(args):
         sys.exit(1)
 
 
-def package_list(args):
-    # type: (List[str]) -> None
+def package_list(args: List[str]) -> None:
     if len(args) > 0:
         for name in args:
             show_package_contents(name)
@@ -117,26 +114,22 @@ def package_list(args):
                 sys.stdout.write("%s\n" % pacname)
 
 
-def package_info(args):
-    # type: (List[str]) -> None
+def package_info(args: List[str]) -> None:
     if len(args) == 0:
         raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkp")
     for name in args:
         show_package_info(name)
 
 
-def show_package_contents(name):
-    # type: (PackageName) -> None
+def show_package_contents(name: PackageName) -> None:
     show_package(name, False)
 
 
-def show_package_info(name):
-    # type: (PackageName) -> None
+def show_package_info(name: PackageName) -> None:
     show_package(name, True)
 
 
-def show_package(name, show_info=False):
-    # type: (PackageName, bool) -> None
+def show_package(name: PackageName, show_info: bool = False) -> None:
     try:
         if name.endswith(_pac_ext):
             tar = tarfile.open(name, "r:gz")
@@ -185,8 +178,7 @@ def show_package(name, show_info=False):
                     sys.stdout.write(part.path + "/" + fn + "\n")
 
 
-def package_create(args):
-    # type: (List[str]) -> None
+def package_create(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P create NAME")
 
@@ -213,8 +205,7 @@ def package_create(args):
                package_dir() / pacname, tty.normal)
 
 
-def package_find(_no_args):
-    # type: (List[str]) -> None
+def package_find(_no_args: List[str]) -> None:
     first = True
     for part in get_package_parts() + get_config_parts():
         files = unpackaged_files_in_dir(part.ident, part.path)
@@ -234,16 +225,14 @@ def package_find(_no_args):
         logger.log(VERBOSE, "No unpackaged files found.")
 
 
-def package_release(args):
-    # type: (List[str]) -> None
+def package_release(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P release NAME")
     pacname = args[0]
     release_package(pacname)
 
 
-def package_pack(args):
-    # type: (List[str]) -> None
+def package_pack(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P pack NAME")
 
@@ -269,8 +258,7 @@ def package_pack(args):
     logger.log(VERBOSE, "Successfully created %s", tarfilename)
 
 
-def package_remove(args):
-    # type: (List[str]) -> None
+def package_remove(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P remove NAME")
     pacname = args[0]
@@ -283,8 +271,7 @@ def package_remove(args):
     logger.log(VERBOSE, "Successfully removed package %s.", pacname)
 
 
-def package_install(args):
-    # type: (List[str]) -> None
+def package_install(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P install NAME")
     path = Path(args[0])

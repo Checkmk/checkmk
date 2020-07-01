@@ -145,7 +145,7 @@ def _parse_perftxt(string):
 
 def parse_local(string_table):
     now = time.time()
-    parsed = {}  # type: Dict[Optional[str], Union[LocalResult, List]]
+    parsed: Dict[Optional[str], Union[LocalResult, List]] = {}
     for line in string_table:
         # allows blank characters in service description
         if len(line) == 1:

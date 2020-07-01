@@ -27,8 +27,7 @@ from cmk.base.api.agent_based.section_types import (
 from cmk.base.discovered_labels import HostLabel
 
 
-def _validate_parse_function(parse_function):
-    # type: (Union[AgentParseFunction, SNMPParseFunction]) -> None
+def _validate_parse_function(parse_function: Union[AgentParseFunction, SNMPParseFunction]) -> None:
     """Validate the parse functions signature and type"""
 
     if not inspect.isfunction(parse_function):
@@ -42,8 +41,7 @@ def _validate_parse_function(parse_function):
         raise ValueError("parse function must accept exactly one argument 'string_table'")
 
 
-def _validate_host_label_function(host_label_function):
-    # type: (HostLabelFunction) -> None
+def _validate_host_label_function(host_label_function: HostLabelFunction) -> None:
     """Validate the host label functions signature and type"""
 
     if not inspect.isgeneratorfunction(host_label_function):
@@ -55,14 +53,12 @@ def _validate_host_label_function(host_label_function):
         raise ValueError("host label function must accept exactly one argument 'section'")
 
 
-def _validate_supersedings(supersedes):
-    # type: (List[SectionName]) -> None
+def _validate_supersedings(supersedes: List[SectionName]) -> None:
     if not len(supersedes) == len(set(supersedes)):
         raise ValueError("duplicate supersedes entry")
 
 
-def _validate_detect_spec(detect_spec):
-    # type: (SNMPDetectSpec) -> None
+def _validate_detect_spec(detect_spec: SNMPDetectSpec) -> None:
     if not (isinstance(detect_spec, list) and
             all(isinstance(element, list) for element in detect_spec)):
         raise TypeError("value of 'detect' keyword must be a list of lists of 3-tuples")
@@ -91,8 +87,7 @@ def _validate_detect_spec(detect_spec):
                       (expected_match,))
 
 
-def _validate_snmp_trees(trees):
-    # type: (List[SNMPTree]) -> None
+def _validate_snmp_trees(trees: List[SNMPTree]) -> None:
     type_error = TypeError("value of 'trees' keyword must be a non-empty list of SNMPTrees")
     if not isinstance(trees, list):
         raise type_error
@@ -102,14 +97,13 @@ def _validate_snmp_trees(trees):
         raise type_error
 
 
-def _noop_host_label_function(section):  # pylint: disable=unused-argument
-    # type: (Any) -> Generator[HostLabel, None, None]
+def _noop_host_label_function(section: Any) -> Generator[HostLabel, None, None]:  # pylint: disable=unused-argument
     return
     yield  # pylint: disable=unreachable
 
 
-def _create_host_label_function(host_label_function):
-    # type: (Optional[HostLabelFunction]) -> HostLabelFunction
+def _create_host_label_function(
+        host_label_function: Optional[HostLabelFunction]) -> HostLabelFunction:
     if host_label_function is None:
         return _noop_host_label_function
 
@@ -129,8 +123,7 @@ def _create_host_label_function(host_label_function):
     return filtered_generator
 
 
-def _create_supersedes(supersedes):
-    # type: (Optional[List[str]]) -> List[SectionName]
+def _create_supersedes(supersedes: Optional[List[str]]) -> List[SectionName]:
     if supersedes is None:
         return []
 
@@ -141,15 +134,14 @@ def _create_supersedes(supersedes):
 
 
 def create_agent_section_plugin(
-        *,
-        name,  # type: str
-        parsed_section_name=None,  # type: Optional[str]
-        parse_function,  # type: AgentParseFunction
-        host_label_function=None,  # type: Optional[HostLabelFunction]
-        supersedes=None,  # type:  Optional[List[str]]
-        forbidden_names,  # type: List[SectionName]
-):
-    # type: (...) -> AgentSectionPlugin
+    *,
+    name: str,
+    parsed_section_name: Optional[str] = None,
+    parse_function: AgentParseFunction,
+    host_label_function: Optional[HostLabelFunction] = None,
+    supersedes: Optional[List[str]] = None,
+    forbidden_names: List[SectionName],
+) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
 
     For a detailed description of the parameters please refer to the exposed function in the
@@ -175,17 +167,16 @@ def create_agent_section_plugin(
 
 
 def create_snmp_section_plugin(
-        *,
-        name,  # type: str
-        parsed_section_name=None,  # type: Optional[str]
-        parse_function,  # type: SNMPParseFunction
-        host_label_function=None,  # type: Optional[HostLabelFunction]
-        supersedes=None,  # type:  Optional[List[str]]
-        detect_spec,  # type: SNMPDetectSpec
-        trees,  # type: List[SNMPTree]
-        forbidden_names=None,  # type: Optional[List[SectionName]]
-):
-    # type: (...) -> SNMPSectionPlugin
+    *,
+    name: str,
+    parsed_section_name: Optional[str] = None,
+    parse_function: SNMPParseFunction,
+    host_label_function: Optional[HostLabelFunction] = None,
+    supersedes: Optional[List[str]] = None,
+    detect_spec: SNMPDetectSpec,
+    trees: List[SNMPTree],
+    forbidden_names: Optional[List[SectionName]] = None,
+) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
 
     For a detailed description of the parameters please refer to the exposed function in the

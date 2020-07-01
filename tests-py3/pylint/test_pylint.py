@@ -53,6 +53,16 @@ def test_pylint(pylint_test_dir, capsys):
 
 
 def _get_files_to_check(pylint_test_dir):
+    # Add the compiled files for things that are no modules yet
+    open(pylint_test_dir + "/__init__.py", "w")
+    _compile_check_and_inventory_plugins(pylint_test_dir)
+
+    if is_enterprise_repo():
+        _compile_bakery_plugins(pylint_test_dir)
+
+    # Not checking compiled check, inventory, bakery plugins with Python 3
+    files = [ pylint_test_dir ]
+
     p = subprocess.Popen(
         ["%s/scripts/find-python-files" % repo_path(), "3"],
         stdout=subprocess.PIPE,
@@ -60,10 +70,8 @@ def _get_files_to_check(pylint_test_dir):
         shell=False,
         close_fds=True,
     )
-
     stdout = p.communicate()[0]
 
-    files = []
     for fname in stdout.splitlines():
         # Thin out these excludes some day...
         rel_path = fname[len(repo_path()) + 1:]
@@ -91,18 +99,6 @@ def _get_files_to_check(pylint_test_dir):
             continue
 
         files.append(fname)
-
-    # Add the compiled files for things that are no modules yet
-    open(pylint_test_dir + "/__init__.py", "w")
-    _compile_check_and_inventory_plugins(pylint_test_dir)
-
-    if is_enterprise_repo():
-        _compile_bakery_plugins(pylint_test_dir)
-
-    # Not checking compiled check, inventory, bakery plugins with Python 3
-    files += [
-        pylint_test_dir,
-    ]
 
     return files
 

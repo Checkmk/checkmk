@@ -3,10 +3,13 @@
 function install(){
     echo "Installing Forecast Graphs dependencies..."
     # Install dependecies
-    pip install pystan
+    LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install backports.ssl_match_hostname
+    LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install pystan
     LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install subprocess32
     LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install fbprophet==0.5
+    pip uninstall -y holidays
     pip uninstall -y matplotlib
+    LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install holidays==0.9.10
 
     # Cleanup of unnecessary files
     rm -rf local/lib/python/fbprophet/tests

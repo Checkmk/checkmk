@@ -672,32 +672,35 @@ def _dashboard_context_dialog(board: DashboardConfig, board_context: VisualConte
 
     forms.header(_("Dashboard context"))
 
-    # Configure required single info keys (the ones that are not set by the config)
-    single_context_filters = []
-    for info_key in unconfigured_single_infos:
-        info = visuals.visual_info_registry[info_key]()
+    try:
+        # Configure required single info keys (the ones that are not set by the config)
+        single_context_filters = []
+        for info_key in unconfigured_single_infos:
+            info = visuals.visual_info_registry[info_key]()
 
-        for filter_name, valuespec in info.single_spec:
-            single_context_filters.append(filter_name)
-            forms.section(valuespec.title())
-            valuespec.render_input(filter_name, None)
-    forms.section_close()
+            for filter_name, valuespec in info.single_spec:
+                single_context_filters.append(filter_name)
+                forms.section(valuespec.title())
+                valuespec.render_input(filter_name, None)
+        forms.section_close()
 
-    # Configure required context filters set in the dashboard config
-    if board["mandatory_context_filters"]:
-        forms.section(_("Required context"))
-        for filter_key in board["mandatory_context_filters"]:
-            valuespec = visuals.VisualFilter(filter_key)
-            valuespec.render_input(filter_key, board_context.get(filter_key))
+        # Configure required context filters set in the dashboard config
+        if board["mandatory_context_filters"]:
+            forms.section(_("Required context"))
+            for filter_key in board["mandatory_context_filters"]:
+                valuespec = visuals.VisualFilter(filter_key)
+                valuespec.render_input(filter_key, board_context.get(filter_key))
 
-    # Give the user the option to redefine filters configured in the dashboard config
-    # and also give the option to add some additional filters
-    forms.section(_("Additional context"))
-    # Like _dashboard_info_handler we assume that only host / service filters are relevant
-    vs_filters = visuals.VisualFilterList(info_list=["host", "service"],
-                                          ignore=board["mandatory_context_filters"] +
-                                          single_context_filters)
-    vs_filters.render_input("", board_context)
+        # Give the user the option to redefine filters configured in the dashboard config
+        # and also give the option to add some additional filters
+        forms.section(_("Additional context"))
+        # Like _dashboard_info_handler we assume that only host / service filters are relevant
+        vs_filters = visuals.VisualFilterList(info_list=["host", "service"],
+                                              ignore=board["mandatory_context_filters"] +
+                                              single_context_filters)
+        vs_filters.render_input("", board_context)
+    except Exception:
+        crash_reporting.handle_exception_as_gui_crash_report()
 
     html.open_tr()
     html.open_td(colspan=2)

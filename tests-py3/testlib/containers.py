@@ -119,8 +119,8 @@ def _docker_client():
     return docker.from_env(timeout=1200)
 
 
-def _get_or_load_image(client: docker.DockerClient,
-                       image_name_with_tag: str) -> Optional[docker.Image]:
+def _get_or_load_image(client: 'docker.DockerClient',
+                       image_name_with_tag: str) -> Optional['docker.Image']:
     try:
         image = client.images.get(image_name_with_tag)
         logger.info("  Available locally (%s)", image.short_id)
@@ -171,7 +171,7 @@ def _handle_api_error(e):
     raise e
 
 
-def _create_cmk_image(client: docker.DockerClient, base_image_name: str, docker_tag: str,
+def _create_cmk_image(client: 'docker.DockerClient', base_image_name: str, docker_tag: str,
                       version: CMKVersion) -> str:
     base_image_name_with_tag = "%s:%s" % (base_image_name, docker_tag)
 
@@ -455,7 +455,7 @@ class ContainerExec:
         return self.poll()
 
 
-def _copy_directory(container: docker.types.containers.Container, src_path: Path,
+def _copy_directory(container: 'docker.types.containers.Container', src_path: Path,
                     dest_path: Path) -> None:
     logger.info("Copying %s from container to %s", src_path, dest_path)
 

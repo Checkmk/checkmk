@@ -1211,7 +1211,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
         return cert_details
 
-    def _is_ca_certificate(self, crypto_cert: SSL.Certificate) -> bool:
+    def _is_ca_certificate(self, crypto_cert: 'SSL.Certificate') -> bool:
         try:
             key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
             use_key_for_signing = key_usage.value.key_cert_sign is True

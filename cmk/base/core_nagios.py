@@ -17,11 +17,12 @@ from six import ensure_binary, ensure_str
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import section_name_of
+from cmk.utils.check_utils import section_name_of, maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
+    CheckPluginName,
     ContactgroupName,
     HostAddress,
     HostgroupName,
@@ -32,6 +33,7 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.base.utils
+from cmk.base.api.agent_based.checking_types import CheckPlugin
 import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -948,8 +950,9 @@ def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None
             if e.errno != errno.ENOENT:
                 raise
 
-    needed_check_plugin_names = _get_needed_check_plugin_names(host_config)
-    if not needed_check_plugin_names:
+    needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names = (
+        _get_needed_check_plugin_names(host_config))
+    if not (needed_legacy_check_plugin_names or needed_agent_based_check_plugin_names):
         console.verbose("(no Check_MK checks)\n")
         return
 
@@ -979,7 +982,11 @@ def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None
     output.write("import cmk.base.checking as checking\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")
-    output.write("import cmk.base.plugins.agent_based.local\n")  # TODO (mo): do this properly!
+    output.write("\n")
+    for module in _get_needed_agent_based_modules(needed_agent_based_check_plugin_names):
+        full_mod_name = "cmk.base.plugins.agent_based.%s" % module
+        output.write("import %s\n" % full_mod_name)
+        console.verbose(" %s%s%s", tty.green, full_mod_name, tty.normal, stream=sys.stderr)
 
     # Self-compile: replace symlink with precompiled python-code, if
     # we are run for the first time
@@ -1017,9 +1024,9 @@ if '-d' in sys.argv:
 """)
 
     output.write("config.load_checks(check_api.get_check_api_context, %r)\n" %
-                 _get_needed_check_file_names(needed_check_plugin_names))
+                 _get_needed_check_file_names(needed_legacy_check_plugin_names))
 
-    for check_plugin_name in sorted(needed_check_plugin_names):
+    for check_plugin_name in sorted(needed_legacy_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 
     output.write("config.load_packed_config()\n")
@@ -1104,9 +1111,11 @@ if '-d' in sys.argv:
     console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
 
-def _get_needed_check_plugin_names(host_config: config.HostConfig) -> Set[CheckPluginNameStr]:
+def _get_needed_check_plugin_names(
+    host_config: config.HostConfig,) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName]]:
     import cmk.base.check_table as check_table  # pylint: disable=import-outside-toplevel
-    needed_check_plugin_names = set([])
+    needed_legacy_check_plugin_names: Set[CheckPluginNameStr] = set([])
+    needed_agent_based_check_plugin_names: Set[CheckPluginName] = set([])
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
     # to be loaded
@@ -1117,33 +1126,43 @@ def _get_needed_check_plugin_names(host_config: config.HostConfig) -> Set[CheckP
     )
     for source in sources:
         if isinstance(source, data_sources.programs.SpecialAgentDataSource):
-            needed_check_plugin_names.add(source.special_agent_plugin_file_name)
+            needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)
 
     # Collect the needed check plugin names using the host check table
     for check_plugin_name in check_table.get_needed_check_names(host_config.hostname,
                                                                 filter_mode="include_clustered",
                                                                 skip_ignored=False):
         if check_plugin_name not in config.check_info:
-            continue  # TODO (mo): do this properly
+            # TODO (mo): centralize maincheckify: CMK-4295
+            needed_agent_based_check_plugin_names.add(
+                CheckPluginName(maincheckify(check_plugin_name)))
+            continue
 
         if config.check_info[check_plugin_name].get("extra_sections"):
             for section_name in config.check_info[check_plugin_name]["extra_sections"]:
                 if section_name in config.check_info:
-                    needed_check_plugin_names.add(section_name)
+                    needed_legacy_check_plugin_names.add(section_name)
 
-        needed_check_plugin_names.add(check_plugin_name)
+        needed_legacy_check_plugin_names.add(check_plugin_name)
 
     # Also include the check plugins of the cluster nodes to be able to load
     # the autochecks of the nodes
+    # TODO (mo): is this only due to the referenced variables? If so, we can remove this block
+    # once the variables are resolved during cmk-update-config
     if host_config.is_cluster:
         nodes = host_config.nodes
         if nodes is None:
             raise MKGeneralException("Invalid cluster configuration")
         for node in nodes:
-            needed_check_plugin_names.update(
-                check_table.get_needed_check_names(node, skip_ignored=False))
+            for check_plugin_name in check_table.get_needed_check_names(node, skip_ignored=False):
+                if check_plugin_name in config.check_info:
+                    needed_legacy_check_plugin_names.add(check_plugin_name)
+                else:
+                    # TODO (mo): centralize maincheckify: CMK-4295
+                    needed_agent_based_check_plugin_names.add(
+                        CheckPluginName(maincheckify(check_plugin_name)))
 
-    return needed_check_plugin_names
+    return needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names
 
 
 def _get_needed_check_file_names(needed_check_plugin_names: Set[CheckPluginNameStr]) -> List[str]:
@@ -1175,3 +1194,20 @@ def _get_needed_check_file_names(needed_check_plugin_names: Set[CheckPluginNameS
                 filenames.append(path)
 
     return filenames
+
+
+def _get_needed_agent_based_modules(check_plugin_names: Set[CheckPluginName],) -> List[str]:
+    check_plugins_opt: List[Optional[CheckPlugin]] = [
+        config.get_registered_check_plugin(p) for p in check_plugin_names
+    ]
+
+    check_modules = {
+        plugin.module
+        for plugin in check_plugins_opt
+        if plugin is not None and plugin.module is not None
+    }
+    check_modules.update(
+        (section.module
+         for section in config.get_relevant_raw_sections(check_plugin_names).values()
+         if section.module is not None),)
+    return sorted(check_modules)

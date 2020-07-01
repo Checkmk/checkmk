@@ -11,6 +11,7 @@ from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 from cmk.base import config
 from cmk.base.api.agent_based.checking_types import CheckFunction, DiscoveryFunction
+from cmk.base.api.agent_based.register.utils import get_plugin_module_name
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
@@ -58,6 +59,7 @@ def agent_section(
         host_label_function=host_label_function,
         supersedes=supersedes,
         forbidden_names=forbidden_names,
+        module=get_plugin_module_name(),
     )
 
     config.registered_agent_sections[section_plugin.name] = section_plugin
@@ -108,6 +110,7 @@ def snmp_section(
         trees=trees,
         supersedes=supersedes,
         forbidden_names=forbidden_names,
+        module=get_plugin_module_name(),
     )
 
     config.registered_snmp_sections[section_plugin.name] = section_plugin
@@ -162,6 +165,7 @@ def check_plugin(
         check_ruleset_name=check_ruleset_name,
         cluster_check_function=cluster_check_function,
         forbidden_names=list(config.registered_check_plugins),
+        module=get_plugin_module_name(),
     )
 
     config.registered_check_plugins[plugin.name] = plugin

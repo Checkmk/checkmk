@@ -141,6 +141,7 @@ def create_agent_section_plugin(
     host_label_function: Optional[HostLabelFunction] = None,
     supersedes: Optional[List[str]] = None,
     forbidden_names: List[SectionName],
+    module: Optional[str] = None,
 ) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
 
@@ -163,6 +164,7 @@ def create_agent_section_plugin(
         parse_function,
         _create_host_label_function(host_label_function),
         _create_supersedes(supersedes),
+        module,
     )
 
 
@@ -176,6 +178,7 @@ def create_snmp_section_plugin(
     detect_spec: SNMPDetectSpec,
     trees: List[SNMPTree],
     forbidden_names: Optional[List[SectionName]] = None,
+    module: Optional[str] = None,
 ) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
 
@@ -202,4 +205,5 @@ def create_snmp_section_plugin(
         _create_supersedes(supersedes),
         detect_spec,
         trees,
+        module,
     )

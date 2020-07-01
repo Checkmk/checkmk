@@ -102,7 +102,7 @@ def test_create_agent_section_plugin():
     )
 
     assert isinstance(plugin, section_types.AgentSectionPlugin)
-    assert len(plugin) == 5
+    assert len(plugin) == 6
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("norris")  # "chuck")
     assert plugin.parse_function is _parse_dummy
@@ -156,7 +156,7 @@ def test_create_snmp_section_plugin():
     )
 
     assert isinstance(plugin, section_types.SNMPSectionPlugin)
-    assert len(plugin) == 7
+    assert len(plugin) == 8
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("norris")  # "chuck")
     assert plugin.parse_function is _parse_dummy

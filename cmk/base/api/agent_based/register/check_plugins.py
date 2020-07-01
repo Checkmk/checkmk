@@ -198,6 +198,7 @@ def create_check_plugin(
     check_ruleset_name: Optional[str] = None,
     cluster_check_function: Optional[Callable] = None,
     forbidden_names: List[CheckPluginName],
+    module: Optional[str] = None,
 ) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one
 
@@ -275,6 +276,7 @@ def create_check_plugin(
         check_default_parameters or {},
         None if check_ruleset_name is None else RuleSetName(check_ruleset_name),
         cluster_check_function,
+        module,
     )
 
 
@@ -290,6 +292,7 @@ def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
         original_plugin.check_default_parameters,
         original_plugin.check_ruleset_name,
         original_plugin.cluster_check_function,
+        original_plugin.module,
     )
 
 

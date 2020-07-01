@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES
 
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import SectionName, CheckPluginName
 
 from cmk.snmplib.type_defs import SNMPTree
 
@@ -182,6 +182,12 @@ def test_exception_required(config_check_info):
     assert "apc_symmetra_temp" in config_check_info, (
         "In cmk.base.config is an extra condition for 'apc_symmetra_temp'. "
         "If this test fails, you can remove those two lines along with this test.")
+
+
+def test_module_attribute(migrated_checks):
+    # TODO: this really belongs somewhere else, but for now we use the fixture from this module
+    local_check = migrated_checks[CheckPluginName("local")]
+    assert local_check.module == "local"
 
 
 def test_all_checks_migrated(config_check_info, migrated_checks):

@@ -297,15 +297,18 @@ DiscoveryFunction = Callable[..., Generator[Service, None, None]]
 
 CheckFunction = Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]
 
-CheckPlugin = NamedTuple("CheckPlugin", [
-    ("name", CheckPluginName),
-    ("sections", List[ParsedSectionName]),
-    ("service_name", str),
-    ("discovery_function", DiscoveryFunction),
-    ("discovery_default_parameters", Dict[str, Any]),
-    ("discovery_ruleset_name", Optional[RuleSetName]),
-    ("check_function", CheckFunction),
-    ("check_default_parameters", Dict[str, Any]),
-    ("check_ruleset_name", Optional[RuleSetName]),
-    ("cluster_check_function", CheckFunction),
-])
+CheckPlugin = NamedTuple(
+    "CheckPlugin",
+    [
+        ("name", CheckPluginName),
+        ("sections", List[ParsedSectionName]),
+        ("service_name", str),
+        ("discovery_function", DiscoveryFunction),
+        ("discovery_default_parameters", Dict[str, Any]),
+        ("discovery_ruleset_name", Optional[RuleSetName]),
+        ("check_function", CheckFunction),
+        ("check_default_parameters", Dict[str, Any]),
+        ("check_ruleset_name", Optional[RuleSetName]),
+        ("cluster_check_function", CheckFunction),
+        ("module", Optional[str]),  # not available for auto migrated plugins.
+    ])

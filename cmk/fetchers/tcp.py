@@ -20,11 +20,11 @@ from ._base import AbstractDataFetcher, MKFetcherError
 
 class TCPDataFetcher(AbstractDataFetcher):
     def __init__(
-            self,
-            family,  # type: socket.AddressFamily
-            address,  # type: Tuple[HostAddress, int]
-            timeout,  # type: float
-            encryption_settings,  # type: Dict[str, str]
+        self,
+        family: socket.AddressFamily,
+        address: Tuple[HostAddress, int],
+        timeout: float,
+        encryption_settings: Dict[str, str],
     ):
         # type (...) -> None
         super(TCPDataFetcher, self).__init__()
@@ -33,10 +33,9 @@ class TCPDataFetcher(AbstractDataFetcher):
         self._timeout = timeout
         self._encryption_settings = encryption_settings
         self._logger = logging.getLogger("cmk.fetchers.tcp")
-        self._socket = None  # type: Optional[socket.socket]
+        self._socket: Optional[socket.socket] = None
 
-    def __enter__(self):
-        # type: () -> TCPDataFetcher
+    def __enter__(self) -> 'TCPDataFetcher':
         self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)", self._address[0],
                            self._address[1], self._timeout)
         self._socket = socket.socket(self._family, socket.SOCK_STREAM)
@@ -49,29 +48,26 @@ class TCPDataFetcher(AbstractDataFetcher):
             self._socket = None
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> None
+    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType]) -> None:
         self._logger.debug("Closing TCP connection to %s:%d", self._address[0], self._address[1])
         if self._socket is not None:
             self._socket.close()
         self._socket = None
 
-    def data(self):
-        # type: () -> RawAgentData
+    def data(self) -> RawAgentData:
         if self._socket is None:
             raise MKFetcherError("Not connected")
 
         return self._decrypt(self._raw_data())
 
-    def _raw_data(self):
-        # type: () -> RawAgentData
+    def _raw_data(self) -> RawAgentData:
         self._logger.debug("Reading data from agent")
         if not self._socket:
             return b""
 
-        def recvall(sock):
-            # type: (socket.socket) -> bytes
-            buffer = []  # type: List[bytes]
+        def recvall(sock: socket.socket) -> bytes:
+            buffer: List[bytes] = []
             while True:
                 data = sock.recv(4096, socket.MSG_WAITALL)
                 if not data:
@@ -86,8 +82,7 @@ class TCPDataFetcher(AbstractDataFetcher):
                 raise
             raise MKFetcherError("Communication failed: %s" % e)
 
-    def _decrypt(self, output):
-        # type: (RawAgentData) -> RawAgentData
+    def _decrypt(self, output: RawAgentData) -> RawAgentData:
         if output.startswith(b"<<<"):
             self._logger.debug("Output is not encrypted")
             if self._encryption_settings["use_regular"] == "enforce":
@@ -115,8 +110,7 @@ class TCPDataFetcher(AbstractDataFetcher):
         return output
 
     # TODO: Sync with real_type_checks._decrypt_rtc_package
-    def _real_decrypt(self, output):
-        # type: (RawAgentData) -> RawAgentData
+    def _real_decrypt(self, output: RawAgentData) -> RawAgentData:
         try:
             # simply check if the protocol is an actual number
             protocol = int(output[:2])
@@ -128,8 +122,8 @@ class TCPDataFetcher(AbstractDataFetcher):
         encrypt_digest = sha256 if protocol == 2 else md5
 
         # Adapt OpenSSL handling of key and iv
-        def derive_key_and_iv(password, key_length, iv_length):
-            # type: (bytes, int, int) -> Tuple[bytes, bytes]
+        def derive_key_and_iv(password: bytes, key_length: int,
+                              iv_length: int) -> Tuple[bytes, bytes]:
             d = d_i = b''
             while len(d) < key_length + iv_length:
                 d_i = encrypt_digest(d_i + password).digest()

@@ -98,8 +98,7 @@ StrSequence = Union[List[str], Tuple[str]]
 LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox"
 
 
-def parse_arguments(argv):
-    # type: (List[str]) -> argparse.Namespace
+def parse_arguments(argv: List[str]) -> argparse.Namespace:
     """parse command line arguments and return argument object"""
     parser = argparse.ArgumentParser(description=__doc__)
     # needs import vcrtrace which needs pathlib2
@@ -126,19 +125,16 @@ class BackupTask:
     """Handles a bunch of log lines and turns them into a set of data needed from the log
     """
     class LogParseError(RuntimeError):
-        def __init__(self, line, msg):
-            # type: (int, str) -> None
+        def __init__(self, line: int, msg: str) -> None:
             # todo(Python3): super()
             RuntimeError.__init__(self, msg)
             self.line = line
 
-        def __repr__(self):
-            # type: () -> str
+        def __repr__(self) -> str:
             # todo(Python3): super()
             return "LogParseError(%d, %r)" % (self.line, RuntimeError.__str__(self))
 
-    def __init__(self, task, logs):
-        # type: (Dict[str, Any], Sequence[Dict[str, Any]]) -> None
+    def __init__(self, task: Dict[str, Any], logs: Sequence[Dict[str, Any]]) -> None:
         self.upid, self.type, self.starttime, self.status = "", "", 0, ""
         self.__dict__.update(task)
 
@@ -154,8 +150,7 @@ class BackupTask:
             LOGGER.error("<<<<<< content")
 
     @staticmethod
-    def _to_lines(lines_with_numbers):
-        # type: (Sequence[Dict[str, Any]]) -> Sequence[str]
+    def _to_lines(lines_with_numbers: Sequence[Dict[str, Any]]) -> Sequence[str]:
         """ Gets list of dict containing a line number an a line [{"n": int, "t": str}*]
         Returns List of lines only"""
         return tuple(  #
@@ -164,8 +159,7 @@ class BackupTask:
             for line in (elem["t"],)  #
             if isinstance(line, str) and line.strip())
 
-    def __str__(self):
-        # type: () -> str
+    def __str__(self) -> str:
         return "BackupTask(%r, t=%r, vms=%r)" % (
             self.type,
             datetime.fromtimestamp(self.starttime).strftime("%Y.%m.%d-%H:%M:%S"),
@@ -173,23 +167,20 @@ class BackupTask:
         )
 
     @staticmethod
-    def _extract_tuple(pattern, string, count):
-        # type: (str, str, int) -> Optional[Sequence[str]]
+    def _extract_tuple(pattern: str, string: str, count: int) -> Optional[Sequence[str]]:
         """return regex-findings as tuple.
         Return tuple of None (or single None) if @string does not match @pattern"""
         result = re.search(pattern, string, flags=re.IGNORECASE)
         return None if result is None else result.groups()[:count]
 
     @staticmethod
-    def _extract_value(pattern, string):
-        # type: (str, str) -> Optional[str]
+    def _extract_value(pattern: str, string: str) -> Optional[str]:
         """Return first regex-group finding as string if available"""
         result = BackupTask._extract_tuple(pattern, string, 1)
         return None if result is None else result[0]
 
     @staticmethod
-    def _extract_logs(logs):
-        # type: (Sequence[str]) -> Dict[str, Any]
+    def _extract_logs(logs: Sequence[str]) -> Dict[str, Any]:
         pattern = {
             "start_job": r"^INFO: starting new backup job: vzdump (.*)",
             "start_vm": r"^INFO: Starting Backup of VM (\d+).*",
@@ -202,9 +193,9 @@ class BackupTask:
             "archive_size": r"^INFO: archive file size: (.*)",
         }
 
-        result = {}  # type: Dict[str, Any]
-        current_vmid = ""  # type: str
-        current_dataset = {}  # type: Dict[str, Any]
+        result: Dict[str, Any] = {}
+        current_vmid: str = ""
+        current_dataset: Dict[str, Any] = {}
 
         for linenr, line in enumerate(logs):
             start_vmid = BackupTask._extract_value(pattern["start_vm"], line)
@@ -299,8 +290,7 @@ class BackupTask:
 
 
 @contextmanager
-def JsonCachedData(filename):
-    # type: (str) -> Generator[Dict[str, Any], None, None]
+def JsonCachedData(filename: str) -> Generator[Dict[str, Any], None, None]:
     """Store JSON-serializable data on filesystem and provide it if available"""
     # # todo(python3): use exist_ok=True, remove try/except
     try:
@@ -327,8 +317,8 @@ def JsonCachedData(filename):
             cwfile.write(json.dumps(cache).encode())
 
 
-def fetch_backup_data(args, session, nodes):
-    # type: (argparse.Namespace, ProxmoxAPI, Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]
+def fetch_backup_data(args: argparse.Namespace, session: 'ProxmoxAPI',
+                      nodes: Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     """Since the Proxmox API does not provide us with information about past backups we read the
     information we need from log entries created for each backup process"""
     # Fetching log files is by far the most time consuming process issued by the Proxmox agent.
@@ -369,7 +359,7 @@ def fetch_backup_data(args, session, nodes):
             for task in node["tasks"]
             if (task['type'] == "vzdump" and int(task['starttime']) >= cutoff_date))
 
-        backup_data = {}  # type: Dict[str, Dict[str, Any]]
+        backup_data: Dict[str, Dict[str, Any]] = {}
         for task in backup_tasks:
             LOGGER.info("%s", task)
             LOGGER.debug("%r", task.backup_data)
@@ -381,8 +371,7 @@ def fetch_backup_data(args, session, nodes):
         return backup_data
 
 
-def to_bytes(string):
-    # type: (str) -> int
+def to_bytes(string: str) -> int:
     """Turn a string containing a byte-size with units like (MiB, ..) into an int
     containing the size in bytes"""
     return round(  #
@@ -395,19 +384,15 @@ def to_bytes(string):
         float(string))
 
 
-def write_agent_output(args):
-    # type: (argparse.Namespace) -> None
+def write_agent_output(args: argparse.Namespace) -> None:
     """Fetches and writes selected information formatted as agent output to stdout"""
-    def write_piggyback_sections(host, sections):
-        # type: (str, Sequence[Dict[str, Any]]) -> None
+    def write_piggyback_sections(host: str, sections: Sequence[Dict[str, Any]]) -> None:
         print("<<<<%s>>>>" % host)
         write_sections(sections)
         print("<<<<>>>>")
 
-    def write_sections(sections):
-        # type: (Sequence[Dict[str, Any]]) -> None
-        def write_section(name, data, skip=False, jsonify=True):
-            # type: (str, Any, bool, bool) -> None
+    def write_sections(sections: Sequence[Dict[str, Any]]) -> None:
+        def write_section(name: str, data: Any, skip: bool = False, jsonify: bool = True) -> None:
             if skip:
                 return
             print(("<<<%s:sep(0)>>>" if jsonify else "<<<%s>>>") % name)
@@ -565,8 +550,8 @@ class ProxmoxSession:
     """Session"""
     class HTTPAuth(requests.auth.AuthBase):
         """Auth"""
-        def __init__(self, base_url, credentials, timeout, verify_ssl):
-            # type: (str, Dict[str, str], int, bool) -> None
+        def __init__(self, base_url: str, credentials: Dict[str, str], timeout: int,
+                     verify_ssl: bool) -> None:
             super(ProxmoxSession.HTTPAuth, self).__init__()
             ticket_url = base_url + "api2/json/access/ticket"
             response = requests.post(url=ticket_url,
@@ -580,15 +565,13 @@ class ProxmoxSession:
             self.pve_auth_cookie = response["ticket"]
             self.csrf_prevention_token = response["CSRFPreventionToken"]
 
-        def __call__(self, r):
-            # type: (requests.PreparedRequest) -> requests.PreparedRequest
+        def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
             r.headers["CSRFPreventionToken"] = self.csrf_prevention_token
             return r
 
-    def __init__(self, endpoint, credentials, timeout, verify_ssl):
-        # type: (Tuple[str, int], Dict[str, str], int, bool) -> None
-        def create_session():
-            # type: () -> requests.Session
+    def __init__(self, endpoint: Tuple[str, int], credentials: Dict[str, str], timeout: int,
+                 verify_ssl: bool) -> None:
+        def create_session() -> requests.Session:
             session = requests.Session()
             session.auth = self.HTTPAuth(self._base_url, credentials, timeout, verify_ssl)
             session.cookies = requests.cookies.cookiejar_from_dict(  # type: ignore
@@ -604,22 +587,18 @@ class ProxmoxSession:
         self._base_url = "https://%s:%d/" % endpoint
         self._session = create_session()
 
-    def __enter__(self):
-        # type: () -> Any
+    def __enter__(self) -> Any:
         return self
 
-    def __exit__(self, *args, **kwargs):  # wing disable:argument-not-used
-        # type: (Any, Any) -> None
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:  # wing disable:argument-not-used
         self.close()
 
-    def close(self):
-        # type: () -> None
+    def close(self) -> None:
         """close connection to ProxMox endpoint"""
         if self._session:
             self._session.close()
 
-    def get_raw(self, sub_url):
-        # type: (str) -> requests.Response
+    def get_raw(self, sub_url: str) -> requests.Response:
         return self._session.request(
             method="GET",
             url=self._base_url + sub_url,
@@ -630,8 +609,7 @@ class ProxmoxSession:
             timeout=self._timeout,
         )
 
-    def get_api_element(self, path):
-        # type: (str) -> Any
+    def get_api_element(self, path: str) -> Any:
         """do an API GET request"""
         response_json = self.get_raw("api2/json/" + path).json()
         if 'errors' in response_json:
@@ -641,8 +619,8 @@ class ProxmoxSession:
 
 class ProxmoxAPI:
     """Wrapper for ProxmoxSession which provides high level API calls"""
-    def __init__(self, host, port, credentials, timeout, verify_ssl):
-        # type: (str, int, Any, int, bool) -> None
+    def __init__(self, host: str, port: int, credentials: Any, timeout: int,
+                 verify_ssl: bool) -> None:
         try:
             LOGGER.info("Establish connection to Proxmox host %r", host)
             self._session = ProxmoxSession(
@@ -656,43 +634,36 @@ class ProxmoxAPI:
             # this function - fallback to full stack on Python2
             raise exc.with_traceback(None) if hasattr(exc, "with_traceback") else exc
 
-    def __enter__(self):
-        # type: () -> Any
+    def __enter__(self) -> Any:
         self._session.__enter__()
         return self
 
-    def __exit__(self, *args, **kwargs):
-        # type: (Any, Any) -> None
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:
         self._session.__exit__(*args, **kwargs)
         self._session.close()
 
-    def get(self, path):
-        # type: (Union[str, List[str], Tuple[str]]) -> Any
+    def get(self, path: Union[str, List[str], Tuple[str]]) -> Any:
         """Handle request items in form of 'path/to/item' or ['path', 'to', 'item'] """
         return self._session.get_api_element("/".join(
             str(p) for p in path) if isinstance(path, (list, tuple)) else path)
 
-    def get_tree(self, requested_structure):
-        # type: (ListOrDict) -> Any
-        def rec_get_tree(element_name, requested_structure, path):
-            # type: (Optional[str], ListOrDict, StrSequence) -> Any
+    def get_tree(self, requested_structure: ListOrDict) -> Any:
+        def rec_get_tree(element_name: Optional[str], requested_structure: ListOrDict,
+                         path: StrSequence) -> Any:
             """Recursively fetch data from API to match <requested_structure>"""
-            def is_list_of_subtree_names(data):
-                # type: (ListOrDict) -> bool
+            def is_list_of_subtree_names(data: ListOrDict) -> bool:
                 """Return True if given data is a list of dicts containing names of subtrees,
                 e.g [{'name': 'log'}, {'name': 'options'}, ...]"""
                 return bool(data) and all(
                     isinstance(elem, dict) and tuple(elem) in {("name",), ("subdir",), ("cmd",)}  #
                     for elem in data)
 
-            def extract_request_subtree(request_tree):
-                # type: (ListOrDict) -> ListOrDict
+            def extract_request_subtree(request_tree: ListOrDict) -> ListOrDict:
                 """If list if given return first (and only) element return the provided data tree"""
                 return (request_tree if not isinstance(request_tree, list) else  #
                         next(iter(request_tree)) if len(request_tree) > 0 else {})
 
-            def extract_variable(st):
-                # type: (ListOrDict) -> Optional[Dict[str, Any]]
+            def extract_variable(st: ListOrDict) -> Optional[Dict[str, Any]]:
                 """Check if there is exactly one root element with a variable name,
                 e.g. '{node}' and return its stripped name"""
                 if not isinstance(st, dict):
@@ -705,8 +676,7 @@ class ProxmoxAPI:
                 assert len(st) == 1 and key.startswith("{")
                 return {"name": key.strip("{}"), "subtree": value}
 
-            def dict_merge(d1, d2):
-                # type: (Dict[str, Any], Dict[str, Any]) -> Dict[str, Any]
+            def dict_merge(d1: Dict[str, Any], d2: Dict[str, Any]) -> Dict[str, Any]:
                 """Does the same as {**d1, **d2} would do"""
                 result = d1.copy()
                 result.update(d2)
@@ -759,8 +729,7 @@ class ProxmoxAPI:
         return rec_get_tree(None, requested_structure, [])
 
 
-def main(argv=None):
-    # type: (Any) -> int
+def main(argv: Any = None) -> int:
     """read arguments, configure application and run command specified on command line"""
     if argv is None:
         cmk.utils.password_store.replace_passwords()

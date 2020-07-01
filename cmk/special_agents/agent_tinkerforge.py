@@ -153,7 +153,7 @@ def display_on_segment(conn, settings, text):
 
     from tinkerforge.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
     br = BrickletSegmentDisplay4x7(segment_display, conn)
-    segments = []  # type: List[int]
+    segments: List[int] = []
     for letter in text:
         if len(segments) >= 4:
             break

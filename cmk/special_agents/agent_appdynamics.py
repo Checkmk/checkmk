@@ -145,7 +145,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 raise
             return 1
 
-    grouped_data = {}  # type: Dict[str, Dict[str, Dict[str, Any]]]
+    grouped_data: Dict[str, Dict[str, Dict[str, Any]]] = {}
     for metric in data:
         path_parts = metric['metricPath'].split('|')
         if len(path_parts) == 7:  # Unit missing

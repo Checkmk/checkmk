@@ -52,8 +52,7 @@ class DummyApplication:
 
 
 class UpdateConfig:
-    def __init__(self, logger, arguments):
-        # type: (logging.Logger, argparse.Namespace) -> None
+    def __init__(self, logger: logging.Logger, arguments: argparse.Namespace) -> None:
         super(UpdateConfig, self).__init__()
         self._arguments = arguments
         self._logger = logger
@@ -162,8 +161,7 @@ class UpdateConfig:
         cmk.gui.config.load_config()
         cmk.gui.config.set_super_user()
 
-    def _cleanup_version_specific_caches(self):
-        # type: () -> None
+    def _cleanup_version_specific_caches(self) -> None:
         paths = [
             Path(cmk.utils.paths.include_cache_dir, "builtin"),
             Path(cmk.utils.paths.include_cache_dir, "local"),
@@ -179,8 +177,7 @@ class UpdateConfig:
                     raise  # Do not fail on missing directories / files
 
 
-def main(args):
-    # type: (List[str]) -> int
+def main(args: List[str]) -> int:
     arguments = parse_arguments(args)
     log.setup_console_logging()
     log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
@@ -200,8 +197,7 @@ def main(args):
     return 0
 
 
-def parse_arguments(args):
-    # type: (List[str]) -> argparse.Namespace
+def parse_arguments(args: List[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--debug', action='store_true', help='Debug mode: raise Python exceptions')
     p.add_argument('-v',

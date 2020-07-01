@@ -14,8 +14,7 @@ from typing import Dict
 import cmk.notification_plugins.utils as utils
 
 
-def cisco_webex_teams_msg(context):
-    # type: (Dict) -> Dict
+def cisco_webex_teams_msg(context: Dict) -> Dict:
     """Build the message for Cisco Webex Teams. We use the Markdown markup language, see
     https://developer.webex.com/docs/api/basics. For example, we need two spaces before a newline
     character."""

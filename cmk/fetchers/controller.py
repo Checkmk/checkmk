@@ -41,15 +41,14 @@ class Header:
     fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
     length = 32
 
-    def __init__(self, name, state, hint, payload_length):
-        # type: (str, Union[Header.State, str], str, int) -> None
+    def __init__(self, name: str, state: 'Union[Header.State, str]', hint: str,
+                 payload_length: int) -> None:
         self.name = name
         self.state = Header.State(state) if isinstance(state, str) else state
         self.hint = hint
         self.payload_length = payload_length
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return "%s(%r, %r, %r, %r)" % (
             type(self).__name__,
             self.name,
@@ -58,25 +57,20 @@ class Header:
             self.payload_length,
         )
 
-    def __str__(self):
-        # type: () -> str
+    def __str__(self) -> str:
         return Header.fmt.format(self.name[:5], self.state[:7], self.hint[:8], self.payload_length)
 
-    def __eq__(self, other):
-        # type: (Any) -> bool
+    def __eq__(self, other: Any) -> bool:
         return str(self) == str(other)
 
-    def __hash__(self):
-        # type: () -> int
+    def __hash__(self) -> int:
         return hash(str(self))
 
-    def __len__(self):
-        # type: () -> int
+    def __len__(self) -> int:
         return Header.length
 
     @classmethod
-    def from_network(cls, data):
-        # type: (str) -> Header
+    def from_network(cls, data: str) -> 'Header':
         try:
             # to simplify parsing we are using ':' as a splitter
             name, state, hint, payload_length = data[:Header.length].split(":")[:4]
@@ -84,13 +78,11 @@ class Header:
         except ValueError as exc:
             raise ValueError(data) from exc
 
-    def clone(self):
-        # type: () -> Header
+    def clone(self) -> 'Header':
         return Header(self.name, self.state, self.hint, self.payload_length)
 
     @staticmethod
-    def default_protocol_name():
-        # type: () -> str
+    def default_protocol_name() -> str:
         return "fetch"
 
 
@@ -129,12 +121,10 @@ def run(serial, host, timeout):
     return 0
 
 
-def read_json_file(serial, host):
-    # type: (str, str) -> str
+def read_json_file(serial: str, host: str) -> str:
     json_file = build_json_file_path(serial=serial, host=host)
     return json_file.read_text(encoding="utf-8")
 
 
-def build_json_file_path(serial, host):
-    # type: (str, str) -> Path
+def build_json_file_path(serial: str, host: str) -> Path:
     return Path("{}/{}/{}.mk".format(core_fetcher_config_dir, serial, host))

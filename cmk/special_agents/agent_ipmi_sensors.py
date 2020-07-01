@@ -140,7 +140,7 @@ def main(sys_argv=None):
                      "-h", hostname, "-u", username,
                      "-p", password, "-l", privilege_lvl ] + \
                      additional_opts
-        queries = {"_sensors": ([], [])}  # type: Dict[str, Tuple[List[str], List[str]]]
+        queries: Dict[str, Tuple[List[str], List[str]]] = {"_sensors": ([], [])}
     elif ipmi_cmd_type == 'ipmitool':
         ipmi_cmd = ["ipmitool", "-H", hostname, "-U", username, "-P", password, "-L", privilege_lvl]
         # As in check_mk_agent

@@ -50,7 +50,7 @@ def parse_arguments(argv):
 
 
 # The dict key is the section, the values the list of lines
-sections = {}  # type: Dict
+sections: Dict = {}
 
 # Which objects to get
 api_get_objects = [

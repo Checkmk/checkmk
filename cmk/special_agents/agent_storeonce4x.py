@@ -47,8 +47,7 @@ class StoreOnceOauth2Session:
     _token_endpoint = "/pml/login/authenticate"
     _dt_fmt = '%Y-%m-%d %H:%M:%S.%f'
 
-    def __init__(self, host, port, user, secret, verify_ssl):
-        # type: (str, str, str, str, bool) -> None
+    def __init__(self, host: str, port: str, user: str, secret: str, verify_ssl: bool) -> None:
         self._host = host
         self._token_file = self._token_file_suffix % self._host
         self._port = port
@@ -97,8 +96,7 @@ class StoreOnceOauth2Session:
             self.store_token_file_and_update_expires_in_abs(token_dict)
             self._json_token = token_dict
 
-    def store_token_file_and_update_expires_in_abs(self, token_dict):
-        # type: (dict) -> None
+    def store_token_file_and_update_expires_in_abs(self, token_dict: dict) -> None:
         if not self._token_dir.exists():
             self._token_dir.mkdir(parents=True)
 
@@ -109,8 +107,7 @@ class StoreOnceOauth2Session:
         with open(self._token_file, "w") as token_file:
             json.dump(token_dict, token_file)
 
-    def load_token_file_and_update_expire_in(self):
-        # type: () -> dict
+    def load_token_file_and_update_expire_in(self) -> dict:
         with open(self._token_file, "r") as token_file:
             token_json = json.load(token_file)
 
@@ -121,8 +118,7 @@ class StoreOnceOauth2Session:
             token_json["expires_in"] = math.floor(expires_in_updated.total_seconds())
             return token_json
 
-    def get_absolute_expire_time(self, expires_in, expires_in_earlier=20):
-        # type: (str, int) -> str
+    def get_absolute_expire_time(self, expires_in: str, expires_in_earlier: int = 20) -> str:
         """
         :param: expires_in_earlier: Will calculate an earlier absolute expire time about its
         value in [s].
@@ -133,8 +129,7 @@ class StoreOnceOauth2Session:
         dt_expires_in_earlier = dt.timedelta(0, expires_in_earlier)
         return dt.datetime.strftime(now + dt_expires_in - dt_expires_in_earlier, self._dt_fmt)
 
-    def execute_get_request(self, url):
-        # type: (str) -> OAuth2Session.request
+    def execute_get_request(self, url: str) -> OAuth2Session.request:
         url = "https://%s:%s%s" % (self._host, self._port, url)
         resp = self._oauth_session.request(method="GET", url=url, verify=self._verify_ssl)
         if resp.status_code != 200:
@@ -152,15 +147,15 @@ class StoreOnceOauth2Session:
 #   +----------------------------------------------------------------------+
 
 
-def handler_simple(uris, opt, oauth_session):
-    # type: (List[str], argparse.Namespace, StoreOnceOauth2Session) -> None
+def handler_simple(uris: List[str], opt: argparse.Namespace,
+                   oauth_session: StoreOnceOauth2Session) -> None:
     for uri in uris:
         resp = oauth_session.execute_get_request(uri)
         sys.stdout.write("%s\n" % json.dumps(resp.json()))
 
 
-def handler_appliances(uris, opt, oauth_session):
-    # type: (List[str], argparse.Namespace, StoreOnceOauth2Session) -> None
+def handler_appliances(uris: List[str], opt: argparse.Namespace,
+                       oauth_session: StoreOnceOauth2Session) -> None:
     # Get all appliance UUIDs
     resp = oauth_session.execute_get_request(uris[0])
     sys.stdout.write("%s\n" % json.dumps(resp.json()))
@@ -219,8 +214,7 @@ SECTIONS = [
 #   '----------------------------------------------------------------------'
 
 
-def parse_arguments(argv):
-    # type: (List[str]) -> argparse.Namespace
+def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument("--vcrtrace",
@@ -261,8 +255,7 @@ def parse_arguments(argv):
 #   '----------------------------------------------------------------------'
 
 
-def main(argv=None):
-    # type: (Any) -> int
+def main(argv: Any = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
     opt = parse_arguments(argv)

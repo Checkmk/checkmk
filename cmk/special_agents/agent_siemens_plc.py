@@ -89,7 +89,7 @@ def main(sys_argv=None):
     short_options = 'h:t:d'
     long_options = ['help', 'timeout=', 'debug']
 
-    devices = []  # type: List[Dict[str, Any]]
+    devices: List[Dict[str, Any]] = []
     opt_debug = False
     opt_timeout = 10
 
@@ -130,7 +130,7 @@ def main(sys_argv=None):
 
             if ':' in p[0]:
                 area_name, db_number = p[0].split(':')
-                area = (area_name, int(db_number))  # type: Tuple[str, Optional[int]]
+                area: Tuple[str, Optional[int]] = (area_name, int(db_number))
             elif p[0] in ["merker", "input", "output", "counter", "timer"]:
                 area = (p[0], None)
             else:
@@ -140,7 +140,7 @@ def main(sys_argv=None):
 
             if ':' in p[2]:
                 typename, size_str = p[2].split(':')
-                datatype = typename, int(size_str)  # type: Union[Tuple[str, int], str]
+                datatype: Union[Tuple[str, int], str] = (typename, int(size_str))
             else:
                 datatype = p[2]
 
@@ -182,12 +182,12 @@ def main(sys_argv=None):
             # We want to have a minimum number of reads. We try to only use
             # a single read and detect the memory area to fetch dynamically
             # based on the configured values
-            addresses = {}  # type: Dict
+            addresses: Dict = {}
             start_address = None
             end_address = None
             for area, (byte, bit), datatype, valuetype, ident in device['values']:
                 if isinstance(datatype, tuple):
-                    size = datatype[1]  # type: Optional[int]
+                    size: Optional[int] = datatype[1]
                 else:
                     size = datatypes[datatype][0]
                 addresses.setdefault(area, [None, None])

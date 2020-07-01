@@ -23,26 +23,24 @@ from ._base import AbstractDataFetcher, MKFetcherError
 
 class IPMIDataFetcher(AbstractDataFetcher):
     def __init__(
-            self,
-            address,  # type: HostAddress
-            username,  # type: str
-            password,  # type: str
-    ):
-        # type: (...) -> None
+        self,
+        address: HostAddress,
+        username: str,
+        password: str,
+    ) -> None:
         super(IPMIDataFetcher, self).__init__()
         self._address = address
         self._username = username
         self._password = password
         self._logger = logging.getLogger("cmk.fetchers.ipmi")
-        self._command = None  # type: Optional[ipmi_cmd.Command]
+        self._command: Optional[ipmi_cmd.Command] = None
 
-    def __enter__(self):
-        # type: () -> IPMIDataFetcher
+    def __enter__(self) -> 'IPMIDataFetcher':
         self.open()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> bool
+    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType]) -> bool:
         self.close()
         if exc_type is IpmiException and not str(exc_value):
             # Raise a more specific exception
@@ -51,8 +49,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
             return False
         return True
 
-    def data(self):
-        # type: () -> RawAgentData
+    def data(self) -> RawAgentData:
         if self._command is None:
             raise MKFetcherError("Not connected")
 
@@ -61,8 +58,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
         output += self._firmware_section()
         return output
 
-    def open(self):
-        # type: () -> None
+    def open(self) -> None:
         self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)", self._address,
                            self._username)
         self._command = ipmi_cmd.Command(bmc=self._address,
@@ -70,16 +66,14 @@ class IPMIDataFetcher(AbstractDataFetcher):
                                          password=self._password,
                                          privlevel=2)
 
-    def close(self):
-        # type: () -> None
+    def close(self) -> None:
         if self._command is None:
             return
 
         self._logger.debug("Closing connection to %s:623", self._command.bmc)
         self._command.ipmi_session.logout()
 
-    def _sensors_section(self):
-        # type: () -> RawAgentData
+    def _sensors_section(self) -> RawAgentData:
         if self._command is None:
             raise MKFetcherError("Not connected")
 
@@ -110,8 +104,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
         return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
             [b"|".join(sensor) + b"\n" for sensor in sensors])
 
-    def _firmware_section(self):
-        # type: () -> RawAgentData
+    def _firmware_section(self) -> RawAgentData:
         if self._command is None:
             raise MKFetcherError("Not connected")
 
@@ -131,8 +124,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
 
         return output
 
-    def _has_gpu(self):
-        # type: () -> bool
+    def _has_gpu(self) -> bool:
         if self._command is None:
             return False
 
@@ -150,8 +142,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
         return any("GPU" in line for line in inventory_entries)
 
     @staticmethod
-    def _parse_sensor_reading(number, reading):
-        # type: (int, ipmi_sdr.SensorReading) -> List[RawAgentData]
+    def _parse_sensor_reading(number: int, reading: ipmi_sdr.SensorReading) -> List[RawAgentData]:
         # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
         #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
         #  'value': 25.0, 'unavailable': 0}]]
@@ -176,8 +167,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
         ]
 
     @staticmethod
-    def _handle_false_positive_warnings(reading):
-        # type: (ipmi_sdr.SensorReading) -> RawAgentData
+    def _handle_false_positive_warnings(reading: ipmi_sdr.SensorReading) -> RawAgentData:
         """This is a workaround for a pyghmi bug
         (bug report: https://bugs.launchpad.net/pyghmi/+bug/1790120)
 

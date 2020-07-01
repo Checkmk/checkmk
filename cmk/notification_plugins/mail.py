@@ -771,8 +771,8 @@ def event_templates(notification_type):
 
 def body_templates(what, is_alert_handler, elements, body_elements):
     even = "even"
-    tmpl_txt = []  # type: List[str]
-    tmpl_html = []  # type: List[str]
+    tmpl_txt: List[str] = []
+    tmpl_html: List[str] = []
     for name, whence, forced, nottype, title, txt, html in body_elements:
         if nottype == "alerthandler" and not is_alert_handler:
             continue

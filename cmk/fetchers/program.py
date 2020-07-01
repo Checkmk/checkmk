@@ -21,21 +21,19 @@ from ._base import AbstractDataFetcher, MKFetcherError
 
 class ProgramDataFetcher(AbstractDataFetcher):
     def __init__(
-            self,
-            cmdline,  # type: Union[bytes, str]
-            stdin,  # type: Optional[str]
-            is_cmc,  # type: bool
-    ):
-        # type: (...) -> None
+        self,
+        cmdline: Union[bytes, str],
+        stdin: Optional[str],
+        is_cmc: bool,
+    ) -> None:
         super(ProgramDataFetcher, self).__init__()
         self._cmdline = cmdline
         self._stdin = stdin
         self._is_cmc = is_cmc
         self._logger = logging.getLogger("cmk.fetchers.program")
-        self._process = None  # type: Optional[subprocess.Popen]
+        self._process: Optional[subprocess.Popen] = None
 
-    def __enter__(self):
-        # type: () -> ProgramDataFetcher
+    def __enter__(self) -> 'ProgramDataFetcher':
         if self._is_cmc:
             # Warning:
             # The preexec_fn parameter is not safe to use in the presence of threads in your
@@ -70,8 +68,8 @@ class ProgramDataFetcher(AbstractDataFetcher):
             )
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> None
+    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType]) -> None:
         if self._process is None:
             return
         if exc_type is MKTimeout:
@@ -87,8 +85,7 @@ class ProgramDataFetcher(AbstractDataFetcher):
         self._process.stderr.close()
         self._process = None
 
-    def data(self):
-        # type: () -> RawAgentData
+    def data(self) -> RawAgentData:
         if self._process is None:
             raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(

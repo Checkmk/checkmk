@@ -90,7 +90,7 @@ def _handle_project(jira, args):
 
     # get open issues for each project and workflow
     sys.stdout.write("<<<jira_workflow>>>\n")
-    issues_dict = {}  # type: Dict[str, Dict[str, int]]
+    issues_dict: Dict[str, Dict[str, int]] = {}
     for project in projects:
         project_name = project["Name"][0]
         for workflow in project.get("Workflow", []):
@@ -134,7 +134,7 @@ def _handle_custom_query(jira, args):
     )]
 
     sys.stdout.write("<<<jira_custom_svc>>>\n")
-    result_dict = {}  # type: Dict[str, Dict[str, Any]]
+    result_dict: Dict[str, Dict[str, Any]] = {}
     for query in projects:
 
         jql = query["Query"][0]
@@ -180,7 +180,7 @@ def _handle_custom_query(jira, args):
         if query["Result"][0] == "sum":
             key = "sum"
             # TODO: Why do we use a float below, but a str in the else part?
-            value = total  # type: Union[float, str]
+            value: Union[float, str] = total
         else:
             # average
             key = "avg"
@@ -222,8 +222,7 @@ def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc
         return issues
 
 
-def setup_logging(verbosity):
-    # type: (int) -> None
+def setup_logging(verbosity: int) -> None:
     if verbosity >= 3:
         lvl = logging.DEBUG
     elif verbosity == 2:

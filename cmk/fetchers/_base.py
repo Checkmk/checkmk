@@ -19,22 +19,19 @@ class MKFetcherError(MKException):
 class AbstractDataFetcher(metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
     @classmethod
-    def from_json(cls, serialized):
-        # type: (Dict[str, Any]) -> AbstractDataFetcher
+    def from_json(cls, serialized: Dict[str, Any]) -> 'AbstractDataFetcher':
         """Deserialize from JSON."""
         return cls(**serialized)  # type: ignore[call-arg]
 
     @abc.abstractmethod
-    def __enter__(self):
-        # type: () -> AbstractDataFetcher
+    def __enter__(self) -> 'AbstractDataFetcher':
         """Prepare the data source."""
 
     @abc.abstractmethod
-    def __exit__(self, exc_type, exc_value, traceback):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> Optional[bool]
+    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType]) -> Optional[bool]:
         """Destroy the data source."""
 
     @abc.abstractmethod
-    def data(self):
-        # type: () -> RawAgentData
+    def data(self) -> RawAgentData:
         """Return the data from the source."""

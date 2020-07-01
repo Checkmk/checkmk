@@ -543,7 +543,7 @@ class AzureResource:
 
     def dumpinfo(self):
         # TODO: Hmmm, should the variable-length tuples actually be lists?
-        lines = [("Resource",), (json.dumps(self.info),)]  # type: List[Tuple]
+        lines: List[Tuple] = [("Resource",), (json.dumps(self.info),)]
         if self.metrics:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
@@ -585,16 +585,13 @@ class MetricCache(DataCache):
         return AZURE_CACHE_FILE_PATH / subdir
 
     @property
-    def cache_interval(self):
-        # type: () -> int
+    def cache_interval(self) -> int:
         return self.timedelta.seconds
 
-    def get_validity_from_args(self, *args):
-        # type: (Any) -> bool
+    def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
-    def get_live_data(self, *args):
-        # type: (Any) -> Any
+    def get_live_data(self, *args: Any) -> Any:
         mgmt_client, resource_id, err = args
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
@@ -636,8 +633,7 @@ class UsageClient(DataCache):
         self._client = client
 
     @property
-    def cache_interval(self):
-        # type: () -> int
+    def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
@@ -651,12 +647,10 @@ class UsageClient(DataCache):
     def offerid_has_no_consuption_api(cls, errmsg):
         return any(s in errmsg for s in cls.NO_CONSUPTION_API)
 
-    def get_validity_from_args(self, *args):
-        # type: (Any) -> bool
+    def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
-    def get_live_data(self, *args):
-        # type: (Any) -> Any
+    def get_live_data(self, *args: Any) -> Any:
         LOGGER.debug("UsageClient: get live data")
 
         try:
@@ -820,7 +814,7 @@ def get_mapper(debug, sequential, timeout):
         Note that the order of the results does not correspond
         to that of the arguments.
         '''
-        queue = Queue()  # type: Queue[Tuple[Any, bool, Any]]
+        queue: Queue[Tuple[Any, bool, Any]] = Queue()
         jobs = {}
 
         def produce(id_, args):

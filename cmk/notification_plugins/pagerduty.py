@@ -35,8 +35,7 @@ def pagerduty_severity(state):
     }[state]
 
 
-def pagerduty_msg(context):
-    # type: (Dict) -> Dict
+def pagerduty_msg(context: Dict) -> Dict:
     """Build the PagerDuty incident payload"""
 
     if context.get('WHAT', None) == "SERVICE":

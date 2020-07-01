@@ -28,7 +28,7 @@ def parse_arguments(argv):
     parser.add_argument("--vcrtrace",
                         action=vcrtrace(**mk_jolokia.JolokiaInstance.FILTER_SENSITIVE))
 
-    opts_with_help = []  # type: List[List[str]]
+    opts_with_help: List[List[str]] = []
     for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES:
         if len(opt) == 3:
             opts_with_help.append([str(elem) for elem in opt])

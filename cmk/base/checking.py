@@ -541,7 +541,7 @@ def _legacy_determine_cache_info(multi_host_sections: MultiHostSections,
     """
     cached_ats: List[int] = []
     intervals: List[int] = []
-    for host_sections in multi_host_sections.get_host_sections().values():
+    for host_sections in multi_host_sections.values():
         section_entries = host_sections.cache_info
         if section_name in section_entries:
             cached_at, cache_interval = section_entries[section_name]

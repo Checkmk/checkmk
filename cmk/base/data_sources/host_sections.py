@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import collections.abc
 import sys
 from typing import Any, Callable, cast, Dict, List, Optional, Set, Tuple, Union
 
@@ -45,17 +46,15 @@ from .abstract import AbstractHostSections
 
 HostKey = Tuple[HostName, Optional[HostAddress], SourceType]
 
-MultiHostSectionsData = Dict[HostKey, AbstractHostSections]
 
-
-class MultiHostSections:
+class MultiHostSections(collections.abc.Mapping):
     """Container object for wrapping the host sections of a host being processed
     or multiple hosts when a cluster is processed. Also holds the functionality for
     merging these information together for a check"""
-    def __init__(self) -> None:
+    def __init__(self, data: Optional[Dict[HostKey, AbstractHostSections]] = None) -> None:
         super(MultiHostSections, self).__init__()
+        self._data: Dict[HostKey, AbstractHostSections] = {}
         self._config_cache = config.get_config_cache()
-        self._multi_host_sections: MultiHostSectionsData = {}
         self._section_content_cache = caching.DictCache()
         # This is not quite the same as section_content_cache.
         # It is introduced for the changed data handling with the migration
@@ -64,18 +63,33 @@ class MultiHostSections:
         self._parsed_sections = caching.DictCache()
         self._parsed_to_raw_map = caching.DictCache()
 
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self):
+        return self._data.__iter__()
+
+    def __getitem__(self, key: HostKey):
+        return self._data.__getitem__(key)
+
     def __repr__(self):
-        return "%s(data=%r)" % (type(self).__name__, self._multi_host_sections)
+        return "%s(data=%r)" % (type(self).__name__, self._data)
+
+    def keys(self):
+        return self._data.keys()
+
+    def values(self):
+        return self._data.values()
+
+    def items(self):
+        return self._data.items()
 
     def set_default_host_sections(
         self,
         host_key: HostKey,
         default: AbstractHostSections,
     ) -> None:
-        self._multi_host_sections.setdefault(host_key, default)
-
-    def get_host_sections(self) -> MultiHostSectionsData:
-        return self._multi_host_sections
+        self._data.setdefault(host_key, default)
 
     def get_section_kwargs(
         self,
@@ -138,7 +152,7 @@ class MultiHostSections:
         """
         cached_ats: List[int] = []
         intervals: List[int] = []
-        for host_key, host_sections in self._multi_host_sections.items():
+        for host_key, host_sections in self._data.items():
             for parsed_section_name in parsed_section_names:
                 raw_section = self._get_raw_section(host_key, parsed_section_name)
                 if raw_section is None:
@@ -169,7 +183,7 @@ class MultiHostSections:
             parse_function = section_def.parse_function
 
         try:
-            hosts_raw_sections = self._multi_host_sections[host_key].sections
+            hosts_raw_sections = self._data[host_key].sections
             string_table = hosts_raw_sections[raw_section_name]
         except KeyError:
             return self._parsed_sections.setdefault(cache_key, None)
@@ -193,7 +207,7 @@ class MultiHostSections:
             return self._parsed_to_raw_map[cache_key]
 
         try:
-            hosts_raw_sections = self._multi_host_sections[host_key].sections
+            hosts_raw_sections = self._data[host_key].sections
         except KeyError:
             return self._parsed_to_raw_map.setdefault(cache_key, None)
 
@@ -322,7 +336,7 @@ class MultiHostSections:
 
             host_key = (node_name, node_ip_address, source_type)
             try:
-                host_section_content = self._multi_host_sections[host_key].sections[section_name]
+                host_section_content = self._data[host_key].sections[section_name]
             except KeyError:
                 continue
 
@@ -485,7 +499,7 @@ class MultiHostSections:
         something.
         """
         raw_section_names = {
-            name for node_data in self._multi_host_sections.values() for name in node_data.sections
+            name for node_data in self._data.values() for name in node_data.sections
         }
 
         raw_sections = [

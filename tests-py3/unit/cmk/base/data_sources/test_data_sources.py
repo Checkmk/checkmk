@@ -8,8 +8,6 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import SourceType
-
 import cmk.base.config as config
 from cmk.base.data_sources import DataSources
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
@@ -65,24 +63,3 @@ def test_get_sources(monkeypatch, hostname, tags, sources):
 
     assert [s.__class__ for s in DataSources(host_config, "127.0.0.1").get_data_sources()
            ] == sources
-
-
-def test_get_host_sections(monkeypatch):
-    hostname = "testhost"
-    address = "1.2.3.4"
-    tags = {"agent": "no-agent"}
-    make_scenario(hostname, tags).apply(monkeypatch)
-    host_config = config.HostConfig.make_host_config(hostname)
-
-    sources = DataSources(host_config, address)
-    multi_host_sections = sources.get_host_sections()
-    data = multi_host_sections._multi_host_sections
-    assert len(data) == 1
-
-    key = (hostname, address, SourceType.HOST)
-    assert key in data
-    section = data[key]
-    assert not section.sections
-    assert not section.cache_info
-    assert not section.piggybacked_raw_data
-    assert not section.persisted_sections

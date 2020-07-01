@@ -14,6 +14,7 @@ from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.data_sources import DataSources
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import MultiHostSections
 
@@ -360,3 +361,38 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
     )
     assert section_content is None, \
            "Section content: Expected 'None' but got '%s'" % (section_content,)
+
+
+def make_scenario(hostname, tags):
+    ts = Scenario().add_host(hostname, tags=tags)
+    ts.set_ruleset("datasource_programs", [
+        ('echo 1', [], ['ds-host-14', 'all-agents-host', 'all-special-host'], {}),
+    ])
+    ts.set_option(
+        "special_agents",
+        {"jolokia": [({}, [], [
+            'special-host-14',
+            'all-agents-host',
+            'all-special-host',
+        ], {}),]})
+    return ts
+
+
+def test_get_host_sections(monkeypatch):
+    hostname = "testhost"
+    address = "1.2.3.4"
+    tags = {"agent": "no-agent"}
+    make_scenario(hostname, tags).apply(monkeypatch)
+    host_config = config.HostConfig.make_host_config(hostname)
+
+    sources = DataSources(host_config, address)
+    mhs = sources.get_host_sections()
+    assert len(mhs) == 1
+
+    key = (hostname, address, SourceType.HOST)
+    assert key in mhs
+    section = mhs[key]
+    assert not section.sections
+    assert not section.cache_info
+    assert not section.piggybacked_raw_data
+    assert not section.persisted_sections

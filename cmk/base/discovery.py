@@ -919,7 +919,7 @@ def _discover_host_labels(
     discovered_host_labels = DiscoveredHostLabels()
 
     try:
-        host_data = multi_host_sections.get_host_sections()[host_key]
+        host_data = multi_host_sections[host_key]
     except KeyError:
         return discovered_host_labels
 

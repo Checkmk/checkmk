@@ -26,7 +26,9 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Integer,
+    Age,
+    Dictionary,
+    Transform,
     Tuple,
 )
 
@@ -38,13 +40,23 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_systemtime():
-    return Tuple(
-        title=_("Time offset"),
+    return Transform(Dictionary(
+        title="Time offset",
         elements=[
-            Integer(title=_("Warning at"), unit=_("Seconds")),
-            Integer(title=_("Critical at"), unit=_("Seconds")),
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels on time offset"),
+                    elements=[
+                        Age(title=_("Warning at"), default_value=30),
+                        Age(title=_("Critical at"), default_value=60),
+                    ],
+                ),
+            ),
         ],
-    )
+        optional_keys=False,
+    ),
+                     forth=lambda v: {'levels': v} if isinstance(v, tuple) else v)
 
 
 rulespec_registry.register(

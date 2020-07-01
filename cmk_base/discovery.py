@@ -304,7 +304,8 @@ def discover_on_host(config_cache,
                                              ipaddress,
                                              check_plugin_names=None,
                                              do_snmp_scan=do_snmp_scan,
-                                             on_error=on_error)
+                                             on_error=on_error,
+                                             for_check_discovery=True)
 
         multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 

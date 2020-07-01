@@ -135,12 +135,12 @@ class GroupedBoxesLayout(Layout):
             this_group = group_value(row, group_cells)
             if this_group != last_group:
                 last_group = this_group
-                current_group = []  # type: List[Tuple[str, Any]]
+                current_group: List[Tuple[str, Any]] = []
                 groups.append((this_group, current_group))
             current_group.append((row_id(view, row), row))
 
         # Create empty columns
-        columns = []  # type: List[List[Any]]
+        columns: List[List[Any]] = []
         for _x in range(num_columns):
             columns.append([])
 
@@ -310,7 +310,7 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
 
     # First create dictionaries for each found group containing the
     # group spec and the row indizes of the grouped rows
-    groups = {}  # type: Dict[Any, Tuple[Any, List[Any]]]
+    groups: Dict[Any, Tuple[Any, List[Any]]] = {}
     current_group = None
     group_id = None
     last_row_group = None
@@ -885,11 +885,11 @@ class LayoutMatrix(Layout):
 
     def _matrix_find_majorities(self, rows, cells, for_header=False):
         # dict row_id -> cell_nr -> value -> count
-        counts = {}  # type: Dict[Any, Dict[Any, Any]]
+        counts: Dict[Any, Dict[Any, Any]] = {}
 
         for row in rows:
             if for_header:
-                rid = None  # type: Optional[Tuple]
+                rid: Optional[Tuple] = None
             else:
                 # TODO: WTF???
                 rid = tuple(group_value(row, [cells[0]]))  # type: ignore[arg-type]
@@ -903,7 +903,7 @@ class LayoutMatrix(Layout):
 
         # Now find majorities for each row
         # row_id -> cell_nr -> majority value
-        majorities = {}  # type: Dict[Any, Dict[Any, Any]]
+        majorities: Dict[Any, Dict[Any, Any]] = {}
         for rid, row_entry in counts.items():
             maj_entry = majorities.setdefault(rid, {})
             for cell_nr, cell_entry in row_entry.items():
@@ -937,12 +937,12 @@ def create_matrices(rows, group_cells, cells, num_columns):
     # First find the groups - all rows that have the same values for
     # all group columns. Usually these should correspond with the hosts
     # in the matrix
-    groups = []  # type: List[Tuple[Any, Any]]
+    groups: List[Tuple[Any, Any]] = []
     last_group_id = None
     # not a set, but a list. Need to keep sort order!
-    unique_row_ids = []  # type: List[Any]
+    unique_row_ids: List[Any] = []
     # Dict from row_id -> group_id -> row
-    matrix_cells = {}  # type: Dict[Any, Dict[Any, Any]]
+    matrix_cells: Dict[Any, Dict[Any, Any]] = {}
     col_num = 0
 
     for row in rows:

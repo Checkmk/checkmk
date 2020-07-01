@@ -66,12 +66,12 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
 
     if column == "host_inventory":
         painter_options = PainterOptions.get_instance()
-        tree_renderer = AttributeRenderer(row["site"],
-                                          row["host_name"],
-                                          "",
-                                          invpath,
-                                          show_internal_tree_paths=painter_options.get(
-                                              'show_internal_tree_paths'))  # type: NodeRenderer
+        tree_renderer: NodeRenderer = AttributeRenderer(
+            row["site"],
+            row["host_name"],
+            "",
+            invpath,
+            show_internal_tree_paths=painter_options.get('show_internal_tree_paths'))
     else:
         tree_id = "/" + str(row["invhist_time"])
         tree_renderer = DeltaNodeRenderer(row["site"], row["host_name"], tree_id, invpath)
@@ -879,7 +879,7 @@ class RowMultiTableInventory(ABCRowTable):
         return multi_inv_data
 
     def _prepare_rows(self, inv_data):
-        joined_rows = {}  # type: Dict[Tuple[str, ...], Dict]
+        joined_rows: Dict[Tuple[str, ...], Dict] = {}
         for this_info_name, this_inv_data in inv_data:
             for entry in this_inv_data:
                 inst = joined_rows.setdefault(tuple(entry[key] for key in self._match_by), {})
@@ -1748,9 +1748,8 @@ class NodeRenderer:
 
         keyorder = hint.get("keyorder")
         if keyorder:
-            sort_func = partial(
-                _sort_by_index,
-                keyorder)  # type: Union[partial[Tuple[str, Any]], Callable[[Tuple[str, Any]], str]]
+            sort_func: Union[partial[Tuple[str, Any]],
+                             Callable[[Tuple[str, Any]], str]] = partial(_sort_by_index, keyorder)
         else:
             # Simply sort by keys
             sort_func = lambda item: item[0]
@@ -1855,7 +1854,7 @@ def ajax_inv_render_tree():
                 _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
                  ) % ", ".join(corrupted_history_files))
             return
-        tree_renderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)  # type: NodeRenderer
+        tree_renderer: NodeRenderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
 
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)

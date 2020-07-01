@@ -991,14 +991,13 @@ class CommandScheduleDowntimes(Command):
 
             from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types  # pylint: disable=no-name-in-module,import-outside-toplevel
 
-            recurring_selections = [
+            recurring_selections: Choices = [
                 (str(k), v) for (k, v) in sorted(recurring_downtimes_types().items())
-            ]  # type: Choices
+            ]
             html.dropdown("_down_recurring", recurring_selections, deflt="3")
             html.write_text(_("(This only works when using CMC)"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
-        # type: (Any, Any, Any, Any, Any) -> Any
+    def action(self, cmdtag: Any, spec: Any, row: Any, row_index: Any, num_rows: Any) -> Any:
         """Prepares the livestatus command for any received downtime information through WATO"""
         if html.request.var("_down_remove"):
             return self._remove_downtime_details(cmdtag, row)
@@ -1070,7 +1069,7 @@ class CommandScheduleDowntimes(Command):
         """Retrieve the duration (fixed and delayed) from the HTML information"""
         if html.request.var("_down_flexible"):
             fixed_downtime_duration = 0
-            delayed_duration = self._vs_duration().from_html_vars("_down_duration")  # type: Seconds
+            delayed_duration: Seconds = self._vs_duration().from_html_vars("_down_duration")
             self._vs_duration().validate_value(delayed_duration, "_down_duration")
         else:
             fixed_downtime_duration = 1
@@ -1151,7 +1150,7 @@ class CommandScheduleDowntimes(Command):
     def button_interval_value(self):
         rangebtns = (varname for varname, _value in html.request.itervars(prefix="_downrange"))
         try:
-            rangebtn = next(rangebtns)  # type: Optional[str]
+            rangebtn: Optional[str] = next(rangebtns)
         except StopIteration:
             rangebtn = None
         if rangebtn is None:
@@ -1171,24 +1170,21 @@ class CommandScheduleDowntimes(Command):
             specs = [spec]
         return cmdtag, specs, title
 
-    def _vs_down_from(self):
-        # type: () -> AbsoluteDate
+    def _vs_down_from(self) -> AbsoluteDate:
         return AbsoluteDate(
             title=_("From"),
             include_time=True,
             submit_form_name="_down_custom",
         )
 
-    def _vs_down_to(self):
-        # type: () -> AbsoluteDate
+    def _vs_down_to(self) -> AbsoluteDate:
         return AbsoluteDate(
             title=_("Until"),
             include_time=True,
             submit_form_name="_down_custom",
         )
 
-    def _vs_duration(self):
-        # type: () -> Age
+    def _vs_duration(self) -> Age:
         return Age(
             display=["hours", "minutes"],
             title=_("Duration"),
@@ -1222,8 +1218,7 @@ class CommandScheduleDowntimes(Command):
             return False
 
 
-def bi_commands(downtime, node):
-    # type: (DowntimeSchedule, Any) -> List[Tuple[Any, Any]]
+def bi_commands(downtime: DowntimeSchedule, node: Any) -> List[Tuple[Any, Any]]:
     """Generate the list of downtime command strings for the BI module"""
     commands_aggr = []
     for site, host, service in bi.find_all_leaves(node):
@@ -1237,8 +1232,8 @@ def bi_commands(downtime, node):
     return commands_aggr
 
 
-def time_interval_end(time_value, start_time):
-    # type: (Literal["next_day", "next_week", "next_month", "next_year"], float) -> Optional[float]
+def time_interval_end(time_value: Literal["next_day", "next_week", "next_month", "next_year"],
+                      start_time: float) -> Optional[float]:
     now = time.localtime(start_time)
     if time_value == "next_day":
         return time.mktime(

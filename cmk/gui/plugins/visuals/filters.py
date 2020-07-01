@@ -62,8 +62,7 @@ class FilterText(Filter):
         htmlvar = self.htmlvars[0]
         return html.request.var(htmlvar, "")
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         current_value = self._current_value()
         html.text_input(self.htmlvars[0], current_value, self.negateable and 'neg' or '')
         if self.negateable:
@@ -307,10 +306,9 @@ class FilterHostnameOrAlias(FilterUnicode):
 
 
 class FilterIPAddress(Filter):
-    _what = None  # type: _Optional[str]
+    _what: _Optional[str] = None
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.text_input(self.htmlvars[0])
         html.br()
         html.br()
@@ -427,8 +425,7 @@ class FilterAddressFamily(Filter):
     def __init__(self):
         Filter.__init__(self, info="host", htmlvars=["address_family"], link_columns=[])
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.begin_radio_group()
         html.radiobutton("address_family", "4", False, _("IPv4"))
         html.radiobutton("address_family", "6", False, _("IPv6"))
@@ -461,8 +458,7 @@ class FilterAddressFamilies(Filter):
             "address_families",
         ], link_columns=[])
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.begin_radio_group()
         html.radiobutton("address_families", "4", False, label="v4")
         html.radiobutton("address_families", "6", False, label="v6")
@@ -525,8 +521,7 @@ class FilterMultigroup(Filter):
             return []
         return current
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.open_div(class_="multigroup")
         self.valuespec().render_input(self.htmlvar, self.selection())
         if self._get_choices() and self.negateable:
@@ -616,11 +611,10 @@ class FilterGroupCombo(Filter):
     def double_height(self):
         return True
 
-    def display(self):
-        # type: () -> None
-        choices = list(sites.all_groups(self.what.split("_")[-1]))  # type: Choices
+    def display(self) -> None:
+        choices: Choices = list(sites.all_groups(self.what.split("_")[-1]))
         if not self.enforce:
-            empty_choices = [("", u"")]  # type: Choices
+            empty_choices: Choices = [("", u"")]
             choices = empty_choices + choices
         html.dropdown(self.htmlvars[0], choices, ordered=True)
         if not self.enforce:
@@ -869,10 +863,9 @@ class FilterGroupSelection(Filter):
         Filter.__init__(self, info=infoname, htmlvars=[infoname], link_columns=[])
         self.what = infoname
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         # chop off "group", leaves host or service
-        choices = list(sites.all_groups(self.what[:-5]))  # type: Choices
+        choices: Choices = list(sites.all_groups(self.what[:-5]))
         html.dropdown(self.htmlvars[0], choices, ordered=True)
 
     def current_value(self):
@@ -978,8 +971,7 @@ class FilterHostgroupVisibility(Filter):
     def __init__(self):
         Filter.__init__(self, info="hostgroup", htmlvars=["hostgroupshowempty"], link_columns=[])
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.checkbox("hostgroupshowempty", False, label="Show empty groups")
 
     def filter(self, infoname):
@@ -1013,8 +1005,7 @@ class FilterHostgroupProblems(Filter):
             "hostsgroups_having_services_unknown",
         ], [])
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.begin_checkbox_group()
         html.write_text("Service states:" + " ")
         for svc_var, svc_text in [
@@ -1107,11 +1098,10 @@ class FilterQueryDropdown(Filter):
         self.query = query
         self.filterline = filterline
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         selection = sites.live().query_column_unique(self.query)
-        empty_choices = [("", u"")]  # type: Choices
-        sel = [(x, x) for x in selection]  # type: Choices
+        empty_choices: Choices = [("", u"")]
+        sel: Choices = [(x, x) for x in selection]
         html.dropdown(self.ident, empty_choices + sel, ordered=True)
 
     def filter(self, infoname):
@@ -1172,8 +1162,7 @@ class FilterServiceState(Filter):
         ], [])
         self.prefix = prefix
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.begin_checkbox_group()
         html.hidden_field(self.prefix + "_filled", "1", add_var=True)
         for var, text in [(self.prefix + "st0", _("OK")), (self.prefix + "st1", _("WARN")),
@@ -1272,8 +1261,7 @@ class FilterHostState(Filter):
             [],
         )
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.begin_checkbox_group()
         html.hidden_field("hoststate_filled", "1", add_var=True)
         for var, text in [
@@ -1335,8 +1323,7 @@ class FilterHostsHavingServiceProblems(Filter):
             "hosts_having_services_unknown",
         ], [])
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.begin_checkbox_group()
         for var, text in [
             ("warn", _("WARN")),
@@ -1364,8 +1351,7 @@ class FilterStateType(FilterTristate):
     def __init__(self, info):
         FilterTristate.__init__(self, info, None, deflt=-1)
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         current = html.request.var(self.varname)
         html.begin_radio_group(horizontal=True)
         for value, text in [("0", _("SOFT")), ("1", _("HARD")), ("-1", _("(ignore)"))]:
@@ -1775,8 +1761,7 @@ class SiteFilter(Filter):
         )
         self.enforce = enforce
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         choices = filter_cme_choices() if cmk_version.is_managed_edition() else filter_cre_choices()
         html.dropdown("site", ([] if self.enforce else [("", "")]) + choices)
 
@@ -1841,8 +1826,7 @@ class FilterNumberRange(Filter):  # type is int
         varnames = [self.ident + "_from", self.ident + "_until"]
         Filter.__init__(self, info, varnames, [])
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.write_text(_("From:") + "&nbsp;")
         html.text_input(self.htmlvars[0], style="width: 80px;")
         html.write_text(" &nbsp; " + _("To:") + "&nbsp;")
@@ -2175,8 +2159,7 @@ class FilterLogClass(Filter):
     def double_height(self):
         return True
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.hidden_field("logclass_filled", "1", add_var=True)
         html.open_table(cellspacing="0", cellpadding="0")
         if config.filter_columns == 1:
@@ -2397,8 +2380,7 @@ class FilterLogState(Filter):
     def _filter_used(self):
         return any([html.request.has_var(v) for v in self.htmlvars])
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.hidden_field("log_state_filled", "1", add_var=True)
         html.open_table(class_="alertstatefilter")
         html.open_tr()
@@ -2463,8 +2445,7 @@ class FilterLogNotificationPhase(FilterTristate):
     def double_height(self):
         return True
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         current = html.request.var(self.varname)
         html.begin_radio_group(horizontal=False)
         for value, text in [
@@ -2560,7 +2541,7 @@ class ABCTagFilter(Filter, metaclass=abc.ABCMeta):
 
     def __init__(self):
         self.count = 3
-        htmlvars = []  # type: List[str]
+        htmlvars: List[str] = []
         for num in range(self.count):
             htmlvars += [
                 '%s%d_grp' % (self._var_prefix, num),
@@ -2572,15 +2553,14 @@ class ABCTagFilter(Filter, metaclass=abc.ABCMeta):
                                            htmlvars=htmlvars,
                                            link_columns=[])
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         groups = config.tags.get_tag_group_choices()
-        operators = [
+        operators: Choices = [
             ("is", "="),
             ("isnot", u"≠"),
-        ]  # type: Choices
+        ]
 
-        grouped = {}  # type: Dict[str, Choices]
+        grouped: Dict[str, Choices] = {}
         for tag_group in config.tags.tag_groups:
             grouped.setdefault(tag_group.id, [("", u"")])
 
@@ -2603,7 +2583,7 @@ class ABCTagFilter(Filter, metaclass=abc.ABCMeta):
                           class_="grp")
             html.close_td()
             html.open_td()
-            empty_choices = [("", "")]  # type: Choices
+            empty_choices: Choices = [("", "")]
             html.dropdown(prefix + '_op',
                           empty_choices + operators,
                           style="width:36px",
@@ -2613,7 +2593,7 @@ class ABCTagFilter(Filter, metaclass=abc.ABCMeta):
             html.open_td()
 
             if html.request.var(prefix + "_grp"):
-                choices = html.get_item_input(prefix + "_grp", grouped)[0]  # type: Choices
+                choices: Choices = html.get_item_input(prefix + "_grp", grouped)[0]
             else:
                 choices = [("", "")]
 
@@ -2712,8 +2692,7 @@ class FilterHostAuxTags(Filter):
 
         Filter.__init__(self, info='host', htmlvars=htmlvars, link_columns=[])
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         aux_tag_choices = [("", "")] + config.tags.aux_tag_list.get_choices()
         for num in range(self.count):
             html.dropdown('%s_%d' % (self.prefix, num), aux_tag_choices, ordered=True, class_='neg')
@@ -2781,8 +2760,7 @@ class ABCLabelFilter(Filter, metaclass=abc.ABCMeta):
     def _valuespec(self):
         return Labels(world=Labels.World.CORE)
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         self._valuespec().render_input(self._var_prefix, self._current_value())
 
     def filter(self, infoname):
@@ -2861,8 +2839,7 @@ class ABCFilterCustomAttribute(Filter, metaclass=abc.ABCMeta):
     def value_varname(self):
         return "%s_value" % self.ident
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.dropdown(self.name_varname, [("", "")] + self._custom_attribute_choices())
         html.text_input(self.value_varname)
 
@@ -2936,8 +2913,7 @@ class FilterECServiceLevelRange(Filter):
         choices = sorted(config.mkeventd_service_levels[:])
         return [(str(x[0]), "%s - %s" % (x[0], x[1])) for x in choices]
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         selection = [("", "")] + self._prepare_choices()
         html.open_div(class_="service_level min")
         html.write_text("From")
@@ -3139,8 +3115,7 @@ class FilterDiscoveryState(Filter):
         )
         self.__varname = "discovery_state"
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.begin_checkbox_group()
         for varname, title in self.__options:
             html.checkbox(varname, True, label=title)
@@ -3188,11 +3163,10 @@ class FilterAggrGroup(FilterUnicodeFilter):
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self.column])]
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         htmlvar = self.htmlvars[0]
-        empty_choices = [("", "")]  # type: Choices
-        groups = [(group, group) for group in bi.get_aggregation_group_trees()]  # type: Choices
+        empty_choices: Choices = [("", "")]
+        groups: Choices = [(group, group) for group in bi.get_aggregation_group_trees()]
         html.dropdown(htmlvar, empty_choices + groups)
 
     def selected_group(self):
@@ -3229,8 +3203,7 @@ class FilterAggrGroupTree(FilterUnicodeFilter):
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self.column])]
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         htmlvar = self.htmlvars[0]
         html.dropdown(htmlvar, [("", "")] + self._get_selection())
 
@@ -3264,7 +3237,7 @@ class FilterAggrGroupTree(FilterUnicodeFilter):
                 title_prefix = ""
             return ("/".join(path), title_prefix + path[index])
 
-        tree = {}  # type: Dict[str, Any]
+        tree: Dict[str, Any] = {}
         for group in bi.get_aggregation_group_trees():
             _build_tree(group.split("/"), tree, tuple())
 
@@ -3290,8 +3263,7 @@ class BITextFilter(FilterUnicodeFilter):
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self.column])]
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.text_input(self.htmlvars[0])
 
     def heading_info(self):
@@ -3394,8 +3366,7 @@ class FilterAggrHosts(Filter):
             [],
         )
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.text_input(self.htmlvars[1])
 
     def heading_info(self):
@@ -3451,8 +3422,7 @@ class FilterAggrService(Filter):
     def double_height(self):
         return True
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.write(_("Host") + ": ")
         html.text_input(self.htmlvars[1])
         html.write(_("Service") + ": ")
@@ -3496,8 +3466,7 @@ class BIStatusFilter(Filter):
     def _filter_used(self):
         return html.request.has_var(self.prefix + "_filled")
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.hidden_field(self.prefix + "_filled", "1", add_var=True)
 
         for varend, text in [
@@ -3845,8 +3814,7 @@ class FilterEventCount(Filter):
         Filter.__init__(self, "event", [name + "_from", name + "_to"], [name])
         self._name = name
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.write_text("from: ")
         html.text_input(self._name + "_from", default_value="", size=8, cssclass="number")
         html.write_text(" to: ")
@@ -3872,8 +3840,7 @@ class EventFilterState(Filter):
     def double_height(self):
         return len(self._choices) >= 5
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         html.begin_checkbox_group()
         for name, title in self._choices:
             html.checkbox(self.ident + "_" + str(name), True, label=title)
@@ -4033,14 +4000,13 @@ class EventFilterDropdown(Filter):
         self._column = column
         self._operator = operator
 
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         if isinstance(self._choices, list):
             choices = self._choices
         else:
             choices = self._choices()
-        empty_choices = [("", "")]  # type: Choices
-        the_choices = [(str(n), t) for (n, t) in choices]  # type: Choices
+        empty_choices: Choices = [("", "")]
+        the_choices: Choices = [(str(n), t) for (n, t) in choices]
         html.dropdown(self.ident, empty_choices + the_choices)
 
     def filter(self, infoname):

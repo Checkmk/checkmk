@@ -604,8 +604,7 @@ class PainterEventPid(Painter):
 T = TypeVar('T')
 
 
-def _deref(x):
-    # type: (Union[T, Callable[[], T]]) -> T
+def _deref(x: Union[T, Callable[[], T]]) -> T:
     return x() if callable(x) else x
 
 
@@ -747,7 +746,7 @@ def render_event_phase_icons(row):
 def render_delete_event_icons(row):
     if not config.user.may("mkeventd.delete"):
         return ''
-    urlvars = []  # type: HTTPVariables
+    urlvars: HTTPVariables = []
 
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.
@@ -762,7 +761,7 @@ def render_delete_event_icons(row):
         title_url = view.get("title_url")
         if title_url:
             parsed_url = urllib.parse.urlparse(title_url)
-            filename = parsed_url.path  # type: Optional[str]
+            filename: Optional[str] = parsed_url.path
             urlvars += urllib.parse.parse_qsl(parsed_url.query)
     else:
         # Regular view
@@ -1358,7 +1357,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_archive_events_of_hosts"):
             if cmdtag == "HOST":
-                tag = "host"  # type: Optional[str]
+                tag: Optional[str] = "host"
             elif cmdtag == "SVC":
                 tag = "service"
             else:

@@ -2349,7 +2349,7 @@ class PainterHost(Painter):
 
     @property
     def parameters(self):
-        elements = [
+        elements: DictionaryElements = [
             ("color_choices",
              ListChoice(choices=[
                  ("colorize_up", _("Colorize background if host is up")),
@@ -2361,7 +2361,7 @@ class PainterHost(Painter):
                         title=_("Coloring"),
                         help=_("Here you can configure the background color for specific states. "
                                "The coloring for host in dowtime overrules all other coloring.")))
-        ]  # type: DictionaryElements
+        ]
 
         return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
 
@@ -2792,14 +2792,14 @@ class PainterHostServices(Painter):
 
     @property
     def parameters(self):
-        choices = [
+        choices: ListChoiceChoices = [
             (0, _("OK")),
             (1, _("WARN")),
             (2, _("CRIT")),
             (3, _("UNKN")),
             ("p", _("PEND")),
-        ]  # type: ListChoiceChoices
-        elements = [
+        ]
+        elements: DictionaryElements = [
             ("render_states",
              ListChoice(choices=choices,
                         toggle_all=True,
@@ -2807,7 +2807,7 @@ class PainterHostServices(Painter):
                         title=_("Only show services in this states"),
                         help=_("Here you can configure which services are displayed depending on "
                                "their state. This is a filter at display level not query level.")))
-        ]  # type: DictionaryElements
+        ]
 
         return Dictionary(elements=elements, title=_("Options"))
 
@@ -3835,7 +3835,7 @@ class PainterCommentEntryType(Painter):
             help_txt = _("Acknowledgement")
         else:
             return "", ""
-        code = html.render_icon(icon, help_txt)  # type: CellContent
+        code: CellContent = html.render_icon(icon, help_txt)
         if linkview:
             code = link_to_view(code, row, linkview)
         return "icons", code

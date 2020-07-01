@@ -13,7 +13,7 @@ from . import (
     multisite_builtin_views,)
 
 # Painters used in list of services views
-service_view_painters = [
+service_view_painters: List[Tuple[Optional[str], ...]] = [
     ('service_state', None),
     #    ('service_type_icon',   None),
     ('service_description', 'service'),
@@ -22,9 +22,9 @@ service_view_painters = [
     ('svc_state_age', None),
     ('svc_check_age', None),
     ('perfometer', None),
-]  # type: List[Tuple[Optional[str], ...]]
+]
 
-_host_host_painter = ('host', 'host')  # type: Tuple[Optional[str], ...]
+_host_host_painter: Tuple[Optional[str], ...] = ('host', 'host')
 
 # Same as list of services, but extended by the hostname
 host_service_view_painters = service_view_painters[:]
@@ -4902,7 +4902,7 @@ multisite_builtin_views['cmk_servers'] = {
 
 
 def cmk_sites_painters():
-    service_painters = []  # type: List[Any]
+    service_painters: List[Any] = []
     if not cmk_version.is_raw_edition():
         service_painters += [
             ('invcmksites_cmc', None, None),

@@ -91,8 +91,8 @@ class CrashReportsRowTable(RowTable):
             })
         return sorted(rows, key=lambda r: r["crash_time"])
 
-    def get_crash_report_rows(self, only_sites, filter_headers):
-        # type: (Optional[List[config.SiteId]], str) -> List[Dict[str, str]]
+    def get_crash_report_rows(self, only_sites: Optional[List[config.SiteId]],
+                              filter_headers: str) -> List[Dict[str, str]]:
 
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
@@ -132,8 +132,9 @@ class CrashReportsRowTable(RowTable):
 
         return rows
 
-    def _get_crash_report_info(self, only_sites, filter_headers=None):
-        # type: (Optional[List[config.SiteId]], Optional[str]) -> List[Dict[str, str]]
+    def _get_crash_report_info(self,
+                               only_sites: Optional[List[config.SiteId]],
+                               filter_headers: Optional[str] = None) -> List[Dict[str, str]]:
         try:
             sites.live().set_prepend_site(True)
             sites.live().set_only_sites(only_sites)

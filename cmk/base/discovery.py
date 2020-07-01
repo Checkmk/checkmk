@@ -557,7 +557,8 @@ def check_discovery(
     sources = _get_sources_for_discovery(hostname,
                                          ipaddress,
                                          do_snmp_scan=params["inventory_check_do_scan"],
-                                         on_error="raise")
+                                         on_error="raise",
+                                         for_check_discovery=True)
 
     multi_host_sections = _get_host_sections_for_discovery(
         sources, use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())

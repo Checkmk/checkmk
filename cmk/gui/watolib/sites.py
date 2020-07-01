@@ -58,17 +58,6 @@ from cmk.gui.watolib.utils import (
 )
 
 
-class SiteManagementFactory:
-    @staticmethod
-    def factory() -> 'SiteManagement':
-        if cmk_version.is_raw_edition():
-            cls: 'Type[SiteManagement]' = CRESiteManagement
-        else:
-            cls = CEESiteManagement
-
-        return cls()
-
-
 class SiteManagement:
     @classmethod
     def connection_method_valuespec(cls):
@@ -357,6 +346,17 @@ class SiteManagement:
     @classmethod
     def transform_old_connection_params(cls, value):
         return value
+
+
+class SiteManagementFactory:
+    @staticmethod
+    def factory() -> SiteManagement:
+        if cmk_version.is_raw_edition():
+            cls: Type[SiteManagement] = CRESiteManagement
+        else:
+            cls = CEESiteManagement
+
+        return cls()
 
 
 class CRESiteManagement(SiteManagement):

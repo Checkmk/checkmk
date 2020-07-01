@@ -1020,7 +1020,12 @@ class CommandScheduleDowntimes(Command):
             end_time = self._custom_end_time(start_time)
             title = self._title_range(start_time, end_time)
         else:  # one of the default time buttons
-            next_time_interval = self.button_interval_value()
+            button_value = self.button_interval_value()
+            if button_value is None:
+                # the remove button in the Show Downtimes WATO view returns None here
+                # TODO: separate the remove mechanism from the create downtime procedure in the views call
+                return
+            next_time_interval = button_value
             start_time = self._current_local_time()
             end_time = time_interval_end(next_time_interval, start_time)
             if end_time is None:
@@ -1154,7 +1159,7 @@ class CommandScheduleDowntimes(Command):
         except StopIteration:
             rangebtn = None
         if rangebtn is None:
-            raise MKUserError("_downrange", "Downtime button value could not be determined")
+            return None
         _btnname, period = rangebtn.split("__", 1)
         return period
 

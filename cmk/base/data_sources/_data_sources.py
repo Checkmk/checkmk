@@ -213,14 +213,11 @@ class DataSources:
         self._ipaddress = ipaddress
         self._host_config = host_config
         self._sources = make_sources(host_config, ipaddress, selected_raw_sections)
-        self._description = make_description(host_config)
+        self.description = make_description(host_config)
 
     @property
     def _hostname(self) -> HostName:
         return self._host_config.hostname
-
-    def describe_data_sources(self) -> str:
-        return self._description
 
     def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
         for source in self.get_data_sources():
@@ -250,43 +247,44 @@ class DataSources:
                                  else config.cluster_max_cachefile_age)
 
         # First abstract clusters/nodes/hosts
-        hosts = []
-        nodes = self._host_config.nodes
-        if nodes is not None:
-            for node_hostname in nodes:
-                node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
+        if self._host_config.nodes is not None:
+            nodes = []
+            for hostname in self._host_config.nodes:
+                ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-                node_check_names = check_table.get_needed_check_names(node_hostname,
-                                                                      remove_duplicates=True,
-                                                                      filter_mode="only_clustered")
+                check_names = check_table.get_needed_check_names(
+                    hostname,
+                    remove_duplicates=True,
+                    filter_mode="only_clustered",
+                )
                 node_needed_raw_sections = config.get_relevant_raw_sections(
                     # TODO (mo): centralize maincheckify: CMK-4295
-                    CheckPluginName(maincheckify(n)) for n in node_check_names)
+                    CheckPluginName(maincheckify(n)) for n in check_names)
 
-                node_data_sources = DataSources(
+                sources = DataSources(
                     self._host_config,
-                    node_ipaddress,
+                    ipaddress,
                     node_needed_raw_sections,
                 )
-                node_data_sources.set_max_cachefile_age(max_cachefile_age)
-                hosts.append((node_hostname, node_ipaddress, node_data_sources))
+                sources.set_max_cachefile_age(max_cachefile_age)
+                nodes.append((hostname, ipaddress, sources))
         else:
             self.set_max_cachefile_age(max_cachefile_age)
-            hosts.append((self._hostname, self._ipaddress, self))
+            nodes = [(self._hostname, self._ipaddress, self)]
 
-        if nodes:
+        if self._host_config.nodes:
             import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
             abstract.DataSource.set_may_use_cache_file()
 
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
         # the section lines need to be extended
         multi_host_sections = MultiHostSections()
-        for this_hostname, this_ipaddress, these_sources in hosts:
-            for source in these_sources.get_data_sources():
+        for hostname, ipaddress, sources in nodes:
+            for source in sources.get_data_sources():
                 host_sections = AgentHostSections()
                 host_sections.update(source.run())
                 multi_host_sections.set_default_host_sections(
-                    (this_hostname, this_ipaddress, source.source_type),
+                    (hostname, ipaddress, source.source_type),
                     host_sections,
                 )
 
@@ -294,10 +292,12 @@ class DataSources:
             # also implies a removal of piggyback files received during previous calls.
             host_sections = AgentHostSections()
             multi_host_sections.set_default_host_sections(
-                (this_hostname, this_ipaddress, SourceType.HOST),
+                (hostname, ipaddress, SourceType.HOST),
                 host_sections,
             )
-            cmk.utils.piggyback.store_piggyback_raw_data(this_hostname,
-                                                         host_sections.piggybacked_raw_data)
+            cmk.utils.piggyback.store_piggyback_raw_data(
+                hostname,
+                host_sections.piggybacked_raw_data,
+            )
 
         return multi_host_sections

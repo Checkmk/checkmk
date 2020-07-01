@@ -91,7 +91,7 @@ def dump_host(hostname: HostName) -> None:
         agenttypes.append('PING only')
 
     out.output(tty.yellow + "Agent mode:             " + tty.normal)
-    out.output(sources.describe_data_sources() + "\n")
+    out.output(sources.description + "\n")
 
     out.output(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:

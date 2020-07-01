@@ -20,22 +20,18 @@ from cmk.gui.plugins.sidebar import (
 @snapin_registry.register
 class SidebarSnapinAggregationGroupList(SidebarSnapin):
     @staticmethod
-    def type_name():
-        # type: () -> str
+    def type_name() -> str:
         return "biaggr_groups"
 
     @classmethod
-    def title(cls):
-        # type: () -> str
+    def title(cls) -> str:
         return _("BI Aggregation Groups")
 
     @classmethod
-    def description(cls):
-        # type: () -> str
+    def description(cls) -> str:
         return _("A direct link to all groups of BI aggregations")
 
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         html.open_ul()
         for group in bi.get_aggregation_group_trees():
             bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % html.urlencode(group))
@@ -45,23 +41,19 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
 @snapin_registry.register
 class SidebarSnapinAggregationGroupTree(SidebarSnapin):
     @staticmethod
-    def type_name():
-        # type: () -> str
+    def type_name() -> str:
         return "biaggr_groups_tree"
 
     @classmethod
-    def title(cls):
-        # type: () -> str
+    def title(cls) -> str:
         return _("BI Aggregation Groups Tree")
 
     @classmethod
-    def description(cls):
-        # type: () -> str
+    def description(cls) -> str:
         return _("A direct link to all groups of BI aggregations organized as tree")
 
-    def show(self):
-        # type: () -> None
-        tree = {}  # type: Dict[Tuple[str, ...], Dict[str, Any]]
+    def show(self) -> None:
+        tree: Dict[Tuple[str, ...], Dict[str, Any]] = {}
         for group in bi.get_aggregation_group_trees():
             self._build_tree(group.split("/"), tree, tuple())
         self._render_tree(tree)

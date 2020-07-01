@@ -14,8 +14,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def fortigate_sessions_element():
-    # type: () -> Tuple
+def fortigate_sessions_element() -> Tuple:
     return Tuple(
         title=_("Levels for active sessions"),
         elements=[

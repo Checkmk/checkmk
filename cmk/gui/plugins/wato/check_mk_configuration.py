@@ -766,7 +766,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         #  - consist only of checkbox tags
         #  - contain at least two entries
         choices = []
-        by_topic = {}  # type: Dict[str, List[TagGroup]]
+        by_topic: Dict[str, List[TagGroup]] = {}
         for tag_group in config.tags.tag_groups:
             choices.append((tag_group.id, tag_group.title))
             by_topic.setdefault(tag_group.topic, []).append(tag_group)
@@ -3152,7 +3152,7 @@ rulespec_registry.register(
 
 
 def _host_check_commands_host_check_command_choices():
-    choices = [
+    choices: List[CascadingDropdownChoice] = [
         ("ping", _("PING (active check with ICMP echo request)")),
         ("smart", _("Smart PING (only with Check_MK Micro Core)")),
         ("tcp", _("TCP Connect"),
@@ -3167,7 +3167,7 @@ def _host_check_commands_host_check_command_choices():
              help=_("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
                     "with the name of the current host."),
          )),
-    ]  # type: List[CascadingDropdownChoice]
+    ]
     if config.user.may('wato.add_or_modify_executables'):
         return choices + [
             ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
@@ -3696,8 +3696,7 @@ def _valuespec_periodic_discovery():
     )
 
 
-def _vs_periodic_discovery():
-    # type: () -> Transform
+def _vs_periodic_discovery() -> Transform:
     return Transform(
         Dictionary(
             title=_("Perform periodic service discovery check"),
@@ -3767,8 +3766,7 @@ def _vs_periodic_discovery():
     )
 
 
-def _valuespec_automatic_rediscover_parameters():
-    # type: () -> Dictionary
+def _valuespec_automatic_rediscover_parameters() -> Dictionary:
     return Dictionary(
         title=_("Automatically update service configuration"),
         help=_("If active the check will not only notify about un-monitored services, "

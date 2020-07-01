@@ -52,9 +52,9 @@ class ValueTypedDictSchema(Schema):
             to keep the key and it's value in the value-dict or to remove it.
 
     """
-    key_name = 'name'  # type: str
-    keep_key = True  # type: bool
-    value_type = None  # type: Schema
+    key_name: str = 'name'
+    keep_key: bool = True
+    value_type: Schema = None
 
     def dump(self, obj, many=None, update_fields=True, **kwargs):
         schema = common.resolve_schema_instance(self.value_type)

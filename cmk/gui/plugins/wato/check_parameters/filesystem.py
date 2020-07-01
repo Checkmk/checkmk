@@ -98,7 +98,7 @@ def _transform_filesystem_groups(grouping):
     if not grouping or isinstance(grouping[0], dict):
         return grouping
 
-    grouping_dict = {}  # type: Dict[str, List[str]]
+    grouping_dict: Dict[str, List[str]] = {}
     for group_name, pattern_inclde in grouping:
         grouping_dict.setdefault(group_name, []).append(pattern_inclde)
 

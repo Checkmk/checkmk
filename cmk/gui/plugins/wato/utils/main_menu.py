@@ -71,8 +71,7 @@ class MenuItem:
         return self._sort_index
 
     @property
-    def enabled(self):
-        # type: () -> bool
+    def enabled(self) -> bool:
         return True
 
     def may_see(self):
@@ -112,33 +111,27 @@ class MainModule(MenuItem, metaclass=abc.ABCMeta):
                                          sort_index=None)
 
     @abc.abstractproperty
-    def mode_or_url(self):
-        # type: () -> str
+    def mode_or_url(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def icon(self):
-        # type: () -> str
+    def icon(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def permission(self):
-        # type: () -> Optional[str]
+    def permission(self) -> Optional[str]:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def description(self):
-        # type: () -> str
+    def description(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def sort_index(self):
-        # type: () -> int
+    def sort_index(self) -> int:
         raise NotImplementedError()
 
 

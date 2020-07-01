@@ -18,8 +18,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_cisco_stack():
-    # type: () -> Dictionary
+def _parameter_valuespec_cisco_stack() -> Dictionary:
     return Dictionary(
         elements=[
             ("waiting",

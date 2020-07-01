@@ -273,7 +273,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
             if topic != selected_topic:
                 default = ''
-                style = 'display:none'  # type: Optional[str]
+                style: Optional[str] = 'display:none'
             else:
                 default = selected_target
                 style = None

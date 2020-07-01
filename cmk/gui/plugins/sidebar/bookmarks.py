@@ -217,7 +217,7 @@ class BookmarkList(pagetypes.Overridable):
         return self._["default_topic"]
 
     def bookmarks_by_topic(self):
-        topics = {}  # type: Dict[str, List[Dict[str, Any]]]
+        topics: Dict[str, List[Dict[str, Any]]] = {}
         for bookmark in self._["bookmarks"]:
             topic = topics.setdefault(bookmark["topic"], [])
             topic.append(bookmark)
@@ -264,7 +264,7 @@ class Bookmarks(SidebarSnapin):
         end_footnote_links()
 
     def _get_bookmarks_by_topic(self):
-        topics = {}  # type: Dict[Any, List[Any]]
+        topics: Dict[Any, List[Any]] = {}
         BookmarkList.load()
         for instance in BookmarkList.instances_sorted():
             if (instance.is_mine() and instance.may_see()) or \

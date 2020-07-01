@@ -48,9 +48,9 @@ DashletPosition = Tuple[int, int]
 DashletInputFunc = Callable[["Dashlet"], None]
 DashletHandleInputFunc = Callable[[DashletId, DashletConfig], None]
 
-builtin_dashboards = {}  # type: Dict[DashboardName, DashboardConfig]
+builtin_dashboards: Dict[DashboardName, DashboardConfig] = {}
 # Keep this for legacy reasons until we drop the legacy plugin mechanic
-dashlet_types = {}  # type: Dict[str, DashletType]
+dashlet_types: Dict[str, DashletType] = {}
 
 # Declare constants to be used in the definitions of the dashboards
 GROW = 0
@@ -61,118 +61,102 @@ class Dashlet(metaclass=abc.ABCMeta):
     """Base class for all dashboard dashlet implementations"""
 
     # Minimum width and height of dashlets in raster units
-    minimum_size = (10, 5)  # type: DashletSize
+    minimum_size: DashletSize = (10, 5)
 
     @classmethod
     @abc.abstractmethod
-    def type_name(cls):
-        # type: () -> str
+    def type_name(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def title(cls):
-        # type: () -> str
+    def title(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def description(cls):
-        # type: () -> str
+    def description(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def sort_index(cls):
-        # type: () -> int
+    def sort_index(cls) -> int:
         raise NotImplementedError()
 
     @classmethod
-    def has_context(cls):
-        # type: () -> bool
+    def has_context(cls) -> bool:
         """Whether or not this dashlet is context sensitive."""
         return False
 
     @classmethod
-    def single_infos(cls):
-        # type: () -> List[str]
+    def single_infos(cls) -> List[str]:
         """Return a list of the single infos (for the visual context) of this dashlet"""
         return []
 
     @classmethod
-    def is_selectable(cls):
-        # type: () -> bool
+    def is_selectable(cls) -> bool:
         """Whether or not the user can choose to add this dashlet in the dashboard editor"""
         return True
 
     @classmethod
-    def is_resizable(cls):
-        # type: () -> bool
+    def is_resizable(cls) -> bool:
         """Whether or not the user may resize this dashlet"""
         return True
 
     @classmethod
-    def is_iframe_dashlet(cls):
-        # type: () -> bool
+    def is_iframe_dashlet(cls) -> bool:
         """Whether or not the dashlet is rendered in an iframe"""
         return False
 
     @classmethod
-    def initial_size(cls):
-        # type: () -> DashletSize
+    def initial_size(cls) -> DashletSize:
         """The initial size of dashlets when being added to the dashboard"""
         return cls.minimum_size
 
     @classmethod
-    def initial_position(cls):
-        # type: () -> DashletPosition
+    def initial_position(cls) -> DashletPosition:
         """The initial position of dashlets when being added to the dashboard"""
         return (1, 1)
 
     @classmethod
-    def initial_refresh_interval(cls):
-        # type: () -> DashletRefreshInterval
+    def initial_refresh_interval(cls) -> DashletRefreshInterval:
         return False
 
     @classmethod
-    def vs_parameters(cls):
-        # type: () -> Union[None, List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]]
+    def vs_parameters(
+        cls
+    ) -> Union[None, List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc,
+                                                             DashletHandleInputFunc]]:
         """Returns a valuespec instance in case the dashlet has parameters, otherwise None"""
         # For legacy reasons this may also return a list of Dashboard() elements. (TODO: Clean this up)
         return None
 
     @classmethod
-    def opt_parameters(cls):
-        # type: () -> Optional[List[DictionaryEntry]]
+    def opt_parameters(cls) -> Optional[List[DictionaryEntry]]:
         """List of optional parameters in case vs_parameters() returns a list"""
         return None
 
     @classmethod
-    def validate_parameters_func(cls):
-        # type: () -> Optional[ValueSpecValidateFunc]
+    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc]:
         """Optional validation function in case vs_parameters() returns a list"""
         return None
 
     @classmethod
-    def styles(cls):
-        # type: () -> Optional[str]
+    def styles(cls) -> Optional[str]:
         """Optional registration of snapin type specific stylesheets"""
         return None
 
     @classmethod
-    def script(cls):
-        # type: () -> Optional[str]
+    def script(cls) -> Optional[str]:
         """Optional registration of snapin type specific javascript"""
         return None
 
     @classmethod
-    def allowed_roles(cls):
-        # type: () -> List[str]
+    def allowed_roles(cls) -> List[str]:
         return config.builtin_role_ids
 
     @classmethod
-    def add_url(cls):
-        # type: () -> str
+    def add_url(cls) -> str:
         """The URL to open for adding a new dashlet of this type to a dashboard"""
         return html.makeuri([('type', cls.type_name()), ('back', html.makeuri([('edit', '1')]))],
                             filename='edit_dashlet.py')
@@ -186,22 +170,20 @@ class Dashlet(metaclass=abc.ABCMeta):
         """
         return {}
 
-    def __init__(self, dashboard_name, dashboard, dashlet_id, dashlet):
-        # type: (DashboardName, DashboardConfig, DashletId, DashletConfig) -> None
+    def __init__(self, dashboard_name: DashboardName, dashboard: DashboardConfig,
+                 dashlet_id: DashletId, dashlet: DashletConfig) -> None:
         super(Dashlet, self).__init__()
         self._dashboard_name = dashboard_name
         self._dashboard = dashboard
         self._dashlet_id = dashlet_id
         self._dashlet_spec = dashlet
-        self._context = self._get_context()  # type: Optional[Dict]
+        self._context: Optional[Dict] = self._get_context()
 
-    def infos(self):
-        # type: () -> List[str]
+    def infos(self) -> List[str]:
         """Return a list of the supported infos (for the visual context) of this dashlet"""
         return []
 
-    def _get_context(self):
-        # type: () -> Optional[Dict]
+    def _get_context(self) -> Optional[Dict]:
         if not self.has_context():
             return None
 
@@ -212,55 +194,44 @@ class Dashlet(metaclass=abc.ABCMeta):
         )
 
     @property
-    def context(self):
-        # type: () -> Dict
+    def context(self) -> Dict:
         if self._context is None:
             raise Exception("Missing context")
         return self._context
 
     @property
-    def dashlet_id(self):
-        # type: () -> DashletId
+    def dashlet_id(self) -> DashletId:
         return self._dashlet_id
 
     @property
-    def dashlet_spec(self):
-        # type: () -> DashletConfig
+    def dashlet_spec(self) -> DashletConfig:
         return self._dashlet_spec
 
     @property
-    def dashboard_name(self):
-        # type: () -> str
+    def dashboard_name(self) -> str:
         return self._dashboard_name
 
-    def display_title(self):
-        # type: () -> str
+    def display_title(self) -> str:
         return self._dashlet_spec.get("title", self.title())
 
-    def show_title(self):
-        # type: () -> bool
+    def show_title(self) -> bool:
         return self._dashlet_spec.get("show_title", True)
 
-    def title_url(self):
-        # type: () -> Optional[str]
+    def title_url(self) -> Optional[str]:
         return self._dashlet_spec.get("title_url")
 
-    def show_background(self):
-        # type: () -> bool
+    def show_background(self) -> bool:
         return self._dashlet_spec.get("background", True)
 
-    def on_resize(self):
-        # type: () -> Optional[str]
+    def on_resize(self) -> Optional[str]:
         """Returns either Javascript code to execute when a resize event occurs or None"""
         return None
 
-    def on_refresh(self):
-        # type: () -> Optional[str]
+    def on_refresh(self) -> Optional[str]:
         """Returns either Javascript code to execute when a the dashlet should be refreshed or None"""
         return None
 
-    def update(self):
-        # type: () -> None
+    def update(self) -> None:
         """Called by the ajax call to update dashlet contents
 
         This is normally equivalent to the .show() method. Differs only for
@@ -269,13 +240,11 @@ class Dashlet(metaclass=abc.ABCMeta):
         self.show()
 
     @abc.abstractmethod
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         """Produces the HTML code of the dashlet content."""
         raise NotImplementedError()
 
-    def _add_context_vars_to_url(self, url):
-        # type: (str) -> str
+    def _add_context_vars_to_url(self, url: str) -> str:
         """Adds missing context variables to the given URL"""
         if not self.has_context():
             return url
@@ -293,40 +262,33 @@ class Dashlet(metaclass=abc.ABCMeta):
         new_qs = urllib.parse.urlencode(url_vars)
         return urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
 
-    def _dashlet_context_vars(self):
-        # type: () -> HTTPVariables
+    def _dashlet_context_vars(self) -> HTTPVariables:
         return visuals.get_context_uri_vars(self.context, self.single_infos())
 
-    def unconfigured_single_infos(self):
-        # type: () -> Set[str]
+    def unconfigured_single_infos(self) -> Set[str]:
         """Returns infos that are not set by the dashlet config"""
         if not self.has_context():
             return set()
         return visuals.get_missing_single_infos(self.single_infos(), self._dashlet_spec["context"])
 
-    def missing_single_infos(self):
-        # type: () -> Set[str]
+    def missing_single_infos(self) -> Set[str]:
         """Returns infos that are neither configured nor available through HTTP variables"""
         if not self.has_context():
             return set()
         return visuals.get_missing_single_infos(self.single_infos(), self.context)
 
-    def size(self):
-        # type: () -> DashletSize
+    def size(self) -> DashletSize:
         if self.is_resizable():
             return self._dashlet_spec.get("size", self.initial_size())
         return self.initial_size()
 
-    def position(self):
-        # type: () -> DashletPosition
+    def position(self) -> DashletPosition:
         return self._dashlet_spec.get("position", self.initial_position())
 
-    def refresh_interval(self):
-        # type: () -> DashletRefreshInterval
+    def refresh_interval(self) -> DashletRefreshInterval:
         return self._dashlet_spec.get("refresh", self.initial_refresh_interval())
 
-    def get_refresh_action(self):
-        # type: () -> DashletRefreshAction
+    def get_refresh_action(self) -> DashletRefreshAction:
         if not self.refresh_interval():
             return None
 
@@ -346,8 +308,7 @@ class Dashlet(metaclass=abc.ABCMeta):
 
         return None
 
-    def _get_refresh_url(self):
-        # type: () -> str
+    def _get_refresh_url(self) -> str:
         """Returns the URL to be used for loading the dashlet contents"""
         dashlet_url = self._get_dashlet_url_from_urlfunc()
         if dashlet_url is not None:
@@ -367,8 +328,7 @@ class Dashlet(metaclass=abc.ABCMeta):
 
     # TODO: This is specific for the 'url' dashlet type. Move it to that
     # dashlets class once it has been refactored to a class
-    def _get_dashlet_url_from_urlfunc(self):
-        # type: () -> Optional[str]
+    def _get_dashlet_url_from_urlfunc(self) -> Optional[str]:
         """Use the URL returned by urlfunc as dashlet URL
 
         Dashlets using the 'urlfunc' method will dynamically compute
@@ -402,22 +362,18 @@ class Dashlet(metaclass=abc.ABCMeta):
 class IFrameDashlet(Dashlet, metaclass=abc.ABCMeta):
     """Base class for all dashlet using an iframe"""
     @classmethod
-    def is_iframe_dashlet(cls):
-        # type: () -> bool
+    def is_iframe_dashlet(cls) -> bool:
         """Whether or not the dashlet is rendered in an iframe"""
         return True
 
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         self._show_initial_iframe_container()
 
-    def reload_on_resize(self):
-        # type: () -> bool
+    def reload_on_resize(self) -> bool:
         """Whether or not the page should be reloaded when the dashlet is resized"""
         return self._dashlet_spec.get("reload_on_resize", False)
 
-    def _show_initial_iframe_container(self):
-        # type: () -> None
+    def _show_initial_iframe_container(self) -> None:
         iframe_url = self._get_iframe_url()
         if not iframe_url:
             return
@@ -437,16 +393,14 @@ class IFrameDashlet(Dashlet, metaclass=abc.ABCMeta):
             html.javascript('cmk.dashboard.set_reload_on_resize(%s, %s);' %
                             (json.dumps(self._dashlet_id), json.dumps(iframe_url)))
 
-    def _get_iframe_url(self):
-        # type: () -> Optional[str]
+    def _get_iframe_url(self) -> Optional[str]:
         if not self.is_iframe_dashlet():
             return None
 
         return self._add_context_vars_to_url(self._get_refresh_url())
 
     @abc.abstractmethod
-    def update(self):
-        # type: () -> None
+    def update(self) -> None:
         raise NotImplementedError()
 
 
@@ -475,30 +429,27 @@ class DashboardStore:
         self.all = self._load_all()
         self.permitted = self._load_permitted(self.all)
 
-    def _load_all(self):
-        # type: () -> Dict[Tuple[UserId, DashboardName], DashboardConfig]
+    def _load_all(self) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
         """Loads all definitions from disk and returns them"""
         _transform_builtin_dashboards()
         return _transform_dashboards(visuals.load('dashboards', builtin_dashboards))
 
-    def _load_permitted(self, all_dashboards):
-        # type: (Dict[Tuple[UserId, DashboardName], DashboardConfig]) -> Dict[DashboardName, DashboardConfig]
+    def _load_permitted(
+        self, all_dashboards: Dict[Tuple[UserId, DashboardName], DashboardConfig]
+    ) -> Dict[DashboardName, DashboardConfig]:
         """Returns all defitions that a user is allowed to use"""
         return visuals.available('dashboards', all_dashboards)
 
 
-def save_all_dashboards():
-    # type: () -> None
+def save_all_dashboards() -> None:
     visuals.save('dashboards', get_all_dashboards())
 
 
-def get_all_dashboards():
-    # type: () -> Dict[Tuple[Optional[UserId], DashboardName], DashboardConfig]
+def get_all_dashboards() -> Dict[Tuple[Optional[UserId], DashboardName], DashboardConfig]:
     return DashboardStore.get_instance().all
 
 
-def get_permitted_dashboards():
-    # type: () -> Dict[DashboardName, DashboardConfig]
+def get_permitted_dashboards() -> Dict[DashboardName, DashboardConfig]:
     return DashboardStore.get_instance().permitted
 
 
@@ -510,8 +461,9 @@ def get_permitted_dashboards():
 # This code transforms views from user_dashboards.mk which have been
 # migrated/created with daily snapshots from 2014-08 till beginning 2014-10.
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
-def _transform_dashboards(boards):
-    # type: (Dict[Tuple[UserId, DashboardName], DashboardConfig]) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]
+def _transform_dashboards(
+    boards: Dict[Tuple[UserId, DashboardName], DashboardConfig]
+) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
     for dashboard in boards.values():
         visuals.transform_old_visual(dashboard)
 
@@ -535,8 +487,7 @@ def _transform_dashboards(boards):
 # be compatible to old definitions, where even internal dashlets were
 # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
 # FIXME: can be removed one day. Mark as incompatible change or similar.
-def _transform_builtin_dashboards():
-    # type: () -> None
+def _transform_builtin_dashboards() -> None:
     if 'builtin_dashboards_transformed' in g:
         return  # Only do this once
     for name, dashboard in builtin_dashboards.items():
@@ -627,8 +578,11 @@ def _transform_builtin_dashboards():
     g.builtin_dashboards_transformed = True
 
 
-def copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_all_views=False):
-    # type: (DashletConfig, DashletId, str, VisualContext, bool) -> None
+def copy_view_into_dashlet(dashlet: DashletConfig,
+                           nr: DashletId,
+                           view_name: str,
+                           add_context: VisualContext = None,
+                           load_from_all_views: bool = False) -> None:
     permitted_views = get_permitted_views()
 
     # it is random which user is first accessing
@@ -662,7 +616,7 @@ def copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
     # Overwrite the views default title with the context specific title
     dashlet['title'] = visuals.visual_title('view', view)
     # TODO: Shouldn't we use the self._dashlet_context_vars() here?
-    name_part = [('view_name', view_name)]  # type: HTTPVariables
+    name_part: HTTPVariables = [('view_name', view_name)]
     singlecontext_vars = cast(
         HTTPVariables,
         list(visuals.get_singlecontext_vars(

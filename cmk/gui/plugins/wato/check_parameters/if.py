@@ -40,8 +40,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
 def transform_if(v):
-    new_traffic = [
-    ]  # type: List[_Tuple[str, _Tuple[str, _Tuple[str, _Tuple[Union[int, float], Any]]]]]
+    new_traffic: List[_Tuple[str, _Tuple[str, _Tuple[str, _Tuple[Union[int, float], Any]]]]] = []
 
     if 'traffic' in v and not isinstance(v['traffic'], list):
         warn, crit = v['traffic']
@@ -219,7 +218,7 @@ rulespec_registry.register(
         valuespec=_valuespec_inventory_if_rules,
     ))
 
-vs_elements_if_groups_matches = [
+vs_elements_if_groups_matches: List[DictionaryEntry] = [
     ("iftype",
      Transform(
          DropdownChoice(
@@ -236,7 +235,7 @@ vs_elements_if_groups_matches = [
          title=_("Restrict interface items"),
          help=_("Only interface with these item names are put into this group."),
      )),
-]  # type: List[DictionaryEntry]
+]
 
 vs_elements_if_groups_group = [
     ("group_name",
@@ -261,8 +260,7 @@ vs_elements_if_groups_group = [
 
 
 def _valuespec_if_groups():
-    node_name_elements = [("node_name", TextAscii(title=_("Node name")))
-                         ]  # type: List[DictionaryEntry]
+    node_name_elements: List[DictionaryEntry] = [("node_name", TextAscii(title=_("Node name")))]
     return Transform(Alternative(
         title=_('Network interface groups'),
         help=

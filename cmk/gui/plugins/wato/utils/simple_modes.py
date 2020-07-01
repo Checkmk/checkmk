@@ -40,8 +40,7 @@ from cmk.gui.valuespec import (
 
 class SimpleModeType(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def type_name(self):
-        # type: () -> str
+    def type_name(self) -> str:
         """A GUI globally unique identifier (in singular form) for the managed type of object"""
         raise NotImplementedError()
 
@@ -51,20 +50,17 @@ class SimpleModeType(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def is_site_specific(self):
-        # type: () -> bool
+    def is_site_specific(self) -> bool:
         """Whether or not an object of this type is site specific
         It has a mandatory "site" attribute in case it is.
         """
         raise NotImplementedError()
 
-    def site_valuespec(self):
-        # type: () -> SiteChoice
+    def site_valuespec(self) -> SiteChoice:
         return SiteChoice()
 
     @abc.abstractmethod
-    def can_be_disabled(self):
-        # type: () -> bool
+    def can_be_disabled(self) -> bool:
         """Whether or not an object of this type can be disabled
 
         If True the user can set an attribute named "disabled" for each object.
@@ -72,28 +68,23 @@ class SimpleModeType(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def affected_config_domains(self):
-        # type: () -> List[Type[watolib.ABCConfigDomain]]
+    def affected_config_domains(self) -> List[Type[watolib.ABCConfigDomain]]:
         """List of config domains that are affected by changes to objects of this type"""
         raise NotImplementedError()
 
-    def mode_ident(self):
-        # type: () -> str
+    def mode_ident(self) -> str:
         """A GUI wide unique identifier which is used to create the WATO mode identifiers"""
         return self.type_name()
 
-    def list_mode_name(self):
-        # type: () -> str
+    def list_mode_name(self) -> str:
         """The mode name of the WATO list mode of this object type"""
         return "%ss" % self.mode_ident()
 
-    def edit_mode_name(self):
-        # type: () -> str
+    def edit_mode_name(self) -> str:
         """The mode name of the WATO edit mode of this object type"""
         return "edit_%s" % self.mode_ident()
 
-    def affected_sites(self, entry):
-        # type: (dict) -> Optional[List[str]]
+    def affected_sites(self, entry: dict) -> Optional[List[str]]:
         """Sites that are affected by changes to objects of this type
 
         Returns either a list of sites affected by a change or None.
@@ -112,8 +103,7 @@ class SimpleWatoModeBase(WatoMode, metaclass=abc.ABCMeta):
     This is essentially a base class for the SimpleListMode/SimpleEditMode
     classes. It should not be used directly by specific mode classes.
     """
-    def __init__(self, mode_type, store):
-        # type: (SimpleModeType, WatoSimpleConfigFile) -> None
+    def __init__(self, mode_type: SimpleModeType, store: WatoSimpleConfigFile) -> None:
         self._mode_type = mode_type
         self._store = store
 
@@ -123,8 +113,7 @@ class SimpleWatoModeBase(WatoMode, metaclass=abc.ABCMeta):
         # TODO: Make the _from_vars() mechanism more explicit
         super(SimpleWatoModeBase, self).__init__()
 
-    def _add_change(self, action, entry, text):
-        # type: (str, Dict, str) -> None
+    def _add_change(self, action: str, entry: Dict, text: str) -> None:
         """Add a WATO change entry for this object type modifications"""
         watolib.add_change("%s-%s" % (action, self._mode_type.type_name()),
                            text,
@@ -135,19 +124,16 @@ class SimpleWatoModeBase(WatoMode, metaclass=abc.ABCMeta):
 class SimpleListMode(SimpleWatoModeBase):
     """Base class for list modes"""
     @abc.abstractmethod
-    def _table_title(self):
-        # type: () -> str
+    def _table_title(self) -> str:
         """The user visible title shown on top of the list table"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _show_entry_cells(self, table, ident, entry):
-        # type: (Table, str, dict) -> None
+    def _show_entry_cells(self, table: Table, ident: str, entry: dict) -> None:
         """Shows the HTML code for the cells of an object row"""
         raise NotImplementedError()
 
-    def _handle_custom_action(self, action):
-        # type: (str) -> Union[None, bool, Tuple[Optional[str], str]]
+    def _handle_custom_action(self, action: str) -> Union[None, bool, Tuple[Optional[str], str]]:
         """Gives the mode the option to implement custom actions
 
         This function is called when the action phase is triggered. The action name is given
@@ -159,8 +145,7 @@ class SimpleListMode(SimpleWatoModeBase):
         """
         raise MKUserError("_action", _("The action '%s' is not implemented") % action)
 
-    def _new_context_button_label(self):
-        # type: () -> str
+    def _new_context_button_label(self) -> str:
         return _("New %s") % self._mode_type.name_singular()
 
     def buttons(self):
@@ -268,7 +253,7 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
                                   _("This %s does not exist.") % self._mode_type.name_singular())
 
             self._new = False
-            self._ident = ident  # type: Optional[str]
+            self._ident: Optional[str] = ident
             self._entry = entry
             return
 

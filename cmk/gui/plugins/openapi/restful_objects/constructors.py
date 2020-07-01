@@ -32,15 +32,14 @@ from cmk.gui.plugins.openapi.restful_objects.utils import (
 
 
 def link_rel(
-        rel,  # type: Union[RestfulEndpointName, EndpointName]
-        href,  # type: str
-        method='get',  # type: HTTPMethod
-        content_type='application/json',  # type: str
-        profile=None,  # type: Optional[str]
-        title=None,  # type: Optional[str]
-        parameters=None,  # type: Optional[Dict[str, str]]
-):
-    # type: (...) -> LinkType
+    rel: Union[RestfulEndpointName, EndpointName],
+    href: str,
+    method: HTTPMethod = 'get',
+    content_type: str = 'application/json',
+    profile: Optional[str] = None,
+    title: Optional[str] = None,
+    parameters: Optional[Dict[str, str]] = None,
+) -> LinkType:
     """Link to a separate entity
 
     Args:
@@ -101,10 +100,9 @@ def link_rel(
 
 
 def expand_rel(
-        rel,  # type: str
-        parameters=None,  # type: Optional[Dict[str, str]]
-):
-    # type: (...) -> str
+    rel: str,
+    parameters: Optional[Dict[str, str]] = None,
+) -> str:
     """Expand abbreviations in the rel field
 
     `.../` and `cmk/` are shorthands for the restful-objects and CheckMK namespaces. The
@@ -136,8 +134,7 @@ def expand_rel(
     return rel
 
 
-def require_etag(etag):
-    # type: (ETags) -> None
+def require_etag(etag: ETags) -> None:
     """Ensure the current request matches the given ETag.
 
     Args:
@@ -154,8 +151,7 @@ def require_etag(etag):
         )
 
 
-def object_action(name, parameters, base):
-    # type: (str, dict, str) -> Dict[str, Any]
+def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
     """A action description to be used as an object member.
 
     Examples:
@@ -190,8 +186,8 @@ def object_action(name, parameters, base):
     }
 
 
-def object_collection(name, entries, base):
-    # type: (str, List[Union[LinkType, DomainObject]], str) -> Dict[str, Any]
+def object_collection(name: str, entries: List[Union[LinkType, DomainObject]],
+                      base: str) -> Dict[str, Any]:
     """A collection description to be used as an object member.
 
     Args:
@@ -214,12 +210,11 @@ def object_collection(name, entries, base):
 
 
 def action_result(
-        action_links,  # type: List[LinkType]
-        result_type,  # type: ResultType
-        result_links,  # type: List[LinkType]
-        result_value,  # type: Optional[Any]
-):
-    # type: (...) -> Dict
+    action_links: List[LinkType],
+    result_type: ResultType,
+    result_links: List[LinkType],
+    result_value: Optional[Any],
+) -> Dict:
     """Construct an Action Result resource
 
     Described in Restful Objects, chapter 19.1-4 """
@@ -256,15 +251,14 @@ class DomainObjectMembers:
 
 
 def object_property(
-        name,  # type: str
-        value,  # type: Any
-        prop_format,  # type: PropertyFormat
-        base,  # type: str
-        title=None,  # type: Optional[str]
-        linkable=True,  # type: bool
-        links=None,  # type: Optional[List[LinkType]]
-):
-    # type: (...) -> Dict[str, Any]
+    name: str,
+    value: Any,
+    prop_format: PropertyFormat,
+    base: str,
+    title: Optional[str] = None,
+    linkable: bool = True,
+    links: Optional[List[LinkType]] = None,
+) -> Dict[str, Any]:
     """Render an object-property
 
     Args:
@@ -312,8 +306,7 @@ def object_property(
     return property_obj
 
 
-def object_href(domain_type, obj):
-    # type: (str, Any) -> str
+def object_href(domain_type: str, obj: Any) -> str:
     """
 
     Args:
@@ -341,16 +334,15 @@ def object_href(domain_type, obj):
 
 
 def domain_object(
-        domain_type,  # type: DomainType
-        identifier,  # type: str
-        title,  # type: str
-        members=None,  # type: Optional[Dict[str, Any]]
-        extensions=None,  # type: Optional[Dict[str, Any]]
-        editable=True,  # type: bool
-        deletable=True,  # type: bool
-        links=None,  # type: Optional[List[LinkType]]
-):
-    # type: (...) -> DomainObject
+    domain_type: DomainType,
+    identifier: str,
+    title: str,
+    members: Optional[Dict[str, Any]] = None,
+    extensions: Optional[Dict[str, Any]] = None,
+    editable: bool = True,
+    deletable: bool = True,
+    links: Optional[List[LinkType]] = None,
+) -> DomainObject:
     """Renders a domain-object dict structure.
 
     Most of the parameters are optional, yet without them nothing interesting would happen.
@@ -502,8 +494,7 @@ def link_endpoint(
     )
 
 
-def collection_item(collection_type, domain_type, obj):
-    # type: (str, DomainType, Any) -> CollectionItem
+def collection_item(collection_type: str, domain_type: DomainType, obj: Any) -> CollectionItem:
     """A link for use in a collection object.
 
     Args:
@@ -545,8 +536,7 @@ def obj_title(obj):
     return obj['title']
 
 
-def serve_json(data, profile=None):
-    # type: (Serializable, Dict[str, str]) -> Response
+def serve_json(data: Serializable, profile: Dict[str, str] = None) -> Response:
     content_type = 'application/json'
     if profile is not None:
         content_type += ';profile="%s"' % (profile,)

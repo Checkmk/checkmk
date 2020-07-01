@@ -1322,7 +1322,7 @@ rulespec_registry.register(
 
 
 def _special_agents_siemens_plc_validate_siemens_plc_values(value, varprefix):
-    valuetypes = {}  # type: Dict[Any, Any]
+    valuetypes: Dict[Any, Any] = {}
     for index, (_db_number, _address, _datatype, valuetype, ident) in enumerate(value):
         valuetypes.setdefault(valuetype, [])
         if ident in valuetypes[valuetype]:

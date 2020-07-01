@@ -94,7 +94,7 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
             html.render_tr(html.render_td("%ss:" % properties["log_target"].capitalize()) +
                 html.render_td(time_frame["value"])))
 
-        args = []  # type: HTTPVariables
+        args: HTTPVariables = []
         # Generic filters
         args.append(("filled_in", "filter"))
         args.append(("view_name", "events"))
@@ -125,12 +125,11 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
 
 class ABCEventBarChartDashlet(ABCFigureDashlet):
     @classmethod
-    def data_generator(cls):
-        # type: () -> Type[ABCEventBarChartDataGenerator]
+    def data_generator(cls) -> Type[ABCEventBarChartDataGenerator]:
         raise NotImplementedError()
 
     def show(self):
-        args = []  # type: HTTPVariables
+        args: HTTPVariables = []
         args.append(("context", json.dumps(self._dashlet_spec["context"])))
         args.append(
             ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
@@ -184,8 +183,7 @@ class NotificationsBarChartDashlet(ABCEventBarChartDashlet):
         return _("Displays a bar chart for host and service notifications.")
 
     @classmethod
-    def data_generator(cls):
-        # type: () -> Type[NotificationsBarChartDataGenerator]
+    def data_generator(cls) -> 'Type[NotificationsBarChartDataGenerator]':
         return NotificationsBarChartDataGenerator
 
 
@@ -237,8 +235,7 @@ class AlertsBarChartDashlet(ABCEventBarChartDashlet):
         return _("Displays a bar chart for host and service alerts.")
 
     @classmethod
-    def data_generator(cls):
-        # type: () -> Type[AlertBarChartDataGenerator]
+    def data_generator(cls) -> 'Type[AlertBarChartDataGenerator]':
         return AlertBarChartDataGenerator
 
 

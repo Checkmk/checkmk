@@ -21,10 +21,8 @@ def serve_group(group, serializer):
     return response
 
 
-def serialize_group(name):
-    # type: (GroupName) -> Any
-    def _serializer(group):
-        # type: (Dict[str, str]) -> Any
+def serialize_group(name: GroupName) -> Any:
+    def _serializer(group: Dict[str, str]) -> Any:
         ident = group['id']
         uri = '/object/%s/%s' % (
             name,

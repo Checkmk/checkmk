@@ -19,8 +19,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_storage_throughput():
-    # type: () -> Dictionary
+def _parameter_valuespec_storage_throughput() -> Dictionary:
     return Dictionary(elements=[
         ("read",
          Tuple(

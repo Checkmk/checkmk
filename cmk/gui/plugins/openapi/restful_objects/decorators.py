@@ -51,7 +51,7 @@ def _constantly(arg):
     return lambda *args, **kw: arg
 
 
-_SEEN_PATHS = set()  # type: Set[Tuple[str, str, str]]
+_SEEN_PATHS: Set[Tuple[str, str, str]] = set()
 
 ResponseSchema = Optional[Schema]
 RequestSchema = Optional[Schema]
@@ -59,26 +59,23 @@ RequestSchema = Optional[Schema]
 # FIXME: Group of endpoints is currently derived from module-name. This prevents sub-packages.
 
 
-def reduce_to_primitives(parameters):
-    # type: (Optional[List[Parameter]]) -> List[PrimitiveParameter]
+def reduce_to_primitives(parameters: Optional[List[Parameter]]) -> List[PrimitiveParameter]:
     return [p.to_dict() if isinstance(p, ParamDict) else p for p in (parameters or [])]
 
 
-def endpoint_schema(
-        path,  # type: str
-        name,  # type: Union[EndpointName, RestfulEndpointName]
-        method='get',  # type: HTTPMethod
-        parameters=None,  # type: List[Parameter]
-        content_type='application/json',  # type: str
-        output_empty=False,  # type: bool
-        response_schema=None,  # type: ResponseSchema
-        request_schema=None,  # type: RequestSchema
-        request_body_required=True,  # type: bool
-        error_schema=ApiError,  # type: Schema
-        etag=None,  # type: ETagBehaviour
-        will_do_redirects=False,  # type: bool
-        **options  # type: dict
-):
+def endpoint_schema(path: str,
+                    name: Union[EndpointName, RestfulEndpointName],
+                    method: HTTPMethod = 'get',
+                    parameters: List[Parameter] = None,
+                    content_type: str = 'application/json',
+                    output_empty: bool = False,
+                    response_schema: ResponseSchema = None,
+                    request_schema: RequestSchema = None,
+                    request_body_required: bool = True,
+                    error_schema: Schema = ApiError,
+                    etag: ETagBehaviour = None,
+                    will_do_redirects: bool = False,
+                    **options: dict):
     """Mark the function as a REST-API endpoint.
 
     Notes:
@@ -346,8 +343,7 @@ def _verify_parameters(path: str, parameters: List[PrimitiveParameter]):
             raise ValueError("Param %r, assumed globally defined, was not found." % (param,))
 
 
-def _assign_to_tag_group(tag_group, name):
-    # type: (str, str) -> None
+def _assign_to_tag_group(tag_group: str, name: str) -> None:
     for group in SPEC.options.setdefault('x-tagGroups', []):
         if group['name'] == tag_group:
             group['tags'].append(name)
@@ -357,8 +353,7 @@ def _assign_to_tag_group(tag_group, name):
                          (tag_group,))
 
 
-def _add_tag(tag, tag_group=None):
-    # type: (dict, Optional[str]) -> None
+def _add_tag(tag: dict, tag_group: Optional[str] = None) -> None:
     name = tag['name']
     if name in [t['name'] for t in SPEC._tags]:
         return
@@ -411,8 +406,7 @@ def _schema_definition(schema):
     return definition
 
 
-def _tag_from_schema(schema):
-    # type: (Union[Schema, Type[Schema]]) -> dict
+def _tag_from_schema(schema: Union[Schema, Type[Schema]]) -> dict:
     """Construct a Tag-Dict from a Schema instance or class
 
     Examples:
@@ -459,8 +453,8 @@ def _tag_from_schema(schema):
     return tag
 
 
-def _docstring_keys(docstring, title, description):
-    # type: (Union[Any, str, None], str, str) -> Dict[str, str]
+def _docstring_keys(docstring: Union[Any, str, None], title: str,
+                    description: str) -> Dict[str, str]:
     """Split the docstring by title and rest.
 
     This is part of the rest.
@@ -495,8 +489,7 @@ def _docstring_keys(docstring, title, description):
     return {}
 
 
-def _names_of(params):
-    # type: (List[PrimitiveParameter]) -> Sequence[PrimitiveParameter]
+def _names_of(params: List[PrimitiveParameter]) -> Sequence[PrimitiveParameter]:
     """Give a list of parameter names
 
     Both dictionary and string form are supported. See examples.

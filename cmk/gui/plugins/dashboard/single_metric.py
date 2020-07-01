@@ -188,7 +188,7 @@ class GaugeDashlet(ABCFigureDashlet):
         html.div("", id_=div_id)
 
         fetch_url = "single_metric_data.py"
-        args = []  # type: HTTPVariables
+        args: HTTPVariables = []
         args.append(("context", json.dumps(self._dashlet_spec["context"])))
         args.append(
             ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
@@ -250,7 +250,7 @@ class BarplotDashlet(ABCFigureDashlet):
         html.div("", id_=div_id)
 
         fetch_url = "single_metric_data.py"
-        args = []  # type: HTTPVariables
+        args: HTTPVariables = []
         args.append(("context", json.dumps(self._dashlet_spec["context"])))
         args.append(
             ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
@@ -414,11 +414,11 @@ class SingleMetricDashlet(ABCFigureDashlet):
         return _("Displays a single metric of a specific host and service.")
 
     def _get_titles(self, metric_spec, links, render_options):
-        titles = {
+        titles: Dict[str, List[Union[str, Tuple[str, int]]]] = {
             "above": [],
             "below": [],
             "tooltip": [],
-        }  # type: Dict[str, List[Union[str, Tuple[str, int]]]]
+        }
 
         for opt in ["site", "host", "service", "metric"]:
             opt_id = "show_%s" % opt
@@ -508,7 +508,7 @@ class SingleMetricDashlet(ABCFigureDashlet):
         html.div("", id_=div_id)
 
         fetch_url = "ajax_single_graph_metric_data.py"
-        args = []  # type: HTTPVariables
+        args: HTTPVariables = []
         args.append(("context", json.dumps(self._dashlet_spec["context"])))
         args.append(
             ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))

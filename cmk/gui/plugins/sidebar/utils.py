@@ -33,7 +33,7 @@ CustomSnapins = Any
 # Constants to be used in snapins
 snapin_width = 230
 
-search_plugins = []  # type: List
+search_plugins: List = []
 
 PageHandlers = Dict[str, "cmk.gui.pages.PageHandlerFunc"]
 
@@ -41,18 +41,15 @@ PageHandlers = Dict[str, "cmk.gui.pages.PageHandlerFunc"]
 @permission_section_registry.register
 class PermissionSectionSidebarSnapins(PermissionSection):
     @property
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         return "sidesnap"
 
     @property
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Sidebar snapins")
 
     @property
-    def do_sort(self):
-        # type: () -> bool
+    def do_sort(self) -> bool:
         return True
 
 
@@ -61,59 +58,48 @@ class SidebarSnapin(metaclass=abc.ABCMeta):
     """Abstract base class for all sidebar snapins"""
     @classmethod
     @abc.abstractmethod
-    def type_name(cls):
-        # type: () -> str
+    def type_name(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def title(cls):
-        # type: () -> str
+    def title(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def description(cls):
-        # type: () -> str
+    def description(cls) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         raise NotImplementedError()
 
     @classmethod
-    def refresh_regularly(cls):
-        # type: () -> bool
+    def refresh_regularly(cls) -> bool:
         return False
 
     @classmethod
-    def refresh_on_restart(cls):
-        # type: () -> bool
+    def refresh_on_restart(cls) -> bool:
         return False
 
     @classmethod
-    def is_custom_snapin(cls):
-        # type: () -> bool
+    def is_custom_snapin(cls) -> bool:
         """Whether or not a snapin type is a customized snapin"""
         return False
 
     @classmethod
-    def permission_name(cls):
-        # type: () -> PermissionName
+    def permission_name(cls) -> PermissionName:
         return "sidesnap.%s" % cls.type_name()
 
     @classmethod
-    def allowed_roles(cls):
-        # type: () -> List[RoleName]
+    def allowed_roles(cls) -> List[RoleName]:
         return ["admin", "user", "guest"]
 
-    def styles(self):
-        # type: () -> Optional[str]
+    def styles(self) -> Optional[str]:
         return None
 
-    def page_handlers(self):
-        # type: () -> PageHandlers
+    def page_handlers(self) -> PageHandlers:
         return {}
 
 
@@ -145,8 +131,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_name(self, plugin_class):
         return plugin_class.type_name()
 
-    def registration_hook(self, plugin_class):
-        # type: (Type[SidebarSnapin]) -> None
+    def registration_hook(self, plugin_class: Type[SidebarSnapin]) -> None:
         declare_permission(
             "sidesnap.%s" % self.plugin_name(plugin_class),
             plugin_class.title(),
@@ -157,27 +142,23 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
         for path, page_func in plugin_class().page_handlers().items():
             cmk.gui.pages.register_page_handler(path, page_func)
 
-    def get_customizable_snapin_types(self):
-        # type: () -> List[Tuple[str, CustomizableSidebarSnapin]]
+    def get_customizable_snapin_types(self) -> List[Tuple[str, CustomizableSidebarSnapin]]:
         return [(snapin_type_id, snapin_type)
                 for snapin_type_id, snapin_type in self.items()
                 if (issubclass(snapin_type, CustomizableSidebarSnapin) and
                     not snapin_type.is_custom_snapin())]
 
-    def register_custom_snapins(self, custom_snapins):
-        # type: (List[CustomSnapins]) -> None
+    def register_custom_snapins(self, custom_snapins: List[CustomSnapins]) -> None:
         """Extends the snapin registry with the ones configured in the site (for the current user)"""
         self._clear_custom_snapins()
         self._add_custom_snapins(custom_snapins)
 
-    def _clear_custom_snapins(self):
-        # type: () -> None
+    def _clear_custom_snapins(self) -> None:
         for snapin_type_id, snapin_type in self.items():
             if snapin_type.is_custom_snapin():
                 self.unregister(snapin_type_id)
 
-    def _add_custom_snapins(self, custom_snapins):
-        # type: (List[CustomSnapins]) -> None
+    def _add_custom_snapins(self, custom_snapins: List[CustomSnapins]) -> None:
         for custom_snapin in custom_snapins:
             base_snapin_type_id = custom_snapin._["custom_snapin"][0]
 
@@ -313,8 +294,7 @@ def nagioscgilink(text, target):
     html.close_li()
 
 
-def snapin_site_choice(ident, choices):
-    # type: (SiteId, List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]
+def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:
     sites = config.user.load_file("sidebar_sites", {})
     site = sites.get(ident, "")
     if site == "":
@@ -325,9 +305,9 @@ def snapin_site_choice(ident, choices):
     if len(choices) <= 1:
         return None
 
-    dropdown_choices = [
+    dropdown_choices: Choices = [
         ("", _("All sites")),
-    ]  # type: Choices
+    ]
     dropdown_choices += choices
 
     onchange = "cmk.sidebar.set_snapin_site(event, %s, this)" % json.dumps(ident)

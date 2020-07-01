@@ -19,8 +19,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_ddn_s2a_port_errors():
-    # type: () -> Dictionary
+def _parameter_valuespec_ddn_s2a_port_errors() -> Dictionary:
     return Dictionary(elements=[
         ("link_failure_errs",
          Tuple(

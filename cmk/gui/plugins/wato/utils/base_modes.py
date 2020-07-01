@@ -17,15 +17,13 @@ ActionResult = Union[NewMode, Tuple[NewMode, str]]
 
 
 class WatoMode(metaclass=abc.ABCMeta):
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(WatoMode, self).__init__()
         self._from_vars()
 
     @classmethod
     @abc.abstractmethod
-    def permissions(cls):
-        # type: () -> List[PermissionName]
+    def permissions(cls) -> List[PermissionName]:
         """permissions = None -> every user can use this mode, permissions
         are checked by the mode itself. Otherwise the user needs at
         least wato.use and - if he makes actions - wato.edit. Plus wato.*
@@ -34,32 +32,25 @@ class WatoMode(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def name(cls):
-        # type: () -> str
+    def name(cls) -> str:
         """Wato wide unique mode name which is used to access this mode"""
         raise NotImplementedError("%s misses name()" % cls.__name__)
 
-    def _from_vars(self):
-        # type: () -> None
+    def _from_vars(self) -> None:
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("(Untitled module)")
 
-    def buttons(self):
-        # type: () -> None
+    def buttons(self) -> None:
         global_buttons()
 
-    def action(self):
-        # type: () -> ActionResult
+    def action(self) -> ActionResult:
         pass
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         html.show_message(_("(This module is not yet implemented)"))
 
-    def handle_page(self):
-        # type: () -> None
+    def handle_page(self) -> None:
         return self.page()

@@ -277,10 +277,10 @@ class APICallHosts(APICallCollection):
         return self._bulk_action(request, "add")
 
     def _bulk_action(self, request, action_name):
-        result = {
+        result: Dict[str, Any] = {
             "succeeded_hosts": [],
             "failed_hosts": {},
-        }  # type: Dict[str, Any]
+        }
         for host_request in request["hosts"]:
             try:
                 if action_name == "add":
@@ -386,7 +386,7 @@ class APICallHosts(APICallCollection):
         if unknown_hosts:
             raise MKUserError(None, _("No such host(s): %s") % ", ".join(unknown_hosts))
 
-        grouped_by_folders = {}  # type: Dict[watolib.CREFolder, List[Any]]
+        grouped_by_folders: Dict[watolib.CREFolder, List[Any]] = {}
         for hostname in delete_hostnames:
             grouped_by_folders.setdefault(all_hosts[hostname].folder(), []).append(hostname)
 
@@ -660,7 +660,7 @@ class APICallRules(APICallCollection):
         collection.load()
         ruleset = collection.get(ruleset_name)
 
-        ruleset_dict = {}  # type: Dict[str, List[Any]]
+        ruleset_dict: Dict[str, List[Any]] = {}
         for folder, _rule_index, rule in ruleset.get_rules():
             ruleset_dict.setdefault(folder.path(), []).append(rule.to_web_api())
 
@@ -1111,7 +1111,7 @@ class APICallOther(APICallCollection):
             result = watolib.check_mk_automation(host_attributes.get("site"), "try-inventory",
                                                  ["@scan"] + [hostname])
             # TODO: This *way* too general, even for our very low standards...
-            counts = {"new": 0, "old": 0}  # type: Dict[Any, Any]
+            counts: Dict[Any, Any] = {"new": 0, "old": 0}
             for entry in result["check_table"]:
                 if entry[0] in counts:
                     counts[entry[0]] += 1

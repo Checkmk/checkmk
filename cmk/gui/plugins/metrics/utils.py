@@ -44,10 +44,10 @@ class AutomaticDict(OrderedDict):
 
 
 # TODO: Refactor to plugin_registry structures
-unit_info = {}  # type: Dict[str, Any]
-metric_info = {}  # type: Dict[str, Dict[str, Any]]
-check_metrics = {}  # type: Dict[str, Dict[str, Any]]
-perfometer_info = []  # type: List[Union[LegacyPerfometer, Perfometer]]
+unit_info: Dict[str, Any] = {}
+metric_info: Dict[str, Dict[str, Any]] = {}
+check_metrics: Dict[str, Dict[str, Any]] = {}
+perfometer_info: List[Union[LegacyPerfometer, Perfometer]] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
 graph_info = AutomaticDict("manual_graph_template")
@@ -193,8 +193,7 @@ def split_unit(value_text):
     return None, unit_name
 
 
-def parse_perf_data(perf_data_string, check_command=None):
-    # type: (str, Optional[str]) -> Tuple[List, str]
+def parse_perf_data(perf_data_string: str, check_command: Optional[str] = None) -> Tuple[List, str]:
     """ Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
     if check_command is None:
@@ -250,8 +249,7 @@ def _float_or_int(val):
 
 
 # TODO: Slightly funny typing, fix this when we use Python 3.
-def _split_perf_data(perf_data_string):
-    # type: (AnyStr) -> List[AnyStr]
+def _split_perf_data(perf_data_string: AnyStr) -> List[AnyStr]:
     "Split the perf data string into parts. Preserve quoted strings!"
     parts = shlex.split(ensure_str(perf_data_string))
     if isinstance(perf_data_string, bytes):
@@ -323,8 +321,7 @@ def get_metric_info(metric_name, color_index):
     return mi, color_index
 
 
-def translate_metrics(perf_data, check_command):
-    # type: (List[Tuple], str) -> TranslatedMetrics
+def translate_metrics(perf_data: List[Tuple], check_command: str) -> TranslatedMetrics:
     """Convert Ascii-based performance data as output from a check plugin
     into floating point numbers, do scaling if necessary.
 
@@ -332,7 +329,7 @@ def translate_metrics(perf_data, check_command):
     Result for this example:
     { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
-    translated_metrics = {}  # type: Dict[str, Dict[str, Any]]
+    translated_metrics: Dict[str, Dict[str, Any]] = {}
     color_index = 0
     for entry in perf_data:
 
@@ -365,8 +362,7 @@ def translate_metrics(perf_data, check_command):
 # TODO: Refactor evaluate and all helpers into single class
 
 
-def split_expression(expression):
-    # type: (str) -> Tuple[str, Optional[str], Optional[str]]
+def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]]:
     explicit_color = None
     if "#" in expression:
         expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
@@ -405,11 +401,12 @@ def evaluate(expression, translated_metrics):
     return value, unit, color
 
 
-def _evaluate_rpn(expression, translated_metrics):
-    # type: (str, Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]
+def _evaluate_rpn(
+        expression: str,
+        translated_metrics: Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]:
     parts = expression.split(",")
     # stack of (value, unit, color)
-    stack = []  # type: List[Tuple[float, Dict[str, Any], Optional[str]]]
+    stack: List[Tuple[float, Dict[str, Any], Optional[str]]] = []
     while parts:
         operator_name = parts[0]
         parts = parts[1:]
@@ -447,14 +444,13 @@ rpn_operators = {
 
 
 # TODO: real unit computation!
-def _unit_mult(u1, u2):
-    # type: (Dict[str, Any], Dict[str, Any]) -> Dict[str, Any]
+def _unit_mult(u1: Dict[str, Any], u2: Dict[str, Any]) -> Dict[str, Any]:
     return u2 if u1 in (unit_info[''], unit_info['count']) else u1
 
 
-_unit_div = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
-_unit_add = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
-_unit_sub = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
+_unit_div: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
+_unit_add: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
+_unit_sub: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
 
 
 def _choose_operator_color(a, b):
@@ -485,8 +481,9 @@ def _operator_minmax(a, b, func):
     return v, unit, winner[2] or loser[2]
 
 
-def _evaluate_literal(expression, translated_metrics):
-    # type: (Union[float, str], Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]
+def _evaluate_literal(
+        expression: Union[float, str],
+        translated_metrics: Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]:
     if isinstance(expression, int):
         return float(expression), unit_info["count"], None
 
@@ -618,9 +615,8 @@ def _get_explicit_graph_templates(translated_metrics):
             yield _graph_without_missing_optional_metrics(graph_template, translated_metrics)
 
 
-def _get_graphed_metrics(graph_templates):
-    # type: (List) -> Set
-    graphed_metrics = set()  # type: Set
+def _get_graphed_metrics(graph_templates: List) -> Set:
+    graphed_metrics: Set = set()
     for graph_template in graph_templates:
         graphed_metrics.update(_metrics_used_by_graph(graph_template))
     return graphed_metrics
@@ -632,8 +628,7 @@ def _get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
             yield generic_graph_template(metric_name)
 
 
-def _metrics_used_by_graph(graph_template):
-    # type: (Any) -> Iterator
+def _metrics_used_by_graph(graph_template: Any) -> Iterator:
     for metric_definition in graph_template["metrics"]:
         for metric in _metrics_used_in_definition(metric_definition[0]):
             yield metric
@@ -790,13 +785,12 @@ def get_next_random_palette_color():
     return parse_color_into_hexrgb("%s/a" % keys[index])
 
 
-def get_n_different_colors(n):
-    # type: (int) -> List[str]
+def get_n_different_colors(n: int) -> List[str]:
     """Return a list of colors that are as different as possible (visually)
     by distributing them on the HSV color wheel."""
     total_weight = sum([x[1] for x in _hsv_color_distribution])
 
-    colors = []  # type: List[str]
+    colors: List[str] = []
     while len(colors) < n:
         weight_index = int(len(colors) * total_weight / n)
         hue = _get_hue_by_weight_index(weight_index)
@@ -804,8 +798,7 @@ def get_n_different_colors(n):
     return colors
 
 
-def _get_hue_by_weight_index(weight_index):
-    # type: (float) -> float
+def _get_hue_by_weight_index(weight_index: float) -> float:
     section_begin = 0.0
     for section_end, section_weight in _hsv_color_distribution:
         if weight_index < section_weight:
@@ -840,19 +833,17 @@ def parse_color_into_hexrgb(color_string):
     return "#808080"
 
 
-def _pointwise_multiplication(c1, c2):
-    # type: (Tuple[float, float, float], Tuple[float, float, float]) -> Tuple[float, float, float]
+def _pointwise_multiplication(c1: Tuple[float, float, float],
+                              c2: Tuple[float, float, float]) -> Tuple[float, float, float]:
     components = list(x * y for x, y in zip(c1, c2))
     return components[0], components[1], components[2]
 
 
-def hsv_to_hexrgb(hsv):
-    # type: (Tuple[float, float, float]) -> str
+def hsv_to_hexrgb(hsv: Tuple[float, float, float]) -> str:
     return render_color(colorsys.hsv_to_rgb(*hsv))
 
 
-def render_color(color_rgb):
-    # type: (Tuple[float, float, float]) -> str
+def render_color(color_rgb: Tuple[float, float, float]) -> str:
     return "#%02x%02x%02x" % (
         int(color_rgb[0] * 255),
         int(color_rgb[1] * 255),
@@ -861,8 +852,7 @@ def render_color(color_rgb):
 
 
 # "#ff0080" -> (1.0, 0.0, 0.5)
-def parse_color(color):
-    # type: (str) -> Tuple[float, float, float]
+def parse_color(color: str) -> Tuple[float, float, float]:
     def _hex_to_float(a):
         return int(color[a:a + 2], 16) / 255.0
 
@@ -936,7 +926,7 @@ def MetricName():
         if value is None:
             raise MKUserError(varprefix, _("You need to select a metric"))
 
-    choices = [(None, "")]  # type: List[Tuple[Any, str]]
+    choices: List[Tuple[Any, str]] = [(None, "")]
     choices += [
         (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
     ]

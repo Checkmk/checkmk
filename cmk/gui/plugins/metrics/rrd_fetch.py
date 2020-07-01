@@ -26,8 +26,8 @@ def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
 
     by_service = group_needed_rrd_data_by_service(needed_rrd_data)
     # TODO: The Unions below are horrible! Fix this by making this a NewType/class.
-    rrd_data = {
-    }  # type: Dict[Union[str, Tuple[Any, Any, Any, Any, Any, Any]], Union[Tuple[float, float, float], TimeSeries]]
+    rrd_data: Dict[Union[str, Tuple[Any, Any, Any, Any, Any, Any]],
+                   Union[Tuple[float, float, float], TimeSeries]] = {}
     for (site, host_name, service_description), entries in by_service.items():
         try:
             for (perfvar, cf, scale), data in \
@@ -111,8 +111,8 @@ def needed_elements_of_expression(expression):
                 yield result
 
 
-def get_needed_sources(metrics, condition=lambda x: True):
-    # type: (List[Dict[str, Any]], Callable[[Any], bool]) -> Set
+def get_needed_sources(metrics: List[Dict[str, Any]],
+                       condition: Callable[[Any], bool] = lambda x: True) -> Set:
     """Extract all metric data sources definitions
 
     metrics: List
@@ -128,8 +128,7 @@ def get_needed_sources(metrics, condition=lambda x: True):
 
 
 def group_needed_rrd_data_by_service(needed_rrd_data):
-    by_service = collections.defaultdict(
-        set)  # type: Dict[Tuple[str, str, str], Set[Tuple[Any, Any, Any]]]
+    by_service: Dict[Tuple[str, str, str], Set[Tuple[Any, Any, Any]]] = collections.defaultdict(set)
     for site, host_name, service_description, perfvar, cf, scale in needed_rrd_data:
         by_service[(site, host_name, service_description)].add((perfvar, cf, scale))
     return by_service
@@ -138,7 +137,7 @@ def group_needed_rrd_data_by_service(needed_rrd_data):
 def fetch_rrd_data(site, host_name, service_description, entries, graph_recipe, graph_data_range):
     start_time, end_time = graph_data_range["time_range"]
 
-    step = graph_data_range["step"]  # type: Union[int,float,str]
+    step: Union[int, float, str] = graph_data_range["step"]
     # assumes str step is well formatted, colon separated step length & rrd point count
     if not isinstance(step, str):
         step = max(1, step)
@@ -151,8 +150,8 @@ def fetch_rrd_data(site, host_name, service_description, entries, graph_recipe, 
         return zip(entries, sites.live().query_row(query))
 
 
-def rrd_columns(metrics, rrd_consolidation, data_range):
-    # type: (List[Tuple[str, Optional[str], float]], str, str) -> Iterator[ColumnName]
+def rrd_columns(metrics: List[Tuple[str, Optional[str], float]], rrd_consolidation: str,
+                data_range: str) -> Iterator[ColumnName]:
     """RRD data columns for all metrics
 
     Include scaling of metric directly in query"""
@@ -165,8 +164,7 @@ def rrd_columns(metrics, rrd_consolidation, data_range):
         yield "rrddata:%s:%s:%s" % (perfvar, rpn, data_range)
 
 
-def merge_multicol(row, rrdcols, params):
-    # type: (Dict, List[ColumnName], Dict) -> TimeSeries
+def merge_multicol(row: Dict, rrdcols: List[ColumnName], params: Dict) -> TimeSeries:
     """Establish single timeseries for desired metric
 
     If Livestatus query is performed in bulk, over all possible named

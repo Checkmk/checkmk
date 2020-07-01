@@ -33,13 +33,11 @@ crypt_context = CryptContext(schemes=[
 
 class Htpasswd:
     """Thin wrapper for loading and saving the htpasswd file"""
-    def __init__(self, path):
-        # type: (Path) -> None
+    def __init__(self, path: Path) -> None:
         super(Htpasswd, self).__init__()
         self._path = path
 
-    def load(self):
-        # type: () -> Dict[str, str]
+    def load(self) -> Dict[str, str]:
         """Loads the contents of a valid htpasswd file into a dictionary and returns the dictionary"""
         entries = {}
 
@@ -53,13 +51,11 @@ class Htpasswd:
 
         return entries
 
-    def exists(self, user_id):
-        # type: (str) -> bool
+    def exists(self, user_id: str) -> bool:
         """Whether or not a user exists according to the htpasswd file"""
         return user_id in self.load()
 
-    def save(self, entries):
-        # type: (Dict[str, str]) -> None
+    def save(self, entries: Dict[str, str]) -> None:
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
         output = u"\n".join(u"%s:%s" % (ensure_str(e[0]), ensure_str(e[1]))
                             for e in sorted(entries.items())) + u"\n"

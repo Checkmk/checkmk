@@ -158,8 +158,7 @@ def _serve_folder(folder, profile=None):
     return response
 
 
-def _serialize_folder(folder):
-    # type: (CREFolder) -> DomainObject
+def _serialize_folder(folder: CREFolder) -> DomainObject:
     uri = '/objects/folder/%s' % (folder.id(),)
     return constructors.domain_object(
         domain_type='folder',

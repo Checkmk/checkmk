@@ -18,15 +18,15 @@ from typing import Any as _Any, Dict as _Dict, List as _List, Tuple as _Tuple, U
 #   '----------------------------------------------------------------------'
 
 # User supplied roles
-roles = {}  # type: _Dict
+roles: _Dict = {}
 
 # define default values for all settings
 debug = False
 screenshotmode = False
-profile = False  # type: _Union[bool, str]
-users = []  # type: _List[str]
-admin_users = ["omdadmin", "cmkadmin"]  # type: _List[str]
-guest_users = []  # type: _List[str]
+profile: _Union[bool, str] = False
+users: _List[str] = []
+admin_users: _List[str] = ["omdadmin", "cmkadmin"]
+guest_users: _List[str] = []
 default_user_role = "user"
 save_user_access_times = False
 user_online_maxage = 30  # seconds
@@ -40,10 +40,10 @@ log_levels = {
     "cmk.web.background-job": 30,
 }
 
-multisite_users = {}  # type: _Dict
-multisite_hostgroups = {}  # type: _Dict
-multisite_servicegroups = {}  # type: _Dict
-multisite_contactgroups = {}  # type: _Dict
+multisite_users: _Dict = {}
+multisite_hostgroups: _Dict = {}
+multisite_servicegroups: _Dict = {}
+multisite_contactgroups: _Dict = {}
 
 #    ____  _     _      _
 #   / ___|(_) __| | ___| |__   __ _ _ __
@@ -129,7 +129,7 @@ view_action_defaults = {
 #
 
 # TODO: Improve type below, see cmk.gui.plugins.sidebar.custom_links
-custom_links = {}  # type: _Dict[str, _List[_Tuple]]
+custom_links: _Dict[str, _List[_Tuple]] = {}
 
 # Links for everyone
 custom_links['guest'] = [
@@ -178,7 +178,7 @@ visible_views = None
 hidden_views = None
 
 # Patterns to group services in table views together
-service_view_grouping = []  # type: _List
+service_view_grouping: _List = []
 
 # Custom user stylesheet to load (resides in htdocs/)
 custom_style_sheet = None
@@ -192,7 +192,7 @@ start_url = "dashboard.py"
 # Page heading for main frame set
 page_heading = "Checkmk %s"
 
-login_screen = {}  # type: _Dict
+login_screen: _Dict = {}
 
 # Timeout for rescheduling of host- and servicechecks
 reschedule_timeout = 10.0
@@ -204,7 +204,7 @@ filter_columns = 2
 default_language = None
 
 # Hide these languages from user selection
-hide_languages = []  # type: _List
+hide_languages: _List = []
 
 # Default timestamp format to be used in multisite
 default_ts_format = 'mixed'
@@ -227,7 +227,7 @@ table_row_limit = 100
 multisite_draw_ruleicon = True
 
 # Default downtime configuration
-adhoc_downtime = {}  # type: _Dict
+adhoc_downtime: _Dict = {}
 
 # Display dashboard date
 pagetitle_date_format = None
@@ -240,7 +240,7 @@ staleness_threshold = 1.5
 escape_plugin_output = True
 
 # Virtual host trees for the "Virtual Host Trees" snapin
-virtual_host_trees = []  # type: _List
+virtual_host_trees: _List = []
 
 # Target URL for sending crash reports to
 crash_report_url = "https://crash.checkmk.com"
@@ -260,7 +260,7 @@ bulk_discovery_default_settings = {
 
 use_siteicons = False
 
-graph_timeranges = [
+graph_timeranges: _List[_Dict[str, _Any]] = [
     {
         'title': "The last 4 hours",
         "duration": 4 * 60 * 60
@@ -281,7 +281,7 @@ graph_timeranges = [
         'title': "The last 400 days",
         "duration": 400 * 24 * 60 * 60
     },
-]  # type: _List[_Dict[str, _Any]]
+]
 
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
@@ -296,17 +296,17 @@ graph_timeranges = [
 userdb_automatic_sync = "master"
 
 # Holds dicts defining user connector instances and their properties
-user_connections = []  # type: _List
+user_connections: _List = []
 
-default_user_profile = {
+default_user_profile: _Dict[str, _Any] = {
     'contactgroups': [],
     'roles': ['user'],
     'force_authuser': False,
-}  # type: _Dict[str, _Any]
+}
 lock_on_logon_failures = False
 user_idle_timeout = None
 single_user_session = None
-password_policy = {}  # type: _Dict
+password_policy: _Dict = {}
 
 user_localizations = {
     u'Agent type': {
@@ -363,12 +363,12 @@ user_localizations = {
 }
 
 # Contains user specified icons and actions for hosts and services
-user_icons_and_actions = {}  # type: _Dict
+user_icons_and_actions: _Dict = {}
 
 # Defintions of custom attributes to be used for services
-custom_service_attributes = {}  # type: _Dict
+custom_service_attributes: _Dict = {}
 
-user_downtime_timeranges = [
+user_downtime_timeranges: _List[_Dict[str, _Any]] = [
     {
         'title': "2 hours",
         'end': 2 * 60 * 60
@@ -389,10 +389,10 @@ user_downtime_timeranges = [
         'title': "This year",
         'end': 'next_year'
     },
-]  # type: _List[_Dict[str, _Any]]
+]
 
 # Override toplevel and sort_index settings of builtin icons
-builtin_icon_visibility = {}  # type: _Dict
+builtin_icon_visibility: _Dict = {}
 
 # Name of the hostgroup to filter the network topology view by default
 topology_default_filter_group = None
@@ -440,13 +440,13 @@ mkeventd_service_levels = [
 #   '----------------------------------------------------------------------'
 
 # Pre 1.6 tag configuration variables
-wato_host_tags = []  # type: _List
-wato_aux_tags = []  # type: _List
+wato_host_tags: _List = []
+wato_aux_tags: _List = []
 # Tag configuration variable since 1.6
-wato_tags = {
+wato_tags: _Dict[str, _List] = {
     "tag_groups": [],
     "aux_tags": [],
-}  # type: _Dict[str, _List]
+}
 
 wato_enabled = True
 wato_hide_filenames = True
@@ -461,11 +461,11 @@ wato_num_itemspecs = 15
 wato_activation_method = 'restart'
 wato_write_nagvis_auth = False
 wato_use_git = False
-wato_hidden_users = []  # type: _List
-wato_user_attrs = []  # type: _List
-wato_host_attrs = []  # type: _List
+wato_hidden_users: _List = []
+wato_user_attrs: _List = []
+wato_host_attrs: _List = []
 wato_legacy_eval = False
-wato_read_only = {}  # type: _Dict
+wato_read_only: _Dict = {}
 wato_hide_folders_without_read_permissions = False
 wato_pprint_config = False
 wato_icon_categories = [
@@ -484,15 +484,15 @@ wato_icon_categories = [
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-aggregation_rules = {}  # type: _Dict
-aggregations = []  # type: _List
-host_aggregations = []  # type: _List
-bi_packs = {}  # type: _Dict
+aggregation_rules: _Dict = {}
+aggregations: _List = []
+host_aggregations: _List = []
+bi_packs: _Dict = {}
 bi_precompile_on_demand = True
 bi_use_legacy_compilation = False
 
 default_bi_layout = {"node_style": "builtin_hierarchy", "line_style": "straight"}
-bi_layouts = {"templates": {}, "aggregations": {}}  # type: _Dict[str, _Dict]
+bi_layouts: _Dict[str, _Dict] = {"templates": {}, "aggregations": {}}
 
 # Deprecated. Kept for compatibility.
 bi_compile_log = None

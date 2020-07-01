@@ -25,10 +25,8 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _vs_cisco_dom(which_levels):
-    # type: (str) -> _Tuple[str, Alternative]
-    def _button_text_warn(which_levels):
-        # type: (str) -> str
+def _vs_cisco_dom(which_levels: str) -> _Tuple[str, Alternative]:
+    def _button_text_warn(which_levels: str) -> str:
         if which_levels == "upper":
             text = _("Warning at")
         elif which_levels == "lower":
@@ -37,8 +35,7 @@ def _vs_cisco_dom(which_levels):
             raise ValueError()
         return text
 
-    def _button_text_crit(which_levels):
-        # type: (str) -> str
+    def _button_text_crit(which_levels: str) -> str:
         if which_levels == "upper":
             text = _("Critical at")
         elif which_levels == "lower":
@@ -72,13 +69,11 @@ def _vs_cisco_dom(which_levels):
             ]))
 
 
-def _item_spec_cisco_dom():
-    # type: () -> TextAscii
+def _item_spec_cisco_dom() -> TextAscii:
     return TextAscii(title=_("Sensor description if present, sensor index otherwise"))
 
 
-def _parameter_valuespec_cisco_dom():
-    # type: () -> Dictionary
+def _parameter_valuespec_cisco_dom() -> Dictionary:
     return Dictionary(elements=[
         (_vs_cisco_dom("upper")),
         (_vs_cisco_dom("lower")),

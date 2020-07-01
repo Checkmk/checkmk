@@ -112,8 +112,8 @@ class BIManagement:
 
         if not config.user.may("wato.bi_admin"):
             assert config.user.id is not None
-            self._user_contactgroups = userdb.contactgroups_of_user(
-                config.user.id)  # type: _Optional[List[ContactgroupName]]
+            self._user_contactgroups: _Optional[
+                List[ContactgroupName]] = userdb.contactgroups_of_user(config.user.id)
         else:
             self._user_contactgroups = None  # meaning I am admin
 
@@ -121,7 +121,7 @@ class BIManagement:
         if html.request.has_var("pack"):
             self._pack_id = html.request.var("pack")
             try:
-                self._pack = self._packs[self._pack_id]  # type: _Optional[BIPack]
+                self._pack: _Optional[BIPack] = self._packs[self._pack_id]
             except KeyError:
                 raise MKUserError("pack", _("This BI pack does not exist."))
         else:
@@ -135,12 +135,12 @@ class BIManagement:
     def _load_config(self):
         filename = Path(watolib.multisite_dir()) / "bi.mk"
         try:
-            vars_ = {
+            vars_: Dict[str, Any] = {
                 "aggregation_rules": {},
                 "aggregations": [],
                 "host_aggregations": [],
                 "bi_packs": {},
-            }  # type: Dict[str, Any]
+            }
             vars_.update(self._bi_constants)
 
             if filename.exists():
@@ -231,9 +231,8 @@ class BIManagement:
         converted_rules = {
             rule_id: self._convert_rule_to_bi(rule) for rule_id, rule in pack["rules"].items()
         }
-        converted_aggregations = []  # type: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]]
-        converted_host_aggregations = [
-        ]  # type: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]]
+        converted_aggregations: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]] = []
+        converted_host_aggregations: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]] = []
         for aggregation in pack["aggregations"]:
             converted_aggregation = self._convert_aggregation_to_bi(aggregation)
             if aggregation["single_host"]:
@@ -259,13 +258,13 @@ class BIManagement:
 
     def _convert_aggregation_to_bi(self, aggr):
         node = self._convert_node_to_bi(aggr["node"])
-        option_keys = [
+        option_keys: List[_Tuple[str, Any]] = [
             ("ID", None),
             ("node_visualization", {}),
             ("hard_states", False),
             ("downtime_aggr_warn", False),
             ("disabled", False),
-        ]  # type: List[_Tuple[str, Any]]
+        ]
 
         if cmk_version.is_managed_edition():
             option_keys.append(("customer", managed.default_customer_id()))
@@ -425,7 +424,7 @@ class BIManagement:
 
         subnode = self._convert_node_from_bi(node[2:])
         if foreach_spec == self._bi_constants['FOREACH_HOST']:
-            what = "host"  # type: Union[str, _Tuple]
+            what: Union[str, _Tuple] = "host"
         elif foreach_spec == self._bi_constants['FOREACH_CHILD']:
             what = "child"
         elif foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
@@ -438,7 +437,7 @@ class BIManagement:
         return self._packs
 
     def find_aggregation_rule_usages(self):
-        aggregations_that_use_rule = {}  # type: Dict[str, List]
+        aggregations_that_use_rule: Dict[str, List] = {}
         for pack_id, pack in self._packs.items():
             for aggr_id, aggregation in enumerate(pack["aggregations"]):
                 rule_id, _description = self.rule_called_by_node(aggregation["node"])
@@ -2037,7 +2036,7 @@ class ModeBIEditRule(ModeBI):
         html.end_form()
 
     def _may_use_rules_from_packs(self, rulepack):
-        rules_without_permissions = {}  # type: Dict[_Tuple[str, str], Any]
+        rules_without_permissions: Dict[_Tuple[str, str], Any] = {}
         for node in rulepack.get("nodes", []):
             node_type, node_content = node
             if node_type != 'call':
@@ -2275,8 +2274,7 @@ bi_aggregation_functions["best"] = {
 }
 
 
-def vs_count_ok_count(title, defval, defvalperc):
-    # type: (str, int, int) -> Alternative
+def vs_count_ok_count(title: str, defval: int, defvalperc: int) -> Alternative:
     return Alternative(
         title=title,
         style="dropdown",

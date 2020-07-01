@@ -18,8 +18,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_hacmp_resources():
-    # type: () -> Dictionary
+def _parameter_valuespec_hacmp_resources() -> Dictionary:
     return Dictionary(
         elements=[
             ("expect_online_on",

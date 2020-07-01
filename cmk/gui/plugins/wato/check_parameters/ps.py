@@ -44,10 +44,10 @@ from cmk.gui.plugins.wato import (
 
 
 def process_level_elements():
-    cpu_rescale_max_choices = [
+    cpu_rescale_max_choices: DropdownChoices = [
         (True, _("100% is all cores at full load")),
         (False, _("N * 100% as each core contributes with 100% at full load")),
-    ]  # type: DropdownChoices
+    ]
     return [
         ("cpu_rescale_max",
          DropdownChoice(
@@ -488,7 +488,7 @@ rulespec_registry.register(
 # configuration we allow reading old discovery rules and ship these
 # settings in an optional sub-dictionary.
 def convert_inventory_processes(old_dict):
-    new_dict = {"default_params": {}}  # type: Dict[str, Dict[str, Any]]
+    new_dict: Dict[str, Dict[str, Any]] = {"default_params": {}}
     for key in old_dict:
         if key in [
                 'levels',

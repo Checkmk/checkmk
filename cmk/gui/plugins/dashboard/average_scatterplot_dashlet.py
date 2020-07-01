@@ -174,7 +174,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
 
     @classmethod
     def _create_average_elements(cls, elements):
-        values_per_timestamp = {}  # type: Dict[str, Dict]
+        values_per_timestamp: Dict[str, Dict] = {}
         for elem in elements:
             values_per_timestamp.setdefault(elem["timestamp"],
                                             {}).update({elem["label"]: elem["value"]})
@@ -249,7 +249,7 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
         html.div("", id_=div_id)
 
         fetch_url = "ajax_average_scatterplot_data.py"
-        args = []  # type: HTTPVariables
+        args: HTTPVariables = []
         args.append(("context", json.dumps(self._dashlet_spec["context"])))
         args.append(
             ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))

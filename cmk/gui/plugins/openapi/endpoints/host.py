@@ -85,7 +85,7 @@ def update_host(params):
     hostname = params['hostname']
     body = params['body']
     attributes = body['attributes']
-    host = watolib.Host.host(hostname)  # type: watolib.CREHost
+    host: watolib.CREHost = watolib.Host.host(hostname)
     constructors.require_etag(constructors.etag_of_obj(host))
     validate_host_attributes(attributes, new=False)
     host.update_attributes(attributes)

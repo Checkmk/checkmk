@@ -1731,11 +1731,11 @@ register_hop_graphs()
 
 
 def register_hop_response_graph():
-    new_graph = {
+    new_graph: Dict[str, Any] = {
         "title": _("Hop response times"),
         "metrics": [],
         "optional_metrics": [],
-    }  # type: Dict[str, Any]
+    }
     for idx in range(1, MAX_NUMBER_HOPS):
         color = indexed_color(idx, MAX_NUMBER_HOPS)
         new_graph["metrics"].append(

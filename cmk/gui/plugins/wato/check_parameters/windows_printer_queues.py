@@ -24,10 +24,10 @@ from cmk.gui.plugins.wato import (
 
 
 def windows_printer_queues_forth(old):
-    default = {
+    default: Dict[str, Any] = {
         "warn_states": [8, 11],
         "crit_states": [9, 10],
-    }  # type: Dict[str, Any]
+    }
     if isinstance(old, tuple):
         default['levels'] = old
     if isinstance(old, dict):

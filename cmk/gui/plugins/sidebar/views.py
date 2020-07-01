@@ -57,8 +57,7 @@ class Views(SidebarSnapin):
             links.append((_("Edit"), "edit_views.py"))
             footnotelinks(links)
 
-    def _render_topic(self, topic, entries):
-        # type: (str, List[ViewMenuItem]) -> None
+    def _render_topic(self, topic: str, entries: List[ViewMenuItem]) -> None:
         container_id = ensure_str(re.sub('[^a-zA-Z]', '', topic))
         html.begin_foldable_container(treename="views",
                                       id_=container_id,
@@ -88,8 +87,7 @@ class Views(SidebarSnapin):
         html.end_foldable_container()
 
 
-def view_menu_url(name, is_view):
-    # type: (str, bool) -> str
+def view_menu_url(name: str, is_view: bool) -> str:
     if is_view:
         return "view.py?view_name=%s" % name
 
@@ -100,10 +98,9 @@ def view_menu_url(name, is_view):
 
 
 # TODO: Move this to some more generic place
-def get_view_menu_items():
-    # type: () -> Dict[str, List[ViewMenuItem]]
+def get_view_menu_items() -> Dict[str, List[ViewMenuItem]]:
     # TODO: One bright day drop this whole visuals stuff and only use page_types
-    page_type_topics = {}  # type: Dict[str, List[Tuple[str, str, str, bool]]]
+    page_type_topics: Dict[str, List[Tuple[str, str, str, bool]]] = {}
     for page_type in pagetypes.all_page_types().values():
         if issubclass(page_type, pagetypes.PageRenderer):
             for t, title, url in page_type.sidebar_links():
@@ -122,7 +119,7 @@ def get_view_menu_items():
     all_topics_with_entries += page_type_topics.items()
 
     # Filter hidden / not permitted entries
-    by_topic = OrderedDict()  # type: Dict[str, List[ViewMenuItem]]
+    by_topic: Dict[str, List[ViewMenuItem]] = OrderedDict()
     for topic, entries in all_topics_with_entries:
         for t, title, name, is_view in entries:
             if is_view and config.visible_views and name not in config.visible_views:

@@ -49,6 +49,7 @@ from cmk.utils.type_defs import (
     HostState,
     Item,
     Metric,
+    ParsedSectionName,
     RulesetName,
     SourceType,
 )
@@ -1076,6 +1077,33 @@ def _discover_host_labels(
     return discovered_host_labels
 
 
+def _find_candidates(mhs: MultiHostSections) -> Set[CheckPluginName]:
+    """Return names of check plugins that this multi_host_section may
+    contain data for.
+
+    Given this mutli_host_section, there is no point in trying to discover
+    any check plugins not returned by this function.  This does not
+    address the question wether or not the returned check plugins will
+    discover something.
+
+    """
+    raw_section_names = {name for node_data in mhs.values() for name in node_data.sections}
+
+    raw_sections = [(name, config.get_registered_section_plugin(name)) for name in raw_section_names
+                   ]
+
+    parsed_section_names = {
+        ParsedSectionName(str(name)) if section is None else section.parsed_section_name
+        for name, section in raw_sections
+    }
+
+    return {
+        plugin.name
+        for plugin in config.registered_check_plugins.values()
+        if any(section in parsed_section_names for section in plugin.sections)
+    }
+
+
 # Create a table of autodiscovered services of a host. Do not save
 # this table anywhere. Do not read any previously discovered
 # services. The table has the following columns:
@@ -1106,7 +1134,7 @@ def _discover_services(
     check_api_utils.set_hostname(hostname)
 
     # find out which plugins we need to discover
-    plugin_candidates = multi_host_sections.get_check_plugin_candidates()
+    plugin_candidates = _find_candidates(multi_host_sections)
     if check_plugin_whitelist is not None:
         plugin_candidates = plugin_candidates.intersection(check_plugin_whitelist)
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))

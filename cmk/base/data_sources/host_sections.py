@@ -6,12 +6,11 @@
 
 import collections.abc
 import sys
-from typing import Any, Callable, cast, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import (
-    CheckPluginName,
     HostAddress,
     HostName,
     ParsedSectionName,
@@ -489,30 +488,3 @@ class MultiHostSections(collections.abc.Mapping):
             raise MKParseFunctionError(*sys.exc_info())
         finally:
             item_state.set_item_state_prefix(*orig_item_state_prefix)
-
-    def get_check_plugin_candidates(self) -> Set[CheckPluginName]:
-        """Return names of check plugins that this multi_host_section may contain data for.
-
-        Given this mutli_host_section, there is no point in trying to discover any check plugins
-        not returned by this function.
-        This does not address the question wether or not the returned check plugins will discover
-        something.
-        """
-        raw_section_names = {
-            name for node_data in self._data.values() for name in node_data.sections
-        }
-
-        raw_sections = [
-            (name, config.get_registered_section_plugin(name)) for name in raw_section_names
-        ]
-
-        parsed_section_names = {
-            ParsedSectionName(str(name)) if section is None else section.parsed_section_name
-            for name, section in raw_sections
-        }
-
-        return {
-            plugin.name
-            for plugin in config.registered_check_plugins.values()
-            if any(section in parsed_section_names for section in plugin.sections)
-        }

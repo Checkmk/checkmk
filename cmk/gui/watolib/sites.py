@@ -7,7 +7,7 @@
 import os
 import re
 import time
-from typing import NamedTuple, Type
+from typing import NamedTuple, Type  # pylint: disable=unused-import
 from pathlib import Path
 
 from six import ensure_binary

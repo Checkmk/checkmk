@@ -402,7 +402,8 @@ class MultiHostSections(collections.abc.Mapping):
 
     # TODO: Add correct type hint for node wrapped SectionContent. We would have to create some kind
     # of AbstractSectionContentWithNodeInfo.
-    def _add_node_column(self, section_content: AbstractSectionContent,
+    @staticmethod
+    def _add_node_column(section_content: AbstractSectionContent,
                          nodename: Optional[HostName]) -> AbstractSectionContent:
         new_section_content = []
         node_text = str(nodename) if isinstance(nodename, str) else nodename
@@ -446,7 +447,8 @@ class MultiHostSections(collections.abc.Mapping):
             ) for extra_section_name in extra_sections
         ]
 
-    def _update_with_parse_function(self, section_content: AbstractSectionContent,
+    @staticmethod
+    def _update_with_parse_function(section_content: AbstractSectionContent,
                                     section_name: SectionName) -> ParsedSectionContent:
         """Transform the section_content using the defined parse functions.
 

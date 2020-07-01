@@ -179,8 +179,6 @@ def test_list_checks(execute):
         assert p.stderr == ''
         assert "zypper" in p.stdout
         assert "Zypper: (Security) Updates" in p.stdout
-        assert p.stdout.count(" snmp ") > 300
-        assert p.stdout.count(" tcp ") > 200
 
         if output_long is None:
             output_long = p.stdout

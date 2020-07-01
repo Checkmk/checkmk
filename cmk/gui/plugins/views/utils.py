@@ -726,12 +726,6 @@ class RowTableLivestatus(RowTable):
 
 def query_livestatus(query: LivestatusQuery, only_sites: OnlySites, limit: Optional[int],
                      auth_domain: str) -> List[LivestatusRow]:
-    sites.live().set_prepend_site(True)
-
-    if limit is not None:
-        sites.live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
-    else:
-        sites.live().set_limit(None)
 
     if all((
             config.debug_livestatus_queries,
@@ -742,18 +736,11 @@ def query_livestatus(query: LivestatusQuery, only_sites: OnlySites, limit: Optio
         html.tt(query.replace('\n', '<br>\n'))
         html.close_div()
 
-    if only_sites is None:
-        only_sites = []
-
-    if only_sites:
-        sites.live().set_only_sites(only_sites)
-
     sites.live().set_auth_domain(auth_domain)
-    data = sites.live().query(query)
+    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(limit):
+        data = sites.live().query(query)
+
     sites.live().set_auth_domain("read")
-    sites.live().set_only_sites(None)
-    sites.live().set_prepend_site(False)
-    sites.live().set_limit()  # removes limit
 
     return data
 

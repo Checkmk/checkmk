@@ -2543,19 +2543,15 @@ def query_action_data(what, host, site, svcdesc):
     except KeyError:
         pass
 
-    if site:
-        sites.live().set_only_sites([site])
-    sites.live().set_prepend_site(True)
     query = 'GET %ss\n' \
             'Columns: %s\n' \
             'Filter: host_name = %s\n' \
            % (what, ' '.join(columns), host)
     if what == 'service':
         query += 'Filter: service_description = %s\n' % svcdesc
-    row = sites.live().query_row(query)
 
-    sites.live().set_prepend_site(False)
-    sites.live().set_only_sites(None)
+    with sites.prepend_site(), sites.only_sites(site):
+        row = sites.live().query_row(query)
 
     return dict(zip(['site'] + columns, row))
 

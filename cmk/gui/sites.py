@@ -309,3 +309,16 @@ def prepend_site() -> Iterator[None]:
         yield
     finally:
         live().set_prepend_site(False)
+
+
+@contextmanager
+def set_limit(limit: Optional[int]) -> Iterator[None]:
+    if limit is not None:
+        live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
+    else:
+        live().set_limit(None)
+
+    try:
+        yield
+    finally:
+        live().set_limit()  # removes limit

@@ -6,21 +6,24 @@
 
 # yapf: disable
 # type: ignore
+
+from cmk.base.plugins.agent_based.systemtime import parse_systemtime
+
 checkname = 'systemtime'
 
 freeze_time = '2019-10-10 20:38:55'
 
-info = [['1593509210']]
+parsed = parse_systemtime([['1593509210']])
 
-discovery = {'': [(None, 'systemtime_default_values')]}
+discovery = {'': [(None, {})]}
 
 checks = {
     '': [
         (
-            None, (30, 60), [
+            None, {'levels': (30, 60)}, [
                 (
-                    2, 'Offset is 22769275 sec (warn/crit at 30/60 sec)', [
-                        ('offset', 22769275, 30, 60, 0, None)
+                    2, 'Offset: 264 d (warn/crit at 30.0 s/60 s)', [
+                        ('offset', 22769275, 30, 60)
                     ]
                 )
             ]

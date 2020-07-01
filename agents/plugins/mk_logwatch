@@ -885,13 +885,11 @@ def find_matching_logfiles(glob_pattern):
         # we can't use glob on unicode, as it would try to re-decode matches with ascii
         matches = glob.glob(glob_pattern.encode('utf8'))
 
-    # skip dirs and read links
+    # skip dirs
     file_refs = []
     for match in matches:
         if os.path.isdir(match):
             continue
-        if os.path.islink(match):
-            match = os.readlink(match)
 
         # match is bytes in Linux and unicode/str in Windows
         match_readable = _decode_to_unicode(match)

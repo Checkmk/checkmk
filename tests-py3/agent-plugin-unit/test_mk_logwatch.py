@@ -377,7 +377,7 @@ STAR_FILES = [
     (b"/hard_link_to_file.log", u"/hard_link_to_file.log"),
     (b"/hard_linked_file.log", u"/hard_linked_file.log"),
     (b"/oh-no-\x89", u"/oh-no-\uFFFD"),  # unicode replace char
-    (b"/symlinked_file.log", u"/symlinked_file.log"),
+    (b"/symlink_to_file.log", u"/symlink_to_file.log"),
     (b"/wat\xe2\x80\xbd", u"/wat\u203D"),  # actual interobang
 ]
 
@@ -385,23 +385,26 @@ STAR_FILES = [
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [
     (u"/*", STAR_FILES),
     (u"/**", STAR_FILES),
-    (u"/subdir/*", [(b"/subdir/another_symlinked_file.log", u"/subdir/another_symlinked_file.log")
-                   ]),
+    (u"/subdir/*", [(b"/subdir/symlink_to_file.log", u"/subdir/symlink_to_file.log")]),
     (u"/symlink_to_dir/*", [
         (b"/symlink_to_dir/yet_another_file.log", u"/symlink_to_dir/yet_another_file.log")
     ]),
 ])
 def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, file_suffixes):
     fake_fs_path_u = ensure_text(fake_filesystem)
+    fake_fs_path_b = bytes(fake_filesystem, "utf-8")
     files = mk_logwatch.find_matching_logfiles(fake_fs_path_u + pattern_suffix)
+    fake_fs_file_suffixes = [
+        (fake_fs_path_b + path[0], fake_fs_path_u + path[1]) for path in file_suffixes
+    ]
 
-    for actual, expected in zip(sorted(files), file_suffixes):
+    for actual, expected in zip(sorted(files), fake_fs_file_suffixes):
         assert isinstance(actual[0], type(expected[0]))
         assert actual[0].endswith(expected[0])
 
         assert isinstance(actual[1], text_type())
         assert actual[1].startswith(fake_fs_path_u)
-        assert actual[1][len(fake_fs_path_u):] == expected[1]
+        assert actual[1] == expected[1]
 
 
 def test_ip_in_subnetwork(mk_logwatch):

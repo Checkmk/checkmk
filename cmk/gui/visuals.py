@@ -1213,6 +1213,8 @@ def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
     if single_infos is None:
         single_infos = []
 
+    single_info_keys = set(get_single_info_keys(single_infos))
+
     context: VisualContext = {}
     for filter_name, filter_class in filter_registry.items():
         filter_object = filter_class()
@@ -1220,9 +1222,10 @@ def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
             this_filter_vars: FilterHTTPVariables = {}
             for varname in filter_object.htmlvars:
                 if html.request.has_var(varname):
-                    if filter_object.info in single_infos:
+                    if varname in single_info_keys:
                         context[filter_name] = html.request.get_unicode_input_mandatory(varname)
                         break
+
                     this_filter_vars[varname] = html.request.get_str_input_mandatory(varname)
             if this_filter_vars:
                 context[filter_name] = this_filter_vars

@@ -3766,6 +3766,10 @@ def test_get_context_uri_vars(register_builtin_html, visual, only_count, expecte
     (["host"], [], [("abc", "dingeling")], {}),
     # Single host context
     (["host"], ["host"], [("host", "aaa")], {"host": "aaa"}),
+    # Single host context with site hint
+    # -> add site and siteopt (Why? Was like this in 1.6...)
+    (["host"], ["host"], [("host", "aaa"),("site", "abc")], {"host": "aaa", "site": {"site": "abc"},
+        "siteopt": {"site": "abc"}}),
     # Single host context -> not set
     (["host"], ["host"], [], {}),
     # Single host context -> empty set

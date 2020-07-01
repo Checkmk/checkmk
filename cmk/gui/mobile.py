@@ -222,7 +222,8 @@ def page_index() -> None:
 
             datasource = data_source_registry[view_spec["datasource"]]()
             context = visuals.get_merged_context(
-                visuals.get_context_from_uri_vars(datasource.infos),
+                visuals.get_context_from_uri_vars(datasource.infos,
+                                                  single_infos=view_spec["single_infos"]),
                 view_spec["context"],
             )
 
@@ -282,7 +283,7 @@ def page_view() -> None:
 
     datasource = data_source_registry[view_spec["datasource"]]()
     context = visuals.get_merged_context(
-        visuals.get_context_from_uri_vars(datasource.infos),
+        visuals.get_context_from_uri_vars(datasource.infos, single_infos=view_spec["single_infos"]),
         view_spec["context"],
     )
 

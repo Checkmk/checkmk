@@ -81,8 +81,7 @@ else:
     agent_bakery = None  # type: ignore[assignment]
 
 
-def render_html(text):
-    # type: (Union[HTML, str]) -> str
+def render_html(text: Union[HTML, str]) -> str:
     if isinstance(text, HTML):
         return text.__html__()
     return text
@@ -152,10 +151,10 @@ class ModeRuleEditor(WatoMode):
         menu = MainMenu()
         main_groups = [g_class() for g_class in rulespec_group_registry.get_main_groups()]
         for group in sorted(main_groups, key=lambda g: g.title):
-            url_vars = [
+            url_vars: HTTPVariables = [
                 ("mode", "rulesets"),
                 ("group", group.name),
-            ]  # type: HTTPVariables
+            ]
             if self._only_host:
                 url_vars.append(("host", self._only_host))
             url = watolib.folder_preserving_link(url_vars)
@@ -224,7 +223,7 @@ class RulesetMode(WatoMode):
 
         self._search_options = ModeRuleSearch().search_options
 
-        self._only_host = html.request.get_ascii_input("host")  # type: Optional[HostName]
+        self._only_host: Optional[HostName] = html.request.get_ascii_input("host")
 
     @abc.abstractmethod
     def _rulesets(self):
@@ -482,9 +481,9 @@ class ModeEditRuleset(WatoMode):
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
 
-        self._item = None  # type: Optional[ServiceName]
-        self._service = None  # type: Optional[ServiceName]
-        self._hostname = None  # type: Optional[HostName]
+        self._item: Optional[ServiceName] = None
+        self._service: Optional[ServiceName] = None
+        self._hostname: Optional[HostName] = None
 
         # TODO: Clean this up. In which case is it used?
         # - The calculation for the service_description is not even correct, because it does not
@@ -582,10 +581,10 @@ class ModeEditRuleset(WatoMode):
         global_buttons()
 
         if config.user.may('wato.rulesets'):
-            args = [
+            args: HTTPVariables = [
                 ("mode", self._back_mode),
                 ("host", self._hostname),
-            ]  # type: HTTPVariables
+            ]
 
             if self._back_mode == "rulesets":
                 args.append(("group", self._rulespec.main_group_name))
@@ -1174,11 +1173,11 @@ class EditRuleMode(WatoMode):
 
     def buttons(self):
         if self._back_mode == 'edit_ruleset':
-            var_list = [
+            var_list: HTTPVariables = [
                 ("mode", "edit_ruleset"),
                 ("varname", self._name),
                 ("host", html.request.get_ascii_input_mandatory("host", "")),
-            ]  # type: HTTPVariables
+            ]
             if html.request.has_var("item"):
                 var_list.append(("item", html.request.get_unicode_input_mandatory("item")))
             if html.request.has_var("service"):
@@ -1264,8 +1263,7 @@ class EditRuleMode(WatoMode):
         self._vs_predefined_condition_id().validate_value(condition_id, "predefined_condition_id")
         return condition_id
 
-    def _get_rule_conditions_from_vars(self):
-        # type: () -> RuleConditions
+    def _get_rule_conditions_from_vars(self) -> RuleConditions:
         if self._get_condition_type_from_vars() == "predefined":
             return self._get_predefined_rule_conditions(self._get_condition_id_from_vars())
         return self._get_explicit_rule_conditions()
@@ -1475,12 +1473,11 @@ class VSExplicitConditions(Transform):
 
         return elements
 
-    def _to_valuespec(self, conditions):
-        # type: (RuleConditions) -> Dict
-        explicit = {
+    def _to_valuespec(self, conditions: RuleConditions) -> Dict:
+        explicit: Dict = {
             "folder_path": conditions.host_folder,
             "host_tags": conditions.host_tags,
-        }  # type: Dict
+        }
 
         if self._allow_label_conditions():
             explicit["host_labels"] = conditions.host_labels
@@ -1533,8 +1530,7 @@ class VSExplicitConditions(Transform):
 
         raise MKUserError(None, "Invalid item type '%s'" % item_type)
 
-    def _from_valuespec(self, explicit):
-        # type: (dict) -> RuleConditions
+    def _from_valuespec(self, explicit: dict) -> RuleConditions:
 
         service_description = None
         service_labels = None
@@ -1685,8 +1681,7 @@ class VSExplicitConditions(Transform):
         if value.startswith("!"):
             raise MKUserError(varprefix, _("It's not allowed to use a leading \"!\" here."))
 
-    def value_to_text(self, value):
-        # type: (RuleConditions) -> str
+    def value_to_text(self, value: RuleConditions) -> str:
         with html.plugged():
             html.open_ul(class_="conditions")
             renderer = RuleConditionRenderer()
@@ -1753,9 +1748,8 @@ class LabelCondition(Transform):
 
 
 class RuleConditionRenderer:
-    def render(self, rulespec, conditions):
-        # type: (Rulespec, RuleConditions) -> List[str]
-        rendered = []  # type: List[str]
+    def render(self, rulespec: Rulespec, conditions: RuleConditions) -> List[str]:
+        rendered: List[str] = []
         rendered += list(self._tag_conditions(conditions))
         rendered += list(self._host_label_conditions(conditions))
         rendered += list(self._host_conditions(conditions))
@@ -1763,8 +1757,7 @@ class RuleConditionRenderer:
         rendered += list(self._service_label_conditions(conditions))
         return rendered
 
-    def _tag_conditions(self, conditions):
-        # type: (RuleConditions) -> Generator
+    def _tag_conditions(self, conditions: RuleConditions) -> Generator:
         for tag_spec in conditions.host_tags.values():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
                 yield HTML(" <i>or</i> ").join(
@@ -1805,12 +1798,10 @@ class RuleConditionRenderer:
 
         return HTML(_("Unknown tag: Host has the tag <tt>%s</tt>") % tag_id)
 
-    def _host_label_conditions(self, conditions):
-        # type: (RuleConditions) -> Generator
+    def _host_label_conditions(self, conditions: RuleConditions) -> Generator:
         return self._label_conditions(conditions.host_labels, "host", _("Host"))
 
-    def _service_label_conditions(self, conditions):
-        # type: (RuleConditions) -> Generator
+    def _service_label_conditions(self, conditions: RuleConditions) -> Generator:
         return self._label_conditions(conditions.service_labels, "service", _("Service"))
 
     def _label_conditions(self, label_conditions, object_type, object_title):
@@ -1842,8 +1833,7 @@ class RuleConditionRenderer:
 
         return HTML("%s%s" % (html.render_i(_("not"), class_="label_operator"), labels_html))
 
-    def _host_conditions(self, conditions):
-        # type: (RuleConditions) -> Generator
+    def _host_conditions(self, conditions: RuleConditions) -> Generator:
         if conditions.host_name is None:
             return
 
@@ -1857,8 +1847,8 @@ class RuleConditionRenderer:
         if conditions.host_name == []:
             return _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
 
-        condition = []  # type: List[Union[HTML, str]]
-        text_list = []  # type: List[Union[HTML, str]]
+        condition: List[Union[HTML, str]] = []
+        text_list: List[Union[HTML, str]] = []
 
         is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(
             conditions.host_name)
@@ -1914,8 +1904,7 @@ class RuleConditionRenderer:
 
         return HTML(" ").join(condition)
 
-    def _service_conditions(self, rulespec, conditions):
-        # type: (Rulespec, RuleConditions) -> Generator
+    def _service_conditions(self, rulespec: Rulespec, conditions: RuleConditions) -> Generator:
         if not rulespec.item_type or conditions.service_description is None:
             return
 
@@ -1935,7 +1924,7 @@ class RuleConditionRenderer:
         exact_match_count = len(
             [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"])
 
-        text_list = []  # type: List[Union[HTML, str]]
+        text_list: List[Union[HTML, str]] = []
         if exact_match_count == len(service_conditions) or exact_match_count == 0:
             if is_negate:
                 condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")
@@ -2048,8 +2037,8 @@ class ModeNewRule(EditRuleMode):
         return self._get_rule_conditions_from_vars().host_folder
 
     def _set_rule(self):
-        host_name_conditions = None  # type: HostNameConditions
-        service_description_conditions = None  # type: ServiceNameConditions
+        host_name_conditions: HostNameConditions = None
+        service_description_conditions: ServiceNameConditions = None
 
         if html.request.has_var("_new_host_rule"):
             hostname = html.request.get_ascii_input("host")

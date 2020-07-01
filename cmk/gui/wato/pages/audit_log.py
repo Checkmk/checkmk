@@ -365,8 +365,7 @@ class ModeAuditLog(WatoMode):
                                       user, action, '"' + text + '"')) + '\n')
         return False
 
-    def _parse_audit_log(self):
-        # type: () -> List[Tuple[int, str, str, str, str]]
+    def _parse_audit_log(self) -> List[Tuple[int, str, str, str, str]]:
         if not self.log_path.exists():
             return []
 

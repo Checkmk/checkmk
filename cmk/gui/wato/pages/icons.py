@@ -90,8 +90,7 @@ class ModeIcons(WatoMode):
                 _('Your icon conflicts with a Check_MK builtin icon. Please '
                   'choose another name for your icon.'))
 
-    def action(self):
-        # type: () -> ActionResult
+    def action(self) -> ActionResult:
         if html.request.has_var("_delete"):
             icon_name = html.request.var("_delete")
             if icon_name in self._load_custom_icons():
@@ -132,8 +131,7 @@ class ModeIcons(WatoMode):
             # Might happen with interlaced PNG files and PIL version < 1.1.7
             raise MKUserError(None, _('Unable to upload icon: %s') % e)
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         html.h3(_("Upload Icon"))
         html.p(_("Allowed are single PNG image files with a maximum size of 80x80 px."))
 

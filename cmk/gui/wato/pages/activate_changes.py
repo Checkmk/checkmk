@@ -138,8 +138,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         self._extract_from_file(cmk.gui.watolib.snapshots.snapshot_dir + snapshot_file,
                                 watolib.backup_domains)
 
-    def _extract_from_file(self, filename, elements):
-        # type: (str, Dict[str, cmk.gui.watolib.snapshots.DomainSpec]) -> None
+    def _extract_from_file(self, filename: str,
+                           elements: Dict[str, cmk.gui.watolib.snapshots.DomainSpec]) -> None:
         if not isinstance(elements, dict):
             raise NotImplementedError()
 
@@ -230,7 +230,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.end_form()
 
     def _vs_activation(self):
-        elements = [
+        elements: List[DictionaryEntry] = [
             ("comment",
              TextAreaUnicode(
                  title=_("Comment (optional)"),
@@ -241,7 +241,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         "This can be useful to document the reason why the changes you "
                         "activate have been made."),
              )),
-        ]  # type: List[DictionaryEntry]
+        ]
 
         if self.has_foreign_changes() and config.user.may("wato.activateforeign"):
             elements.append(("foreign",
@@ -439,7 +439,7 @@ class ModeAjaxStartActivation(AjaxPage):
         else:
             affected_sites = affected_sites_request.split(",")
 
-        comment = request.get("comment", "").strip()  # type: Optional[str]
+        comment: Optional[str] = request.get("comment", "").strip()
         if comment == "":
             comment = None
 

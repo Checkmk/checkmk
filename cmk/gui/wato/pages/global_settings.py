@@ -158,8 +158,8 @@ class GlobalSettingsMode(WatoMode):
                 forms.section(title, simple=simple)
 
                 if varname in self._current_settings:
-                    modified_cls = "modified"  # type: Optional[str]
-                    value_title = _("This option has been modified.")  # type: Optional[str]
+                    modified_cls: Optional[str] = "modified"
+                    value_title: Optional[str] = _("This option has been modified.")
                 elif varname in self._global_settings:
                     modified_cls = "modified globally"
                     value_title = _("This option has been modified in global settings.")
@@ -232,8 +232,8 @@ class EditGlobalSettingMode(WatoMode):
             except KeyError:
                 pass
 
-            msg = _("Resetted configuration variable %s to its default."
-                   ) % self._varname  # type: Union[HTML, str]
+            msg: Union[
+                HTML, str] = _("Resetted configuration variable %s to its default.") % self._varname
         else:
             new_value = self._valuespec.from_html_vars("ve")
             self._valuespec.validate_value(new_value, "ve")

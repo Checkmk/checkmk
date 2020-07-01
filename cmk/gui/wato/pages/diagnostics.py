@@ -50,8 +50,7 @@ from cmk.gui.pages import page_registry, Page
 @mode_registry.register
 class ModeDiagnostics(WatoMode):
     @classmethod
-    def name(cls):
-        # type: () -> str
+    def name(cls) -> str:
         return "diagnostics"
 
     @classmethod
@@ -59,28 +58,23 @@ class ModeDiagnostics(WatoMode):
         # type : () -> List[str]
         return ["diagnostics"]
 
-    def _from_vars(self):
-        # type: () -> None
+    def _from_vars(self) -> None:
         self._start = bool(html.request.get_ascii_input("_start"))
         self._diagnostics_parameters = self._get_diagnostics_parameters()
         self._job = DiagnosticsDumpBackgroundJob()
 
-    def _get_diagnostics_parameters(self):
-        # type: () -> Optional[DiagnosticsParameters]
+    def _get_diagnostics_parameters(self) -> Optional[DiagnosticsParameters]:
         if self._start:
             return self._vs_diagnostics().from_html_vars("diagnostics")
         return None
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Diagnostics")
 
-    def buttons(self):
-        # type: () -> None
+    def buttons(self) -> None:
         home_button()
 
-    def action(self):
-        # type: () -> None
+    def action(self) -> None:
         if not html.check_transaction():
             return
 
@@ -92,8 +86,7 @@ class ModeDiagnostics(WatoMode):
 
         raise HTTPRedirect(self._job.detail_url())
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():
             raise HTTPRedirect(self._job.detail_url())
@@ -107,8 +100,7 @@ class ModeDiagnostics(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-    def _vs_diagnostics(self):
-        # type: () -> Dictionary
+    def _vs_diagnostics(self) -> Dictionary:
         return Dictionary(
             title=_("Collect diagnostic dump"),
             render="form",
@@ -132,9 +124,8 @@ class ModeDiagnostics(WatoMode):
             optional_keys=False,
         )
 
-    def _get_optional_information_elements(self):
-        # type: () -> List[Tuple[str, ValueSpec]]
-        elements = [
+    def _get_optional_information_elements(self) -> List[Tuple[str, ValueSpec]]:
+        elements: List[Tuple[str, ValueSpec]] = [
             (OPT_LOCAL_FILES,
              FixedValue(
                  True,
@@ -164,7 +155,7 @@ class ModeDiagnostics(WatoMode):
                         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
                         "(Agent plugin mk_inventory needs to be installed)"),
              )),
-        ]  # type: List[Tuple[str, ValueSpec]]
+        ]
 
         if not cmk_version.is_raw_edition():
             elements.append(
@@ -185,12 +176,10 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
     job_prefix = "diagnostics_dump"
 
     @classmethod
-    def gui_title(cls):
-        # type: () -> str
+    def gui_title(cls) -> str:
         return _("Diagnostics dump")
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(DiagnosticsDumpBackgroundJob, self).__init__(
             self.job_prefix,
             title=self.gui_title(),
@@ -198,12 +187,11 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
             stoppable=False,
         )
 
-    def _back_url(self):
-        # type: () -> str
+    def _back_url(self) -> str:
         return html.makeuri([])
 
-    def do_execute(self, diagnostics_parameters, job_interface):
-        # type: (DiagnosticsParameters, BackgroundProcessInterface) -> None
+    def do_execute(self, diagnostics_parameters: DiagnosticsParameters,
+                   job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
 
         site = diagnostics_parameters["site"]
@@ -232,8 +220,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
 @page_registry.register_page("download_diagnostics_dump")
 class PageDownloadDiagnosticsDump(Page):
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         site = html.request.get_ascii_input_mandatory("site")
         tarfile_name = html.request.get_ascii_input_mandatory("tarfile_name")
         Filename().validate_value(tarfile_name, "tarfile_name")
@@ -243,8 +230,7 @@ class PageDownloadDiagnosticsDump(Page):
         html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % tarfile_name
         html.write_binary(file_content)
 
-    def _get_diagnostics_dump_file(self, site, tarfile_name):
-        # type: (str, str) -> bytes
+    def _get_diagnostics_dump_file(self, site: str, tarfile_name: str) -> bytes:
         if config.site_is_local(site):
             return _get_diagnostics_dump_file(tarfile_name)
 
@@ -255,22 +241,18 @@ class PageDownloadDiagnosticsDump(Page):
 
 @automation_command_registry.register
 class AutomationDiagnosticsDumpGetFile(AutomationCommand):
-    def command_name(self):
-        # type: () -> str
+    def command_name(self) -> str:
         return "diagnostics-dump-get-file"
 
-    def execute(self, request):
-        # type: (str) -> bytes
+    def execute(self, request: str) -> bytes:
         return _get_diagnostics_dump_file(request)
 
-    def get_request(self):
-        # type: () -> str
+    def get_request(self) -> str:
         tarfile_name = html.request.get_ascii_input_mandatory("tarfile_name")
         Filename().validate_value(tarfile_name, "tarfile_name")
         return tarfile_name
 
 
-def _get_diagnostics_dump_file(tarfile_name):
-    # type: (str) -> bytes
+def _get_diagnostics_dump_file(tarfile_name: str) -> bytes:
     with cmk.utils.paths.diagnostics_dir.joinpath(tarfile_name).open("rb") as f:
         return f.read()

@@ -38,8 +38,8 @@ from cmk.gui.plugins.wato.utils.context_buttons import (
 
 @mode_registry.register
 class ModeObjectParameters(WatoMode):
-    _PARAMETERS_UNKNOWN = []  # type: List
-    _PARAMETERS_OMIT = []  # type: List
+    _PARAMETERS_UNKNOWN: List = []
+    _PARAMETERS_OMIT: List = []
 
     @classmethod
     def name(cls):
@@ -280,8 +280,8 @@ class ModeObjectParameters(WatoMode):
         self._show_labels(serviceinfo.get("labels", {}), "service",
                           serviceinfo.get("label_sources", {}))
 
-    def _get_custom_check_origin_rule(self, ruleset, hostname, svc_desc):
-        # type: (Ruleset, str, str) -> Optional[Tuple[CREFolder, int, Rule]]
+    def _get_custom_check_origin_rule(self, ruleset: Ruleset, hostname: str,
+                                      svc_desc: str) -> Optional[Tuple[CREFolder, int, Rule]]:
         # We could use the outcome of _setting instead of the outcome of
         # the automation call in the future
         _setting, rules = ruleset.analyse_ruleset(self._hostname,

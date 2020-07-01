@@ -938,8 +938,7 @@ class ModeEditUser(WatoMode):
         # Check if rule based notifications are enabled (via WATO)
         return watolib.load_configuration_settings().get("enable_rulebased_notifications")
 
-    def _pw_suffix(self):
-        # type: () -> str
+    def _pw_suffix(self) -> str:
         return 'new' if self._user_id is None else ensure_str(
             base64.b64encode(self._user_id.encode("utf-8")))
 
@@ -986,7 +985,7 @@ class ModeEditUser(WatoMode):
 
 
 def select_language(user):
-    languages = [l for l in get_languages() if not config.hide_language(l[0])]  # type: Choices
+    languages: Choices = [l for l in get_languages() if not config.hide_language(l[0])]
     if languages:
         active = 'language' in user
         forms.section(_("Language"), checkbox=('_set_lang', active, 'language'))

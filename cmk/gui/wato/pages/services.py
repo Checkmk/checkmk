@@ -176,8 +176,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
     def command_name(self):
         return "service-discovery-job"
 
-    def get_request(self):
-        # type: () -> StartDiscoveryRequest
+    def get_request(self) -> StartDiscoveryRequest:
         config.user.need_permission("wato.hosts")
 
         host_name = html.request.get_ascii_input("host_name")
@@ -201,8 +200,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                                      folder=host.folder(),
                                      options=DiscoveryOptions(**options))
 
-    def execute(self, request):
-        # type: (StartDiscoveryRequest) -> str
+    def execute(self, request: StartDiscoveryRequest) -> str:
         return repr(tuple(execute_discovery_job(request)))
 
 
@@ -213,7 +211,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         config.user.need_permission("wato.hosts")
 
-        request = self.webapi_request()  # type: AjaxDiscoveryRequest
+        request: AjaxDiscoveryRequest = self.webapi_request()
         html.request.del_var("request")  # Do not add this to URLs constructed later
         request.setdefault("update_target", None)
         request.setdefault("update_source", None)
@@ -273,8 +271,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "discovery_result": repr(tuple(discovery_result)),
         }
 
-    def _get_status_message(self, discovery_result, performed_action):
-        # type: (DiscoveryResult, str) -> Optional[str]
+    def _get_status_message(self, discovery_result: DiscoveryResult,
+                            performed_action: str) -> Optional[str]:
         if performed_action == DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated.")
 
@@ -337,9 +335,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             changelog_button()
             return html.drain()
 
-    def _get_discovery_options(self, request):
+    def _get_discovery_options(self, request: dict) -> DiscoveryOptions:
 
-        # type: (dict) -> DiscoveryOptions
         options = DiscoveryOptions(**request["discovery_options"])
 
         # Refuse action requests in case the user is not permitted
@@ -372,8 +369,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
     def _is_active(self, discovery_result):
         return discovery_result.job_status["is_active"]
 
-    def _get_check_table(self):
-        # type: () -> DiscoveryResult
+    def _get_check_table(self) -> DiscoveryResult:
         return get_check_table(StartDiscoveryRequest(self._host, self._host.folder(),
                                                      self._options))
 
@@ -394,8 +390,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         if show_plugin_names != self._options.show_plugin_names:
             config.user.discovery_show_plugin_names = self._options.show_plugin_names
 
-    def _handle_action(self, discovery_result, request):
-        # type: (DiscoveryResult, dict) -> DiscoveryResult
+    def _handle_action(self, discovery_result: DiscoveryResult, request: dict) -> DiscoveryResult:
         config.user.need_permission("wato.services")
 
         if self._options.action in [
@@ -425,26 +420,23 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
 
 class DiscoveryPageRenderer:
-    def __init__(self, host, options):
-        # type: (watolib.CREHost, DiscoveryOptions) -> None
+    def __init__(self, host: watolib.CREHost, options: DiscoveryOptions) -> None:
         super(DiscoveryPageRenderer, self).__init__()
         self._host = host
         self._options = options
 
-    def render(self, discovery_result, request):
-        # type: (DiscoveryResult, dict) -> str
+    def render(self, discovery_result: DiscoveryResult, request: dict) -> str:
         with html.plugged():
             self._show_action_buttons(discovery_result)
             self._show_discovered_host_labels(discovery_result)
             self._show_discovery_details(discovery_result, request)
             return html.drain()
 
-    def _show_discovered_host_labels(self, discovery_result):
-        # type: (DiscoveryResult) -> None
+    def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> None:
         if not discovery_result.host_labels:
             return
 
-        host_labels_by_plugin = {}  # type: Dict[str, Dict[str, str]]
+        host_labels_by_plugin: Dict[str, Dict[str, str]] = {}
         for label_id, label in discovery_result.host_labels.items():
             host_labels_by_plugin.setdefault(label["plugin_name"], {})[label_id] = label["value"]
 
@@ -461,8 +453,7 @@ class DiscoveryPageRenderer:
                 table.text_cell(_("Check plugin"), plugin_name)
                 table.cell(_("Host labels"), labels_html)
 
-    def _show_discovery_details(self, discovery_result, request):
-        # type: (DiscoveryResult, dict) -> None
+    def _show_discovery_details(self, discovery_result: DiscoveryResult, request: dict) -> None:
         if not discovery_result.check_table and self._is_active(discovery_result):
             html.br()
             html.show_message(_("Discovered no service yet."))
@@ -512,8 +503,7 @@ class DiscoveryPageRenderer:
     def _is_active(self, discovery_result):
         return discovery_result.job_status["is_active"]
 
-    def _get_group_header(self, entry):
-        # type: (TableGroupEntry) -> HTML
+    def _get_group_header(self, entry: TableGroupEntry) -> HTML:
         map_icons = {
             DiscoveryState.UNDECIDED: "undecided",
             DiscoveryState.MONITORED: "monitored",
@@ -527,15 +517,14 @@ class DiscoveryPageRenderer:
 
         return group_header + html.render_help(entry.help_text)
 
-    def _group_check_table_by_state(self, check_table):
-        # type: (CheckTable) -> Dict[str, List[CheckTableEntry]]
-        by_group = {}  # type: Dict[str, List[CheckTableEntry]]
+    def _group_check_table_by_state(self,
+                                    check_table: CheckTable) -> Dict[str, List[CheckTableEntry]]:
+        by_group: Dict[str, List[CheckTableEntry]] = {}
         for entry in check_table:
             by_group.setdefault(entry[0], []).append(entry)
         return by_group
 
-    def _show_action_buttons(self, discovery_result):
-        # type: (DiscoveryResult) -> None
+    def _show_action_buttons(self, discovery_result: DiscoveryResult) -> None:
         if not config.user.may("wato.services"):
             return
 
@@ -612,8 +601,7 @@ class DiscoveryPageRenderer:
     def _show_button_spacer(self):
         html.div("", class_=["button_spacer"])
 
-    def _show_checkbox_button(self, discovery_result):
-        # type: (DiscoveryResult) -> None
+    def _show_checkbox_button(self, discovery_result: DiscoveryResult) -> None:
         if not self._options.show_checkboxes:
             checkbox_options = self._options._replace(show_checkboxes=True)
             checkbox_title = _('Show checkboxes')
@@ -628,8 +616,7 @@ class DiscoveryPageRenderer:
             disabled=self._is_active(discovery_result),
         )
 
-    def _show_parameters_button(self, discovery_result):
-        # type: (DiscoveryResult) -> None
+    def _show_parameters_button(self, discovery_result: DiscoveryResult) -> None:
         if self._options.show_parameters:
             params_options = self._options._replace(show_parameters=False)
             params_title = _("Hide check parameters")
@@ -644,8 +631,7 @@ class DiscoveryPageRenderer:
             disabled=self._is_active(discovery_result),
         )
 
-    def _show_discovered_labels_button(self, discovery_result):
-        # type: (DiscoveryResult) -> None
+    def _show_discovered_labels_button(self, discovery_result: DiscoveryResult) -> None:
         if self._options.show_discovered_labels:
             params_options = self._options._replace(show_discovered_labels=False)
             params_title = _("Hide discovered labels")
@@ -660,8 +646,7 @@ class DiscoveryPageRenderer:
             disabled=self._is_active(discovery_result),
         )
 
-    def _show_plugin_names_button(self, discovery_result):
-        # type: (DiscoveryResult) -> None
+    def _show_plugin_names_button(self, discovery_result: DiscoveryResult) -> None:
         if self._options.show_plugin_names:
             params_options = self._options._replace(show_plugin_names=False)
             params_title = _("Hide plugin names")
@@ -676,8 +661,7 @@ class DiscoveryPageRenderer:
             disabled=self._is_active(discovery_result),
         )
 
-    def _start_js_call(self, options, request_vars=None):
-        # type: (DiscoveryOptions, dict) -> str
+    def _start_js_call(self, options: DiscoveryOptions, request_vars: dict = None) -> str:
         return "cmk.service_discovery.start(%s, %s, %s, %s, %s)" % (
             json.dumps(self._host.name()),
             json.dumps(self._host.folder().path()),
@@ -1033,8 +1017,7 @@ class DiscoveryPageRenderer:
             return "active_checks:" + check_type
         return None
 
-    def _ordered_table_groups(self):
-        # type: () -> List[TableGroupEntry]
+    def _ordered_table_groups(self) -> List[TableGroupEntry]:
         return [
             TableGroupEntry(
                 table_group=DiscoveryState.UNDECIDED,

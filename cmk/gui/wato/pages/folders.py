@@ -446,7 +446,7 @@ class ModeFolder(WatoMode):
             contact_group_names = load_contact_group_information()
 
             host_errors = self._folder.host_validation_errors()
-            rendered_hosts = []  # type: List[HostName]
+            rendered_hosts: List[HostName] = []
 
             # Now loop again over all hosts and display them
             max_hosts = len(hostnames)
@@ -718,7 +718,7 @@ class ModeFolder(WatoMode):
             return None  # browser reload
 
         # Create groups of hosts with the same target folder
-        target_folder_names = {}  # type: Dict[str, List[HostName]]
+        target_folder_names: Dict[str, List[HostName]] = {}
         for host_name in host_names_to_move:
             host = self._folder.host(host_name)
             imported_folder_name = host.attribute('imported_folder')
@@ -887,9 +887,9 @@ class FolderMode(WatoMode, metaclass=abc.ABCMeta):
         html.begin_form("edit_host", method="POST")
 
         # title
-        basic_attributes = [
+        basic_attributes: List[Tuple[str, ValueSpec, str]] = [
             ("title", TextUnicode(title=_("Title")), self._folder.title()),
-        ]  # type: List[Tuple[str, ValueSpec, str]]
+        ]
         html.set_focus("title")
 
         # folder name (omit this for root folder)

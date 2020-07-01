@@ -126,18 +126,18 @@ class ModeEditPassword(SimpleEditMode):
 
     def _vs_individual_elements(self):
         if config.user.may("wato.edit_all_passwords"):
-            admin_element = [
+            admin_element: List[ValueSpec] = [
                 FixedValue(
                     None,
                     title=_("Administrators"),
                     totext=_("Administrators (having the permission "
                              "\"Write access to all passwords\")"),
                 )
-            ]  # type: List[ValueSpec]
+            ]
         else:
             admin_element = []
 
-        elements = [
+        elements: List[DictionaryEntry] = [
             ("password", PasswordSpec(
                 title=_("Password"),
                 allow_empty=False,
@@ -171,7 +171,7 @@ class ModeEditPassword(SimpleEditMode):
                  choices=self._contact_group_choices,
                  autoheight=False,
              )),
-        ]  # type: List[DictionaryEntry]
+        ]
 
         return elements
 

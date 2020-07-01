@@ -88,8 +88,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
 
         job_interface.send_result_message(_("Parent scan finished"))
 
-    def _initialize_statistics(self):
-        # type: () -> None
+    def _initialize_statistics(self) -> None:
         self._num_hosts_total = 0
         self._num_gateways_found = 0
         self._num_directly_reachable_hosts = 0
@@ -99,8 +98,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         self._num_gateway_hosts_created = 0
         self._num_errors = 0
 
-    def _process_task(self, task, settings):
-        # type: (ParentScanTask, ParentScanSettings) -> None
+    def _process_task(self, task: ParentScanTask, settings: ParentScanSettings) -> None:
         self._num_hosts_total += 1
 
         try:
@@ -118,8 +116,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
             else:
                 self._logger.exception(msg)
 
-    def _execute_parent_scan(self, task, settings):
-        # type: (ParentScanTask, ParentScanSettings) -> List
+    def _execute_parent_scan(self, task: ParentScanTask, settings: ParentScanSettings) -> List:
         params = list(
             map(str, [
                 settings.timeout,
@@ -129,8 +126,8 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
             ]))
         return watolib.check_mk_automation(task.site_id, "scan-parents", params + [task.host_name])
 
-    def _process_parent_scan_results(self, task, settings, gateways):
-        # type: (ParentScanTask, ParentScanSettings, List) -> None
+    def _process_parent_scan_results(self, task: ParentScanTask, settings: ParentScanSettings,
+                                     gateways: List) -> None:
         gateway = ParentScanResult(*gateways[0][0]) if gateways[0][0] else None
         state, skipped_gateways, error = gateways[0][1:]
 

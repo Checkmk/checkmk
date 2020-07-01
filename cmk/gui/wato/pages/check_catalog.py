@@ -139,8 +139,8 @@ class ModeCheckPlugins(WatoMode):
             menu.show()
 
     def _get_manpages_after_search(self):
-        collection = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
-        handled_check_names = set()  # type: Set[CheckPluginNameStr]
+        collection: Dict[ManPageCatalogPath, List[Dict]] = {}
+        handled_check_names: Set[CheckPluginNameStr] = set()
 
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
@@ -192,7 +192,7 @@ class ModeCheckPlugins(WatoMode):
         def strip_manpage_entry(entry):
             return {k: v for k, v in entry.items() if k in ["name", "agents", "title"]}
 
-        tree = {}  # type: Dict[str, Any]
+        tree: Dict[str, Any] = {}
         if len(self._path) > 0:
             only_path = tuple(self._path)
         else:

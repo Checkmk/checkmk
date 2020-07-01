@@ -50,26 +50,21 @@ from cmk.gui.plugins.wato import (
 
 class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
     @abc.abstractproperty
-    def type_name(self):
-        # type: () -> GroupType
+    def type_name(self) -> GroupType:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _load_groups(self):
-        # type: () -> Dict
+    def _load_groups(self) -> Dict:
         raise NotImplementedError()
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(ModeGroups, self).__init__()
         self._groups = self._load_groups()
 
-    def buttons(self):
-        # type: () -> None
+    def buttons(self) -> None:
         global_buttons()
 
-    def action(self):
-        # type: () -> ActionResult
+    def action(self) -> ActionResult:
         if html.request.var('_delete'):
             delname = html.request.get_ascii_input_mandatory("_delete")
             usages = watolib.find_usages_of_group(delname, self.type_name)
@@ -95,8 +90,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
 
         return None
 
-    def _page_no_groups(self):
-        # type: () -> None
+    def _page_no_groups(self) -> None:
         html.div(_("No groups are defined yet."), class_="info")
 
     def _collect_additional_data(self):
@@ -116,8 +110,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
         table.cell(_("Name"), escaping.escape_attribute(name))
         table.cell(_("Alias"), escaping.escape_attribute(group['alias']))
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         if not self._groups:
             self._page_no_groups()
             return
@@ -132,13 +125,11 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
 
 class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
     @abc.abstractproperty
-    def type_name(self):
-        # type: () -> GroupType
+    def type_name(self) -> GroupType:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _load_groups(self):
-        # type: () -> Dict
+    def _load_groups(self) -> Dict:
         raise NotImplementedError()
 
     def __init__(self):
@@ -149,8 +140,7 @@ class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
 
         super(ModeEditGroup, self).__init__()
 
-    def _from_vars(self):
-        # type: () -> None
+    def _from_vars(self) -> None:
         self._name = html.request.get_ascii_input("edit")  # missing -> new group
         self._new = self._name is None
 
@@ -173,18 +163,15 @@ class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
         except KeyError:
             raise MKUserError(None, _("This group does not exist."))
 
-    def buttons(self):
-        # type: () -> None
+    def buttons(self) -> None:
         html.context_button(
             _("All groups"),
             watolib.folder_preserving_link([("mode", "%s_groups" % self.type_name)]), "back")
 
-    def _determine_additional_group_data(self):
-        # type: () -> None
+    def _determine_additional_group_data(self) -> None:
         pass
 
-    def action(self):
-        # type: () -> ActionResult
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return "%s_groups" % self.type_name
 
@@ -204,8 +191,7 @@ class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
     def _show_extra_page_elements(self):
         pass
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         html.begin_form("group")
         forms.header(_("Properties"))
         forms.section(_("Name"), simple=not self._new)

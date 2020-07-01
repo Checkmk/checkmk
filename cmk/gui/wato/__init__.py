@@ -343,7 +343,7 @@ from cmk.gui.plugins.watolib.utils import (
     configvar_order,
 )
 
-modes = {}  # type: Dict[Any, Any]
+modes: Dict[Any, Any] = {}
 
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_confirm,
@@ -403,8 +403,7 @@ if TYPE_CHECKING:
 
 
 @cmk.gui.pages.register("wato")
-def page_handler():
-    # type: () -> None
+def page_handler() -> None:
     initialize_wato_html_head()
 
     if not config.wato_enabled:
@@ -435,8 +434,8 @@ def page_handler():
         _wato_page_handler(current_mode, mode_permissions, mode_class)
 
 
-def _wato_page_handler(current_mode, mode_permissions, mode_class):
-    # type: (str, List[PermissionName], Type[WatoMode]) -> None
+def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName],
+                       mode_class: Type[WatoMode]) -> None:
     try:
         init_wato_datastructures(with_wato_lock=not html.is_transaction())
     except Exception:
@@ -453,7 +452,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
     mode = mode_class()
 
     # Do actions (might switch mode)
-    action_message = None  # type: _Optional[str]
+    action_message: _Optional[str] = None
     if html.is_transaction():
         try:
             config.user.need_permission("wato.edit")
@@ -546,8 +545,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
                      display_options.enabled(display_options.H))
 
 
-def get_mode_permission_and_class(mode_name):
-    # type: (str) -> _Tuple[List[PermissionName], Type[WatoMode]]
+def get_mode_permission_and_class(mode_name: str) -> _Tuple[List[PermissionName], Type[WatoMode]]:
     mode_class = mode_registry.get(mode_name, ModeNotImplemented)
     mode_permissions = mode_class.permissions()
 
@@ -565,16 +563,14 @@ def get_mode_permission_and_class(mode_name):
     return mode_permissions, mode_class
 
 
-def ensure_mode_permissions(mode_permissions):
-    # type: (List[PermissionName]) -> None
+def ensure_mode_permissions(mode_permissions: List[PermissionName]) -> None:
     for pname in mode_permissions:
         if '.' not in pname:
             pname = "wato." + pname
         config.user.need_permission(pname)
 
 
-def _show_read_only_warning():
-    # type: () -> None
+def _show_read_only_warning() -> None:
     if cmk.gui.watolib.read_only.is_enabled():
         html.show_warning(cmk.gui.watolib.read_only.message())
 
@@ -595,8 +591,7 @@ def _show_read_only_warning():
 # Executed by the multisite cron job once a minute. Is only executed in the
 # master site. Finds the next folder to scan and starts it via WATO
 # automation. The result is written to the folder in the master site.
-def execute_network_scan_job():
-    # type: () -> None
+def execute_network_scan_job() -> None:
     init_wato_datastructures(with_wato_lock=True)
 
     if watolib.is_wato_slave_site():
@@ -618,12 +613,12 @@ def execute_network_scan_job():
               "scan of the folder %s does not exist.") % (run_as, folder.title()))
     config.set_user_by_id(folder.attribute("network_scan")["run_as"])
 
-    result = {
+    result: NetworkScanResult = {
         "start": time.time(),
         "end": True,  # means currently running
         "state": None,
         "output": "The scan is currently running.",
-    }  # type: NetworkScanResult
+    }
 
     # Mark the scan in progress: Is important in case the request takes longer than
     # the interval of the cron job (1 minute). Otherwise the scan might be started
@@ -661,8 +656,7 @@ def execute_network_scan_job():
         config.set_user_by_id(old_user)
 
 
-def find_folder_to_scan():
-    # type: () -> _Optional[CREFolder]
+def find_folder_to_scan() -> '_Optional[CREFolder]':
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
     for folder in watolib.Folder.all_folders().values():
@@ -675,8 +669,7 @@ def find_folder_to_scan():
     return folder_to_scan
 
 
-def add_scanned_hosts_to_folder(folder, found):
-    # type: (CREFolder, NetworkScanFoundHosts) -> None
+def add_scanned_hosts_to_folder(folder: 'CREFolder', found: NetworkScanFoundHosts) -> None:
     network_scan_properties = folder.attribute("network_scan")
 
     translation = network_scan_properties.get("translate_names", {})
@@ -702,8 +695,7 @@ def add_scanned_hosts_to_folder(folder, found):
         folder.save()
 
 
-def save_network_scan_result(folder, result):
-    # type: (CREFolder, NetworkScanResult) -> None
+def save_network_scan_result(folder: 'CREFolder', result: NetworkScanResult) -> None:
     # Reload the folder, lock WATO before to protect against concurrency problems.
     with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
@@ -727,11 +719,10 @@ def save_network_scan_result(folder, result):
 
 modes = {}
 
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 
 
-def load_plugins(force):
-    # type: (bool) -> None
+def load_plugins(force: bool) -> None:
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return

@@ -230,8 +230,8 @@ class ModePatternEditor(WatoMode):
 
             html.end_foldable_container()
 
-    def _get_service_description(self, hostname, check_plugin_name, item):
-        # type: (HostName, CheckPluginNameStr, Item) -> ServiceName
+    def _get_service_description(self, hostname: HostName, check_plugin_name: CheckPluginNameStr,
+                                 item: Item) -> ServiceName:
         # TODO: re-enable once the GUI is using Python3
         #return cmk.base.export.service_description(hostname, check_plugin_name, item)
         assert item is not None

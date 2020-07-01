@@ -27,21 +27,17 @@ from cmk.gui.plugins.wato import (
 @mode_registry.register
 class ModeDownloadAgents(WatoMode):
     @classmethod
-    def name(cls):
-        # type: () -> str
+    def name(cls) -> str:
         return "download_agents"
 
     @classmethod
-    def permissions(cls):
-        # type: () -> List[str]
+    def permissions(cls) -> List[str]:
         return ["download_agents"]
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Agents and Plugins")
 
-    def buttons(self):
-        # type: () -> None
+    def buttons(self) -> None:
         global_buttons()
         if watolib.has_agent_bakery():
             html.context_button(_("Baked agents"),
@@ -49,8 +45,7 @@ class ModeDownloadAgents(WatoMode):
                                 "download_agents")
         html.context_button(_("Release Notes"), "version.py", "mk")
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         html.open_div(class_="rulesets")
         packed = glob.glob(cmk.utils.paths.agents_dir + "/*.deb") \
                 + glob.glob(cmk.utils.paths.agents_dir + "/*.rpm") \
@@ -99,8 +94,7 @@ class ModeDownloadAgents(WatoMode):
                 self._download_table(title, sorted(useful_file_paths))
         html.close_div()
 
-    def _download_table(self, title, paths):
-        # type: (str, List[str]) -> None
+    def _download_table(self, title: str, paths: List[str]) -> None:
         forms.header(title)
         forms.container()
         for path in paths:

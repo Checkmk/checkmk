@@ -606,9 +606,8 @@ class ModeNotifications(NotificationsMode):
 
                 table.cell(_("Nr."), nr + 1, css="number")
                 if "MICROTIME" in context:
-                    date = time.strftime("%Y-%m-%d %H:%M:%S",
-                                         time.localtime(int(context["MICROTIME"]) /
-                                                        1000000.0))  # type: str
+                    date: str = time.strftime("%Y-%m-%d %H:%M:%S",
+                                              time.localtime(int(context["MICROTIME"]) / 1000000.0))
                 else:
                     date = (context.get("SHORTDATETIME") or context.get("LONGDATETIME") or
                             context.get("DATE") or _("Unknown date"))
@@ -896,10 +895,9 @@ class EditNotificationRuleMode(NotificationsMode):
     # TODO: Refactor this mess
     def _vs_notification_rule(self, userid=None):
         if userid:
-            contact_headers = [
-            ]  # type: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]
+            contact_headers: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = []
             section_contacts = []
-            section_override = []  # type: List[DictionaryEntry]
+            section_override: List[DictionaryEntry] = []
         else:
             contact_headers = [
                 (_("Contact Selection"), [
@@ -1003,7 +1001,7 @@ class EditNotificationRuleMode(NotificationsMode):
                  )),
             ]
 
-        bulk_options = [
+        bulk_options: List[DictionaryEntry] = [
             ("count",
              Integer(
                  title=_("Maximum bulk size"),
@@ -1049,10 +1047,9 @@ class EditNotificationRuleMode(NotificationsMode):
                  size=80,
                  default_value=
                  "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts")),
-        ]  # type: List[DictionaryEntry]
+        ]
 
-        def make_interval_entry():
-            # type: () -> List[DictionaryEntry]
+        def make_interval_entry() -> List[DictionaryEntry]:
             return [
                 ("interval",
                  Age(
@@ -1063,13 +1060,13 @@ class EditNotificationRuleMode(NotificationsMode):
                  )),
             ]
 
-        timeperiod_entry = [
+        timeperiod_entry: List[DictionaryEntry] = [
             ("timeperiod",
              watolib.timeperiods.TimeperiodSelection(
                  title=_("Only bulk notifications during the following timeperiod"),)),
-        ]  # type: List[DictionaryEntry]
+        ]
 
-        bulk_outside_entry = [
+        bulk_outside_entry: List[DictionaryEntry] = [
             ("bulk_outside",
              Dictionary(
                  title=_("Also bulk outside of timeperiod"),
@@ -1079,15 +1076,15 @@ class EditNotificationRuleMode(NotificationsMode):
                  columns=1,
                  optional_keys=["bulk_subject"],
              )),
-        ]  # type: List[DictionaryEntry]
+        ]
 
-        headers_part1 = [
+        headers_part1: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
             (_("Rule Properties"),
              ["description", "comment", "disabled", "docu_url", "allow_disable"]),
             (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
-        ]  # type: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]
+        ]
 
-        headers_part2 = [
+        headers_part2: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
             (_("Conditions"), [
                 "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts",
                 "match_exclude_hosts", "match_servicegroups", "match_exclude_servicegroups",
@@ -1097,7 +1094,7 @@ class EditNotificationRuleMode(NotificationsMode):
                 "match_escalation", "match_escalation_throttle", "match_sl", "match_host_event",
                 "match_service_event", "match_ec", "match_notification_comment"
             ]),
-        ]  # type: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]
+        ]
 
         return Dictionary(
             title=_("Rule Properties"),

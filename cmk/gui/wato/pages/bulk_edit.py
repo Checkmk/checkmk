@@ -62,8 +62,7 @@ class ModeBulkEdit(WatoMode):
 
         return "folder", _("Edited %d hosts") % len(host_names)
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         host_names = get_hostnames_from_checkboxes()
         hosts = {host_name: watolib.Folder.current().host(host_name) for host_name in host_names}
         current_host_hash = sha256(ensure_binary(repr(hosts))).hexdigest()

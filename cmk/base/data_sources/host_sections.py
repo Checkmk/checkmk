@@ -6,7 +6,7 @@
 
 import collections.abc
 import sys
-from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, NamedTuple, cast, Dict, List, Optional, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
@@ -43,7 +43,11 @@ from cmk.base.exceptions import MKParseFunctionError
 
 from .abstract import AbstractHostSections
 
-HostKey = Tuple[HostName, Optional[HostAddress], SourceType]
+HostKey = NamedTuple("HostKey", [
+    ("hostname", HostName),
+    ("ipaddress", Optional[HostAddress]),
+    ("source_type", SourceType),
+])
 
 
 class MultiHostSections(collections.abc.MutableMapping):
@@ -114,8 +118,7 @@ class MultiHostSections(collections.abc.MutableMapping):
 
     def get_section_cluster_kwargs(
         self,
-        host_name: HostName,
-        source_type: SourceType,
+        host_key: HostKey,
         parsed_section_names: List[ParsedSectionName],
         service_description: ServiceName,
     ):
@@ -126,26 +129,25 @@ class MultiHostSections(collections.abc.MutableMapping):
         """
         # see which host entries we must use
         nodes_of_clustered_service = self._get_nodes_of_clustered_service(
-            host_name, service_description) or []
-        host_entries = self._get_host_entries(host_name, None)
+            host_key.hostname, service_description) or []
+        host_entries = self._get_host_entries(host_key)
         used_entries = [he for he in host_entries if he[0] in nodes_of_clustered_service]
 
         kwargs: Dict[str, Dict[str, Any]] = {}
-        for node_name, node_ip in used_entries:
-            node_kwargs = self.get_section_kwargs(
-                (node_name, node_ip, source_type),
-                parsed_section_names,
-            )
+        for node_key in used_entries:
+            node_kwargs = self.get_section_kwargs(node_key, parsed_section_names)
             for key, sections_node_data in node_kwargs.items():
-                kwargs.setdefault(key, {})[node_name] = sections_node_data
+                kwargs.setdefault(key, {})[node_key.hostname] = sections_node_data
         # empty it, if nothing was found:
         if all(v is None for s in kwargs.values() for v in s.values()):
             kwargs.clear()
 
         return kwargs
 
-    def get_cache_info(self,
-                       parsed_section_names: List[ParsedSectionName]) -> Optional[Tuple[int, int]]:
+    def get_cache_info(
+        self,
+        parsed_section_names: List[ParsedSectionName],
+    ) -> Optional[Tuple[int, int]]:
         """Aggregate information about the age of the data in the agent sections
         """
         cached_ats: List[int] = []
@@ -191,8 +193,10 @@ class MultiHostSections(collections.abc.MutableMapping):
         return self._parsed_sections.setdefault(cache_key, parsed)
 
     def _get_raw_section(
-            self, host_key: HostKey,
-            parsed_section_name: ParsedSectionName) -> Union[AgentSectionPlugin, SNMPSectionPlugin]:
+        self,
+        host_key: HostKey,
+        parsed_section_name: ParsedSectionName,
+    ) -> Union[AgentSectionPlugin, SNMPSectionPlugin]:
         """Get the raw sections name that will be parsed into the required section
 
         Raw sections may get renamed once they are parsed, if they declare it. This function
@@ -215,8 +219,7 @@ class MultiHostSections(collections.abc.MutableMapping):
 
     def get_section_content(
             self,
-            hostname: HostName,
-            ipaddress: Optional[HostAddress],
+            host_key: HostKey,
             management_board_info: str,
             check_plugin_name: CheckPluginNameStr,
             for_discovery: bool,
@@ -243,12 +246,9 @@ class MultiHostSections(collections.abc.MutableMapping):
 
         section_name = section_name_of(check_plugin_name)
         nodes_of_clustered_service = self._get_nodes_of_clustered_service(
-            hostname, service_description)
-        cache_key = (hostname, ipaddress, management_board_info, section_name, for_discovery,
+            host_key.hostname, service_description)
+        cache_key = (host_key, management_board_info, section_name, for_discovery,
                      bool(nodes_of_clustered_service))
-
-        source_type = (SourceType.MANAGEMENT
-                       if management_board_info == LEGACY_MGMT_ONLY else SourceType.HOST)
 
         try:
             return self._section_content_cache[cache_key]
@@ -256,9 +256,8 @@ class MultiHostSections(collections.abc.MutableMapping):
             pass
 
         section_content = self._get_section_content(
-            hostname,
-            ipaddress,
-            source_type,
+            host_key._replace(source_type=SourceType.MANAGEMENT if management_board_info ==
+                              LEGACY_MGMT_ONLY else SourceType.HOST),
             check_plugin_name,
             SectionName(section_name),
             for_discovery,
@@ -266,12 +265,10 @@ class MultiHostSections(collections.abc.MutableMapping):
         )
 
         # If we found nothing, see if we must check the management board:
-        if (section_content is None and source_type is SourceType.HOST and
+        if (section_content is None and host_key.source_type is SourceType.HOST and
                 management_board_info == LEGACY_HOST_PRECEDENCE):
             section_content = self._get_section_content(
-                hostname,
-                ipaddress,
-                SourceType.MANAGEMENT,
+                host_key._replace(source_type=SourceType.MANAGEMENT),
                 check_plugin_name,
                 SectionName(section_name),
                 for_discovery,
@@ -282,8 +279,10 @@ class MultiHostSections(collections.abc.MutableMapping):
         return section_content
 
     def _get_nodes_of_clustered_service(
-            self, hostname: HostName,
-            service_description: Optional[ServiceName]) -> Optional[List[HostName]]:
+        self,
+        hostname: HostName,
+        service_description: Optional[ServiceName],
+    ) -> Optional[List[HostName]]:
         """Returns the node names if a service is clustered, otherwise 'None' in order to
         decide whether we collect section content of the host or the nodes.
 
@@ -313,34 +312,30 @@ class MultiHostSections(collections.abc.MutableMapping):
 
     def _get_section_content(
         self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        source_type: SourceType,
+        host_key: HostKey,
         check_plugin_name: CheckPluginNameStr,
         section_name: SectionName,
         for_discovery: bool,
         nodes_of_clustered_service: Optional[List[HostName]],
     ) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]:
-
-        # First abstract cluster / non cluster hosts
-        host_entries = self._get_host_entries(hostname, ipaddress)
-
         # Now get the section_content from the required hosts and merge them together to
         # a single section_content. For each host optionally add the node info.
         section_content: Optional[AbstractSectionContent] = None
-        for node_name, node_ip_address in host_entries:
-            if nodes_of_clustered_service and node_name not in nodes_of_clustered_service:
+        for node_key in self._get_host_entries(host_key):
+            if nodes_of_clustered_service and node_key.hostname not in nodes_of_clustered_service:
                 continue
 
-            host_key = (node_name, node_ip_address, source_type)
             try:
-                host_section_content = self._data[host_key].sections[section_name]
+                host_section_content = self._data[node_key].sections[section_name]
             except KeyError:
                 continue
 
-            host_section_content = self._update_with_node_column(host_section_content,
-                                                                 check_plugin_name, node_name,
-                                                                 for_discovery)
+            host_section_content = self._update_with_node_column(
+                host_section_content,
+                check_plugin_name,
+                node_key.hostname,
+                for_discovery,
+            )
 
             if section_content is None:
                 section_content = host_section_content[:]
@@ -354,26 +349,54 @@ class MultiHostSections(collections.abc.MutableMapping):
 
         section_content = self._update_with_parse_function(section_content, section_name)
         section_contents = self._update_with_extra_sections(
+            host_key,
             section_content,
-            hostname,
-            ipaddress,
-            LEGACY_MGMT_ONLY if source_type is SourceType.MANAGEMENT else LEGACY_HOST_ONLY,
+            LEGACY_MGMT_ONLY if host_key.source_type is SourceType.MANAGEMENT else LEGACY_HOST_ONLY,
             section_name,
             for_discovery,
         )
         return section_contents
 
-    def _get_host_entries(
-            self, hostname: HostName,
-            ipaddress: Optional[HostAddress]) -> List[Tuple[HostName, Optional[HostAddress]]]:
-        host_config = self._config_cache.get_host_config(hostname)
+    def _get_host_entries(self, host_key: HostKey) -> List[HostKey]:
+        host_config = self._config_cache.get_host_config(host_key.hostname)
         if host_config.nodes is None:
-            return [(hostname, ipaddress)]
+            return [host_key]
 
-        return [(node_hostname, ip_lookup.lookup_ip_address(node_hostname))
-                for node_hostname in host_config.nodes]
+        return [
+            HostKey(hostname, ip_lookup.lookup_ip_address(hostname), host_key.source_type)
+            for hostname in host_config.nodes
+        ]
 
-    def _update_with_node_column(self, section_content: AbstractSectionContent,
+    def _update_with_extra_sections(
+        self,
+        host_key: HostKey,
+        section_content: ParsedSectionContent,
+        management_board_info: str,
+        section_name: SectionName,
+        for_discovery: bool,
+    ) -> Union[ParsedSectionContent, List[ParsedSectionContent]]:
+        """Adds additional agent sections to the section_content the check receives.
+
+        Please note that this is not a check/subcheck individual setting. This option is related
+        to the agent section.
+        """
+        extra_sections = config.check_info.get(str(section_name), {}).get("extra_sections", [])
+        if not extra_sections:
+            return section_content
+
+        # In case of extra_sections the existing info is wrapped into a new list to which all
+        # extra sections are appended
+        return [section_content] + [
+            self.get_section_content(
+                host_key,
+                management_board_info,
+                extra_section_name,
+                for_discovery,
+            ) for extra_section_name in extra_sections
+        ]
+
+    @staticmethod
+    def _update_with_node_column(section_content: AbstractSectionContent,
                                  check_plugin_name: CheckPluginNameStr, hostname: HostName,
                                  for_discovery: bool) -> AbstractSectionContent:
         """Add cluster node information to the section content
@@ -394,16 +417,18 @@ class MultiHostSections(collections.abc.MutableMapping):
             return section_content  # unknown check_plugin_name or does not want node info -> do nothing
 
         node_name: Optional[HostName] = None
-        if not for_discovery and self._config_cache.clusters_of(hostname):
+        if not for_discovery and config.get_config_cache().clusters_of(hostname):
             node_name = hostname
 
-        return self._add_node_column(section_content, node_name)
+        return MultiHostSections._add_node_column(section_content, node_name)
 
     # TODO: Add correct type hint for node wrapped SectionContent. We would have to create some kind
     # of AbstractSectionContentWithNodeInfo.
     @staticmethod
-    def _add_node_column(section_content: AbstractSectionContent,
-                         nodename: Optional[HostName]) -> AbstractSectionContent:
+    def _add_node_column(
+        section_content: AbstractSectionContent,
+        nodename: Optional[HostName],
+    ) -> AbstractSectionContent:
         new_section_content = []
         node_text = str(nodename) if isinstance(nodename, str) else nodename
         for line in section_content:
@@ -416,39 +441,11 @@ class MultiHostSections(collections.abc.MutableMapping):
                 new_section_content.append([node_text] + line)  # type: ignore[arg-type,operator]
         return new_section_content  # type: ignore[return-value]
 
-    def _update_with_extra_sections(
-        self,
-        section_content: ParsedSectionContent,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        management_board_info: str,
-        section_name: SectionName,
-        for_discovery: bool,
-    ) -> Union[ParsedSectionContent, List[ParsedSectionContent]]:
-        """Adds additional agent sections to the section_content the check receives.
-
-        Please note that this is not a check/subcheck individual setting. This option is related
-        to the agent section.
-        """
-        extra_sections = config.check_info.get(str(section_name), {}).get("extra_sections", [])
-        if not extra_sections:
-            return section_content
-
-        # In case of extra_sections the existing info is wrapped into a new list to which all
-        # extra sections are appended
-        return [section_content] + [
-            self.get_section_content(
-                hostname,
-                ipaddress,
-                management_board_info,
-                extra_section_name,
-                for_discovery,
-            ) for extra_section_name in extra_sections
-        ]
-
     @staticmethod
-    def _update_with_parse_function(section_content: AbstractSectionContent,
-                                    section_name: SectionName) -> ParsedSectionContent:
+    def _update_with_parse_function(
+        section_content: AbstractSectionContent,
+        section_name: SectionName,
+    ) -> ParsedSectionContent:
         """Transform the section_content using the defined parse functions.
 
         Some checks define a parse function that is used to transform the section_content

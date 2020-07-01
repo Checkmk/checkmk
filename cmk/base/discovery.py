@@ -80,7 +80,7 @@ from cmk.base.check_utils import (
     Service,
 )
 from cmk.base.core_config import MonitoringCore
-from cmk.base.data_sources.host_sections import MultiHostSections
+from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
 # Run the discovery queued by check_discovery() - if any
@@ -430,12 +430,12 @@ def _do_discovery_for(
 
     section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
-        (hostname, ipaddress, SourceType.HOST),
+        HostKey(hostname, ipaddress, SourceType.HOST),
         multi_host_sections,
         on_error=on_error,
     )
     discovered_host_labels += _discover_host_labels(
-        (hostname, ipaddress, SourceType.MANAGEMENT),
+        HostKey(hostname, ipaddress, SourceType.MANAGEMENT),
         multi_host_sections,
         on_error=on_error,
     )
@@ -1217,7 +1217,7 @@ def _execute_discovery(
 
     try:
         kwargs = multi_host_sections.get_section_kwargs(
-            (hostname, ipaddress, source_type),
+            HostKey(hostname, ipaddress, source_type),
             check_plugin.sections,
         )
     except Exception as exc:
@@ -1344,12 +1344,12 @@ def _get_discovered_services(
 
     section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
-        (hostname, ipaddress, SourceType.HOST),
+        HostKey(hostname, ipaddress, SourceType.HOST),
         multi_host_sections,
         on_error,
     )
     discovered_host_labels += _discover_host_labels(
-        (hostname, ipaddress, SourceType.MANAGEMENT),
+        HostKey(hostname, ipaddress, SourceType.MANAGEMENT),
         multi_host_sections,
         on_error,
     )

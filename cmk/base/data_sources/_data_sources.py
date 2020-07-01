@@ -26,7 +26,7 @@ from cmk.base.config import HostConfig, SelectedRawSections
 
 from .abstract import DataSource
 from .agent import AgentDataSource, AgentHostSections
-from .host_sections import MultiHostSections
+from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMIManagementBoardDataSource
 from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
@@ -247,7 +247,7 @@ class DataSources(collections.abc.Collection):
             for source in sources:
                 source.set_max_cachefile_age(max_cachefile_age)
                 host_sections = multi_host_sections.setdefault(
-                    (hostname, ipaddress, source.source_type),
+                    HostKey(hostname, ipaddress, source.source_type),
                     AgentHostSections(),
                 )
                 host_sections.update(source.run())
@@ -255,7 +255,7 @@ class DataSources(collections.abc.Collection):
             # Store piggyback information received from all sources of this host. This
             # also implies a removal of piggyback files received during previous calls.
             host_sections = multi_host_sections.setdefault(
-                (hostname, ipaddress, SourceType.HOST),
+                HostKey(hostname, ipaddress, SourceType.HOST),
                 AgentHostSections(),
             )
             cmk.utils.piggyback.store_piggyback_raw_data(

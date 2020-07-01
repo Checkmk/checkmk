@@ -17,7 +17,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources import DataSources, make_sources
 from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.host_sections import MultiHostSections
+from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 
 _TestSection = collections.namedtuple(
     "TestSection",
@@ -116,12 +116,12 @@ def test_get_parsed_section(monkeypatch, node_section_content, expected_result):
 
     multi_host_sections = MultiHostSections()
     multi_host_sections.setdefault(
-        ("node1", "127.0.0.1", SourceType.HOST),
+        HostKey("node1", "127.0.0.1", SourceType.HOST),
         AgentHostSections(sections=node_section_content),
     )
 
     content = multi_host_sections.get_parsed_section(
-        ("node1", "127.0.0.1", SourceType.HOST),
+        HostKey("node1", "127.0.0.1", SourceType.HOST),
         ParsedSectionName("parsed"),
     )
 
@@ -165,7 +165,7 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
         SectionName("three"): NODE_1
     }
 
-    host_key = ("node1", "127.0.0.1", SourceType.HOST)
+    host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
 
     multi_host_sections = MultiHostSections()
     multi_host_sections.setdefault(
@@ -252,17 +252,16 @@ def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_res
 
     multi_host_sections = MultiHostSections()
     multi_host_sections.setdefault(
-        ("node1", "127.0.0.1", SourceType.HOST),
+        HostKey("node1", "127.0.0.1", SourceType.HOST),
         AgentHostSections(sections=node1_section_content),
     )
     multi_host_sections.setdefault(
-        ("node2", "127.0.0.1", SourceType.HOST),
+        HostKey("node2", "127.0.0.1", SourceType.HOST),
         AgentHostSections(sections=node2_section_content),
     )
 
     kwargs = multi_host_sections.get_section_cluster_kwargs(
-        "cluster",
-        SourceType.HOST,
+        HostKey("cluster", None, SourceType.HOST),
         [ParsedSectionName(n) for n in required_sections],
         "_service_description",
     )
@@ -326,13 +325,12 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
     multi_host_sections = MultiHostSections()
     for nodename, node_section_content in host_entries:
         multi_host_sections.setdefault(
-            (nodename, "127.0.0.1", SourceType.HOST),
+            HostKey(nodename, "127.0.0.1", SourceType.HOST),
             AgentHostSections(sections={SectionName("section_plugin_name"): node_section_content}),
         )
 
     section_content = multi_host_sections.get_section_content(
-        hostname,
-        "127.0.0.1",
+        HostKey(hostname, "127.0.0.1", SourceType.HOST),
         check_api_utils.HOST_ONLY,
         "section_plugin_name",
         False,
@@ -342,8 +340,7 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
            "Section content: Expected '%s' but got '%s'" % (expected_result, section_content)
 
     section_content = multi_host_sections.get_section_content(
-        hostname,
-        "127.0.0.1",
+        HostKey(hostname, "127.0.0.1", SourceType.HOST),
         check_api_utils.HOST_PRECEDENCE,
         "section_plugin_name",
         False,
@@ -353,8 +350,7 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
            "Section content: Expected '%s' but got '%s'" % (expected_result, section_content)
 
     section_content = multi_host_sections.get_section_content(
-        hostname,
-        "127.0.0.1",
+        HostKey(hostname, "127.0.0.1", SourceType.MANAGEMENT),
         check_api_utils.MGMT_ONLY,
         "section_plugin_name",
         False,
@@ -395,7 +391,7 @@ def test_get_host_sections(monkeypatch):
     mhs = sources.get_host_sections(nodes, max_cachefile_age=host_config.max_cachefile_age)
     assert len(mhs) == 1
 
-    key = (hostname, address, SourceType.HOST)
+    key = HostKey(hostname, address, SourceType.HOST)
     assert key in mhs
     section = mhs[key]
     assert not section.sections
@@ -445,7 +441,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     for host, addr in hosts.items():
         remove_source_status_file = cmk.utils.piggyback.remove_source_status_file
         remove_source_status_file.assert_any_call(host)  # type: ignore[attr-defined]
-        key = (host, addr, SourceType.HOST)
+        key = HostKey(host, addr, SourceType.HOST)
         assert key in mhs
         section = mhs[key]
         assert not section.sections

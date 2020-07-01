@@ -71,7 +71,8 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
     wrap_parameters,
 )
 from cmk.base.check_utils import LegacyCheckParameters, Service
-from cmk.base.data_sources.host_sections import MultiHostSections
+from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
+from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -418,12 +419,11 @@ def get_aggregated_result(
     kwargs = {}
     try:
         kwargs = multi_host_sections.get_section_cluster_kwargs(
-            host_config.hostname,
-            source_type,
+            HostKey(host_config.hostname, None, source_type),
             plugin.sections,
             service.description,
         ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
-            (host_config.hostname, ipaddress, source_type),
+            HostKey(host_config.hostname, ipaddress, source_type),
             plugin.sections,
         )
 
@@ -473,15 +473,20 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
     section_name = section_name_of(service.check_plugin_name)
 
     section_content = None
+    mgmt_board_info = config.get_management_board_precedence(section_name, config.check_info)
     try:
-        # TODO: There is duplicate code with discovery._execute_discovery(). Find a common place!
+        # TODO: There is duplicate code with discovery._execute_discovery().
         section_content = multi_host_sections.get_section_content(
-            hostname,
-            ipaddress,
-            config.get_management_board_precedence(section_name, config.check_info),
+            HostKey(
+                hostname,
+                ipaddress,
+                SourceType.MANAGEMENT if mgmt_board_info == LEGACY_MGMT_ONLY else SourceType.HOST,
+            ),
+            mgmt_board_info,
             section_name,
             for_discovery=False,
-            service_description=service.description)
+            service_description=service.description,
+        )
 
         # TODO: Move this to a helper function
         if section_content is None:  # No data for this check type

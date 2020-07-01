@@ -28,6 +28,7 @@ from cmk.utils.type_defs import (
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
+    SourceType,
 )
 
 import cmk.snmplib.snmp_scan as snmp_scan
@@ -39,7 +40,7 @@ import cmk.base.data_sources as data_sources
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
-from cmk.base.data_sources.host_sections import MultiHostSections
+from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.data_sources.snmp import SNMPHostSections
 from cmk.base.discovered_labels import HostLabel
 
@@ -294,7 +295,7 @@ def _do_inv_for_realhost(host_config: config.HostConfig, sources: data_sources.D
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be
                 # sections for inventory plugins which were not fetched yet.
                 host_sections = multi_host_sections.setdefault(
-                    (hostname, ipaddress, source.source_type),
+                    HostKey(hostname, ipaddress, source.source_type),
                     SNMPHostSections(),
                 )
                 source.set_fetched_raw_section_names(set(host_sections.sections))
@@ -310,8 +311,7 @@ def _do_inv_for_realhost(host_config: config.HostConfig, sources: data_sources.D
     console.verbose("Plugins:")
     for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
         section_content = multi_host_sections.get_section_content(
-            hostname,
-            ipaddress,
+            HostKey(hostname, ipaddress, SourceType.HOST),
             check_api_utils.HOST_PRECEDENCE,
             section_name,
             for_discovery=False,

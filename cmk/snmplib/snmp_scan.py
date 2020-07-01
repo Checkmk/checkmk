@@ -25,8 +25,8 @@ SNMPScanSection = NamedTuple("SNMPScanSection", [
 ])
 
 
-def _evaluate_snmp_detection(detect_spec, cp_name, do_snmp_scan, *, backend):
-    # type: (SNMPDetectSpec, str, bool, ABCSNMPBackend) -> bool
+def _evaluate_snmp_detection(detect_spec: SNMPDetectSpec, cp_name: str, do_snmp_scan: bool, *,
+                             backend: ABCSNMPBackend) -> bool:
     """Evaluate a SNMP detection specification
 
     Return True if and and only if at least all conditions in one "line" are True
@@ -38,8 +38,8 @@ def _evaluate_snmp_detection(detect_spec, cp_name, do_snmp_scan, *, backend):
         for alternative in detect_spec)
 
 
-def _evaluate_snmp_detection_atom(atom, cp_name, do_snmp_scan, *, backend):
-    # type: (SNMPDetectAtom, str, bool, ABCSNMPBackend) -> bool
+def _evaluate_snmp_detection_atom(atom: SNMPDetectAtom, cp_name: str, do_snmp_scan: bool, *,
+                                  backend: ABCSNMPBackend) -> bool:
     oid, pattern, flag = atom
     value = snmp_modes.get_single_oid(
         oid,
@@ -64,8 +64,9 @@ SectionNameFilterFunction = Callable[[
 
 
 # gather auto_discovered check_plugin_names for this host
-def gather_available_raw_section_names(sections, on_error, do_snmp_scan, *, binary_host, backend):
-    # type: (Iterable[SNMPScanSection], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginNameStr]
+def gather_available_raw_section_names(sections: Iterable[SNMPScanSection], on_error: str,
+                                       do_snmp_scan: bool, *, binary_host: bool,
+                                       backend: ABCSNMPBackend) -> Set[CheckPluginNameStr]:
     try:
         return _snmp_scan(
             sections,
@@ -87,8 +88,12 @@ OID_SYS_DESCR = ".1.3.6.1.2.1.1.1.0"
 OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 
 
-def _snmp_scan(sections, on_error="ignore", do_snmp_scan=True, *, binary_host, backend):
-    # type: (Iterable[SNMPScanSection], str, bool, bool, ABCSNMPBackend) -> Set[CheckPluginNameStr]
+def _snmp_scan(sections: Iterable[SNMPScanSection],
+               on_error: str = "ignore",
+               do_snmp_scan: bool = True,
+               *,
+               binary_host: bool,
+               backend: ABCSNMPBackend) -> Set[CheckPluginNameStr]:
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
     _snmp_scan_cache_description(
@@ -106,8 +111,8 @@ def _snmp_scan(sections, on_error="ignore", do_snmp_scan=True, *, binary_host, b
     return found_plugins
 
 
-def _snmp_scan_cache_description(binary_host, *, do_snmp_scan, backend):
-    # type: (bool, bool, ABCSNMPBackend) -> None
+def _snmp_scan_cache_description(binary_host: bool, *, do_snmp_scan: bool,
+                                 backend: ABCSNMPBackend) -> None:
     if not binary_host:
         for oid, name in [(OID_SYS_DESCR, "system description"), (OID_SYS_OBJ, "system object")]:
             value = snmp_modes.get_single_oid(oid, do_snmp_scan=do_snmp_scan, backend=backend)
@@ -123,9 +128,9 @@ def _snmp_scan_cache_description(binary_host, *, do_snmp_scan, backend):
         snmp_cache.set_single_oid_cache(OID_SYS_OBJ, "")
 
 
-def _snmp_scan_find_plugins(sections, *, do_snmp_scan, on_error, backend):
-    # type: (Iterable[SNMPScanSection], bool, str, ABCSNMPBackend) -> Set[CheckPluginNameStr]
-    found_plugins = set()  # type: Set[CheckPluginNameStr]
+def _snmp_scan_find_plugins(sections: Iterable[SNMPScanSection], *, do_snmp_scan: bool,
+                            on_error: str, backend: ABCSNMPBackend) -> Set[CheckPluginNameStr]:
+    found_plugins: Set[CheckPluginNameStr] = set()
     for name, specs in sections:
         try:
             if _evaluate_snmp_detection(
@@ -147,8 +152,7 @@ def _snmp_scan_find_plugins(sections, *, do_snmp_scan, on_error, backend):
     return found_plugins
 
 
-def _output_snmp_check_plugins(title, collection):
-    # type: (str, Iterable[CheckPluginNameStr]) -> None
+def _output_snmp_check_plugins(title: str, collection: Iterable[CheckPluginNameStr]) -> None:
     if collection:
         collection_out = " ".join(sorted(collection))
     else:

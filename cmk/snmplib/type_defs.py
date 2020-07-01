@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import abc
 import collections
 import string
@@ -88,12 +89,11 @@ class SNMPHostConfig(
             ("record_stats", bool),
         ])):
     @property
-    def is_snmpv3_host(self):
-        # type: () -> bool
+    def is_snmpv3_host(self) -> bool:
         return isinstance(self.credentials, tuple)
 
-    def snmpv3_contexts_of(self, check_plugin_name):
-        # type: (Optional[_CheckPluginName]) -> List[SNMPContext]
+    def snmpv3_contexts_of(self,
+                           check_plugin_name: Optional[_CheckPluginName]) -> List[SNMPContext]:
         if not check_plugin_name or not self.is_snmpv3_host:
             return [None]
         for ty, rules in self.snmpv3_contexts:
@@ -101,15 +101,13 @@ class SNMPHostConfig(
                 return rules
         return [None]
 
-    def update(self, **kwargs):
-        # type: (Dict[str, Any]) -> SNMPHostConfig
+    def update(self, **kwargs: Dict[str, Any]) -> "SNMPHostConfig":
         """Return a new SNMPHostConfig with updated attributes."""
         cfg = self._asdict()
         cfg.update(**kwargs)
         return SNMPHostConfig(**cfg)
 
-    def ensure_str(self, value):
-        # type: (AnyStr) -> str
+    def ensure_str(self, value: AnyStr) -> str:
         if self.character_encoding:
             return ensure_str(value, self.character_encoding)
         try:
@@ -119,24 +117,22 @@ class SNMPHostConfig(
 
 
 class ABCSNMPBackend(metaclass=abc.ABCMeta):
-    def __init__(self, snmp_config):
-        # type: (SNMPHostConfig) -> None
+    def __init__(self, snmp_config: SNMPHostConfig) -> None:
         super(ABCSNMPBackend, self).__init__()
         self.config = snmp_config
 
     @property
-    def hostname(self):
-        # type: () -> _HostName
+    def hostname(self) -> _HostName:
         return self.config.hostname
 
     @property
-    def address(self):
-        # type: () -> _HostAddress
+    def address(self) -> _HostAddress:
         return self.config.ipaddress
 
     @abc.abstractmethod
-    def get(self, oid, context_name=None):
-        # type: (OID, Optional[SNMPContextName]) -> Optional[SNMPRawValue]
+    def get(self,
+            oid: OID,
+            context_name: Optional[SNMPContextName] = None) -> Optional[SNMPRawValue]:
         """Fetch a single OID from the given host in the given SNMP context
         The OID may end with .* to perform a GETNEXT request. Otherwise a GET
         request is sent to the given host.
@@ -144,8 +140,11 @@ class ABCSNMPBackend(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
-        # type: (OID, Optional[_CheckPluginName], Optional[OID], Optional[SNMPContextName]) -> SNMPRowInfo
+    def walk(self,
+             oid: OID,
+             check_plugin_name: Optional[_CheckPluginName] = None,
+             table_base_oid: Optional[OID] = None,
+             context_name: Optional[SNMPContextName] = None) -> SNMPRowInfo:
         return []
 
 
@@ -162,8 +161,7 @@ class OIDSpec:
     VALID_CHARACTERS = '.' + string.digits
 
     @classmethod
-    def validate(cls, value):
-        # type: (str) -> None
+    def validate(cls, value: str) -> None:
         if not isinstance(value, str):
             raise TypeError("expected a non-empty string: %r" % (value,))
         if not value:
@@ -174,16 +172,14 @@ class OIDSpec:
         if value.endswith('.'):
             raise ValueError("%r should not end with '.'" % (value,))
 
-    def __init__(self, value):
-        # type: (Union[OIDSpec, str]) -> None
+    def __init__(self, value: Union["OIDSpec", str]) -> None:
         if isinstance(value, OIDSpec):
             value = str(value)
 
         self.validate(value)
         self._value = value
 
-    def __add__(self, right):
-        # type: (Any) -> OIDSpec
+    def __add__(self, right: Any) -> "OIDSpec":
         """Concatenate two OID specs
         We only allow adding (left to right) a "base" (starting with a '.')
         to an "column" (not starting with '.').
@@ -195,18 +191,15 @@ class OIDSpec:
             raise ValueError("can only add full OIDs to partial OIDs")
         return right.__class__("%s.%s" % (self, right))
 
-    def __eq__(self, other):
-        # type: (Any) -> bool
+    def __eq__(self, other: Any) -> bool:
         if other.__class__ != self.__class__:
             return False
         return self._value == other._value
 
-    def __str__(self):
-        # type: () -> str
+    def __str__(self) -> str:
         return self._value
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return "%s(%r)" % (self.__class__.__name__, self._value)
 
 
@@ -245,38 +238,35 @@ class SNMPTree:
     be handed a list of lists with the values of the corresponding
     OIDs.
     """
-    def __init__(self, *, base, oids):
-        # type: (Union[OIDSpec, str], List[Union[str, OIDSpec, OIDEnd]]) -> None
+    def __init__(self, *, base: Union[OIDSpec, str], oids: List[Union[str, OIDSpec,
+                                                                      OIDEnd]]) -> None:
         super(SNMPTree, self).__init__()
         self._base = self._sanitize_base(base)
         self._oids = self._sanitize_oids(oids)
 
-    def to_json(self):
-        # type: () -> Dict[str, Any]
+    def to_json(self) -> Dict[str, Any]:
         return {
             "base": SNMPTree._serialize_oid(self.base),
             "oids": [SNMPTree._serialize_oid(oid) for oid in self.oids],
         }
 
     @classmethod
-    def from_json(cls, serialized):
-        # type: (Dict[str, Any]) -> SNMPTree
+    def from_json(cls, serialized: Dict[str, Any]) -> "SNMPTree":
         return cls(
             base=SNMPTree._deserialize_base(*serialized["base"]),
             oids=[SNMPTree._deserialize_oids(*oid) for oid in serialized["oids"]],
         )
 
     @staticmethod
-    def _sanitize_base(base):
-        # type: (Union[OIDSpec, str]) -> OIDSpec
+    def _sanitize_base(base: Union[OIDSpec, str]) -> OIDSpec:
         oid_base = OIDSpec(base)
         if not str(oid_base).startswith('.'):
             raise ValueError("%r must start with '.'" % (oid_base,))
         return oid_base
 
     @staticmethod
-    def _sanitize_oids(oids):
-        # type: (List[Union[str, OIDSpec, OIDEnd]]) -> List[Union[OIDSpec, OIDEndCompat]]
+    def _sanitize_oids(
+            oids: List[Union[str, OIDSpec, OIDEnd]]) -> List[Union[OIDSpec, OIDEndCompat]]:
         if not isinstance(oids, list):
             raise TypeError("oids must be a list")
 
@@ -305,18 +295,15 @@ class SNMPTree:
         return typed_oids  # type: ignore[return-value] # allow for legacy code
 
     @property
-    def base(self):
-        # type: () -> OIDSpec
+    def base(self) -> OIDSpec:
         return self._base
 
     @property
-    def oids(self):
-        # type: () -> List[Union[OIDSpec, OIDEndCompat]]
+    def oids(self) -> List[Union[OIDSpec, OIDEndCompat]]:
         return self._oids
 
     @staticmethod
-    def _serialize_oid(oid):
-        # type: (Union[OIDSpec, OIDEndCompat]) -> Tuple[str, Union[str, int]]
+    def _serialize_oid(oid: Union[OIDSpec, OIDEndCompat]) -> Tuple[str, Union[str, int]]:
         if isinstance(oid, OIDSpec):
             return type(oid).__name__, str(oid)
         if isinstance(oid, OIDEndCompat):
@@ -324,8 +311,7 @@ class SNMPTree:
         raise TypeError(oid)
 
     @staticmethod
-    def _deserialize_base(type_, value):
-        # type: (str, str) -> OIDSpec
+    def _deserialize_base(type_: str, value: str) -> OIDSpec:
         # Note: base *cannot* be OIDEnd.
         try:
             return {
@@ -337,8 +323,7 @@ class SNMPTree:
             raise TypeError(type_) from exc
 
     @staticmethod
-    def _deserialize_oids(type_, value):
-        # type: (str, Union[str, int]) -> Union[str, OIDSpec, OIDEnd]
+    def _deserialize_oids(type_: str, value: Union[str, int]) -> Union[str, OIDSpec, OIDEnd]:
         try:
             return {
                 "OIDSpec": OIDSpec,
@@ -349,12 +334,10 @@ class SNMPTree:
         except LookupError as exc:
             raise TypeError(type_) from exc
 
-    def __eq__(self, other):
-        # type: (Any) -> bool
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
             return False
         return self.__dict__ == other.__dict__
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return "%s(base=%r, oids=%r)" % (self.__class__.__name__, self.base, self.oids)

@@ -14,8 +14,7 @@ from .type_defs import OID, OIDFunction, SNMPScanFunction
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 
 
-def binstring_to_int(binstring):
-    # type: (bytes) -> int
+def binstring_to_int(binstring: bytes) -> int:
     """Convert a string to an integer.
 
     This is done by consideren the string to be a little endian byte string.
@@ -44,25 +43,20 @@ class MutexScanRegistry:
     meaning that the fallback function will only be evaluated if all of the
     scan functions registered earlier return something falsey.
     """
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(MutexScanRegistry, self).__init__()
-        self._specific_scans = []  # type: List[SNMPScanFunction]
+        self._specific_scans: List[SNMPScanFunction] = []
 
-    def _is_specific(self, oid):
-        # type: (OIDFunction) -> bool
+    def _is_specific(self, oid: OIDFunction) -> bool:
         return any(scan(oid) for scan in self._specific_scans)
 
-    def register(self, scan_function):
-        # type: (SNMPScanFunction) -> SNMPScanFunction
+    def register(self, scan_function: SNMPScanFunction) -> SNMPScanFunction:
         self._specific_scans.append(scan_function)
         return scan_function
 
-    def as_fallback(self, scan_function):
-        # type: (SNMPScanFunction) -> SNMPScanFunction
+    def as_fallback(self, scan_function: SNMPScanFunction) -> SNMPScanFunction:
         @functools.wraps(scan_function)
-        def wrapper(oid):
-            # type: (OIDFunction) -> bool
+        def wrapper(oid: OIDFunction) -> bool:
             if self._is_specific(oid):
                 return False
             return scan_function(oid)

@@ -28,8 +28,7 @@ class SectionStore:
         self.path = path
         self._logger = logger
 
-    def store(self, sections):
-        # type: (BoundedAbstractPersistedSections) -> None
+    def store(self, sections: BoundedAbstractPersistedSections) -> None:
         if not sections:
             return
 
@@ -47,8 +46,7 @@ class SectionStore:
     # TODO: This is not race condition free when modifying the data. Either remove
     # the possible write here and simply ignore the outdated sections or lock when
     # reading and unlock after writing
-    def load(self, keep_outdated):
-        # type: (bool) -> BoundedAbstractPersistedSections
+    def load(self, keep_outdated: bool) -> BoundedAbstractPersistedSections:
         raw_sections_data = store.load_object_from_file(self.path, default={})
         sections: BoundedAbstractPersistedSections = {  # type: ignore[assignment]
             SectionName(k): v for k, v in raw_sections_data.items()
@@ -65,8 +63,8 @@ class SectionStore:
 
         return sections
 
-    def _filter(self, sections):
-        # type: (BoundedAbstractPersistedSections) -> BoundedAbstractPersistedSections
+    def _filter(self,
+                sections: BoundedAbstractPersistedSections) -> BoundedAbstractPersistedSections:
         now = time.time()
         for section_name, entry in list(sections.items()):
             if len(entry) == 2:
@@ -83,15 +81,15 @@ class SectionStore:
 
 class FileCache:
     def __init__(
-            self,
-            path,  # type: Union[str, Path]
-            max_cachefile_age,  # type: Optional[int]
-            is_agent_cache_disabled,  # type: bool
-            may_use_cache_file,  # type: bool
-            use_outdated_cache_file,  # type: bool
-            from_cache_file,
-            to_cache_file,
-            logger,  # type: logging.Logger
+        self,
+        path: Union[str, Path],
+        max_cachefile_age: Optional[int],
+        is_agent_cache_disabled: bool,
+        may_use_cache_file: bool,
+        use_outdated_cache_file: bool,
+        from_cache_file,
+        to_cache_file,
+        logger: logging.Logger,
     ):
         # type (...) -> None
         super(FileCache, self).__init__()
@@ -104,8 +102,7 @@ class FileCache:
         self._to_cache_file = to_cache_file
         self._logger = logger
 
-    def read(self):
-        # type: () -> Optional[BoundedAbstractRawData]
+    def read(self) -> Optional[BoundedAbstractRawData]:
         assert self._max_cachefile_age is not None
         if not self.path.exists():
             self._logger.debug("Not using cache (Does not exist)")
@@ -136,8 +133,7 @@ class FileCache:
         self._logger.log(VERBOSE, "Using data from cache file %s", self.path)
         return self._from_cache_file(result)
 
-    def write(self, raw_data):
-        # type: (BoundedAbstractRawData) -> None
+    def write(self, raw_data: BoundedAbstractRawData) -> None:
         if self._is_agent_cache_disabled:
             self._logger.debug("Not writing data to cache file (Cache usage disabled)")
             return

@@ -40,24 +40,20 @@ class ProgramDataSource(AgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
     @property
     @abc.abstractmethod
-    def source_cmdline(self):
-        # type: () -> str
+    def source_cmdline(self) -> str:
         """Return the command line to the source."""
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
-    def source_stdin(self):
-        # type: () -> Optional[str]
+    def source_stdin(self) -> Optional[str]:
         """Return the standard in of the source, or None."""
         raise NotImplementedError()
 
-    def _cpu_tracking_id(self):
-        # type: () -> str
+    def _cpu_tracking_id(self) -> str:
         return "ds"
 
-    def _execute(self):
-        # type: () -> RawAgentData
+    def _execute(self) -> RawAgentData:
         self._logger.debug("Calling external program %r" % (self.source_cmdline))
         with ProgramDataFetcher(
                 self.source_cmdline,
@@ -67,8 +63,7 @@ class ProgramDataSource(AgentDataSource):
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 
-    def describe(self):
-        # type: () -> str
+    def describe(self) -> str:
         """Return a short textual description of the agent"""
         response = ["Program: %s" % self.source_cmdline]
         if self.source_stdin:
@@ -78,14 +73,13 @@ class ProgramDataSource(AgentDataSource):
 
 class DSProgramDataSource(ProgramDataSource):
     def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            command_template,  # type: str
-            selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
-            main_data_source=False,  # type: bool
-    ):
-        # type: (...) -> None
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        command_template: str,
+        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
+        main_data_source: bool = False,
+    ) -> None:
         super(DSProgramDataSource, self).__init__(
             hostname,
             ipaddress,
@@ -95,19 +89,16 @@ class DSProgramDataSource(ProgramDataSource):
         )
         self._command_template = command_template
 
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         return "agent"
 
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         """Return a unique (per host) textual identification of the data source"""
         program = self.source_cmdline.split(" ")[0]
         return os.path.basename(program)
 
     @property
-    def source_cmdline(self):
-        # type: () -> str
+    def source_cmdline(self) -> str:
         cmd = self._command_template
         cmd = self._translate_legacy_macros(cmd)
         cmd = self._translate_host_macros(cmd)
@@ -117,13 +108,11 @@ class DSProgramDataSource(ProgramDataSource):
     def source_stdin(self):
         return None
 
-    def _translate_legacy_macros(self, cmd):
-        # type: (str) -> str
+    def _translate_legacy_macros(self, cmd: str) -> str:
         # Make "legacy" translation. The users should use the $...$ macros in future
         return cmd.replace("<IP>", self._ipaddress or "").replace("<HOST>", self._hostname)
 
-    def _translate_host_macros(self, cmd):
-        # type: (str) -> str
+    def _translate_host_macros(self, cmd: str) -> str:
         attrs = core_config.get_host_attributes(self._hostname, self._config_cache)
         if self._host_config.is_cluster:
             parents_list = core_config.get_cluster_nodes_for_config(self._config_cache,
@@ -139,15 +128,14 @@ class DSProgramDataSource(ProgramDataSource):
 
 class SpecialAgentDataSource(ProgramDataSource):
     def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            special_agent_id,  # type: str
-            params,  # type: Dict
-            selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
-            main_data_source=False,  # type: bool
-    ):
-        # type: (...) -> None
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        special_agent_id: str,
+        params: Dict,
+        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
+        main_data_source: bool = False,
+    ) -> None:
         self._special_agent_id = special_agent_id
         super(SpecialAgentDataSource, self).__init__(
             hostname,
@@ -158,39 +146,33 @@ class SpecialAgentDataSource(ProgramDataSource):
         )
         self._params = params
 
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         return "special_%s" % self._special_agent_id
 
     @property
-    def special_agent_plugin_file_name(self):
-        # type: () -> str
+    def special_agent_plugin_file_name(self) -> str:
         return "agent_%s" % self._special_agent_id
 
     @property
-    def _source_path(self):
-        # type: () -> Path
+    def _source_path(self) -> Path:
         local_path = cmk.utils.paths.local_agents_dir / "special" / self.special_agent_plugin_file_name
         if local_path.exists():
             return local_path
         return Path(cmk.utils.paths.agents_dir) / "special" / self.special_agent_plugin_file_name
 
     @property
-    def _source_args(self):
-        # type: () -> str
+    def _source_args(self) -> str:
         info_func = config.special_agent_info[self._special_agent_id]
         agent_configuration = info_func(self._params, self._hostname, self._ipaddress)
         return core_config.active_check_arguments(self._hostname, None, agent_configuration)
 
     @property
-    def source_cmdline(self):
-        # type: () -> str
+    def source_cmdline(self) -> str:
         """Create command line using the special_agent_info"""
         return "%s %s" % (self._source_path, self._source_args)
 
     @property
-    def source_stdin(self):
-        # type: () -> Optional[str]
+    def source_stdin(self) -> Optional[str]:
         """Create command line using the special_agent_info"""
         info_func = config.special_agent_info[self._special_agent_id]
         agent_configuration = info_func(self._params, self._hostname, self._ipaddress)

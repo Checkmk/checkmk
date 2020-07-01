@@ -28,13 +28,12 @@ from .agent import AgentDataSource
 
 class PiggyBackDataSource(AgentDataSource):
     def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            selected_raw_sections=None,  # type: Optional[Dict[SectionName, config.SectionPlugin]]
-            main_data_source=False,  # type: bool
-    ):
-        # type: (...) -> None
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
+        main_data_source: bool = False,
+    ) -> None:
         super(PiggyBackDataSource, self).__init__(
             hostname,
             ipaddress,
@@ -42,28 +41,24 @@ class PiggyBackDataSource(AgentDataSource):
             {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
             main_data_source=main_data_source,
         )
-        self._summary = None  # type: Optional[ServiceCheckResult]
+        self._summary: Optional[ServiceCheckResult] = None
         self._time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings(
             piggybacked_hostname=self._hostname)
 
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         return "piggyback"
 
-    def describe(self):
-        # type: () -> str
+    def describe(self) -> str:
         path = os.path.join(tmp_dir, "piggyback", self._hostname)
         return "Process piggyback data from %s" % path
 
-    def _execute(self):
-        # type: () -> RawAgentData
+    def _execute(self) -> RawAgentData:
         with PiggyBackDataFetcher(self._hostname, self._ipaddress, self._time_settings) as fetcher:
             self._summary = fetcher.summary()
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 
-    def _get_raw_data(self):
-        # type: () -> Tuple[RawAgentData, bool]
+    def _get_raw_data(self) -> Tuple[RawAgentData, bool]:
         """Returns the current raw data of this data source
 
         Special for piggyback: No caching of raw data
@@ -71,8 +66,7 @@ class PiggyBackDataSource(AgentDataSource):
         self._logger.log(VERBOSE, "Execute data source")
         return self._execute(), False
 
-    def _summary_result(self, for_checking):
-        # type: (bool) -> ServiceCheckResult
+    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""

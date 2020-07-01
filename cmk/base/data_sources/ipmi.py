@@ -31,13 +31,12 @@ class IPMIManagementBoardDataSource(AgentDataSource):
     _raw_sections = {SectionName("mgmt_ipmi_sensors")}
 
     def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            selected_raw_sections=None,  # type: Optional[Dict[SectionName, SectionPlugin]]
-            main_data_source=False,  # type: bool
-    ):
-        # type: (...) -> None
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        selected_raw_sections: Optional[Dict[SectionName, SectionPlugin]] = None,
+        main_data_source: bool = False,
+    ) -> None:
         super(IPMIManagementBoardDataSource, self).__init__(
             hostname,
             ipaddress,
@@ -47,16 +46,13 @@ class IPMIManagementBoardDataSource(AgentDataSource):
         )
         self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
 
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         return "mgmt_ipmi"
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return "Management board - IPMI"
 
-    def describe(self):
-        # type: () -> str
+    def describe(self) -> str:
         items = []
         if self._ipaddress:
             items.append("Address: %s" % self._ipaddress)
@@ -64,12 +60,10 @@ class IPMIManagementBoardDataSource(AgentDataSource):
             items.append("User: %s" % self._credentials["username"])
         return "%s (%s)" % (self.title(), ", ".join(items))
 
-    def _cpu_tracking_id(self):
-        # type: () -> str
+    def _cpu_tracking_id(self) -> str:
         return self.id()
 
-    def _execute(self):
-        # type: () -> RawAgentData
+    def _execute(self) -> RawAgentData:
         if not self._credentials:
             raise MKAgentError("Missing credentials")
 
@@ -81,12 +75,10 @@ class IPMIManagementBoardDataSource(AgentDataSource):
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 
-    def _summary_result(self, for_checking):
-        # type: (bool) -> ServiceCheckResult
+    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         return 0, "Version: %s" % self._get_ipmi_version(), []
 
-    def _get_ipmi_version(self):
-        # type: () -> ServiceDetails
+    def _get_ipmi_version(self) -> ServiceDetails:
         if self._host_sections is None:
             return "unknown"
 

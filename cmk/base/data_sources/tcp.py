@@ -36,13 +36,12 @@ class TCPDataSource(AgentDataSource):
     _use_only_cache = False
 
     def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            selected_raw_sections=None,  # type: Optional[Dict[SectionName, SectionPlugin]]
-            main_data_source=False,  # type: bool
-    ):
-        # type: (...) -> None
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        selected_raw_sections: Optional[Dict[SectionName, SectionPlugin]] = None,
+        main_data_source: bool = False,
+    ) -> None:
         super(TCPDataSource, self).__init__(
             hostname,
             ipaddress,
@@ -50,39 +49,33 @@ class TCPDataSource(AgentDataSource):
             {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
             main_data_source=main_data_source,
         )
-        self._port = None  # type: Optional[int]
-        self._timeout = None  # type: Optional[float]
+        self._port: Optional[int] = None
+        self._timeout: Optional[float] = None
 
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         return "agent"
 
     @property
-    def port(self):
-        # type: () -> int
+    def port(self) -> int:
         if self._port is None:
             return self._host_config.agent_port
         return self._port
 
     @port.setter
-    def port(self, value):
-        # type: (Optional[int]) -> None
+    def port(self, value: Optional[int]) -> None:
         self._port = value
 
     @property
-    def timeout(self):
-        # type: () -> float
+    def timeout(self) -> float:
         if self._timeout is None:
             return self._host_config.tcp_connect_timeout
         return self._timeout
 
     @timeout.setter
-    def timeout(self, value):
-        # type: (Optional[float]) -> None
+    def timeout(self, value: Optional[float]) -> None:
         self._timeout = value
 
-    def _execute(self):
-        # type: () -> RawAgentData
+    def _execute(self) -> RawAgentData:
         if self._use_only_cache:
             raise MKAgentError("Got no data: No usable cache file present at %s" %
                                self._cache_file_path())
@@ -105,12 +98,10 @@ class TCPDataSource(AgentDataSource):
             return output
         raise MKAgentError("Failed to read data")
 
-    def describe(self):
-        # type: () -> str
+    def describe(self) -> str:
         """Return a short textual description of the agent"""
         return "TCP: %s:%d" % (self._ipaddress, self._host_config.agent_port)
 
     @classmethod
-    def use_only_cache(cls):
-        # type: () -> None
+    def use_only_cache(cls) -> None:
         cls._use_only_cache = True

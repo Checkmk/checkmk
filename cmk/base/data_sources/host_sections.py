@@ -10,10 +10,10 @@ from typing import Any, Callable, cast, Dict, List, Optional, Set, Tuple, Union
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import (
+    CheckPluginName,
     HostAddress,
     HostName,
     ParsedSectionName,
-    CheckPluginName,
     ServiceName,
     SourceType,
 )
@@ -52,11 +52,10 @@ class MultiHostSections:
     """Container object for wrapping the host sections of a host being processed
     or multiple hosts when a cluster is processed. Also holds the functionality for
     merging these information together for a check"""
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(MultiHostSections, self).__init__()
         self._config_cache = config.get_config_cache()
-        self._multi_host_sections = {}  # type: MultiHostSectionsData
+        self._multi_host_sections: MultiHostSectionsData = {}
         self._section_content_cache = caching.DictCache()
         # This is not quite the same as section_content_cache.
         # It is introduced for the changed data handling with the migration
@@ -69,23 +68,20 @@ class MultiHostSections:
         return "%s(data=%r)" % (type(self).__name__, self._multi_host_sections)
 
     def setdefault_host_sections(
-            self,
-            host_key,  # type: HostKey
-            default,  # type: AbstractHostSections
-    ):
-        # type: (...) -> AbstractHostSections
+        self,
+        host_key: HostKey,
+        default: AbstractHostSections,
+    ) -> AbstractHostSections:
         return self._multi_host_sections.setdefault(host_key, default)
 
-    def get_host_sections(self):
-        # type: () -> MultiHostSectionsData
+    def get_host_sections(self) -> MultiHostSectionsData:
         return self._multi_host_sections
 
     def get_section_kwargs(
-            self,
-            host_key,  # type: HostKey
-            parsed_section_names,  # type: List[ParsedSectionName]
-    ):
-        # type: (...) -> Dict[str, Any]
+        self,
+        host_key: HostKey,
+        parsed_section_names: List[ParsedSectionName],
+    ) -> Dict[str, Any]:
         """Prepares section keyword arguments for a non-cluster host
 
         It returns a dictionary containing one entry (may be None) for each
@@ -105,11 +101,11 @@ class MultiHostSections:
         return kwargs
 
     def get_section_cluster_kwargs(
-            self,
-            host_name,  # type: HostName
-            source_type,  # type: SourceType
-            parsed_section_names,  # type: List[ParsedSectionName]
-            service_description,  # type: ServiceName
+        self,
+        host_name: HostName,
+        source_type: SourceType,
+        parsed_section_names: List[ParsedSectionName],
+        service_description: ServiceName,
     ):
         """Prepares section keyword arguments for a cluster host
 
@@ -122,7 +118,7 @@ class MultiHostSections:
         host_entries = self._get_host_entries(host_name, None)
         used_entries = [he for he in host_entries if he[0] in nodes_of_clustered_service]
 
-        kwargs = {}  # type: Dict[str, Dict[str, Any]]
+        kwargs: Dict[str, Dict[str, Any]] = {}
         for node_name, node_ip in used_entries:
             node_kwargs = self.get_section_kwargs(
                 (node_name, node_ip, source_type),
@@ -136,12 +132,12 @@ class MultiHostSections:
 
         return kwargs
 
-    def get_cache_info(self, parsed_section_names):
-        # type: (List[ParsedSectionName]) -> Optional[Tuple[int, int]]
+    def get_cache_info(self,
+                       parsed_section_names: List[ParsedSectionName]) -> Optional[Tuple[int, int]]:
         """Aggregate information about the age of the data in the agent sections
         """
-        cached_ats = []  # type: List[int]
-        intervals = []  # type: List[int]
+        cached_ats: List[int] = []
+        intervals: List[int] = []
         for host_key, host_sections in self._multi_host_sections.items():
             for parsed_section_name in parsed_section_names:
                 raw_section = self._get_raw_section(host_key, parsed_section_name)
@@ -155,11 +151,10 @@ class MultiHostSections:
         return (min(cached_ats), max(intervals)) if cached_ats else None
 
     def get_parsed_section(
-            self,
-            host_key,  # type: HostKey
-            parsed_section_name,  # type: ParsedSectionName
-    ):
-        # type: (...) -> Optional[ParsedSectionContent]
+        self,
+        host_key: HostKey,
+        parsed_section_name: ParsedSectionName,
+    ) -> Optional[ParsedSectionContent]:
         cache_key = host_key + (parsed_section_name,)
         if cache_key in self._parsed_sections:
             return self._parsed_sections[cache_key]
@@ -168,7 +163,7 @@ class MultiHostSections:
         if section_def is None:
             # no section creating the desired one was found, assume a 'default' section:
             raw_section_name = SectionName(str(parsed_section_name))
-            parse_function = parse_string_table  # type: Union[SNMPParseFunction, AgentParseFunction]
+            parse_function: Union[SNMPParseFunction, AgentParseFunction] = parse_string_table
         else:
             raw_section_name = section_def.name
             parse_function = section_def.parse_function
@@ -183,8 +178,9 @@ class MultiHostSections:
 
         return self._parsed_sections.setdefault(cache_key, parsed)
 
-    def _get_raw_section(self, host_key, parsed_section_name):
-        # type: (HostKey, ParsedSectionName) -> Union[AgentSectionPlugin, SNMPSectionPlugin]
+    def _get_raw_section(
+            self, host_key: HostKey,
+            parsed_section_name: ParsedSectionName) -> Union[AgentSectionPlugin, SNMPSectionPlugin]:
         """Get the raw sections name that will be parsed into the required section
 
         Raw sections may get renamed once they are parsed, if they declare it. This function
@@ -207,14 +203,12 @@ class MultiHostSections:
 
     def get_section_content(
             self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            management_board_info,  # type: str
-            check_plugin_name,  # type: CheckPluginNameStr
-            for_discovery,  # type: bool
-            service_description=None  # type: Optional[ServiceName]
-    ):
-        # type: (...) -> FinalSectionContent
+            hostname: HostName,
+            ipaddress: Optional[HostAddress],
+            management_board_info: str,
+            check_plugin_name: CheckPluginNameStr,
+            for_discovery: bool,
+            service_description: Optional[ServiceName] = None) -> FinalSectionContent:
         """Prepares the section_content construct for a Check_MK check on ANY host
 
         The section_content construct is then handed over to the check, inventory or
@@ -275,8 +269,9 @@ class MultiHostSections:
         self._section_content_cache[cache_key] = section_content
         return section_content
 
-    def _get_nodes_of_clustered_service(self, hostname, service_description):
-        # type: (HostName, Optional[ServiceName]) -> Optional[List[HostName]]
+    def _get_nodes_of_clustered_service(
+            self, hostname: HostName,
+            service_description: Optional[ServiceName]) -> Optional[List[HostName]]:
         """Returns the node names if a service is clustered, otherwise 'None' in order to
         decide whether we collect section content of the host or the nodes.
 
@@ -305,23 +300,22 @@ class MultiHostSections:
         ]
 
     def _get_section_content(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            source_type,  # type: SourceType
-            check_plugin_name,  # type: CheckPluginNameStr
-            section_name,  # type: SectionName
-            for_discovery,  # type: bool
-            nodes_of_clustered_service,  # type:  Optional[List[HostName]]
-    ):
-        # type: (...) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        source_type: SourceType,
+        check_plugin_name: CheckPluginNameStr,
+        section_name: SectionName,
+        for_discovery: bool,
+        nodes_of_clustered_service: Optional[List[HostName]],
+    ) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]:
 
         # First abstract cluster / non cluster hosts
         host_entries = self._get_host_entries(hostname, ipaddress)
 
         # Now get the section_content from the required hosts and merge them together to
         # a single section_content. For each host optionally add the node info.
-        section_content = None  # type: Optional[AbstractSectionContent]
+        section_content: Optional[AbstractSectionContent] = None
         for node_name, node_ip_address in host_entries:
             if nodes_of_clustered_service and node_name not in nodes_of_clustered_service:
                 continue
@@ -357,8 +351,9 @@ class MultiHostSections:
         )
         return section_contents
 
-    def _get_host_entries(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> List[Tuple[HostName, Optional[HostAddress]]]
+    def _get_host_entries(
+            self, hostname: HostName,
+            ipaddress: Optional[HostAddress]) -> List[Tuple[HostName, Optional[HostAddress]]]:
         host_config = self._config_cache.get_host_config(hostname)
         if host_config.nodes is None:
             return [(hostname, ipaddress)]
@@ -366,8 +361,9 @@ class MultiHostSections:
         return [(node_hostname, ip_lookup.lookup_ip_address(node_hostname))
                 for node_hostname in host_config.nodes]
 
-    def _update_with_node_column(self, section_content, check_plugin_name, hostname, for_discovery):
-        # type: (AbstractSectionContent, CheckPluginNameStr, HostName, bool) -> AbstractSectionContent
+    def _update_with_node_column(self, section_content: AbstractSectionContent,
+                                 check_plugin_name: CheckPluginNameStr, hostname: HostName,
+                                 for_discovery: bool) -> AbstractSectionContent:
         """Add cluster node information to the section content
 
         If the check want's the node column, we add an additional column (as the first column) with the
@@ -385,7 +381,7 @@ class MultiHostSections:
                 "node_info"]:
             return section_content  # unknown check_plugin_name or does not want node info -> do nothing
 
-        node_name = None  # type: Optional[HostName]
+        node_name: Optional[HostName] = None
         if not for_discovery and self._config_cache.clusters_of(hostname):
             node_name = hostname
 
@@ -393,8 +389,8 @@ class MultiHostSections:
 
     # TODO: Add correct type hint for node wrapped SectionContent. We would have to create some kind
     # of AbstractSectionContentWithNodeInfo.
-    def _add_node_column(self, section_content, nodename):
-        # type: (AbstractSectionContent, Optional[HostName]) -> AbstractSectionContent
+    def _add_node_column(self, section_content: AbstractSectionContent,
+                         nodename: Optional[HostName]) -> AbstractSectionContent:
         new_section_content = []
         node_text = str(nodename) if isinstance(nodename, str) else nodename
         for line in section_content:
@@ -408,15 +404,14 @@ class MultiHostSections:
         return new_section_content  # type: ignore[return-value]
 
     def _update_with_extra_sections(
-            self,
-            section_content,  # type: ParsedSectionContent
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            management_board_info,  # type: str
-            section_name,  # type: SectionName
-            for_discovery,  # type: bool
-    ):
-        # type: (...) -> Union[ParsedSectionContent, List[ParsedSectionContent]]
+        self,
+        section_content: ParsedSectionContent,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        management_board_info: str,
+        section_name: SectionName,
+        for_discovery: bool,
+    ) -> Union[ParsedSectionContent, List[ParsedSectionContent]]:
         """Adds additional agent sections to the section_content the check receives.
 
         Please note that this is not a check/subcheck individual setting. This option is related
@@ -438,8 +433,8 @@ class MultiHostSections:
             ) for extra_section_name in extra_sections
         ]
 
-    def _update_with_parse_function(self, section_content, section_name):
-        # type: (AbstractSectionContent, SectionName) -> ParsedSectionContent
+    def _update_with_parse_function(self, section_content: AbstractSectionContent,
+                                    section_name: SectionName) -> ParsedSectionContent:
         """Transform the section_content using the defined parse functions.
 
         Some checks define a parse function that is used to transform the section_content
@@ -481,8 +476,7 @@ class MultiHostSections:
         finally:
             item_state.set_item_state_prefix(*orig_item_state_prefix)
 
-    def get_check_plugin_candidates(self):
-        # type: () -> Set[CheckPluginName]
+    def get_check_plugin_candidates(self) -> Set[CheckPluginName]:
         """Return names of check plugins that this multi_host_section may contain data for.
 
         Given this mutli_host_section, there is no point in trying to discover any check plugins

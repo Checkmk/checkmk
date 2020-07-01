@@ -46,11 +46,10 @@ __all__ = ["AgentHostSections", "AgentDataSource"]
 class AgentHostSections(AbstractHostSections[RawAgentData, AgentSections, PersistedAgentSections,
                                              AgentSectionContent]):
     def __init__(self,
-                 sections=None,
-                 cache_info=None,
-                 piggybacked_raw_data=None,
-                 persisted_sections=None):
-        # type: (Optional[AgentSections], Optional[SectionCacheInfo], Optional[PiggybackRawData], Optional[PersistedAgentSections]) -> None
+                 sections: Optional[AgentSections] = None,
+                 cache_info: Optional[SectionCacheInfo] = None,
+                 piggybacked_raw_data: Optional[PiggybackRawData] = None,
+                 persisted_sections: Optional[PersistedAgentSections] = None) -> None:
         super(AgentHostSections, self).__init__(
             sections=sections if sections is not None else {},
             cache_info=cache_info if cache_info is not None else {},
@@ -58,8 +57,8 @@ class AgentHostSections(AbstractHostSections[RawAgentData, AgentSections, Persis
             persisted_sections=persisted_sections if persisted_sections is not None else {},
         )
 
-    def _extend_section(self, section_name, section_content):
-        # type: (SectionName, AgentSectionContent) -> None
+    def _extend_section(self, section_name: SectionName,
+                        section_content: AgentSectionContent) -> None:
         self.sections.setdefault(section_name, []).extend(section_content)
 
 
@@ -80,13 +79,12 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
     # pylint: disable=abstract-method
 
     def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            selected_raw_section_names=None,  # type: Optional[Set[SectionName]]
-            main_data_source=False,  # type: bool
-    ):
-        # type: (...) -> None
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        selected_raw_section_names: Optional[Set[SectionName]] = None,
+        main_data_source: bool = False,
+    ) -> None:
         super(AgentDataSource, self).__init__(hostname, ipaddress, selected_raw_section_names)
         self._is_main_agent_data_source = main_data_source
         """Tell the data source that it's the main agent based data source
@@ -98,73 +96,64 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
         """
         # TODO: We should cleanup these old directories one day. Then we can remove this special case
 
-    def _cpu_tracking_id(self):
-        # type: () -> str
+    def _cpu_tracking_id(self) -> str:
         return "agent"
 
-    def _cache_dir(self):
-        # type: () -> str
+    def _cache_dir(self) -> str:
         # The main agent has another cache directory to be compatible with older Check_MK
         if self._is_main_agent_data_source:
             return cmk.utils.paths.tcp_cache_dir
 
         return super(AgentDataSource, self)._cache_dir()
 
-    def _persisted_sections_dir(self):
-        # type: () -> str
+    def _persisted_sections_dir(self) -> str:
         # The main agent has another cache directory to be compatible with older Check_MK
         if self._is_main_agent_data_source:
             return os.path.join(cmk.utils.paths.var_dir, "persisted")
 
         return super(AgentDataSource, self)._persisted_sections_dir()
 
-    def _empty_raw_data(self):
-        # type: () -> RawAgentData
+    def _empty_raw_data(self) -> RawAgentData:
         return b""
 
-    def _empty_host_sections(self):
-        # type: () -> AgentHostSections
+    def _empty_host_sections(self) -> AgentHostSections:
         return AgentHostSections()
 
-    def _from_cache_file(self, raw_data):
-        # type: (bytes) -> RawAgentData
+    def _from_cache_file(self, raw_data: bytes) -> RawAgentData:
         return raw_data
 
-    def _to_cache_file(self, raw_data):
-        # type: (RawAgentData) -> bytes
+    def _to_cache_file(self, raw_data: RawAgentData) -> bytes:
         raw_data = cast(RawAgentData, raw_data)
         # TODO: This does not seem to be needed
         return ensure_binary(raw_data)
 
-    def _convert_to_sections(self, raw_data):
-        # type: (RawAgentData) -> AgentHostSections
+    def _convert_to_sections(self, raw_data: RawAgentData) -> AgentHostSections:
         raw_data = cast(RawAgentData, raw_data)
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
         return self._parse_host_section(raw_data)
 
-    def _parse_host_section(self, raw_data):
-        # type: (RawAgentData) -> AgentHostSections
+    def _parse_host_section(self, raw_data: RawAgentData) -> AgentHostSections:
         """Split agent output in chunks, splits lines by whitespaces.
 
         Returns a HostSections() object.
         """
-        sections = {}  # type: AgentSections
+        sections: AgentSections = {}
         # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
         # The value is a list of lines which were received for this host.
-        piggybacked_raw_data = {}  # type: PiggybackRawData
+        piggybacked_raw_data: PiggybackRawData = {}
         piggybacked_hostname = None
         piggybacked_cached_at = int(time.time())
         # Transform to seconds and give the piggybacked host a little bit more time
         piggybacked_cache_age = int(1.5 * 60 * self._host_config.check_mk_check_interval)
 
         # handle sections with option persist(...)
-        persisted_sections = {}  # type: PersistedAgentSections
-        section_content = None  # type: Optional[AgentSectionContent]
-        section_options = {}  # type: Dict[str, Optional[str]]
-        agent_cache_info = {}  # type: SectionCacheInfo
-        separator = None  # type: Optional[str]
+        persisted_sections: PersistedAgentSections = {}
+        section_content: Optional[AgentSectionContent] = None
+        section_options: Dict[str, Optional[str]] = {}
+        agent_cache_info: SectionCacheInfo = {}
+        separator: Optional[str] = None
         encoding = None
         for line in raw_data.split(b"\n"):
             line = line.rstrip(b"\r")
@@ -230,15 +219,15 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
                                  persisted_sections)
 
     @staticmethod
-    def _parse_section_header(headerline):
-        # type: (bytes) -> Tuple[Optional[SectionName], Dict[str, Optional[str]]]
+    def _parse_section_header(
+            headerline: bytes) -> Tuple[Optional[SectionName], Dict[str, Optional[str]]]:
         headerparts = ensure_str(headerline).split(":")
         try:
             section_name = SectionName(headerparts[0])
         except ValueError:
             return None, {}
 
-        section_options = {}  # type: Dict[str, Optional[str]]
+        section_options: Dict[str, Optional[str]] = {}
         for option in headerparts[1:]:
             if "(" not in option:
                 section_options[option] = None
@@ -247,8 +236,8 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
                 section_options[opt_name] = opt_part[:-1]
         return section_name, section_options
 
-    def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
-        # type: (bytes) -> Optional[HostName]
+    def _get_sanitized_and_translated_piggybacked_hostname(
+            self, orig_piggyback_header: bytes) -> Optional[HostName]:
         piggybacked_hostname = ensure_str(orig_piggyback_header[4:-4])
         if not piggybacked_hostname:
             return None
@@ -263,9 +252,8 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
         # a) Replace spaces by underscores
         return piggybacked_hostname.replace(" ", "_")
 
-    def _add_cached_info_to_piggybacked_section_header(self, orig_section_header, cached_at,
-                                                       cache_age):
-        # type: (bytes, int, int) -> bytes
+    def _add_cached_info_to_piggybacked_section_header(self, orig_section_header: bytes,
+                                                       cached_at: int, cache_age: int) -> bytes:
         if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
             return orig_section_header
         return b'<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3],
@@ -273,17 +261,16 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
                                                 "%d" % cached_at), ensure_binary("%d" % cache_age))
 
     # TODO: refactor
-    def _summary_result(self, for_checking):
-        # type: (bool) -> ServiceCheckResult
+    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         assert isinstance(self._host_sections, AgentHostSections)
 
         cmk_section = self._host_sections.sections.get(SectionName("check_mk"))
         agent_info = self._get_agent_info(cmk_section)
         agent_version = agent_info["version"]
 
-        status = 0  # type: ServiceState
-        output = []  # type: List[ServiceDetails]
-        perfdata = []  # type: List[Metric]
+        status: ServiceState = 0
+        output: List[ServiceDetails] = []
+        perfdata: List[Metric] = []
         if not self._host_config.is_cluster and agent_version is not None:
             output.append("Version: %s" % agent_version)
 
@@ -303,12 +290,12 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
                 perfdata += sub_perfdata
         return status, ", ".join(output), perfdata
 
-    def _get_agent_info(self, cmk_section):
-        # type: (Optional[AgentSectionContent]) -> Dict[str, Optional[str]]
-        agent_info = {
+    def _get_agent_info(self,
+                        cmk_section: Optional[AgentSectionContent]) -> Dict[str, Optional[str]]:
+        agent_info: Dict[str, Optional[str]] = {
             "version": u"unknown",
             "agentos": u"unknown",
-        }  # type: Dict[str, Optional[str]]
+        }
 
         if self._host_sections is None or not cmk_section:
             return agent_info
@@ -318,8 +305,8 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
             agent_info[str(line[0][:-1].lower())] = value
         return agent_info
 
-    def _sub_result_version(self, agent_info):
-        # type: (Dict[str, Optional[str]]) -> Optional[ServiceCheckResult]
+    def _sub_result_version(self, agent_info: Dict[str,
+                                                   Optional[str]]) -> Optional[ServiceCheckResult]:
         agent_version = str(agent_info["version"])
         expected_version = self._host_config.agent_target_version
 
@@ -353,8 +340,8 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
 
         return None
 
-    def _sub_result_only_from(self, agent_info):
-        # type: (Dict[str, Optional[str]]) -> Optional[ServiceCheckResult]
+    def _sub_result_only_from(self,
+                              agent_info: Dict[str, Optional[str]]) -> Optional[ServiceCheckResult]:
         agent_only_from = agent_info.get("onlyfrom")
         if agent_only_from is None:
             return None
@@ -379,8 +366,8 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
         return 1, "Unexpected allowed IP ranges (%s)%s" % (", ".join(infotexts),
                                                            state_markers[1]), []
 
-    def _is_expected_agent_version(self, agent_version, expected_version):
-        # type: (Optional[str], config.AgentTargetVersion) -> bool
+    def _is_expected_agent_version(self, agent_version: Optional[str],
+                                   expected_version: config.AgentTargetVersion) -> bool:
         try:
             if agent_version is None:
                 return False
@@ -423,8 +410,7 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
                 (agent_version, expected_version, e))
 
 
-def _normalize_ip_addresses(ip_addresses):
-    # type: (Union[AnyStr, List[AnyStr]]) -> List[str]
+def _normalize_ip_addresses(ip_addresses: Union[AnyStr, List[AnyStr]]) -> List[str]:
     '''factorize 10.0.0.{1,2,3}'''
     if not isinstance(ip_addresses, list):
         ip_addresses = ip_addresses.split()

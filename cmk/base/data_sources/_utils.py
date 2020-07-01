@@ -16,8 +16,7 @@ from cmk.base.exceptions import MKIPAddressLookupError
 __all__ = ["management_board_ipaddress", "verify_ipaddress"]
 
 
-def management_board_ipaddress(hostname):
-    # type: (HostName) -> Optional[HostAddress]
+def management_board_ipaddress(hostname: HostName) -> Optional[HostAddress]:
     mgmt_ipaddress = config.get_config_cache().get_host_config(hostname).management_address
 
     if mgmt_ipaddress is None:
@@ -32,8 +31,7 @@ def management_board_ipaddress(hostname):
         return mgmt_ipaddress
 
 
-def verify_ipaddress(address):
-    # type: (Optional[HostAddress]) -> None
+def verify_ipaddress(address: Optional[HostAddress]) -> None:
     if not address:
         raise MKIPAddressLookupError("Host as no IP address configured.")
 
@@ -42,8 +40,7 @@ def verify_ipaddress(address):
             "Failed to lookup IP address and no explicit IP address configured")
 
 
-def _is_ipaddress(address):
-    # type: (Optional[HostAddress]) -> bool
+def _is_ipaddress(address: Optional[HostAddress]) -> bool:
     if address is None:
         return False
 

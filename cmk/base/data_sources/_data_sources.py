@@ -38,25 +38,24 @@ __all__ = ["DataSources"]
 
 class SourceBuilder:
     """Build the source list from host config and raw sections."""
-    def __init__(self, host_config, ipaddress, selected_raw_sections):
-        # type: (HostConfig, Optional[HostAddress], Optional[SelectedRawSections]) -> None
+    def __init__(self, host_config: HostConfig, ipaddress: Optional[HostAddress],
+                 selected_raw_sections: Optional[SelectedRawSections]) -> None:
         super(SourceBuilder, self).__init__()
         self._host_config = host_config
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
-        self._sources = {}  # type: Dict[str, DataSource]
+        self._sources: Dict[str, DataSource] = {}
 
         self._initialize_data_sources(selected_raw_sections)
 
     @property
-    def sources(self):
-        # type: () -> Iterable[DataSource]
+    def sources(self) -> Iterable[DataSource]:
         # Always execute piggyback at the end
         return sorted(self._sources.values(),
                       key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
 
-    def _initialize_data_sources(self, selected_raw_sections):
-        # type: (Optional[SelectedRawSections]) -> None
+    def _initialize_data_sources(self,
+                                 selected_raw_sections: Optional[SelectedRawSections]) -> None:
         if self._host_config.is_cluster:
             # Cluster hosts do not have any actual data sources
             # Instead all data is provided by the nodes
@@ -66,8 +65,8 @@ class SourceBuilder:
         self._initialize_snmp_data_sources(selected_raw_sections)
         self._initialize_management_board_data_sources(selected_raw_sections)
 
-    def _initialize_agent_based_data_sources(self, selected_raw_sections):
-        # type: (Optional[SelectedRawSections]) -> None
+    def _initialize_agent_based_data_sources(
+            self, selected_raw_sections: Optional[SelectedRawSections]) -> None:
         if self._host_config.is_all_agents_host:
             self._add_source(
                 self._get_agent_data_source(
@@ -98,8 +97,8 @@ class SourceBuilder:
                     selected_raw_sections=selected_raw_sections,
                 ))
 
-    def _initialize_snmp_data_sources(self, selected_raw_sections):
-        # type: (Optional[SelectedRawSections]) -> None
+    def _initialize_snmp_data_sources(self,
+                                      selected_raw_sections: Optional[SelectedRawSections]) -> None:
         if not self._host_config.is_snmp_host:
             return
         self._add_source(
@@ -109,8 +108,8 @@ class SourceBuilder:
                 selected_raw_sections=selected_raw_sections,
             ))
 
-    def _initialize_management_board_data_sources(self, selected_raw_sections):
-        # type: (Optional[SelectedRawSections]) -> None
+    def _initialize_management_board_data_sources(
+            self, selected_raw_sections: Optional[SelectedRawSections]) -> None:
         protocol = self._host_config.management_protocol
         if protocol is None:
             return
@@ -133,22 +132,19 @@ class SourceBuilder:
         else:
             raise NotImplementedError()
 
-    def _add_sources(self, sources):
-        # type: (Iterable[DataSource]) -> None
+    def _add_sources(self, sources: Iterable[DataSource]) -> None:
         for source in sources:
             self._add_source(source)
 
-    def _add_source(self, source):
-        # type: (DataSource) -> None
+    def _add_source(self, source: DataSource) -> None:
         self._sources[source.id()] = source
 
     def _get_agent_data_source(
-            self,
-            ignore_special_agents,  # type: bool
-            selected_raw_sections,  # type: Optional[SelectedRawSections]
-            main_data_source,  # type: bool
-    ):
-        # type: (...) -> AgentDataSource
+        self,
+        ignore_special_agents: bool,
+        selected_raw_sections: Optional[SelectedRawSections],
+        main_data_source: bool,
+    ) -> AgentDataSource:
         if not ignore_special_agents:
             special_agents = self._get_special_agent_data_sources(
                 selected_raw_sections=selected_raw_sections,)
@@ -173,10 +169,9 @@ class SourceBuilder:
         )
 
     def _get_special_agent_data_sources(
-            self,
-            selected_raw_sections,  # type: Optional[SelectedRawSections]
-    ):
-        # type: (...) -> List[SpecialAgentDataSource]
+        self,
+        selected_raw_sections: Optional[SelectedRawSections],
+    ) -> List[SpecialAgentDataSource]:
         return [
             SpecialAgentDataSource(
                 self._hostname,
@@ -188,13 +183,12 @@ class SourceBuilder:
         ]
 
 
-def make_sources(host_config, ipaddress, selected_raw_sections):
-    # type: (HostConfig, Optional[HostAddress], Optional[SelectedRawSections]) -> Iterable[DataSource]
+def make_sources(host_config: HostConfig, ipaddress: Optional[HostAddress],
+                 selected_raw_sections: Optional[SelectedRawSections]) -> Iterable[DataSource]:
     return SourceBuilder(host_config, ipaddress, selected_raw_sections).sources
 
 
-def make_description(host_config):
-    # type: (HostConfig) -> str
+def make_description(host_config: HostConfig) -> str:
     if host_config.is_all_agents_host:
         return "Normal Checkmk agent, all configured special agents"
 
@@ -209,13 +203,12 @@ def make_description(host_config):
 
 class DataSources:
     def __init__(
-            self,
-            host_config,  # type: HostConfig
-            ipaddress,  # type: Optional[HostAddress]
-            # optional set: None -> no selection, empty -> select *nothing*
-        selected_raw_sections=None,  # type: Optional[SelectedRawSections]
-    ):
-        # type: (...) -> None
+        self,
+        host_config: HostConfig,
+        ipaddress: Optional[HostAddress],
+        # optional set: None -> no selection, empty -> select *nothing*
+        selected_raw_sections: Optional[SelectedRawSections] = None,
+    ) -> None:
         super(DataSources, self).__init__()
         self._ipaddress = ipaddress
         self._host_config = host_config
@@ -223,25 +216,20 @@ class DataSources:
         self._description = make_description(host_config)
 
     @property
-    def _hostname(self):
-        # type: () -> HostName
+    def _hostname(self) -> HostName:
         return self._host_config.hostname
 
-    def describe_data_sources(self):
-        # type: () -> str
+    def describe_data_sources(self) -> str:
         return self._description
 
-    def set_max_cachefile_age(self, max_cachefile_age):
-        # type: (int) -> None
+    def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
         for source in self.get_data_sources():
             source.set_max_cachefile_age(max_cachefile_age)
 
-    def get_data_sources(self):
-        # type: () -> Iterable[DataSource]
+    def get_data_sources(self) -> Iterable[DataSource]:
         return self._sources
 
-    def get_host_sections(self, max_cachefile_age=None):
-        # type: (Optional[int]) -> MultiHostSections
+    def get_host_sections(self, max_cachefile_age: Optional[int] = None) -> MultiHostSections:
         """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
         Returns a dictionary object of already parsed HostSections() constructs for each related host.

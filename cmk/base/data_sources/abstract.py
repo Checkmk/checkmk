@@ -57,8 +57,9 @@ class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSectio
         4. cache_info:              Agent cache information
                                     (dict section name -> (cached_at, cache_interval))
     """
-    def __init__(self, sections, cache_info, piggybacked_raw_data, persisted_sections):
-        # type: (BoundedAbstractSections, SectionCacheInfo, PiggybackRawData, BoundedAbstractPersistedSections) -> None
+    def __init__(self, sections: BoundedAbstractSections, cache_info: SectionCacheInfo,
+                 piggybacked_raw_data: PiggybackRawData,
+                 persisted_sections: BoundedAbstractPersistedSections) -> None:
         super(AbstractHostSections, self).__init__()
         self.sections = sections
         self.cache_info = cache_info
@@ -79,8 +80,7 @@ class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSectio
     # of the sections, but for the self.cache_info this is not done. Why?
     # TODO: checking.execute_check() is using the oldest cached_at and the largest interval.
     #       Would this be correct here?
-    def update(self, host_sections):
-        # type: (AbstractHostSections) -> None
+    def update(self, host_sections: "AbstractHostSections") -> None:
         """Update this host info object with the contents of another one"""
         for section_name, section_content in host_sections.sections.items():
             self._extend_section(section_name, section_content)
@@ -95,12 +95,12 @@ class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSectio
             self.persisted_sections.update(host_sections.persisted_sections)
 
     @abc.abstractmethod
-    def _extend_section(self, section_name, section_content):
-        # type: (SectionName, BoundedAbstractSectionContent) -> None
+    def _extend_section(self, section_name: SectionName,
+                        section_content: BoundedAbstractSectionContent) -> None:
         raise NotImplementedError()
 
-    def add_cached_section(self, section_name, section, persisted_from, persisted_until):
-        # type: (SectionName, BoundedAbstractSectionContent , int, int) -> None
+    def add_cached_section(self, section_name: SectionName, section: BoundedAbstractSectionContent,
+                           persisted_from: int, persisted_until: int) -> None:
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
         # TODO: Find out why mypy complains about this
         self.sections[section_name] = section  # type: ignore[assignment]
@@ -145,12 +145,11 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     _use_outdated_persisted_sections = False
 
     def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            selected_raw_section_names=None,  # type: Optional[Set[SectionName]]
-    ):
-        # type: (...) -> None
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        selected_raw_section_names: Optional[Set[SectionName]] = None,
+    ) -> None:
         """Initialize the abstract base class
 
         :param hostname: The name of the host this data source is associated to
@@ -162,22 +161,21 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         super(DataSource, self).__init__()
         self._hostname = hostname
         self._ipaddress = ipaddress
-        self._max_cachefile_age = None  # type: Optional[int]
+        self._max_cachefile_age: Optional[int] = None
         self._selected_raw_section_names = selected_raw_section_names
 
         self._logger = logging.getLogger("cmk.base.data_source.%s" % self.id())
         self._setup_logger()
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
-        self._exception = None  # type: Optional[Exception]
-        self._host_sections = None  # type: Optional[BoundedAbstractHostSections]
-        self._persisted_sections = None  # type: Optional[BoundedAbstractPersistedSections]
+        self._exception: Optional[Exception] = None
+        self._host_sections: Optional[BoundedAbstractHostSections] = None
+        self._persisted_sections: Optional[BoundedAbstractPersistedSections] = None
 
         self._config_cache = config.get_config_cache()
         self._host_config = self._config_cache.get_host_config(self._hostname)
 
-    def _setup_logger(self):
-        # type: () -> None
+    def _setup_logger(self) -> None:
         """Add the source log prefix to the class logger"""
         self._logger.propagate = False
         handler = logging.StreamHandler(stream=sys.stdout)
@@ -186,15 +184,13 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         del self._logger.handlers[:]  # Remove all previously existing handlers
         self._logger.addHandler(handler)
 
-    def run(self):
-        # type: () -> AbstractHostSections
+    def run(self) -> AbstractHostSections:
         result = self._run(get_raw_data=False)
         if not isinstance(result, AbstractHostSections):
             raise TypeError("Got invalid type: %r" % result)
         return result
 
-    def run_raw(self):
-        # type: () -> RawAgentData
+    def run_raw(self) -> RawAgentData:
         """Small wrapper for self._run() which always returns raw data source data
 
         Both hostname and ipaddress are optional, used for virtual
@@ -205,8 +201,8 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return result
 
     @cpu_tracking.track
-    def _run(self, get_raw_data):
-        # type: (bool) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]
+    def _run(self,
+             get_raw_data: bool) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]:
         """Wrapper for self._execute() that unifies several things:
 
         a) Exception handling
@@ -224,8 +220,8 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         section_store = SectionStore(self._persisted_sections_file_path(), self._logger)
 
         try:
-            persisted_sections_from_disk = section_store.load(
-                self._use_outdated_persisted_sections)  # type: BoundedAbstractPersistedSections
+            persisted_sections_from_disk: BoundedAbstractPersistedSections = section_store.load(
+                self._use_outdated_persisted_sections)
             self._persisted_sections = persisted_sections_from_disk
 
             raw_data, is_cached_data = self._get_raw_data()
@@ -257,8 +253,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             return self._empty_raw_data()
         return self._empty_host_sections()
 
-    def _make_file_cache(self):
-        # type: () -> FileCache
+    def _make_file_cache(self) -> FileCache:
         return FileCache(
             self._cache_file_path(),
             self._max_cachefile_age,
@@ -270,8 +265,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             self._logger,
         )
 
-    def _get_raw_data(self):
-        # type: () -> Tuple[BoundedAbstractRawData, bool]
+    def _get_raw_data(self) -> Tuple[BoundedAbstractRawData, bool]:
         """Returns the current raw data of this data source
 
         It either uses previously cached raw data of this data source or
@@ -296,8 +290,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return raw_data, False
 
     @abc.abstractmethod
-    def _execute(self):
-        # type: () -> BoundedAbstractRawData
+    def _execute(self) -> BoundedAbstractRawData:
         """Fetches the current agent data from the source specified with
         hostname and ipaddress and returns the result as "raw data" that is
         later converted by self._convert_to_sections() to a HostSection().
@@ -308,66 +301,53 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _empty_raw_data(self):
-        # type: () -> BoundedAbstractRawData
+    def _empty_raw_data(self) -> BoundedAbstractRawData:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _empty_host_sections(self):
-        # type: () -> BoundedAbstractHostSections
+    def _empty_host_sections(self) -> BoundedAbstractHostSections:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _from_cache_file(self, raw_data):
-        # type: (bytes) -> BoundedAbstractRawData
+    def _from_cache_file(self, raw_data: bytes) -> BoundedAbstractRawData:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _to_cache_file(self, raw_data):
-        # type: (BoundedAbstractRawData) -> bytes
+    def _to_cache_file(self, raw_data: BoundedAbstractRawData) -> bytes:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _convert_to_sections(self, raw_data):
-        # type: (BoundedAbstractRawData) -> BoundedAbstractHostSections
+    def _convert_to_sections(self, raw_data: BoundedAbstractRawData) -> BoundedAbstractHostSections:
         """See _execute() for details"""
         raise NotImplementedError()
 
-    def _cache_file_path(self):
-        # type: () -> str
+    def _cache_file_path(self) -> str:
         return os.path.join(self._cache_dir(), self._hostname)
 
-    def _cache_dir(self):
-        # type: () -> str
+    def _cache_dir(self) -> str:
         return os.path.join(cmk.utils.paths.data_source_cache_dir, self.id())
 
-    def _persisted_sections_file_path(self):
-        # type: () -> str
+    def _persisted_sections_file_path(self) -> str:
         return os.path.join(self._persisted_sections_dir(), self._hostname)
 
-    def _persisted_sections_dir(self):
-        # type: () -> str
+    def _persisted_sections_dir(self) -> str:
         return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
 
-    def is_relevant_raw_section(self, raw_section_name):
-        # type: (SectionName) -> bool
+    def is_relevant_raw_section(self, raw_section_name: SectionName) -> bool:
         return (self._selected_raw_section_names is None or
                 raw_section_name in self._selected_raw_section_names)
 
     @abc.abstractmethod
-    def _cpu_tracking_id(self):
-        # type: () -> str
+    def _cpu_tracking_id(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         """Return a unique identifier for this data source type
         It is used to identify the different data source types."""
         raise NotImplementedError()
 
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         """Return a unique (per host) textual identification of the data source
 
         This name is used to identify this data source instance compared to other
@@ -380,49 +360,39 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return ":".join([self.id(), self._hostname, self._ipaddress or ""])
 
     @abc.abstractmethod
-    def describe(self):
-        # type: () -> str
+    def describe(self) -> str:
         """Return a short textual description of the datasource"""
         raise NotImplementedError()
 
-    def set_max_cachefile_age(self, max_cachefile_age):
-        # type: (int) -> None
+    def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
         self._max_cachefile_age = max_cachefile_age
 
     @classmethod
-    def disable_data_source_cache(cls):
-        # type: () -> None
+    def disable_data_source_cache(cls) -> None:
         cls._no_cache = True
 
     @classmethod
-    def is_agent_cache_disabled(cls):
-        # type: () -> bool
+    def is_agent_cache_disabled(cls) -> bool:
         return cls._no_cache
 
     @staticmethod
-    def get_may_use_cache_file():
-        # type: () -> bool
+    def get_may_use_cache_file() -> bool:
         return DataSource._may_use_cache_file
 
     @staticmethod
-    def set_may_use_cache_file(state=True):
-        # type: (bool) -> None
+    def set_may_use_cache_file(state: bool = True) -> None:
         DataSource._may_use_cache_file = state
 
-    def get_summary_result_for_discovery(self):
-        # type: () -> ServiceCheckResult
+    def get_summary_result_for_discovery(self) -> ServiceCheckResult:
         return self._get_summary_result(for_checking=False)
 
-    def get_summary_result_for_inventory(self):
-        # type: () -> ServiceCheckResult
+    def get_summary_result_for_inventory(self) -> ServiceCheckResult:
         return self._get_summary_result(for_checking=False)
 
-    def get_summary_result_for_checking(self):
-        # type: () -> ServiceCheckResult
+    def get_summary_result_for_checking(self) -> ServiceCheckResult:
         return self._get_summary_result()
 
-    def _get_summary_result(self, for_checking=True):
-        # type: (bool) -> ServiceCheckResult
+    def _get_summary_result(self, for_checking: bool = True) -> ServiceCheckResult:
         """Returns a three element tuple of state, output and perfdata (list) that summarizes
         the execution result of this data source.
 
@@ -449,8 +419,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
         return status, exc_msg + check_api_utils.state_markers[status], []
 
-    def _summary_result(self, for_checking):
-        # type: (bool) -> ServiceCheckResult
+    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         """Produce a source specific summary result in case no exception occured.
 
         When an exception occured while processing a data source, the generic
@@ -460,8 +429,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         ignored by the code that processes the summary result."""
         return 0, "Success", []
 
-    def exception(self):
-        # type: () -> Optional[Exception]
+    def exception(self) -> Optional[Exception]:
         """Provides exceptions happened during last self.run() call or None"""
         return self._exception
 
@@ -478,9 +446,10 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     #   | of sections that are not provided on each query.                     |
     #   '----------------------------------------------------------------------'
 
-    def _update_info_with_persisted_sections(self, persisted_sections, host_sections,
-                                             is_cached_data, section_store):
-        # type: (BoundedAbstractPersistedSections, BoundedAbstractHostSections, bool, SectionStore) -> BoundedAbstractHostSections
+    def _update_info_with_persisted_sections(
+            self, persisted_sections: BoundedAbstractPersistedSections,
+            host_sections: BoundedAbstractHostSections, is_cached_data: bool,
+            section_store: SectionStore) -> BoundedAbstractHostSections:
         if host_sections.persisted_sections and not is_cached_data:
             persisted_sections.update(host_sections.persisted_sections)
             section_store.store(persisted_sections)
@@ -505,11 +474,9 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return host_sections
 
     @classmethod
-    def use_outdated_persisted_sections(cls):
-        # type: () -> None
+    def use_outdated_persisted_sections(cls) -> None:
         cls._use_outdated_persisted_sections = True
 
     @classmethod
-    def set_use_outdated_cache_file(cls, state=True):
-        # type: (bool) -> None
+    def set_use_outdated_cache_file(cls, state: bool = True) -> None:
         cls._use_outdated_cache_file = state

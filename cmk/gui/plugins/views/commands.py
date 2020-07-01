@@ -19,7 +19,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import Choices
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Age, AbsoluteDate, Seconds
-from cmk.gui.watolib.downtime import DowntimeSchedule
+from cmk.gui.watolib.downtime import DowntimeSchedule, determine_downtime_mode
 
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -1033,13 +1033,13 @@ class CommandScheduleDowntimes(Command):
             title = time_interval_to_human_readable(next_time_interval, title_prefix)
 
         comment = self._comment()
-        mode, delayed_duration = self._mode_options(recurring_number)
+        delayed_duration = self._flexible_option()
+        mode = determine_downtime_mode(recurring_number, delayed_duration)
         downtime = DowntimeSchedule(start_time, end_time, mode, delayed_duration, comment)
         cmdtag, specs, title = self._downtime_specs(cmdtag, row, spec, title)
         if "aggr_tree" in row:  # BI mode
             node = row["aggr_tree"]
             return bi_commands(downtime, node), title
-
         return [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs], title
 
     def _remove_downtime_details(self, cmdtag, row):
@@ -1083,26 +1083,13 @@ class CommandScheduleDowntimes(Command):
             recurring_type = 0
         return recurring_type
 
-    def _mode_options(self, recurring_number):
-        """Determining the downtime mode and the delayed duration period
-
-        The mode is represented by an integer (bit masking?) which contains information
-        about the recurring option and indirectly the flexible (delayed) duration
-        """
+    def _flexible_option(self):
         if html.request.var("_down_flexible"):
-            fixed_downtime = 0
             delayed_duration = self._vs_duration().from_html_vars("_down_duration")  # type: Seconds
             self._vs_duration().validate_value(delayed_duration, "_down_duration")
         else:
-            fixed_downtime = 1
             delayed_duration = 0
-
-        if html.get_checkbox("_down_do_recur"):
-            mode = recurring_number * 2 + fixed_downtime
-        else:
-            mode = fixed_downtime
-
-        return mode, delayed_duration
+        return delayed_duration
 
     def _comment(self):
         comment = html.request.get_unicode_input("_down_comment")

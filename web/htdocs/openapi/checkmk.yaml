@@ -172,6 +172,52 @@ components:
       - domainType
       - links
       type: object
+    CreateDowntime:
+      properties:
+        comment:
+          example: Security updates
+          type: string
+        delayed_duration:
+          description: With this option the scheduled downtime does not begin automatically
+            at a nominated time, rather first when a real Problem status appears for
+            the host.In consequence, the start/end time is only the time window in
+            which the scheduled downtime can begin. The concerning duration is specified
+            in seconds.
+          example: 3600
+          format: int32
+          type: integer
+        end_time:
+          description: The end datetime of the new downtime. The format underlies
+            the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        host_name:
+          description: The hostname or IP address itself.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+        recurring_option:
+          description: Option when want to repeat this downtime on a regular basis
+            (This only works when using CMC)
+          example: hour
+          pattern: hour|day|week|second week|fourth week|same weekday|same day of
+            the month
+          type: string
+        service_description:
+          example: CPU utilization
+          type: string
+        start_time:
+          description: The start datetime of the new downtime. The format underlies
+            the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+      required:
+      - end_time
+      - host_name
+      - start_time
+      type: object
     CreateFolder:
       properties:
         attributes:
@@ -1155,6 +1201,56 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/contact_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
           \ a20ceacf346041dc' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
+  /domain-types/downtime/collections/all:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.downtime.create_downtime
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDowntime'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.downtime
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/domain-types/downtime/collections/all\",\n    json={\n\
+          \        \"comment\": \"Security updates\",\n        \"delayed_duration\"\
+          : 3600,\n        \"end_time\": \"2017-07-21T17:32:28Z\",\n        \"host_name\"\
+          : \"example.com\",\n        \"recurring_option\": \"hour\",\n        \"\
+          service_description\": \"CPU utilization\",\n        \"start_time\": \"\
+          2017-07-21T17:32:28Z\"\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"comment\": \"Security updates\"\
+          ,\n          \"delayed_duration\": 3600,\n          \"end_time\": \"2017-07-21T17:32:28Z\"\
+          ,\n          \"host_name\": \"example.com\",\n          \"recurring_option\"\
+          : \"hour\",\n          \"service_description\": \"CPU utilization\",\n \
+          \         \"start_time\": \"2017-07-21T17:32:28Z\"\n        }' \\\n    \"\
+          $API_URL/domain-types/downtime/collections/all\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/downtime/collections/all\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    comment='Security\
+          \ updates' \\\n    delayed_duration='3600' \\\n    end_time='2017-07-21T17:32:28Z'\
+          \ \\\n    host_name='example.com' \\\n    recurring_option='hour' \\\n \
+          \   service_description='CPU utilization' \\\n    start_time='2017-07-21T17:32:28Z'"
   /domain-types/folder_config/collections/all:
     get:
       description: ''
@@ -2878,6 +2974,10 @@ tags:
     showReadOnly={true} showWriteOnly={true} />
   name: InputContactGroup
   x-displayName: Creating a contact group
+- name: cmk.gui.plugins.openapi.endpoints.downtime
+- description: <SchemaDefinition schemaRef="#/components/schemas/CreateDowntime" showReadOnly={true}
+    showWriteOnly={true} />
+  name: CreateDowntime
 - name: cmk.gui.plugins.openapi.endpoints.folder_config
   x-displayName: Folders
 - description: "Every folder needs a parent folder to reside in. The uppermost folder\
@@ -2952,6 +3052,7 @@ x-tagGroups:
   tags:
   - cmk.gui.plugins.openapi.endpoints.activate_changes
   - cmk.gui.plugins.openapi.endpoints.contact_group_config
+  - cmk.gui.plugins.openapi.endpoints.downtime
   - cmk.gui.plugins.openapi.endpoints.folder_config
   - cmk.gui.plugins.openapi.endpoints.host
   - cmk.gui.plugins.openapi.endpoints.host_config
@@ -2966,6 +3067,7 @@ x-tagGroups:
 - name: Request Schemas
   tags:
   - InputContactGroup
+  - CreateDowntime
   - CreateFolder
   - UpdateFolder
   - CreateHost

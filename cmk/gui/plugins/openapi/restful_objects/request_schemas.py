@@ -13,6 +13,14 @@ class InputAttribute(Schema):
     value = fields.String(required=True)
 
 
+HOST_FIELD = fields.String(
+    description="The hostname or IP address itself.",
+    required=True,
+    pattern=HOST_NAME_REGEXP,
+    example="example.com",
+)
+
+
 class CreateHost(Schema):
     """Creating a new host
 
@@ -26,12 +34,7 @@ class CreateHost(Schema):
       * `attributes`
       * `nodes`
     """
-    host_name = fields.String(
-        description="The hostname or IP address itself.",
-        required=True,
-        pattern=HOST_NAME_REGEXP,
-        example="example.com",
-    )
+    host_name = HOST_FIELD
     folder = fields.String(
         description=("The folder-id of the folder under which this folder shall be created. May be "
                      "'root' for the root-folder."),
@@ -123,3 +126,34 @@ class UpdateFolder(Schema):
                                  'key': 'foo',
                                  'value': 'bar'
                              }])
+
+
+class CreateDowntime(Schema):
+    service_description = fields.String(required=False, example="CPU utilization")
+    host_name = HOST_FIELD
+    end_time = fields.String(
+        required=True,
+        example="2017-07-21T17:32:28Z",
+        description=
+        "The end datetime of the new downtime. The format underlies the ISO 8601 profile",
+        format="date-time")
+    start_time = fields.String(
+        required=True,
+        example="2017-07-21T17:32:28Z",
+        description=
+        "The start datetime of the new downtime. The format underlies the ISO 8601 profile",
+        format="date-time")
+    recurring_option = fields.String(
+        required=False,
+        pattern="hour|day|week|second week|fourth week|same weekday|same day of the month",
+        description=
+        "Option when want to repeat this downtime on a regular basis (This only works when using CMC)",
+        example="hour")
+    delayed_duration = fields.Integer(
+        required=False,
+        description="With this option the scheduled downtime does not begin automatically at a "
+        "nominated time, rather first when a real Problem status appears for the host."
+        "In consequence, the start/end time is only the time window in which the scheduled "
+        "downtime can begin. The concerning duration is specified in seconds.",
+        example=3600)
+    comment = fields.String(required=False, example="Security updates")

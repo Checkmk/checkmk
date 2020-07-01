@@ -11,6 +11,7 @@ DomainType = Literal[
     'activation_run',
     'contact_group_config',
     'folder_config',
+    'downtime',
     'host',
     'host_config',
     'host_group_config',

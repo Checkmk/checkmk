@@ -3,8 +3,32 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import time
+
 import cmk.gui.config as config
+import cmk.gui.sites as sites
+from livestatus import SiteId
 import livestatus
+
+
+def execute_livestatus_command(command, site):
+    sites.live().command("[%d] %s" % (int(time.time()), command), SiteId(site))
+
+
+def determine_downtime_mode(recurring_number, delayed_duration):
+    """Determining the downtime mode
+
+    The mode is represented by an integer (bit masking?) which contains information
+    about the recurring option
+    """
+    fixed_downtime = 0 if delayed_duration else 1
+
+    if recurring_number:
+        mode = recurring_number * 2 + fixed_downtime
+    else:
+        mode = fixed_downtime
+
+    return mode
 
 
 class DowntimeSchedule:

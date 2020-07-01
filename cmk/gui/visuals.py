@@ -1218,17 +1218,24 @@ def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
     context: VisualContext = {}
     for filter_name, filter_class in filter_registry.items():
         filter_object = filter_class()
-        if only_infos is None or filter_object.info in only_infos:
-            this_filter_vars: FilterHTTPVariables = {}
-            for varname in filter_object.htmlvars:
-                if html.request.has_var(varname):
-                    if varname in single_info_keys:
-                        context[filter_name] = html.request.get_unicode_input_mandatory(varname)
-                        break
 
-                    this_filter_vars[varname] = html.request.get_str_input_mandatory(varname)
-            if this_filter_vars:
-                context[filter_name] = this_filter_vars
+        if only_infos is not None and filter_object.info not in only_infos:
+            continue  # Skip filters related to not relevant infos
+
+        this_filter_vars: FilterHTTPVariables = {}
+        for varname in filter_object.htmlvars:
+            if not html.request.has_var(varname):
+                continue  # Variable to set in environment
+
+            if varname in single_info_keys:
+                context[filter_name] = html.request.get_unicode_input_mandatory(varname)
+                break
+
+            this_filter_vars[varname] = html.request.get_str_input_mandatory(varname)
+
+        if this_filter_vars:
+            context[filter_name] = this_filter_vars
+
     return context
 
 

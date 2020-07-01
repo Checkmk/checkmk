@@ -17,7 +17,7 @@ from pathlib import Path
 import pprint
 import sys
 import traceback
-from typing import Any, Dict, Iterator, Optional, Tuple, Type
+from typing import Any, Dict, Iterator, Optional, Tuple, Type  # pylint: disable=unused-import
 import uuid
 import urllib.parse
 

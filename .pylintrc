@@ -138,6 +138,19 @@ disable=
     # https://github.com/PyCQA/pylint/issues/3162.
     no-member,
 
+enable=
+    #---------------------------------------------------------------------------
+    # The checks below are from --py3k, and they can sometimes be annoying.
+    # Nevertheless, they found quite a few bugs, so it makes sense to keep them
+    # enabled.
+    dict-items-not-iterating,
+    dict-keys-not-iterating,
+    dict-values-not-iterating,
+    filter-builtin-not-iterating,
+    map-builtin-not-iterating,
+    range-builtin-not-iterating,
+    zip-builtin-not-iterating,
+
 [REPORTS]
 output-format=cmk_colorized
 msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}

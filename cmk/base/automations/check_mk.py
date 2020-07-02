@@ -1184,8 +1184,16 @@ class AutomationDiagHost(Automation):
                 return self._execute_ping(host_config, ipaddress)
 
             if test == 'agent':
-                return self._execute_agent(host_config, hostname, ipaddress, agent_port, cmd,
-                                           tcp_connect_timeout)
+                return self._execute_agent(
+                    data_sources.DataSources(
+                        hostname,
+                        ipaddress,
+                        sources=data_sources.make_sources(host_config, ipaddress),
+                    ),
+                    agent_port,
+                    cmd,
+                    tcp_connect_timeout,
+                )
 
             if test == 'traceroute':
                 return self._execute_traceroute(host_config, ipaddress)
@@ -1227,16 +1235,22 @@ class AutomationDiagHost(Automation):
         response = p.stdout.read()
         return p.wait(), response
 
-    def _execute_agent(self, host_config: config.HostConfig, hostname: str, ipaddress: str,
-                       agent_port: int, cmd: str,
-                       tcp_connect_timeout: Optional[float]) -> Tuple[int, str]:
-        sources = data_sources.DataSources(host_config, ipaddress)
-
+    def _execute_agent(
+        self,
+        sources: data_sources.DataSources,
+        agent_port: int,
+        cmd: str,
+        tcp_connect_timeout: Optional[float],
+    ) -> Tuple[int, str]:
         state, output = 0, u""
         for source in sources:
             source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source, data_sources.programs.DSProgramDataSource) and cmd:
-                source = data_sources.programs.DSProgramDataSource(hostname, ipaddress, cmd)
+                source = data_sources.programs.DSProgramDataSource(
+                    sources.hostname,
+                    sources.ipaddress,
+                    cmd,
+                )
             elif isinstance(source, data_sources.tcp.TCPDataSource):
                 source.port = agent_port
                 if tcp_connect_timeout is not None:
@@ -1520,7 +1534,11 @@ class AutomationGetAgentOutput(Automation):
                 data_sources.abstract.DataSource.set_may_use_cache_file(
                     not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
-                sources = data_sources.DataSources(host_config, ipaddress)
+                sources = data_sources.DataSources(
+                    hostname,
+                    ipaddress,
+                    sources=data_sources.make_sources(host_config, ipaddress),
+                )
 
                 agent_output = b""
                 for source in sources:

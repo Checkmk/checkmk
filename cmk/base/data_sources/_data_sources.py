@@ -34,7 +34,7 @@ from .programs import DSProgramDataSource, SpecialAgentDataSource
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .tcp import TCPDataSource
 
-__all__ = ["DataSources"]
+__all__ = ["DataSources", "make_sources"]
 
 
 class SourceBuilder:
@@ -184,41 +184,35 @@ class SourceBuilder:
         ]
 
 
-def make_sources(host_config: HostConfig, ipaddress: Optional[HostAddress],
-                 selected_raw_sections: Optional[SelectedRawSections]) -> List[DataSource]:
+def make_sources(
+    host_config: HostConfig,
+    ipaddress: Optional[HostAddress],
+    *,
+    selected_raw_sections: Optional[SelectedRawSections] = None,
+) -> List[DataSource]:
+    """Return a list of sources for DataSources.
+
+    Args:
+        host_config: The host configuration.
+        ipaddress: The host address.
+        selected_raw_sections: optional set: None -> no selection, empty -> select *nothing*
+
+    """
     return SourceBuilder(host_config, ipaddress, selected_raw_sections).sources
-
-
-def make_description(host_config: HostConfig) -> str:
-    if host_config.is_all_agents_host:
-        return "Normal Checkmk agent, all configured special agents"
-
-    if host_config.is_all_special_agents_host:
-        return "No Checkmk agent, all configured special agents"
-
-    if host_config.is_tcp_host:
-        return "Normal Checkmk agent, or special agent if configured"
-
-    return "No agent"
 
 
 class DataSources(collections.abc.Collection):
     def __init__(
         self,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
-        # optional set: None -> no selection, empty -> select *nothing*
-        selected_raw_sections: Optional[SelectedRawSections] = None,
+        *,
+        sources: List[DataSource],
     ) -> None:
         super(DataSources, self).__init__()
-        self._ipaddress = ipaddress
-        self._host_config = host_config
-        self._sources = make_sources(host_config, ipaddress, selected_raw_sections)
-        self.description = make_description(host_config)
-
-    @property
-    def _hostname(self) -> HostName:
-        return self._host_config.hostname
+        self.hostname = hostname
+        self.ipaddress = ipaddress
+        self._sources = sources
 
     def __contains__(self, item) -> bool:
         return self._sources.__contains__(item)
@@ -229,7 +223,11 @@ class DataSources(collections.abc.Collection):
     def __len__(self):
         return self._sources.__len__()
 
-    def get_host_sections(self, max_cachefile_age: Optional[int] = None) -> MultiHostSections:
+    def get_host_sections(
+        self,
+        host_config: HostConfig,
+        max_cachefile_age: Optional[int] = None,
+    ) -> MultiHostSections:
         """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
         Returns a dictionary object of already parsed HostSections() constructs for each related host.
@@ -242,17 +240,18 @@ class DataSources(collections.abc.Collection):
         or source.exception() to get the exception object.
         """
         console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
+        hostnames = host_config.nodes
 
         if max_cachefile_age is None:
             # In case a max_cachefile_age is given with the function call, always use this one
             # instead of the host individual one. This is only used in discovery mode.
-            max_cachefile_age = (config.check_max_cachefile_age if self._host_config.nodes is None
-                                 else config.cluster_max_cachefile_age)
+            max_cachefile_age = (config.check_max_cachefile_age
+                                 if hostnames is None else config.cluster_max_cachefile_age)
 
         # First abstract clusters/nodes/hosts
-        if self._host_config.nodes is not None:
+        if hostnames is not None:
             nodes = []
-            for hostname in self._host_config.nodes:
+            for hostname in hostnames:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
                 check_names = check_table.get_needed_check_names(
@@ -260,20 +259,24 @@ class DataSources(collections.abc.Collection):
                     remove_duplicates=True,
                     filter_mode="only_clustered",
                 )
-                node_needed_raw_sections = config.get_relevant_raw_sections(
+                selected_raw_sections = config.get_relevant_raw_sections(
                     # TODO (mo): centralize maincheckify: CMK-4295
                     CheckPluginName(maincheckify(n)) for n in check_names)
 
                 sources = DataSources(
-                    self._host_config,
+                    hostname,
                     ipaddress,
-                    node_needed_raw_sections,
+                    sources=make_sources(
+                        host_config,
+                        ipaddress,
+                        selected_raw_sections=selected_raw_sections,
+                    ),
                 )
                 nodes.append((hostname, ipaddress, sources))
         else:
-            nodes = [(self._hostname, self._ipaddress, self)]
+            nodes = [(self.hostname, self.ipaddress, self)]
 
-        if self._host_config.nodes:
+        if hostnames:
             import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
             abstract.DataSource.set_may_use_cache_file()
 

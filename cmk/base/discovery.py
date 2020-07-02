@@ -310,10 +310,9 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
 
     # Now loop through all hosts
     for hostname in sorted(host_names):
+        host_config = config_cache.get_host_config(hostname)
         section.section_begin(hostname)
-
         try:
-
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
             # Usually we disable SNMP scan if cmk -I is used without a list of
@@ -327,14 +326,24 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                                      config.get_relevant_raw_sections(check_plugin_names))
 
             sources = _get_sources_for_discovery(
-                hostname,
-                ipaddress,
+                data_sources.DataSources(
+                    hostname,
+                    ipaddress,
+                    sources=data_sources.make_sources(
+                        host_config,
+                        ipaddress,
+                        selected_raw_sections=selected_raw_sections,
+                    ),
+                ),
                 do_snmp_scan,
                 on_error,
-                selected_raw_sections=selected_raw_sections,
             )
 
-            multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
+            multi_host_sections = _get_host_sections_for_discovery(
+                sources,
+                host_config,
+                use_caches=use_caches,
+            )
 
             _do_discovery_for(hostname, ipaddress, multi_host_sections, check_plugin_names,
                               arg_only_new, on_error)
@@ -517,13 +526,22 @@ def discover_on_host(
         else:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        sources = _get_sources_for_discovery(hostname,
-                                             ipaddress,
-                                             do_snmp_scan=do_snmp_scan,
-                                             on_error=on_error,
-                                             for_check_discovery=True)
+        sources = _get_sources_for_discovery(
+            data_sources.DataSources(
+                hostname,
+                ipaddress,
+                sources=data_sources.make_sources(host_config, ipaddress),
+            ),
+            do_snmp_scan=do_snmp_scan,
+            on_error=on_error,
+            for_check_discovery=True,
+        )
 
-        multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
+        multi_host_sections = _get_host_sections_for_discovery(
+            sources,
+            host_config,
+            use_caches=use_caches,
+        )
 
         # Compute current state of new and existing checks
         services, discovered_host_labels = _get_host_services(host_config,
@@ -645,14 +663,22 @@ def check_discovery(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-    sources = _get_sources_for_discovery(hostname,
-                                         ipaddress,
-                                         do_snmp_scan=params["inventory_check_do_scan"],
-                                         on_error="raise",
-                                         for_check_discovery=True)
+    sources = _get_sources_for_discovery(
+        data_sources.DataSources(
+            hostname,
+            ipaddress,
+            sources=data_sources.make_sources(host_config, ipaddress),
+        ),
+        do_snmp_scan=params["inventory_check_do_scan"],
+        on_error="raise",
+        for_check_discovery=True,
+    )
 
     multi_host_sections = _get_host_sections_for_discovery(
-        sources, use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
+        sources,
+        host_config,
+        use_caches=data_sources.abstract.DataSource.get_may_use_cache_file(),
+    )
 
     services, discovered_host_labels = _get_host_services(host_config,
                                                           ipaddress,
@@ -1109,20 +1135,11 @@ def _discover_services(
 
 
 def _get_sources_for_discovery(
-    hostname: HostName,
-    ipaddress: Optional[HostAddress],
+    sources: data_sources.DataSources,
     do_snmp_scan: bool,
     on_error: str,
     for_check_discovery: bool = False,
-    *,
-    selected_raw_sections: Optional[config.SelectedRawSections] = None,
 ) -> data_sources.DataSources:
-    sources = data_sources.DataSources(
-        config.HostConfig.make_host_config(hostname),
-        ipaddress,
-        selected_raw_sections=selected_raw_sections,
-    )
-
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
             source.set_on_error(on_error)
@@ -1143,10 +1160,13 @@ def _get_sources_for_discovery(
     return sources
 
 
-def _get_host_sections_for_discovery(sources: data_sources.DataSources,
-                                     use_caches: bool) -> MultiHostSections:
+def _get_host_sections_for_discovery(
+    sources: data_sources.DataSources,
+    host_config: config.HostConfig,
+    use_caches: bool,
+) -> MultiHostSections:
     max_cachefile_age = config.inventory_max_cachefile_age if use_caches else 0
-    return sources.get_host_sections(max_cachefile_age)
+    return sources.get_host_sections(host_config, max_cachefile_age)
 
 
 def _execute_discovery(
@@ -1443,16 +1463,27 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
     ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_name)
 
     sources = _get_sources_for_discovery(
-        host_name,
-        ip_address,
+        data_sources.DataSources(
+            host_name,
+            ip_address,
+            sources=data_sources.make_sources(host_config, ip_address),
+        ),
         do_snmp_scan=do_snmp_scan,
         on_error=on_error,
     )
 
-    multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
+    multi_host_sections = _get_host_sections_for_discovery(
+        sources,
+        host_config,
+        use_caches=use_caches,
+    )
 
-    services, discovered_host_labels = _get_host_services(host_config, ip_address,
-                                                          multi_host_sections, on_error)
+    services, discovered_host_labels = _get_host_services(
+        host_config,
+        ip_address,
+        multi_host_sections,
+        on_error,
+    )
 
     table: CheckPreviewTable = []
     for check_source, service in services.values():

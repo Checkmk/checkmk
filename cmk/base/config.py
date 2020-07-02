@@ -2735,6 +2735,19 @@ class HostConfig:
         return settings[0]
 
     @property
+    def agent_description(self) -> str:
+        if self.is_all_agents_host:
+            return "Normal Checkmk agent, all configured special agents"
+
+        if self.is_all_special_agents_host:
+            return "No Checkmk agent, all configured special agents"
+
+        if self.is_tcp_host:
+            return "Normal Checkmk agent, or special agent if configured"
+
+        return "No agent"
+
+    @property
     def agent_exclude_sections(self) -> Dict[str, str]:
         settings = self._config_cache.host_extra_conf(self.hostname, agent_exclude_sections)
         if not settings:

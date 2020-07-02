@@ -14,7 +14,7 @@ from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources import DataSources
+from cmk.base.data_sources import DataSources, make_sources
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import MultiHostSections
 
@@ -385,8 +385,12 @@ def test_get_host_sections(monkeypatch):
     make_scenario(hostname, tags).apply(monkeypatch)
     host_config = config.HostConfig.make_host_config(hostname)
 
-    sources = DataSources(host_config, address)
-    mhs = sources.get_host_sections()
+    sources = DataSources(
+        hostname,
+        address,
+        sources=make_sources(host_config, address),
+    )
+    mhs = sources.get_host_sections(host_config)
     assert len(mhs) == 1
 
     key = (hostname, address, SourceType.HOST)

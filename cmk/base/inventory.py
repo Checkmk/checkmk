@@ -69,7 +69,11 @@ def do_inv(hostnames: List[HostName]) -> None:
             else:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-            sources = data_sources.DataSources(host_config, ipaddress)
+            sources = data_sources.DataSources(
+                hostname,
+                ipaddress,
+                sources=data_sources.make_sources(host_config, ipaddress),
+            )
             inventory_tree, status_data_tree = _do_inv_for(
                 sources,
                 multi_host_sections=None,
@@ -117,7 +121,11 @@ def do_inv_check(
     long_infotexts: List[str] = []
     perfdata: List[Tuple] = []
 
-    sources = data_sources.DataSources(host_config, ipaddress)
+    sources = data_sources.DataSources(
+        hostname,
+        ipaddress,
+        sources=data_sources.make_sources(host_config, ipaddress),
+    )
     inventory_tree, status_data_tree = _do_inv_for(
         sources,
         multi_host_sections=None,
@@ -294,7 +302,7 @@ def _do_inv_for_realhost(host_config: config.HostConfig, sources: data_sources.D
                 )
 
     if multi_host_sections is None:
-        multi_host_sections = sources.get_host_sections()
+        multi_host_sections = sources.get_host_sections(host_config)
 
     section.section_step("Executing inventory plugins")
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel

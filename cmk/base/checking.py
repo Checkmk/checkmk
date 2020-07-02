@@ -151,8 +151,15 @@ def do_check(
         selected_raw_sections = config.get_relevant_raw_sections(
             CheckPluginName(maincheckify(s.check_plugin_name)) for s in services)
 
-        sources = data_sources.DataSources(host_config, ipaddress, selected_raw_sections)
-
+        sources = data_sources.DataSources(
+            hostname,
+            ipaddress,
+            sources=data_sources.make_sources(
+                host_config,
+                ipaddress,
+                selected_raw_sections=selected_raw_sections,
+            ),
+        )
         num_success, plugins_missing_data = _do_all_checks_on_host(
             services,
             sources,
@@ -272,7 +279,7 @@ def _do_all_checks_on_host(
     check_api_utils.set_hostname(hostname)
 
     # Gather the data from the sources
-    multi_host_sections = sources.get_host_sections()
+    multi_host_sections = sources.get_host_sections(host_config)
 
     for service in services:
 

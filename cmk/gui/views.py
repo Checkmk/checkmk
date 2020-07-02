@@ -22,6 +22,7 @@ from livestatus import SiteId, LivestatusRow
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.prediction import livestatus_lql
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -29,6 +30,7 @@ import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
 import cmk.gui.inventory as inventory
 import cmk.gui.visuals as visuals
+from cmk.gui.visuals import get_only_sites
 import cmk.gui.sites as sites
 import cmk.gui.i18n
 import cmk.gui.pages
@@ -1744,14 +1746,6 @@ def get_user_sorters() -> 'List[SorterSpec]':
     return _parse_url_sorters(html.request.var("sort"))
 
 
-def get_only_sites() -> Optional[List[SiteId]]:
-    """Is the view limited to specific sites by request?"""
-    site_arg = html.request.var("site")
-    if site_arg:
-        return [SiteId(site_arg)]
-    return None
-
-
 def get_limit() -> Optional[int]:
     """How many data rows may the user query?"""
     limitvar = html.request.var("limit", "soft")
@@ -2543,12 +2537,7 @@ def query_action_data(what, host, site, svcdesc):
     except KeyError:
         pass
 
-    query = 'GET %ss\n' \
-            'Columns: %s\n' \
-            'Filter: host_name = %s\n' \
-           % (what, ' '.join(columns), host)
-    if what == 'service':
-        query += 'Filter: service_description = %s\n' % svcdesc
+    query = livestatus_lql([host], columns, svcdesc)
 
     with sites.prepend_site(), sites.only_sites(site):
         row = sites.live().query_row(query)

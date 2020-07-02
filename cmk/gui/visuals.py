@@ -12,6 +12,8 @@ import json
 from contextlib import contextmanager
 from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
+from livestatus import SiteId
+
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
@@ -1260,8 +1262,6 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
 # TODO: Untangle only_sites and filter headers
 # TODO: Reduce redundancies with filters_of_visual()
 def get_filter_headers(table, infos, context):
-    # Prepare Filter headers for Livestatus
-    filter_headers = ""
     with html.stashed_vars():
         for filter_name, filter_vars in context.items():
             # first set the HTML variables. Sorry - the filters need this
@@ -1271,17 +1271,24 @@ def get_filter_headers(table, infos, context):
             else:
                 html.request.set_var(filter_name, filter_vars)
 
-        # Apply the site hint / filter (Same logic as in views.py)
-        site_str = html.request.var("site")
-        only_sites = [site_str] if site_str else None
+        filter_headers = "".join(collect_filter_headers(infos, table))
+    return filter_headers, get_only_sites()
 
-        # Now compute filter headers for all infos of the used datasource
-        for filter_name, filter_class in filter_registry.items():
-            filter_object = filter_class()
-            if filter_object.info in infos:
-                header = filter_object.filter(table)
-                filter_headers += header
-    return filter_headers, only_sites
+
+def get_only_sites() -> Optional[List[SiteId]]:
+    """Is the view limited to specific sites by request?"""
+    site_arg = html.request.var("site")
+    if site_arg:
+        return [SiteId(site_arg)]
+    return None
+
+
+def collect_filter_headers(info_keys, table):
+    # Collect all available filters for these infos
+    for filter_class in filter_registry.values():
+        filter_obj = filter_class()
+        if filter_obj.info in info_keys and filter_obj.available():
+            yield filter_obj.filter(table)
 
 
 #.

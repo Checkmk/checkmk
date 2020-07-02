@@ -1,9 +1,14 @@
+<<<<<<< HEAD
 #!/usr/bin/env python3
+=======
+#!/usr/bin/env python
+>>>>>>> 3ca3a019a5... Added SIGNL4 as a notification option.
 # SIGNL4 Alerting
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
 # (c) 2020 Derdack GmbH
 #          SIGNL4 <info@signl4.com>
+<<<<<<< HEAD
 # Reliable team alerting using SIGNL4.
 
 import sys
@@ -12,13 +17,30 @@ import requests
 
 
 from cmk.notification_plugins import utils
+=======
+
+# Reliable team alerting using SIGNL4.
+
+import requests
+import json
+import os
+import sys
+>>>>>>> 3ca3a019a5... Added SIGNL4 as a notification option.
 
 api_url = "https://connect.signl4.com/webhook/"
 
 def main():
+<<<<<<< HEAD
     context = utils.collect_context()
 
     message = get_text(context)
+=======
+    context = dict([ (var[7:], value.decode("utf-8"))
+                      for (var, value) in os.environ.items()
+                      if var.startswith("NOTIFY_")])
+
+    message    = get_text(context)
+>>>>>>> 3ca3a019a5... Added SIGNL4 as a notification option.
 
     password = context["PARAMETER_PASSWORD"]
 
@@ -39,7 +61,11 @@ def get_text(context):
     contact_pager = context['CONTACTPAGER'].replace(' ', '')
     description = notification_type + ' on ' + host_name
     service_problem_id = ''
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3ca3a019a5... Added SIGNL4 as a notification option.
     host_problem_id = context['HOSTPROBLEMID']
     date_time = context['SHORTDATETIME']
 
@@ -59,6 +85,10 @@ def get_text(context):
         if notification_type in [ "PROBLEM", "RECOVERY" ]:
             host_state = context['HOSTSTATE']
             description += ' (' + host_state + ')'
+<<<<<<< HEAD
+=======
+            service_problem_id = context['SERVICEPROBLEMID']
+>>>>>>> 3ca3a019a5... Added SIGNL4 as a notification option.
         else:
             description += ' (' + host_state + ')'
 
@@ -87,7 +117,11 @@ def get_text(context):
         'HostProblemId': host_problem_id,
         'ServiceProblemId': service_problem_id,
         'DateTime': date_time,
+<<<<<<< HEAD
         'X-S4-ExternalID': 'Checkmk: ' + host_name + '-' + host_problem_id + '-' + service_problem_id,
+=======
+        'X-S4-ExternalID': host_name + '-' + host_problem_id + '-' + service_problem_id,
+>>>>>>> 3ca3a019a5... Added SIGNL4 as a notification option.
         'X-S4-Status': s4_status
     }
 
@@ -97,6 +131,7 @@ def send_alert(password, message):
 
     resp = requests.post(api_url + password, params=None, data=json.dumps(message))
 
+<<<<<<< HEAD
     if resp.status_code >= 200 and resp.status_code < 300:
         if resp.text.find('eventId') == -1:
             sys.stdout.write(resp.text)
@@ -108,5 +143,15 @@ def send_alert(password, message):
 
     sys.stderr.write(resp.text)
     sys.exit(2)
+=======
+    if resp.status_code == 200:
+        result = resp.text.split("\t")
+        if result.find('eventId') == -1:
+            sys.stdout.write(result)
+            return 0
+        
+    sys.stderr.write(resp.text)
+    return 2
+>>>>>>> 3ca3a019a5... Added SIGNL4 as a notification option.
 
 sys.exit(main())

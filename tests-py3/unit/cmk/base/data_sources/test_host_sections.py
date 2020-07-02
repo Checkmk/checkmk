@@ -9,6 +9,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
+import cmk.utils.piggyback
 from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 
 import cmk.base.check_api_utils as check_api_utils
@@ -400,3 +401,52 @@ def test_get_host_sections(monkeypatch):
     assert not section.cache_info
     assert not section.piggybacked_raw_data
     assert not section.persisted_sections
+
+
+def test_get_host_sections_cluster(monkeypatch, mocker):
+    hostname = "testhost"
+    hosts = {
+        "host0": "10.0.0.0",
+        "host1": "10.0.0.1",
+        "host2": "10.0.0.2",
+    }
+    address = "1.2.3.4"
+    tags = {"agent": "no-agent"}
+    make_scenario(hostname, tags).apply(monkeypatch)
+    host_config = config.HostConfig.make_host_config(hostname)
+
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda hostname: hosts[hostname])
+    mocker.patch.object(
+        cmk.utils.piggyback,
+        "remove_source_status_file",
+        autospec=True,
+    )
+    mocker.patch.object(
+        cmk.utils.piggyback,
+        "_store_status_file_of",
+        autospec=True,
+    )
+
+    # Create a cluster
+    host_config.nodes = list(hosts.keys())
+
+    sources = DataSources(
+        hostname,
+        address,
+        sources=make_sources(host_config, address),
+    )
+    mhs = sources.get_host_sections(host_config)
+    assert len(mhs) == len(hosts) == 3
+    cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]
+    assert cmk.utils.piggyback.remove_source_status_file.call_count == 3  # type: ignore[attr-defined]
+
+    for host, addr in hosts.items():
+        remove_source_status_file = cmk.utils.piggyback.remove_source_status_file
+        remove_source_status_file.assert_any_call(host)  # type: ignore[attr-defined]
+        key = (host, addr, SourceType.HOST)
+        assert key in mhs
+        section = mhs[key]
+        assert not section.sections
+        assert not section.cache_info
+        assert not section.piggybacked_raw_data
+        assert not section.persisted_sections

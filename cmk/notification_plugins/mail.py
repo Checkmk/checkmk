@@ -631,7 +631,7 @@ def render_cmk_graphs(context):
                          (e, url, json_data))
         return []
 
-    return map(base64.b64decode, base64_strings)
+    return [base64.b64decode(s) for s in base64_strings]
 
 
 def render_performance_graphs(context):

@@ -311,7 +311,7 @@ class NetAppConnection:
         return netapp_response
 
     def invoke(self, *args_):
-        invoke_list = [args_[0], map(list, zip(args_[1::2], args_[2::2]))]
+        invoke_list = [args_[0], [list(a) for a in zip(args_[1::2], args_[2::2])]]
         response = self.get_response(invoke_list)
         if response:
             return response.get_results()
@@ -349,7 +349,7 @@ class NetAppNode:
         return None
 
     def children_get(self):
-        return map(NetAppNode, self.node)
+        return [NetAppNode(n) for n in self.node]
 
     def append(self, what):
         self.node.append(what)

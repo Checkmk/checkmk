@@ -169,7 +169,7 @@ def if_extract_node(line, has_nodeinfo):
 
 def if_render_mac_address(ifPhysAddress):
     if not isinstance(ifPhysAddress, list):
-        mac_bytes = map(ord, ifPhysAddress)
+        mac_bytes = [ord(x) for x in ifPhysAddress]
     else:
         mac_bytes = ifPhysAddress
     return (":".join(["%02s" % hex(m)[2:] for m in mac_bytes]).replace(' ', '0')).upper()

@@ -16,7 +16,7 @@ def prettify(html_text):
 
 def encode_attribute(value):
     if isinstance(value, list):
-        return map(encode_attribute, value)
+        return [encode_attribute(v) for v in value]
 
     return value.replace("&", "&amp;")\
                 .replace('"', "&quot;")\
@@ -26,7 +26,7 @@ def encode_attribute(value):
 
 def undo_encode_attribute(value):
     if isinstance(value, list):
-        return map(undo_encode_attribute, value)
+        return [undo_encode_attribute(v) for v in value]
 
     return value.replace("&quot;", '"')\
                 .replace("&lt;", '<')\
@@ -36,7 +36,7 @@ def undo_encode_attribute(value):
 
 def subber(value):
     if isinstance(value, list):
-        return map(subber, value)
+        return [subber(v) for v in value]
 
     return re.sub(
         '>', ' ',

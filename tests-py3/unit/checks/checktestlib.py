@@ -325,7 +325,8 @@ class DiscoveryResult:
 
     # TODO: Very obscure and inconsistent __str__ conversion...
     def __str__(self):
-        return "%s%s" % (map(tuple, self.entries), [self.labels[k].label for k in self.labels])
+        return "%s%s" % ([tuple(e) for e in self.entries
+                         ], [self.labels[k].label for k in self.labels])
 
 
 def assertDiscoveryResultsEqual(check, actual, expected):

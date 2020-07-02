@@ -235,7 +235,7 @@ class VirtualHostTree(SidebarSnapin):
         if "_state" in tree:
             return tree["_state"]
 
-        states = map(self._tag_tree_worst_state, tree.values())
+        states = [self._tag_tree_worst_state(s) for s in tree.values()]
         for x in states:
             if x == 2:
                 return 2

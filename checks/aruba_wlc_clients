@@ -16,8 +16,7 @@ def parse_aruba_wlc_clients(info):
     parsed = {}
     sum_clients = 0
     for index, clients_str in info:
-        ascii_table = map(int, index.split(".")[1:])
-        name = "".join(map(chr, ascii_table))
+        name = "".join(chr(int(x)) for x in index.split(".")[1:])
         if name:
             sum_clients += int(clients_str)
             parsed[name] = (int(clients_str), "")

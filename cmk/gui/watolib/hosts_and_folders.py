@@ -2701,7 +2701,7 @@ class CMEFolder(CREFolder):
         result_dict["involved_customers"].update(
             set(map(managed.get_customer_of_site, result_dict["explicit_host_sites"].keys())))
         result_dict["involved_customers"].update(
-            map(managed.get_customer_of_site, result_dict["explicit_folder_sites"].keys()))
+            set(map(managed.get_customer_of_site, result_dict["explicit_folder_sites"].keys())))
 
     def _determine_explicit_set_site_ids(self, result_dict):
         for host in self.hosts().values():

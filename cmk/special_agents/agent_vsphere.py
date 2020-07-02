@@ -9,13 +9,12 @@ import argparse
 import collections
 import datetime
 import errno
-import functools
 from pathlib import Path
 import re
 import socket
 import sys
 import time
-from typing import Any, Counter, Dict, Iterable, List, Set
+from typing import Any, Counter, Dict, Iterable, List
 from xml.dom import minidom  # type: ignore[import]
 
 import requests
@@ -1198,7 +1197,7 @@ class ESXConnection:
 #   '----------------------------------------------------------------------'
 
 
-def fetch_available_counters(connection, hostsystems):
+def fetch_available_counters(connection, hostsystems) -> Dict[str, Dict[str, List[str]]]:
     counters_available_by_host: Dict[str, Dict[str, List[str]]] = {}
     for host in hostsystems:
         counter_avail_response = connection.query_server('perfcounteravail', esxhost=host)
@@ -1291,8 +1290,12 @@ def fetch_counters(connection, host, counters_selected):
 def get_section_counters(connection, hostsystems, datastores, opt):
     section_lines = []
     counters_available_by_host = fetch_available_counters(connection, hostsystems)
-    counters_available_all: Set[str] = functools.reduce(lambda x, y: x.union(y),
-                                                        counters_available_by_host.values(), set())
+    counters_available_all = {
+        counter  #
+        for by_host in counters_available_by_host.values()  #
+        for counter in by_host.keys()
+    }
+
     net_extra_info = fetch_extra_interface_counters(connection, opt)
     counters_description = fetch_counters_syntax(connection, counters_available_all)
 

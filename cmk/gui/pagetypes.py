@@ -235,7 +235,7 @@ class Base:
     # Return a list of all instances of this type
     @classmethod
     def instances(cls):
-        return cls.__instances.values()
+        return list(cls.__instances.values())
 
     @classmethod
     def instance(cls, key):

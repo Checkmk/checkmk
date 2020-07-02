@@ -304,10 +304,10 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
 
         return result
 
-    services = check_table.get_check_table(hostname, remove_duplicates=True).values()
+    chk_tab = check_table.get_check_table(hostname, remove_duplicates=True)
     have_at_least_one_service = False
     used_descriptions: Dict[ServiceName, Tuple[CheckPluginNameStr, Item]] = {}
-    for service in sorted(services, key=lambda s: (s.check_plugin_name, s.item)):
+    for service in sorted(chk_tab.values(), key=lambda s: (s.check_plugin_name, s.item)):
         if service.check_plugin_name not in config.check_info:
             continue  # simply ignore missing checks
 

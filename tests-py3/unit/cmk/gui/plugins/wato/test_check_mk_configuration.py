@@ -43,9 +43,9 @@ def test_ui_theme_default_value(register_builtin_html):
     var = config_variable_registry["ui_theme"]()
 
     default_setting = var.domain()().default_globals()[var.ident()]
-    assert default_setting == "facelift"
+    assert default_setting == "modern-dark"
 
-    assert var.valuespec().value_to_text(default_setting) == "Modern"
+    assert var.valuespec().value_to_text(default_setting) == "Modern (Dark)"
 
 
 def test_exclude_section_options():

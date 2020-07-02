@@ -349,7 +349,7 @@ def load_dynamic_permissions() -> None:
 def get_role_permissions() -> Dict[str, List[str]]:
     """Returns the set of permissions for all roles"""
     role_permissions: Dict[str, List[str]] = {}
-    roleids = roles.keys()
+    roleids = set(roles.keys())
     for perm_class in permissions.permission_registry.values():
         perm = perm_class()
         for role_id in roleids:

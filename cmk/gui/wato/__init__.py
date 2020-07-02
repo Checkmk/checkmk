@@ -736,7 +736,7 @@ def load_plugins(force: bool) -> None:
     if modes:
         raise MKGeneralException(
             _("Deprecated WATO modes found: %r. "
-              "They need to be refactored to new API.") % modes.keys())
+              "They need to be refactored to new API.") % list(modes.keys()))
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins

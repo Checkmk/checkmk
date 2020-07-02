@@ -53,7 +53,7 @@ def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
 
 
 def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
-    builtin_keys = builtin_timeperiods().keys()
+    builtin_keys = set(builtin_timeperiods().keys())
     return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
 
 

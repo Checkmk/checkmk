@@ -2791,7 +2791,7 @@ def validate_all_hosts(hostnames, force_all=False):
         all_hosts = collect_hosts(Folder.root_folder())
 
         if force_all:
-            hostnames = all_hosts.keys()
+            hostnames = list(all_hosts.keys())
 
         for name in hostnames:
             eff = all_hosts[name]

@@ -76,7 +76,7 @@ class MultiHostSections(collections.abc.Mapping):
         return "%s(data=%r)" % (type(self).__name__, self._data)
 
     def keys(self):
-        return self._data.keys()
+        return self._data.keys()  # pylint: disable=dict-keys-not-iterating
 
     def values(self):
         return self._data.values()

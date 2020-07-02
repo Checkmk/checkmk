@@ -1513,7 +1513,7 @@ def compile_forest(only_hosts=None, only_groups=None):
             # Passive apache processes simply reload the cachefile (if applicable) and wait
             g_bi_cache_manager.load_cachefile()
 
-            log("Wait for jobs to finish: %r" % jobs.keys())
+            log("Wait for jobs to finish: %r" % list(jobs.keys()))
             time.sleep(1)
 
     except Exception:

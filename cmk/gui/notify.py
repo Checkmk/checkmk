@@ -211,14 +211,14 @@ def _validate_msg(msg, varprefix):
     if not msg.get('methods'):
         raise MKUserError('methods', _('Please select at least one notification method.'))
 
-    valid_methods = _notify_methods().keys()
+    valid_methods = set(_notify_methods().keys())
     for method in msg['methods']:
         if method not in valid_methods:
             raise MKUserError('methods', _('Invalid notitification method selected.'))
 
     # On manually entered list of users validate the names
     if isinstance(msg['dest'], tuple) and msg['dest'][0] == 'list':
-        existing = config.multisite_users.keys()
+        existing = set(config.multisite_users.keys())
         for user_id in msg['dest'][1]:
             if user_id not in existing:
                 raise MKUserError('dest', _('A user with the id "%s" does not exist.') % user_id)

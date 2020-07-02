@@ -481,7 +481,7 @@ def link_endpoint(
     try:
         endpoint = _registry[(module_name, rel)]
     except KeyError:
-        raise KeyError(_registry.keys())
+        raise KeyError(list(_registry.keys()))
 
     param_values = {key: {'example': value} for key, value in parameters.items()}
 

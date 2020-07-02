@@ -5490,7 +5490,7 @@ class IconSelector(ValueSpec):
             dirs.append(
                 os.path.join(cmk.utils.paths.omd_root, "share/check_mk/web/htdocs/images/icons"))
 
-        valid_categories = dict(self.categories()).keys()
+        valid_categories = set(k for k, _v in self.categories())
 
         #
         # Read all icons from the icon directories

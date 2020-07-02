@@ -6299,8 +6299,7 @@ def test_registered_display_hints():
     '.software.packages:*.vendor',
     '.software.packages:*.version',]
 
-    found = cmk.gui.plugins.views.inventory_displayhints.keys()
-    assert sorted(expected) == sorted(found)
+    assert sorted(expected) == sorted(cmk.gui.plugins.views.inventory_displayhints.keys())
 
 
 def test_get_inventory_display_hint():

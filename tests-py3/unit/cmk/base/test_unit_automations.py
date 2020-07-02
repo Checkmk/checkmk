@@ -48,9 +48,8 @@ def test_registered_automations():
             'bake-agents',
         ]
 
-    registered_automations = cmk.base.automations.automations._automations.keys()
-
-    assert sorted(needed_automations) == sorted(registered_automations)
+    assert sorted(needed_automations) == sorted(
+        cmk.base.automations.automations._automations.keys())
 
 
 def test_get_labels_of_host(monkeypatch):

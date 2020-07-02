@@ -130,7 +130,7 @@ def test_validate_function_args(function, has_item, has_params, sections, raises
         check_plugins._validate_function_args("", "", function, has_item, has_params, sections)
 
 
-@pytest.mark.parametrize("key", MINIMAL_CREATION_KWARGS.keys())
+@pytest.mark.parametrize("key", list(MINIMAL_CREATION_KWARGS.keys()))
 def test_create_check_plugin_mandatory(key):
     kwargs = {k: v for k, v in MINIMAL_CREATION_KWARGS.items() if k != key}
     with pytest.raises(TypeError):

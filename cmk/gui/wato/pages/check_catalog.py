@@ -179,7 +179,7 @@ class ModeCheckPlugins(WatoMode):
         for key, entries in self._manpages.items():
             check_entries(key, entries)
 
-        return collection.items()
+        return list(collection.items())
 
     def _get_check_catalog(self):
         def path_prefix_matches(p, op):

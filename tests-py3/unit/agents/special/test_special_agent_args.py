@@ -90,7 +90,7 @@ def test_all_agents_tested():
     assert not untested, "Please add test cases for special agents %s" % untested
 
 
-@pytest.mark.parametrize("agent_name, required_args", REQUIRED_ARGUMENTS.items())
+@pytest.mark.parametrize("agent_name, required_args", list(REQUIRED_ARGUMENTS.items()))
 def test_parse_arguments(agent_name, required_args):
     agent = import_module("cmk.special_agents.%s" % agent_name)
     if agent_name in AGENTS_WITHOUT_PARSE_ARGUMENTS:

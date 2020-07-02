@@ -211,7 +211,7 @@ class ModeUsers(WatoMode):
 
         users = userdb.load_users()
 
-        entries = users.items()
+        entries = list(users.items())
 
         html.begin_form("bulk_delete_form", method="POST")
 

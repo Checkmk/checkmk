@@ -73,26 +73,26 @@ class WerkTranslator:
         }
 
     def classes(self):
-        return self._classes.items()
+        return list(self._classes.items())
 
     def class_of(self, werk):
         return self._classes[werk["class"]]
 
     def components(self):
-        return self._components.items()
+        return list(self._components.items())
 
     def component_of(self, werk):
         c = werk["component"]
         return self._components.get(c, c)
 
     def levels(self):
-        return self._levels.items()
+        return list(self._levels.items())
 
     def level_of(self, werk):
         return self._levels[werk["level"]]
 
     def compatibilities(self):
-        return self._compatibilities.items()
+        return list(self._compatibilities.items())
 
     def compatibility_of(self, werk):
         return self._compatibilities[werk["compatible"]]

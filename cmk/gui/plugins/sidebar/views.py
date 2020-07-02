@@ -116,7 +116,7 @@ def get_view_menu_items() -> Dict[str, List[ViewMenuItem]]:
             del page_type_topics[topic]
         all_topics_with_entries.append((topic, entries))
 
-    all_topics_with_entries += page_type_topics.items()
+    all_topics_with_entries.extend(page_type_topics.items())
 
     # Filter hidden / not permitted entries
     by_topic: Dict[str, List[ViewMenuItem]] = OrderedDict()

@@ -259,8 +259,7 @@ def _find_usages_of_contact_group_in_users(name):
     """Is the contactgroup assigned to a user?"""
     used_in = []
     users = userdb.load_users()
-    entries = users.items()
-    for userid, user in sorted(entries, key=lambda x: x[1].get("alias", x[0])):
+    for userid, user in sorted(users.items(), key=lambda x: x[1].get("alias", x[0])):
         cgs = user.get("contactgroups", [])
         if name in cgs:
             used_in.append(('%s: %s' % (_('User'), user.get('alias', userid)),

@@ -749,7 +749,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
 
         site_states = {}
 
-        sites = watolib.SiteManagementFactory().factory().load_sites().items()
+        sites = list(watolib.SiteManagementFactory().factory().load_sites().items())
         replication_sites = [e for e in sites if e[1]["replication"]]
         replication_status = ReplicationStatusFetcher().fetch(replication_sites)
 

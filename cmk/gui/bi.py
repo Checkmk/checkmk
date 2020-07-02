@@ -1694,7 +1694,7 @@ def get_services_filtered_by_host_alias(host_spec):
     honor_site = SITE_SEP in host_spec[1]
     if g_services_items:
         return host_spec, honor_site, g_services_items
-    return host_spec, honor_site, g_services.items()
+    return host_spec, honor_site, list(g_services.items())
 
 
 def get_services_filtered_by_host_name(host_re):

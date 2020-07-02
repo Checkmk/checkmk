@@ -3900,7 +3900,7 @@ class FilterEventPhase(EventFilterState):
         return 207
 
     def __init__(self):
-        EventFilterState.__init__(self, "event", mkeventd.phase_names.items())
+        EventFilterState.__init__(self, "event", list(mkeventd.phase_names.items()))
 
 
 @filter_registry.register

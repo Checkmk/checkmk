@@ -7,7 +7,7 @@
 set -e
 
 if [ $# = 1 -a "$1" = 2 ]; then
-    TESTS_DIR="tests"
+    TESTS_DIR=""
     SHEBANG_PATTERN='^#!.*python$'
 elif [ $# = 1 -a "$1" = 3 ]; then
     TESTS_DIR="tests-py3"
@@ -58,7 +58,7 @@ SEARCH+=" omd/packages/appliance"
 SEARCH+=" omd/packages/maintenance"
 SEARCH+=" omd/packages/omd"
 SEARCH+=" scripts"
-SEARCH+=" $TESTS_DIR"
+test -n "$TESTS_DIR" && SEARCH+=" $TESTS_DIR"
 SEARCH+=" web/app"
 SEARCH+=" werk"
 

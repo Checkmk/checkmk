@@ -11,22 +11,27 @@
 # .1.3.6.1.4.1.318.1.1.12.2.3.1.1.3.1 1 --> PowerNet-MIB::rPDULoadStatusLoadState.1
 
 # .1.3.6.1.4.1.318.1.1.12.1.1.0 FOOBAR --> PowerNet-MIB::rPDUIdentName.0
-# .1.3.6.1.4.1.318.1.1.12.1.9.0 1 --> PowerNet-MIB::rPDUIdentDeviceNumPhases.0$
+# .1.3.6.1.4.1.318.1.1.12.1.9.0 1 --> PowerNet-MIB::rPDUIdentDeviceNumPhases.0
 # .1.3.6.1.4.1.318.1.1.12.1.16.0 1587 --> PowerNet-MIB::rPDUIdentDevicePowerWatts.0
-# .1.3.6.1.4.1.318.1.1.12.2.1.4.0 2 --> PowerNet-MIB::rPDULoadDevNumBanks.0
 # .1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1 0 --> PowerNet-MIB::rPDULoadStatusLoad.1
 # .1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.2 0 --> PowerNet-MIB::rPDULoadStatusLoad.2
 # .1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.3 0 --> PowerNet-MIB::rPDULoadStatusLoad.3
 # .1.3.6.1.4.1.318.1.1.12.2.3.1.1.3.1 1 --> PowerNet-MIB::rPDULoadStatusLoadStates.1
 # .1.3.6.1.4.1.318.1.1.12.2.3.1.1.3.2 1 --> PowerNet-MIB::rPDULoadStatusLoadStates.2
 # .1.3.6.1.4.1.318.1.1.12.2.3.1.1.3.3 1 --> PowerNet-MIB::rPDULoadStatusLoadStates.3
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.4.1 1 --> PowerNet-MIB::rPDULoadStatusPhaseNumber.1
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.4.2 0 --> PowerNet-MIB::rPDULoadStatusPhaseNumber.2
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.4.3 0 --> PowerNet-MIB::rPDULoadStatusPhaseNumber.3
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.5.1 0 --> PowerNet-MIB::rPDULoadStatusBankNumber.1
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.5.2 1 --> PowerNet-MIB::rPDULoadStatusBankNumber.2
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.5.3 2 --> PowerNet-MIB::rPDULoadStatusBankNumber.3
 
 # examples num phase/banks: 1/0,    => parsed = device phase
 #                           1/2,    => parsed = device phase + 2 banks
 #                           3/0     => parsed = device phase + 3 phases
 
-from typing import Dict, Tuple, Union
-from cmk.snmplib.type_defs import OIDEnd, SNMPTree
+from typing import Dict, List, Tuple, Union
+from cmk.snmplib.type_defs import SNMPTree
 from .agent_based_api.v0 import (
     all_of,
     exists,
@@ -34,38 +39,54 @@ from .agent_based_api.v0 import (
     startswith,
 )
 
+InfoEntry = Union[str, List[int]]
+StatusInfo = Tuple[float, Tuple[int, str]]
+Parsed = Dict[str, Dict[str, Union[float, StatusInfo]]]
 
-def parse_apc_rackpdu_power(string_table):
-    def get_status_info(amperage_str, device_state):
-        return float(amperage_str) / 10, {
-            "1": (0, "load normal"),
-            "2": (2, "load low"),
-            "3": (1, "load near over load"),
-            "4": (2, "load over load"),
-        }[device_state]
+STATE_MAP = {
+    "1": (0, "load normal"),
+    "2": (2, "load low"),
+    "3": (1, "load near over load"),
+    "4": (2, "load over load"),
+}
 
-    parsed: Dict[str, Dict[str, Union[float, Tuple[float, Tuple[int, str]]]]] = {}
-    device_info, bank_info, phase_info = string_table
+
+def get_status_info(amperage_str: InfoEntry, device_state: InfoEntry) -> StatusInfo:
+    """
+    The assert-statements make mypy happy because they handle input of type List[int], which would
+    only happen if we used OIDBytes("...") in the SNMP trees.
+    """
+    assert isinstance(amperage_str, str)
+    assert isinstance(device_state, str)
+    return float(amperage_str) / 10, STATE_MAP[device_state]
+
+
+def parse_apc_rackpdu_power(string_table: List[List[List[InfoEntry]]]) -> Parsed:
+
+    parsed: Parsed = {}
+    device_info, n_phases, phase_bank_info = string_table
     pdu_ident_name, power_str = device_info[0]
     device_name = "Device %s" % pdu_ident_name
 
+    assert isinstance(power_str, str)  # see comment in get_status_info
     parsed.setdefault(device_name, {"power": float(power_str)})
 
-    if len(device_info) == len(phase_info):
-        parsed[device_name]["current"] = get_status_info(*phase_info[0][1:])
-        return parsed
+    if n_phases[0][0] == '1':
+        parsed[device_name]["current"] = get_status_info(*phase_bank_info[0][:2])
+        phase_bank_info = phase_bank_info[1:]
 
-    if int(bank_info[0][0]):
-        parsed[device_name]["current"] = get_status_info(*phase_info[0][1:])
-        phase_info = phase_info[1:]
-        name_part = "Bank"
-    else:
-        name_part = "Phase"
+    for amperage_str, device_state, phase_num, bank_num in phase_bank_info:
+        if bank_num != '0':
+            name_part = "Bank"
+            num = bank_num
+        elif phase_num != '0':
+            name_part = "Phase"
+            num = phase_num
+        else:
+            continue
 
-    for oid_end, amperage_str, device_state in phase_info:
-        parsed.setdefault("%s %s" % (name_part, oid_end),
+        parsed.setdefault("%s %s" % (name_part, num),
                           {"current": get_status_info(amperage_str, device_state)})
-
     return parsed
 
 
@@ -83,15 +104,16 @@ register.snmp_section(
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.12.2.1",
             oids=[
-                '4',  # rPDULoadDevNumBanks
+                '2',  # rPDULoadDevNumPhases
             ],
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.12.2.3.1.1",
             oids=[
-                OIDEnd(),
                 '2',  # rPDULoadStatusLoad
                 '3',  # rPDULoadStatusLoadState
+                '4',  # rPDULoadStatusPhaseNumber
+                '5',  # rPDULoadStatusBankNumber
             ],
         ),
     ],

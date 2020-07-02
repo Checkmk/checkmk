@@ -13,8 +13,8 @@ checkname = 'apc_rackpdu_power'
 
 parsed = parse_apc_rackpdu_power(
     [[[u'luz0010x', u'0']],
-     [[u'0']],
-     [[u'1', u'0', u'1'], [u'2', u'0', u'1'], [u'3', u'0', u'1']]],
+     [[u'3']],
+     [[u'0', u'1', u'1', u'0'], [u'0', u'1', u'2', u'0'], [u'0', u'1', u'3', u'0']]],
 )
 
 discovery = {'': [(u'Device luz0010x', {}),

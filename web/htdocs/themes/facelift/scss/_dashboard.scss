@@ -898,10 +898,27 @@ div#dashboard_context_dialog_container {
   div#dashboard_context_dialog {
     position: relative;
     display: block;
-    width: 400px;
+    width: min-content;
     margin-top: 100px;
     margin-right: auto;
     margin-left: auto;
+
+    a.close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: block;
+      width: 16px;
+      height: 16px;
+
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+
+      border: 1px solid;
+      border-radius: 2px;
+    }
 
     table.nform tr td.legend {
       width: 300px;

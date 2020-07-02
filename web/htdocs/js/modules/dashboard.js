@@ -1244,3 +1244,7 @@ export function show_dashboard_context_dialog() {
     document.getElementById("dashboard_context_dialog_container").style.display = "block";
     toggle_dashboard_menu(false);
 }
+
+export function close_dashboard_context_dialog() {
+    document.getElementById("dashboard_context_dialog_container").style.display = "none";
+}

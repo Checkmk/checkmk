@@ -670,6 +670,11 @@ def _dashboard_context_dialog(board: DashboardConfig, board_context: VisualConte
     html.open_div(id_="dashboard_context_dialog")
     html.begin_form("dashboard_context_dialog", method="GET", add_transid=False)
 
+    html.a("x",
+           href="javascript:void(0)",
+           onclick="cmk.dashboard.close_dashboard_context_dialog()",
+           class_="close")
+
     forms.header(_("Dashboard context"))
 
     try:

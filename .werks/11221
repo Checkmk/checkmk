@@ -1,0 +1,16 @@
+Title: systemtime: Offset for vSphere special agent
+Knowledge: undoc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1593596803
+
+The check <tt>systemtime<\tt> reported an incorrect offset when checking
+the output of the vSphere special agent. This was caused by the runtime of
+the special agent itself and has now been fixed. The check <tt>systemtime<\tt>
+can now process a second, optional input which gives the timestamp against
+which the actual offset is computed.

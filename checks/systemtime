@@ -29,23 +29,28 @@ factory_settings['systemtime_default_levels'] = {'levels': (30, 60)}
 
 
 def parse_systemtime(info):
-    try:
-        return {'systemtime': float(info[0][0])}
-    except IndexError:
-        return {}
+    parsed = {}
+    for idx, key in enumerate(['foreign_systemtime', 'our_systemtime']):
+        try:
+            parsed[key] = float(info[0][idx])
+        except IndexError:
+            return parsed
+    return parsed
 
 
 def check_systemtime(item, params, parsed):
     if not parsed:
         return
 
-    systemtime = parsed['systemtime']
-    try:
-        systemtime += get_agent_data_time()
-    except (NameError, TypeError):
-        pass
-
-    offset = systemtime - time.time()
+    systemtime = parsed['foreign_systemtime']
+    if 'our_systemtime' in parsed:
+        offset = systemtime - parsed['our_systemtime']
+    else:
+        try:
+            systemtime += get_agent_data_time()
+        except (NameError, TypeError):
+            pass
+        offset = systemtime - time.time()
 
     warn, crit = params if isinstance(params, tuple) else params['levels']
     yield check_levels(

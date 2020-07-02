@@ -1276,7 +1276,7 @@ def section_systemtime(connection):
             utc = naive.replace(tzinfo=tz.tzutc())
             localtime = utc.astimezone(tz.tzlocal())
             output("<<<systemtime>>>")
-            output(localtime.strftime("%s"))
+            output(localtime.strftime("%s") + " " + str(time.time()))
     except Exception:
         if opt_debug:
             raise

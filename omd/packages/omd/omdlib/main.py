@@ -32,7 +32,6 @@ import pwd
 import time
 import errno
 import fcntl
-import shlex
 import random
 import shutil
 import string
@@ -57,7 +56,7 @@ from cmk.utils.exceptions import MKTerminate
 import omdlib
 import omdlib.certs
 import omdlib.backup
-from omdlib.utils import chdir, is_dockerized
+from omdlib.utils import chdir, ok, delete_user_file
 from omdlib.version_info import VersionInfo
 from omdlib.dialog import (
     dialog_menu,
@@ -81,6 +80,8 @@ from omdlib.config_hooks import (create_config_environment, save_site_conf, load
 from omdlib.users_and_groups import (find_processes_of_user, groupdel, useradd, userdel, user_id,
                                      user_exists, group_exists, group_id, user_logged_in,
                                      switch_to_site_user, user_verify)
+from omdlib.tmpfs import (tmpfs_mounted, prepare_tmpfs, mark_tmpfs_initialized, unmount_tmpfs,
+                          add_to_fstab, remove_from_fstab)
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]
@@ -93,10 +94,6 @@ class StateMarkers:
     good = " " + tty.green + tty.bold + "*" + tty.normal
     warn = " " + tty.bgyellow + tty.black + tty.bold + "!" + tty.normal
     error = " " + tty.bgred + tty.white + tty.bold + "!" + tty.normal
-
-
-def ok() -> None:
-    sys.stdout.write(tty.ok + "\n")
 
 
 def bail_out(message: str) -> NoReturn:
@@ -288,18 +285,6 @@ def save_version_meta_data(site: SiteContext, version: str) -> None:
         f.write("%s\n" % version)
 
 
-def delete_user_file(user_path: str) -> None:
-    if not os.path.islink(user_path) and os.path.isdir(user_path):
-        shutil.rmtree(user_path)
-    else:
-        os.remove(user_path)
-
-
-def delete_directory_contents(d: str) -> None:
-    for f in os.listdir(d):
-        delete_user_file(d + '/' + f)
-
-
 def create_skeleton_file(skelbase: str, userbase: str, relpath: str,
                          replacements: Replacements) -> None:
     skel_path = skelbase + "/" + relpath
@@ -325,6 +310,16 @@ def create_skeleton_file(skelbase: str, userbase: str, relpath: str,
             else:
                 mode = 0o644
         os.chmod(user_path, mode)
+
+
+def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
+    prepare_tmpfs(version_info, site)
+
+    if not os.listdir(site.tmp_dir):
+        create_skeleton_files(site, "tmp")
+        chown_tree(site.tmp_dir, site.name)
+        mark_tmpfs_initialized(site)
+    _create_livestatus_tcp_socket_link(site)
 
 
 def chown_tree(directory: str, user: str) -> None:
@@ -1109,199 +1104,6 @@ def _instantiate_skel(site: SiteContext, path: str) -> bytes:
 #   +----------------------------------------------------------------------+
 #   |  Helper functions for dealing with the tmpfs                         |
 #   '----------------------------------------------------------------------'
-
-
-# TODO: Use site context?
-def tmpfs_mounted(sitename: str) -> bool:
-    # Problem here: if /omd is a symbolic link somewhere else,
-    # then in /proc/mounts the physical path will appear and be
-    # different from tmp_path. We just check the suffix therefore.
-    path_suffix = "sites/%s/tmp" % sitename
-    for line in open("/proc/mounts"):
-        try:
-            _device, mp, fstype, _options, _dump, _fsck = line.split()
-            if mp.endswith(path_suffix) and fstype == 'tmpfs':
-                return True
-        except Exception:
-            continue
-    return False
-
-
-def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
-    _prepare_tmpfs(version_info, site)
-
-    if not os.listdir(site.tmp_dir):
-        create_skeleton_files(site, "tmp")
-        chown_tree(site.tmp_dir, site.name)
-        _mark_tmpfs_initialized(site)
-    _create_livestatus_tcp_socket_link(site)
-
-
-def _prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
-    if tmpfs_mounted(site.name):
-        sys.stdout.write("Temporary filesystem already mounted\n")
-        return  # Fine: Mounted
-
-    if site.conf["TMPFS"] != "on":
-        sys.stdout.write("Preparing tmp directory %s..." % site.tmp_dir)
-        sys.stdout.flush()
-
-        if os.path.exists(site.tmp_dir):
-            return
-
-        try:
-            os.mkdir(site.tmp_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:  # File exists
-                raise
-        return
-
-    sys.stdout.write("Creating temporary filesystem %s..." % site.tmp_dir)
-    sys.stdout.flush()
-    if not os.path.exists(site.tmp_dir):
-        os.mkdir(site.tmp_dir)
-
-    mount_options = shlex.split(version_info.MOUNT_OPTIONS)
-    p = subprocess.Popen(["mount"] + mount_options + [site.tmp_dir],
-                         shell=False,
-                         stdin=open(os.devnull),
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT,
-                         encoding="utf-8")
-    exit_code = p.wait()
-    if exit_code == 0:
-        ok()
-        return  # Fine: Mounted
-
-    if p.stdout is None:
-        raise Exception("stdout needs to be set")
-
-    sys.stdout.write(p.stdout.read())
-    if is_dockerized():
-        sys.stdout.write(tty.warn + ": "
-                         "Could not mount tmpfs. You may either start the container in "
-                         "privileged mode or use the \"docker run\" option \"--tmpfs\" to "
-                         "make docker do the tmpfs mount for the site.\n")
-
-    sys.stdout.write(tty.warn + ": You may continue without tmpfs, but the "
-                     "performance of Check_MK may be degraded.\n")
-
-
-def _mark_tmpfs_initialized(site: SiteContext) -> None:
-    """Write a simple file marking the time of the tmpfs structure initialization
-
-    The st_ctime of the file will be used by Checkmk to know when the tmpfs file
-    structure was initialized."""
-    with Path(site.tmp_dir, "initialized").open("w", encoding="utf-8") as f:
-        f.write(u"")
-
-
-def tmpfs_is_managed_by_node(site: SiteContext) -> bool:
-    """When running in a container, and the tmpfs is managed by the node, the
-    mount is visible, but can not be unmounted. umount exits with 32 in this
-    case. Treat this case like there is no tmpfs and only the directory needs
-    to be cleaned."""
-    if not is_dockerized():
-        return False
-
-    if not tmpfs_mounted(site.name):
-        return False
-
-    return subprocess.call(["umount", site.tmp_dir],
-                           stdout=open(os.devnull, "w"),
-                           stderr=subprocess.STDOUT) in [1, 32]
-
-
-def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) -> bool:
-    # Clear directory hierarchy when not using a tmpfs
-    # During omd update TMPFS hook might not be set so assume
-    # that the hook is enabled by default.
-    # If kill is True, then we do an fuser -k on the tmp
-    # directory first.
-    if not tmpfs_mounted(site.name) or tmpfs_is_managed_by_node(site):
-        tmp = site.tmp_dir
-        if os.path.exists(tmp):
-            if output:
-                sys.stdout.write("Cleaning up tmp directory...")
-                sys.stdout.flush()
-            delete_directory_contents(tmp)
-            if output:
-                ok()
-        return True
-
-    if output:
-        sys.stdout.write("Unmounting temporary filesystem...")
-
-    for _t in range(0, 10):
-        if not tmpfs_mounted(site.name):
-            if output:
-                ok()
-            return True
-
-        if subprocess.call(["umount", site.tmp_dir]) == 0:
-            if output:
-                ok()
-            return True
-
-        if kill:
-            if output:
-                sys.stdout.write("Killing processes still using '%s'\n" % site.tmp_dir)
-            subprocess.call(["fuser", "--silent", "-k", site.tmp_dir])
-
-        if output:
-            sys.stdout.write(kill and "K" or ".")
-            sys.stdout.flush()
-        time.sleep(1)
-
-    if output:
-        bail_out(tty.error + ": Cannot unmount temporary filesystem.")
-
-    return False
-
-
-# Extracted to separate function to be able to monkeypatch the path for tests
-def fstab_path() -> str:
-    return "/etc/fstab"
-
-
-def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
-    if not os.path.exists(fstab_path()):
-        return  # Don't do anything in case there is no fstab
-
-    # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
-    mountpoint = "/opt" + site.tmp_dir
-    sys.stdout.write("Adding %s to %s.\n" % (mountpoint, fstab_path()))
-
-    # No size option: using up to 50% of the RAM
-    sizespec = ''
-    if tmpfs_size is not None and re.match('^[0-9]+(G|M|%)$', tmpfs_size):
-        sizespec = ',size=%s' % tmpfs_size
-
-    # Ensure the fstab has a newline char at it's end before appending
-    previous_fstab = open(fstab_path()).read()
-    complete_last_line = previous_fstab and not previous_fstab.endswith("\n")
-
-    with open(fstab_path(), "a+") as fstab:
-        if complete_last_line:
-            fstab.write("\n")
-
-        fstab.write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" %
-                    (mountpoint, site.name, site.name, sizespec))
-
-
-def remove_from_fstab(site: SiteContext) -> None:
-    if not os.path.exists("/etc/fstab"):
-        return  # Don't do anything in case there is no fstab
-
-    mountpoint = site.tmp_dir
-    sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
-    newtab = open("/etc/fstab.new", "w")
-    for line in open("/etc/fstab"):
-        if "uid=%s," % site.name in line and mountpoint in line:
-            continue
-        newtab.write(line)
-    os.rename("/etc/fstab.new", "/etc/fstab")
-    ok()
 
 
 def initialize_site_ca(site: SiteContext) -> None:

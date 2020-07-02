@@ -24,8 +24,12 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import sys
+import shutil
 import contextlib
 from typing import Iterator
+
+import cmk.utils.tty as tty
 
 
 def is_dockerized() -> bool:
@@ -41,3 +45,19 @@ def chdir(path: str) -> Iterator[None]:
         yield
     finally:
         os.chdir(prev_cwd)
+
+
+def ok() -> None:
+    sys.stdout.write(tty.ok + "\n")
+
+
+def delete_user_file(user_path: str) -> None:
+    if not os.path.islink(user_path) and os.path.isdir(user_path):
+        shutil.rmtree(user_path)
+    else:
+        os.remove(user_path)
+
+
+def delete_directory_contents(d: str) -> None:
+    for f in os.listdir(d):
+        delete_user_file(d + '/' + f)

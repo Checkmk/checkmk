@@ -147,7 +147,7 @@ def fetch_rrd_data(site, host_name, service_description, entries, graph_recipe, 
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site):
-        return zip(entries, sites.live().query_row(query))
+        return list(zip(entries, sites.live().query_row(query)))
 
 
 def rrd_columns(metrics: List[Tuple[str, Optional[str], float]], rrd_consolidation: str,

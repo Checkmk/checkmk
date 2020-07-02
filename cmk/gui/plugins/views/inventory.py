@@ -914,7 +914,7 @@ def declare_joined_inventory_table_view(tablename, title_singular, title_plural,
     ds_class = type(
         "DataSourceInventory%s" % tablename.title(), (DataSource,), {
             "_ident": tablename,
-            "_sources": zip(info_names, invpaths),
+            "_sources": list(zip(info_names, invpaths)),
             "_match_by": match_by,
             "_errors": errors,
             "_title": "%s: %s" % (_("Inventory"), title_plural),

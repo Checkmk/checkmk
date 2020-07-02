@@ -147,7 +147,7 @@ def test_query_row_table_inventory_history_add_columns(monkeypatch):
 
 
 def test_query_row_multi_table_inventory(monkeypatch):
-    sources = zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"])
+    sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
     row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
@@ -157,7 +157,7 @@ def test_query_row_multi_table_inventory(monkeypatch):
 
 
 def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
-    sources = zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"])
+    sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
     row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
@@ -167,7 +167,7 @@ def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
 
 
 def test_query_row_multi_table_inventory_add_columns(monkeypatch):
-    sources = zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"])
+    sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
     row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)

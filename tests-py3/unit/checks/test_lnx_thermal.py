@@ -35,7 +35,7 @@ result_discovery = [  # type: ignore
 ]
 
 
-@pytest.mark.parametrize("info, result", zip(agent_info, result_discovery))
+@pytest.mark.parametrize("info, result", list(zip(agent_info, result_discovery)))
 def test_parse_and_discovery_function(check_manager, info, result):
     check = check_manager.get_check("lnx_thermal")
     parsed = check.run_parse(info)
@@ -60,8 +60,8 @@ result_check = [
 ]
 
 
-@pytest.mark.parametrize("info, discovered, checked", zip(agent_info, result_discovery,
-                                                          result_check))
+@pytest.mark.parametrize("info, discovered, checked",
+                         list(zip(agent_info, result_discovery, result_check)))
 def test_check_functions_perfdata(check_manager, info, discovered, checked):
     check = check_manager.get_check("lnx_thermal")
     parsed = check.run_parse(info)

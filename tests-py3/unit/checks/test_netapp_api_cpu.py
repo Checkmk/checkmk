@@ -76,7 +76,7 @@ result_parsed_over_time = [
 ]
 
 
-@pytest.mark.parametrize("info, expected_parsed", zip(agent_info, result_parsed))
+@pytest.mark.parametrize("info, expected_parsed", list(zip(agent_info, result_parsed)))
 def test_parse_function(check_manager, info, expected_parsed):
     check = check_manager.get_check("netapp_api_cpu")
     parsed = check.run_parse(info)

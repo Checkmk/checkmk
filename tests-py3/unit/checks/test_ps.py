@@ -193,7 +193,7 @@ input_ids = [
 ]
 
 
-@pytest.mark.parametrize("capture, result", zip(generate_inputs(), result_parse), ids=input_ids)
+@pytest.mark.parametrize("capture, result", list(zip(generate_inputs(), result_parse)), ids=input_ids)
 def test_parse_ps(check_manager, capture, result):
     check = check_manager.get_check("ps")
 
@@ -716,7 +716,7 @@ check_results = [
 
 @pytest.mark.parametrize(
     "inv_item, reference",
-    zip(PS_DISCOVERED_ITEMS, check_results),
+    list(zip(PS_DISCOVERED_ITEMS, check_results)),
     ids=[a[0] for a in PS_DISCOVERED_ITEMS])
 def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
     check = check_manager.get_check("ps")

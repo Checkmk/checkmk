@@ -1662,8 +1662,8 @@ def eval_virtual_device(info, _datastores):
             device_info = get_pattern(search_pattern, virtual_device)[0]
         except IndexError:
             continue
-        device_pairs = zip(device_info[0::2], device_info[1::2])
-        device_txt = "|".join("%s %s" % p for p in device_pairs)
+        device_txt = "|".join("%s %s" % p  #
+                              for p in zip(device_info[0::2], device_info[1::2]))
         response.append("virtualDeviceType %s|%s" % (type_info, device_txt))
 
     return "@@".join(response)

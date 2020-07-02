@@ -13,10 +13,8 @@ strem1_wetness_defaultlevels = (None, None)
 
 def strem1_sensors_parse_info(info):
     # Change format of output: 1 tuple for each group
-    info = zip(*info)
-
     parsed = []
-    for group in info:
+    for group in zip(*info):
         grp = group[0]
 
         items = group[1:]

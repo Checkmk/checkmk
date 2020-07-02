@@ -107,7 +107,7 @@ try:
             return int(sum(y for y in _a))
 
         #util_total = map(lambda x: int(sum([y for y in x if y is not None])),
-        util_total = list(map(sumsum, zip(datasets[0], datasets[1], datasets[2])))
+        util_total = [sumsum(x) for x in zip(datasets[0], datasets[1], datasets[2])]
 
     cpu_peak = max(util_total)
     peak_time = time.localtime(fromtime + step_secs * util_total.index(cpu_peak))

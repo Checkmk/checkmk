@@ -73,26 +73,27 @@ def splitter(text):
 
 
 @pytest.mark.parametrize("capture, result",
-                         zip(agent_out, [
-                             {
-                                 "License": "Initial grace period",
-                                 "expiration": "12960 minute(s) (9 day(s))",
-                                 "expiration_time": 12960 * 60,
-                             },
-                             {
-                                 "License": "Licensed",
-                                 "expiration": "253564 minute(s) (177 day(s))",
-                                 "expiration_time": 253564 * 60,
-                             },
-                             {
-                                 "License": "Licensed",
-                                 "expiration": "251100 minute(s) (174 day(s))",
-                                 "expiration_time": 251100 * 60,
-                             },
-                             {
-                                 "License": "Licensed",
-                             },
-                         ]),
+                         list(
+                             zip(agent_out, [
+                                 {
+                                     "License": "Initial grace period",
+                                     "expiration": "12960 minute(s) (9 day(s))",
+                                     "expiration_time": 12960 * 60,
+                                 },
+                                 {
+                                     "License": "Licensed",
+                                     "expiration": "253564 minute(s) (177 day(s))",
+                                     "expiration_time": 253564 * 60,
+                                 },
+                                 {
+                                     "License": "Licensed",
+                                     "expiration": "251100 minute(s) (174 day(s))",
+                                     "expiration_time": 251100 * 60,
+                                 },
+                                 {
+                                     "License": "Licensed",
+                                 },
+                             ])),
                          ids=["win7", "win2012", "win2008", "win10"])
 def test_parse_win_license(check_manager, capture, result):
     check = check_manager.get_check("win_license")

@@ -376,12 +376,10 @@ def esx_vsphere_multipath_convert(info):
     raw_path_info = data.get('config.storageDevice.multipathInfo')
     if not raw_path_info:
         return {}
-    path_info = zip(raw_path_info[::3], raw_path_info[1::3], raw_path_info[2::3])
 
     paths = {}
-    for lun_id, path, state in path_info:
+    for lun_id, path, state in zip(raw_path_info[::3], raw_path_info[1::3], raw_path_info[2::3]):
         paths.setdefault(lun_id, []).append((state, path))
-
     return paths
 
 

@@ -105,7 +105,7 @@ def _read_os_release() -> Optional[Dict[str, str]]:
 
 class ABCPackageManager(abc.ABC):
     @classmethod
-    def factory(cls) -> ABCPackageManager:
+    def factory(cls) -> 'ABCPackageManager':
         distro_name = get_omd_distro_name()
         logger.info("Distro: %s", distro_name)
 

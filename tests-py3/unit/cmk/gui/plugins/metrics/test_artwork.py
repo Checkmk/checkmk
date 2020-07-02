@@ -51,7 +51,7 @@ def test_halfstep_interpolation():
 
 
 @pytest.mark.parametrize("args, result", [
-    pytest.param(([], range(3)), [(0, 0), (0, 1), (0, 2)], id='area'),
+    pytest.param(([], list(range(3))), [(0, 0), (0, 1), (0, 2)], id='area'),
     pytest.param(([], [5, None, 6]), [(0, 5), (None, None), (0, 6)], id='area holes'),
     pytest.param(([0, 0], [1, 2]), [(0, 1), (0, 2)], id='stack'),
     pytest.param(([0, 1], [1, 1]), [(0, 1), (1, 2)], id='stack'),

@@ -152,7 +152,7 @@ check_ref = namedtuple('result', ['parameters', 'check_output'])
                 None, CheckResult([(0, "Software is Licensed"),
                                    (0, 'License will expire in 176 d')])),
         ])),
-    ids=list(map(str, range(6))))
+    ids=[str(x) for x in range(6)])
 def test_check_win_license(check_manager, capture, result):
     check = check_manager.get_check("win_license")
     output = check.run_check(None, result.parameters or check.default_parameters(),

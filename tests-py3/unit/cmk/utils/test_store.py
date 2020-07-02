@@ -400,7 +400,7 @@ def test_locking(tmp_path, path_type):
 
         # Take lock with store1
         t1.do = "lock"
-        while range(20):
+        for _dummy in range(20):
             if store1.have_lock(path):
                 break
             time.sleep(0.01)
@@ -414,7 +414,7 @@ def test_locking(tmp_path, path_type):
 
         # And now unlock store1 and check whether store2 has the lock now
         t1.do = "unlock"
-        while range(20):
+        for _dummy in range(20):
             if not store1.have_lock(path):
                 break
             time.sleep(0.01)

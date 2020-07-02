@@ -54,7 +54,7 @@ def test_create_layout_recover_function(suboids_list, input_data, expected_outpu
             None,
         ),
         (
-            (".1.2.3", range(4, 6)),
+            (".1.2.3", list(range(4, 6))),
             [SNMPTree(base=".1.2.3", oids=["4", "5"])],
             None,
         ),

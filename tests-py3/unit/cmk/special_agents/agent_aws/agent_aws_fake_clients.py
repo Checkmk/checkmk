@@ -76,19 +76,19 @@ class Str(Entity):
 
 class Int(Entity):
     def create(self, idx, amount):
-        return random.choice(range(100))
+        return random.choice(list(range(100)))
 
 
 class Float(Entity):
     def create(self, idx, amount):
-        return 1.0 * random.choice(range(100))
+        return 1.0 * random.choice(list(range(100)))
 
 
 class Timestamp(Entity):
     def create(self, idx, amount):
         return "2019-%02d-%02d" % (
-            random.choice(range(1, 13)),
-            random.choice(range(1, 29)),
+            random.choice(list(range(1, 13))),
+            random.choice(list(range(1, 29))),
         )
 
 

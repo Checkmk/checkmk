@@ -1805,7 +1805,7 @@ def remove_empty_nodes(node):
     for subnode in subnodes:
         remove_empty_nodes(subnode)
     # remove all subnode rules which have no subnodes
-    for i in range(0, len(subnodes))[::-1]:
+    for i in reversed(range(len(subnodes))):
         if node_is_empty(subnodes[i]):
             del subnodes[i]
 

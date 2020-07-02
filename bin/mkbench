@@ -1155,7 +1155,8 @@ class AgentListener(multiprocessing.Process):
 
         # hundreds of a second
         num_cpus = 4
-        for i in [""] + list(map(str, range(num_cpus))):
+        cpu_idents = [""] + [str(n) for n in range(num_cpus)]
+        for i in cpu_idents:
             self._update_counter(host_id, "kernel_cpu%s_user" % i, per_sec=0.10)
             self._update_counter(host_id, "kernel_cpu%s_nice" % i, per_sec=0.05)
             self._update_counter(host_id, "kernel_cpu%s_system" % i, per_sec=0.10)
@@ -1166,7 +1167,7 @@ class AgentListener(multiprocessing.Process):
         counters["now"] = time.time()
 
         cpu_output = ""
-        for i in [""] + list(map(str, range(num_cpus))):
+        for i in cpu_idents:
             cpu_output += "cpu%s %d %d %d %d %d 0 0 0 0 0\n" % \
                 (i,
                  counters["kernel_cpu%s_user" % i],
@@ -2522,7 +2523,7 @@ class TestAgentBasedStandardHosts(TestCase):
     def _spawn_agent_listeners(self):
         self._test.info("  Starting agent listeners")
         for first_host_id in range(0, self.num_hosts, self._hosts_per_listener):
-            host_ids = range(first_host_id, first_host_id + self._hosts_per_listener)
+            host_ids = list(range(first_host_id, first_host_id + self._hosts_per_listener))
             listener = AgentListener(host_ids)
             listener.start()
             self._listeners.append(listener)

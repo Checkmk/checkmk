@@ -28,7 +28,7 @@ check_info["sensatronics_temp"] = {
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.16174.1.1.1"],
     "snmp_info": (
         ".1.3.6.1.4.1.16174.1.1.1.3",
-        range(16),
+        list(range(16)),
         [
             "1.0",  #Sensor Name
             "2.0",  #Sensor Value

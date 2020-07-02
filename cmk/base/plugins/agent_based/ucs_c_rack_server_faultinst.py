@@ -13,11 +13,10 @@
 # faultInst<TAB>severity major<TAB>cause equipmentInoperable<TAB>code F0531<TAB>descr Storage Raid Battery 11 is inoperable: Check Controller battery<TAB>affectedDN sys/rack-unit-1/board/storage-SAS-SLOT-SAS/raid-battery-11
 
 from typing import Dict, List
-from cmk.base.api.agent_based.section_types import AgentSectionContent
-from cmk.base.plugins.agent_based.agent_based_api.v0 import register
+from .agent_based_api.v0 import register
 
 
-def parse_ucs_c_rack_server_faultinst(string_table: AgentSectionContent) -> Dict[str, List[str]]:
+def parse_ucs_c_rack_server_faultinst(string_table: List[List[str]]) -> Dict[str, List[str]]:
     """
     >>> parse_ucs_c_rack_server_faultinst([['faultInst', 'severity critical', 'cause powerproblem', 'code F0883', 'descr Broken', 'affectedDN sys/rack-unit-1/psu-4']])
     {'Severity': ['critical'], 'Cause': ['powerproblem'], 'Code': ['F0883'], 'Description': ['Broken'], 'Affected DN': ['rack-unit-1/psu-4']}

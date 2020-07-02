@@ -29,7 +29,7 @@ from cmk.base.api.agent_based.section_types import (
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
-from cmk.base.api.agent_based.utils import parse_string_table
+from cmk.base.api.agent_based.utils import parse_to_string_table
 from cmk.base.check_api_utils import HOST_ONLY as LEGACY_HOST_ONLY
 from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
@@ -177,7 +177,7 @@ class MultiHostSections(collections.abc.Mapping):
         if section_def is None:
             # no section creating the desired one was found, assume a 'default' section:
             raw_section_name = SectionName(str(parsed_section_name))
-            parse_function: Union[SNMPParseFunction, AgentParseFunction] = parse_string_table
+            parse_function: Union[SNMPParseFunction, AgentParseFunction] = parse_to_string_table
         else:
             raw_section_name = section_def.name
             parse_function = section_def.parse_function

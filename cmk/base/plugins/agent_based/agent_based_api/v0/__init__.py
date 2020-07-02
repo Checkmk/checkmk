@@ -46,7 +46,7 @@ from cmk.base.api.agent_based.utils import (
     not_exists,
     not_matches,
     not_startswith,
-    parse_string_table,
+    parse_to_string_table,
     startswith,
 )
 from cmk.base.api.agent_based.value_store import get_value_store
@@ -65,7 +65,7 @@ __all__ = [
     "HostLabel",
     # utils
     "render",
-    "parse_string_table",
+    "parse_to_string_table",
     # detect spec helper
     "all_of",
     "any_of",

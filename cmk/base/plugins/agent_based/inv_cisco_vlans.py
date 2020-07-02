@@ -6,11 +6,11 @@
 
 from cmk.snmplib.type_defs import OIDEnd, SNMPTree
 
-from .agent_based_api.v0 import contains, parse_string_table, register
+from .agent_based_api.v0 import contains, parse_to_string_table, register
 
 register.snmp_section(
     name="inv_cisco_vlans",
-    parse_function=parse_string_table,
+    parse_function=parse_to_string_table,
     trees=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.68.1.2.2.1",

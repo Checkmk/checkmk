@@ -24,7 +24,7 @@ from cmk.base.api.agent_based.section_types import AgentSectionContent
 RawSection = TypeVar('RawSection', List[SNMPTable], AgentSectionContent)
 
 
-def parse_string_table(string_table: RawSection) -> RawSection:
+def parse_to_string_table(string_table: RawSection) -> RawSection:
     """Identity function
 
     Provided for developers who don't want to implement a parse function (which they should).

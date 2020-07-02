@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.snmplib.type_defs import SNMPTree
 
-from .agent_based_api.v0 import contains, parse_string_table, register
+from .agent_based_api.v0 import contains, parse_to_string_table, register
 
 register.snmp_section(
     name="hp_proliant_systeminfo",
-    parse_function=parse_string_table,
+    parse_function=parse_to_string_table,
     trees=[
         SNMPTree(
             base=".1.3.6.1.4.1.232.2.2.2",

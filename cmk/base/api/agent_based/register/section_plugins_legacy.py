@@ -23,7 +23,7 @@ from cmk.base.api.agent_based.section_types import (
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
-from cmk.base.api.agent_based.utils import parse_string_table
+from cmk.base.api.agent_based.utils import parse_to_string_table
 from cmk.base.check_api_utils import Service
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
@@ -38,7 +38,7 @@ def _create_agent_parse_function(original_parse_function: Optional[Callable]) ->
     """Wrap parse function to comply to signature requirement"""
 
     if original_parse_function is None:
-        return parse_string_table
+        return parse_to_string_table
 
     # do not use functools.wraps, the point is the new argument name!
     def parse_function(string_table: AgentSectionContent) -> Any:
@@ -172,7 +172,7 @@ def _create_snmp_parse_function(original_parse_function: Optional[Callable],
     spec for SNMPTrees.
     """
     if original_parse_function is None:
-        original_parse_function = parse_string_table
+        original_parse_function = parse_to_string_table
 
     # do not use functools.wraps, the point is the new argument name!
     def parse_function(string_table: List[SNMPTable]) -> Any:

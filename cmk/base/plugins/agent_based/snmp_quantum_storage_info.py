@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.snmplib.type_defs import SNMPTree
 
-from .agent_based_api.v0 import exists, parse_string_table, register
+from .agent_based_api.v0 import exists, parse_to_string_table, register
 
 register.snmp_section(
     name="snmp_quantum_storage_info",
-    parse_function=parse_string_table,
+    parse_function=parse_to_string_table,
     trees=[
         SNMPTree(
             base=".1.3.6.1.4.1.2036.2.1.1",  # qSystemInfo

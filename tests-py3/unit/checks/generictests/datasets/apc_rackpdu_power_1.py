@@ -7,11 +7,15 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.apc_rackpdu_power import parse_apc_rackpdu_power
+
 checkname = 'apc_rackpdu_power'
 
-info = [[[u'luz0010x', u'0']],
-        [[u'0']],
-        [[u'1', u'0', u'1'], [u'2', u'0', u'1'], [u'3', u'0', u'1']]]
+parsed = parse_apc_rackpdu_power(
+    [[[u'luz0010x', u'0']],
+     [[u'0']],
+     [[u'1', u'0', u'1'], [u'2', u'0', u'1'], [u'3', u'0', u'1']]],
+)
 
 discovery = {'': [(u'Device luz0010x', {}),
                   (u'Phase 1', {}),

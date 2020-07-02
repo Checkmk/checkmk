@@ -140,6 +140,7 @@ def test_scan_function_translation(config_snmp_scan_functions):
                 "ucd_mem",
                 "hr_mem",
                 "cisco_vpn_sessions",
+                "apc_rackpdu_power",
         ):
             continue
 

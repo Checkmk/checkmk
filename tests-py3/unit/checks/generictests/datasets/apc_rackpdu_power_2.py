@@ -7,11 +7,15 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.apc_rackpdu_power import parse_apc_rackpdu_power
+
 checkname = 'apc_rackpdu_power'
 
-info = [[[u'pb-n15-115', u'420']],
-        [[u'2']],
-        [[u'1', u'20', u'1'], [u'2', u'10', u'1'], [u'3', u'9', u'1']]]
+parsed = parse_apc_rackpdu_power(
+    [[[u'pb-n15-115', u'420']],
+     [[u'2']],
+     [[u'1', u'20', u'1'], [u'2', u'10', u'1'], [u'3', u'9', u'1']]],
+)
 
 discovery = {'': [(u'Bank 2', {}), (u'Bank 3', {}), (u'Device pb-n15-115', {})]}
 

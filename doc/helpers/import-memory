@@ -234,7 +234,7 @@ FORMATTERS = {
     'console': ConsoleFormatter,
 }
 
-_FORMATTER: Optional[Formatter] = None
+_FORMATTER: Optional['Formatter'] = None
 
 
 class Formatter:

@@ -14,7 +14,7 @@ import sys
 import termios
 import time
 import tty
-from typing import Any, Callable, Dict, List, NoReturn, Optional, Set, Tuple, Union
+from typing import Dict, List, NoReturn, Optional, Set, Tuple, Union
 
 Werk = Dict[str, str]
 

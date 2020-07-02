@@ -229,10 +229,6 @@ class DataSources(collections.abc.Collection):
     def __len__(self):
         return self._sources.__len__()
 
-    def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
-        for source in self:
-            source.set_max_cachefile_age(max_cachefile_age)
-
     def get_host_sections(self, max_cachefile_age: Optional[int] = None) -> MultiHostSections:
         """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
@@ -273,10 +269,8 @@ class DataSources(collections.abc.Collection):
                     ipaddress,
                     node_needed_raw_sections,
                 )
-                sources.set_max_cachefile_age(max_cachefile_age)
                 nodes.append((hostname, ipaddress, sources))
         else:
-            self.set_max_cachefile_age(max_cachefile_age)
             nodes = [(self._hostname, self._ipaddress, self)]
 
         if self._host_config.nodes:
@@ -288,6 +282,7 @@ class DataSources(collections.abc.Collection):
         multi_host_sections = MultiHostSections()
         for hostname, ipaddress, sources in nodes:
             for source in sources:
+                source.set_max_cachefile_age(max_cachefile_age)
                 host_sections = AgentHostSections()
                 host_sections.update(source.run())
                 multi_host_sections.set_default_host_sections(

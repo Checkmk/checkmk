@@ -1228,10 +1228,10 @@ class AutomationDiagHost(Automation):
                        agent_port: int, cmd: str,
                        tcp_connect_timeout: Optional[float]) -> Tuple[int, str]:
         sources = data_sources.DataSources(host_config, ipaddress)
-        sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
         state, output = 0, u""
         for source in sources:
+            source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source, data_sources.programs.DSProgramDataSource) and cmd:
                 source = data_sources.programs.DSProgramDataSource(hostname, ipaddress, cmd)
             elif isinstance(source, data_sources.tcp.TCPDataSource):
@@ -1518,10 +1518,10 @@ class AutomationGetAgentOutput(Automation):
                     not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
                 sources = data_sources.DataSources(host_config, ipaddress)
-                sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
                 agent_output = b""
                 for source in sources:
+                    source.set_max_cachefile_age(config.check_max_cachefile_age)
                     if isinstance(source, data_sources.agent.AgentDataSource):
                         agent_output += source.run_raw()
                 info = agent_output

@@ -681,7 +681,7 @@ def check_discovery(
         infotexts.append(u"rediscovery scheduled")
 
     # Add data source information to check results
-    for source in sources.get_data_sources():
+    for source in sources:
         source_state, source_output, _source_perfdata = source.get_summary_result_for_discovery()
         # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
         if source_state != 0:
@@ -1120,7 +1120,7 @@ def _get_sources_for_discovery(
         selected_raw_sections=selected_raw_sections,
     )
 
-    for source in sources.get_data_sources():
+    for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
             source.set_on_error(on_error)
             source.set_do_snmp_scan(do_snmp_scan)

@@ -84,7 +84,7 @@ def dump_host(hostname: HostName) -> None:
 
     agenttypes = []
     sources = data_sources.DataSources(host_config, ipaddress)
-    for source in sources.get_data_sources():
+    for source in sources:
         agenttypes.append(source.describe())
 
     if host_config.is_ping_host:

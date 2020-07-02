@@ -164,7 +164,7 @@ def do_check(
         if _submit_to_core:
             item_state.save(hostname)
 
-        for source in sources.get_data_sources():
+        for source in sources:
             source_state, source_output, source_perfdata = source.get_summary_result_for_checking()
             if source_output != "":
                 status = max(status, source_state)

@@ -8,6 +8,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
+import collections.abc
 from typing import Dict, Iterable, List, Optional
 
 from cmk.utils.check_utils import maincheckify
@@ -49,7 +50,7 @@ class SourceBuilder:
         self._initialize_data_sources(selected_raw_sections)
 
     @property
-    def sources(self) -> Iterable[DataSource]:
+    def sources(self) -> List[DataSource]:
         # Always execute piggyback at the end
         return sorted(self._sources.values(),
                       key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
@@ -184,7 +185,7 @@ class SourceBuilder:
 
 
 def make_sources(host_config: HostConfig, ipaddress: Optional[HostAddress],
-                 selected_raw_sections: Optional[SelectedRawSections]) -> Iterable[DataSource]:
+                 selected_raw_sections: Optional[SelectedRawSections]) -> List[DataSource]:
     return SourceBuilder(host_config, ipaddress, selected_raw_sections).sources
 
 
@@ -201,7 +202,7 @@ def make_description(host_config: HostConfig) -> str:
     return "No agent"
 
 
-class DataSources:
+class DataSources(collections.abc.Collection):
     def __init__(
         self,
         host_config: HostConfig,
@@ -219,12 +220,18 @@ class DataSources:
     def _hostname(self) -> HostName:
         return self._host_config.hostname
 
-    def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
-        for source in self.get_data_sources():
-            source.set_max_cachefile_age(max_cachefile_age)
+    def __contains__(self, item) -> bool:
+        return self._sources.__contains__(item)
 
-    def get_data_sources(self) -> Iterable[DataSource]:
-        return self._sources
+    def __iter__(self):
+        return self._sources.__iter__()
+
+    def __len__(self):
+        return self._sources.__len__()
+
+    def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
+        for source in self:
+            source.set_max_cachefile_age(max_cachefile_age)
 
     def get_host_sections(self, max_cachefile_age: Optional[int] = None) -> MultiHostSections:
         """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
@@ -280,7 +287,7 @@ class DataSources:
         # the section lines need to be extended
         multi_host_sections = MultiHostSections()
         for hostname, ipaddress, sources in nodes:
-            for source in sources.get_data_sources():
+            for source in sources:
                 host_sections = AgentHostSections()
                 host_sections.update(source.run())
                 multi_host_sections.set_default_host_sections(

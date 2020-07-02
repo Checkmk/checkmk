@@ -1111,7 +1111,7 @@ def _get_needed_check_plugin_names(host_config: config.HostConfig) -> Set[CheckP
     # In case the host is monitored as special agent, the check plugin for the special agent needs
     # to be loaded
     sources = data_sources.DataSources(host_config, ipaddress=None)
-    for source in sources.get_data_sources():
+    for source in sources:
         if isinstance(source, data_sources.programs.SpecialAgentDataSource):
             needed_check_plugin_names.add(source.special_agent_plugin_file_name)
 

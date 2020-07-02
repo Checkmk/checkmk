@@ -167,7 +167,7 @@ def do_inv_check(
         if not status_data_tree.is_empty():
             infotexts.append("Found %s status entries" % status_data_tree.count_entries())
 
-    for source in sources.get_data_sources():
+    for source in sources:
         source_state, source_output, _source_perfdata = source.get_summary_result_for_inventory()
         if source_state != 0:
             # Do not output informational things (state == 0). Also do not use source states
@@ -189,9 +189,7 @@ def _all_sources_fail(host_config: config.HostConfig, sources: data_sources.Data
     if host_config.is_cluster:
         return False
 
-    exceptions_by_source = {
-        source.id(): source.exception() for source in sources.get_data_sources()
-    }
+    exceptions_by_source = {source.id(): source.exception() for source in sources}
     if "piggyback" in exceptions_by_source and not len(exceptions_by_source) == 1\
        and not host_config.has_piggyback_data:
         del exceptions_by_source["piggyback"]
@@ -271,7 +269,7 @@ def _do_inv_for_realhost(host_config: config.HostConfig, sources: data_sources.D
                          multi_host_sections: Optional[MultiHostSections], hostname: HostName,
                          ipaddress: Optional[HostAddress], inventory_tree: StructuredDataTree,
                          status_data_tree: StructuredDataTree) -> None:
-    for source in sources.get_data_sources():
+    for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
             source.set_on_error("raise")
             source.set_do_snmp_scan(True)

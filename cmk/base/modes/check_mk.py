@@ -391,12 +391,12 @@ def mode_dump_agent(hostname: HostName) -> None:
         sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
         output = b"".join(source.run_raw()
-                          for source in sources.get_data_sources()
+                          for source in sources
                           if isinstance(source, data_sources.agent.AgentDataSource))
 
         # Show errors of problematic data sources
         has_errors = False
-        for source in sources.get_data_sources():
+        for source in sources:
             source_state, source_output, _source_perfdata = source.get_summary_result_for_checking()
             if source_state != 0:
                 console.error("ERROR [%s]: %s\n", source.id(), ensure_str(source_output))

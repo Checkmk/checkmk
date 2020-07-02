@@ -1231,7 +1231,7 @@ class AutomationDiagHost(Automation):
         sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
         state, output = 0, u""
-        for source in sources.get_data_sources():
+        for source in sources:
             if isinstance(source, data_sources.programs.DSProgramDataSource) and cmd:
                 source = data_sources.programs.DSProgramDataSource(hostname, ipaddress, cmd)
             elif isinstance(source, data_sources.tcp.TCPDataSource):
@@ -1521,13 +1521,13 @@ class AutomationGetAgentOutput(Automation):
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
                 agent_output = b""
-                for source in sources.get_data_sources():
+                for source in sources:
                     if isinstance(source, data_sources.agent.AgentDataSource):
                         agent_output += source.run_raw()
                 info = agent_output
 
                 # Optionally show errors of problematic data sources
-                for source in sources.get_data_sources():
+                for source in sources:
                     source_state, source_output, _source_perfdata = source.get_summary_result_for_checking(
                     )
                     if source_state != 0:

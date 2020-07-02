@@ -801,6 +801,12 @@ metric_info["ap_devices_not_responding"] = {
     "color": "14/a"
 }
 
+metric_info["ap_devices_percent_unhealthy"] = {
+    "title": _("Percentage of devices with an unhealthy state"),
+    "unit": "%",
+    "color": "14/a"
+}
+
 metric_info["request_rate"] = {
     "title": _("Request rate"),
     "unit": "1/s",

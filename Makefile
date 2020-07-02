@@ -62,7 +62,7 @@ PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs
 RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
 
 WEBPACK_MODE       ?= production
-THEMES             := classic facelift modern-dark
+THEMES             := facelift modern-dark
 THEME_CSS_FILES    := $(addprefix web/htdocs/themes/,$(addsuffix /theme.css,$(THEMES)))
 THEME_JSON_FILES   := $(addprefix web/htdocs/themes/,$(addsuffix /theme.json,$(THEMES)))
 THEME_IMAGE_DIRS   := $(addprefix web/htdocs/themes/,$(addsuffix /images,$(THEMES)))

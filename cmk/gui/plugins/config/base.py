@@ -184,7 +184,7 @@ service_view_grouping: _List = []
 custom_style_sheet = None
 
 # UI theme to use
-ui_theme = "classic"
+ui_theme = "facelift"
 
 # URL for start page in main frame (welcome page)
 start_url = "dashboard.py"

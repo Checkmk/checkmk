@@ -52,9 +52,8 @@ def inv_lnx_sysctl(info, params, inventory_tree):
 
         # if there are non-empty values, we keep only these ones, otherwise we write a single empty line to show that
         # the parameter exists
-        if any(values):
-            values = filter(lambda val: val, values)
-        else:
+        values = [val for val in values if val]
+        if not values:
             values = ['']
 
         for value in values:

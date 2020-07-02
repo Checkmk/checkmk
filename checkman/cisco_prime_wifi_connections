@@ -1,11 +1,11 @@
 title: Cisco Prime WiFi connections
-agents: generic
+agents: agent_cisco_prime
 catalog: os/misc
 license: GPL
 distribution: check_mk
 description:
- This check returns OK when the total number of client connections does not
- fall below configurable minimum values or if no values have been configured.
+ This check returns {{OK}} when the total number of client connections does not
+ fall below configurable minimum levels or if no levels have been configured.
  There are no default values.
  It shows the sum of connections for each individual connection type.
 

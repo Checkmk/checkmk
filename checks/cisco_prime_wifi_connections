@@ -4,43 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Cisco prime connection count check
-The JSON output of agent_generic provides the following structure:
-
-{"queryResponse": {
-    "entity": [
-       {
-         "clientCountsDTO": {
-          "@id": str,
-          "count": sum of all values below,
-          "dot11aCount": int,
-          "dot11bCount": int,
-          "dot11gCount": int,
-          "dot11acCount": int,
-          "dot11n2_4Count": int,
-          "dot11n5Count": int,
-          ... (other values not of our interest)
-       }
-       ... (other values not of our interest)
-    },
-]}}
-
-see https://solutionpartner.cisco.com/media/prime-infrastructure-api-reference-v3-0/192.168.115.187/webacs/api/v1/data/ClientCountscc3b.html
-
 This check will compare the sum of all 'count' entries against lower levels and additionally
 output the sums of all individual connection types
 """
-
-import json
-
-
-def parse_cisco_prime_wifi_connections(info):
-    """Parse JSON and return queryResponse/entity entry (a list of dicts)"""
-    elements = json.loads(info[0][0])["queryResponse"]["entity"]
-    return {
-        item["@id"]: item  #
-        for elem in elements  #
-        for item in (elem["clientCountsDTO"],)
-    }
 
 
 def check_cisco_prime_wifi_connections(item, params, parsed):
@@ -70,9 +36,10 @@ def check_cisco_prime_wifi_connections(item, params, parsed):
 
 
 check_info["cisco_prime_wifi_connections"] = {
-    "parse_function": parse_cisco_prime_wifi_connections,
+    "parse_function": lambda info: parse_cisco_prime("clientCountsDTO", info),
     "inventory_function": discover_single,
     "check_function": check_cisco_prime_wifi_connections,
     "service_description": "Cisco Prime WiFi Connections",
     "group": "cisco_prime_wifi_connections",
+    "includes": ["cisco_prime.include"],
 }

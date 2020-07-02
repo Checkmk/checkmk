@@ -23,32 +23,36 @@ def test_add_to_fstab_not_existing(tmp_fstab, site_context):
     assert not tmp_fstab.exists()
 
 
-def test_add_to_fstab(tmp_fstab, site_context):
+def test_add_to_fstab(tmp_path, tmp_fstab, site_context):
     tmp_fstab.open("w", encoding="utf-8").write(u"# system fstab bla\n")
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
         "# system fstab bla\n"
-        "tmpfs  /opt/omd/sites/unit/tmp tmpfs noauto,user,mode=755,uid=unit,gid=unit 0 0\n")
+        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=755,uid=unit,gid=unit 0 0\n" %
+        tmp_path)
 
 
-def test_add_to_fstab_with_size(tmp_fstab, site_context):
+def test_add_to_fstab_with_size(tmp_path, tmp_fstab, site_context):
     tmp_fstab.open("w", encoding="utf-8").write(u"# system fstab bla\n")
     add_to_fstab(site_context, tmpfs_size="1G")
     assert tmp_fstab.open().read() == (
         "# system fstab bla\n"
-        "tmpfs  /opt/omd/sites/unit/tmp tmpfs noauto,user,mode=755,uid=unit,gid=unit,size=1G 0 0\n")
+        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=755,uid=unit,gid=unit,size=1G 0 0\n"
+        % tmp_path)
 
 
-def test_add_to_fstab_no_newline_at_end(tmp_fstab, site_context):
+def test_add_to_fstab_no_newline_at_end(tmp_path, tmp_fstab, site_context):
     tmp_fstab.open("w", encoding="utf-8").write(u"# system fstab bla")
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
         "# system fstab bla\n"
-        "tmpfs  /opt/omd/sites/unit/tmp tmpfs noauto,user,mode=755,uid=unit,gid=unit 0 0\n")
+        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=755,uid=unit,gid=unit 0 0\n" %
+        tmp_path)
 
 
-def test_add_to_fstab_empty(tmp_fstab, site_context):
+def test_add_to_fstab_empty(tmp_path, tmp_fstab, site_context):
     tmp_fstab.open("w", encoding="utf-8").write(u"")
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
-        "tmpfs  /opt/omd/sites/unit/tmp tmpfs noauto,user,mode=755,uid=unit,gid=unit 0 0\n")
+        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=755,uid=unit,gid=unit 0 0\n" %
+        tmp_path)

@@ -9,5 +9,10 @@ import omdlib.main
 
 
 @pytest.fixture()
-def site_context():
+def site_context(tmp_path, monkeypatch):
+    monkeypatch.setattr(omdlib.main.SiteContext, "dir",
+                        property(lambda s: "%s/omd/sites/%s" % (tmp_path, s.name)))
+    monkeypatch.setattr(omdlib.main.SiteContext, "real_dir",
+                        property(lambda s: "%s/opt/omd/sites/%s" % (tmp_path, s.name)))
+
     return omdlib.main.SiteContext("unit")

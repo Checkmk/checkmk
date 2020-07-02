@@ -189,7 +189,7 @@ def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
         return  # Don't do anything in case there is no fstab
 
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
-    mountpoint = "/opt" + site.tmp_dir
+    mountpoint = site.real_tmp_dir
     sys.stdout.write("Adding %s to %s.\n" % (mountpoint, fstab_path()))
 
     # No size option: using up to 50% of the RAM

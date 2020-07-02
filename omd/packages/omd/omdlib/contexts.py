@@ -62,6 +62,16 @@ class AbstractSiteContext(metaclass=abc.ABCMeta):
     def tmp_dir(self) -> str:
         raise NotImplementedError()
 
+    @abc.abstractproperty
+    def real_dir(self):
+        # type: () -> str
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def real_tmp_dir(self):
+        # type: () -> str
+        raise NotImplementedError()
+
     @property
     def version_meta_dir(self) -> str:
         return "%s/.version_meta" % self.dir
@@ -103,6 +113,14 @@ class SiteContext(AbstractSiteContext):
     @property
     def tmp_dir(self) -> str:
         return "%s/tmp" % self.dir
+
+    @property
+    def real_dir(self) -> str:
+        return "/opt/" + self.dir
+
+    @property
+    def real_tmp_dir(self) -> str:
+        return "%s/tmp" % self.real_dir
 
     @property
     def version(self) -> Optional[str]:
@@ -244,6 +262,14 @@ class RootContext(AbstractSiteContext):
     @property
     def tmp_dir(self) -> str:
         return "/tmp"
+
+    @property
+    def real_dir(self) -> str:
+        return "/" + self.dir
+
+    @property
+    def real_tmp_dir(self) -> str:
+        return "%s/tmp" % self.real_dir
 
     @property
     def version(self) -> str:

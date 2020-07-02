@@ -8,7 +8,6 @@ function install(){
     LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install subprocess32
     LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install fbprophet==0.5
     pip uninstall -y holidays
-    pip uninstall -y matplotlib
     LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install holidays==0.9.10
 
     # Cleanup of unnecessary files
@@ -45,8 +44,8 @@ function install(){
 
 function uninstall(){
     echo "Removing Forecast Graphs dependencies"
-    pip install pip-autoremove
-    local/lib/python/bin/pip-autoremove fbprophet  pystan -y
+    pip install -U pip-autoremove
+    ~/local/lib/python/bin/pip-autoremove fbprophet  pystan -y
     pip uninstall -y pip-autoremove
 
     omd restart apache

@@ -11,9 +11,9 @@ function install(){
 
 function uninstall(){
     echo "Removing Forecast Graphs dependencies"
-    pip install pip-autoremove
-    local/lib/python/bin/pip-autoremove fbprophet  pystan -y
-    pip uninstall -y pip-autoremove
+    pip3 install -U pip-autoremove
+    local/lib/python3/bin/pip-autoremove fbprophet  pystan -y
+    pip3 uninstall -y pip-autoremove
 
     omd restart apache
 }

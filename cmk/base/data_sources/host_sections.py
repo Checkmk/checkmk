@@ -484,9 +484,14 @@ class MultiHostSections(collections.abc.Mapping):
         try:
             item_state.set_item_state_prefix(section_name, None)
             return parse_function(section_content)
+
+        except item_state.MKCounterWrapped:
+            raise
+
         except Exception:
             if cmk.utils.debug.enabled():
                 raise
             raise MKParseFunctionError(*sys.exc_info())
+
         finally:
             item_state.set_item_state_prefix(*orig_item_state_prefix)

@@ -72,7 +72,6 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
 )
 from cmk.base.check_utils import ABCService, LegacyCheckParameters, Service
 from cmk.base.data_sources.host_sections import MultiHostSections
-from cmk.base.exceptions import MKParseFunctionError
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -474,22 +473,13 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
     section_content = None
     try:
         # TODO: There is duplicate code with discovery._execute_discovery(). Find a common place!
-        try:
-            section_content = multi_host_sections.get_section_content(
-                hostname,
-                ipaddress,
-                config.get_management_board_precedence(section_name, config.check_info),
-                section_name,
-                for_discovery=False,
-                service_description=service.description)
-        except MKParseFunctionError as e:
-            x = e.exc_info()
-            # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
-            # exception which need to lead to a skipped check instead of a crash
-            # TODO CMK-3729, PEP-3109
-            new_exception = x[0](x[1])
-            new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
-            raise new_exception
+        section_content = multi_host_sections.get_section_content(
+            hostname,
+            ipaddress,
+            config.get_management_board_precedence(section_name, config.check_info),
+            section_name,
+            for_discovery=False,
+            service_description=service.description)
 
         # TODO: Move this to a helper function
         if section_content is None:  # No data for this check type

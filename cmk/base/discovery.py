@@ -97,7 +97,7 @@ DiscoveryEntry = Union[check_api_utils.Service, DiscoveredHostLabels, HostLabel,
                        Tuple[Item, LegacyCheckParameters]]
 DiscoveryResult = List[DiscoveryEntry]
 DiscoveryFunction = Callable[[FinalSectionContent], DiscoveryResult]
-ServiceFilter = Callable[[HostName, CheckPluginNameStr, Item], bool]
+ServiceFilter = Callable[[HostName, ABCService], bool]
 ServiceFilters = NamedTuple("ServiceFilters", [
     ("new", ServiceFilter),
     ("vanished", ServiceFilter),
@@ -248,29 +248,26 @@ def _get_service_filter_func(service_whitelist: Optional[List[str]],
     whitelist = regex("|".join(["(%s)" % p for p in service_whitelist]))
     blacklist = regex("|".join(["(%s)" % p for p in service_blacklist]))
 
-    return lambda hostname, check_plugin_name, item: _filter_service_by_patterns(
-        hostname, check_plugin_name, item, whitelist, blacklist)
+    return lambda hostname, service: _filter_service_by_patterns(hostname, service, whitelist,
+                                                                 blacklist)
 
 
 def _filter_service_by_patterns(
     hostname: HostName,
-    check_plugin_name_str: CheckPluginNameStr,
-    item: Item,
+    service: ABCService,
     whitelist: Pattern[str],
     blacklist: Pattern[str],
 ) -> bool:
     #TODO Call sites: Why do we not use discovered_service.description;
     # Is discovered_service.description already finalized as
     # in config.service_description?
-    # (mo): we should indeed make sure that is the case, and then pass the service as
-    # argument directly.
-    check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
-    description = config.service_description(hostname, check_plugin_name, item)
+    # (mo): we should indeed make sure that is the case, and use it
+    check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
+    description = config.service_description(hostname, check_plugin_name, service.item)
     return whitelist.match(description) is not None and blacklist.match(description) is None
 
 
-def _accept_all_services(_hostname: HostName, _check_plugin_name: CheckPluginNameStr,
-                         _item: Item) -> bool:
+def _accept_all_services(_hostname: HostName, _service: ABCService) -> bool:
     return True
 
 
@@ -589,7 +586,7 @@ def _get_new_services(
 
         if check_source == "new":
             if mode in ("new", "fixall", "refresh") and service_filters.new(
-                    hostname, discovered_service.check_plugin_name, discovered_service.item):
+                    hostname, discovered_service):
                 counts["self_new"] += 1
                 new_services.append(discovered_service)
 
@@ -602,7 +599,7 @@ def _get_new_services(
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
             if mode in ("fixall", "remove") and service_filters.vanished(
-                    hostname, discovered_service.check_plugin_name, discovered_service.item):
+                    hostname, discovered_service):
                 counts["self_removed"] += 1
             else:
                 new_services.append(discovered_service)
@@ -729,8 +726,7 @@ def _check_service_table(
                 affected_check_plugin_names.setdefault(discovered_service.check_plugin_name, 0)
                 affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
-                if not unfiltered and service_filter(hostname, discovered_service.check_plugin_name,
-                                                     discovered_service.item):
+                if not unfiltered and service_filter(hostname, discovered_service):
                     unfiltered = True
 
                 #TODO In service_filter:we use config.service_description(...)

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,protected-access
 
 import pytest  # type: ignore[import]
 
@@ -111,13 +111,14 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
 
     params = {"inventory_rediscovery": {"service_whitelist": whitelist}}
     service_filters = discovery.get_service_filter_funcs(params)
+    service = discovery.DiscoveredService("check_plugin_name", "item", "Test Description", "None")
     assert service_filters.new is not None
-    assert service_filters.new("hostname", "check_plugin_name", "item") is result
+    assert service_filters.new("hostname", service) is result
 
     params = {"inventory_rediscovery": {"service_blacklist": whitelist}}
     service_filters_inverse = discovery.get_service_filter_funcs(params)
     assert service_filters_inverse.new is not None
-    assert service_filters_inverse.new("hostname", "check_plugin_name", "item") is not result
+    assert service_filters_inverse.new("hostname", service) is not result
 
     params = {
         "inventory_rediscovery": {
@@ -127,7 +128,7 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
     }
     service_filters_both = discovery.get_service_filter_funcs(params)
     assert service_filters_both.new is not None
-    assert service_filters_both.new("hostname", "check_plugin_name", "item") is False
+    assert service_filters_both.new("hostname", service) is False
 
 
 @pytest.mark.parametrize(
@@ -171,8 +172,9 @@ def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
 
     params = {"inventory_rediscovery": parameters_rediscovery}
     service_filters = discovery.get_service_filter_funcs(params)
+    service = discovery.DiscoveredService("check_plugin_name", "item", "Test Description", "None")
     assert service_filters.new is not None
-    assert service_filters.new("hostname", "check_plugin_name", "item") is result
+    assert service_filters.new("hostname", service) is result
 
 
 @pytest.fixture

@@ -1592,6 +1592,28 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
     assert host_config is cache.get_host_config("xyz")
 
 
+def test_host_config_max_cachefile_age_no_cluster(monkeypatch):
+    ts = Scenario()
+    ts.add_host("xyz")
+    ts.apply(monkeypatch)
+
+    host_config = config.HostConfig.make_host_config("xyz")
+    assert not host_config.is_cluster
+    assert host_config.max_cachefile_age == config.check_max_cachefile_age
+    assert host_config.max_cachefile_age != config.cluster_max_cachefile_age
+
+
+def test_host_config_max_cachefile_age_cluster(monkeypatch):
+    ts = Scenario()
+    ts.add_cluster("clu")
+    ts.apply(monkeypatch)
+
+    host_config = config.HostConfig.make_host_config("clu")
+    assert host_config.is_cluster
+    assert host_config.max_cachefile_age != config.check_max_cachefile_age
+    assert host_config.max_cachefile_age == config.cluster_max_cachefile_age
+
+
 @pytest.mark.parametrize("use_new_descr,result", [
     (True, "Check_MK Discovery"),
     (False, "Check_MK inventory"),

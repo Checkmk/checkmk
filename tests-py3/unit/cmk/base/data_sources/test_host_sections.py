@@ -391,7 +391,8 @@ def test_get_host_sections(monkeypatch):
         address,
         sources=make_sources(host_config, address),
     )
-    mhs = sources.get_host_sections(host_config)
+    nodes = sources.make_nodes(host_config)
+    mhs = sources.get_host_sections(nodes, max_cachefile_age=host_config.max_cachefile_age)
     assert len(mhs) == 1
 
     key = (hostname, address, SourceType.HOST)
@@ -435,7 +436,8 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
         address,
         sources=make_sources(host_config, address),
     )
-    mhs = sources.get_host_sections(host_config)
+    nodes = sources.make_nodes(host_config)
+    mhs = sources.get_host_sections(nodes, max_cachefile_age=host_config.max_cachefile_age)
     assert len(mhs) == len(hosts) == 3
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]
     assert cmk.utils.piggyback.remove_source_status_file.call_count == 3  # type: ignore[attr-defined]

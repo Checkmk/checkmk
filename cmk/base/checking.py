@@ -278,7 +278,9 @@ def _do_all_checks_on_host(
     check_api_utils.set_hostname(hostname)
 
     # Gather the data from the sources
-    multi_host_sections = sources.get_host_sections(host_config)
+    nodes = sources.make_nodes(host_config)
+    multi_host_sections = sources.get_host_sections(nodes,
+                                                    max_cachefile_age=host_config.max_cachefile_age)
 
     for service in services:
 

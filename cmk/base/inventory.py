@@ -302,7 +302,9 @@ def _do_inv_for_realhost(host_config: config.HostConfig, sources: data_sources.D
                 )
 
     if multi_host_sections is None:
-        multi_host_sections = sources.get_host_sections(host_config)
+        nodes = sources.make_nodes(host_config)
+        multi_host_sections = sources.get_host_sections(
+            nodes, max_cachefile_age=host_config.max_cachefile_age)
 
     section.section_step("Executing inventory plugins")
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel

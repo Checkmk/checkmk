@@ -1194,7 +1194,8 @@ def _get_host_sections_for_discovery(
     use_caches: bool,
 ) -> MultiHostSections:
     max_cachefile_age = config.inventory_max_cachefile_age if use_caches else 0
-    return sources.get_host_sections(host_config, max_cachefile_age=max_cachefile_age)
+    nodes = sources.make_nodes(host_config)
+    return sources.get_host_sections(nodes, max_cachefile_age=max_cachefile_age)
 
 
 def _execute_discovery(

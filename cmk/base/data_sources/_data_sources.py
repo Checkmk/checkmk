@@ -223,11 +223,11 @@ class DataSources(collections.abc.Collection):
     def __len__(self):
         return self._sources.__len__()
 
+    @staticmethod
     def get_host_sections(
-        self,
-        host_config: HostConfig,
+        nodes: List[Tuple[HostName, Optional[HostAddress], "DataSources"]],
         *,
-        max_cachefile_age: Optional[int] = None,
+        max_cachefile_age: int,
     ) -> MultiHostSections:
         """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
@@ -241,58 +241,6 @@ class DataSources(collections.abc.Collection):
         or source.exception() to get the exception object.
         """
         console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-        is_cluster = host_config.nodes is not None
-        if is_cluster:
-            import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
-            abstract.DataSource.set_may_use_cache_file()
-
-        if is_cluster:
-            nodes = self._make_piggy_nodes(host_config)
-        else:
-            nodes = [(self.hostname, self.ipaddress, self)]
-
-        max_cachefile_age = self._make_max_cachefile_age(max_cachefile_age, is_cluster)
-        return self._make_mhs(nodes, max_cachefile_age)
-
-    @staticmethod
-    def _make_max_cachefile_age(max_cachefile_age: Optional[int], is_cluster: bool) -> int:
-        if max_cachefile_age is not None:
-            # In case a max_cachefile_age is given with the function call, always use this one
-            # instead of the host individual one. This is only used in discovery mode.
-            return max_cachefile_age
-
-        return config.cluster_max_cachefile_age if is_cluster else config.check_max_cachefile_age
-
-    @staticmethod
-    def _make_piggy_nodes(
-            host_config: HostConfig) -> List[Tuple[HostName, Optional[HostAddress], "DataSources"]]:
-        """Abstract clusters/nodes/hosts"""
-        assert host_config.nodes is not None
-        nodes = []
-        for hostname in host_config.nodes:
-            ipaddress = ip_lookup.lookup_ip_address(hostname)
-            check_names = check_table.get_needed_check_names(
-                hostname,
-                remove_duplicates=True,
-                filter_mode="only_clustered",
-            )
-            selected_raw_sections = config.get_relevant_raw_sections(
-                # TODO (mo): centralize maincheckify: CMK-4295
-                CheckPluginName(maincheckify(n)) for n in check_names)
-            sources = DataSources(
-                hostname,
-                ipaddress,
-                sources=make_sources(
-                    host_config,
-                    ipaddress,
-                    selected_raw_sections=selected_raw_sections,
-                ),
-            )
-            nodes.append((hostname, ipaddress, sources))
-        return nodes
-
-    @staticmethod
-    def _make_mhs(nodes, max_cachefile_age):
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
         # the section lines need to be extended
         multi_host_sections = MultiHostSections()
@@ -319,3 +267,43 @@ class DataSources(collections.abc.Collection):
             )
 
         return multi_host_sections
+
+    def make_nodes(
+        self,
+        host_config: HostConfig,
+    ) -> List[Tuple[HostName, Optional[HostAddress], "DataSources"]]:
+        if host_config.nodes is None:
+            return [(self.hostname, self.ipaddress, self)]
+        return self._make_piggy_nodes(host_config)
+
+    @staticmethod
+    def _make_piggy_nodes(
+            host_config: HostConfig) -> List[Tuple[HostName, Optional[HostAddress], "DataSources"]]:
+        """Abstract clusters/nodes/hosts"""
+        assert host_config.nodes is not None
+
+        import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
+        abstract.DataSource.set_may_use_cache_file()
+
+        nodes = []
+        for hostname in host_config.nodes:
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
+            check_names = check_table.get_needed_check_names(
+                hostname,
+                remove_duplicates=True,
+                filter_mode="only_clustered",
+            )
+            selected_raw_sections = config.get_relevant_raw_sections(
+                # TODO (mo): centralize maincheckify: CMK-4295
+                CheckPluginName(maincheckify(n)) for n in check_names)
+            sources = DataSources(
+                hostname,
+                ipaddress,
+                sources=make_sources(
+                    host_config,
+                    ipaddress,
+                    selected_raw_sections=selected_raw_sections,
+                ),
+            )
+            nodes.append((hostname, ipaddress, sources))
+        return nodes

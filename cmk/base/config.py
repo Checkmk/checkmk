@@ -3178,6 +3178,10 @@ class HostConfig:
                 hostname, self._config_cache.host_of_clustered_service, service_description)  #
             for hostname in hostnames)
 
+    @property
+    def max_cachefile_age(self) -> int:
+        return check_max_cachefile_age if self.nodes is None else cluster_max_cachefile_age
+
 
 #.
 #   .--Configuration Cache-------------------------------------------------.

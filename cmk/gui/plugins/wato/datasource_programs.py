@@ -131,12 +131,6 @@ rulespec_registry.register(
 def _valuespec_special_agents_cisco_prime():
     return Dictionary(
         elements=[
-            ("path",
-             TextAscii(
-                 title=_("Path"),
-                 help="Part of the URL which specifies the service "
-                 "e.g. <b>api/json/users?p1=value1&p2=value2</b>",
-             )),
             ("basicauth",
              Tuple(
                  title=_("BasicAuth settings (optional)"),
@@ -168,7 +162,6 @@ def _valuespec_special_agents_cisco_prime():
                  unit=_("seconds"),
              )),
         ],
-        required_keys=["path"],
         title=_("Cisco Prime"),
     )
 

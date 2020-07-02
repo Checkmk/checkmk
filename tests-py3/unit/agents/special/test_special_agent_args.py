@@ -77,7 +77,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_vsphere': ['HOSTNAME'],
     'agent_proxmox': ['HOSTNAME'],
     'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST'],
-    'agent_cisco_prime': ['--hostname', 'HOSTNAME', '--path', 'PATH'],
+    'agent_cisco_prime': ['--hostname', 'HOSTNAME'],
 }
 
 

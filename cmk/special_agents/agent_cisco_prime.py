@@ -19,13 +19,18 @@ from requests.packages import urllib3
 from cmk.special_agents.utils import vcrtrace
 from cmk.utils import password_store
 
+API_PATH = "webacs/api/v1/data/"
+REQUESTS = {
+    "wifi_access_points": "AccessPoints.json?.full=true&.nocount=true&.maxResults=10000",
+    "wifi_connections": "ClientCounts.json?.full=true&subkey=ROOT-DOMAIN&type=SSID",
+}
+
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     """Parse arguments needed to construct an URL and for connection conditions"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--hostname", required=True, help="Host to query")
     parser.add_argument("--port", "-p", type=int, help='IPv4 port to connect to')
-    parser.add_argument("--path", required=True, type=str, help="request path")
     parser.add_argument("--basic-auth", "-u", type=str, help='username:password for basic_auth')
     parser.add_argument("--no-tls", action="store_true", help="Use http instead of https")
     parser.add_argument("--no-cert-check", action="store_true")
@@ -57,7 +62,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
         logging.getLogger("vcr").setLevel(logging.WARN)
 
     def fetch_json_data(url: str, args: argparse.Namespace) -> str:
-        logging.info("fetch data from URL=%r", url)
+        logging.info("fetch data from url=%r", url)
         response = requests.get(
             url=url,
             auth=tuple(args.basic_auth.split(":")) if args.basic_auth else None,
@@ -81,14 +86,17 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
     setup_logging(args.verbose)
     logging.debug("cmd: argv=%r, turned into: %r", argv, args.__dict__)
     try:
-        url = "%s://%s%s/%s" % (
+        url_prefix = "%s://%s%s/%s" % (
             "http" if args.no_tls else "https",
             args.hostname,
             ":%s" % args.port if args.port else "",
-            args.path,
+            API_PATH,
         )
-        logging.info("fetch data from url=%r", url)
-        print("<<<cisco_prime_wifi_connections:sep(0)>>>\n%s" % fetch_json_data(url, args))
+        for service, request_string in REQUESTS.items():
+            print("<<<cisco_prime_%s:sep(0)>>>\n%s" % (
+                service,
+                fetch_json_data(url_prefix + request_string, args),
+            ))
 
     except Exception as exc:  # pylint: disable=broad-except
         if args.debug:

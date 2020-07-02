@@ -10,6 +10,23 @@ from cmk.special_agents.agent_cisco_prime import main
 
 AUTH = ("user", "passw0rd")
 HOST = "httpbin.org"
+API_PATH = "webacs/api/v1/data"
+REQUESTS = ("AccessPoints.json?.full=true&.nocount=true&.maxResults=10000",
+            "ClientCounts.json?.full=true&subkey=ROOT-DOMAIN&type=SSID")
+
+
+@pytest.fixture(name="accept_requests")
+def fixture_accept_requests(return_code):
+    for req in REQUESTS:
+        responses.add(
+            responses.GET,
+            "https://%s/%s/%s" % (HOST, API_PATH, req),
+            json={
+                "authenticated": True,
+                "user": "user"
+            },
+            status=return_code,
+        )
 
 
 def test_wrong_arguments(capsys):
@@ -19,33 +36,25 @@ def test_wrong_arguments(capsys):
 
 
 @responses.activate
-def test_agent_output(capsys):
-    responses.add(
-        responses.GET,
-        "https://%s/basic-auth/%s/%s" % (HOST, *AUTH),
-        json={
-            "authenticated": True,
-            "user": "user"
-        },
-        status=200,
-    )
-    main(["--hostname", HOST, "--path", "basic-auth/%s/%s" % AUTH, "-u", "%s:%s" % AUTH])
+@pytest.mark.parametrize('return_code', [200])
+def test_agent_output(capsys, accept_requests):
+    main(["--debug", "--hostname", HOST, "-u", "%s:%s" % AUTH])
     assert capsys.readouterr() == (
-        '<<<cisco_prime_wifi_connections:sep(0)>>>\n{"authenticated": true, "user": "user"}\n',
+        '<<<cisco_prime_wifi_access_points:sep(0)>>>\n'
+        '{"authenticated": true, "user": "user"}\n'
+        '<<<cisco_prime_wifi_connections:sep(0)>>>\n'
+        '{"authenticated": true, "user": "user"}\n',
         '',
     )
 
 
 @responses.activate
-def test_missing_credentials(capsys):
-    responses.add(
-        responses.GET,
-        "https://%s/basic-auth/%s/%s" % (HOST, *AUTH),
-        status=401,
-    )
+@pytest.mark.parametrize('return_code', [401])
+def test_missing_credentials(capsys, accept_requests):
     with pytest.raises(SystemExit):
-        main(["--hostname", HOST, "--path", "basic-auth/%s/%s" % AUTH])
+        main(["--hostname", HOST])
     assert capsys.readouterr() == (
         '',
-        '401 Client Error: Unauthorized for url: https://httpbin.org/basic-auth/user/passw0rd\n',
+        '401 Client Error: Unauthorized for url: '
+        'https://%s/%s/%s\n' % (HOST, API_PATH, REQUESTS[0]),
     )

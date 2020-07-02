@@ -3438,8 +3438,10 @@ class ConfigCache:
 
         # Some WATO rules might register icons on their own
         if checkname:
-            checkgroup = check_info[checkname]["group"]
-            if checkgroup in ['ps', 'services'] and isinstance(params, dict):
+            # TODO (mo): centralize maincheckify: CMK-4295
+            plugin = get_registered_check_plugin(CheckPluginName(maincheckify(checkname)))
+            if (plugin is not None and str(plugin.check_ruleset_name) in ('ps', 'services') and
+                    isinstance(params, dict)):
                 icon = params.get('icon')
                 if icon:
                     actions.add(icon)

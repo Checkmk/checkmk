@@ -13,7 +13,7 @@ import threading
 import urllib.parse
 from http.cookiejar import CookieJar
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Literal
 
 import pytest  # type: ignore[import]
 import webtest  # type: ignore[import]
@@ -46,6 +46,10 @@ Automation = NamedTuple("Automation", [
     ("responses", Any),
 ])
 
+HTTPMethod = Literal[
+    "get", "put", "post", "delete",
+    "GET", "PUT", "POST", "DELETE",
+]  # yapf: disable
 
 @pytest.fixture(scope='function')
 def register_builtin_html():
@@ -261,10 +265,10 @@ class WebTestAppForCMK(webtest.TestApp):
         self.username = username
         self.password = password
 
-    def call_method(self, method, url, *args, **kw):
+    def call_method(self, method: HTTPMethod, url, *args, **kw) -> webtest.TestResponse:
         return getattr(self, method.lower())(url, *args, **kw)
 
-    def follow_link(self, resp, rel, base='', **kw):
+    def follow_link(self, resp: webtest.TestResponse, rel, base='', **kw) -> webtest.TestResponse:
         """Follow a link description as defined in a restful-objects entity"""
         if rel.startswith(".../"):
             rel = rel.replace(".../", "urn:org.restfulobjects:rels/")

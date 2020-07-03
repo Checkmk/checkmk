@@ -1202,6 +1202,53 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
           \ a20ceacf346041dc' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
   /domain-types/downtime/collections/all:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.downtime.list_service_downtimes
+      parameters:
+      - allowEmptyValue: false
+        in: query
+        name: host_name
+        required: false
+        schema:
+          type: string
+      - allowEmptyValue: false
+        in: query
+        name: service_description
+        required: false
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.downtime
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/domain-types/downtime/collections/all\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/domain-types/downtime/collections/all\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/domain-types/downtime/collections/all\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
     post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.create_downtime

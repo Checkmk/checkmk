@@ -1013,7 +1013,6 @@ def test_grouped_rulespecs():
             'notification_parameters:slack',
             'notification_parameters:victorops',
             'notification_parameters:pagerduty',
-            'notification_parameters:signl4',
             'notification_parameters:asciimail',
             'notification_parameters:mkeventd',
             'notification_parameters:spectrum',

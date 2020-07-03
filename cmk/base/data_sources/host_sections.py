@@ -11,9 +11,11 @@ from typing import Any, Callable, NamedTuple, cast, Dict, List, Optional, Tuple,
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import (
+    CheckPluginNameStr,
     HostAddress,
     HostName,
     ParsedSectionName,
+    SectionName,
     ServiceName,
     SourceType,
 )
@@ -34,10 +36,8 @@ from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import (
     AbstractSectionContent,
-    CheckPluginNameStr,
     FinalSectionContent,
     ParsedSectionContent,
-    SectionName,
 )
 from cmk.base.exceptions import MKParseFunctionError
 

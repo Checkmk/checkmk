@@ -243,7 +243,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             if section_name in self._fetched_raw_section_names:
                 continue
 
-            # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
+            # This checks data is configured to be persisted (snmp_fetch_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added later
             if self._persisted_sections and section_name in self._persisted_sections:
                 self._logger.debug("%s: Skip fetching data (persisted info exists)", section_name)
@@ -299,12 +299,12 @@ class SNMPDataSource(ABCSNMPDataSource):
         persisted_sections: SNMPPersistedSections = {}
 
         for section_name, section_content in raw_data.items():
-            check_interval = self._host_config.snmp_check_interval(str(section_name))
-            if check_interval is None:
+            fetch_interval = self._host_config.snmp_fetch_interval(section_name)
+            if fetch_interval is None:
                 continue
 
             cached_at = int(time.time())
-            until = cached_at + (check_interval * 60)
+            until = cached_at + (fetch_interval * 60)
             persisted_sections[section_name] = (cached_at, until, section_content)
 
         return persisted_sections

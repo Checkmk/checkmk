@@ -2749,22 +2749,22 @@ class HostConfig:
         of this site"""
         return self.hostname in self._config_cache.all_configured_clusters()
 
-    def snmp_check_interval(self, section_name: str) -> Optional[int]:
-        """Return the check interval of SNMP check sections
+    def snmp_fetch_interval(self, section_name: SectionName) -> Optional[int]:
+        """Return the fetch interval of SNMP sections
 
-        This has been added to reduce the check interval of single SNMP checks (or
-        more precise: sections) to be executed less frequent that the "Check_MK"
-        service is executed.
+        This has been added to reduce the fetch interval of single SNMP sections
+        to be executed less frequently than the "Check_MK" service is executed.
         """
-        if not cmk.base.check_utils.is_snmp_check(section_name):
-            return None  # no values at all for non snmp checks
+        section = get_registered_section_plugin(section_name)
+        if not isinstance(section, SNMPSectionPlugin):
+            return None  # no values at all for non snmp section
 
         # Previous to 1.5 "match" could be a check name (including subchecks) instead of
         # only main check names -> section names. This has been cleaned up, but we still
         # need to be compatible. Strip of the sub check part of "match".
         for match, minutes in self._config_cache.host_extra_conf(self.hostname,
                                                                  snmp_check_interval):
-            if match is None or match.split(".")[0] == section_name:
+            if match is None or match.split(".")[0] == str(section_name):
                 return minutes  # use first match
 
         return None

@@ -85,8 +85,9 @@ from cmk.gui.plugins.wato import (
     get_check_information,
 )
 
-from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
 from cmk.gui.plugins.views.icons import icon_and_action_registry
+from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
+from cmk.gui.plugins.wato.utils import get_section_information
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
 
@@ -4965,29 +4966,27 @@ def get_snmp_checktypes():
 
 
 def get_snmp_section_names():
-    checks = get_check_information()
-    snmp_section_names = set(cn.split(".", 1)[0] for (cn, c) in checks.items() if c['snmp'])
-    section_choices = [(sn, sn) for sn in snmp_section_names]
-    return [(None, _('All SNMP Checks'))] + sorted(section_choices)
+    sections = get_section_information()
+    section_choices = {(s['name'], s['name']) for s in sections.values() if s['type'] == 'snmp'}
+    return [(None, _('All SNMP sections'))] + sorted(section_choices)
 
 
-def _valuespec_snmp_check_interval():
+def _valuespec_snmp_fetch_interval():
     return Tuple(
-        title=_('Check intervals for SNMP checks'),
-        help=_('This rule can be used to customize the check interval of each SNMP based check. '
-               'With this option it is possible to configure a longer check interval for specific '
-               'checks, than then normal check interval.'),
+        title=_('Fetch intervals for SNMP sections'),
+        help=_(
+            'This rule can be used to customize the data acquisition interval of each SNMP based '
+            'section. With this option it is possible to configure a longer interval for specific '
+            'sections, than then normal check interval.'),
         elements=[
             Transform(
                 DropdownChoice(
                     title=_("Check"),
-                    help=_("You can only configure \"section names\" here and not choose all "
-                           "individual SNMP based checks here. It is only possible to define "
-                           "SNMP check intervals for main checks and all the related sub "
-                           "checks together. The reason for this is that the data of the "
-                           "main check and it's sub checks is defined for the whole group "
-                           "of checks in the main check and also fetched for all these "
-                           "checks together."),
+                    help=_("You can only configure \"section names\" here and not choose "
+                           "individual checks here. It is only possible to define "
+                           "SNMP fetch intervals for SNMP based sections. "
+                           "The reason for this is that the check plugins themselves are not "
+                           "aware wether or not they are processing SNMP based data."),
                     choices=get_snmp_section_names,
                 ),
                 # Transform check types to section names
@@ -5005,8 +5004,8 @@ def _valuespec_snmp_check_interval():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupAgentSNMP,
-        name="snmp_check_interval",
-        valuespec=_valuespec_snmp_check_interval,
+        name="snmp_check_interval",  # legacy name, kept for compatibility
+        valuespec=_valuespec_snmp_fetch_interval,
     ))
 
 

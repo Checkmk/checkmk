@@ -17,7 +17,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.api.agent_based import checking_types
 from cmk.base.caching import config_cache as _config_cache
@@ -1116,7 +1116,8 @@ def test_host_config_snmp_check_interval(monkeypatch, hostname, section_name, re
         (("snmp_uptime", 4), [], ["testhost2"], {}),
     ])
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).snmp_check_interval(section_name) == result
+    assert config_cache.get_host_config(hostname).snmp_fetch_interval(
+        SectionName(section_name)) == result
 
 
 def test_http_proxies():

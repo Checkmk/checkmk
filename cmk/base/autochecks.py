@@ -265,7 +265,7 @@ def _parse_autocheck_entry(
 
     if not isinstance(ast_check_plugin_name, ast.Str):
         raise Exception("Invalid autocheck: Wrong check plugin type: %r" % ast_check_plugin_name)
-    check_plugin_name = ast_check_plugin_name.s
+    check_plugin_name: str = ast_check_plugin_name.s
 
     item: Item = None
     if isinstance(ast_item, ast.Str):
@@ -279,7 +279,12 @@ def _parse_autocheck_entry(
         raise Exception("Invalid autocheck: Wrong item type: %r" % ast_item)
 
     try:
-        description = service_description(hostname, check_plugin_name, item)
+        # TODO (mo): centralize maincheckify: CMK-4295
+        description = service_description(
+            hostname,
+            CheckPluginName(maincheckify(check_plugin_name)),
+            item,
+        )
     except Exception:
         return None  # ignore
 

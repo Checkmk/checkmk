@@ -12,7 +12,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
 from cmk.gui.watolib.downtime import (execute_livestatus_command, determine_downtime_mode,
-                                      DowntimeSchedule)
+                                      remove_downtime_command, DowntimeSchedule)
 from cmk.gui.plugins.openapi.restful_objects import (endpoint_schema, request_schemas, constructors,
                                                      response_schemas)
 
@@ -25,6 +25,12 @@ RECURRING_OPTIONS = {
     "same weekday": 6,
     "same day of the month": 7
 }
+
+DOWNTIME_ID = ParamDict.create('downtime_id',
+                               'path',
+                               description='The id of the downtime',
+                               example='54',
+                               required=True)
 
 
 @endpoint_schema(constructors.collection_href('downtime'),
@@ -99,14 +105,33 @@ def list_service_downtimes(param):
     return _serve_downtimes(gen_downtimes)
 
 
+@endpoint_schema('/objects/host/{host_name}/objects/downtime/{downtime_id}',
+                 '.../delete',
+                 method='delete',
+                 parameters=['host_name', DOWNTIME_ID],
+                 output_empty=True)
+def delete_downtime(params):
+    live = sites.live()
+
+    q = Query([Downtimes.id, Downtimes.is_service])
+
+    q = q.filter(Downtimes.id.contains(params['downtime_id']))
+    gen_downtime = q.iterate(live)
+    downtime_info = next(gen_downtime)
+    downtime_type = "SVC" if downtime_info['is_service'] else "HOST"
+    command_delete = remove_downtime_command(downtime_type, params['downtime_id'])
+    execute_livestatus_command(command_delete, params['host_name'])
+    return Response(status=204)
+
+
 def _serve_downtimes(downtimes):
     response = Response()
-    response.set_data(json.dumps(serialize_downtimes(downtimes)))
+    response.set_data(json.dumps(_serialize_downtimes(downtimes)))
     response.set_content_type('application/json')
     return response
 
 
-def serialize_downtimes(downtimes):
+def _serialize_downtimes(downtimes):
     entries = []
     for downtime_info in downtimes:
         service_description = downtime_info.get("service_description")
@@ -115,13 +140,20 @@ def serialize_downtimes(downtimes):
         else:
             downtime_detail = "host: %s" % downtime_info["host_name"]
 
+        downtime_id = downtime_info['id']
         entries.append(
             constructors.domain_object(
                 domain_type='downtime',
-                identifier=downtime_info['id'],
+                identifier=downtime_id,
                 title='Downtime for %s' % downtime_detail,
                 extensions=_downtime_properties(downtime_info),
-            ))
+                links=[
+                    constructors.link_rel(rel='.../delete',
+                                          href='/objects/host/%s/objects/downtime/%s' %
+                                          (downtime_info['host_name'], downtime_id),
+                                          method='delete',
+                                          title='Delete the downtime'),
+                ]))
 
     return constructors.object_collection(
         name='all',

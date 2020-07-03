@@ -15,6 +15,10 @@ def execute_livestatus_command(command, site):
     sites.live().command("[%d] %s" % (int(time.time()), command), SiteId(site))
 
 
+def remove_downtime_command(cmdtag, downtime_id):
+    return "DEL_%s_DOWNTIME;%s" % (cmdtag, downtime_id)
+
+
 def determine_downtime_mode(recurring_number, delayed_duration):
     """Determining the downtime mode
 

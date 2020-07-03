@@ -1298,6 +1298,47 @@ paths:
           \ updates' \\\n    delayed_duration='3600' \\\n    end_time='2017-07-21T17:32:28Z'\
           \ \\\n    host_name='example.com' \\\n    recurring_option='hour' \\\n \
           \   service_description='CPU utilization' \\\n    start_time='2017-07-21T17:32:28Z'"
+  /objects/host/{host_name}/objects/downtime/{downtime_id}:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.downtime.delete_downtime
+      parameters:
+      - $ref: '#/components/parameters/host_name'
+      - allowEmptyValue: false
+        description: The id of the downtime
+        example: '54'
+        in: path
+        name: downtime_id
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.downtime
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
+          \    API_URL + \"/objects/host/example.com/objects/downtime/54\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/host/example.com/objects/downtime/54\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/objects/host/example.com/objects/downtime/54\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /domain-types/folder_config/collections/all:
     get:
       description: ''

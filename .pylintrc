@@ -153,9 +153,6 @@ enable=
     map-builtin-not-iterating,
     range-builtin-not-iterating,
     zip-builtin-not-iterating,
-    #---------------------------------------------------------------------------
-    # Checks we still need to consider:
-    # eq-without-hash,
 
 [REPORTS]
 output-format=cmk_colorized

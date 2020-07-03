@@ -156,7 +156,6 @@ enable=
     # eq-without-hash,
     # exception-escape,
     # exception-message-attribute,
-    # next-method-called,
 
 [REPORTS]
 output-format=cmk_colorized

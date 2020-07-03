@@ -147,6 +147,7 @@ enable=
     dict-items-not-iterating,
     dict-keys-not-iterating,
     dict-values-not-iterating,
+    exception-escape,
     filter-builtin-not-iterating,
     map-builtin-not-iterating,
     range-builtin-not-iterating,
@@ -154,7 +155,6 @@ enable=
     #---------------------------------------------------------------------------
     # Checks we still need to consider:
     # eq-without-hash,
-    # exception-escape,
     # exception-message-attribute,
 
 [REPORTS]

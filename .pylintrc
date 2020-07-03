@@ -148,6 +148,7 @@ enable=
     dict-keys-not-iterating,
     dict-values-not-iterating,
     exception-escape,
+    exception-message-attribute,
     filter-builtin-not-iterating,
     map-builtin-not-iterating,
     range-builtin-not-iterating,
@@ -155,7 +156,6 @@ enable=
     #---------------------------------------------------------------------------
     # Checks we still need to consider:
     # eq-without-hash,
-    # exception-message-attribute,
 
 [REPORTS]
 output-format=cmk_colorized

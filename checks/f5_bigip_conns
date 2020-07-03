@@ -68,7 +68,7 @@ def check_f5_bigip_conns(item, params, info):
     try:
         conn_rate_params = get_conn_rate_params(params)
     except ValueError as err:
-        yield 3, err.message
+        yield 3, str(err)
         return
 
     # Current connections

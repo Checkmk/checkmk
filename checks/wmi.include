@@ -61,7 +61,7 @@ class WMITable(object):
             try:
                 self.__key_index = self.__headers[self._normalize_key(key_field)]
             except KeyError as e:
-                raise KeyError(e.message + " missing, valid keys: " + ", ".join(self.__headers))
+                raise KeyError(str(e) + " missing, valid keys: " + ", ".join(self.__headers))
 
         self.__row_lookup = {}
         self.__rows = []
@@ -143,7 +143,7 @@ class WMITable(object):
             try:
                 col_index = self.__headers[self._normalize_key(column)]
             except KeyError as e:
-                raise KeyError(e.message + " missing, valid keys: " + ", ".join(self.__headers))
+                raise KeyError(str(e) + " missing, valid keys: " + ", ".join(self.__headers))
         return self.__rows[row_index][col_index]
 
     def row_labels(self):

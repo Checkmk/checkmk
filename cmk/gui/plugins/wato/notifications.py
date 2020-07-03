@@ -395,6 +395,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
             ],
         )
 
+
 @notification_parameter_registry.register
 class NotificationParameterASCIIMail(NotificationParameter):
     @property

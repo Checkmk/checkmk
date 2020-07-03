@@ -10,7 +10,7 @@ import time
 from typing import cast, Dict, Iterable, List, Optional, Set
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginNameStr, HostAddress, HostName, SectionName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.snmp_scan import SectionNameFilterFunction, SNMPScanSection
 from cmk.snmplib.type_defs import (
@@ -77,7 +77,7 @@ class CachedSNMPDetector:
         self._filter_function: Optional[SectionNameFilterFunction] = None
         self._for_inventory = False
         # Optional set: None: we never tried, empty: we tried, but found nothing
-        self._cached_result: Optional[Set[CheckPluginNameStr]] = None
+        self._cached_result: Optional[Set[SectionName]] = None
 
     def set_filter_function(self, filter_function: SectionNameFilterFunction) -> None:
         self._filter_function = filter_function
@@ -99,7 +99,7 @@ class CachedSNMPDetector:
         on_error: str,
         do_snmp_scan: bool,
         for_mgmt_board: bool,
-    ):
+    ) -> Set[SectionName]:
         """Returns a list of raw sections that shall be processed by this source.
 
         The logic is only processed once. Once processed, the answer is cached.
@@ -124,12 +124,14 @@ class CachedSNMPDetector:
             ),
             backend=factory.backend(snmp_config),
         )
-        self._cached_result = config.filter_by_management_board(
-            snmp_config.hostname,
-            found_plugins,
-            for_mgmt_board=for_mgmt_board,
-            for_discovery=True,
-        )
+        self._cached_result = {
+            SectionName(s) for s in config.filter_by_management_board(
+                snmp_config.hostname,
+                found_plugins,
+                for_mgmt_board=for_mgmt_board,
+                for_discovery=True,
+            )
+        }
         return self._cached_result
 
 
@@ -268,7 +270,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         for section_name in self._sort_section_names(raw_sections_to_process):
             plugin = config.registered_snmp_sections.get(section_name)
             if plugin is None:
-                self._logger.debug("%s: No such section definiton", section_name)
+                self._logger.debug("%s: No such section definition", section_name)
                 continue
 
             if section_name in self._fetched_raw_section_names:

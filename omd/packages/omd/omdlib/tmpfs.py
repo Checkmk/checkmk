@@ -30,6 +30,7 @@ import sys
 import time
 import shlex
 import errno
+import tarfile
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -116,29 +117,23 @@ def mark_tmpfs_initialized(site: SiteContext) -> None:
         f.write(u"")
 
 
-def tmpfs_is_managed_by_node(site: SiteContext) -> bool:
-    """When running in a container, and the tmpfs is managed by the node, the
-    mount is visible, but can not be unmounted. umount exits with 32 in this
-    case. Treat this case like there is no tmpfs and only the directory needs
-    to be cleaned."""
-    if not is_dockerized():
-        return False
-
-    if not tmpfs_mounted(site.name):
-        return False
-
-    return subprocess.call(["umount", site.tmp_dir],
-                           stdout=open(os.devnull, "w"),
-                           stderr=subprocess.STDOUT) in [1, 32]
-
-
 def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) -> bool:
-    # Clear directory hierarchy when not using a tmpfs
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp
     # directory first.
-    if not tmpfs_mounted(site.name) or tmpfs_is_managed_by_node(site):
+
+    # For some files in tmpfs we want the IO performance of the tmpfs and
+    # want to keep the files between unmount / mount operations (if possible).
+    if os.path.exists(site.tmp_dir):
+        if output:
+            sys.stdout.write("Saving temporary filesystem contents...")
+        save_tmpfs_dump(site)
+        if output:
+            ok()
+
+    # Clear directory hierarchy when not using a tmpfs
+    if not tmpfs_mounted(site.name) or _tmpfs_is_managed_by_node(site):
         tmp = site.tmp_dir
         if os.path.exists(tmp):
             if output:
@@ -158,7 +153,7 @@ def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) ->
                 ok()
             return True
 
-        if subprocess.call(["umount", site.tmp_dir]) == 0:
+        if _unmount(site):
             if output:
                 ok()
             return True
@@ -182,6 +177,26 @@ def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) ->
 # Extracted to separate function to be able to monkeypatch the path for tests
 def fstab_path() -> str:
     return "/etc/fstab"
+
+
+def _unmount(site: SiteContext) -> bool:
+    return subprocess.call(["umount", site.tmp_dir]) == 0
+
+
+def _tmpfs_is_managed_by_node(site: SiteContext) -> bool:
+    """When running in a container, and the tmpfs is managed by the node, the
+    mount is visible, but can not be unmounted. umount exits with 32 in this
+    case. Treat this case like there is no tmpfs and only the directory needs
+    to be cleaned."""
+    if not is_dockerized():
+        return False
+
+    if not tmpfs_mounted(site.name):
+        return False
+
+    return subprocess.call(["umount", site.tmp_dir],
+                           stdout=open(os.devnull, "w"),
+                           stderr=subprocess.STDOUT) in [1, 32]
 
 
 def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
@@ -222,3 +237,40 @@ def remove_from_fstab(site: SiteContext) -> None:
         newtab.write(line)
     os.rename("/etc/fstab.new", "/etc/fstab")
     ok()
+
+
+def save_tmpfs_dump(site):
+    # type: (SiteContext) -> None
+    """Dump tmpfs content for later restore after remount
+
+    Creates a tar archive from the current tmpfs contents that is restored to the
+    tmpfs later after mounting it again.
+
+    Please note that this only preserves specific files, not the whole tmpfs.
+    """
+    save_paths = [
+        Path(site.tmp_dir) / "check_mk" / "piggyback",
+        Path(site.tmp_dir) / "check_mk" / "piggyback_sources",
+    ]
+
+    dump_path = _tmpfs_dump_path(site)
+    dump_path.parent.mkdir(parents=True, exist_ok=True)
+    with tarfile.TarFile(dump_path, mode="w") as f:
+        for save_path in save_paths:
+            if save_path.exists():
+                f.add(str(save_path), arcname=str(save_path.relative_to(site.tmp_dir)))
+    assert dump_path.exists()
+
+
+def restore_tmpfs_dump(site):
+    # type: (SiteContext) -> None
+    """Populate the tmpfs from the previously created tmpfs dump
+    Silently skipping over in case there is no dump available."""
+    if not _tmpfs_dump_path(site).exists():
+        return
+    tarfile.TarFile(_tmpfs_dump_path(site)).extractall(site.tmp_dir)
+
+
+def _tmpfs_dump_path(site):
+    # type: (SiteContext) -> Path
+    return Path(site.dir, "var", "omd", "tmpfs-dump.tar")

@@ -81,7 +81,7 @@ from omdlib.users_and_groups import (find_processes_of_user, groupdel, useradd, 
                                      user_exists, group_exists, group_id, user_logged_in,
                                      switch_to_site_user, user_verify)
 from omdlib.tmpfs import (tmpfs_mounted, prepare_tmpfs, mark_tmpfs_initialized, unmount_tmpfs,
-                          add_to_fstab, remove_from_fstab)
+                          add_to_fstab, remove_from_fstab, restore_tmpfs_dump, save_tmpfs_dump)
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]
@@ -319,6 +319,8 @@ def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext) -> 
         create_skeleton_files(site, "tmp")
         chown_tree(site.tmp_dir, site.name)
         mark_tmpfs_initialized(site)
+        restore_tmpfs_dump(site)
+
     _create_livestatus_tcp_socket_link(site)
 
 
@@ -1091,19 +1093,6 @@ def _instantiate_skel(site: SiteContext, path: str) -> bytes:
     except Exception:
         # TODO: This is a bad exception handler. Drop it
         return b""  # e.g. due to permission error
-
-
-#.
-#   .--tmpfs---------------------------------------------------------------.
-#   |                     _                    __                          |
-#   |                    | |_ _ __ ___  _ __  / _|___                      |
-#   |                    | __| '_ ` _ \| '_ \| |_/ __|                     |
-#   |                    | |_| | | | | | |_) |  _\__ \                     |
-#   |                     \__|_| |_| |_| .__/|_| |___/                     |
-#   |                                  |_|                                 |
-#   +----------------------------------------------------------------------+
-#   |  Helper functions for dealing with the tmpfs                         |
-#   '----------------------------------------------------------------------'
 
 
 def initialize_site_ca(site: SiteContext) -> None:
@@ -2407,6 +2396,10 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     create_version_symlink(site, to_version)
     save_version_meta_data(site, to_version)
 
+    # Before the hooks can be executed the tmpfs needs to be mounted, e.g. the Checkmk configuration
+    # is being updated (cmk -U). This requires access to the initialized tmpfs.
+    prepare_and_populate_tmpfs(version_info, site)
+
     call_scripts(site, 'update-pre-hooks')
 
     # Let hooks of the new(!) version do their work and update configuration.
@@ -2516,6 +2509,9 @@ def main_init_action(version_info: VersionInfo, site: SiteContext, global_opts: 
         # processes and terminate them
         if command == "stop" and not args and exit_status == 0:
             terminate_site_user_processes(site, global_opts)
+            # Even if we are not explicitly executing an unmount of the tmpfs, this may be the
+            # "stop" before shutting down the computer. Create a tmpfs dump now, just to be sure.
+            save_tmpfs_dump(site)
 
         sys.exit(exit_status)
 

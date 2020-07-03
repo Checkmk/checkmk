@@ -26,7 +26,6 @@ def test_registered_automations():
         'get-configuration',
         'get-labels-of',
         'get-real-time-checks',
-        'get-service-name',
         'get-service-configurations',
         'inventory',
         'notification-analyse',
@@ -40,7 +39,6 @@ def test_registered_automations():
         'try-inventory',
         'update-dns-cache',
         'update-host-labels',
-        'get-rule-mismatch-reason',
     ]
 
     if not cmk_version.is_raw_edition():

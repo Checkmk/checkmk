@@ -24,7 +24,6 @@ import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
@@ -34,7 +33,6 @@ from cmk.utils.type_defs import (
     CheckPluginNameStr,
     HostName,
     ServiceDetails,
-    ServiceName,
     ServiceState,
 )
 
@@ -1695,89 +1693,6 @@ class AutomationGetLabelsOf(Automation):
 
 
 automations.register(AutomationGetLabelsOf())
-
-
-# Temporary automation call to support base/GUI Python 3 transition
-class AutomationGetServiceName(Automation):
-    cmd = "get-service-name"
-    needs_config = True
-    needs_checks = True
-
-    def execute(self, args: List[str]) -> ServiceName:
-        hostname, check_plugin_name_str, item = args
-        # TODO (mo): centralize maincheckify: CMK-4295
-        check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
-        return config.service_description(hostname, check_plugin_name, item)
-
-
-automations.register(AutomationGetServiceName())
-
-
-# Temporary automation call to support base/GUI Python 3 transition
-class AutomationGetRuleMismatchReason(Automation):
-    cmd = "get-rule-mismatch-reason"
-    needs_config = True
-    needs_checks = False
-
-    def execute(self, args: List[str]) -> Optional[str]:
-        parsed_args: List[Any] = ast.literal_eval(args[0])
-        return self.get_mismatch_reason(*parsed_args)
-
-    def get_mismatch_reason(self, hostname: HostName, svc_desc_or_item: ServiceName,
-                            svc_desc: ServiceName, only_host_conditions: bool,
-                            match_service_conditions: bool, rule_dict: Dict, item_type: str,
-                            is_binary_ruleset: bool) -> Optional[str]:
-        """A generator that provides the reasons why a given folder/host/item not matches this rule"""
-
-        config_cache = config.get_config_cache()
-
-        # BE AWARE: Depending on the service ruleset the service_description of
-        # the rules is only a check item or a full service description. For
-        # example the check parameters rulesets only use the item, and other
-        # service rulesets like disabled services ruleset use full service
-        # descriptions.
-        #
-        # The service_description attribute of the match_object must be set to
-        # either the item or the full service description, depending on the
-        # ruleset, but the labels of a service need to be gathered using the
-        # real service description.
-        if only_host_conditions:
-            match_object = ruleset_matcher.RulesetMatchObject(hostname)
-        elif item_type == "service":
-            match_object = config_cache.ruleset_match_object_of_service(hostname, svc_desc_or_item)
-        elif item_type == "item":
-            match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(
-                hostname, svc_desc_or_item, svc_desc)
-        elif not item_type:
-            match_object = ruleset_matcher.RulesetMatchObject(hostname)
-        else:
-            raise NotImplementedError()
-
-        return self._get_mismatch_reason_of_match_object(config_cache, match_object,
-                                                         match_service_conditions, rule_dict,
-                                                         is_binary_ruleset)
-
-    def _get_mismatch_reason_of_match_object(self, config_cache: config.ConfigCache,
-                                             match_object: ruleset_matcher.RulesetMatchObject,
-                                             match_service_conditions: bool, rule_dict: Dict,
-                                             is_binary_ruleset: bool) -> Optional[str]:
-        matcher = config_cache.ruleset_matcher
-
-        if match_service_conditions:
-            if list(
-                    matcher.get_service_ruleset_values(match_object, [rule_dict],
-                                                       is_binary=is_binary_ruleset)):
-                return None
-        else:
-            if list(
-                    matcher.get_host_ruleset_values(match_object, [rule_dict],
-                                                    is_binary=is_binary_ruleset)):
-                return None
-
-        return u"The rule does not match"
-
-
-automations.register(AutomationGetRuleMismatchReason())
 
 
 class AutomationCreateDiagnosticsDump(Automation):

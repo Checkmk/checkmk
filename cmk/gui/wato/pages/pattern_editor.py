@@ -28,7 +28,7 @@ from cmk.gui.plugins.wato import (
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
-# import cmk.base.export
+import cmk.base.export
 
 
 @mode_registry.register
@@ -232,8 +232,4 @@ class ModePatternEditor(WatoMode):
 
     def _get_service_description(self, hostname: HostName, check_plugin_name: CheckPluginNameStr,
                                  item: Item) -> ServiceName:
-        # TODO: re-enable once the GUI is using Python3
-        #return cmk.base.export.service_description(hostname, check_plugin_name, item)
-        assert item is not None
-        return watolib.check_mk_local_automation("get-service-name",
-                                                 [hostname, check_plugin_name, item])
+        return cmk.base.export.service_description(hostname, check_plugin_name, item)

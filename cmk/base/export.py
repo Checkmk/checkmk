@@ -12,7 +12,7 @@ from the configuration.
 from typing import Dict
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.type_defs import HostName, Item, CheckPluginName, ServiceName
+from cmk.utils.type_defs import HostName, Item, CheckPluginNameStr, CheckPluginName, ServiceName
 
 import cmk.base.config as config
 
@@ -32,9 +32,10 @@ def reset_config() -> None:
     _config_loaded = False
 
 
-def service_description(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> str:
+def service_description(hostname: HostName, check_plugin_name: CheckPluginNameStr,
+                        item: Item) -> str:
     _load_config()
-    return config.service_description(hostname, check_plugin_name, item)
+    return config.service_description(hostname, CheckPluginName(check_plugin_name), item)
 
 
 def get_ruleset_matcher() -> RulesetMatcher:

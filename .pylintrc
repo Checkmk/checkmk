@@ -158,7 +158,6 @@ enable=
     # exception-message-attribute,
     # invalid-str-codec,
     # next-method-called,
-    # round-builtin,
 
 [REPORTS]
 output-format=cmk_colorized

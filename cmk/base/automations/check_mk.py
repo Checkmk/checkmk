@@ -244,7 +244,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         host_config = config_cache.get_host_config(hostname)
 
         new_services = []
-        for (check_plugin_name, item), (paramstr, raw_service_labels) in new_items.items():
+        for (check_plugin_name, item), (params, raw_service_labels) in new_items.items():
             descr = config.service_description(hostname, check_plugin_name, item)
 
             service_labels = DiscoveredServiceLabels()
@@ -252,8 +252,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 service_labels.add_label(ServiceLabel(label_id, label_value))
 
             new_services.append(
-                discovery.DiscoveredService(check_plugin_name, item, descr, paramstr,
-                                            service_labels))
+                discovery.Service(check_plugin_name, item, descr, params, service_labels))
 
         host_config.set_autochecks(new_services)
         self._trigger_discovery_check(config_cache, host_config)

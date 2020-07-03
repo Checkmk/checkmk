@@ -105,6 +105,9 @@ class ModeIcons(WatoMode):
                     return None
 
         elif html.request.has_var("_do_upload"):
+            if not html.check_transaction():
+                return
+
             vs_upload = self._vs_upload()
             icon_info = vs_upload.from_html_vars('_upload_icon')
             vs_upload.validate_value(icon_info, '_upload_icon')

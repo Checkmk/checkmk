@@ -146,6 +146,7 @@ drbd_cs_map = {
     'WFConnection': 2,
     'WFReportParams': 1,
     'Connected': 0,
+    'Established': 0,
     'StartingSyncS': 1,
     'StartingSyncT': 1,
     'WFBitMapS': 1,

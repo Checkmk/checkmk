@@ -573,6 +573,7 @@ section_drbd() {
     if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && [ -e /proc/drbd ]; then
         echo '<<<drbd>>>'
         cat /proc/drbd
+        cat /sys/kernel/debug/drbd/resources/*/connections/*/0/proc_drbd 2>/dev/null
     fi
 }
 

@@ -20,7 +20,6 @@ expected_plugins = [
     'pagerduty',
     'pushover',
     'servicenow',
-    'signl4',
     'slack',
     'spectrum',
     'victorops',

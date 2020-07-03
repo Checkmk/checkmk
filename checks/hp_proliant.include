@@ -174,7 +174,7 @@ hp_proliant_fans_locale = {
 def inventory_hp_proliant_fans(info):
     if len(info) > 0:
         items = []
-        for line in [line for line in info if line[2] == '3']:
+        for line in [l for l in info if l[2] == '3']:
             label = 'other'
             if int(line[1]) in hp_proliant_fans_locale:
                 label = hp_proliant_fans_locale[int(line[1])]

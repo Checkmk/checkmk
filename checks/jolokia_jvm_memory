@@ -125,10 +125,8 @@ def discover_jolokia_jvm_memory_pools(parsed):
 def _get_jolokia_jvm_mempool_data(item, parsed):
     instance, pool_name = item.split(" Memory Pool ", 1)
     data = parsed.get(instance, {}).get("MemoryPool", {})
-    pool = [pool for pool in data.values() if pool.get("Name") == pool_name]
-    if not pool:
-        return {}
-    return pool[0]
+    pools = [pool for pool in data.values() if pool.get("Name") == pool_name]
+    return pools[0] if pools else {}
 
 
 def check_jolokia_jvm_memory_pools(item, params, parsed):

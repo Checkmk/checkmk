@@ -143,6 +143,7 @@ enable=
     # The checks below are from --py3k, and they can sometimes be annoying.
     # Nevertheless, they found quite a few bugs, so it makes sense to keep them
     # enabled.
+    comprehension-escape,
     dict-items-not-iterating,
     dict-keys-not-iterating,
     dict-values-not-iterating,
@@ -150,6 +151,14 @@ enable=
     map-builtin-not-iterating,
     range-builtin-not-iterating,
     zip-builtin-not-iterating,
+    #---------------------------------------------------------------------------
+    # Checks we still need to consider:
+    # eq-without-hash,
+    # exception-escape,
+    # exception-message-attribute,
+    # invalid-str-codec,
+    # next-method-called,
+    # round-builtin,
 
 [REPORTS]
 output-format=cmk_colorized

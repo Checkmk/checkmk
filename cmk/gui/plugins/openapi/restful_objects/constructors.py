@@ -121,11 +121,14 @@ def expand_rel(
         >>> expand_rel('cmk/launch', {'payload': 'coffee', 'count': 5})
         'urn:com.checkmk:rels/launch;count="5";payload="coffee"'
 
+        >>> expand_rel('cmk/cmk/foo')
+        'urn:com.checkmk:rels/cmk/foo'
+
     """
     if rel.startswith(".../"):
-        rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
+        rel = rel.replace(".../", "urn:org.restfulobjects:rels/", 1)
     elif rel.startswith("cmk/"):
-        rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
+        rel = rel.replace("cmk/", "urn:com.checkmk:rels/", 1)
 
     if parameters:
         for param_name, value in sorted(parameters.items()):

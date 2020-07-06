@@ -243,10 +243,10 @@ def test_automation_set_autochecks(test_cfg, site):
             ((s.check_plugin_name, s.item), s.parameters, s.service_labels.to_dict()) for s in data
         ]
         assert sorted(services) == [
-            (('df', u'xxx'), '{}', {
+            (('df', u'xxx'), {}, {
                 u"xyz": u"123"
             }),
-            (('uptime', None), 'None', {}),
+            (('uptime', None), None, {}),
         ]
 
         assert site.file_exists("var/check_mk/autochecks/blablahost.mk")

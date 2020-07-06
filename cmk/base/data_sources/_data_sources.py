@@ -248,17 +248,16 @@ class DataSources(collections.abc.Collection):
                 source.set_max_cachefile_age(max_cachefile_age)
                 host_sections = AgentHostSections()
                 host_sections.update(source.run())
-                multi_host_sections.set_default_host_sections(
+                multi_host_sections.setdefault(
                     (hostname, ipaddress, source.source_type),
                     host_sections,
                 )
 
             # Store piggyback information received from all sources of this host. This
             # also implies a removal of piggyback files received during previous calls.
-            host_sections = AgentHostSections()
-            multi_host_sections.set_default_host_sections(
+            host_sections = multi_host_sections.setdefault(
                 (hostname, ipaddress, SourceType.HOST),
-                host_sections,
+                AgentHostSections(),
             )
             cmk.utils.piggyback.store_piggyback_raw_data(
                 hostname,

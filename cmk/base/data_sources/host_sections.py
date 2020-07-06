@@ -46,7 +46,7 @@ from .abstract import AbstractHostSections
 HostKey = Tuple[HostName, Optional[HostAddress], SourceType]
 
 
-class MultiHostSections(collections.abc.Mapping):
+class MultiHostSections(collections.abc.MutableMapping):
     """Container object for wrapping the host sections of a host being processed
     or multiple hosts when a cluster is processed. Also holds the functionality for
     merging these information together for a check"""
@@ -71,6 +71,12 @@ class MultiHostSections(collections.abc.Mapping):
     def __getitem__(self, key: HostKey):
         return self._data.__getitem__(key)
 
+    def __setitem__(self, key: HostKey, value: AbstractHostSections) -> None:
+        self._data.__setitem__(key, value)
+
+    def __delitem__(self, key: HostKey) -> None:
+        self._data.__delitem__(key)
+
     def __repr__(self):
         return "%s(data=%r)" % (type(self).__name__, self._data)
 
@@ -82,13 +88,6 @@ class MultiHostSections(collections.abc.Mapping):
 
     def items(self):
         return self._data.items()  # pylint: disable=dict-items-not-iterating
-
-    def set_default_host_sections(
-        self,
-        host_key: HostKey,
-        default: AbstractHostSections,
-    ) -> None:
-        self._data.setdefault(host_key, default)
 
     def get_section_kwargs(
         self,

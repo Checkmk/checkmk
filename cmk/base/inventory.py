@@ -296,7 +296,7 @@ def _do_inv_for_realhost(host_config: config.HostConfig, sources: data_sources.D
                 host_sections = SNMPHostSections()
                 source.set_fetched_raw_section_names(set(host_sections.sections))
                 host_sections.update(source.run())
-                multi_host_sections.set_default_host_sections(
+                multi_host_sections.setdefault(
                     (hostname, ipaddress, source.source_type),
                     host_sections,
                 )

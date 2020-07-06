@@ -293,13 +293,12 @@ def _do_inv_for_realhost(host_config: config.HostConfig, sources: data_sources.D
                 # Status data inventory already provides filled multi_host_sections object.
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be
                 # sections for inventory plugins which were not fetched yet.
-                host_sections = SNMPHostSections()
+                host_sections = multi_host_sections.setdefault(
+                    (hostname, ipaddress, source.source_type),
+                    SNMPHostSections(),
+                )
                 source.set_fetched_raw_section_names(set(host_sections.sections))
                 host_sections.update(source.run())
-                multi_host_sections.setdefault(
-                    (hostname, ipaddress, source.source_type),
-                    host_sections,
-                )
 
     if multi_host_sections is None:
         nodes = sources.make_nodes(host_config)

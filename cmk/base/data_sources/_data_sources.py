@@ -246,12 +246,11 @@ class DataSources(collections.abc.Collection):
         for hostname, ipaddress, sources in nodes:
             for source in sources:
                 source.set_max_cachefile_age(max_cachefile_age)
-                host_sections = AgentHostSections()
-                host_sections.update(source.run())
-                multi_host_sections.setdefault(
+                host_sections = multi_host_sections.setdefault(
                     (hostname, ipaddress, source.source_type),
-                    host_sections,
+                    AgentHostSections(),
                 )
+                host_sections.update(source.run())
 
             # Store piggyback information received from all sources of this host. This
             # also implies a removal of piggyback files received during previous calls.

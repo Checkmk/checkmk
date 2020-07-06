@@ -264,6 +264,30 @@ mocked-sql_rman" "$MK_ASYNC_SECTIONS_QUERY"
 }
 
 
+test_mk_oracle_do_checks_remote_sid_excluded () {
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
+DBUSER="checkmk:password"
+DBUSER_myinst1="checkmk_inst:password_inst::db1xyz_srv12.domain.tld:1521"
+
+ASYNC_SECTIONS="tablespaces rman jobs resumable ts_quotas"
+
+EXCLUDE_myinst1="rman jobs"
+
+REMOTE_INSTANCE_mysinst1="checkmk_inst:password_inst::db1syz-srv12.domain.tld:1521:db1xyz-srv12:myinst1:12.1"
+EOF
+
+    load_config
+    ORACLE_SID="myinst1"
+    do_checks
+
+
+    assertEquals "mocked-sql_tablespaces
+mocked-sql_resumable
+mocked-sql_ts_quotas" "$MK_ASYNC_SECTIONS_QUERY"
+
+}
+
+
 test_mk_oracle_do_checks_sid_sections_excluded () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
 SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks"

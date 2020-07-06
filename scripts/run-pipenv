@@ -29,7 +29,7 @@ if [ ! -d "$REPO_PATH/virtual-envs/$PYTHON_VERSION" ]; then
     exit 1
 fi
 
-# This is skipped when run-pipenv is called from virtual-envs/venv.make
+# Avoid a loop when building the virtual environment itself.
 if [ -z "$SKIP_MAKEFILE_CALL" ]; then
     make --silent -C "$REPO_PATH/virtual-envs/$PYTHON_VERSION" .venv 1>&2
 fi

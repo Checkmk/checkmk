@@ -76,7 +76,7 @@ OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
         format-linux format-python \
 	format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel .venv .venv-3.8 openapi openapi-doc
+        am--refresh skel .venv openapi openapi-doc
 
 
 help:
@@ -567,13 +567,10 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
-.venv-3.8:
+.venv:
 	$(MAKE) -C virtual-envs/3.8 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
 	ln -s virtual-envs/3.8/{Pipfile,Pipfile.lock,.venv} .
-
-# This alias is for compatibility: The target .venv should refer to 3.8 for the moment
-.venv: .venv-3.8
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

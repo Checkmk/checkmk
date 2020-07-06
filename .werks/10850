@@ -1,0 +1,17 @@
+Title: mk_oracle: Fixed remote instances with excluded sections
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p14
+Date: 1594036835
+Class: fix
+
+Instances that are fetched remotely ignored the exclusion of sections
+due to wrong variable in the code. This is now fixed, so that the Variable
+EXCLUDE_{SID} now works also for remote instances. This bug has been introduced
+with 1.6.0.
+
+Please replace the patched mk_oracle plugin and perform a rediscovery. In
+case the unwanted section has been an async. please delete the cache or wait
+for the rediscvoery until the cache time has expired.

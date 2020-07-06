@@ -2510,7 +2510,7 @@ do_checks () {
         MK_ASYNC_SECTIONS_QUERY=
 
     else
-        excluded=$(eval "echo \$EXCLUDE_$MK_SID")
+        excluded=$(eval "echo \$EXCLUDE_$ORACLE_SID")
         sections=$(remove_excluded_sections "$do_sync_sections" "$excluded")
         asections=$(remove_excluded_sections "$do_async_sections" "$excluded")
         logging "[${MK_SID}] [do_checks]" "Excluded: $excluded"\

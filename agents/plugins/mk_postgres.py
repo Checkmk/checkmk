@@ -105,10 +105,6 @@ class PostgresBase:
         """Gets all instances"""
 
     @abc.abstractmethod
-    def get_connections(self):
-        """Gets the connections"""
-
-    @abc.abstractmethod
     def get_stats(self):
         """Get the stats"""
 
@@ -136,6 +132,19 @@ class PostgresBase:
         if self.numeric_version > 9.2:
             return "state", "'idle'"
         return "current_query", "'<IDLE>'"
+
+    def get_connections(self):
+        """Gets the the idle and active connections"""
+        connection_sql_cmd = ("SELECT datname, "
+                              "(SELECT setting AS mc FROM pg_settings "
+                              "WHERE name = 'max_connections') AS mc, "
+                              "COUNT(state) FILTER (WHERE state='idle') AS idle, "
+                              "COUNT(state) FILTER (WHERE state='active') AS active "
+                              "FROM pg_stat_activity group by 1;")
+
+        return self.run_sql_as_db_user(connection_sql_cmd,
+                                       rows_only=False,
+                                       extra_args="-P footer=off")
 
     def get_sessions(self):
         """Gets idle and open sessions"""
@@ -348,24 +357,6 @@ class PostgresWin(PostgresBase):
             if "postgres" in proc.name().lower() and proc.status() == "running":
                 out += "%s %s\n" % (proc.pid(), proc.binpath())
         return out.rstrip()
-
-    def get_connections(self):
-        # type: () -> str
-        """Gets the connections"""
-        # Previously part of simple_queries
-        # "<>" was replaced by "!=" in order not to confuse cmd with redirect
-        condition = "%s != %s" % (self.row, self.idle)
-
-        connection_sql_cmd = ("SELECT d.datname, COUNT(datid) AS current,"
-                              "(SELECT setting AS mc "
-                              "FROM pg_settings WHERE name = 'max_connections') AS mc "
-                              "FROM pg_database d LEFT JOIN pg_stat_activity s "
-                              "ON (s.datid = d.oid) WHERE %s "
-                              "GROUP BY 1 ORDER BY datname;" % condition)
-
-        return self.run_sql_as_db_user(connection_sql_cmd,
-                                       rows_only=False,
-                                       extra_args="-P footer=off")
 
     def get_stats(self):
         # type: () -> str
@@ -675,21 +666,6 @@ class PostgresLinux(PostgresBase):
                                  "ORDER BY query_start, procpid DESC;")
 
         return self.run_sql_as_db_user(querytime_sql_cmd,
-                                       rows_only=False,
-                                       extra_args="-P footer=off")
-
-    def get_connections(self):
-        # type: () -> str
-        # Previously part of simple_queries
-        condition = "%s <> %s" % (self.row, self.idle)
-
-        connection_sql_cmd = ("SELECT d.datname, COUNT(datid) AS current,"
-                              "(SELECT setting AS mc FROM pg_settings "
-                              "WHERE name = 'max_connections') AS mc FROM pg_database d "
-                              "LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) "
-                              "WHERE %s GROUP BY 1 ORDER BY datname;" % condition)
-
-        return self.run_sql_as_db_user(connection_sql_cmd,
                                        rows_only=False,
                                        extra_args="-P footer=off")
 

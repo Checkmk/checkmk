@@ -282,6 +282,18 @@ metric_info["connections"] = {
     "color": "#a080b0",
 }
 
+metric_info["idle_connections"] = {
+    "title": _("Idle connections"),
+    "unit": "count",
+    "color": "#a080f0",
+}
+
+metric_info["active_connections"] = {
+    "title": _("Active connections"),
+    "unit": "count",
+    "color": "#a020c0",
+}
+
 metric_info["connections_ssl"] = {
     "title": _("SSL connections"),
     "unit": "count",
@@ -1653,6 +1665,15 @@ graph_info["tcp_connection_states"] = {
     ],
     "omit_zero_metrics": True,
     "optional_metrics": ["tcp_bound", "tcp_idle"]
+}
+
+graph_info["db_connections"] = {
+    "title": _("DB Connections"),
+    "metrics": [("active_connections", "area"), ("idle_connections", "area")],
+    "scalars": [
+        ("active_connections:warn", _('Warning (active connections)')),
+        ("active_connections:crit", _('Critical (active connections)')),
+    ],
 }
 
 graph_info["cluster_hosts"] = {

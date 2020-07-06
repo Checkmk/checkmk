@@ -41,6 +41,13 @@ from cmk.gui.plugins.metrics import (
 #                 which show equal data for sorting them together in a single sort domain.
 
 perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "active_connections",
+    "half_value": 50.0,
+    "exponent": 2,
+})
+
+perfometer_info.append({
     "type": "dual",
     "perfometers": [{
         "type": "logarithmic",

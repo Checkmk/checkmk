@@ -107,13 +107,11 @@ function postgres_simple_queries() {
     # Here the order of the columns did not match with what the server side expects,
     # with the result, that there was never any active connection shown in the
     # web-gui.
-    CONDITION="$ROW <> $IDLE"
-    CONNECTIONS_QUERY="SELECT d.datname, COUNT(datid) AS current,
-          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc
-        FROM pg_database d
-        LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE $CONDITION
-        GROUP BY 1
-        ORDER BY datname;"
+    CONNECTIONS_QUERY="SELECT datname,
+          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
+        COUNT(state) FILTER (WHERE state='idle') AS idle,
+        COUNT(state) FILTER (WHERE state='active') AS active
+        FROM pg_stat_activity group by 1;"
 
     echo "\pset footer off
           \echo '<<<postgres_stat_database:sep(59)>>>${INSTANCE_SECTION}'

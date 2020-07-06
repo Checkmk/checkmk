@@ -20,12 +20,14 @@ checks = {
         (
             'adwebconnect', {
                 'levels_perc': (80.0, 90.0)
-            }, [(0, 'No active query', [('connections', 0, 0, 0, 0, 0)])]
+            }, [(0, 'No active connections', [('active_connections', 0, 0, 0, 0, 0)]),
+               (0, 'No idle connections', [('idle_connections', 0, 0, 0, 0, 0)]) ]
         ),
         (
             'postgres', {
                 'levels_perc': (80.0, 90.0)
-            }, [(0, 'No active query', [('connections', 0, 0, 0, 0, 0)])]
+            }, [(0, 'No active connections', [('active_connections', 0, 0, 0, 0, 0)]),
+               (0, 'No idle connections', [('idle_connections', 0, 0, 0, 0, 0)]) ]
         )
     ]
 }

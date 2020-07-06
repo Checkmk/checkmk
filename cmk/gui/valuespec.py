@@ -17,7 +17,7 @@
 
 import abc
 import base64
-from collections.abc import MutableMapping
+from collections.abc import MutableMapping, Sequence as ABCSequence
 from enum import Enum
 import datetime
 import hashlib
@@ -2948,7 +2948,7 @@ class ListChoice(ValueSpec):
             if self._loaded_at != id(html):
                 self._elements = self.get_elements()
                 self._loaded_at = id(html)  # unique for each query!
-        elif isinstance(self._choices, Sequence):
+        elif isinstance(self._choices, ABCSequence):
             self._elements = self._choices
         elif isinstance(self._choices, dict):
             self._elements = self.dict_choices(self._choices)

@@ -42,7 +42,7 @@ import signal
 import io
 import logging
 from pathlib import Path
-from typing import NoReturn, IO, cast, Iterable, Union, Pattern, Tuple, Optional, Callable, List, NamedTuple, Dict
+from typing import NoReturn, IO, cast, Iterable, Union, Tuple, Optional, Callable, List, NamedTuple, Dict
 
 from passlib.hash import sha256_crypt  # type: ignore[import]
 import psutil  # type: ignore[import]
@@ -1161,7 +1161,7 @@ def validate_config_change_commands(config_hooks: ConfigHooks,
             if value not in choices:
                 bail_out("Invalid value %r for %r. Allowed are: %s\n" %
                          (value, key, ", ".join(choices)))
-        elif isinstance(hook["choices"], Pattern):
+        elif isinstance(hook["choices"], re.Pattern):
             if not hook["choices"].match(value):
                 bail_out("Invalid value %r for %r. Does not match allowed pattern.\n" %
                          (value, key))
@@ -1194,7 +1194,7 @@ def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) ->
             sys.stderr.write("Invalid value for '%s'. Allowed are: %s\n" %
                              (value, ", ".join(choices)))
             return
-    elif isinstance(hook["choices"], Pattern):
+    elif isinstance(hook["choices"], re.Pattern):
         if not hook["choices"].match(value):
             sys.stderr.write("Invalid value for '%s'. Does not match allowed pattern.\n" % value)
             return
@@ -1347,7 +1347,7 @@ def config_configure_hook(site: SiteContext, global_opts: 'GlobalOptions',
 
     if isinstance(choices, list):
         change, new_value = dialog_menu(title, descr, choices, value, "Change", "Cancel")
-    elif isinstance(choices, Pattern):
+    elif isinstance(choices, re.Pattern):
         change, new_value = dialog_regex(title, descr, choices, value, "Change", "Cancel")
     else:
         raise NotImplementedError()

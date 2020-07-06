@@ -150,6 +150,7 @@ enable=
     exception-escape,
     exception-message-attribute,
     filter-builtin-not-iterating,
+    isinstance-second-argument-not-valid-type,
     map-builtin-not-iterating,
     range-builtin-not-iterating,
     zip-builtin-not-iterating,

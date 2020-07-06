@@ -563,7 +563,7 @@ def _create_notifications(
 
 
 def _transform_parameters(plugin: str, params: Union[List, NotifyPluginParams]) -> None:
-    if not isinstance(params, NotifyPluginParams):
+    if not isinstance(params, dict):  # NotifyPluginParams
         return
 
     if plugin in ["asiimail", "mail"]:

@@ -223,7 +223,7 @@ def test_automation_try_discovery_host(test_cfg, site):
 
 def test_automation_set_autochecks(test_cfg, site):
     new_items = {
-        ("df", "xxx"): ("'bla'", {
+        ("df", "xxx"): ({}, {
             u"xyz": u"123"
         }),
         ("uptime", None): (None, {}),
@@ -243,7 +243,7 @@ def test_automation_set_autochecks(test_cfg, site):
         services = [((s.check_plugin_name, s.item), s.parameters_unresolved,
                      s.service_labels.to_dict()) for s in data]
         assert sorted(services) == [
-            (('df', u'xxx'), "'bla'", {
+            (('df', u'xxx'), '{}', {
                 u"xyz": u"123"
             }),
             (('uptime', None), 'None', {}),

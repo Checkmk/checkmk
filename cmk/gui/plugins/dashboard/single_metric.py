@@ -26,7 +26,7 @@ from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_n
 from cmk.gui.metrics import translate_perf_data
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
 
-from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 
 

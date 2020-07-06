@@ -136,7 +136,7 @@ def page_api():
         }
     except MKException as e:
         response = {"result_code": 1, "result": _("Check_MK exception: %s") % e}
-    except Exception as e:
+    except Exception:
         if config.debug:
             raise
         logger.exception("error handling web API call")

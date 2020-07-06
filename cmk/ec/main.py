@@ -28,7 +28,7 @@ import threading
 import time
 import traceback
 from types import FrameType
-from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
 from six import ensure_binary
 
@@ -532,7 +532,7 @@ class Perfcounters:
             self._old_counters = self._counters.copy()
 
     @classmethod
-    def status_columns(cls: 'Type[Perfcounters]') -> List[Tuple[str, float]]:
+    def status_columns(cls: Type['Perfcounters']) -> List[Tuple[str, float]]:
         columns: List[Tuple[str, float]] = []
         # Please note: status_columns() and get_status() need to produce lists with exact same column order
         for name in cls._counter_names:

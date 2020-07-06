@@ -7,7 +7,7 @@
 import os
 import re
 import time
-from typing import NamedTuple, Type  # pylint: disable=unused-import
+from typing import NamedTuple, Type
 from pathlib import Path
 
 from six import ensure_binary
@@ -18,7 +18,7 @@ import cmk.utils.store as store
 import cmk.gui.sites
 from cmk.gui.sites import SiteConfigurations
 import cmk.gui.config as config
-import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.hooks as hooks
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -181,7 +181,7 @@ class SiteManagement:
                 ("all", _("Sync users with all connections")),
                 ("list", _("Sync with the following LDAP connections"),
                  ListChoice(
-                     choices=userdb.connection_choices,
+                     choices=userdb_utils.connection_choices,
                      allow_empty=False,
                  )),
             ],

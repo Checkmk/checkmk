@@ -16,6 +16,7 @@ import cmk.utils.render as render
 from cmk.utils.type_defs import UserId, timeperiod_spec_alias
 
 import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.escaping as escaping
@@ -215,7 +216,7 @@ class ModeUsers(WatoMode):
 
         html.begin_form("bulk_delete_form", method="POST")
 
-        roles = userdb.load_roles()
+        roles = userdb_utils.load_roles()
         timeperiods = watolib.timeperiods.load_timeperiods()
         contact_groups = load_contact_group_information()
 
@@ -426,7 +427,7 @@ class ModeEditUser(WatoMode):
         # boxes and to check for validity.
         self._contact_groups = load_contact_group_information()
         self._timeperiods = watolib.timeperiods.load_timeperiods()
-        self._roles = userdb.load_roles()
+        self._roles = userdb_utils.load_roles()
 
         if cmk_version.is_managed_edition():
             self._vs_customer = managed.vs_customer()

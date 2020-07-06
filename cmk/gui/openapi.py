@@ -8,7 +8,7 @@ import copy
 import json
 import sys
 
-from openapi_spec_validator import validate_spec  # type: ignore
+from openapi_spec_validator import validate_spec  # type: ignore[import]
 
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.utils import version
@@ -17,7 +17,6 @@ from cmk.utils import version
 import cmk.gui.plugins.openapi  # pylint: disable=unused-import
 
 if not version.is_raw_edition():
-    # noinspection PyUnresolvedReferences
     import cmk.gui.cee.plugins.openapi  # noqa: F401 # pylint: disable=unused-import,no-name-in-module
 
 

@@ -6,9 +6,9 @@
 
 # Basic functions for cmk_figures
 
-from typing import Type  # pylint: disable=unused-import
 import abc
 import json
+from typing import Type
 
 from cmk.gui.plugins.dashboard import Dashlet
 from cmk.gui.globals import html

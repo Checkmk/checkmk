@@ -33,11 +33,11 @@ from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
 from cmk.gui.watolib.tags import (
     TagConfigFile,)
-from cmk.gui.watolib.groups import (
-    load_contact_group_information,
+from cmk.gui.groups import (
     load_host_group_information,
     load_service_group_information,
 )
+from cmk.gui.watolib.groups import load_contact_group_information
 
 import cmk.gui.bi as bi
 

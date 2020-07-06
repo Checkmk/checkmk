@@ -25,6 +25,7 @@ from typing import Optional
 import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -54,7 +55,7 @@ from cmk.gui.plugins.wato import (
 
 class RoleManagement:
     def __init__(self):
-        self._roles = userdb.load_roles()
+        self._roles = userdb_utils.load_roles()
         super(RoleManagement, self).__init__()
 
     def _save_roles(self):
@@ -407,7 +408,7 @@ class ModeRoleMatrix(WatoMode):
         html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "roles")]), "back")
 
     def page(self):
-        role_list = sorted(userdb.load_roles().items(), key=lambda a: (a[1]["alias"], a[0]))
+        role_list = sorted(userdb_utils.load_roles().items(), key=lambda a: (a[1]["alias"], a[0]))
 
         for section in permission_section_registry.get_sorted_sections():
             html.begin_foldable_container("perm_matrix",

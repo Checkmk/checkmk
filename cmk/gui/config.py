@@ -16,9 +16,7 @@ import time
 
 from six import ensure_str
 
-from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
-    SiteId, SiteConfiguration, SiteConfigurations,
-)
+from livestatus import SiteId, SiteConfiguration, SiteConfigurations
 
 import cmk.utils.version as cmk_version
 import cmk.utils.tags

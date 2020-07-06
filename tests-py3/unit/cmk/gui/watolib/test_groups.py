@@ -8,6 +8,7 @@ import pytest  # type: ignore[import]
 from werkzeug.test import create_environ
 
 import cmk.utils.paths
+import cmk.gui.groups as gui_groups
 import cmk.gui.watolib.groups as groups
 import cmk.gui.htmllib as htmllib
 from cmk.gui.http import Request
@@ -31,8 +32,8 @@ def test_load_group_information_empty(tmp_path):
     with AppContext(DummyApplication(environ, None)), \
          RequestContext(htmllib.html(Request(environ))):
         assert groups.load_contact_group_information() == {}
-        assert groups.load_host_group_information() == {}
-        assert groups.load_service_group_information() == {}
+        assert gui_groups.load_host_group_information() == {}
+        assert gui_groups.load_service_group_information() == {}
 
 
 def test_load_group_information(tmp_path):
@@ -105,14 +106,14 @@ multisite_contactgroups = {
             }
         }
 
-        assert groups.load_host_group_information() == {
+        assert gui_groups.load_host_group_information() == {
             'all_hosts': {
                 'alias': u'All hosts :-)',
                 "ding": "dong",
             }
         }
 
-        assert groups.load_service_group_information() == {
+        assert gui_groups.load_service_group_information() == {
             'all_services': {
                 'alias': u'All s\xe4rvices',
                 "d1ng": "dong",

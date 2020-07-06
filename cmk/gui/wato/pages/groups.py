@@ -28,9 +28,11 @@ from cmk.gui.valuespec import (
     TextAscii,
 )
 
-from cmk.gui.watolib.groups import (
+from cmk.gui.groups import (
     load_host_group_information,
     load_service_group_information,
+)
+from cmk.gui.watolib.groups import (
     load_contact_group_information,
     GroupType,
 )

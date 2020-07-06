@@ -7,7 +7,6 @@
 # yapf: disable
 # pylint: disable=too-many-lines
 # pylint: disable=line-too-long
-# pylint: disable=invalid-name
 import os
 import re
 
@@ -20,21 +19,21 @@ regex = re.compile
 exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include')).read())
 
 REQUIRED_IMAGE_KEYS = (
-    ("Id", (str, str)),
+    ("Id", str),
     ("RepoTags", list),
-    ("Created", (str, str)),
+    ("Created", str),
     ("VirtualSize", int),
     ("Labels", dict),
     ("amount_containers", int),
 )
 
 REQUIRED_CONTAINER_KEYS = (
-    ("Id", (str, str)),
-    ("Image", (str, str)),
-    ("Created", (str, str)),
+    ("Id", str),
+    ("Image", str),
+    ("Created", str),
     ("Labels", dict),
-    ("Name", (str, str)),
-    ("Status", (str, str)),
+    ("Name", str),
+    ("Status", str),
 )
 
 SUBSECTIONS1 = {
@@ -4807,7 +4806,7 @@ def test_parse_legacy_docker_node_images(subsections, ex_img, ex_cont):
         else:
             assert dic[key] == value, "expected: %r, got: %r" % (value, dic[key])
 
-    parsed = parse_legacy_docker_node_images(subsections)  # pylint: disable=undefined-variable
+    parsed = parse_legacy_docker_node_images(subsections)  # type: ignore[name-defined] # pylint: disable=undefined-variable
     assert_contains(parsed, "images", ex_img)
     assert_contains(parsed, "containers", ex_cont)
 

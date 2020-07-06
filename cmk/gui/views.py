@@ -12,7 +12,7 @@ import pprint
 import traceback
 import json
 import functools
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as _Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as _Tuple, Union
 
 from six import ensure_str
 
@@ -2113,7 +2113,7 @@ def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:
         return
 
     # Handle case where join columns are not present for all rows
-    def safe_compare(compfunc: 'Callable[[Row, Row], int]', row1: 'Row', row2: 'Row') -> int:
+    def safe_compare(compfunc: Callable[['Row', 'Row'], int], row1: 'Row', row2: 'Row') -> int:
         if row1 is None and row2 is None:
             return 0
         if row1 is None:

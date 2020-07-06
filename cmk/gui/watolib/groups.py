@@ -15,11 +15,8 @@ from cmk.utils.type_defs import timeperiod_spec_alias
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
-# TODO: Cleanup call sites
-from cmk.gui.groups import (  # noqa: F401  # pylint: disable=unused-import
-    load_group_information, load_host_group_information, load_service_group_information,
-    load_contact_group_information,
-)
+import cmk.gui.plugins.userdb.utils as userdb_utils
+from cmk.gui.groups import load_group_information, load_contact_group_information
 import cmk.gui.hooks as hooks
 from cmk.gui.globals import html, g
 from cmk.gui.exceptions import MKUserError
@@ -374,7 +371,7 @@ def is_alias_used(my_what, my_name, my_alias):
             return False, _("This alias is already used in timeperiod %s.") % key
 
     # Roles
-    roles = userdb.load_roles()
+    roles = userdb_utils.load_roles()
     for key, value in roles.items():
         if value.get("alias") == my_alias and (my_what != "roles" or my_name != key):
             return False, _("This alias is already used in the role %s.") % key

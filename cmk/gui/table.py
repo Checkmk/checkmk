@@ -7,7 +7,7 @@
 from contextlib import contextmanager
 import re
 import json
-from typing import NamedTuple, Union, cast, Dict, Tuple, List, Optional, Any, Iterator  # pylint: disable=unused-import
+from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union, cast
 
 from six import ensure_str
 
@@ -65,7 +65,7 @@ def table_element(
     empty_text: Optional[str] = None,
     help: Optional[str] = None,  # pylint: disable=redefined-builtin
     css: Optional[str] = None,
-) -> 'Iterator[Table]':
+) -> Iterator['Table']:
     with html.plugged():
         table = Table(table_id=table_id,
                       title=title,

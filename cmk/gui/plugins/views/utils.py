@@ -49,9 +49,7 @@ from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
-from cmk.gui.view_utils import (  # noqa: F401 # pylint: disable=unused-import
-    CellSpec, CSSClass, CellContent, render_tag_groups, render_labels, get_labels,
-)
+from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
 
 from cmk.gui.type_defs import (
     ColumnName,

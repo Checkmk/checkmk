@@ -13,7 +13,7 @@ from cmk.utils.tags import TagGroup
 
 import cmk.gui.sites as sites
 import cmk.gui.config as config
-import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -2224,7 +2224,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
         )
 
     def _list_roles(self):
-        roles = userdb.load_roles()
+        roles = userdb_utils.load_roles()
         return [(i, r["alias"]) for i, r in roles.items()]
 
     def _list_contactgroups(self):

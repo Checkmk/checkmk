@@ -75,6 +75,7 @@ from cmk.gui.plugins.dashboard.utils import (
     get_permitted_dashboards,
     copy_view_into_dashlet,
 )
+# Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
     DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,

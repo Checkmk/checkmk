@@ -15,10 +15,7 @@ import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
-# Things imported here are used by pre legacy (pre 1.6) cron plugins)
-from cmk.gui.plugins.sidebar import (  # noqa: F401 # pylint: disable=unused-import
-    CustomizableSidebarSnapin, snapin_registry, write_snapin_exception, snapin_width, link,
-)
+from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, link
 
 ViewURLParams = namedtuple("ViewURLParams", ["total", "handled", "unhandled", "stale"])
 OverviewRow = namedtuple("OverviewRow", ["what", "title", "context", "stats", "views"])

@@ -17,7 +17,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
     request_schemas,
 )
-from cmk.gui.watolib.groups import edit_group, add_group, load_service_group_information
+from cmk.gui.groups import load_service_group_information
+from cmk.gui.watolib.groups import edit_group, add_group
 
 
 @endpoint_schema(constructors.collection_href('service_group_config'),

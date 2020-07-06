@@ -17,7 +17,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
     request_schemas,
 )
-from cmk.gui.watolib.groups import load_host_group_information, edit_group, add_group
+from cmk.gui.groups import load_host_group_information
+from cmk.gui.watolib.groups import edit_group, add_group
 
 
 @endpoint_schema(constructors.collection_href('host_group_config'),

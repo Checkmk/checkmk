@@ -56,7 +56,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.timeperiods import TimeperiodSelection  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.watolib.users import notification_script_title
-from cmk.gui.watolib.groups import (
+from cmk.gui.groups import (
     load_contact_group_information,
     load_host_group_information,
     load_service_group_information,

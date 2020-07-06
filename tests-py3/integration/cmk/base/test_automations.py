@@ -7,10 +7,12 @@
 # pylint: disable=redefined-outer-name
 # flake8: noqa
 
-import re
-import os
 import ast
+import os
+import re
 import subprocess
+from typing import Any, Dict, Optional, Tuple
+
 import pytest  # type: ignore[import]
 
 from testlib.fixtures import web  # pylint: disable=unused-import
@@ -222,7 +224,7 @@ def test_automation_try_discovery_host(test_cfg, site):
 
 
 def test_automation_set_autochecks(test_cfg, site):
-    new_items = {
+    new_items : Dict[Tuple[str, Optional[str]], Any] = {
         ("df", "xxx"): ({}, {
             u"xyz": u"123"
         }),

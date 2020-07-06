@@ -17,7 +17,7 @@ from pathlib import Path
 import pprint
 import sys
 import traceback
-from typing import Any, Dict, Iterator, Optional, Tuple, Type  # pylint: disable=unused-import
+from typing import Any, Dict, Iterator, Optional, Tuple, Type
 import uuid
 import urllib.parse
 
@@ -151,7 +151,7 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
         return cls(**attributes)
 
     @classmethod
-    def deserialize(cls: 'Type[ABCCrashReport]', serialized: dict) -> 'ABCCrashReport':
+    def deserialize(cls: Type['ABCCrashReport'], serialized: dict) -> 'ABCCrashReport':
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
         return class_(**serialized)

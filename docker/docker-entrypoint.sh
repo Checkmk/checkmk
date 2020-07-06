@@ -8,8 +8,11 @@ function create_system_apache_config() {
     #
     # In a reverse proxy setup the proxy would rewrite the host to the host requested by the user.
     # See omd/packages/apache-omd/skel/etc/apache/apache.conf for further information.
+    #
+    # The ServerName also needs to be in a special way. See
+    # (https://forum.checkmk.com/t/check-mk-running-behind-lb-on-port-80-redirects-to-url-including-port-5000/16545)
     APACHE_DOCKER_CFG="/omd/sites/$CMK_SITE_ID/etc/apache/conf.d/cmk_docker.conf"
-    echo -e "# Created for Checkmk docker container\n\nUseCanonicalName Off\n" >"$APACHE_DOCKER_CFG"
+    echo -e "# Created for Checkmk docker container\n\nUseCanonicalName Off\nServerName 127.0.0.1\n" >"$APACHE_DOCKER_CFG"
     chown "$CMK_SITE_ID:$CMK_SITE_ID" "$APACHE_DOCKER_CFG"
     # Redirect top level requests to the sites base url
     echo -e "# Redirect top level requests to the sites base url\nRedirectMatch 302 ^/$ /$CMK_SITE_ID/\n" >>"$APACHE_DOCKER_CFG"

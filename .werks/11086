@@ -1,0 +1,17 @@
+Title: Docker container: Fix usage behind reverse proxies
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p14
+Date: 1594072998
+Class: fix
+
+The Checkmk container was not operating as expected in different scenarios
+where it's user interface was accessed through a reverse proxy, for example
+when it was working behind a K8s load balancer.
+
+This behavior now has been improved by removing the port from the "ServerName"
+directive in the docker container. This makes the web server of the container
+detect and use the port from client requests and reuses it to build URLs for
+redirects and so on.

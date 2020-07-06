@@ -89,7 +89,7 @@ def get_text(context):
         'HostProblemId': host_problem_id,
         'ServiceProblemId': service_problem_id,
         'DateTime': date_time,
-        'X-S4-ExternalID': host_name + '-' + host_problem_id + '-' + service_problem_id,
+        'X-S4-ExternalID': 'Checkmk: ' + host_name + '-' + host_problem_id + '-' + service_problem_id,
         'X-S4-Status': s4_status
     }
 

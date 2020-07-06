@@ -39,6 +39,7 @@ from cmk.gui.watolib.utils import (
     format_config_value,
     ALL_HOSTS,
     ALL_SERVICES,
+    has_agent_bakery,
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.automations import check_mk_automation
@@ -48,6 +49,7 @@ from cmk.gui.watolib.host_attributes import (
     collect_attributes,
 )
 from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.gui.background_job import BackgroundJobAlreadyRunning
 
 import cmk.utils.version as cmk_version
 
@@ -1769,6 +1771,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                        sites=[host.site_id()])
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
+
+        # 3. Prepare agents for the new hosts
+        if has_agent_bakery():
+            import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery  # pylint: disable=import-error,no-name-in-module
+            try:
+                agent_bakery.start_bake_agents(host_names=[e[0] for e in entries])
+            except BackgroundJobAlreadyRunning:
+                pass
 
     def delete_hosts(self, host_names):
         # 1. Check preconditions

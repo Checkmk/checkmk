@@ -70,7 +70,7 @@ TimeperiodSpec = Dict[str, Union[str, List[Tuple[str, str]]]]
 class ABCPluginName(abc.ABC):
     """Common class for all plugin names
 
-    A plugin name must be a non-empty string consting only of letters A-z, digits
+    A plugin name must be a non-empty string consisting only of letters A-z, digits
     and the underscore.
     """
     VALID_CHARACTERS = string.ascii_letters + '_' + string.digits

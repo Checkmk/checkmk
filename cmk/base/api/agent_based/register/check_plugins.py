@@ -132,20 +132,19 @@ def _filter_check(
     return filtered_generator
 
 
-def _validate_default_parameters(plugin_name: str, params_type: str, ruleset_name: Optional[str],
+def _validate_default_parameters(params_type: str, ruleset_name: Optional[str],
                                  default_parameters: Optional[Dict]) -> None:
     if default_parameters is None:
         if ruleset_name is None:
             return
-        raise TypeError("[%s]: missing default %s parameters for ruleset %s" %
-                        (plugin_name, params_type, ruleset_name))
+        raise TypeError("missing default %s parameters for ruleset %s" %
+                        (params_type, ruleset_name))
 
     if not isinstance(default_parameters, dict):
-        raise TypeError("[%s]: default %s parameters must be dict" % (plugin_name, params_type))
+        raise TypeError("default %s parameters must be dict" % (params_type,))
 
     if ruleset_name is None:
-        raise TypeError("[%s]: missing ruleset name for default %s parameters" %
-                        (plugin_name, params_type))
+        raise TypeError("missing ruleset name for default %s parameters" % (params_type))
 
 
 def _validate_discovery_ruleset(ruleset_name: Optional[str],
@@ -214,7 +213,6 @@ def create_check_plugin(
 
     # validate discovery arguments
     _validate_default_parameters(
-        name,
         "discovery",
         discovery_ruleset_name,
         discovery_default_parameters,
@@ -234,7 +232,6 @@ def create_check_plugin(
 
     # validate check arguments
     _validate_default_parameters(
-        name,
         "check",
         check_ruleset_name,
         check_default_parameters,

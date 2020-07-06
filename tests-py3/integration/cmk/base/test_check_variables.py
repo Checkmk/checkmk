@@ -4,20 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# flake8: noqa
-
-# pylint: disable=redefined-outer-name
 import subprocess
 import pytest  # type: ignore[import]
 
-from testlib.fixtures import web  # pylint: disable=unused-import
+from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 import cmk.base.config as config
 import cmk.base.check_api as check_api
 import cmk.base.autochecks as autochecks
 
 
-@pytest.fixture(scope="module")
-def test_cfg(web, site):
+@pytest.fixture(name="test_cfg", scope="module")
+def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Applying default config")
     web.add_host("modes-test-host", attributes={
         "ipaddress": "127.0.0.1",
@@ -41,7 +38,7 @@ def test_cfg(web, site):
 
 
 # Test whether or not registration of check configuration variables works
-def test_test_check_1(request, test_cfg, site, web):
+def test_test_check_1(request, test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     test_check_path = "local/share/check_mk/checks/test_check_1"
 
@@ -126,7 +123,7 @@ check_info["test_check_1"] = {
 
 
 # Test whether or not registration of discovery variables work
-def test_test_check_2(request, test_cfg, site, web):
+def test_test_check_2(request, test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
     test_check_path = "local/share/check_mk/checks/test_check_2"
 
     def cleanup():
@@ -189,7 +186,7 @@ check_info["test_check_2"] = {
 
 
 # Test whether or not factory settings and checkgroup parameters work
-def test_check_factory_settings(request, test_cfg, site, web):
+def test_check_factory_settings(request, test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
     test_check_path = "local/share/check_mk/checks/test_check_3"
 
     def cleanup():

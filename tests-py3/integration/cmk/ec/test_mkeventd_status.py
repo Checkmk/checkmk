@@ -7,14 +7,11 @@
 import time
 
 import pytest  # type: ignore[import]
-# flake8: noqa
 
-from testlib.fixtures import ec  # pylint: disable=unused-import
-
-# pylint: disable=redefined-outer-name
+from testlib.fixtures import ec  # noqa: F401 # pylint: disable=unused-import
 
 
-def ensure_core_and_get_connection(site, ec, core):
+def ensure_core_and_get_connection(site, ec, core):  # noqa: F811 # pylint: disable=redefined-outer-name
     if core is None:
         return ec.status
     site.set_config("CORE", core, with_restart=True)
@@ -23,7 +20,7 @@ def ensure_core_and_get_connection(site, ec, core):
 
 @pytest.mark.parametrize(("core"), ["nagios", "cmc"])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_command_reload(site, ec, core):
+def test_command_reload(site, ec, core):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Checking core: %s" % core)
     live = ensure_core_and_get_connection(site, ec, core)
 
@@ -43,7 +40,7 @@ def test_command_reload(site, ec, core):
 # core is None means direct query to status socket
 @pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_status_table_via_core(site, ec, core):
+def test_status_table_via_core(site, ec, core):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Checking core: %s" % core)
     live = ensure_core_and_get_connection(site, ec, core)
     prefix = "" if core is None else "eventconsole"
@@ -93,7 +90,7 @@ def test_status_table_via_core(site, ec, core):
 # core is None means direct query to status socket
 @pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_rules_table_via_core(site, ec, core):
+def test_rules_table_via_core(site, ec, core):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Checking core: %s" % core)
     live = ensure_core_and_get_connection(site, ec, core)
     prefix = "" if core is None else "eventconsole"

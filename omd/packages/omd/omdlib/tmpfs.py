@@ -38,8 +38,8 @@ from typing import Optional
 import cmk.utils.tty as tty
 
 from omdlib.utils import is_dockerized, ok, delete_directory_contents
-from omdlib.version_info import VersionInfo  # pylint: disable=unused-import
-from omdlib.contexts import SiteContext  # pylint: disable=unused-import
+from omdlib.version_info import VersionInfo
+from omdlib.contexts import SiteContext
 
 
 # TODO: Use site context?

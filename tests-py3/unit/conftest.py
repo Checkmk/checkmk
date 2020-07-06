@@ -141,3 +141,9 @@ def config_snmp_scan_functions(config_load_all_checks):
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     assert len(config.snmp_scan_functions) > 400  # sanity check
     return copy.deepcopy(config.snmp_scan_functions)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def config_check_variables(config_load_all_checks):
+    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+    return copy.deepcopy(config.get_check_variables())

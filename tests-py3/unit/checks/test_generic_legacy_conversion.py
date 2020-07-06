@@ -62,11 +62,6 @@ def _get_migrated_checks(_load_all_checks):
     return config.registered_check_plugins.copy()
 
 
-@pytest.fixture(scope="module", name="check_variables_names", autouse=True)
-def _get_check_variables(_load_all_checks):
-    return set(config.get_check_variables())
-
-
 def test_management_board_interface_prefix(config_check_info):
     mgmt_criteria = (
         ("Name must start with 'mgmt_'", lambda k, c: k.startswith("mgmt_")),
@@ -205,7 +200,7 @@ def test_all_checks_migrated(config_check_info, migrated_checks):
     assert not failures, "failed to migrate: %r" % (failures,)
 
 
-def test_all_check_variables_present(_load_all_checks, check_variables_names):
+def test_all_check_variables_present(_load_all_checks, config_check_variables):
     expected_check_variables = {
         'AKCP_TEMP_CHECK_DEFAULT_PARAMETERS',
         'ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS',
@@ -1136,7 +1131,7 @@ def test_all_check_variables_present(_load_all_checks, check_variables_names):
         'zorp_connections',
     }
 
-    missing_variables = expected_check_variables - set(check_variables_names)
+    missing_variables = expected_check_variables - set(config_check_variables)
 
     assert not missing_variables, (
         "'%s' were variables present in config.get_check_variables(). "

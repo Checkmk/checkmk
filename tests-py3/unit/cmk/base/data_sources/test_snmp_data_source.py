@@ -9,7 +9,8 @@
 import pytest  # type: ignore[import]
 from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
-from testlib.base import Scenario
+# No stub
+from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import SectionName
@@ -18,7 +19,6 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources import management_board_ipaddress
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
 
@@ -147,7 +147,7 @@ def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
 
     source = SNMPManagementBoardDataSource(
         hostname,
-        management_board_ipaddress(hostname),
+        ip_lookup.management_board_ipaddress(hostname),
     )
 
     assert source._host_config.management_address == ipaddress
@@ -165,7 +165,7 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(monkeypatch):
             "management_address": "lolo"
         },
     })
-    assert management_board_ipaddress("hostname") is None
+    assert ip_lookup.management_board_ipaddress("hostname") is None
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])

@@ -4,13 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from testlib.base import Scenario
+# No stub
+from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import SourceType
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources._utils import management_board_ipaddress
 from cmk.base.data_sources.ipmi import IPMIManagementBoardDataSource
 
 
@@ -19,7 +19,7 @@ def test_attribute_defaults(monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
     source = IPMIManagementBoardDataSource(
         hostname,
-        management_board_ipaddress(hostname),
+        ip_lookup.management_board_ipaddress(hostname),
     )
 
     assert source.source_type is SourceType.MANAGEMENT
@@ -45,7 +45,7 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
     })
     source = IPMIManagementBoardDataSource(
         hostname,
-        management_board_ipaddress(hostname),
+        ip_lookup.management_board_ipaddress(hostname),
     )
 
     assert source._host_config.management_address == ipaddress

@@ -15,8 +15,8 @@ from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 from cmk.base.check_utils import RawAgentData
 from cmk.base.config import SectionPlugin
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
+import cmk.base.ip_lookup as ip_lookup
 
-from ._utils import verify_ipaddress
 from .agent import AgentDataSource
 
 #.
@@ -80,7 +80,7 @@ class TCPDataSource(AgentDataSource):
             raise MKAgentError("Got no data: No usable cache file present at %s" %
                                self._cache_file_path())
 
-        verify_ipaddress(self._ipaddress)
+        ip_lookup.verify_ipaddress(self._ipaddress)
         assert self._ipaddress
 
         with TCPDataFetcher(

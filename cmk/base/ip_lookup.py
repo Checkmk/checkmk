@@ -292,3 +292,56 @@ def _get_dns_cache_lookup_hosts() -> List[IPLookupCacheId]:
             hosts.append((hostname, 6))
 
     return hosts
+
+
+def verify_ipaddress(address: Optional[HostAddress]) -> None:
+    if not address:
+        raise MKIPAddressLookupError("Host as no IP address configured.")
+
+    if address in ["0.0.0.0", "::"]:
+        raise MKIPAddressLookupError(
+            "Failed to lookup IP address and no explicit IP address configured")
+
+
+#   .--MGMT board----------------------------------------------------------.
+#   |       __  __  ____ __  __ _____   _                         _        |
+#   |      |  \/  |/ ___|  \/  |_   _| | |__   ___   __ _ _ __ __| |       |
+#   |      | |\/| | |  _| |\/| | | |   | '_ \ / _ \ / _` | '__/ _` |       |
+#   |      | |  | | |_| | |  | | | |   | |_) | (_) | (_| | | | (_| |       |
+#   |      |_|  |_|\____|_|  |_| |_|   |_.__/ \___/ \__,_|_|  \__,_|       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def management_board_ipaddress(hostname: HostName) -> Optional[HostAddress]:
+    mgmt_ipaddress = config.get_config_cache().get_host_config(hostname).management_address
+
+    if mgmt_ipaddress is None:
+        return None
+
+    if not _is_ipaddress(mgmt_ipaddress):
+        try:
+            return lookup_ip_address(mgmt_ipaddress)
+        except MKIPAddressLookupError:
+            return None
+    else:
+        return mgmt_ipaddress
+
+
+def _is_ipaddress(address: Optional[HostAddress]) -> bool:
+    if address is None:
+        return False
+
+    try:
+        socket.inet_pton(socket.AF_INET, address)
+        return True
+    except socket.error:
+        # not a ipv4 address
+        pass
+
+    try:
+        socket.inet_pton(socket.AF_INET6, address)
+        return True
+    except socket.error:
+        # no ipv6 address either
+        return False

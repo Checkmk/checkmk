@@ -11,16 +11,16 @@ import pytest  # type: ignore[import]
 from cmk.utils.type_defs import SectionName
 
 import cmk.base.data_sources.agent as agent
-from cmk.base.data_sources._utils import _is_ipaddress
+import cmk.base.ip_lookup as ip_lookup
 
 
 def test_mgmt_board_data_source_is_ip_address():
-    assert _is_ipaddress(None) is False
-    assert _is_ipaddress("localhost") is False
-    assert _is_ipaddress("abc 123") is False
-    assert _is_ipaddress("127.0.0.1") is True
-    assert _is_ipaddress("::1") is True
-    assert _is_ipaddress("fe80::807c:f8ff:fea9:9f12") is True
+    assert ip_lookup._is_ipaddress(None) is False
+    assert ip_lookup._is_ipaddress("localhost") is False
+    assert ip_lookup._is_ipaddress("abc 123") is False
+    assert ip_lookup._is_ipaddress("127.0.0.1") is True
+    assert ip_lookup._is_ipaddress("::1") is True
+    assert ip_lookup._is_ipaddress("fe80::807c:f8ff:fea9:9f12") is True
 
 
 def test_normalize_ip():

@@ -24,7 +24,6 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
 
-from ._utils import management_board_ipaddress
 from .abstract import DataSource
 from .agent import AgentDataSource, AgentHostSections
 from .host_sections import MultiHostSections
@@ -115,7 +114,7 @@ class SourceBuilder:
         if protocol is None:
             return
 
-        ip_address = management_board_ipaddress(self._hostname)
+        ip_address = ip_lookup.management_board_ipaddress(self._hostname)
         if protocol == "snmp":
             self._add_source(
                 SNMPManagementBoardDataSource(

@@ -31,8 +31,8 @@ import cmk.base.inventory_plugins as inventory_plugins
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
+import cmk.base.ip_lookup as ip_lookup
 
-from ._utils import verify_ipaddress
 from .abstract import DataSource
 from .host_sections import AbstractHostSections
 
@@ -255,7 +255,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         self._fetched_raw_section_names = raw_section_names
 
     def _execute(self) -> SNMPRawData:
-        verify_ipaddress(self._ipaddress)
+        ip_lookup.verify_ipaddress(self._ipaddress)
         with SNMPDataFetcher(
                 self._make_oid_infos(),
                 self._use_snmpwalk_cache,

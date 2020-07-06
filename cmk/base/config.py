@@ -2031,8 +2031,7 @@ def _extract_check_plugins() -> None:
             # this exception will be removed once the plugin is obsolete (per unit-test)
             continue
         try:
-            check_plugin = create_check_plugin_from_legacy(check_plugin_name, check_info_dict,
-                                                           list(registered_check_plugins))
+            check_plugin = create_check_plugin_from_legacy(check_plugin_name, check_info_dict)
             registered_check_plugins[check_plugin.name] = check_plugin
         except (NotImplementedError, KeyError, AssertionError, ValueError):
             # TODO (mo): Clean this up once we have a solution for the plugins currently

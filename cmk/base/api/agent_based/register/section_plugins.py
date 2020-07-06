@@ -140,7 +140,6 @@ def create_agent_section_plugin(
     parse_function: AgentParseFunction,
     host_label_function: Optional[HostLabelFunction] = None,
     supersedes: Optional[List[str]] = None,
-    forbidden_names: List[SectionName],
     module: Optional[str] = None,
 ) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
@@ -154,7 +153,7 @@ def create_agent_section_plugin(
     if parsed_section_name is not None:
         raise NotImplementedError("parsed_section_name is not yet available")
 
-    section_name = SectionName(name, forbidden_names=forbidden_names)
+    section_name = SectionName(name)
 
     _validate_parse_function(parse_function)
 
@@ -177,7 +176,6 @@ def create_snmp_section_plugin(
     supersedes: Optional[List[str]] = None,
     detect_spec: SNMPDetectSpec,
     trees: List[SNMPTree],
-    forbidden_names: Optional[List[SectionName]] = None,
     module: Optional[str] = None,
 ) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
@@ -191,7 +189,7 @@ def create_snmp_section_plugin(
     if parsed_section_name is not None:
         raise NotImplementedError("parsed_section_name is not yet available")
 
-    section_name = SectionName(name, forbidden_names)
+    section_name = SectionName(name)
 
     _validate_parse_function(parse_function)
     _validate_detect_spec(detect_spec)

@@ -251,8 +251,10 @@ def _create_cluster_legacy_mode_from_hell(check_function: Callable) -> Callable:
     return cluster_legacy_mode_from_hell
 
 
-def create_check_plugin_from_legacy(check_plugin_name: str, check_info_dict: Dict[str, Any],
-                                    forbidden_names: List[CheckPluginName]) -> CheckPlugin:
+def create_check_plugin_from_legacy(
+    check_plugin_name: str,
+    check_info_dict: Dict[str, Any],
+) -> CheckPlugin:
 
     if check_info_dict.get('extra_sections'):
         raise NotImplementedError("[%s]: cannot auto-migrate plugins with extra sections" %
@@ -296,7 +298,6 @@ def create_check_plugin_from_legacy(check_plugin_name: str, check_info_dict: Dic
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_ruleset_name,
         cluster_check_function=_create_cluster_legacy_mode_from_hell(check_function),
-        forbidden_names=forbidden_names,
     )
 
 

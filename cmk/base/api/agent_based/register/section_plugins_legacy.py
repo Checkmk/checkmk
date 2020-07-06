@@ -233,7 +233,6 @@ def create_agent_section_plugin_from_legacy(check_plugin_name: str,
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
         host_label_function=host_label_function,
-        forbidden_names=[],
     )
 
 
@@ -270,7 +269,6 @@ def create_snmp_section_plugin_from_legacy(
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
         host_label_function=host_label_function,
-        forbidden_names=[],
         trees=trees,
         detect_spec=detect_spec,
     )

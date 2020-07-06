@@ -195,7 +195,6 @@ def create_check_plugin(
     check_default_parameters: Optional[Dict] = None,
     check_ruleset_name: Optional[str] = None,
     cluster_check_function: Optional[Callable] = None,
-    forbidden_names: List[CheckPluginName],
     module: Optional[str] = None,
 ) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one
@@ -203,7 +202,7 @@ def create_check_plugin(
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    plugin_name = CheckPluginName(name, forbidden_names)
+    plugin_name = CheckPluginName(name)
 
     subscribed_sections = _create_sections(sections, plugin_name)
 

@@ -10,7 +10,7 @@ import enum
 import functools
 import string
 import sys
-from typing import Any, Dict, Iterable, List, NewType, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, NewType, Optional, Set, Tuple, Union
 
 HostName = str
 HostAddress = str
@@ -80,9 +80,7 @@ class ABCPluginName(abc.ABC):
         """we allow to maintain a list of exceptions"""
         return set()
 
-    def __init__(self,
-                 plugin_name: str,
-                 forbidden_names: Optional[Iterable['ABCPluginName']] = None) -> None:
+    def __init__(self, plugin_name: str) -> None:
         self._value = plugin_name
         if plugin_name in self._legacy_naming_exceptions:
             return
@@ -96,9 +94,6 @@ class ABCPluginName(abc.ABC):
             if char not in self.VALID_CHARACTERS:
                 raise ValueError("invalid character for %s %r: %r" %
                                  (self.__class__.__name__, plugin_name, char))
-
-        if forbidden_names and any(plugin_name == str(fn) for fn in forbidden_names):
-            raise ValueError("duplicate plugin name: %r" % (plugin_name,))
 
     def __repr__(self) -> str:
         return "%s(%r)" % (self.__class__.__name__, self._value)

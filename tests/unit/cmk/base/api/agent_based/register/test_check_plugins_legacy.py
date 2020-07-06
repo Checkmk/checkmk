@@ -112,7 +112,6 @@ def test_create_check_plugin_from_legacy_wo_params(monkeypatch):
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
         MINIMAL_CHECK_INFO,
-        [],
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -143,7 +142,6 @@ def test_create_check_plugin_from_legacy_with_params(monkeypatch):
             "group": "norris_rule",
             "default_levels_variable": "norris_default_levels",
         },
-        [],
     )
 
     assert plugin.name == CheckPluginName("norris")

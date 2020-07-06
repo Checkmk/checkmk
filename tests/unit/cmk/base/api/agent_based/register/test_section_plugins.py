@@ -81,7 +81,6 @@ def test_create_agent_section_plugin():
             parsed_section_name="chuck",
             parse_function=_parse_dummy,
             supersedes=None,
-            forbidden_names=[],
         )
 
     with pytest.raises(NotImplementedError):
@@ -90,7 +89,6 @@ def test_create_agent_section_plugin():
             parsed_section_name=None,
             parse_function=_parse_dummy,
             supersedes=["Foo", "Bar"],
-            forbidden_names=[],
         )
 
     plugin = section_plugins.create_agent_section_plugin(
@@ -98,7 +96,6 @@ def test_create_agent_section_plugin():
         parsed_section_name=None,  # "chuck"
         parse_function=_parse_dummy,
         supersedes=None,  # ["Foo", "Bar"],
-        forbidden_names=[],
     )
 
     assert isinstance(plugin, section_types.AgentSectionPlugin)
@@ -131,7 +128,6 @@ def test_create_snmp_section_plugin():
             trees=trees,
             detect_spec=detect,
             supersedes=None,
-            forbidden_names=[],
         )
 
     with pytest.raises(NotImplementedError):
@@ -142,7 +138,6 @@ def test_create_snmp_section_plugin():
             trees=trees,
             detect_spec=detect,
             supersedes=["Foo", "Bar"],
-            forbidden_names=[],
         )
 
     plugin = section_plugins.create_snmp_section_plugin(
@@ -152,7 +147,6 @@ def test_create_snmp_section_plugin():
         trees=trees,
         detect_spec=detect,
         supersedes=None,  # ["Foo", "Bar"],
-        forbidden_names=[],
     )
 
     assert isinstance(plugin, section_types.SNMPSectionPlugin)

@@ -50,17 +50,18 @@ def agent_section(
         parse function. It is expected to yield objects of type 'HostLabel'.
     :params supersedes: not yet implemented.
     """
-    forbidden_names = list(config.registered_agent_sections) + list(config.registered_snmp_sections)
-
     section_plugin = create_agent_section_plugin(
         name=name,
         parsed_section_name=parsed_section_name,
         parse_function=parse_function,
         host_label_function=host_label_function,
         supersedes=supersedes,
-        forbidden_names=forbidden_names,
         module=get_plugin_module_name(),
     )
+
+    if (section_plugin.name in config.registered_agent_sections or
+            section_plugin.name in config.registered_snmp_sections):
+        raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
     config.registered_agent_sections[section_plugin.name] = section_plugin
 
@@ -99,8 +100,6 @@ def snmp_section(
         one SNMP table per specified Tree, where an SNMP tree is a list of lists of strings.
     :params supersedes: not yet implemented.
     """
-    forbidden_names = list(config.registered_agent_sections) + list(config.registered_snmp_sections)
-
     section_plugin = create_snmp_section_plugin(
         name=name,
         parsed_section_name=parsed_section_name,
@@ -109,9 +108,12 @@ def snmp_section(
         detect_spec=detect,
         trees=trees,
         supersedes=supersedes,
-        forbidden_names=forbidden_names,
         module=get_plugin_module_name(),
     )
+
+    if (section_plugin.name in config.registered_agent_sections or
+            section_plugin.name in config.registered_snmp_sections):
+        raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
     config.registered_snmp_sections[section_plugin.name] = section_plugin
 
@@ -164,9 +166,11 @@ def check_plugin(
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_ruleset_name,
         cluster_check_function=cluster_check_function,
-        forbidden_names=list(config.registered_check_plugins),
         module=get_plugin_module_name(),
     )
+
+    if config.get_registered_check_plugin(plugin.name):
+        raise ValueError("duplicate check plugin definition: %s" % plugin.name)
 
     config.registered_check_plugins[plugin.name] = plugin
 

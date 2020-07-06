@@ -16,11 +16,6 @@ def test_invalid_plugin_name(str_name):
         CheckPluginName(str_name)
 
 
-def test_forbidden_plugin_name():
-    with pytest.raises(ValueError):
-        CheckPluginName("Foo", forbidden_names=[CheckPluginName("Foo"), CheckPluginName("Bar")])
-
-
 def test_plugin_name_repr():
     assert repr(CheckPluginName("Margo")) == "CheckPluginName('Margo')"
 

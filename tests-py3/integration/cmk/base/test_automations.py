@@ -239,8 +239,9 @@ def test_automation_set_autochecks(test_cfg, site):
         assert os.path.exists(autochecks_file)
 
         data = autochecks.parse_autochecks_file("blablahost", config.service_description)
-        services = [((s.check_plugin_name, s.item), s.parameters_unresolved,
-                     s.service_labels.to_dict()) for s in data]
+        services = [
+            ((s.check_plugin_name, s.item), s.parameters, s.service_labels.to_dict()) for s in data
+        ]
         assert sorted(services) == [
             (('df', u'xxx'), '{}', {
                 u"xyz": u"123"

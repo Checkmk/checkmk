@@ -320,7 +320,7 @@ def set_autochecks_of_real_hosts(hostname: HostName, new_services: Sequence[Serv
                                  service_description: GetServiceDescription) -> None:
     new_autochecks: List[Service] = []
 
-    # write new autochecks file, but take parameters_unresolved from existing ones
+    # write new autochecks file, but take parameters from existing ones
     # for those checks which are kept
     for existing_service in parse_autochecks_file(hostname, service_description):
         if existing_service in new_services:

@@ -4,19 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-# flake8: noqa
-
 import time
 import os
 import pytest  # type: ignore[import]
 
 from testlib import WatchLog
-from testlib.fixtures import web  # pylint: disable=unused-import
+from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
 
-@pytest.fixture()
-def fake_sendmail(site):
+@pytest.fixture(name="fake_sendmail")
+def fake_sendmail_fixture(site):
     site.write_file("local/bin/sendmail", "#!/bin/bash\n"
                     "set -e\n"
                     "echo \"sendmail called with: $@\"\n")
@@ -25,11 +22,12 @@ def fake_sendmail(site):
     site.delete_file("local/bin/sendmail")
 
 
-@pytest.fixture(params=[
-    ("nagios", "var/log/nagios.log"),
-    ("cmc", "var/check_mk/core/history"),
-])
-def test_log(request, web, site, fake_sendmail):
+@pytest.fixture(name="test_log",
+                params=[
+                    ("nagios", "var/log/nagios.log"),
+                    ("cmc", "var/check_mk/core/history"),
+                ])
+def test_log_fixture(request, web, site, fake_sendmail):  # noqa: F811 # pylint: disable=redefined-outer-name
     core, log = request.param
     site.set_config("CORE", core, with_restart=True)
 

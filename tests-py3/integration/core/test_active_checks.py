@@ -4,23 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-# flake8: noqa
-
 import logging
 import collections
 import pytest  # type: ignore[import]
 
 from testlib.utils import api_str_type
-from testlib.fixtures import web  # pylint: disable=unused-import
+from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="module", params=["nagios", "cmc"])
-def test_cfg(request, web, site):
+@pytest.fixture(name="test_cfg", scope="module", params=["nagios", "cmc"])
+def test_cfg_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 
@@ -41,7 +38,7 @@ def test_cfg(request, web, site):
     web.delete_host("test-host")
 
 
-def test_active_check_execution(test_cfg, site, web):
+def test_active_check_execution(test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         # TODO: Remove bytestr marker once the GUI uses Python 3
         web.set_ruleset(
@@ -84,7 +81,7 @@ def test_active_check_execution(test_cfg, site, web):
         web.activate_changes()
 
 
-def test_active_check_macros(test_cfg, site, web):
+def test_active_check_macros(test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
     macros = {
         "$HOSTADDRESS$": "127.0.0.1",
         "$HOSTNAME$": "test-host",
@@ -154,7 +151,6 @@ def test_active_check_macros(test_cfg, site, web):
                 if var == "$_HOSTTAGS$":
                     splitted_output = plugin_output.split(" ")
                     plugin_output = splitted_output[0] + " " + " ".join(sorted(splitted_output[1:]))
-
 
             assert expected_output == plugin_output, \
                 "Macro %s has wrong value (%r instead of %r)" % (var, plugin_output, expected_output)

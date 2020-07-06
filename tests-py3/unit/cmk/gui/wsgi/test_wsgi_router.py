@@ -14,8 +14,6 @@ import cmk.utils.version as cmk_version
 if typing.TYPE_CHECKING:
     import webtest  # type: ignore[import] # pylint: disable=unused-import
 
-# pylint: disable=redefined-outer-name
-
 
 def test_normal_auth(wsgi_app, with_user):
     username, password = with_user

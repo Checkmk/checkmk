@@ -9,7 +9,7 @@ import pytest  # type: ignore[import]
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato  # pylint: disable=unused-import
+import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
 
 from cmk.gui.exceptions import MKGeneralException
 import cmk.gui.config as config

@@ -10,6 +10,7 @@ import sys
 from typing import NoReturn
 
 from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
+from cmk.utils.type_defs import HostName
 
 try:
     import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
@@ -41,24 +42,32 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="Enable debug mode",
     )
-    parser.add_argument("serial", type=str)
-    parser.add_argument("host", type=str)
-    parser.add_argument("timeout", type=int)
 
     return parser.parse_args()
 
 
 def main() -> int:
-    args = None  # on exception in parse_arguments we have args defined
+    serial = ""
+    host_name: HostName = ""
     try:
         args = parse_arguments()
-        return controller.run(serial=args.serial, host=args.host, timeout=args.timeout)
+        if args.debug:
+            sys.stdout.write(
+                "Debug mode is enabled")  # reserved for the future testing(out of Core)
+
+        for line in sys.stdin:
+            command = line.rstrip("\n")
+            if command == "*":
+                break
+            serial, host, timeout = command.split(sep=";", maxsplit=2)
+            controller.run(serial=serial, host_name=host_name, timeout=int(timeout))
+
+        return 0
 
     # NOTE: Yes, this is too common. But at this moment we have no chance to provide better method.
     except Exception:
         # reporting to site
-        result = create_fetcher_crash_dump(serial=args.serial if args else "",
-                                           host=args.host if args else "")
+        result = create_fetcher_crash_dump(serial=serial, host=host)
 
         # reporting to check
         sys.stdout.write(controller.make_failure_answer(result, "main"))

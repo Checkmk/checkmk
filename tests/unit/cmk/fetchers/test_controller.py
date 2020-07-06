@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest  # type: ignore[import]
 
 from cmk.fetchers.controller import (Header, make_failure_answer, make_success_answer,
-                                     build_json_file_path)
+                                     make_waiting_answer, build_json_file_path)
 from cmk.utils.paths import core_fetcher_config_dir
 
 
@@ -22,9 +22,14 @@ def test_controller_failure():
                                hint="hint12345678") == "fetch:FAILURE:hint1234:7       :payload"
 
 
+def test_controller_waiting():
+    assert make_waiting_answer() == "fetch:WAITING:        :0       :"
+
+
 def test_build_json_file_path():
     assert build_json_file_path(
-        serial="_serial_", host="buzz") == Path(core_fetcher_config_dir) / "_serial_" / "buzz.mk"
+        serial="_serial_",
+        host_name="buzz") == Path(core_fetcher_config_dir) / "_serial_" / "buzz.mk"
 
 
 class TestHeader:
@@ -89,4 +94,5 @@ class TestHeader:
         assert Header.length == 32
         assert Header.State.FAILURE == "FAILURE"
         assert Header.State.SUCCESS == "SUCCESS"
+        assert Header.State.WAITING == "WAITING"
         assert Header.default_protocol_name() == "fetch"

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Union
 
 from cmk.utils.paths import core_fetcher_config_dir
+from cmk.utils.type_defs import HostName
 
 from . import TCPDataFetcher
 
@@ -37,6 +38,7 @@ class Header:
     class State(str, enum.Enum):
         SUCCESS = "SUCCESS"
         FAILURE = "FAILURE"
+        WAITING = "WAITING"
 
     fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
     length = 32
@@ -86,8 +88,7 @@ class Header:
         return "fetch"
 
 
-def make_success_answer(data):
-    # type : (str) -> str
+def make_success_answer(data: str) -> str:
     return str(
         Header(name=Header.default_protocol_name(),
                state=Header.State.SUCCESS,
@@ -95,8 +96,7 @@ def make_success_answer(data):
                payload_length=len(data))) + data
 
 
-def make_failure_answer(data, hint):
-    # type : (str, str) -> str
+def make_failure_answer(data: str, hint: str) -> str:
     return str(
         Header(name=Header.default_protocol_name(),
                state=Header.State.FAILURE,
@@ -104,27 +104,54 @@ def make_failure_answer(data, hint):
                payload_length=len(data))) + data
 
 
-def run(serial, host, timeout):
-    # type : (str, str, int) -> int
-    # from var/check_mk/core/fetcher-config/[config-serial]/[host].mk
-    json_content = read_json_file(serial=serial, host=host)
+def make_waiting_answer() -> str:
+    return str(
+        Header(name=Header.default_protocol_name(),
+               state=Header.State.WAITING,
+               hint=" ",
+               payload_length=0))
 
-    # build fetcher in usual manner
+
+# CONTEXT: This function is empty stub which awaits some definitions(error processing, formats, ..)
+def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
+
+    # check that file is present, lack of the file is not error at the moment
+    json_file = build_json_file_path(serial=serial, host_name=host_name)
+
+    # TODO (sk): remove this trash & revamp whole function after business-logic will be defined
+    # Precondition: we know what, how and whom should be reported in the case of error
+    if not json_file.exists():
+        print(make_failure_answer("fetcher file is absent", "config"))
+        return
+
+    # from var/check_mk/core/fetcher-config/[config-serial]/[host].mk
+    json_content = json_file.read_text(encoding="utf-8")
+
+    # for every entry in json context call one fetcher:
+
+    # build fetcher in usual manner. Code below is an unreachable stub
+    # we need to have correct config files in the path to build fetcher object(s)
     f = TCPDataFetcher.from_json(json.loads(json_content))
     if not f:
-        print(make_failure_answer(json_content, "json"))
-        return 1
+        print(make_failure_answer(data=json_content, hint="json"))
+        return
 
     # print obtained data to the stdio
     # print(FetcherProtocol.make_success_answer(f.data());
+
+    # code below is an unreachable stub
     print(make_success_answer("used file:" + json_content))
-    return 0
 
 
-def read_json_file(serial: str, host: str) -> str:
-    json_file = build_json_file_path(serial=serial, host=host)
+def run(serial: str, host_name: HostName, timeout: int) -> None:
+    run_fetchers(serial=serial, host_name=host_name, timeout=timeout)
+    print(make_waiting_answer())
+
+
+def read_json_file(serial: str, host_name: HostName) -> str:
+    json_file = build_json_file_path(serial=serial, host_name=host_name)
     return json_file.read_text(encoding="utf-8")
 
 
-def build_json_file_path(serial: str, host: str) -> Path:
-    return Path("{}/{}/{}.mk".format(core_fetcher_config_dir, serial, host))
+def build_json_file_path(serial: str, host_name: HostName) -> Path:
+    return Path("{}/{}/{}.mk".format(core_fetcher_config_dir, serial, host_name))

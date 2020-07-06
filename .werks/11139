@@ -1,0 +1,11 @@
+Title: FIX ESX inventory plugin
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0p14
+Date: 1594037625
+Class: fix
+
+The inventory plugin "esx_systeminfo" was fixed and adapted to the parsed checkoutput.
+If you do not see your ESX host in the inventory, perform a new Check_MK HW/SW Inventory on the relevant host after applying this fix and the ESX inventory should appear.

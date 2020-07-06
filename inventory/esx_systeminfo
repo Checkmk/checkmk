@@ -25,34 +25,20 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output:
-# <<<esx_systeminfo>>>
-# vendor VMware, Inc.
-# name VMware ESXi
-# propertyCollector ha-property-collector
-# apiVersion 5.0
-# sessionManager ha-sessionmgr
-# osType vmnix-x86
-# version 5.0.0
-# build 914586
-# licenseManager ha-license-manager
-# perfManager ha-perfmgr
-# rootFolder ha-folder-root
+# parsed is used
+# {u'vendor': u'VMware, Inc.', u'name': u'VMware ESXi', u'propertyCollector': u'ha-property-collector', u'apiVersion': u'6.7.3', u'sessionManager': u'ha-sessionmgr', u'licenseManager': u'ha-license-manager', u'version': u'6.7.0', u'build': u'15160138', u'osType': u'vmnix-x86', u'perfManager': u'ha-perfmgr', u'rootFolder': u'ha-folder-root'}
 
 
-def inv_esx_systeminfo(info):
+def inv_esx_systeminfo(parsed):
     node = inv_tree("software.os.")
-    for line in info:
-        if line[0] == 'vendor':
-            node["vendor"] = " ".join(line[1:])
-        elif line[0] == 'name':
-            node["name"] = " ".join(line[1:])
-        elif line[0] == 'version':
-            node["version"] = " ".join(line[1:])
-        elif line[0] == 'osType':
-            node["type"] = " ".join(line[1:])
-        node["arch"] = "x86_64"
+
+    node["vendor"] = parsed.get("vendor", "")
+    node["name"] = parsed.get("name", "")
+    node["version"] = parsed.get("version", "")
+    node["type"] = parsed.get("osType", "")
+    node["arch"] = "x86_64"
 
 
-inv_info['esx_systeminfo'] = {
+inv_info["esx_systeminfo"] = {
     "inv_function": inv_esx_systeminfo,
 }

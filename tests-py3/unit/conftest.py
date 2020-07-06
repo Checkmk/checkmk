@@ -18,6 +18,7 @@ import cmk.utils.version as cmk_version
 
 from testlib import is_managed_repo, is_enterprise_repo
 from testlib.debug_utils import cmk_debug_enabled
+from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 logger = logging.getLogger(__name__)
 
@@ -109,8 +110,8 @@ def fixup_ip_lookup(monkeypatch):
     monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def config_load_all_checks():
+@pytest.fixture(name='config_load_all_checks', scope="session", autouse=True)
+def _config_load_all_checks():
     # this is needed in cmk/base *and* checks/ :-(
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
@@ -147,3 +148,25 @@ def config_snmp_scan_functions(config_load_all_checks):
 def config_check_variables(config_load_all_checks):
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     return copy.deepcopy(config.get_check_variables())
+
+
+@pytest.fixture(name="mock_livestatus")
+def _mock_livestatus(mocker):
+    """Mock LiveStatus by patching MultiSiteConnection
+
+    Use it like this:
+
+        def test_foo(mock_livestatus):
+            live = mock_livestatus
+            live.expect_query("Foo")
+            with live:
+                # here call a function which does livestatus calls.
+                sites.live().query("Foo", '')  # Example. Should work.
+
+    """
+    live = MockLiveStatusConnection()
+    mocker.patch("cmk.gui.sites.MultiSiteConnection.set_prepend_site", new=live.set_prepend_site)
+    mocker.patch("cmk.gui.sites.MultiSiteConnection.query_non_parallel",
+                 new=live.query_non_parallel)
+    mocker.patch("cmk.gui.sites.MultiSiteConnection.query_parallel", new=live.query_parallel)
+    return live

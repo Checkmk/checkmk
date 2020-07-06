@@ -16,6 +16,8 @@ from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
 from cmk.base.api.agent_based.checking_types import (
     CheckPlugin,
+    DISCOVERY_RULESET_TYPE_CHOICES,
+    DiscoveryRuleSetType,
     IgnoreResults,
     Metric,
     Result,
@@ -158,6 +160,12 @@ def _validate_discovery_ruleset(ruleset_name: Optional[str],
     return
 
 
+def _validate_discovery_ruleset_type(ruleset_type: DiscoveryRuleSetType) -> None:
+    if ruleset_type not in DISCOVERY_RULESET_TYPE_CHOICES:
+        raise ValueError("invalid discovery ruleset type %r. Allowed are %s" %
+                         (ruleset_type, ",".join(repr(c) for c in DISCOVERY_RULESET_TYPE_CHOICES)))
+
+
 def _validate_check_ruleset(ruleset_name: Optional[str],
                             default_parameters: Optional[dict]) -> None:
     if ruleset_name is None:
@@ -191,6 +199,7 @@ def create_check_plugin(
     discovery_function: Callable,
     discovery_default_parameters: Optional[Dict] = None,
     discovery_ruleset_name: Optional[str] = None,
+    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
     check_function: Callable,
     check_default_parameters: Optional[Dict] = None,
     check_ruleset_name: Optional[str] = None,
@@ -219,6 +228,7 @@ def create_check_plugin(
         discovery_ruleset_name,
         discovery_default_parameters,
     )
+    _validate_discovery_ruleset_type(discovery_ruleset_type,)
     _validate_function_args(
         name,
         "discovery",
@@ -227,6 +237,9 @@ def create_check_plugin(
         discovery_ruleset_name is not None,
         subscribed_sections,
     )
+    disco_func = _filter_discovery(discovery_function, requires_item)
+    disco_params = discovery_default_parameters or {}
+    disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 
     # validate check arguments
     _validate_default_parameters(
@@ -261,17 +274,18 @@ def create_check_plugin(
         cluster_check_function = _filter_check(cluster_check_function)
 
     return CheckPlugin(
-        plugin_name,
-        subscribed_sections,
-        service_name,
-        _filter_discovery(discovery_function, requires_item),
-        discovery_default_parameters or {},
-        None if discovery_ruleset_name is None else RuleSetName(discovery_ruleset_name),
-        _filter_check(check_function),
-        check_default_parameters or {},
-        None if check_ruleset_name is None else RuleSetName(check_ruleset_name),
-        cluster_check_function,
-        module,
+        name=plugin_name,
+        sections=subscribed_sections,
+        service_name=service_name,
+        discovery_function=disco_func,
+        discovery_default_parameters=disco_params,
+        discovery_ruleset_name=disco_ruleset_name,
+        discovery_ruleset_type=discovery_ruleset_type,
+        check_function=_filter_check(check_function),
+        check_default_parameters=check_default_parameters or {},
+        check_ruleset_name=RuleSetName(check_ruleset_name) if check_ruleset_name else None,
+        cluster_check_function=cluster_check_function,
+        module=module,
     )
 
 
@@ -283,6 +297,7 @@ def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
         original_plugin.discovery_function,
         original_plugin.discovery_default_parameters,
         original_plugin.discovery_ruleset_name,
+        original_plugin.discovery_ruleset_type,
         original_plugin.check_function,
         original_plugin.check_default_parameters,
         original_plugin.check_ruleset_name,

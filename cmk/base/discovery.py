@@ -1221,7 +1221,9 @@ def _execute_discovery(
     if not kwargs:
         return
 
-    # TODO: add discovery parameters to kwargs CMK-4727
+    disco_params = config.get_discovery_parameters(hostname, check_plugin)
+    if disco_params is not None:
+        kwargs["params"] = disco_params
 
     try:
         plugins_services = check_plugin.discovery_function(**kwargs)

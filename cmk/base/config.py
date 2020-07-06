@@ -64,9 +64,9 @@ from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
+    CheckPluginName,
     CheckPluginNameStr,
     CheckVariables,
-    ParsedSectionName,
     ContactgroupName,
     HostAddress,
     HostgroupName,
@@ -74,9 +74,10 @@ from cmk.utils.type_defs import (
     Item,
     Labels,
     LabelSources,
+    ParsedSectionName,
     Ruleset,
     RulesetName,
-    CheckPluginName,
+    RuleSetName,
     SectionName,
     ServicegroupName,
     ServiceName,
@@ -105,7 +106,7 @@ try:
         create_agent_section_plugin_from_legacy,
         create_snmp_section_plugin_from_legacy,
     )
-    from cmk.base.api.agent_based.checking_types import CheckPlugin
+    from cmk.base.api.agent_based.checking_types import CheckPlugin, Parameters
     from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
     from cmk.base.api.agent_based.register.check_plugins_legacy import (
         create_check_plugin_from_legacy,)
@@ -396,6 +397,7 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
     for helper_var in helper_vars:
         del global_dict[helper_var]
 
+    _collect_discovery_parameter_rulesets_from_globals(global_dict)
     _transform_plugin_names_from_160_to_170(global_dict)
 
     # Revert specialised SetFolderPath classes back to normal, because it improves
@@ -434,6 +436,13 @@ def _transform_plugin_names_from_160_to_170(global_dict: Dict[str, Any]) -> None
         global_dict["ignored_checktypes"] = [
             maincheckify(n) for n in global_dict["ignored_checktypes"]
         ]
+
+
+def _collect_discovery_parameter_rulesets_from_globals(global_dict: Dict[str, Any]) -> None:
+    for ruleset_name in discovery_parameter_rulesets:
+        var_name = str(ruleset_name)
+        if var_name in global_dict:
+            discovery_parameter_rulesets[ruleset_name] = global_dict.pop(var_name)
 
 
 # Create list of all files to be included during configuration loading
@@ -1415,6 +1424,10 @@ registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
 registered_check_plugins: Dict[CheckPluginName, CheckPlugin] = {}
 
+# Collection of all discovery parameters.
+# Filled in _collect_discovery_parameter_rulesets_from_globals
+discovery_parameter_rulesets: Dict[RuleSetName, List[Dict]] = {}
+
 # Names of variables registered in the check files. This is used to
 # keep track of the variables needed by each file. Those variables are then
 # (if available) read from the config and applied to the checks module after
@@ -2111,6 +2124,31 @@ def discoverable_snmp_checks() -> Set[CheckPluginNameStr]:
         if cmk.base.check_utils.is_snmp_check(check_plugin_name) and check["inventory_function"]:
             types.add(check_plugin_name)
     return types
+
+
+def get_discovery_parameters(
+    host_name: HostName,
+    check_plugin: CheckPlugin,
+) -> Union[None, Parameters, List[Parameters]]:
+    if check_plugin.discovery_ruleset_name is None:
+        return None
+
+    config_cache = get_config_cache()
+    rules = discovery_parameter_rulesets.get(check_plugin.discovery_ruleset_name, [])
+
+    if check_plugin.discovery_ruleset_type == "all":
+        host_rules = config_cache.host_extra_conf(host_name, rules)
+        host_rules.append(check_plugin.discovery_default_parameters)
+        return [Parameters(d) for d in host_rules]
+
+    if check_plugin.discovery_ruleset_type == "merged":
+        params = check_plugin.discovery_default_parameters.copy()
+        params.update(config_cache.host_extra_conf_merged(host_name, rules))
+        return Parameters(params)
+
+    # validation should have prevented this
+    raise NotImplementedError("unknown discovery rule set type %r" %
+                              check_plugin.discovery_ruleset_type)
 
 
 def compute_check_parameters(host: HostName, checktype: Union[CheckPluginNameStr,

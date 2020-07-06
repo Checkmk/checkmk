@@ -1932,6 +1932,7 @@ def add_test_plugin_to_config():
         None,  # type: ignore  # irrelevant for test
         None,  # type: ignore  # irrelevant for test
         None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
     )
     config.registered_check_plugins[test_plugin.name] = test_plugin
 

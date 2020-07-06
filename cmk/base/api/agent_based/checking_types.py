@@ -7,7 +7,8 @@
 """
 import enum
 from collections.abc import Mapping
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
+import pprint
+from typing import Any, Callable, Dict, Generator, List, Literal, NamedTuple, Optional, Tuple, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.type_defs import EvalableFloat, ParsedSectionName, CheckPluginName, RuleSetName
@@ -16,6 +17,9 @@ from cmk.base.discovered_labels import ServiceLabel
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
+
+DISCOVERY_RULESET_TYPE_CHOICES = ("merged", "all")  # can't we dedup this?
+DiscoveryRuleSetType = Literal["merged", "all"]
 
 
 class Parameters(Mapping):
@@ -35,7 +39,8 @@ class Parameters(Mapping):
         return iter(self._data)
 
     def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__, self._data)
+        # use pformat to be testable.
+        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._data))
 
 
 class Service:
@@ -306,6 +311,7 @@ CheckPlugin = NamedTuple(
         ("discovery_function", DiscoveryFunction),
         ("discovery_default_parameters", Dict[str, Any]),
         ("discovery_ruleset_name", Optional[RuleSetName]),
+        ("discovery_ruleset_type", DiscoveryRuleSetType),
         ("check_function", CheckFunction),
         ("check_default_parameters", Dict[str, Any]),
         ("check_ruleset_name", Optional[RuleSetName]),

@@ -10,7 +10,11 @@ from typing import Any, Callable, Dict, List, Optional
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 from cmk.base import config
-from cmk.base.api.agent_based.checking_types import CheckFunction, DiscoveryFunction
+from cmk.base.api.agent_based.checking_types import (
+    CheckFunction,
+    DiscoveryFunction,
+    DiscoveryRuleSetType,
+)
 from cmk.base.api.agent_based.register.utils import get_plugin_module_name
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.section_plugins import (
@@ -126,6 +130,7 @@ def check_plugin(
     discovery_function: DiscoveryFunction,
     discovery_default_parameters: Optional[Dict[str, Any]] = None,
     discovery_ruleset_name: Optional[str] = None,
+    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
     check_function: CheckFunction,
     check_default_parameters: Optional[Dict[str, Any]] = None,
     check_ruleset_name: Optional[str] = None,
@@ -162,6 +167,7 @@ def check_plugin(
         discovery_function=discovery_function,
         discovery_default_parameters=discovery_default_parameters,
         discovery_ruleset_name=discovery_ruleset_name,
+        discovery_ruleset_type=discovery_ruleset_type,
         check_function=check_function,
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_ruleset_name,
@@ -173,6 +179,8 @@ def check_plugin(
         raise ValueError("duplicate check plugin definition: %s" % plugin.name)
 
     config.registered_check_plugins[plugin.name] = plugin
+    if plugin.discovery_ruleset_name is not None:
+        config.discovery_parameter_rulesets.setdefault(plugin.discovery_ruleset_name, [])
 
 
 __all__ = [

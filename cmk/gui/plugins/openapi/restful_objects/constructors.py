@@ -676,7 +676,7 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
     })
 
 
-def etag_of_dict(dict_) -> ETags:
+def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
     """Build a sha256 hash over a dictionary's content.
 
     Keys are sorted first to ensure a stable hash.
@@ -685,6 +685,9 @@ def etag_of_dict(dict_) -> ETags:
         >>> etag_of_dict({'a': 'b', 'c': 'd'})
         <ETags '"88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"'>
 
+        >>> etag_of_dict({'a': 'b', 'c': {'d': {'e': 'f'}}})
+        <ETags '"bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721"'>
+
     Args:
         dict_ (dict): A dictionary.
 
@@ -692,10 +695,16 @@ def etag_of_dict(dict_) -> ETags:
         str: The hex-digest of the built hash.
 
     """
+    def _update(_hash_obj, _d):
+        for key, value in sorted(_d.items()):
+            _hash_obj.update(key.encode('utf-8'))
+            if isinstance(value, dict):
+                _update(_hash_obj, value)
+            else:
+                _hash_obj.update(value.encode('utf-8'))
+
     _hash = hashlib.sha256()
-    for key in sorted(dict_.keys()):
-        _hash.update(key.encode('utf-8'))
-        _hash.update(dict_[key].encode('utf-8'))
+    _update(_hash, dict_)
     return ETags(strong_etags=[_hash.hexdigest()])
 
 

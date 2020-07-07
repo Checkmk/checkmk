@@ -58,9 +58,9 @@ def list_services(param):
         Services.state,
     ])
 
-    hostname = param.get('host_name')
-    if hostname is not None:
-        q = q.filter(Services.host_name.contains(hostname))
+    host_name = param.get('host_name')
+    if host_name is not None:
+        q = q.filter(Services.host_name.contains(host_name))
 
     alias = param.get('host_alias')
     if alias is not None:

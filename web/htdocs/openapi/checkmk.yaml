@@ -9,12 +9,12 @@ components:
       required: true
       schema:
         type: string
-    hostname:
+    host_name:
       allowEmptyValue: false
       description: A hostname.
       example: example.com
       in: path
-      name: hostname
+      name: host_name
       required: true
       schema:
         pattern: '[-0-9a-zA-Z_.]+'
@@ -207,7 +207,7 @@ components:
           example: root
           pattern: '[a-fA-F0-9]{32}|root'
           type: string
-        hostname:
+        host_name:
           description: The hostname or IP address itself.
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
@@ -224,7 +224,7 @@ components:
           type: array
       required:
       - folder
-      - hostname
+      - host_name
       type: object
     DomainObject:
       properties:
@@ -1493,10 +1493,13 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.host.list_hosts
       parameters:
       - allowEmptyValue: false
+        description: A hostname.
+        example: example.com
         in: query
         name: host_name
         required: false
         schema:
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       - allowEmptyValue: false
         in: query
@@ -1635,7 +1638,7 @@ paths:
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
           \    API_URL + \"/domain-types/host_config/collections/all\",\n    json={\n\
           \        \"attributes\": {},\n        \"folder\": \"root\",\n        \"\
-          hostname\": \"example.com\",\n        \"nodes\": [\n            \"host1\"\
+          host_name\": \"example.com\",\n        \"nodes\": [\n            \"host1\"\
           ,\n            \"host2\",\n            \"host3\"\n        ]\n    },\n)\n\
           resp.raise_for_status()"
       - lang: curl
@@ -1643,21 +1646,21 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    -d '{\n          \"attributes\": {},\n    \
-          \      \"folder\": \"root\",\n          \"hostname\": \"example.com\",\n\
+          \      \"folder\": \"root\",\n          \"host_name\": \"example.com\",\n\
           \          \"nodes\": [\n            \"host1\",\n            \"host2\",\n\
           \            \"host3\"\n          ]\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/all\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/host_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    attributes='{}'\
-          \ \\\n    folder='root' \\\n    hostname='example.com' \\\n    nodes='[\"\
+          \ \\\n    folder='root' \\\n    host_name='example.com' \\\n    nodes='[\"\
           host1\", \"host2\", \"host3\"]'"
-  /objects/host_config/{hostname}:
+  /objects/host_config/{host_name}:
     delete:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host_config.delete
       parameters:
-      - $ref: '#/components/parameters/hostname'
+      - $ref: '#/components/parameters/host_name'
       - allowEmptyValue: false
         description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
@@ -1704,7 +1707,7 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host_config.show_host
       parameters:
-      - $ref: '#/components/parameters/hostname'
+      - $ref: '#/components/parameters/host_name'
       responses:
         default:
           content:
@@ -1752,7 +1755,7 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host_config.update_host
       parameters:
-      - $ref: '#/components/parameters/hostname'
+      - $ref: '#/components/parameters/host_name'
       - allowEmptyValue: false
         description: The ETag of the object to be modified. This value comes from
           the ETag HTTP header whenever the object is displayed. To update this object
@@ -2208,12 +2211,12 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/domain-types/service/collections/services\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
-  /objects/host/{hostname}/service/{service_hash}/action/move/{target_state}:
+  /objects/host/{host_name}/service/{service_hash}/action/move/{target_state}:
     put:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.move_service
       parameters:
-      - $ref: '#/components/parameters/hostname'
+      - $ref: '#/components/parameters/host_name'
       - allowEmptyValue: false
         description: A name used as an identifier. Can be of arbitrary length
         example: asoidjfo2jifa09
@@ -2263,12 +2266,12 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host/example.com/service/asoidjfo2jifa09/action/move/monitored\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
-  /objects/host/{hostname}/actions/discover-services/mode/{discover_mode}:
+  /objects/host/{host_name}/actions/discover-services/mode/{discover_mode}:
     post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.execute
       parameters:
-      - $ref: '#/components/parameters/hostname'
+      - $ref: '#/components/parameters/host_name'
       - allowEmptyValue: false
         description: 'The mode of the discovery action. May be one of the following:
           full-scan, tabula-rasa'
@@ -2823,7 +2826,7 @@ paths:
         description: A hostname.
         example: example.com
         in: query
-        name: hostname
+        name: host_name
         required: false
         schema:
           pattern: '[-0-9a-zA-Z_.]+'
@@ -2893,7 +2896,7 @@ tags:
     you need to access the folder API endpoints.'
   name: cmk.gui.plugins.openapi.endpoints.host_config
   x-displayName: Hosts
-- description: "Required arguments:\n\n  * `hostname` - A host name with or without\
+- description: "Required arguments:\n\n  * `host_name` - A host name with or without\
     \ domain part. IP addresses are also allowed.\n  * `folder` - The folder identifier.\n\
     \nOptional arguments:\n\n  * `attributes`\n  * `nodes`\n\n<SchemaDefinition schemaRef=\"\
     #/components/schemas/CreateHost\" showReadOnly={true} showWriteOnly={true} />"

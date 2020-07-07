@@ -34,12 +34,12 @@ from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
 def create_host(params):
     """Create a host"""
     body = params['body']
-    hostname = body['hostname']
+    host_name = body['host_name']
     folder_id = body['folder']
     attributes = body.get('attributes', {})
     cluster_nodes = body.get('nodes', [])
 
-    check_hostname(hostname, should_exist=False)
+    check_hostname(host_name, should_exist=False)
     for node in cluster_nodes:
         check_hostname(node, should_exist=True)
 
@@ -50,9 +50,9 @@ def create_host(params):
     else:
         folder = load_folder(folder_id, status=400)
 
-    folder.create_hosts([(hostname, attributes, cluster_nodes)])
+    folder.create_hosts([(host_name, attributes, cluster_nodes)])
 
-    host = watolib.Host.host(hostname)
+    host = watolib.Host.host(host_name)
     return _serve_host(host)
 
 
@@ -77,56 +77,56 @@ def list_hosts(param):
     })
 
 
-@endpoint_schema(constructors.object_href('host_config', '{hostname}'),
+@endpoint_schema(constructors.object_href('host_config', '{host_name}'),
                  '.../update',
                  method='put',
-                 parameters=['hostname'],
+                 parameters=['host_name'],
                  etag='both',
                  request_body_required=True,
                  request_schema=request_schemas.UpdateHost,
                  response_schema=response_schemas.ConcreteHost)
 def update_host(params):
     """Update a host"""
-    hostname = params['hostname']
+    host_name = params['host_name']
     body = params['body']
     attributes = body['attributes']
-    host: watolib.CREHost = watolib.Host.host(hostname)
+    host: watolib.CREHost = watolib.Host.host(host_name)
     constructors.require_etag(constructors.etag_of_obj(host))
     validate_host_attributes(attributes, new=False)
     host.update_attributes(attributes)
     return _serve_host(host)
 
 
-@endpoint_schema(constructors.object_href('host_config', '{hostname}'),
+@endpoint_schema(constructors.object_href('host_config', '{host_name}'),
                  '.../delete',
                  method='delete',
-                 parameters=['hostname'],
+                 parameters=['host_name'],
                  etag='input',
                  request_body_required=False,
                  output_empty=True)
 def delete(params):
     """Delete a host"""
-    hostname = params['hostname']
-    check_hostname(hostname, should_exist=True)
-    host = watolib.Host.host(hostname)
+    host_name = params['host_name']
+    check_hostname(host_name, should_exist=True)
+    host = watolib.Host.host(host_name)
     constructors.require_etag(constructors.etag_of_obj(host))
     host.folder().delete_hosts([host.name()])
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_href('host_config', '{hostname}'),
+@endpoint_schema(constructors.object_href('host_config', '{host_name}'),
                  'cmk/show',
                  method='get',
-                 parameters=['hostname'],
+                 parameters=['host_name'],
                  etag='output',
                  response_schema=response_schemas.ConcreteHost)
 def show_host(params):
     """Show a host"""
-    hostname = params['hostname']
-    host = watolib.Host.host(hostname)
+    host_name = params['host_name']
+    host = watolib.Host.host(host_name)
     if host is None:
         return problem(
-            404, 'Host "%s" is not known.' % (hostname,),
+            404, f'Host "{host_name}" is not known.',
             'The host you asked for is not known. Please check for eventual misspellings.')
     return _serve_host(host)
 

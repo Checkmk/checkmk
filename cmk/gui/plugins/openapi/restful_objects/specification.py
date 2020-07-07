@@ -60,7 +60,7 @@ import apispec.utils  # type: ignore
 import apispec_oneofschema  # type: ignore
 
 from cmk.gui.plugins.openapi import plugins
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOSTNAME, IDENT, NAME, ACCEPT_HEADER
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, IDENT, NAME, ACCEPT_HEADER
 
 # Path parameters look like {varname} and need to be checked.
 
@@ -144,7 +144,7 @@ SPEC.components.security_scheme(
 # }
 SPEC.components.parameter(*ACCEPT_HEADER.spec_tuple())
 SPEC.components.parameter(*IDENT.spec_tuple())
-SPEC.components.parameter(*HOSTNAME.spec_tuple())
+SPEC.components.parameter(*HOST_NAME.spec_tuple())
 SPEC.components.parameter(*NAME.spec_tuple())
 
 

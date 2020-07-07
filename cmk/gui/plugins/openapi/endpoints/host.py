@@ -7,6 +7,7 @@ from cmk.gui import sites
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
 from cmk.gui.plugins.openapi.restful_objects import endpoint_schema, constructors, response_schemas
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
 
 
@@ -14,12 +15,7 @@ from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
                  '.../collection',
                  method='get',
                  parameters=[
-                     ParamDict.create(
-                         'host_name',
-                         'query',
-                         required=False,
-                         schema_type='string',
-                     ).to_dict(),
+                     HOST_NAME(location='query', required=False),
                      ParamDict.create(
                          'host_alias',
                          'query',
@@ -59,9 +55,9 @@ def list_hosts(param):
         Hosts.scheduled_downtime_depth,
     ])
 
-    hostname = param.get('host_name')
-    if hostname is not None:
-        q = q.filter(Hosts.name.contains(hostname))
+    host_name = param.get('host_name')
+    if host_name is not None:
+        q = q.filter(Hosts.name.contains(host_name))
 
     alias = param.get('host_alias')
     if alias is not None:

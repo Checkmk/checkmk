@@ -104,13 +104,13 @@ def show_services(params):
     return _serve_services(host, discovery_result.check_table, params["discovery_state"])
 
 
-@endpoint_schema('/objects/host/{hostname}/service/{service_hash}/action/move/{target_state}',
+@endpoint_schema('/objects/host/{host_name}/service/{service_hash}/action/move/{target_state}',
                  '.../modify',
                  method='put',
                  output_empty=True,
-                 parameters=["hostname", DISCOVERY_SERVICE_HASH, DISCOVERY_TARGET_STATE])
+                 parameters=["host_name", DISCOVERY_SERVICE_HASH, DISCOVERY_TARGET_STATE])
 def move_service(params):
-    host = watolib.Host.host(params["hostname"])
+    host = watolib.Host.host(params["host_name"])
     discovery_request = {
         "update_target": params["target_state"],
         "update_services": [params["service_hash"]]
@@ -129,13 +129,13 @@ def move_service(params):
     return Response(status=204)
 
 
-@endpoint_schema('/objects/host/{hostname}/actions/discover-services/mode/{discover_mode}',
+@endpoint_schema('/objects/host/{host_name}/actions/discover-services/mode/{discover_mode}',
                  '.../update',
                  method='post',
                  output_empty=True,
-                 parameters=["hostname", DISCOVERY_MODE])
+                 parameters=["host_name", DISCOVERY_MODE])
 def execute(params):
-    host = watolib.Host.host(params["hostname"])
+    host = watolib.Host.host(params["host_name"])
     discovery_request = StartDiscoveryRequest(host=host,
                                               folder=host.folder(),
                                               options=DiscoveryOptions(

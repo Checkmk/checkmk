@@ -6,13 +6,13 @@
 
 from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
 
-HOSTNAME_REGEXP = '[-0-9a-zA-Z_.]+'
-HOSTNAME = ParamDict.create(
-    'hostname',
+HOST_NAME_REGEXP = '[-0-9a-zA-Z_.]+'
+HOST_NAME = ParamDict.create(
+    'host_name',
     'path',
     description="A hostname.",
     example='example.com',
-    schema_string_pattern=HOSTNAME_REGEXP,
+    schema_string_pattern=HOST_NAME_REGEXP,
 )
 
 IDENT = ParamDict.create(

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from marshmallow import Schema, fields  # type: ignore[import]
 
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOSTNAME_REGEXP
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME_REGEXP
 
 
 class InputAttribute(Schema):
@@ -18,7 +18,7 @@ class CreateHost(Schema):
 
     Required arguments:
 
-      * `hostname` - A host name with or without domain part. IP addresses are also allowed.
+      * `host_name` - A host name with or without domain part. IP addresses are also allowed.
       * `folder` - The folder identifier.
 
     Optional arguments:
@@ -26,10 +26,10 @@ class CreateHost(Schema):
       * `attributes`
       * `nodes`
     """
-    hostname = fields.String(
+    host_name = fields.String(
         description="The hostname or IP address itself.",
         required=True,
-        pattern=HOSTNAME_REGEXP,
+        pattern=HOST_NAME_REGEXP,
         example="example.com",
     )
     folder = fields.String(

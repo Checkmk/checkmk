@@ -10,6 +10,7 @@ PYTEST := $(PIPENV) run py.test -vv $(PYTEST_ARGS)
 YAPF := $(PIPENV) run yapf
 THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
+FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 MYPY := $(SCRIPTS)/run-mypy
 ADDITIONAL_MYPY_ARGS :=
 
@@ -78,6 +79,8 @@ agent-plugin-unit/py26/test_%.py: agent-plugin-unit/test_%.py
 $(foreach VERS,$(filter 2.%,$(PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 
 $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
+	# Clean up auto-generated files, which do not have a corresponding source file anymore
+	flock ./agent-plugin-unit $(FIND_INVALID_TEST_FILES)
 	# Recursive Makefiles suck big time...
 	flock ../agents/plugins $(MAKE) -C ../agents/plugins
 	PYTHON_VERSION="$(patsubst test-agent-plugin-unit-py%-docker,%,$@)" ; \

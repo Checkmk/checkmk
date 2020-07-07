@@ -354,11 +354,7 @@ def get_cmk_passive_service_attributes(config_cache: ConfigCache, host_config: H
     attrs = get_service_attributes(host_config.hostname, service.description, config_cache,
                                    service.check_plugin_name, service.parameters)
 
-    value = host_config.snmp_check_interval(config_cache.section_name_of(service.check_plugin_name))
-    if value is not None:
-        attrs["check_interval"] = value
-    else:
-        attrs["check_interval"] = check_mk_attrs["check_interval"]
+    attrs["check_interval"] = check_mk_attrs["check_interval"]
 
     return attrs
 

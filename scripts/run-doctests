@@ -29,7 +29,7 @@ PIPENV="$REPO_PATH/scripts/run-pipenv"
 
 pushd $REPO_PATH > /dev/null
 
-$PIPENV 3 run python -m doctest $FILES
+$PIPENV run python -m doctest $FILES
 popd > /dev/null
 
 exit 0

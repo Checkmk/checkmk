@@ -22,7 +22,10 @@ def parse_juniper_cpu_util(info):
 
 def inventory_juniper_cpu_util(parsed):
     for descr, util in parsed.items():
-        if 'Routing Engine' in descr:
+        if util > 0:
+            # JUNIPER-MIB::jnxOperatingCPU
+            # The CPU utilization in percentage of this
+            # subject. Zero if unavailable or inapplicable.
             yield descr, {}
 
 

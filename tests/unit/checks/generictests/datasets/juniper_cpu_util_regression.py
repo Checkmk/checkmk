@@ -14,7 +14,8 @@ info = [
     ['TFEB Intake temperature sensor 2', '0']
 ]
 
-discovery = {'': [('Routing Engine 1', {}), ('Routing Engine 2', {})]}
+
+discovery = {'': [('Routing Engine 1', {}), ('Routing Engine 2', {}), ('TFEB Intake temperature sensor', {})]}
 
 checks = {
     '': [

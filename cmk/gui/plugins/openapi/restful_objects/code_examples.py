@@ -3,19 +3,29 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Generate code-examples for the documentation.
+
+To add a new example (new language, library, etc.), a new Jinja2-Template has to be written and
+be referenced in the result of _build_code_templates.
+
+"""
 import collections
 import json
 import re
 import threading
-from typing import Dict, List
+from typing import Dict, List, Sequence
 
 import jinja2
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
+from marshmallow import Schema  # type: ignore[import]
 
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
+    AnyParameter,
+    AnyParameterAndReference,
     fill_out_path_template,
     HTTPMethod,
+    LocationType,
     OperationSpecType,
     ParamDict,
     RequestSchema,
@@ -27,6 +37,20 @@ CODE_TEMPLATE_CURL = """
 API_URL = "http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
 USERNAME = "..."
 PASSWORD = "..."
+{%- macro show_query_params(params) %}
+{%- if params %}
+{%- for param in params %}
+{%- if 'example' not in param %}
+    {%- continue %}
+{%- endif %}
+{%- if not loop.first %}&{% endif %}
+{{- param['name'] }}={{ param['example'] }}
+{%- endfor %}
+{%- endif %}
+{%- endmacro %}{%- if query_params %}
+
+QUERY_STRING="{{ show_query_params(query_params) }}"
+{%- endif %}
 
 curl \\
     -X {{ request_method | upper }} \\
@@ -40,15 +64,30 @@ curl \\
             to_json(indent=2, sort_keys=True) |
             indent(skip_lines=1, spaces=8) }}' \\
 {%- endif %}
-    "$API_URL{{ request_endpoint | fill_out_parameters }}"
+    "$API_URL{{ request_endpoint | fill_out_parameters }}{% if query_params %}?$QUERY_STRING{% endif %}"
 """
 
 CODE_TEMPLATE_HTTPIE = """
 API_URL = "http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
 USERNAME = "..."
 PASSWORD = "..."
+{%- macro show_query_params(params) %}
+{%- if params %}
+{%- for param in params %}
+{%- if 'example' not in param %}
+    {%- continue %}
+{%- endif %}
+{%- if not loop.first %}&{% endif %}
+{{- param['name'] }}={{ param['example'] }}
+{%- endfor %}
+{%- endif %}
+{%- endmacro %}{% if query_params %}
 
-http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
+QUERY_STRING="{{ show_query_params(query_params) }}"
+{%- endif %}
+
+http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}{%
+    if query_params %}?$QUERY_STRING{% endif %}" \\
     "Authorization: Bearer $USERNAME $PASSWORD"
 {%- for header in headers %} \\
     '{{ header['name'] }}: {{ header['example'] }}'{% if not loop.last %} \\{% endif %}
@@ -71,27 +110,36 @@ session.headers['Accept'] = 'application/json'
 # Replace HOST_NAME and SITE_NAME with the names from your host and site.
 API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'
 
+{%- macro show_params(name, params, comment=None) %}
+{%- if params %}
+    {{ name }}={ {%- if comment %}  # {{ comment }}{% endif %}
+{%- for param in params %}{% if 'example' not in param %}{% continue %}{% endif %}
+        "{{ param['name'] }}": "{{
+            param['example'] }}",{% if 'description' in param and param['description'] %}  #
+        {%- if param['required'] %} (required){% endif %} {{
+            param['description'] | first_sentence }}{% endif %}
+{%- endfor %}
+    },
+{%- endif %}
+{%- endmacro %}
+
 resp = session.{{ method }}(
     API_URL + "{{ request_endpoint | fill_out_parameters }}",
-{%- for header in headers %}
-{%- if loop.first %}
-    headers={ {% endif %}
-        "{{ header['name'] }}": "{{ header['example'] }}",{% if header['description'] %}  #
-        {%- if header['required'] %} (required){% endif %} {{
-        header['description'] | first_sentence }}{% endif %}
-{%- if loop.last %}
-    },{% endif %}{% endfor %}{% if request_schema %}
-    {% if method == "get" %}params{% else %}json{% endif %}={{
+    {{- show_params("params", query_params, comment="goes into query string") }}
+    {{- show_params("headers", headers) }}
+    {%- if request_schema %}
+    json={{
             request_schema |
             to_dict |
             to_json(indent=4, sort_keys=True) |
-            indent(skip_lines=1, spaces=4) }},{% endif %}
+            indent(skip_lines=1, spaces=4) }},
+    {%- endif %}
 )
 resp.raise_for_status()
 """
 
 
-def to_env(value):
+def _to_env(value):
     if isinstance(value, (list, dict)):
         return json.dumps(value)
 
@@ -121,17 +169,37 @@ def first_sentence(text):
     return ''.join(re.split(r'(\w\.)', text)[:2])
 
 
-def to_dict(schema):
+def to_dict(schema: Schema) -> Dict[str, str]:
+    """Convert a Schema-class to a dict-representation.
+
+    Examples:
+
+        >>> from marshmallow import Schema, fields
+        >>> class SayHello(Schema):
+        ...      message = fields.String(example="Hello world!")
+        >>> to_dict(SayHello())
+        {'message': 'Hello world!'}
+
+        >>> class Nobody(Schema):
+        ...      expects = fields.String()
+        >>> to_dict(Nobody())
+        Traceback (most recent call last):
+        ...
+        KeyError: "Schema 'Nobody.expects' has no example."
+
+    Args:
+        schema:
+            A Schema instance with all it's fields having an `example` key.
+
+    Returns:
+        A dict with the field-names as a key and their example as value.
+
+    """
     ret = {}
     for name, field in schema.fields.items():
-        try:
-            ret[name] = field.metadata['example']
-        except KeyError:
-            raise KeyError("%s.%s has no example (%r)" % (
-                schema.__class__.__name__,
-                name,
-                field,
-            ))
+        if 'example' not in field.metadata:
+            raise KeyError(f"Schema '{schema.__class__.__name__}.{name}' has no example.")
+        ret[name] = field.metadata['example']
     return ret
 
 
@@ -197,11 +265,10 @@ def code_samples(  # pylint: disable=dangerous-default-value
             if not code_templates:
                 code_templates.append(_build_code_templates())
 
-    headers = []
     parameters = operation_spec.get('parameters', [])
-    for param in parameters:
-        if isinstance(param, dict) and param['in'] == 'header':
-            headers.append(param)
+
+    headers = _filter_params(parameters, 'header')
+    query_params = _filter_params(parameters, 'query')
 
     return [{
         'lang': language,
@@ -212,8 +279,20 @@ def code_samples(  # pylint: disable=dangerous-default-value
                             if request_schema is not None else None),
             endpoint_parameters=_transform_params(parameters),
             headers=headers,
+            query_params=query_params,
         ).strip(),
     } for language, template in code_templates[0].items()]
+
+
+def _filter_params(
+    parameters: Sequence[AnyParameterAndReference],
+    param_location: LocationType,
+) -> Sequence[AnyParameter]:
+    query_parameters = []
+    for param in parameters:
+        if isinstance(param, (dict, ParamDict)) and param['in'] == param_location:
+            query_parameters.append(param)
+    return query_parameters
 
 
 def _build_code_templates():
@@ -228,15 +307,17 @@ def _build_code_templates():
     ...     request_method='get',
     ...     request_schema=resolve_schema_instance('CreateHost'),
     ...     endpoint_parameters={},
+    ...     query_params=[],
     ...     headers=[],
     ... )
-    >>> assert '&' not in result
+    >>> assert '&' not in result, result
 
     """
     # NOTE:
     # This is not a security problem, as this is an Environment which accepts no data from the web
     # but is only used to fill in our code examples.
     tmpl_env = jinja2.Environment(  # nosec
+        extensions=['jinja2.ext.loopcontrols'],
         autoescape=False,  # because copy-paste we don't want HTML entities in our code examples.
         loader=jinja2.BaseLoader(),
         undefined=jinja2.StrictUndefined,
@@ -248,7 +329,7 @@ def _build_code_templates():
         first_sentence=first_sentence,
         indent=indent,
         to_dict=to_dict,
-        to_env=to_env,
+        to_env=_to_env,
         to_json=json.dumps,
     )
     # These objects will be available in the templates

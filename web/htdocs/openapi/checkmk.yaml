@@ -1081,9 +1081,9 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
-          \    API_URL + \"/objects/contact_group_config/pathname\",\n    headers={\
-          \ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of\
-          \ the object to be modified.\n    },\n)\nresp.raise_for_status()"
+          \    API_URL + \"/objects/contact_group_config/pathname\",\n    headers={\n\
+          \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
@@ -1197,10 +1197,10 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
-          \    API_URL + \"/objects/contact_group_config/pathname\",\n    headers={\
-          \ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of\
-          \ the object to be modified.\n    },\n    json={\n        \"alias\": \"\
-          Not on Sundays.\",\n        \"name\": \"OnCall\"\n    },\n)\nresp.raise_for_status()"
+          \    API_URL + \"/objects/contact_group_config/pathname\",\n    headers={\n\
+          \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n    json={\n        \"alias\": \"Not on\
+          \ Sundays.\",\n        \"name\": \"OnCall\"\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
@@ -1487,7 +1487,7 @@ paths:
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
           \    API_URL + \"/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
-          ,\n    headers={ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
           \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
@@ -1605,7 +1605,7 @@ paths:
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
           \    API_URL + \"/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
-          ,\n    headers={ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
           \ The ETag of the object to be modified.\n    },\n    json={\n        \"\
           attributes\": [\n            {\n                \"key\": \"foo\",\n    \
           \            \"value\": \"bar\"\n            }\n        ],\n        \"title\"\
@@ -1675,7 +1675,7 @@ paths:
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
           \    API_URL + \"/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
-          ,\n    headers={ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
           \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
@@ -1758,15 +1758,20 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
-          \    API_URL + \"/domain-types/host/collections/all\",\n)\nresp.raise_for_status()"
+          \    API_URL + \"/domain-types/host/collections/all\",\n    params={  #\
+          \ goes into query string\n        \"host_name\": \"example.com\",  # Host\
+          \ name\n        \"acknowledged\": \"1\",  # Whether the current problem\
+          \ has been acknowledged (0/1)\n        \"in_downtime\": \"0\",  # Whether\
+          \ the host is currently in a downtime (0/1)\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
-          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    \"$API_URL/domain-types/host/collections/all\""
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"host_name=example.com&acknowledged=1&in_downtime=0\"\
+          \n\ncurl \\\n    -X GET \\\n    --header \"Authorization: Bearer $USERNAME\
+          \ $PASSWORD\" \\\n    --header \"Accept: application/json\" \\\n    \"$API_URL/domain-types/host/collections/all?$QUERY_STRING\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/domain-types/host/collections/all\"\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"host_name=example.com&acknowledged=1&in_downtime=0\"\
+          \n\nhttp GET \"$API_URL/domain-types/host/collections/all?$QUERY_STRING\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /domain-types/host_config/collections/all:
     get:
@@ -1901,8 +1906,8 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
-          \    API_URL + \"/objects/host_config/example.com\",\n    headers={ \n \
-          \       \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \    API_URL + \"/objects/host_config/example.com\",\n    headers={\n  \
+          \      \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
           \ object to be modified.\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
@@ -2017,8 +2022,8 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
-          \    API_URL + \"/objects/host_config/example.com\",\n    headers={ \n \
-          \       \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \    API_URL + \"/objects/host_config/example.com\",\n    headers={\n  \
+          \      \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
           \ object to be modified.\n    },\n    json={\n        \"attributes\": {},\n\
           \        \"nodes\": [\n            \"host1\",\n            \"host2\",\n\
           \            \"host3\"\n        ]\n    },\n)\nresp.raise_for_status()"
@@ -2165,7 +2170,7 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
-          \    API_URL + \"/objects/host_group_config/pathname\",\n    headers={ \n\
+          \    API_URL + \"/objects/host_group_config/pathname\",\n    headers={\n\
           \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
           \ object to be modified.\n    },\n)\nresp.raise_for_status()"
       - lang: curl
@@ -2281,7 +2286,7 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
-          \    API_URL + \"/objects/host_group_config/pathname\",\n    headers={ \n\
+          \    API_URL + \"/objects/host_group_config/pathname\",\n    headers={\n\
           \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
           \ object to be modified.\n    },\n    json={\n        \"alias\": \"Windows\
           \ Servers\",\n        \"name\": \"windows\"\n    },\n)\nresp.raise_for_status()"
@@ -2363,16 +2368,19 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
-          \    API_URL + \"/objects/host/example.com/collections/services\",\n)\n\
-          resp.raise_for_status()"
+          \    API_URL + \"/objects/host/example.com/collections/services\",\n   \
+          \ params={  # goes into query string\n        \"host_alias\": \"example\"\
+          ,\n        \"acknowledged\": \"0\",\n        \"in_downtime\": \"1\",\n \
+          \       \"status\": \"0\",\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
-          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    \"$API_URL/objects/host/example.com/collections/services\""
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"host_alias=example&acknowledged=0&in_downtime=1&status=0\"\
+          \n\ncurl \\\n    -X GET \\\n    --header \"Authorization: Bearer $USERNAME\
+          \ $PASSWORD\" \\\n    --header \"Accept: application/json\" \\\n    \"$API_URL/objects/host/example.com/collections/services?$QUERY_STRING\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/host/example.com/collections/services\"\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"host_alias=example&acknowledged=0&in_downtime=1&status=0\"\
+          \n\nhttp GET \"$API_URL/objects/host/example.com/collections/services?$QUERY_STRING\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /domain-types/service/collections/all:
     get:
@@ -2440,15 +2448,20 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
-          \    API_URL + \"/domain-types/service/collections/all\",\n)\nresp.raise_for_status()"
+          \    API_URL + \"/domain-types/service/collections/all\",\n    params={\
+          \  # goes into query string\n        \"host_name\": \"example.com\",  #\
+          \ A hostname.\n        \"host_alias\": \"example\",\n        \"acknowledged\"\
+          : \"0\",\n        \"in_downtime\": \"1\",\n        \"status\": \"0\",\n\
+          \    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
-          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    \"$API_URL/domain-types/service/collections/all\""
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"host_name=example.com&host_alias=example&acknowledged=0&in_downtime=1&status=0\"\
+          \n\ncurl \\\n    -X GET \\\n    --header \"Authorization: Bearer $USERNAME\
+          \ $PASSWORD\" \\\n    --header \"Accept: application/json\" \\\n    \"$API_URL/domain-types/service/collections/all?$QUERY_STRING\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/domain-types/service/collections/all\"\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"host_name=example.com&host_alias=example&acknowledged=0&in_downtime=1&status=0\"\
+          \n\nhttp GET \"$API_URL/domain-types/service/collections/all?$QUERY_STRING\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /domain-types/service/collections/services:
     get:
@@ -2501,15 +2514,20 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
-          \    API_URL + \"/domain-types/service/collections/services\",\n)\nresp.raise_for_status()"
+          \    API_URL + \"/domain-types/service/collections/services\",\n    params={\
+          \  # goes into query string\n        \"host\": \"example.com\",  # (required)\
+          \ Optionally the hostname for which a certain agent has been configured.\n\
+          \        \"discovery_state\": \"monitored\",  # (required) The discovery\
+          \ state of the services.\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
-          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    \"$API_URL/domain-types/service/collections/services\""
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"host=example.com&discovery_state=monitored\"\
+          \n\ncurl \\\n    -X GET \\\n    --header \"Authorization: Bearer $USERNAME\
+          \ $PASSWORD\" \\\n    --header \"Accept: application/json\" \\\n    \"$API_URL/domain-types/service/collections/services?$QUERY_STRING\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/domain-types/service/collections/services\"\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"host=example.com&discovery_state=monitored\"\
+          \n\nhttp GET \"$API_URL/domain-types/service/collections/services?$QUERY_STRING\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /objects/host/{host_name}/service/{service_hash}/action/move/{target_state}:
     put:
@@ -2741,9 +2759,9 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
-          \    API_URL + \"/objects/service_group_config/pathname\",\n    headers={\
-          \ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of\
-          \ the object to be modified.\n    },\n)\nresp.raise_for_status()"
+          \    API_URL + \"/objects/service_group_config/pathname\",\n    headers={\n\
+          \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
@@ -2857,10 +2875,10 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
-          \    API_URL + \"/objects/service_group_config/pathname\",\n    headers={\
-          \ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of\
-          \ the object to be modified.\n    },\n    json={\n        \"alias\": \"\
-          Environment Sensors\",\n        \"name\": \"environment\"\n    },\n)\nresp.raise_for_status()"
+          \    API_URL + \"/objects/service_group_config/pathname\",\n    headers={\n\
+          \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n    json={\n        \"alias\": \"Environment\
+          \ Sensors\",\n        \"name\": \"environment\"\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
@@ -3207,16 +3225,20 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
-          \    API_URL + \"/objects/agent/80e99ba3a66d4880\",\n)\nresp.raise_for_status()"
+          \    API_URL + \"/objects/agent/80e99ba3a66d4880\",\n    params={  # goes\
+          \ into query string\n        \"os_type\": \"linux_tgz\",  # The type of\
+          \ the operating system.\n        \"host_name\": \"example.com\",  # A hostname.\n\
+          \    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
-          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    \"$API_URL/objects/agent/80e99ba3a66d4880\""
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"os_type=linux_tgz&host_name=example.com\"\
+          \n\ncurl \\\n    -X GET \\\n    --header \"Authorization: Bearer $USERNAME\
+          \ $PASSWORD\" \\\n    --header \"Accept: application/json\" \\\n    \"$API_URL/objects/agent/80e99ba3a66d4880?$QUERY_STRING\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/agent/80e99ba3a66d4880\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"os_type=linux_tgz&host_name=example.com\"\
+          \n\nhttp GET \"$API_URL/objects/agent/80e99ba3a66d4880?$QUERY_STRING\" \\\
+          \n    \"Authorization: Bearer $USERNAME $PASSWORD\""
 security:
 - BearerAuth: []
 tags:

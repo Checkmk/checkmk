@@ -47,7 +47,7 @@ addons:
             - librrd-dev
 install:
     - pip install pipenv
-    - make -C .venv
+    - make .venv
 script:
     # TODO: Some tests could be optimized for better execution time. For
     # example test-format-python optionally checks only the files in set in

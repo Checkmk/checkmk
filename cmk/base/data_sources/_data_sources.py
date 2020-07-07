@@ -248,7 +248,7 @@ class DataSources(collections.abc.Collection):
                 source.set_max_cachefile_age(max_cachefile_age)
                 host_sections = multi_host_sections.setdefault(
                     HostKey(hostname, ipaddress, source.source_type),
-                    AgentHostSections(),
+                    source._empty_host_sections(),
                 )
                 host_sections.update(source.run())
 
@@ -297,7 +297,7 @@ class DataSources(collections.abc.Collection):
                 hostname,
                 ipaddress,
                 sources=make_sources(
-                    host_config,
+                    HostConfig.make_host_config(hostname),
                     ipaddress,
                     selected_raw_sections=selected_raw_sections,
                 ),

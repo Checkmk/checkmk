@@ -65,7 +65,7 @@ class SNMPHostSections(AbstractHostSections[SNMPRawData, SNMPSections, SNMPPersi
 
     def _extend_section(self, section_name: SectionName,
                         section_content: SNMPSectionContent) -> None:
-        raise NotImplementedError()
+        self.sections.setdefault(section_name, []).extend(section_content)  # type: ignore
 
 
 class CachedSNMPDetector:

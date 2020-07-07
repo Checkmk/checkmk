@@ -18,7 +18,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
 )
 
-from cmk.gui.htmllib import HTML
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_metric

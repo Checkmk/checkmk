@@ -1209,14 +1209,26 @@ def config_set_all(site: SiteContext, ignored_hooks: list = None) -> None:
         ignored_hooks = []
 
     for hook_name in sort_hooks(list(site.conf.keys())):
-        value = site.conf[hook_name]
-        # Hooks might vanish after and up- or downdate
-        if hook_exists(site, hook_name) and hook_name not in ignored_hooks:
-            exitcode, output = call_hook(site, hook_name, ["set", value])
-            if not exitcode:
-                if output and output != value:
-                    site.conf[hook_name] = output
-                    putenv("CONFIG_" + hook_name, output)
+        # Hooks may vanish after and up- or downdate
+        if not hook_exists(site, hook_name):
+            continue
+
+        if hook_name in ignored_hooks:
+            continue
+
+        _config_set(site, hook_name)
+
+
+def _config_set(site: SiteContext, hook_name: str) -> None:
+    value = site.conf[hook_name]
+
+    exitcode, output = call_hook(site, hook_name, ["set", value])
+    if exitcode:
+        return
+
+    if output and output != value:
+        site.conf[hook_name] = output
+        putenv("CONFIG_" + hook_name, output)
 
 
 def config_set_value(site: SiteContext,
@@ -2404,14 +2416,29 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     initialize_livestatus_tcp_tls_after_update(site)
     initialize_site_ca(site)
 
+    # Let hooks of the new(!) version do their work and update configuration.  Explicitly skip the
+    # CORE hook here, because it executes "cmk -U" which needs the tmpfs to be mounted first (is
+    # done in the next step).
+    #
+    # We can not simply move config_set_all after prepare_and_populate_tmpfs, because
+    # prepare_and_populate_tmpfs needs this to be executed, because it may introduce new config
+    # variables and set their default setting during update
+    #
+    # The CORE hook is explicitly called after prepare_and_populate_tmpfs.
+    #
+    # TODO: We should check whether or not we can mount the "cmk" command from the CORE hook to
+    # another place. Then we could really execute all hooks here.
+    config_set_all(site, ignored_hooks=["CORE"])
+
     # Before the hooks can be executed the tmpfs needs to be mounted, e.g. the Checkmk configuration
     # is being updated (cmk -U). This requires access to the initialized tmpfs.
     prepare_and_populate_tmpfs(version_info, site)
 
+    # Now executed the postponed CORE hook
+    _config_set(site, "CORE")
+
     call_scripts(site, 'update-pre-hooks')
 
-    # Let hooks of the new(!) version do their work and update configuration.
-    config_set_all(site)
     save_site_conf(site)
 
     call_scripts(site, 'post-update')

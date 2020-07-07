@@ -32,6 +32,7 @@ from six import ensure_binary
 import livestatus
 
 from cmk.utils.check_utils import (
+    ensure_management_name,
     is_management_name,
     maincheckify,
     unwrap_parameters,
@@ -1073,8 +1074,34 @@ def _find_candidates(mhs: MultiHostSections) -> Set[CheckPluginName]:
     address the question wether or not the returned check plugins will
     discover something.
 
+    We have to consider both the host, and the management board as source
+    type. Note that the determination of the plugin names is not quite
+    symmetric: For the host, we filter out all management plugins,
+    for the management board we create management variants from all
+    plugins that are not allready designed for management boards.
+
     """
-    raw_section_names = {name for node_data in mhs.values() for name in node_data.sections}
+
+    return {
+        # *filter out* all names of management only check plugins
+        n
+        for n in _find_candidates_by_source_type(mhs, SourceType.HOST)
+        if not is_management_name(n)
+    } | {
+        # *create* all management only names of the plugins
+        ensure_management_name(n)
+        for n in _find_candidates_by_source_type(mhs, SourceType.MANAGEMENT)
+    }
+
+
+def _find_candidates_by_source_type(
+    mhs: MultiHostSections,
+    source_type: SourceType,
+) -> Set[CheckPluginName]:
+    raw_section_names = {
+        name for node_key, node_data in mhs.items() if node_key.source_type == source_type
+        for name in node_data.sections
+    }
 
     raw_sections = [(name, config.get_registered_section_plugin(name)) for name in raw_section_names
                    ]
@@ -1191,11 +1218,10 @@ def _execute_discovery(
         console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
         return
 
-    # TODO (mo): for now. the plan is to create management versions on the fly.
     host_key = HostKey(
         hostname,
         ipaddress,
-        SourceType.MANAGEMENT if is_management_name(check_plugin_name) else SourceType.HOST,
+        SourceType.MANAGEMENT if is_management_name(check_plugin.name) else SourceType.HOST,
     )
 
     try:

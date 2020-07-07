@@ -8,6 +8,10 @@
 
 import pytest  # type: ignore[import]
 
+from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType
+
+from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
+from cmk.base.data_sources.agent import AgentHostSections
 import cmk.base.discovery as discovery
 from cmk.base.discovered_labels import ServiceLabel, DiscoveredServiceLabels
 import cmk.base.config as config
@@ -702,3 +706,45 @@ def test__get_service_filters_lists(parameters, new_whitelist, new_blacklist, va
     service_filters = discovery.get_service_filter_funcs(parameters)
     assert service_filters.new is not None
     assert service_filters.vanished is not None
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test__find_candidates():
+    mhs = MultiHostSections()
+    mhs._data = {
+        # we just care about the keys here, content set to [] for simplicity
+        # section names have been are chosen arbitrarily.
+        # any HostSections type is fine.
+        HostKey("test_node", "1.2.3.4", SourceType.HOST): AgentHostSections({
+            SectionName("kernel"): [],  # host only
+            SectionName("uptime"): [],  # host & mgmt
+        }),
+        HostKey("test_node", "1.2.3.4", SourceType.MANAGEMENT): AgentHostSections({
+            SectionName("uptime"): [],  # host & mgmt
+            SectionName("liebert_fans"): [],  # mgmt only
+            SectionName("mgmt_snmp_info"): [],  # is already mgmt_ prefixed
+        }),
+    }
+
+    assert discovery._find_candidates_by_source_type(mhs, SourceType.HOST) == {
+        CheckPluginName("kernel"),
+        CheckPluginName('kernel_performance'),
+        CheckPluginName('kernel_util'),
+        CheckPluginName("uptime"),
+    }
+
+    assert discovery._find_candidates_by_source_type(mhs, SourceType.MANAGEMENT) == {
+        CheckPluginName("liebert_fans"),
+        CheckPluginName("uptime"),
+        CheckPluginName("mgmt_snmp_info"),
+    }
+
+    assert discovery._find_candidates(mhs) == {
+        CheckPluginName("kernel"),
+        CheckPluginName('kernel_performance'),
+        CheckPluginName('kernel_util'),
+        CheckPluginName("uptime"),
+        CheckPluginName("mgmt_liebert_fans"),
+        CheckPluginName("mgmt_uptime"),
+        CheckPluginName("mgmt_snmp_info"),  # not mgmt_mgmt_...
+    }

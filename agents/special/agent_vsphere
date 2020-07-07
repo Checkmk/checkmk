@@ -1248,8 +1248,7 @@ def encode_url(text):
     return text
 
 
-def output_aggregated_snapshots(vms, hostsystems=None):
-
+def output_aggregated_snapshots(vms, time_reference, hostsystems=None):
     aggregated = {}
     for data in vms.itervalues():
         if hostsystems is not None:
@@ -1263,6 +1262,7 @@ def output_aggregated_snapshots(vms, hostsystems=None):
     for piggytarget, sn_list in aggregated.iteritems():
         output('<<<<%s>>>>' % piggytarget)
         output('<<<esx_vsphere_vm>>>')
+        output('time_reference %d' % time_reference)
         output('snapshot.rootSnapshotList %s' % '|'.join(sn_list))
         output('<<<<>>>>')
 
@@ -1576,12 +1576,13 @@ def fetch_virtual_machines(connection, hostsystems, datastores):
     return vms, vm_esx_host
 
 
-def output_virtual_machines(vms):
+def output_virtual_machines(vms, time_reference):
     for key in sorted(vms.keys()):
         data = vms[key]
         if data.get("name"):
             output("<<<<%s>>>>" % convert_hostname(key))
             output("<<<esx_vsphere_vm>>>")
+            output("time_reference %d" % time_reference)
             for entry in sorted(data.items()):
                 output("%s %s" % entry)
 
@@ -1612,6 +1613,12 @@ def process_clusters(connection, vm_esx_host):
             output("%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)))
             output("%s\tvms\t%s\t%s" %
                    (datacenter, cluster[1], "\t".join(map(convert_hostname, cluster_vms))))
+
+
+def _retrieve_utc_system_time(connection):
+    response = connection.query_server(telegram_list["systemtime"])
+    elements = get_pattern('<returnval>(.*)</returnval>', response)
+    return int(time.mktime(time.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ"))) if elements else 0
 
 
 def fetch_data(connection):
@@ -1658,13 +1665,14 @@ def fetch_data(connection):
     ###########################
     vm_esx_host = {}
     if "virtualmachine" in query_objects:
+        time_reference = _retrieve_utc_system_time(connection)
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores)
-        output_virtual_machines(vms)
+        output_virtual_machines(vms, time_reference)
 
         if opt_snapshot_display == 'esxhost':
-            output_aggregated_snapshots(vms, hostsystems)
+            output_aggregated_snapshots(vms, time_reference, hostsystems)
         elif opt_snapshot_display == 'vCenter':
-            output_aggregated_snapshots(vms)
+            output_aggregated_snapshots(vms, time_reference)
 
     # TODO: Where is the related piggyback open tag?
     output("<<<<>>>>")

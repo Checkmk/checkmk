@@ -26,7 +26,7 @@ checks = {
             (0, 'Powered on: VM-Snapshot 12.06.2019 10:56 UTC+02:00'),
             (0, 'Latest: VM-Snapshot 12.06.2019 10:56 UTC+02:00 2019-06-12 08:57:55', []),
             (2, 'Age of oldest: 10 d (warn/crit at 30.0 s/60 m)', [
-                ('age_oldest', 891545.0, 30, 3600, None, None),
+                ('age_oldest', 884345, 30, 3600, None, None),
             ]),
         ]),
     ],

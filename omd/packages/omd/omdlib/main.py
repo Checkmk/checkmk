@@ -2396,6 +2396,14 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     create_version_symlink(site, to_version)
     save_version_meta_data(site, to_version)
 
+    # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
+    # new settings and default values.
+    site.load_config()
+
+    # Execute some builtin initializations before executing the update-pre-hooks
+    initialize_livestatus_tcp_tls_after_update(site)
+    initialize_site_ca(site)
+
     # Before the hooks can be executed the tmpfs needs to be mounted, e.g. the Checkmk configuration
     # is being updated (cmk -U). This requires access to the initialized tmpfs.
     prepare_and_populate_tmpfs(version_info, site)
@@ -2403,12 +2411,7 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     call_scripts(site, 'update-pre-hooks')
 
     # Let hooks of the new(!) version do their work and update configuration.
-    # For this we need to refresh the site configuration, because new hooks
-    # may introduce new settings and default values.
-    site.load_config()
     config_set_all(site)
-    initialize_livestatus_tcp_tls_after_update(site)
-    initialize_site_ca(site)
     save_site_conf(site)
 
     call_scripts(site, 'post-update')

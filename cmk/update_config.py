@@ -13,7 +13,6 @@ be called manually.",
 import re
 import os
 from pathlib import Path
-import subprocess
 import errno
 from typing import List
 import argparse
@@ -43,6 +42,8 @@ import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.htmllib as htmllib  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.globals import AppContext, RequestContext  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.http import Request  # pylint: disable=cmk-module-layer-violation
+
+import cmk.update_rrd_fs_names
 
 
 # TODO: Better make our application available?
@@ -105,21 +106,7 @@ class UpdateConfig:
             os.remove(old_config_flag)
 
         check_df_includes_use_new_metric()
-
-        # TODO: Inline update_rrd_fs_names once GUI and this script have been migrated to Python 3
-        ps = subprocess.Popen(
-            [
-                'python3',
-                os.path.join(cmk.utils.paths.lib_dir, 'python3/cmk/update_rrd_fs_names.py')
-            ],
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        if ps.stderr is None or ps.stdout is None:
-            raise Exception("Huh? Missing stderr/stdout.")
-        for line in iter(ps.stderr.readline, b''):
-            self._logger.log(VERBOSE, line.strip())
-        self._logger.log(VERBOSE, ps.stdout.read())
+        cmk.update_rrd_fs_names.update()
 
     def _rewrite_wato_tag_config(self):
         tag_config_file = cmk.gui.watolib.tags.TagConfigFile()

@@ -35,14 +35,7 @@ except ImportError:
 import cmk.utils
 import cmk.utils.debug
 
-cmk.utils.debug.enable()
-
 logger = logging.getLogger("RRD INFO Metric Migration")
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
-
-config.load_all_checks(check_api.get_check_api_context)
-config.load()
 
 CHECKS_USING_DF_INCLUDE = [
     "3par_capacity", "3par_cpgs", "3par_cpgs.usage", "3par_system", "3par_volumes", "ceph_df",
@@ -162,9 +155,21 @@ def update_service_info(config_cache, hostnames):
                 pnp_files_present |= update_files(hostname, servicedesc, service.item, 'pnp4nagios')
 
 
-def main():
+def update():
+    config.load_all_checks(check_api.get_check_api_context)
+    config.load()
+
     config_cache = config.get_config_cache()
     update_service_info(config_cache, get_hostnames(config_cache))
+
+
+def main():
+    cmk.utils.debug.enable()
+
+    logger.addHandler(logging.StreamHandler())
+    logger.setLevel(logging.DEBUG)
+
+    update()
 
 
 if __name__ == '__main__':

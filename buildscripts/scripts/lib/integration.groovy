@@ -4,7 +4,7 @@ def build(Map args) {
     def DOCKER_BUILDS = [:]
 
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        def BUILD_IMAGE = docker.image('ubuntu-19.04:' + args.DOCKER_TAG)
+        def BUILD_IMAGE = docker.image('ubuntu-20.04:' + args.DOCKER_TAG)
         BUILD_IMAGE.pull()
         // The commands are executed with the 1001:1000 UID:GID (non-root).
         // The download credentials are needed by the image build part

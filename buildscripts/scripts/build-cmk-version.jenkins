@@ -33,7 +33,7 @@ def DISTRO_LIST = DISTROS.split(' ');
 
 // We don't have the "versioning" library here. For this reason we can not use versioning.select_docker_tag.
 // Always use the default docker tag we got from the environment.
-def BUILD_IMAGE_NAME = 'ubuntu-19.04:' + DOCKER_TAG_DEFAULT
+def BUILD_IMAGE_NAME = 'ubuntu-20.04:' + DOCKER_TAG_DEFAULT
 
 println("Building for the following Distros:" + DISTRO_LIST)
 currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST + '\nFake artifacts: ' + FAKE_WINDOWS_ARTIFACTS

@@ -4,25 +4,38 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-def inventory_juniper_cpu_util(info):
-    for line in info:
-        if "Routing Engine" in line[0]:
-            yield line[0], {'levels': (80.0, 90.0)}
+# Default settings for warn/crit values
+factory_settings['juniper_cpu_default'] = {'levels': (80.0, 90.0)}
 
 
-def check_juniper_cpu_util(item, params, info):
+def parse_juniper_cpu_util(info):
+    parsed = {}
+    for raw_name, raw_util in info:
+        name = raw_name.replace('@ ', '') \
+                       .replace('/*', '') \
+                       .strip()
+        if raw_util == "":
+            continue
+        parsed[name] = int(raw_util)
+    return parsed
+
+
+def inventory_juniper_cpu_util(parsed):
+    for descr, util in parsed.items():
+        if 'Routing Engine' in descr:
+            yield descr, {}
+
+
+@get_parsed_item_data
+def check_juniper_cpu_util(item, params, util):
     if not params:
         params = {'levels': (80.0, 90.0)}
 
-    for name, util in info:
-        if name == item:
-            if util == "":
-                return 3, "Information not available"
-            return check_cpu_util(int(util), params)
+    return check_cpu_util(util, params.get('levels'))
 
 
 check_info['juniper_cpu_util'] = {
+    'parse_function': parse_juniper_cpu_util,
     'check_function': check_juniper_cpu_util,
     'inventory_function': inventory_juniper_cpu_util,
     'group': 'juniper_cpu_util',
@@ -33,8 +46,9 @@ check_info['juniper_cpu_util'] = {
     'snmp_info': (
         ".1.3.6.1.4.1.2636.3.1.13.1",
         [
-            5,  #jnxOperatingDescr
-            8,  #jnxOperatingCPU
+            5,  # jnxOperatingDescr
+            8,  # jnxOperatingCPU
         ]),
     'includes': ["cpu_util.include"],
+    'default_levels_variable': 'juniper_cpu_default',
 }

@@ -428,6 +428,16 @@ def get_aggregated_result(
     plugin: Optional[checking_types.CheckPlugin],
     params_function: Callable[[], checking_types.Parameters],
 ) -> Tuple[bool, bool, ServiceCheckResult]:
+    """Run the check function and aggregate the subresults
+
+    This function is also called during discovery.
+
+    Returns a triple:
+       bool: should the result be submitted to the core
+       bool: did we receive data for the plugin
+       ServiceCheckResult: The aggregated result as returned by the plugin, or a fallback
+
+    """
     if plugin is None:
         return False, True, CHECK_NOT_IMPLEMENTED
 
@@ -436,6 +446,7 @@ def get_aggregated_result(
 
     source_type = (SourceType.MANAGEMENT
                    if is_management_name(service.check_plugin_name) else SourceType.HOST)
+
     kwargs = {}
     try:
         kwargs = multi_host_sections.get_section_cluster_kwargs(
@@ -447,7 +458,20 @@ def get_aggregated_result(
             plugin.sections,
         )
 
-        if not kwargs:
+        if not kwargs and not is_management_name(service.check_plugin_name):
+            # in 1.6 some plugins where discovered for management boards, but with
+            # the regular host plugins name. In this case retry with the source type
+            # forced to MANAGEMENT:
+            kwargs = multi_host_sections.get_section_cluster_kwargs(
+                HostKey(host_config.hostname, None, SourceType.MANAGEMENT),
+                plugin.sections,
+                service.description,
+            ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
+                HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
+                plugin.sections,
+            )
+
+        if not kwargs:  # no data found
             return False, False, RECEIVED_NO_DATA
 
         if service.item is not None:

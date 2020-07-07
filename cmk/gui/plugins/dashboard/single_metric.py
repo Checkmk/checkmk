@@ -25,6 +25,7 @@ from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_m
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
 from cmk.gui.metrics import translate_perf_data
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
+from cmk.gui.exceptions import MKUserError
 
 from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
@@ -543,6 +544,9 @@ class SingleMetricDashlet(ABCFigureDashlet):
             self, json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec)),
             self._dashlet_spec["context"])
 
+        if not data:
+            raise MKUserError(None, _("There are no metrics meeting your context filters."))
+
         row = dict(zip(col_names, data[0]))
 
         site = row["site"]
@@ -553,15 +557,11 @@ class SingleMetricDashlet(ABCFigureDashlet):
         t_metrics = translate_perf_data(row["service_perf_data"], row["service_check_command"])
         chosen_metric = t_metrics.get(metric)
         if chosen_metric is None:
-            html.show_warning(_("There are no metrics meeting your context filters."))
-            warning_txt = HTML(
-                _("The given metric \"%s\" could not be found.\
-                        For the selected service \"%s\" you can choose from the following metrics:"
-                  % (metric, service)))
-            warning_txt += html.render_ul("".join(
-                [str(html.render_li(m["title"])) for m in t_metrics.values()]))
-            html.show_warning(warning_txt)
-            return
+            raise MKUserError(
+                None,
+                _("The configured metric \"%s\" could not be found. For the "
+                  "selected service \"%s\" you can choose from the following metrics: %s") %
+                (metric, service, ", ".join([m["title"] for m in t_metrics.values()])))
 
         svc_url = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
             html.urlencode(site), html.urlencode(host), html.urlencode(service))

@@ -231,7 +231,7 @@ def _create_cmk_image(client: 'docker.DockerClient', base_image_name: str, docke
         logger.info("Install Checkmk version")
         assert _exec_run(
             container,
-            ["scripts/run-pipenv", "3", "run", "/git/tests-py3/scripts/install-cmk.py"],
+            ["scripts/run-pipenv", "run", "/git/tests-py3/scripts/install-cmk.py"],
             workdir="/git",
             environment=_container_env(version),
             stream=True,

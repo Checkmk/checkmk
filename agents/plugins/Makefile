@@ -1,5 +1,5 @@
-PIPENV3 := ../../scripts/run-pipenv 3
-THREE_TO_TWO := $(PIPENV3) run 3to2
+PIPENV := ../../scripts/run-pipenv
+THREE_TO_TWO := $(PIPENV) run 3to2
 
 # New plugins are expected to all have a .py extension. This will discover them
 # automatically.  Old plugins without extension are explicitly whitelistet here

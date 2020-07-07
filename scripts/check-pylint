@@ -13,17 +13,12 @@ REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
 
 printf -v files " %s" "$@"
-PYTHON2_FILES=$(python_files 2 "$files")
 PYTHON3_FILES=$(python_files 3 "$files")
 
 if [ ! -z "$PYTHON3_FILES" ]; then
-    $PIPENV 3 run pylint $PYTHON3_FILES
+    $PIPENV run pylint $PYTHON3_FILES
 fi
 
-if [ ! -z "$PYTHON2_FILES" ]; then
-    $PIPENV 2 run pylint $PYTHON2_FILES
-fi
-
-if test -z "$PYTHON2_FILES" && test -z "$PYTHON3_FILES"; then
-    $PIPENV 3 run pylint $@
+if test -z "$PYTHON3_FILES"; then
+    $PIPENV run pylint $@
 fi

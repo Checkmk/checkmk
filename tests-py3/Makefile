@@ -5,11 +5,11 @@
 SHELL := /bin/bash -e
 SCRIPTS := ../scripts
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
-PIPENV3 := $(SCRIPTS)/run-pipenv 3
-PYTEST := $(PIPENV3) run py.test -vv $(PYTEST_ARGS)
-YAPF := $(PIPENV3) run yapf
-THREE_TO_TWO := $(PIPENV3) run 3to2
-BANDIT := $(PIPENV3) run bandit
+PIPENV := $(SCRIPTS)/run-pipenv
+PYTEST := $(PIPENV) run py.test -vv $(PYTEST_ARGS)
+YAPF := $(PIPENV) run yapf
+THREE_TO_TWO := $(PIPENV) run 3to2
+BANDIT := $(PIPENV) run bandit
 MYPY := $(SCRIPTS)/run-mypy
 ADDITIONAL_MYPY_ARGS :=
 
@@ -107,10 +107,10 @@ prepare-node-modules:
 	$(MAKE) -C .. node_modules/.bin/webpack
 
 test-integration-docker-debug test-composition-docker-debug: prepare-node-modules
-	$(PIPENV3) run scripts/run-dockerized.py debug
+	$(PIPENV) run scripts/run-dockerized.py debug
 
 test-composition-docker:
-	$(PIPENV3) run scripts/run-dockerized.py "test-composition"
+	$(PIPENV) run scripts/run-dockerized.py "test-composition"
 
 test-composition: prepare-node-modules
 	$(PYTEST) -p no:cov -T composition $(realpath composition)
@@ -139,13 +139,13 @@ test-gui-crawl: prepare-node-modules
 	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-crawl-docker:
-	$(PIPENV3) run scripts/run-dockerized.py "test-gui-crawl"
+	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"
 
 test-integration: prepare-node-modules
-	CI=true $(PIPENV3) run scripts/run-integration-test.py $(realpath integration)
+	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
 
 test-integration-docker:
-	$(PIPENV3) run scripts/run-dockerized.py "test-integration"
+	$(PIPENV) run scripts/run-dockerized.py "test-integration"
 
 test-mypy3:
 	$(FIND_PYTHON_FILES) 3 | \
@@ -165,7 +165,7 @@ test-packaging:
 	$(PYTEST) -T packaging packaging
 
 test-pipenv-deps:
-	$(PIPENV3) check
+	$(PIPENV) check
 
 test-pylint:
 	$(PYTEST) -T pylint pylint

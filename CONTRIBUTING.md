@@ -478,7 +478,7 @@ understand which names are really available and needed in the current namespace.
 
 The style definition file, `.style.yapf`, lives in the root directory of the
 project repository, where YAPF picks it up automatically. YAPF itself lives in
-a virtualenv managed by pipenv in `check_mk/virtual-envs/2.7/.venv`, you can run it with
+a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with
 `make format-python` or `scripts/run-pipenv run yapf`.
 
 #### Manual invocation: Single file
@@ -525,7 +525,7 @@ Configure YAPF as fixer in your `~/vimrc`. This way the file gets fixed on every
 
 ```vim
 let g:ale_fixers = {'python': ['isort', 'yapf']}
-let g:ale_python_yapf_executable = 'YOUR_REPO_PATH/check_mk/virtual-envs/3.7/.venv/bin/yapf'
+let g:ale_python_yapf_executable = 'YOUR_REPO_PATH/check_mk/.venv/bin/yapf'
 let g:ale_fix_on_save = 1
 ```
 

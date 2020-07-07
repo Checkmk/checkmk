@@ -6,14 +6,14 @@ REPO_PATH := $(realpath $(dir $(realpath $(dir $(realpath $(dir $(lastword $(MAK
 
 include $(REPO_PATH)/defines.make
 
-PIPENV3 := $(REPO_PATH)/scripts/run-pipenv 3
+PIPENV := $(REPO_PATH)/scripts/run-pipenv
 
 
 # You can set these variables from the command line, and also
 # from the environment for the first one.
 SPHINXOPTS    ?=
-SPHINXBUILD   := $(PIPENV3) run sphinx-build
-SPHINXAPIDOC  := $(PIPENV3) run sphinx-apidoc
+SPHINXBUILD   := $(PIPENV) run sphinx-build
+SPHINXAPIDOC  := $(PIPENV) run sphinx-apidoc
 BASEDIR       = $(REPO_PATH)/doc/plugin-api
 SOURCEDIR     = $(BASEDIR)/source
 BUILDDIR      = $(BASEDIR)/build

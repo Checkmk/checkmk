@@ -75,7 +75,7 @@ def execute_tests_in_container(distro_name: str, docker_tag: str, version: CMKVe
             logger.info("+-------------------------------------------------")
             logger.info("| Next steps:")
             logger.info("| ")
-            logger.info("| /git/scripts/run-pipenv 3 shell")
+            logger.info("| /git/scripts/run-pipenv shell")
             logger.info("| cd /git")
             logger.info("| ")
             logger.info("| ... start whatever test you want, for example:")
@@ -525,7 +525,7 @@ def _setup_virtual_environments(container, version):
         stream=True,
     ) == 0
 
-    assert _exec_run(container, ["test", "-d", "/git/virtual-envs/3.8/.venv"]) == 0
+    assert _exec_run(container, ["test", "-d", "/git/.venv"]) == 0
 
 
 def _cleanup_previous_virtual_environments(container, version):
@@ -535,26 +535,26 @@ def _cleanup_previous_virtual_environments(container, version):
     logger.info("Cleanup previous virtual environments")
     assert _exec_run(
         container,
-        ["rm", "-rf", "virtual-envs/3.8/.venv"],
+        ["rm", "-rf", ".venv"],
         workdir="/git",
         environment=_container_env(version),
         stream=True,
     ) == 0
 
-    assert _exec_run(container, ["test", "-n", "/virtual-envs/3.8/.venv"]) == 0
+    assert _exec_run(container, ["test", "-n", "/.venv"]) == 0
 
 
 def _persist_virtual_environments(container, version):
     logger.info("Persisting virtual environments for later use")
     assert _exec_run(
         container,
-        ["rsync", "-aR", "virtual-envs/3.8/.venv", "/"],
+        ["rsync", "-aR", ".venv", "/"],
         workdir="/git",
         environment=_container_env(version),
         stream=True,
     ) == 0
 
-    assert _exec_run(container, ["test", "-d", "/virtual-envs/3.8/.venv"]) == 0
+    assert _exec_run(container, ["test", "-d", "/.venv"]) == 0
 
 
 def _reuse_persisted_virtual_environment(container, version):

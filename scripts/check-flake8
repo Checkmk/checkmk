@@ -14,7 +14,6 @@ REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
 
 printf -v files " %s" "$@"
-PYTHON2_FILES=$(python_files 2 "$files")
 PYTHON3_FILES=$(python_files 3 "$files")
 
 # E - "errors" reported by pycodestyle
@@ -24,11 +23,6 @@ PYTHON3_FILES=$(python_files 3 "$files")
 IGNORE="--ignore E,W,F401,F841"
 
 if [ ! -z "$PYTHON3_FILES" ]; then
-    $PIPENV 3 run flake8 $IGNORE $PYTHON3_FILES
+    $PIPENV run flake8 $IGNORE $PYTHON3_FILES
 fi
-
-if [ ! -z "$PYTHON2_FILES" ]; then
-    $PIPENV 2 run flake8 $IGNORE $PYTHON2_FILES
-fi
-
 exit 0

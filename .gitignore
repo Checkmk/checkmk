@@ -47,8 +47,6 @@ doc/plugin-api/source/apidoc/
 install-sh
 missing
 mk-livestatus-*.tar.gz
-Pipfile
-Pipfile.lock
 stamp-h1
 tags
 tests/web/data/*
@@ -57,7 +55,8 @@ tests/web/data/*
 /*.wpu
 /.tmp*
 *.iml
-.venv
+.venv/
+.venv.lock
 *.gcov
 htmlcov/
 artefacts/

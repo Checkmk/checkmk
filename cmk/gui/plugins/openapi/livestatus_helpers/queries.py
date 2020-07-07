@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -13,6 +14,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
 
 
+# TODO: From a typing perspective, using __getattr__ here is a very, very bad idea. Remove this!
 class ResultRow(dict):
     """
 

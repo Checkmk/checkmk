@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -86,8 +87,8 @@ def list_hosts(param):
         entries=[
             constructors.domain_object(
                 domain_type='host',
-                title=f"{entry.name} ({entry.address})",
-                identifier=entry.name,
+                title=f"{entry['name']} ({entry['address']})",
+                identifier=entry['name'],
                 editable=False,
                 deletable=False,
             ) for entry in result

@@ -10,6 +10,8 @@ import queue
 import threading
 import time
 import traceback
+import shutil
+from pathlib import Path
 from typing import Set
 from urllib.parse import urlsplit, parse_qsl, urlunsplit, urljoin, urlencode
 
@@ -19,6 +21,10 @@ from testlib.site import get_site_factory
 from testlib.web_session import CMKWebSession
 
 logger = logging.getLogger()
+
+
+def _is_dockerized():
+    return Path("/.dockerenv").exists()
 
 
 class InvalidUrl(Exception):
@@ -363,6 +369,7 @@ class Crawler:
 
     # TODO: Better write it as report XML that can be parsed by jenkins?
     def report(self):
+        self._copy_site_files()
         self._write_report_file()
 
         if self.errors:
@@ -370,6 +377,16 @@ class Crawler:
                             (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
 
         logger.info("Done. Everything was OK.")
+
+    def _copy_site_files(self):
+        if not _is_dockerized():
+            return
+
+        shutil.copytree(self.site.path("var/log"), "%s/logs" % self.result_dir())
+
+        crash_dir = self.site.path("var/check_mk/crashes")
+        if os.path.exists(crash_dir):
+            shutil.copytree(crash_dir, "%s/crashes" % self.result_dir())
 
     def _write_report_file(self):
         with open(self.report_file() + ".tmp", "w") as f:
@@ -446,5 +463,8 @@ def test_crawl():
     logger.info("Site %s is ready!", site.id)
 
     crawler = Crawler(site)
-    crawler.crawl()
-    crawler.report()
+
+    try:
+        crawler.crawl()
+    finally:
+        crawler.report()

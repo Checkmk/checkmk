@@ -40,7 +40,7 @@ PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency, used for SFTP
 PYTHON3_MODULES_LIST += pyasn1-0.4.8.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pyasn1-modules-0.2.8.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += pycryptodomex-3.9.3.tar.gz # needed by pysnmp
-PYTHON3_MODULES_LIST += ply-3.8.tar.gz # needed by pysmi, python-active-directory
+PYTHON3_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi, python-active-directory
 PYTHON3_MODULES_LIST += pysmi-0.3.4.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pysnmp-4.4.12.tar.gz # needed by Event Console
 PYTHON3_MODULES_LIST += snmpsim-0.4.7.tar.gz # needed by SNMP integration tests
@@ -119,7 +119,7 @@ PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
 PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
 
 PYTHON3_MODULES_LIST += dnspython-1.16.0.zip  # needed by python-active-directory
-PYTHON3_MODULES_LIST += python-active-directory-1.0.3.tar.gz  # direct dependency
+PYTHON3_MODULES_LIST += python-active-directory-1.0.5.tar.gz  # direct dependency
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target

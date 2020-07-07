@@ -56,7 +56,7 @@ paramiko = "==2.6.0"  # direct dependency, used for SFTP transactions in check_s
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes
 pycryptodomex = "==3.9.3"  # needed by pysnmp
-ply = "==3.8"  # needed by pysmi, python-active-directory
+ply = "==3.11"  # needed by pysmi, python-active-directory
 pysmi = "==0.3.4"  # needed by pysnmp
 pysnmp = "==4.4.12"  # needed by Event Console
 snmpsim = "==0.4.7"  # needed by SNMP integration tests
@@ -123,7 +123,7 @@ apispec-oneofschema = "==2.1.1"
 mypy_extensions = "==0.4.3"  # direct dependency
 typing_extensions = "==3.7.4.1"  # direct dependency
 dnspython = "==1.16.0"  # needed by python-active-directory
-python-active-directory = "==1.0.3"
+python-active-directory = "==1.0.5"
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
 
 [requires]

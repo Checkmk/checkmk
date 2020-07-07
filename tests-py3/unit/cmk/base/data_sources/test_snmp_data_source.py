@@ -147,7 +147,7 @@ def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
 
     source = SNMPManagementBoardDataSource(
         hostname,
-        ip_lookup.management_board_ipaddress(hostname),
+        ip_lookup.lookup_mgmt_board_ip_address(hostname),
     )
 
     assert source._host_config.management_address == ipaddress
@@ -165,7 +165,7 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(monkeypatch):
             "management_address": "lolo"
         },
     })
-    assert ip_lookup.management_board_ipaddress("hostname") is None
+    assert ip_lookup.lookup_mgmt_board_ip_address("hostname") is None
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])

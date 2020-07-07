@@ -314,7 +314,7 @@ def verify_ipaddress(address: Optional[HostAddress]) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def management_board_ipaddress(hostname: HostName) -> Optional[HostAddress]:
+def lookup_mgmt_board_ip_address(hostname: HostName) -> Optional[HostAddress]:
     mgmt_ipaddress = config.get_config_cache().get_host_config(hostname).management_address
 
     if mgmt_ipaddress is None:

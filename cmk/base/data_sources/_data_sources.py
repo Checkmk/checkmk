@@ -114,7 +114,7 @@ class SourceBuilder:
         if protocol is None:
             return
 
-        ip_address = ip_lookup.management_board_ipaddress(self._hostname)
+        ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._hostname)
         if protocol == "snmp":
             self._add_source(
                 SNMPManagementBoardDataSource(

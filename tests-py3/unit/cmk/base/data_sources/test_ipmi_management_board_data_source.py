@@ -19,7 +19,7 @@ def test_attribute_defaults(monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
     source = IPMIManagementBoardDataSource(
         hostname,
-        ip_lookup.management_board_ipaddress(hostname),
+        ip_lookup.lookup_mgmt_board_ip_address(hostname),
     )
 
     assert source.source_type is SourceType.MANAGEMENT
@@ -45,7 +45,7 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
     })
     source = IPMIManagementBoardDataSource(
         hostname,
-        ip_lookup.management_board_ipaddress(hostname),
+        ip_lookup.lookup_mgmt_board_ip_address(hostname),
     )
 
     assert source._host_config.management_address == ipaddress

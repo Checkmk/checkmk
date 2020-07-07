@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
+
 
 # TODO: name the next new subcheck "esx_vsphere_vm" and introduce a parse function
 def esx_vsphere_vm_convert(info):
@@ -392,7 +394,10 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
     powered_on = (s.name for s in snapshots if s.state == "poweredOn")
     yield 0, "Powered on: %s" % (', '.join(powered_on) or "None")
 
-    now = time.time()
+    # if provided take the `time_reference` timestamp from server - otherwise
+    # use a UTC-timestamp - don't use time.time() here since it's local
+    now = int(data.get("time_reference", [0])[0] or  #
+              datetime.datetime.utcnow().timestamp())
     latest_snapshot = max(snapshots, key=lambda s: s.time)
     latest_timestamp = get_timestamp_human_readable(latest_snapshot.time)
     oldest_snapshot = min(snapshots, key=lambda s: s.time)
@@ -406,6 +411,7 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
         infoname="Age of latest",
         human_readable_func=get_age_human_readable,
     )
+
     if state:
         yield state, info, perf
     elif params.get("age"):

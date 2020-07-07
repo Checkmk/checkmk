@@ -1604,8 +1604,7 @@ def get_pattern(pattern, line):
     return re.findall(pattern, line, re.DOTALL) if line else []
 
 
-def get_sections_aggregated_snapshots(vms, hostsystems):
-
+def get_sections_aggregated_snapshots(vms, hostsystems, time_reference):
     aggregated: Dict[str, List[Any]] = {}
     for data in vms.values():
         if hostsystems is not None:
@@ -1620,6 +1619,7 @@ def get_sections_aggregated_snapshots(vms, hostsystems):
     for piggytarget, sn_list in aggregated.items():
         section_lines += [
             '<<<<%s>>>>' % piggytarget, '<<<esx_vsphere_vm>>>',
+            'time_reference %d' % time_reference,
             'snapshot.rootSnapshotList %s' % '|'.join(sn_list), '<<<<>>>>'
         ]
     return section_lines
@@ -1798,11 +1798,14 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     return vms, vm_esx_host
 
 
-def get_section_vm(vms):
+def get_section_vm(vms, time_reference):
     section_lines = []
     for vm_name, vm_data in sorted(vms.items()):
         if vm_data.get("name"):
-            section_lines += ["<<<<%s>>>>" % vm_name, "<<<esx_vsphere_vm>>>"]
+            section_lines += [
+                "<<<<%s>>>>" % vm_name, "<<<esx_vsphere_vm>>>",
+                'time_reference %d' % time_reference
+            ]
             section_lines.extend("%s %s" % entry for entry in sorted(vm_data.items()))
     return section_lines
 
@@ -1833,6 +1836,13 @@ def get_sections_clusters(connection, vm_esx_host, opt):
             ]
 
     return section_lines
+
+
+def _retrieve_system_time(connection):
+    response = connection.query_server('systemtime')
+    elements = get_pattern('<returnval>(.*)</returnval>', response)
+    return (int(datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ").timestamp())
+            if elements else 0)
 
 
 def fetch_data(connection, opt):
@@ -1877,11 +1887,12 @@ def fetch_data(connection, opt):
     # Virtual machines
     ###########################
     if "virtualmachine" in opt.modules:
+        time_reference = _retrieve_system_time(connection)
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
-        output += get_section_vm(vms)
+        output += get_section_vm(vms, time_reference)
 
         used_hostsystems = hostsystems if opt.snapshot_display == 'esxhost' else None
-        output += get_sections_aggregated_snapshots(vms, used_hostsystems)
+        output += get_sections_aggregated_snapshots(vms, used_hostsystems, time_reference)
     else:
         vms, vm_esx_host = {}, {}
 

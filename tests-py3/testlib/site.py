@@ -460,7 +460,7 @@ class Site:
             })
 
     def _install_test_python_modules(self):
-        venv = virtualenv_path(version=3)
+        venv = virtualenv_path()
         bin_dir = venv / "bin"
         self._copy_python_modules_from(venv / "lib/python3.8/site-packages")
 

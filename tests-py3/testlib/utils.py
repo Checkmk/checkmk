@@ -8,12 +8,12 @@
 
 import logging
 import os
+from pathlib import Path
 import pwd
 import re
 import subprocess
 import sys
-from typing import Optional, List
-from pathlib import Path
+from typing import List
 
 from six import ensure_binary, ensure_str
 
@@ -44,13 +44,8 @@ def is_managed_repo():
     return os.path.exists(cme_path())
 
 
-def virtualenv_path(version: Optional[int] = None) -> Path:
-    if version is None:
-        version = sys.version_info[0]
-
-    venv = subprocess.check_output(
-        [repo_path() + "/scripts/run-pipenv",
-         str(version), "--bare", "--venv"])
+def virtualenv_path() -> Path:
+    venv = subprocess.check_output([repo_path() + "/scripts/run-pipenv", "--bare", "--venv"])
     return Path(ensure_str(venv).rstrip("\n"))
 
 

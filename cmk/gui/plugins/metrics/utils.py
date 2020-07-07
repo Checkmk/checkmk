@@ -482,7 +482,7 @@ def _operator_minmax(a, b, func):
 
 
 def _evaluate_literal(
-        expression: Union[float, str],
+        expression: Union[int, float, str],
         translated_metrics: Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]:
     if isinstance(expression, int):
         return float(expression), unit_info["count"], None
@@ -493,24 +493,18 @@ def _evaluate_literal(
     if expression[0].isdigit() or expression[0] == '-':
         return float(expression), unit_info[""], None
 
-    if any(expression.endswith(cf) for cf in ['.max', '.min', '.average']):
-        expression = expression.rsplit(".", 1)[0]
+    varname = drop_metric_consolidation_advice(expression)
+
+    percent = varname.endswith("(%)")
+    if percent:
+        varname = varname[:-3]
 
     color = None
-
-    # TODO: Error handling with useful exceptions
-    if expression.endswith("(%)"):
-        percent = True
-        expression = expression[:-3]
-    else:
-        percent = False
-
-    if ":" in expression:
-        varname, scalarname = expression.split(":")
+    if ":" in varname:
+        varname, scalarname = varname.split(":")
         value = translated_metrics[varname]["scalar"].get(scalarname)
         color = scalar_colors.get(scalarname)
     else:
-        varname = expression
         value = translated_metrics[varname]["value"]
 
     if percent:
@@ -525,10 +519,7 @@ def _evaluate_literal(
         unit = translated_metrics[varname]["unit"]
 
     if color is None:
-        if varname in metric_info:
-            color = parse_color_into_hexrgb(metric_info[varname]["color"])
-        else:
-            color = "#808080"
+        color = parse_color_into_hexrgb(metric_info.get(varname, {}).get("color", "#808080"))
     return value, unit, color
 
 
@@ -630,24 +621,20 @@ def _get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
 
 def _metrics_used_by_graph(graph_template: Any) -> Iterator:
     for metric_definition in graph_template["metrics"]:
-        for metric in _metrics_used_in_definition(metric_definition[0]):
-            yield metric
+        yield from metrics_used_in_expression(metric_definition[0])
 
 
-def _metrics_used_in_definition(metric_definition):
-    without_color = metric_definition.split("#")[0]
-    parts = without_color.split(",")
-    for part in parts:
-        # drop .min, .max, .average
-        if any(part.endswith(cf) for cf in ['.max', '.min', '.average']):
-            metric_name = part.rsplit(".", 1)[0]
-        else:
-            metric_name = part
+def metrics_used_in_expression(metric_expression: str) -> Iterator[str]:
+    for part in split_expression(metric_expression)[0].split(","):
+        metric_name = drop_metric_consolidation_advice(part)
+        if metric_name not in rpn_operators:
+            yield metric_name
 
-        if metric_name in rpn_operators:
-            continue
 
-        yield metric_name
+def drop_metric_consolidation_advice(expression: str) -> str:
+    if any(expression.endswith(cf) for cf in ['.max', '.min', '.average']):
+        return expression.rsplit(".", 1)[0]
+    return expression
 
 
 def _graph_possible(graph_template, translated_metrics):

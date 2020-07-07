@@ -19,6 +19,7 @@ from bs4 import BeautifulSoup  # type: ignore[import]
 
 from testlib.site import get_site_factory
 from testlib.web_session import CMKWebSession
+from testlib.version import CMKVersion
 
 logger = logging.getLogger()
 
@@ -458,7 +459,11 @@ class Crawler:
 
 
 def test_crawl():
-    sf = get_site_factory(prefix="crawl_", update_from_git=False, install_test_python_modules=False)
+    version = os.environ.get("VERSION", CMKVersion.DAILY)
+
+    sf = get_site_factory(prefix="crawl_",
+                          update_from_git=version == "git",
+                          install_test_python_modules=False)
     site = sf.get_site("central")
     logger.info("Site %s is ready!", site.id)
 

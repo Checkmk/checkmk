@@ -67,6 +67,7 @@ PYTHON3_PATHS=(
     special_agents/agent_cisco_prime.py
     special_agents/utils.py
     update_rrd_fs_names.py
+    update_config.py
 )
 
 echo "Copy CRE files..."

@@ -22,7 +22,6 @@ from typing import List, Tuple
 #  * column functions
 #  * more tests
 
-
 RenderIntermediary = List[Tuple[str, str]]
 
 

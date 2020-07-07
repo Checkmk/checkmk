@@ -321,6 +321,7 @@ class CAdvisorExporter:
         self.container_ids.update(container_ids)
 
     def diskstat_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+        logging.debug("Parsing cAdvisor diskstat")
         disk_info = {
             "disk_utilisation":
                 'sum by ({{group_element}})(container_fs_usage_bytes{exclusion}) / '
@@ -334,6 +335,7 @@ class CAdvisorExporter:
 
     def cpu_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
         # Reference ID: 34923788
+        logging.debug("Parsing cAdvisor CPU")
         cpu_info = {
             "cpu_user": 'sum by ({{group_element}})(rate(container_cpu_user_seconds_total{exclusion}[5m])*100)',
             "cpu_system": 'sum by ({{group_element}})(rate(container_cpu_system_seconds_total{exclusion}[5m])*100)',
@@ -341,6 +343,7 @@ class CAdvisorExporter:
         return self._retrieve_formatted_cadvisor_info(cpu_info, group_element)
 
     def df_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+        logging.debug("Parsing cAdvisor df")
         df_info = {
             "df_size": 'sum by ({{group_element}})(container_fs_limit_bytes{exclusion})',
             "df_used": 'sum by ({{group_element}})(container_fs_usage_bytes{exclusion})',
@@ -350,6 +353,7 @@ class CAdvisorExporter:
         return self._retrieve_formatted_cadvisor_info(df_info, group_element)
 
     def if_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+        logging.debug("Parsing cAdvisor if")
         if_info = {
             "if_in_total": 'sum by ({{group_element}})(rate(container_network_receive_bytes_total{exclusion}[5m]))',
             "if_in_discards": 'sum by ({{group_element}})(rate(container_network_receive_packets_dropped_total{exclusion}[5m]))',
@@ -361,6 +365,7 @@ class CAdvisorExporter:
         return self._retrieve_formatted_cadvisor_info(if_info, group_element)
 
     def memory_pod_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+        logging.debug("Parsing cAdvisor pod memory")
         memory_info = {
             "memory_usage_pod": 'container_memory_usage_bytes{pod!="", container=""}',
             "memory_limit": 'sum by(pod)(container_spec_memory_limit_bytes{container!=""})',
@@ -380,7 +385,8 @@ class CAdvisorExporter:
 
         return result_temp
 
-    def memory_container_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+    def memory_container_summary(self, _group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+        logging.debug("Parsing cAdvisor container memory")
         memory_info = {
             "memory_usage_container": 'sum by (pod, container, name)(container_memory_usage_bytes{container!=""})',
             "memory_rss": 'container_memory_rss{container!=""}',
@@ -417,10 +423,7 @@ class CAdvisorExporter:
         group_element = "name" if group_element == "container" else group_element
         for entity_name, entity_promql in entity_info.items():
 
-            if "{group_element}" in entity_promql:
-                promql_query = entity_promql.format(group_element=group_element)
-            else:
-                promql_query = entity_promql
+            promql_query = self._prepare_query(entity_promql, group_element)
 
             promql_result = self.api_client.perform_multi_result_promql(
                 promql_query).get_piggybacked_services(metric_description=entity_name,
@@ -431,6 +434,13 @@ class CAdvisorExporter:
                 promql_result = self._apply_container_name_option(promql_result)
             result.append(promql_result)
         return result
+
+    def _prepare_query(self, entity_promql, group_element):
+        if "{group_element}" in entity_promql:
+            promql_query = entity_promql.format(group_element=group_element)
+        else:
+            promql_query = entity_promql
+        return promql_query
 
     def _apply_container_name_option(self, promql_result):
         promql_result_new = {}
@@ -494,65 +504,79 @@ class KubeStateExporter:
         return {"limits": cluster_limits}
 
     def storage_classes_summary(self) -> List[Dict[str, Dict[str, Any]]]:
-
+        logging.debug("Parsing kube storage classes")
         result: Dict[str, Dict[str, Any]] = {}
         for cluster_storage_dict in self.api_client.perform_multi_result_promql(
                 "kube_storageclass_info").promql_metrics:
             storage_labels = cluster_storage_dict["labels"]
+            expected_label_entries = ["reclaim_policy", "provisioner"]
+            prom_values = self._retrieve_promql_specific(storage_labels, expected_label_entries)
+
+            if len(prom_values) < len(expected_label_entries):
+                continue
             storage_dict = result.setdefault(self.cluster_name,
                                              {}).setdefault(storage_labels["storageclass"], {})
-            storage_dict["reclaim_policy"] = storage_labels["reclaimPolicy"]
-            storage_dict["provisioner"] = storage_labels["provisioner"]
+            storage_dict.update(prom_values)
         return [result]
 
     def namespaces_summary(self) -> List[Dict[str, Dict[str, Any]]]:
-
         # Cluster Section
+        logging.debug("Parsing kube namespaces summary")
         node_result: Dict[str, Dict[str, Any]] = {}
         for namespace_dict in self.api_client.perform_multi_result_promql(
                 "kube_namespace_status_phase").promql_metrics:
-            namespace_labels = namespace_dict["labels"]
-            if int(namespace_dict["value"]):
-                node_result.setdefault(self.cluster_name,
-                                       {}).setdefault(namespace_labels["namespace"],
-                                                      {})["status"] = {
-                                                          "phase": namespace_labels["phase"]
-                                                      }
+            expected_label_entries = ["namespace", "phase"]
+            namespace_labels = self._retrieve_promql_specific(namespace_dict["labels"],
+                                                              expected_label_entries)
+            if len(namespace_labels) < len(expected_label_entries) or not int(
+                    namespace_dict["value"]):
+                continue
+
+            namespace = node_result.setdefault(self.cluster_name,
+                                               {}).setdefault(namespace_labels["namespace"], {})
+            namespace["status"] = {"phase": namespace_labels["phase"]}
         return [node_result]
 
     def cluster_node_info(self) -> List[Dict[str, Dict[str, Any]]]:
-
-        nodes_list = [
-            node_info["labels"]["node"] for node_info in
-            self.api_client.perform_multi_result_promql("kube_node_info").promql_metrics
-        ]
+        logging.debug("Parsing kube cluster node info")
+        nodes_list = []
+        for node_info in self.api_client.perform_multi_result_promql(
+                'kube_node_info').promql_metrics:
+            node_labels = self._retrieve_promql_specific(node_info["labels"], ["node"])
+            if not node_labels:
+                continue
+            nodes_list.append(node_labels["node"])
+        if not nodes_list:
+            return []
         return [{self.cluster_name: {"nodes": nodes_list}}]
 
     # NODE SECTION
 
     def node_conditions_summary(self) -> List[Dict[str, Dict[str, Any]]]:
-
+        logging.debug("Parsing kube node conditions")
         # Eventually consider adding PID Pressure in check
         node_conditions_info = {
             "DiskPressure": 'kube_node_status_condition{condition="DiskPressure"}',
             "MemoryPressure": 'kube_node_status_condition{condition="MemoryPressure"}',
             "Ready": 'kube_node_status_condition{condition="Ready"}',
         }
-        result: List[Dict[str, Dict[str, Any]]] = []
+        result: Dict[str, Dict[str, Any]] = {}
         for entity_name, promql_query in node_conditions_info.items():
-            node_result: Dict[str, Dict[str, Any]] = {}
+            # node_result: Dict[str, Dict[str, Any]] = {}
             for node_condition_dict in self.api_client.perform_multi_result_promql(
                     promql_query).promql_metrics:
-                node_condition_labels = node_condition_dict["labels"]
+                expected_label_entries = ["node", "status"]
+                node_condition_labels = self._retrieve_promql_specific(
+                    node_condition_dict["labels"], expected_label_entries)
+                if len(node_condition_labels) < len(expected_label_entries):
+                    continue
                 if int(node_condition_dict["value"]):
-                    node_result.setdefault(
-                        node_condition_labels["node"],
-                        {})[entity_name] = node_condition_labels["status"].capitalize()
-            result.append(node_result)
-        return result
+                    node_result = result.setdefault(node_condition_labels["node"], {})
+                    node_result[entity_name] = node_condition_labels["status"].capitalize()
+        return [result]
 
     def node_resources(self) -> List[Dict[str, Dict[str, Any]]]:
-
+        logging.debug("Parsing kube node ressources")
         resources_list = [
             ("allocatable", "cpu", "sum by (node)(kube_node_status_allocatable_cpu_cores)"),
             ("allocatable", "memory", "sum by (node)(kube_node_status_allocatable_memory_bytes)"),
@@ -569,23 +593,26 @@ class KubeStateExporter:
         ]
 
         node_valid_limits = self._nodes_limits()
-
         result: Dict[str, Dict[str, Any]] = {}
         for resource_family, resource_type, promql_query in resources_list:
             for node_info in self.api_client.perform_multi_result_promql(
                     promql_query).promql_metrics:
-                if resource_family == "limits" and node_info["labels"][
-                        "node"] not in node_valid_limits[resource_type]:
+                node_labels = self._retrieve_promql_specific(node_info["labels"], ["node"])
+                if not node_labels:
+                    continue
+
+                if resource_family == "limits" and node_labels['node'] not in node_valid_limits[
+                        resource_type]:
                     value = float("inf")
                 else:
                     value = int(node_info["value"]) if resource_type == "pods" else float(
                         node_info["value"])
-                result.setdefault(node_info["labels"]["node"],
-                                  {}).setdefault(resource_family, {})[resource_type] = value
+                result.setdefault(node_labels['node'], {}).setdefault(resource_family,
+                                                                      {})[resource_type] = value
         return [result]
 
     def _nodes_limits(self) -> Dict[str, List[str]]:
-
+        logging.debug("Parsing kube node limits")
         pods_count_expressions = [
             ("total", "count by (node)(kube_pod_info)"),
             ("with_cpu_limits",
@@ -599,23 +626,30 @@ class KubeStateExporter:
         for pod_count_type, promql_query in pods_count_expressions:
             for count_result in self.api_client.perform_multi_result_promql(
                     promql_query).promql_metrics:
-                node_pods.setdefault(count_result["labels"]["node"],
-                                     {})[pod_count_type] = count_result["value"]
+                count_labels = self._retrieve_promql_specific(count_result["labels"], ["node"])
+                if not count_labels:
+                    continue
+                limit_value = count_result.get("value", 0)
+                if limit_value:
+                    node_pods.setdefault(count_labels["node"],
+                                         {})[pod_count_type] = count_result["value"]
 
         nodes_with_limits: Dict[str, List[str]] = {"memory": [], "cpu": []}
 
         for node, pods_count in node_pods.items():
+            if "total" not in pods_count:
+                continue
             entity_total_pods = pods_count["total"]
-            if entity_total_pods == pods_count["with_cpu_limits"]:
+            if entity_total_pods == pods_count.get("with_cpu_limits"):
                 nodes_with_limits["cpu"].append(node)
-            if entity_total_pods == pods_count["with_memory_limits"]:
+            if entity_total_pods == pods_count.get("with_memory_limits"):
                 nodes_with_limits["memory"].append(node)
         return nodes_with_limits
 
     # PODS SECTION
 
     def pod_conditions_summary(self) -> List[Dict[str, Dict[str, Any]]]:
-
+        logging.debug("Parsing kube pod conditions")
         # Unschedulable missing for now
         pod_conditions_info = [
             ("PodScheduled", "kube_pod_status_scheduled"),
@@ -629,14 +663,22 @@ class KubeStateExporter:
             promql_result = self.api_client.perform_multi_result_promql(promql_query).promql_metrics
             if promql_metric == "ContainersReady":
                 for node_ready_dict in promql_result:
+                    node_ready_labels = self._retrieve_promql_specific(
+                        node_ready_dict["labels"], ["pod"])
+                    if not node_ready_labels:
+                        continue
                     ready_result = {}
                     ready_status = "True" if int(node_ready_dict["value"]) == 1 else "False"
-                    ready_result[node_ready_dict["labels"]["pod"]] = {promql_metric: ready_status}
+                    ready_result[node_ready_labels["pod"]] = {promql_metric: ready_status}
                     result.append(ready_result)
             else:
                 schedule_result: Dict[str, Dict[str, Any]] = {}
                 for node_condition_dict in promql_result:
-                    node_condition_labels = node_condition_dict["labels"]
+                    expected_label_entries = ["pod", "condition"]
+                    node_condition_labels = self._retrieve_promql_specific(
+                        node_condition_dict["labels"], expected_label_entries)
+                    if len(node_condition_labels) < len(expected_label_entries):
+                        continue
                     if int(node_condition_dict["value"]):
                         schedule_result.setdefault(
                             node_condition_labels["pod"],
@@ -645,6 +687,7 @@ class KubeStateExporter:
         return result
 
     def pod_container_summary(self) -> List[Dict[str, Dict[str, Any]]]:
+        logging.debug("Parsing kube pod container")
 
         info = [("waiting", "kube_pod_container_status_waiting"),
                 ("running", "kube_pod_container_status_running"),
@@ -655,7 +698,11 @@ class KubeStateExporter:
             temp_result: Dict[str, Dict[str, Any]] = {}
             for container_info in self.api_client.perform_multi_result_promql(
                     promql_query).promql_metrics:
-                labels = container_info["labels"]
+                expected_label_entries = ["pod", "container"]
+                labels = self._retrieve_promql_specific(container_info["labels"],
+                                                        expected_label_entries)
+                if len(labels) < len(expected_label_entries):
+                    continue
                 query_value = int(container_info["value"])
                 metric_dict = temp_result.setdefault(labels["pod"],
                                                      {}).setdefault(labels["container"], {})
@@ -676,6 +723,7 @@ class KubeStateExporter:
         return pod_container_result
 
     def pod_resources_summary(self) -> List[Dict[str, Dict[str, Any]]]:
+        logging.debug("Parsing kube pod resources")
 
         pods_container_count = self.api_client.perform_multi_result_promql(
             "count by (pod)(kube_pod_container_info)").get_value_only_dict("pod")
@@ -725,6 +773,7 @@ class KubeStateExporter:
         return result
 
     def daemon_pods_summary(self) -> List[Dict[str, Dict[str, Any]]]:
+        logging.debug("Parsing kube daemon pods")
 
         daemon_pods_info = {
             "number_ready": "kube_daemonset_status_number_ready",
@@ -745,8 +794,9 @@ class KubeStateExporter:
         return result
 
     def services_selector(self) -> List[Dict[str, Dict[str, Any]]]:
-
         # Cluster Section
+        logging.debug("Parsing kube services selection")
+
         service_label_translation = {
             "label_k8s_app": "k8s-app",
             "label_app_kubernetes_io_name": "app.kubernetes.io/name"
@@ -755,6 +805,10 @@ class KubeStateExporter:
         for service_info in self.api_client.perform_multi_result_promql(
                 "kube_service_labels").promql_metrics:
             service_labels = service_info["labels"]
+
+            if not self._retrieve_promql_specific(service_labels, ["service"]):
+                continue
+
             service_piggyback = result.setdefault(service_labels["service"], {})
             if len(service_labels) == 5:
                 service_piggyback["name"] = service_labels["service"]
@@ -766,18 +820,33 @@ class KubeStateExporter:
         return [result]
 
     def services_info(self) -> List[Dict[str, Dict[str, Any]]]:
+        logging.debug("Parsing kube services info")
 
         result: Dict[str, Dict[str, Any]] = {}
         for service_info in self.api_client.perform_multi_result_promql(
                 "kube_service_info").promql_metrics:
-            service_labels = service_info["labels"]
+            expected_label_entries = ["service", "cluster_ip"]
+            service_labels = self._retrieve_promql_specific(service_info["labels"],
+                                                            expected_label_entries)
+            if len(service_labels) < len(expected_label_entries):
+                continue
             service_piggyback = result.setdefault(service_labels["service"], {})
             service_piggyback.update({
                 "cluster_ip": service_labels["cluster_ip"],
-                "load_balance_ip": service_labels["load_balancer_ip"]
-                                   if service_labels["load_balancer_ip"] else "null"
+                "load_balance_ip": service_info["labels"].get("load_balancer_ip", "null")
             })
         return [result]
+
+    @staticmethod
+    def _retrieve_promql_specific(metrics, entries):
+        result = {}
+        for entry in entries:
+            try:
+                promql_value = metrics[entry]
+                result[entry] = promql_value
+            except KeyError as e:
+                logging.debug("Missing PromQl value for %s", e)
+        return result
 
 
 class PromQLResponse:

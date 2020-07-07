@@ -151,7 +151,7 @@ def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
     )
 
     assert source._host_config.management_address == ipaddress
-    assert source._ipaddress == ipaddress
+    assert source.ipaddress == ipaddress
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(monkeypatch):
@@ -174,8 +174,8 @@ def test_attribute_defaults(monkeypatch, ipaddress):
     Scenario().add_host(hostname).apply(monkeypatch)
     source = SNMPDataSource(hostname, ipaddress)
 
-    assert source._hostname == hostname
-    assert source._ipaddress == ipaddress
+    assert source.hostname == hostname
+    assert source.ipaddress == ipaddress
     assert source.id() == "snmp"
     assert source.title() == "SNMP"
     assert source._cpu_tracking_id() == "snmp"

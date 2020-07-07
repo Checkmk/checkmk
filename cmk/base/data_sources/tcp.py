@@ -80,19 +80,19 @@ class TCPDataSource(AgentDataSource):
             raise MKAgentError("Got no data: No usable cache file present at %s" %
                                self._cache_file_path())
 
-        ip_lookup.verify_ipaddress(self._ipaddress)
-        assert self._ipaddress
+        ip_lookup.verify_ipaddress(self.ipaddress)
+        assert self.ipaddress
 
         with TCPDataFetcher(
                 socket.AF_INET6 if self._host_config.is_ipv6_primary else socket.AF_INET,
-            (self._ipaddress, self.port),
+            (self.ipaddress, self.port),
                 self.timeout,
                 self._host_config.agent_encryption,
         ) as fetcher:
             output = fetcher.data()
             if not output:  # may be caused by xinetd not allowing our address
                 raise MKEmptyAgentData("Empty output from agent at %s:%d" %
-                                       (self._ipaddress, self.port))
+                                       (self.ipaddress, self.port))
             if len(output) < 16:
                 raise MKAgentError("Too short output from agent: %r" % output)
             return output
@@ -100,7 +100,7 @@ class TCPDataSource(AgentDataSource):
 
     def describe(self) -> str:
         """Return a short textual description of the agent"""
-        return "TCP: %s:%d" % (self._ipaddress, self._host_config.agent_port)
+        return "TCP: %s:%d" % (self.ipaddress, self._host_config.agent_port)
 
     @classmethod
     def use_only_cache(cls) -> None:

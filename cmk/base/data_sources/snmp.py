@@ -183,9 +183,9 @@ class SNMPDataSource(ABCSNMPDataSource):
         # is an address set, Inline-SNMP has some lookup logic for some reason. We need to find
         # out whether or not we can really have None here. Looks like it could be the case for
         # cluster hosts which don't have an IP address set.
-        if self._ipaddress is None:
-            raise NotImplementedError("Invalid SNMP host configuration: self._ipaddress is None")
-        return self._host_config.snmp_config(self._ipaddress)
+        if self.ipaddress is None:
+            raise NotImplementedError("Invalid SNMP host configuration: self.ipaddress is None")
+        return self._host_config.snmp_config(self.ipaddress)
 
     def describe(self) -> str:
         snmp_config = self._snmp_config
@@ -255,7 +255,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         self._fetched_raw_section_names = raw_section_names
 
     def _execute(self) -> SNMPRawData:
-        ip_lookup.verify_ipaddress(self._ipaddress)
+        ip_lookup.verify_ipaddress(self.ipaddress)
         with SNMPDataFetcher(
                 self._make_oid_infos(),
                 self._use_snmpwalk_cache,

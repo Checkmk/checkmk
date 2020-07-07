@@ -39,8 +39,8 @@ def test_attribute_defaults(monkeypatch, ipaddress):
     Scenario().add_host(hostname).apply(monkeypatch)
     source = TCPDataSource(hostname, ipaddress)
 
-    assert source._hostname == hostname
-    assert source._ipaddress == ipaddress
+    assert source.hostname == hostname
+    assert source.ipaddress == ipaddress
     assert source.id() == "agent"
     assert source.port == 6556
     assert source.timeout == 5.0

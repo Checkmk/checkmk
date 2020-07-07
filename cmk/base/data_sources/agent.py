@@ -242,8 +242,8 @@ class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSect
         if not piggybacked_hostname:
             return None
 
-        piggybacked_hostname = config.translate_piggyback_host(self._hostname, piggybacked_hostname)
-        if piggybacked_hostname == self._hostname or not piggybacked_hostname:
+        piggybacked_hostname = config.translate_piggyback_host(self.hostname, piggybacked_hostname)
+        if piggybacked_hostname == self.hostname or not piggybacked_hostname:
             return None  # unpiggybacked "normal" host
 
         # Protect Check_MK against unallowed host names. Normally source scripts

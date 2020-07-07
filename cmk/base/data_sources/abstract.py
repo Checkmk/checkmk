@@ -8,7 +8,7 @@ import abc
 import logging
 import os
 import sys
-from typing import cast, Generic, Optional, Set, Tuple, TypeVar, Union
+from typing import cast, Final, Generic, Optional, Set, Tuple, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -159,8 +159,8 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             section that is not listed here *may* be omitted.
         """
         super(DataSource, self).__init__()
-        self._hostname = hostname
-        self._ipaddress = ipaddress
+        self.hostname: Final = hostname
+        self.ipaddress: Final = ipaddress
         self._max_cachefile_age: Optional[int] = None
         self._selected_raw_section_names = selected_raw_section_names
 
@@ -173,7 +173,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self._persisted_sections: Optional[BoundedAbstractPersistedSections] = None
 
         self._config_cache = config.get_config_cache()
-        self._host_config = self._config_cache.get_host_config(self._hostname)
+        self._host_config = self._config_cache.get_host_config(self.hostname)
 
     def _setup_logger(self) -> None:
         """Add the source log prefix to the class logger"""
@@ -322,13 +322,13 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         raise NotImplementedError()
 
     def _cache_file_path(self) -> str:
-        return os.path.join(self._cache_dir(), self._hostname)
+        return os.path.join(self._cache_dir(), self.hostname)
 
     def _cache_dir(self) -> str:
         return os.path.join(cmk.utils.paths.data_source_cache_dir, self.id())
 
     def _persisted_sections_file_path(self) -> str:
-        return os.path.join(self._persisted_sections_dir(), self._hostname)
+        return os.path.join(self._persisted_sections_dir(), self.hostname)
 
     def _persisted_sections_dir(self) -> str:
         return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
@@ -357,7 +357,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         It is only used during execution of Check_MK and not persisted. This means
         the algorithm can be changed at any time.
         """
-        return ":".join([self.id(), self._hostname, self._ipaddress or ""])
+        return ":".join([self.id(), self.hostname, self.ipaddress or ""])
 
     @abc.abstractmethod
     def describe(self) -> str:

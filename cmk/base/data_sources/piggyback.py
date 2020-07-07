@@ -43,17 +43,17 @@ class PiggyBackDataSource(AgentDataSource):
         )
         self._summary: Optional[ServiceCheckResult] = None
         self._time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings(
-            piggybacked_hostname=self._hostname)
+            piggybacked_hostname=self.hostname)
 
     def id(self) -> str:
         return "piggyback"
 
     def describe(self) -> str:
-        path = os.path.join(tmp_dir, "piggyback", self._hostname)
+        path = os.path.join(tmp_dir, "piggyback", self.hostname)
         return "Process piggyback data from %s" % path
 
     def _execute(self) -> RawAgentData:
-        with PiggyBackDataFetcher(self._hostname, self._ipaddress, self._time_settings) as fetcher:
+        with PiggyBackDataFetcher(self.hostname, self.ipaddress, self._time_settings) as fetcher:
             self._summary = fetcher.summary()
             return fetcher.data()
         raise MKAgentError("Failed to read data")

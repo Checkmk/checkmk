@@ -23,9 +23,9 @@ def test_attribute_defaults(monkeypatch):
     )
 
     assert source.source_type is SourceType.MANAGEMENT
-    assert source._hostname == hostname
+    assert source.hostname == hostname
     # Address comes from management board.
-    assert source._ipaddress is None
+    assert source.ipaddress is None
     assert source.id() == "mgmt_ipmi"
     assert source.title() == "Management board - IPMI"
     assert source._cpu_tracking_id() == source.id()
@@ -49,7 +49,7 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
     )
 
     assert source._host_config.management_address == ipaddress
-    assert source._ipaddress == ipaddress
+    assert source.ipaddress == ipaddress
 
 
 def test_describe_with_ipaddress(monkeypatch):

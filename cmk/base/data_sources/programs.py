@@ -110,10 +110,10 @@ class DSProgramDataSource(ProgramDataSource):
 
     def _translate_legacy_macros(self, cmd: str) -> str:
         # Make "legacy" translation. The users should use the $...$ macros in future
-        return cmd.replace("<IP>", self._ipaddress or "").replace("<HOST>", self._hostname)
+        return cmd.replace("<IP>", self.ipaddress or "").replace("<HOST>", self.hostname)
 
     def _translate_host_macros(self, cmd: str) -> str:
-        attrs = core_config.get_host_attributes(self._hostname, self._config_cache)
+        attrs = core_config.get_host_attributes(self.hostname, self._config_cache)
         if self._host_config.is_cluster:
             parents_list = core_config.get_cluster_nodes_for_config(self._config_cache,
                                                                     self._host_config)
@@ -122,7 +122,7 @@ class DSProgramDataSource(ProgramDataSource):
                 core_config.get_cluster_attributes(self._config_cache, self._host_config,
                                                    parents_list))
 
-        macros = core_config.get_host_macros_from_attributes(self._hostname, attrs)
+        macros = core_config.get_host_macros_from_attributes(self.hostname, attrs)
         return ensure_str(core_config.replace_macros(cmd, macros))
 
 
@@ -163,8 +163,8 @@ class SpecialAgentDataSource(ProgramDataSource):
     @property
     def _source_args(self) -> str:
         info_func = config.special_agent_info[self._special_agent_id]
-        agent_configuration = info_func(self._params, self._hostname, self._ipaddress)
-        return core_config.active_check_arguments(self._hostname, None, agent_configuration)
+        agent_configuration = info_func(self._params, self.hostname, self.ipaddress)
+        return core_config.active_check_arguments(self.hostname, None, agent_configuration)
 
     @property
     def source_cmdline(self) -> str:
@@ -175,7 +175,7 @@ class SpecialAgentDataSource(ProgramDataSource):
     def source_stdin(self) -> Optional[str]:
         """Create command line using the special_agent_info"""
         info_func = config.special_agent_info[self._special_agent_id]
-        agent_configuration = info_func(self._params, self._hostname, self._ipaddress)
+        agent_configuration = info_func(self._params, self.hostname, self.ipaddress)
         if isinstance(agent_configuration, config.SpecialAgentConfiguration):
             return agent_configuration.stdin
         return None

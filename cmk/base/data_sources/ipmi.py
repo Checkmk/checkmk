@@ -54,8 +54,8 @@ class IPMIManagementBoardDataSource(AgentDataSource):
 
     def describe(self) -> str:
         items = []
-        if self._ipaddress:
-            items.append("Address: %s" % self._ipaddress)
+        if self.ipaddress:
+            items.append("Address: %s" % self.ipaddress)
         if self._credentials:
             items.append("User: %s" % self._credentials["username"])
         return "%s (%s)" % (self.title(), ", ".join(items))
@@ -67,10 +67,10 @@ class IPMIManagementBoardDataSource(AgentDataSource):
         if not self._credentials:
             raise MKAgentError("Missing credentials")
 
-        if self._ipaddress is None:
+        if self.ipaddress is None:
             raise MKAgentError("Missing IP address")
 
-        with IPMIDataFetcher(self._ipaddress, self._credentials["username"],
+        with IPMIDataFetcher(self.ipaddress, self._credentials["username"],
                              self._credentials["password"]) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")

@@ -888,7 +888,7 @@ class FolderMode(WatoMode, metaclass=abc.ABCMeta):
 
         # title
         basic_attributes: List[Tuple[str, ValueSpec, str]] = [
-            ("title", TextUnicode(title=_("Title")), self._folder.title()),
+            ("title", TextUnicode(title=_("Title")), "" if new else self._folder.title()),
         ]
         html.set_focus("title")
 

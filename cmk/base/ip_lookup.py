@@ -57,6 +57,7 @@ def lookup_ip_address(hostname: HostName, family: Optional[int] = None) -> Optio
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
+
     if config.fake_dns:
         return config.fake_dns
 
@@ -67,8 +68,8 @@ def lookup_ip_address(hostname: HostName, family: Optional[int] = None) -> Optio
         family = 6 if host_config.is_ipv6_primary else 4
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
-    if config.simulation_mode or _enforce_localhost or \
-         (host_config.is_usewalk_host and host_config.is_snmp_host):
+    if config.simulation_mode or _enforce_localhost or (host_config.is_usewalk_host and
+                                                        host_config.is_snmp_host):
         if family == 4:
             return "127.0.0.1"
 
@@ -319,13 +320,13 @@ def management_board_ipaddress(hostname: HostName) -> Optional[HostAddress]:
     if mgmt_ipaddress is None:
         return None
 
-    if not _is_ipaddress(mgmt_ipaddress):
-        try:
-            return lookup_ip_address(mgmt_ipaddress)
-        except MKIPAddressLookupError:
-            return None
-    else:
+    if _is_ipaddress(mgmt_ipaddress):
         return mgmt_ipaddress
+
+    try:
+        return lookup_ip_address(mgmt_ipaddress)
+    except MKIPAddressLookupError:
+        return None
 
 
 def _is_ipaddress(address: Optional[HostAddress]) -> bool:

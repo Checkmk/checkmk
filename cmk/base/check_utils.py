@@ -83,7 +83,7 @@ class Service:
     def service_labels(self) -> DiscoveredServiceLabels:
         return self._service_labels
 
-    def _service_id(self) -> Tuple[CheckPluginNameStr, Item]:
+    def id(self) -> Tuple[CheckPluginNameStr, Item]:
         return self.check_plugin_name, self.item
 
     def __eq__(self, other: Any) -> bool:
@@ -91,12 +91,12 @@ class Service:
         For this the parameters and similar need to be ignored."""
         if not isinstance(other, Service):
             raise TypeError("Can only be compared with other Service objects")
-        return self._service_id() == other._service_id()
+        return self.id() == other.id()
 
     def __hash__(self) -> int:
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""
-        return hash(self._service_id())
+        return hash(self.id())
 
     def __repr__(self) -> str:
         return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_lables=%r)" % (

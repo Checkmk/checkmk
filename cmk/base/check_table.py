@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Callable, cast, Iterator, List, Optional, Set
+from typing import Callable, cast, Iterable, Iterator, List, Optional, Set
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
@@ -74,21 +74,32 @@ class HostCheckTable:
         # Now process all entries that are specific to the host
         # in search (single host) or that might match the host.
         if not skip_autochecks:
-            for service in self._config_cache.get_autochecks_of(hostname):
-                check_table.update(self._handle_service(service))
+            check_table.update({
+                service.id(): service
+                for service in self._config_cache.get_autochecks_of(hostname)
+                if self._keep_service(service)
+            })
 
-        for service in self._get_static_check_entries(self._host_config):
-            check_table.update(self._handle_service(service))
+        check_table.update({
+            service.id(): service
+            for service in self._get_static_check_entries(self._host_config)
+            if self._keep_service(service)
+        })
 
         # Now add checks a cluster might receive from its nodes
         if self._host_config.is_cluster:
-            check_table.update(self._get_clustered_services(hostname, skip_autochecks))
+            check_table.update({
+                service.id(): service
+                for service in self._get_clustered_services(hostname, skip_autochecks)
+                if self._keep_service(service)
+            })
 
         if not skip_autochecks and use_cache:
             check_table_cache[table_cache_id] = check_table
 
         if remove_duplicates:
             return remove_duplicate_checks(check_table)
+
         return check_table
 
     def _get_static_check_entries(self, host_config: config.HostConfig) -> Iterator[Service]:
@@ -123,42 +134,39 @@ class HostCheckTable:
         # a host with the same combination of check type and item.
         return reversed(entries)
 
-    def _handle_service(self, service: Service) -> CheckTable:
-        check_table: CheckTable = {}
+    def _keep_service(self, service: Service) -> bool:
         hostname = self._host_config.hostname
-
-        if not self._is_checkname_valid(service.check_plugin_name):
-            return {}
-
         # TODO (mo): centralize maincheckify: CMK-4295
         service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
+
+        # drop unknown plugins:
+        if config.get_registered_check_plugin(service_check_plugin_name) is None:
+            return False
+
         if self.skip_ignored and config.service_ignored(hostname, service_check_plugin_name,
                                                         service.description):
-            return {}
+            return False
 
-        if not self._host_config.part_of_clusters:
-            svc_is_mine = True
-        else:
-            svc_is_mine = hostname == self._config_cache.host_of_clustered_service(
+        if self._host_config.part_of_clusters:
+            host_of_service = self._config_cache.host_of_clustered_service(
                 hostname, service.description, part_of_clusters=self._host_config.part_of_clusters)
+            svc_is_mine = (hostname == host_of_service)
+        else:
+            svc_is_mine = True
 
         if self.filter_mode is None and not svc_is_mine:
-            return {}
+            return False
 
         if self.filter_mode == "only_clustered" and svc_is_mine:
-            return {}
+            return False
 
-        check_table[(service.check_plugin_name, service.item)] = service
+        return True
 
-        return check_table
-
-    def _is_checkname_valid(self, checkname: CheckPluginNameStr) -> bool:
-        # TODO (mo): centralize maincheckify: CMK-4295
-        plugin_name = CheckPluginName(maincheckify(checkname))
-        return config.get_registered_check_plugin(plugin_name) is not None
-
-    def _get_clustered_services(self, hostname: str, skip_autochecks: bool) -> CheckTable:
-        check_table: CheckTable = {}
+    def _get_clustered_services(
+        self,
+        hostname: str,
+        skip_autochecks: bool,
+    ) -> Iterable[Service]:
         for node in self._host_config.nodes or []:
             # TODO: Cleanup this to work exactly like the logic above (for a single host)
             node_config = self._config_cache.get_host_config(node)
@@ -177,15 +185,13 @@ class HostCheckTable:
                     service.item,
                     service.parameters,
                 )
-                cluster_service = Service(
+                yield Service(
                     service.check_plugin_name,
                     service.item,
                     service.description,
                     cluster_params,
                     service.service_labels,
                 )
-                check_table.update(self._handle_service(cluster_service))
-        return check_table
 
 
 def get_check_table(hostname: str,

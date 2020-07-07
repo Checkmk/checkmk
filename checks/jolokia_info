@@ -13,7 +13,7 @@ def parse_jolokia_info(info):
 
 
 @get_parsed_item_data
-def check_jolokia_info(item, _no_params, data):
+def check_jolokia_info(item, params, data):
 
     line = data[0]
     # Inform user of non-working agent plugin, eg. missing json library
@@ -26,7 +26,8 @@ def check_jolokia_info(item, _no_params, data):
     product = line[0]
     jolokia_version = line[-1]
     version = " ".join(line[1:-1])
-    return 0, "%s %s (Jolokia version %s)" % (product.title(), version, jolokia_version)
+    return [(0, "%s %s" % (product.title(), version)),
+            jolokia_check_version(jolokia_version, params, "Jolokia")]
 
 
 check_info["jolokia_info"] = {
@@ -34,4 +35,6 @@ check_info["jolokia_info"] = {
     "service_description": "JVM %s",
     "check_function": check_jolokia_info,
     "inventory_function": discover(),
+    "includes": ["jolokia.include"],
+    "group": "jvm_jolokia_info",
 }

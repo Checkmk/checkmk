@@ -197,3 +197,36 @@ def inventory_jolokia_metrics_apps(info, what):
                     inv.append(('%s %s' % (inst, app), levels))
                     continue
     return inv
+
+
+def jolokia_check_version(actual_version, params, label):
+    def tokenize(version):
+        return [int(n) for n in version.split('.')]
+
+    info = "%s %s" % (label, actual_version)
+    if actual_version is None:
+        return 3, info + " (no agent info)"
+    if "version" not in params:
+        return 0, info
+
+    comp_type, expected_version = params["version"]
+    try:
+        parts_actual = tokenize(actual_version)
+        parts_expected = tokenize(expected_version)
+    except ValueError:
+        error = ("Can not compare %s and %s. "
+                 "Only characters 0-9 and . are allowed for a version." %
+                 (actual_version, expected_version))
+        return 3, error
+
+    parts_actual_len = len(parts_actual)
+    parts_expected_len = len(parts_expected)
+    m = max(parts_actual_len, parts_expected_len)
+    parts_actual.extend(0 for _ in range(m - parts_actual_len))
+    parts_expected.extend(0 for _ in range(m - parts_expected_len))
+
+    if comp_type == "at_least" and parts_actual < parts_expected:
+        return 2, info + " (should be at least %s)" % expected_version
+    if comp_type == "specific" and parts_actual != parts_expected:
+        return 2, info + " (should be %s)" % expected_version
+    return 0, info

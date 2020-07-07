@@ -1,0 +1,12 @@
+Title: ucd check: discover Microsens devices
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1594108744
+
+The ucd checks like ucd_mem now get discovered on systems of Microsens. This already used to work once in Version 1.4.

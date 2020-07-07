@@ -94,6 +94,7 @@ def _is_ucd(oid):
             "genugate",
             "bomgar",
             "photon",
+            "microsens",
     ]:
         if name in sys_descr:
             return True

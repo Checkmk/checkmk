@@ -179,6 +179,8 @@ class Worker(threading.Thread):
             # results in a helpful error message since 1.7. These are not failures that this test
             # should report.
             "Missing context information",
+            # Same for dashlets that are related to a specific context
+            "There are no metrics meeting your context filters",
         ]
 
         for element in soup.select("div.error"):

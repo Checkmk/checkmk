@@ -625,8 +625,12 @@ def _update_or_show(board: DashboardConfig, dashlet_instance: Dashlet, is_update
 
 def render_dashlet_exception_content(dashlet_spec: DashletConfig, dashlet_id: int,
                                      e: Exception) -> str:
-    logger.exception("Problem while rendering dashlet %d of type %s", dashlet_id,
-                     dashlet_spec["type"])
+
+    if not isinstance(e, MKUserError):
+        # Do not write regular error messages related to normal user interaction and validation to
+        # the web.log
+        logger.exception("Problem while rendering dashlet %d of type %s", dashlet_id,
+                         dashlet_spec["type"])
 
     with html.plugged():
         if isinstance(e, MKException):

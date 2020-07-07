@@ -4,7 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any, Dict, Union
+
+from cmk.utils.type_defs import CheckPluginName
+
+MANAGEMENT_NAME_PREFIX = "mgmt_"
 
 
 def section_name_of(check_plugin_name: str) -> str:
@@ -20,6 +24,20 @@ def maincheckify(subcheck_name: str) -> str:
     return (subcheck_name.replace('.', '_')  # subchecks don't exist anymore
             .replace('-', '_')  # "sap.value-groups"
            )
+
+
+# TODO (mo): see if we can drop str support after migration.
+def is_management_name(plugin_name: Union[CheckPluginName, str]) -> bool:
+    return str(plugin_name).startswith(MANAGEMENT_NAME_PREFIX)
+
+
+def ensure_management_name(original_name: Union[CheckPluginName, str]) -> CheckPluginName:
+    if is_management_name(original_name):
+        if isinstance(original_name, CheckPluginName):
+            return original_name
+        return CheckPluginName(original_name)
+
+    return CheckPluginName("%s%s" % (MANAGEMENT_NAME_PREFIX, original_name))
 
 
 # (un)wrap_parameters:

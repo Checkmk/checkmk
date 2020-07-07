@@ -11,6 +11,7 @@ import itertools
 from inspect import signature
 from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
+from cmk.utils.check_utils import ensure_management_name, MANAGEMENT_NAME_PREFIX
 from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
 from cmk.base.api.agent_based.checking_types import (
@@ -23,8 +24,6 @@ from cmk.base.api.agent_based.checking_types import (
 )
 
 ITEM_VARIABLE = "%s"
-
-MANAGEMENT_NAME_PREFIX = "mgmt_"
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
@@ -279,7 +278,7 @@ def create_check_plugin(
 
 def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
     return CheckPlugin(
-        CheckPluginName("%s%s" % (MANAGEMENT_NAME_PREFIX, original_plugin.name)),
+        ensure_management_name(original_plugin.name),
         original_plugin.sections,
         "%s%s" % (MANAGEMENT_DESCR_PREFIX, original_plugin.service_name),
         original_plugin.discovery_function,
@@ -291,7 +290,3 @@ def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
         original_plugin.cluster_check_function,
         original_plugin.module,
     )
-
-
-def is_management_name(plugin_name: Union[CheckPluginName, str]) -> bool:
-    return str(plugin_name).startswith(MANAGEMENT_NAME_PREFIX)

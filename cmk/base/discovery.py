@@ -31,7 +31,12 @@ from six import ensure_binary
 
 import livestatus
 
-from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_parameters
+from cmk.utils.check_utils import (
+    is_management_name,
+    maincheckify,
+    unwrap_parameters,
+    wrap_parameters,
+)
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.misc
@@ -70,7 +75,6 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_types
-from cmk.base.api.agent_based.register.check_plugins import MANAGEMENT_NAME_PREFIX
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     resolve_legacy_name,)
 from cmk.base.caching import config_cache as _config_cache
@@ -1206,20 +1210,20 @@ def _execute_discovery(
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
         return
 
-    # TODO (mo): for now. the plan is to create management versions on the fly.
-    source_type = (SourceType.MANAGEMENT if
-                   str(check_plugin_name).startswith(MANAGEMENT_NAME_PREFIX) else SourceType.HOST)
-
     check_plugin = config.registered_check_plugins.get(check_plugin_name)
     if check_plugin is None:
         console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
         return
 
+    # TODO (mo): for now. the plan is to create management versions on the fly.
+    host_key = HostKey(
+        hostname,
+        ipaddress,
+        SourceType.MANAGEMENT if is_management_name(check_plugin_name) else SourceType.HOST,
+    )
+
     try:
-        kwargs = multi_host_sections.get_section_kwargs(
-            HostKey(hostname, ipaddress, source_type),
-            check_plugin.sections,
-        )
+        kwargs = multi_host_sections.get_section_kwargs(host_key, check_plugin.sections)
     except Exception as exc:
         if cmk.utils.debug.enabled() or on_error == "raise":
             raise

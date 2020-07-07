@@ -37,7 +37,12 @@ from typing import (
 from six import ensure_str
 
 import cmk.utils
-from cmk.utils.check_utils import maincheckify, unwrap_parameters
+from cmk.utils.check_utils import (
+    maincheckify,
+    unwrap_parameters,
+    is_management_name,
+    MANAGEMENT_NAME_PREFIX,
+)
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
@@ -101,11 +106,7 @@ try:
         create_snmp_section_plugin_from_legacy,
     )
     from cmk.base.api.agent_based.checking_types import CheckPlugin
-    from cmk.base.api.agent_based.register.check_plugins import (
-        is_management_name,
-        MANAGEMENT_NAME_PREFIX,
-        management_plugin_factory,
-    )
+    from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
     from cmk.base.api.agent_based.register.check_plugins_legacy import (
         create_check_plugin_from_legacy,)
 except ImportError:

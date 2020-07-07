@@ -29,7 +29,7 @@ from typing import (
 
 from six import ensure_binary, ensure_str
 
-from cmk.utils.check_utils import maincheckify
+from cmk.utils.check_utils import is_management_name, maincheckify
 import cmk.utils.debug
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
@@ -415,7 +415,7 @@ def get_aggregated_result(
                       if host_config.is_cluster else plugin.check_function)
 
     source_type = (SourceType.MANAGEMENT
-                   if service.check_plugin_name.startswith('mgmt_') else SourceType.HOST)
+                   if is_management_name(service.check_plugin_name) else SourceType.HOST)
     kwargs = {}
     try:
         kwargs = multi_host_sections.get_section_cluster_kwargs(

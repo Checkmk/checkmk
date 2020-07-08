@@ -27,7 +27,6 @@ from cmk.fetchers import factory, SNMPDataFetcher
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
-import cmk.base.inventory_plugins as inventory_plugins
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
@@ -75,23 +74,17 @@ class CachedSNMPDetector:
         # TODO (mo): With the new API we may be able to set this here.
         #            For now, it is set later :-(
         self._filter_function: Optional[SectionNameFilterFunction] = None
-        self._for_inventory = False
         # Optional set: None: we never tried, empty: we tried, but found nothing
         self._cached_result: Optional[Set[SectionName]] = None
 
     def set_filter_function(self, filter_function: SectionNameFilterFunction) -> None:
         self._filter_function = filter_function
 
-    def set_for_inventory(self, for_inventory: bool) -> None:
-        self._for_inventory = for_inventory
-
     def sections(self) -> Iterable[SNMPScanSection]:
-        sections = []
-        for name, section in config.registered_snmp_sections.items():
-            if self._for_inventory and not inventory_plugins.is_snmp_plugin(str(name)):
-                continue
-            sections.append(SNMPScanSection(section.name, section.detect_spec))
-        return sections
+        return [
+            SNMPScanSection(section.name, section.detect_spec)
+            for section in config.registered_snmp_sections.values()
+        ]
 
     def __call__(
         self,
@@ -239,10 +232,8 @@ class SNMPDataSource(ABCSNMPDataSource):
     def get_do_snmp_scan(self) -> bool:
         return self._do_snmp_scan
 
-    def set_check_plugin_name_filter(self, filter_func: SectionNameFilterFunction, *,
-                                     inventory: bool) -> None:
+    def set_check_plugin_name_filter(self, filter_func: SectionNameFilterFunction) -> None:
         self._detector.set_filter_function(filter_func)
-        self._detector.set_for_inventory(inventory)
 
     def set_fetched_raw_section_names(self, raw_section_names: Set[SectionName]) -> None:
         """Sets a list of already fetched host sections/check plugin names.

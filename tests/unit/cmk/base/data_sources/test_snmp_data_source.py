@@ -199,7 +199,7 @@ def test_detector_requires_type_filter_function_and_ipaddress(monkeypatch, ipadd
     def dummy_filter_func(sections, on_error, do_snmp_scan, *, binary_host, backend):
         return set()
 
-    source.set_check_plugin_name_filter(dummy_filter_func, inventory=False)
+    source.set_check_plugin_name_filter(dummy_filter_func)
     if ipaddress is None:
         with pytest.raises(NotImplementedError):
             source._get_raw_section_names_to_process()

@@ -43,6 +43,7 @@ from cmk.utils.type_defs import (
     CheckPluginNameStr,
     HostAddress,
     HostName,
+    InventoryPluginName,
     Item,
     Metric,
     SectionName,
@@ -148,8 +149,7 @@ def do_check(
         )
 
         # see which raw sections we may need
-        selected_raw_sections = config.get_relevant_raw_sections(check_plugin_names=(
-            CheckPluginName(maincheckify(s.check_plugin_name)) for s in services),)
+        selected_raw_sections = _get_relevant_raw_sections(services, host_config)
 
         sources = data_sources.DataSources(sources=data_sources.make_sources(
             host_config,
@@ -218,6 +218,30 @@ def do_check(
            and ipaddress is not None \
            and host_config.snmp_config(ipaddress).is_inline_snmp_host:
             inline.snmp_stats_save()
+
+
+def _get_relevant_raw_sections(services: List[Service], host_config: config.HostConfig):
+    # see if we can remove this function, once inventory plugins have been migrated to
+    # the new API. In particular, we schould be able to get rid of the imports.
+
+    check_plugin_names: Iterable[CheckPluginName] = (
+        CheckPluginName(maincheckify(s.check_plugin_name)) for s in services)
+
+    if host_config.do_status_data_inventory:
+        # This is called during checking, but the inventory plugins are not loaded yet
+        import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
+        from cmk.base.inventory import get_inventory_context  # pylint: disable=import-outside-toplevel
+        from cmk.base.check_api import get_check_api_context  # pylint: disable=import-outside-toplevel
+        inventory_plugins.load_plugins(get_check_api_context, get_inventory_context)
+        inventory_plugin_names: Iterable[InventoryPluginName] = (
+            InventoryPluginName(n) for n, _plugin in inventory_plugins.sorted_inventory_plugins())
+    else:
+        inventory_plugin_names = ()
+
+    return config.get_relevant_raw_sections(
+        check_plugin_names=check_plugin_names,
+        inventory_plugin_names=inventory_plugin_names,
+    )
 
 
 def _check_plugins_missing_data(

@@ -62,8 +62,8 @@ class MoviesSchema(ValueTypedDictSchema):
     value_type = MovieSchema
 
 
-@pytest.fixture()
-def spec():
+@pytest.fixture(name="spec")
+def spec_fixture():
     return APISpec(title='Sensationalist Witty Title',
                    version='1.0.0',
                    openapi_version='3.0.0',

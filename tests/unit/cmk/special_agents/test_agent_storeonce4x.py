@@ -47,7 +47,14 @@ TOKEN_JSON_FROM_STOREONCE = {
 def test_tokenfile_exists(mock_file):
 
     mysession = StoreOnceOauth2Session(HOST, PORT, "user", "secret", False)
-    assert mock_file.call_args == call('%s_oAuthToken.json' % HOST, 'r')
+    opened_file_path = mock_file.call_args[0][0]
+    open_mode = mock_file.call_args[0][1]
+
+    # As pytest tries to open the mocked file from a tmp dir with random caracters
+    # e.g. /tmp/pytest_cmk_2eoxz8ur, we want to be sure that the suffix is OK.
+    assert opened_file_path.endswith(
+        "tmp/check_mk/special_agents/agent_storeonce4x/%s_oAuthToken.json" % HOST)
+    assert open_mode == "r"
     assert mysession._json_token["expires_in"] == 60
     assert mysession._json_token["expires_in_abs"] == "1988-06-08 17:01:00.000000"
 
@@ -63,7 +70,15 @@ def test_invalid_tokenfile(mock_file):
                   status=200)
 
     mysession = StoreOnceOauth2Session(HOST, PORT, "user", "secret", False)
-    assert mock_file.call_args == call('myhost_oAuthToken.json', 'w')
+
+    opened_file_path = mock_file.call_args[0][0]
+    open_mode = mock_file.call_args[0][1]
+
+    # As pytest tries to open the mocked file from a tmp dir with random caracters
+    # e.g. /tmp/pytest_cmk_2eoxz8ur, we want to be sure that the suffix is OK.
+    assert opened_file_path.endswith(
+        "tmp/check_mk/special_agents/agent_storeonce4x/%s_oAuthToken.json" % HOST)
+    assert open_mode == "w"
     assert mysession._json_token["expires_in"] == EXPIRES_IN
     assert mysession._json_token["expires_in_abs"] == "1988-06-08 17:00:10.000000"
 

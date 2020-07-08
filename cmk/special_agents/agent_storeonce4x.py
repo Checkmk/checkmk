@@ -49,7 +49,7 @@ class StoreOnceOauth2Session:
 
     def __init__(self, host: str, port: str, user: str, secret: str, verify_ssl: bool) -> None:
         self._host = host
-        self._token_file = self._token_file_suffix % self._host
+        self._token_file = "%s/%s" % (str(self._token_dir), self._token_file_suffix % self._host)
         self._port = port
         self._user = user
         self._secret = secret
@@ -278,16 +278,14 @@ def main(argv: Any = None) -> int:
     oauth_session = StoreOnceOauth2Session(opt.host, opt.port, opt.user, opt.password,
                                            opt.verify_ssl)
 
-    try:
-        for section in SECTIONS:
-            sys.stdout.write("<<<%s:sep(0)>>>\n" % section.name)
+    for section in SECTIONS:
+        sys.stdout.write("<<<%s:sep(0)>>>\n" % section.name)
+        try:
             section.handler(section.uris, opt, oauth_session)
-    except Exception as exc:
-        if opt.debug:
-            raise
-        LOGGER.error("Caught exception: %r", exc)
-        return -1
-
+        except Exception as exc:
+            if opt.debug:
+                raise
+            LOGGER.error("Caught exception: %r", exc)
     return 0
 
 

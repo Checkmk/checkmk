@@ -154,7 +154,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
         self._add_custom_snapins(custom_snapins)
 
     def _clear_custom_snapins(self) -> None:
-        for snapin_type_id, snapin_type in self.items():
+        for snapin_type_id, snapin_type in list(self.items()):
             if snapin_type.is_custom_snapin():
                 self.unregister(snapin_type_id)
 

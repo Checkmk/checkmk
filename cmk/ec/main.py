@@ -3966,6 +3966,9 @@ def main() -> None:
         logger.info("Successfully shut down.")
         sys.exit(0)
 
+    except MKSignalException:
+        pass
+
     except Exception:
         if settings.options.debug:
             raise

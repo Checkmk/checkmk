@@ -6,6 +6,8 @@
 
 # pylint: disable=protected-access, redefined-outer-name
 
+from pathlib import Path
+
 import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
@@ -177,7 +179,15 @@ class SNMPTestBackend(ABCSNMPBackend):
 
 @pytest.fixture
 def backend():
-    return SNMPTestBackend(SNMPConfig)
+    try:
+        yield SNMPTestBackend(SNMPConfig)
+    finally:
+        cachefile = Path("tmp/check_mk/snmp_scan_cache/%s.%s" %
+                         (SNMPConfig.hostname, SNMPConfig.ipaddress))
+        try:
+            cachefile.unlink()
+        except FileNotFoundError:
+            pass
 
 
 @pytest.fixture

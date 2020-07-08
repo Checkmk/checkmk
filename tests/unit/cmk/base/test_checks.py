@@ -324,22 +324,6 @@ def test_filter_by_management_board_dual_host_with_SNMP_mgmt_board(monkeypatch, 
                                              for_discovery=for_discovery) == set(mgmt_board_result)
 
 
-def test_py2_check_tests():
-    check_tests = Path(testlib.repo_path()).joinpath(Path('tests/unit/checks'))
-    generic_check_tests = Path(testlib.repo_path()).joinpath(
-        Path('tests/unit/checks/generictests/datasets'))
-
-    if check_tests.exists():
-        py2_check_tests = set(p.name for p in check_tests.glob('test_*.py'))
-        assert py2_check_tests == set(
-        ), "Found deprecated Python 2 check tests: %s" % ", ".join(py2_check_tests)
-
-    if generic_check_tests.exists():
-        py2_generic_check_tests = set(p.name for p in generic_check_tests.glob('*.py'))
-        assert py2_generic_check_tests == set(
-        ), "Found deprecated Python 2 generic check tests: %s" % ", ".join(py2_generic_check_tests)
-
-
 def test_check_plugin_header():
     for checkfile in Path(testlib.repo_path()).joinpath(Path('checks')).iterdir():
         if checkfile.name.startswith("."):
@@ -353,15 +337,6 @@ def test_check_plugin_header():
             checkfile.name, shebang)
         assert encoding_header == "# -*- coding: utf-8 -*-", "Check plugin '%s' has wrong encoding header '%s'" % (
             checkfile.name, encoding_header)
-
-
-def test_py2_inv_plugins_tests():
-    inv_plugin_tests = Path(testlib.repo_path()).joinpath(Path('tests/unit/inventory'))
-    py2_inv_plugin_tests = set(p.name for p in inv_plugin_tests.glob('test_*.py'))
-
-    if inv_plugin_tests.exists():
-        assert py2_inv_plugin_tests == set(
-        ), "Found deprecated Python 2 inventory plugin tests: %s" % ", ".join(py2_inv_plugin_tests)
 
 
 def test_inventory_plugin_header():

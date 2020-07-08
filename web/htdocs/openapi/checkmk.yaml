@@ -2890,6 +2890,7 @@ tags:
   name: UpdateFolder
   x-displayName: Updating a folder
 - name: cmk.gui.plugins.openapi.endpoints.host
+  x-displayName: Host status endpoints
 - description: 'Hosts can only exist in conjunction with Folders. To get a list of
     hosts
 
@@ -2915,7 +2916,9 @@ tags:
   name: InputHostGroup
   x-displayName: Creating a host group
 - name: cmk.gui.plugins.openapi.endpoints.service
+  x-displayName: Service status endpoints
 - name: cmk.gui.plugins.openapi.endpoints.service_discovery
+  x-displayName: Service discovery endpoints.
 - name: cmk.gui.plugins.openapi.endpoints.service_group_config
   x-displayName: Service-groups
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputServiceGroup"

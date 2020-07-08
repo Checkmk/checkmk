@@ -233,9 +233,9 @@ $ make -C tests test-unit
 $ make -C tests test-python-futurize
 $ make -C tests test-format-python
 
-$ make -C tests-py3 test-pylint
-$ make -C tests-py3 test-unit
-$ make -C tests-py3 test-mypy-raw
+$ make -C tests test-pylint
+$ make -C tests test-unit
+$ make -C tests test-mypy-raw
 ```
 
 Some of these commands take several minutes, for example the command
@@ -533,7 +533,7 @@ let g:ale_fix_on_save = 1
 
 ### Type checking: mypy
 
-Code can be checked manually with `make -C tests-py3 test-mypy3`.
+Code can be checked manually with `make -C tests test-mypy3`.
 
 The configuration file is `mypy.ini` and lives in the root directory of the
 Checkmk repository. For info about how to type hint refer to

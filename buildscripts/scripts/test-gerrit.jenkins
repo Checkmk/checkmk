@@ -62,7 +62,7 @@ node (NODE) {
         gerrit_stages.run(
             NAME: 'Python Typing',
             CONDITION: CHANGED_PYTHON_FILES != "",
-            DIR: 'tests-py3',
+            DIR: 'tests',
             ENV_VARS: ["JUNIT_XML=--junit-xml ${RESULTS}/mypy.xml"],
             COMMAND: 'make --quiet test-mypy3',
             TEXT_ON_SKIP: 'No Python files changed. Skipping.'
@@ -71,7 +71,7 @@ node (NODE) {
         gerrit_stages.run(
             NAME: 'Python Format',
             CONDITION: CHANGED_PYTHON_FILES != "",
-            DIR: 'tests-py3',
+            DIR: 'tests',
             ENV_VARS: ["PYTHON_FILES=${CHANGED_PYTHON_FILES}"],
             COMMAND: "make --quiet test-format-python3 &> ${RESULTS}/python-yapf.txt",
             TEXT_ON_SKIP: 'No Python files changed. Skipping.'
@@ -80,7 +80,7 @@ node (NODE) {
         gerrit_stages.run(
             NAME: 'Python Unit Test',
             CONDITION: CHANGED_PYTHON_FILES != "",
-            DIR: 'tests-py3',
+            DIR: 'tests',
             ENV_VARS: ["PYTEST_ADDOPTS=--junitxml=$RESULTS/python3-unit-junit.xml"],
             COMMAND: "make test-unit",
             TEXT_ON_SKIP: 'No Python files changed. Skipping.'
@@ -89,7 +89,7 @@ node (NODE) {
         gerrit_stages.run(
             NAME: 'Python Linting',
             CONDITION: CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON_FILES != "",
-            DIR: 'tests-py3',
+            DIR: 'tests',
             ENV_VARS: ["WORKDIR=${WORKDIR}",'PYLINT_ARGS=--output-format=cmk_parseable'],
             COMMAND: "make test-pylint &> ${RESULTS}/pylint.txt",
             TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed. Skipping.'
@@ -98,7 +98,7 @@ node (NODE) {
          gerrit_stages.run(
             NAME: 'Shell Format',
             CONDITION: true,
-            DIR: 'tests-py3',
+            DIR: 'tests',
             ENV_VARS: [],
             COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt",
             TEXT_ON_SKIP: ''
@@ -108,7 +108,7 @@ node (NODE) {
             gerrit_stages.run(
                NAME: 'Agent Plugin Unit Tests ' + PYTHON_VERSION,
                CONDITION: CHANGED_AGENT_PLUGINS != "",
-               DIR: 'tests-py3',
+               DIR: 'tests',
                ENV_VARS: [
                    "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-" + PYTHON_VERSION + "-junit.xml",
                    "DOCKER_ADDOPTS=-v $RESULTS:$RESULTS"

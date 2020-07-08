@@ -80,17 +80,17 @@ def execute_tests_in_container(distro_name: str, docker_tag: str, version: CMKVe
             logger.info("| ")
             logger.info("| ... start whatever test you want, for example:")
             logger.info("| ")
-            logger.info("| make -C tests-py3 test-integration")
+            logger.info("| make -C tests test-integration")
             logger.info("| ")
             logger.info("|   Execute all integration tests")
             logger.info("| ")
-            logger.info("| tests-py3/scripts/run-integration-test.py "
-                        "tests-py3/integration/livestatus/test_livestatus.py")
+            logger.info("| tests/scripts/run-integration-test.py "
+                        "tests/integration/livestatus/test_livestatus.py")
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
-            logger.info("| tests-py3/scripts/run-integration-test.py "
-                        "tests-py3/integration/livestatus/test_livestatus.py "
+            logger.info("| tests/scripts/run-integration-test.py "
+                        "tests/integration/livestatus/test_livestatus.py "
                         "-k test_service_custom_variables ")
             logger.info("| ")
             logger.info("|   Execute a single test")
@@ -231,7 +231,7 @@ def _create_cmk_image(client: 'docker.DockerClient', base_image_name: str, docke
         logger.info("Install Checkmk version")
         assert _exec_run(
             container,
-            ["scripts/run-pipenv", "run", "/git/tests-py3/scripts/install-cmk.py"],
+            ["scripts/run-pipenv", "run", "/git/tests/scripts/install-cmk.py"],
             workdir="/git",
             environment=_container_env(version),
             stream=True,

@@ -28,7 +28,7 @@ node (NODE) {
 
             try {
                 stage('execute test') {
-                    dir ('tests-py3') {
+                    dir ('tests') {
                         def EXIT_CODE = sh(
                             script: "BANDIT_OUTPUT_ARGS=\"-f xml -o '$WORKSPACE/bandit_results.xml'\" make test-bandit",
                             returnStatus: true

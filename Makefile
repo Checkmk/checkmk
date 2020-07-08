@@ -557,7 +557,7 @@ format-python:
 
 
 format-shell:
-	$(MAKE)	-C tests-py3 format-shell
+	$(MAKE)	-C tests format-shell
 
 
 # Note: You need the doxygen and graphviz packages.

@@ -53,4 +53,4 @@ script:
     # example test-format-python optionally checks only the files in set in
     # the environment variable PYTHON_FILES. Without it, it always checks
     # all known python files.
-    - travis_wait 30 make -C tests-py3 $TEST_TARGETS;
+    - travis_wait 30 make -C tests $TEST_TARGETS;

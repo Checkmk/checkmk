@@ -130,8 +130,9 @@ def get_cmk_download_credentials():
 
 
 def get_standard_linux_agent_output():
-    with Path(repo_path(), "tests-py3/integration/cmk/base/test-files/linux-agent-output").open(
-            encoding="utf-8") as f:
+    with Path(
+            repo_path(),
+            "tests/integration/cmk/base/test-files/linux-agent-output").open(encoding="utf-8") as f:
         return f.read()
 
 

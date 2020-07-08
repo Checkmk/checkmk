@@ -41,7 +41,7 @@ try {
             // user in the container.
             TEST_IMAGE.inside("--ulimit nofile=1024:1024 --init") {
                stage('test python3 linting') {
-                   dir ('tests-py3') {
+                   dir ('tests') {
                        sh "make test-pylint"
                    }
                }

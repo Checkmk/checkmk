@@ -10,7 +10,7 @@ fi
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV=pipenv
 
-pushd $REPO_PATH/tests-py3 > /dev/null
+pushd $REPO_PATH/tests > /dev/null
 PIPENV_VENV_IN_PROJECT=true \
     PIPENV_NOSPIN=true \
     PIPENV_HIDE_EMOJIS=true \

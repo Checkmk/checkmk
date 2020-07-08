@@ -13,7 +13,7 @@ init-hook=
     import inspect, os, sys
     config_file = inspect.stack()[2][0].f_locals["linter"].config_file
     tests_dir2 = os.path.join(os.path.dirname(config_file), "tests")
-    tests_dir3 = os.path.join(os.path.dirname(config_file), "tests-py3")
+    tests_dir3 = os.path.join(os.path.dirname(config_file), "tests")
     tests_dir = tests_dir3 if sys.version.split('.')[0] == '3' else tests_dir2
     sys.path.insert(0, os.environ.get("TEST_PATH", tests_dir))
     import conftest

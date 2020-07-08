@@ -57,7 +57,7 @@ def main(raw_args):
         return execute_tests_in_container(
             distro_name=distro_name,
             docker_tag=docker_tag,
-            command=["make", "-C", "tests-py3", args.make_target],
+            command=["make", "-C", "tests", args.make_target],
             version=version,
             result_path=result_path,
             interactive=args.make_target == "debug",

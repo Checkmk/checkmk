@@ -27,7 +27,7 @@ node (NODE) {
             }
             try {
                 stage('test pipenv dependencies') {
-                    dir ('tests-py3') {
+                    dir ('tests') {
                         def EXIT_CODE = sh(
                             script: "make test-pipenv-deps",
                             returnStatus: true

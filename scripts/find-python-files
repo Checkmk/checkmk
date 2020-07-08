@@ -50,7 +50,7 @@ SEARCH+=" omd/packages/appliance"
 SEARCH+=" omd/packages/maintenance"
 SEARCH+=" omd/packages/omd"
 SEARCH+=" scripts"
-SEARCH+=" tests-py3"
+SEARCH+=" tests"
 SEARCH+=" web/app"
 SEARCH+=" werk"
 

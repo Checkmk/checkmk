@@ -50,7 +50,7 @@ try {
                 PYTHON_VERSIONS.each { PYTHON_VERSION ->
                     DOCKER_BUILDS[PYTHON_VERSION] = {
                         stage('test agent plugin unit ' + PYTHON_VERSION) {
-                            dir('tests-py3') {
+                            dir('tests') {
                                 sh("bash -c \"make test-agent-plugin-unit-py" + PYTHON_VERSION + "-docker\"")
                             }
                         }

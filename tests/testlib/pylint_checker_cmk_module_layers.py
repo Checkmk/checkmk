@@ -81,7 +81,7 @@ class CMKModuleLayerChecker(BaseChecker):
 
         file_path = file_path[len(cmk_path()) + 1:]  # Make relative
 
-        if file_path.startswith("tests/") or file_path.startswith("tests-py3/"):
+        if file_path.startswith("tests/") or file_path.startswith("tests/"):
             return  # No validation in tests
 
         # Pylint fails to detect the correct module path here. Instead of realizing that the file

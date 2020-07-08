@@ -358,7 +358,7 @@ class Site:
     def create(self):
         if not self.version.is_installed():
             raise Exception("Version %s not installed. "
-                            "Use \"tests-py3/scripts/install-cmk.py\" or install it manually." %
+                            "Use \"tests/scripts/install-cmk.py\" or install it manually." %
                             self.version.version)
 
         if not self.reuse and self.exists():

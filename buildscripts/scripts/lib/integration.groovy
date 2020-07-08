@@ -20,7 +20,7 @@ def build(Map args) {
                 args.DISTRO_LIST.each { DISTRO ->
                     DOCKER_BUILDS[DISTRO] = {
                         stage('test') {
-                            dir ('tests-py3') {
+                            dir ('tests') {
                                 sh "RESULT_PATH='${WORKSPACE}/test-results/${DISTRO}' EDITION='"+args.EDITION+"' DOCKER_TAG='"+args.DOCKER_TAG+"' VERSION='$CMK_VERSION' DISTRO='$DISTRO' make "+args.MAKE_TARGET
                             }
                         }

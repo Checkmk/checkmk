@@ -261,10 +261,10 @@ def test_save_status(mk_logwatch, tmpdir):
 
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [
     ("/*",
-     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
+     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlink_to_file.log"]),
     ("/**",
-     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
-    ("/subdir/*", ["/subdir/another_symlinked_file.log"]),
+     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlink_to_file.log"]),
+    ("/subdir/*", ["/subdir/symlink_to_file.log"]),
     ("/symlink_to_dir/*", ["/symlink_to_dir/yet_another_file.log"]),
 ])
 def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, file_suffixes):

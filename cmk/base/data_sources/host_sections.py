@@ -56,7 +56,7 @@ class MultiHostSections(collections.abc.MutableMapping):
     merging these information together for a check"""
     def __init__(self, data: Optional[Dict[HostKey, AbstractHostSections]] = None) -> None:
         super(MultiHostSections, self).__init__()
-        self._data: Dict[HostKey, AbstractHostSections] = {}
+        self._data: Dict[HostKey, AbstractHostSections] = {} if data is None else data
         self._config_cache = config.get_config_cache()
         self._section_content_cache = caching.DictCache()
         # This is not quite the same as section_content_cache.

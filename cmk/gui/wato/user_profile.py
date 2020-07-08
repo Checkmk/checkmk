@@ -26,6 +26,7 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
 from cmk.gui.wato.pages.users import select_language
 
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 
 
@@ -242,8 +243,7 @@ def _show_page_user_profile(change_pw):
     # WATO module due to WATO permission issues. So we cannot show this button
     # right now.
     if not change_pw:
-        rulebased_notifications = watolib.load_configuration_settings().get(
-            "enable_rulebased_notifications")
+        rulebased_notifications = rulebased_notifications_enabled()
         if rulebased_notifications and config.user.may('general.edit_notifications'):
             html.begin_context_buttons()
             url = "wato.py?mode=user_notifications_p"

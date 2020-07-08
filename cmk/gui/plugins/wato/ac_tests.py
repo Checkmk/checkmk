@@ -25,6 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 
 from cmk.gui.plugins.wato import (
@@ -859,8 +860,7 @@ class ACTestRulebasedNotifications(ACTest):
         return True
 
     def execute(self) -> Iterator[ACResult]:
-        settings = watolib.load_configuration_settings()
-        if settings['enable_rulebased_notifications'] is not True:
+        if not rulebased_notifications_enabled():
             yield ACResultCRIT('Rulebased notifications are deactivated in the global settings')
         else:
             yield ACResultOK(_("Rulebased notifications are activated"))

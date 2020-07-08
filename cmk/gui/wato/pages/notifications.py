@@ -55,6 +55,7 @@ from cmk.gui.plugins.wato import (
     add_change,
     notification_parameter_registry,
 )
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.notifications import (
     save_notification_rules,
     load_notification_rules,
@@ -496,8 +497,7 @@ class ModeNotifications(NotificationsMode):
         # Check setting of global notifications. Are they enabled? If not, display
         # a warning here. Note: this is a main.mk setting, so we cannot access this
         # directly.
-        current_settings = watolib.load_configuration_settings()
-        if not current_settings.get("enable_rulebased_notifications"):
+        if not rulebased_notifications_enabled():
             url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
             html.show_warning(
                 _("<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "

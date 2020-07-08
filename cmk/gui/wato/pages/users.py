@@ -43,6 +43,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -256,7 +257,7 @@ class ModeUsers(WatoMode):
 
                 notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"),
                                                                     ("user", uid)])
-                if watolib.load_configuration_settings().get("enable_rulebased_notifications"):
+                if rulebased_notifications_enabled():
                     html.icon_button(notifications_url, _("Custom notification table of this user"),
                                      "notifications")
 
@@ -362,7 +363,7 @@ class ModeUsers(WatoMode):
                 #                                                vs_authorized_sites().default_value())))
 
                 # notifications
-                if not watolib.load_configuration_settings().get("enable_rulebased_notifications"):
+                if not rulebased_notifications_enabled():
                     table.cell(_("Notifications"))
                     if not cgs:
                         html.i(_("not a contact"))
@@ -937,7 +938,7 @@ class ModeEditUser(WatoMode):
 
     def _rbn_enabled(self):
         # Check if rule based notifications are enabled (via WATO)
-        return watolib.load_configuration_settings().get("enable_rulebased_notifications")
+        return rulebased_notifications_enabled()
 
     def _pw_suffix(self) -> str:
         return 'new' if self._user_id is None else ensure_str(

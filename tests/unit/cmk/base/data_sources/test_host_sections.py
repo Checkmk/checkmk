@@ -382,12 +382,8 @@ def test_get_host_sections(monkeypatch):
     make_scenario(hostname, tags).apply(monkeypatch)
     host_config = config.HostConfig.make_host_config(hostname)
 
-    sources = DataSources(
-        hostname,
-        address,
-        sources=make_sources(host_config, address),
-    )
-    nodes = sources.make_nodes(host_config)
+    sources = DataSources(sources=make_sources(host_config, address))
+    nodes = sources.make_nodes(host_config, address)
     mhs = sources.get_host_sections(nodes, max_cachefile_age=host_config.max_cachefile_age)
     assert len(mhs) == 1
 
@@ -427,12 +423,8 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     # Create a cluster
     host_config.nodes = list(hosts.keys())
 
-    sources = DataSources(
-        hostname,
-        address,
-        sources=make_sources(host_config, address),
-    )
-    nodes = sources.make_nodes(host_config)
+    sources = DataSources(sources=make_sources(host_config, address),)
+    nodes = sources.make_nodes(host_config, address)
     mhs = sources.get_host_sections(nodes, max_cachefile_age=host_config.max_cachefile_age)
     assert len(mhs) == len(hosts) == 3
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]

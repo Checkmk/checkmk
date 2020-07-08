@@ -388,10 +388,7 @@ def mode_dump_agent(hostname: HostName) -> None:
 
         ipaddress = ip_lookup.lookup_ip_address(hostname)
         sources = data_sources.DataSources(
-            hostname,
-            ipaddress,
-            sources=data_sources.make_sources(host_config, ipaddress),
-        )
+            sources=data_sources.make_sources(host_config, ipaddress))
 
         output = []
         # Show errors of problematic data sources

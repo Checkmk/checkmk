@@ -31,6 +31,7 @@ from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
+    HostAddress,
     HostName,
     ServiceDetails,
     ServiceState,
@@ -1182,10 +1183,9 @@ class AutomationDiagHost(Automation):
             if test == 'agent':
                 return self._execute_agent(
                     data_sources.DataSources(
-                        hostname,
-                        ipaddress,
-                        sources=data_sources.make_sources(host_config, ipaddress),
-                    ),
+                        sources=data_sources.make_sources(host_config, ipaddress)),
+                    host_config.hostname,
+                    ipaddress,
                     agent_port,
                     cmd,
                     tcp_connect_timeout,
@@ -1234,6 +1234,8 @@ class AutomationDiagHost(Automation):
     def _execute_agent(
         self,
         sources: data_sources.DataSources,
+        hostname: HostName,
+        ipaddress: HostAddress,
         agent_port: int,
         cmd: str,
         tcp_connect_timeout: Optional[float],
@@ -1243,8 +1245,8 @@ class AutomationDiagHost(Automation):
             source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source, data_sources.programs.DSProgramDataSource) and cmd:
                 source = data_sources.programs.DSProgramDataSource(
-                    sources.hostname,
-                    sources.ipaddress,
+                    hostname,
+                    ipaddress,
                     cmd,
                 )
             elif isinstance(source, data_sources.tcp.TCPDataSource):
@@ -1531,10 +1533,7 @@ class AutomationGetAgentOutput(Automation):
                     not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
                 sources = data_sources.DataSources(
-                    hostname,
-                    ipaddress,
-                    sources=data_sources.make_sources(host_config, ipaddress),
-                )
+                    sources=data_sources.make_sources(host_config, ipaddress))
 
                 agent_output = b""
                 for source in sources:

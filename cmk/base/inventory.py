@@ -71,10 +71,7 @@ def do_inv(hostnames: List[HostName]) -> None:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
             sources = data_sources.DataSources(
-                hostname,
-                ipaddress,
-                sources=data_sources.make_sources(host_config, ipaddress),
-            )
+                sources=data_sources.make_sources(host_config, ipaddress))
             inventory_tree, status_data_tree = _do_inv_for(
                 sources,
                 multi_host_sections=None,
@@ -122,11 +119,7 @@ def do_inv_check(
     long_infotexts: List[str] = []
     perfdata: List[Tuple] = []
 
-    sources = data_sources.DataSources(
-        hostname,
-        ipaddress,
-        sources=data_sources.make_sources(host_config, ipaddress),
-    )
+    sources = data_sources.DataSources(sources=data_sources.make_sources(host_config, ipaddress))
     inventory_tree, status_data_tree = _do_inv_for(
         sources,
         multi_host_sections=None,
@@ -299,7 +292,7 @@ def _do_inv_for_realhost(host_config: config.HostConfig, sources: data_sources.D
                 host_sections.update(source.run())
 
     if multi_host_sections is None:
-        nodes = sources.make_nodes(host_config)
+        nodes = sources.make_nodes(host_config, ipaddress)
         multi_host_sections = sources.get_host_sections(
             nodes, max_cachefile_age=host_config.max_cachefile_age)
 

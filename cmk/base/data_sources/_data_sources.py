@@ -203,14 +203,10 @@ def make_sources(
 class DataSources(collections.abc.Collection):
     def __init__(
         self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
         *,
         sources: List[DataSource],
     ) -> None:
         super(DataSources, self).__init__()
-        self.hostname = hostname
-        self.ipaddress = ipaddress
         self._sources = sources
 
     def __contains__(self, item) -> bool:
@@ -268,9 +264,10 @@ class DataSources(collections.abc.Collection):
     def make_nodes(
         self,
         host_config: HostConfig,
+        ipaddress: Optional[HostAddress],
     ) -> List[Tuple[HostName, Optional[HostAddress], "DataSources"]]:
         if host_config.nodes is None:
-            return [(self.hostname, self.ipaddress, self)]
+            return [(host_config.hostname, ipaddress, self)]
         return self._make_piggy_nodes(host_config)
 
     @staticmethod
@@ -294,14 +291,10 @@ class DataSources(collections.abc.Collection):
                 check_plugin_names=(
                     # TODO (mo): centralize maincheckify: CMK-4295
                     CheckPluginName(maincheckify(n)) for n in check_names),)
-            sources = DataSources(
-                hostname,
+            sources = DataSources(sources=make_sources(
+                HostConfig.make_host_config(hostname),
                 ipaddress,
-                sources=make_sources(
-                    HostConfig.make_host_config(hostname),
-                    ipaddress,
-                    selected_raw_sections=selected_raw_sections,
-                ),
-            )
+                selected_raw_sections=selected_raw_sections,
+            ))
             nodes.append((hostname, ipaddress, sources))
         return nodes

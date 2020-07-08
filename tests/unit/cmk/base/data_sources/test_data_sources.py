@@ -62,10 +62,5 @@ def test_get_sources(monkeypatch, hostname, tags, sources):
     host_config = config.HostConfig.make_host_config(hostname)
     ipaddress = "127.0.0.1"
 
-    assert [
-        s.__class__ for s in DataSources(
-            hostname,
-            ipaddress,
-            sources=make_sources(host_config, ipaddress),
-        )
-    ] == sources
+    assert [type(source) for source in DataSources(sources=make_sources(host_config, ipaddress))
+           ] == sources

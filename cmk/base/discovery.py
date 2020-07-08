@@ -329,21 +329,17 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                                          check_plugin_names=check_plugin_names))
 
             sources = _get_sources_for_discovery(
-                data_sources.DataSources(
-                    hostname,
+                data_sources.DataSources(sources=data_sources.make_sources(
+                    host_config,
                     ipaddress,
-                    sources=data_sources.make_sources(
-                        host_config,
-                        ipaddress,
-                        selected_raw_sections=selected_raw_sections,
-                    ),
-                ),
+                    selected_raw_sections=selected_raw_sections,
+                )),
                 do_snmp_scan,
                 on_error,
             )
 
             multi_host_sections = sources.get_host_sections(
-                sources.make_nodes(host_config),
+                sources.make_nodes(host_config, ipaddress),
                 max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
             )
 
@@ -528,18 +524,14 @@ def discover_on_host(
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
         sources = _get_sources_for_discovery(
-            data_sources.DataSources(
-                hostname,
-                ipaddress,
-                sources=data_sources.make_sources(host_config, ipaddress),
-            ),
+            data_sources.DataSources(sources=data_sources.make_sources(host_config, ipaddress)),
             do_snmp_scan=do_snmp_scan,
             on_error=on_error,
             for_check_discovery=True,
         )
 
         multi_host_sections = sources.get_host_sections(
-            sources.make_nodes(host_config),
+            sources.make_nodes(host_config, ipaddress),
             max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
         )
 
@@ -664,11 +656,7 @@ def check_discovery(
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
     sources = _get_sources_for_discovery(
-        data_sources.DataSources(
-            hostname,
-            ipaddress,
-            sources=data_sources.make_sources(host_config, ipaddress),
-        ),
+        data_sources.DataSources(sources=data_sources.make_sources(host_config, ipaddress)),
         do_snmp_scan=params["inventory_check_do_scan"],
         on_error="raise",
         for_check_discovery=True,
@@ -676,7 +664,7 @@ def check_discovery(
 
     use_caches = data_sources.abstract.DataSource.get_may_use_cache_file()
     multi_host_sections = sources.get_host_sections(
-        sources.make_nodes(host_config),
+        sources.make_nodes(host_config, ipaddress),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
     )
 
@@ -1486,17 +1474,13 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
     ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_name)
 
     sources = _get_sources_for_discovery(
-        data_sources.DataSources(
-            host_name,
-            ip_address,
-            sources=data_sources.make_sources(host_config, ip_address),
-        ),
+        data_sources.DataSources(sources=data_sources.make_sources(host_config, ip_address),),
         do_snmp_scan=do_snmp_scan,
         on_error=on_error,
     )
 
     multi_host_sections = sources.get_host_sections(
-        sources.make_nodes(host_config),
+        sources.make_nodes(host_config, ip_address),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
     )
 

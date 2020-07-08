@@ -64,6 +64,7 @@ from cmk.gui.plugins.wato import (
     MenuItem,
     main_module_registry,
     MainModule,
+    MainModuleTopicMonitoring,
     global_buttons,
     add_change,
     wato_confirm,
@@ -2374,6 +2375,10 @@ class MainModuleBI(MainModule):
     @property
     def mode_or_url(self):
         return "bi_packs"
+
+    @property
+    def topic(self):
+        return MainModuleTopicMonitoring
 
     @property
     def title(self):

@@ -16,6 +16,11 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     main_module_registry,
     MainModule,
+    MainModuleTopicMonitoring,
+    MainModuleTopicSites,
+    MainModuleTopicUsers,
+    MainModuleTopicAgents,
+    MainModuleTopicEvents,
 )
 
 
@@ -24,6 +29,10 @@ class MainModuleFolder(MainModule):
     @property
     def mode_or_url(self):
         return "folder"
+
+    @property
+    def topic(self):
+        return MainModuleTopicMonitoring
 
     @property
     def title(self):
@@ -51,6 +60,10 @@ class MainModuleTags(MainModule):
     @property
     def mode_or_url(self):
         return "tags"
+
+    @property
+    def topic(self):
+        return MainModuleTopicMonitoring
 
     @property
     def title(self):
@@ -82,6 +95,10 @@ class MainModuleGlobalSettings(MainModule):
         return "globalvars"
 
     @property
+    def topic(self):
+        return MainModuleTopicSites
+
+    @property
     def title(self):
         return _("Global Settings")
 
@@ -107,6 +124,10 @@ class MainModuleHostAndServiceParameters(MainModule):
     @property
     def mode_or_url(self):
         return "ruleeditor"
+
+    @property
+    def topic(self):
+        return MainModuleTopicMonitoring
 
     @property
     def title(self):
@@ -136,6 +157,10 @@ class MainModuleStaticChecks(MainModule):
         return "static_checks"
 
     @property
+    def topic(self):
+        return MainModuleTopicMonitoring
+
+    @property
     def title(self):
         return _("Manual Checks")
 
@@ -161,6 +186,10 @@ class MainModuleCheckPlugins(MainModule):
     @property
     def mode_or_url(self):
         return "check_plugins"
+
+    @property
+    def topic(self):
+        return MainModuleTopicMonitoring
 
     @property
     def title(self):
@@ -190,6 +219,10 @@ class MainModuleHostAndServiceGroups(MainModule):
         return "host_groups"
 
     @property
+    def topic(self):
+        return MainModuleTopicMonitoring
+
+    @property
     def title(self):
         return _("Host & Service Groups")
 
@@ -215,6 +248,10 @@ class MainModuleUsers(MainModule):
     @property
     def mode_or_url(self):
         return "users"
+
+    @property
+    def topic(self):
+        return MainModuleTopicUsers
 
     @property
     def title(self):
@@ -244,6 +281,10 @@ class MainModuleRoles(MainModule):
         return "roles"
 
     @property
+    def topic(self):
+        return MainModuleTopicUsers
+
+    @property
     def title(self):
         return _("Roles & Permissions")
 
@@ -269,6 +310,10 @@ class MainModuleContactGroups(MainModule):
     @property
     def mode_or_url(self):
         return "contact_groups"
+
+    @property
+    def topic(self):
+        return MainModuleTopicUsers
 
     @property
     def title(self):
@@ -298,6 +343,10 @@ class MainModuleNotifications(MainModule):
         return "notifications"
 
     @property
+    def topic(self):
+        return MainModuleTopicEvents
+
+    @property
     def title(self):
         return _("Notifications")
 
@@ -323,6 +372,10 @@ class MainModuleTimeperiods(MainModule):
     @property
     def mode_or_url(self):
         return "timeperiods"
+
+    @property
+    def topic(self):
+        return MainModuleTopicEvents
 
     @property
     def title(self):
@@ -353,6 +406,10 @@ class MainModuleSites(MainModule):
         return "sites"
 
     @property
+    def topic(self):
+        return MainModuleTopicSites
+
+    @property
     def title(self):
         return _("Distributed Monitoring")
 
@@ -378,6 +435,10 @@ class MainModuleBackup(MainModule):
     @property
     def mode_or_url(self):
         return "backup"
+
+    @property
+    def topic(self):
+        return MainModuleTopicSites
 
     @property
     def title(self):
@@ -407,6 +468,10 @@ class MainModulePasswords(MainModule):
         return "passwords"
 
     @property
+    def topic(self):
+        return MainModuleTopicMonitoring
+
+    @property
     def title(self):
         return _("Passwords")
 
@@ -434,6 +499,10 @@ class MainModuleAnalyzeConfig(MainModule):
         return "analyze_config"
 
     @property
+    def topic(self):
+        return MainModuleTopicSites
+
+    @property
     def title(self):
         return _("Analyze configuration")
 
@@ -459,6 +528,10 @@ class MainModuleDiagnostics(MainModule):
     @property
     def mode_or_url(self):
         return "diagnostics"
+
+    @property
+    def topic(self):
+        return MainModuleTopicSites
 
     @property
     def title(self):
@@ -491,6 +564,10 @@ class MainModulePatternEditor(MainModule):
         return "pattern_editor"
 
     @property
+    def topic(self):
+        return MainModuleTopicEvents
+
+    @property
     def title(self):
         return _("Logfile Pattern Analyzer")
 
@@ -518,6 +595,10 @@ class MainModuleIcons(MainModule):
         return "icons"
 
     @property
+    def topic(self):
+        return MainModuleTopicSites
+
+    @property
     def title(self):
         return _("Custom Icons")
 
@@ -542,6 +623,10 @@ class MainModuleDownloadAgents(MainModule):
     @property
     def mode_or_url(self):
         return "download_agents"
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
 
     @property
     def title(self):

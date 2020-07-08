@@ -15,6 +15,7 @@ from cmk.gui.log import logger
 from cmk.gui.plugins.wato import (
     main_module_registry,
     MainModule,
+    MainModuleTopicSites,
     WatoMode,
     mode_registry,
 )
@@ -25,6 +26,10 @@ class MainModuleBackgroundJobs(MainModule):
     @property
     def mode_or_url(self):
         return "background_jobs_overview"
+
+    @property
+    def topic(self):
+        return MainModuleTopicSites
 
     @property
     def title(self):

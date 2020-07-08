@@ -113,6 +113,7 @@ from cmk.gui.plugins.wato.utils import (
     ServiceRulespec,
     main_module_registry,
     MainModule,
+    MainModuleTopicEvents,
     wato_confirm,
     search_form,
     site_neutral_path,
@@ -2768,6 +2769,10 @@ class MainModuleEventConsole(MainModule):
     @property
     def mode_or_url(self):
         return "mkeventd_rule_packs"
+
+    @property
+    def topic(self):
+        return MainModuleTopicEvents
 
     @property
     def title(self):

@@ -41,6 +41,8 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     DualListChoice,
     Optional,
+    IconSelector,
+    Integer,
 )
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _u, _
@@ -1371,3 +1373,113 @@ def render_addto_popup(added_type):
     for page_ty in page_types.values():
         if issubclass(page_ty, Container):
             page_ty.render_addto_popup(added_type)
+
+
+#   .--Topics--------------------------------------------------------------.
+#   |                     _____           _                                |
+#   |                    |_   _|__  _ __ (_) ___ ___                       |
+#   |                      | |/ _ \| '_ \| |/ __/ __|                      |
+#   |                      | | (_) | |_) | | (__\__ \                      |
+#   |                      |_|\___/| .__/|_|\___|___/                      |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Each visuals / pagetype can have one topic. These topics are also    |
+#   | managed in form of pagetypes to be customizable.                     |
+#   '----------------------------------------------------------------------'
+
+
+class PagetypeTopics(Overridable):
+    @classmethod
+    def type_name(cls):
+        return "pagetype_topic"
+
+    @classmethod
+    def phrase(cls, phrase):
+        return {
+            "title": _("Topic"),
+            "title_plural": _("Topics"),
+            "clone": _("Clone topic"),
+            "create": _("Create topic"),
+            "edit": _("Edit topic"),
+            "new": _("New topic"),
+        }.get(phrase, Base.phrase(phrase))
+
+    @classmethod
+    def parameters(cls, mode):
+        parameters = super(PagetypeTopics, cls).parameters(mode)
+
+        parameters += [
+            (
+                _("Topic"),
+                [
+                    # sort-index, key, valuespec
+                    (2.5, "icon_name", IconSelector(
+                        title=_("Icon"),
+                        show_builtin_icons=True,
+                    )),
+                    (2.5, "sort_index",
+                     Integer(
+                         title=_("Sort index"),
+                         help=_("You can customize the order of the topics by changing "
+                                "this number. Lower numbers will be sorted first. "
+                                "Topics with the same number will be sorted alphabetically."),
+                     )),
+                ]),
+        ]
+
+        return parameters
+
+    def render_extra_columns(self, table):
+        """Show some specific useful columns in the list view"""
+        table.cell(_("Icon"), html.render_icon(self._["icon_name"]))
+        table.cell(_("Sort index"), str(self._["sort_index"]))
+
+    @classmethod
+    def builtin_pages(cls):
+        return {
+            "overview": {
+                "title": _("Overview"),
+                "icon_name": "topic_overview",
+                "description": "",
+                "sort_index": 10,
+            },
+            "analyse": {
+                "title": _('Analyse'),
+                "icon_name": "topic_analyze",
+                "description": "",
+                "sort_index": 20,
+            },
+            "operating": {
+                "title": _("Operating"),
+                "icon_name": "topic_operating",
+                "description": "",
+                "sort_index": 30,
+            },
+            "history": {
+                "title": _("History"),
+                "icon_name": "topic_history",
+                "description": "",
+                "sort_index": 40,
+            },
+            "events": {
+                "title": _("Event Console"),
+                "icon_name": "topic_events",
+                "description": "",
+                "sort_index": 50,
+            },
+            "inventory": {
+                "title": _("Inventory"),
+                "icon_name": "topic_inventory",
+                "description": "",
+                "sort_index": 60,
+            },
+            "applications": {
+                "title": _("Applications"),
+                "icon_name": "topic_applications",
+                "description": "",
+                "sort_index": 70,
+            },
+        }
+
+
+declare(PagetypeTopics)

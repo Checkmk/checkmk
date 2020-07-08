@@ -454,6 +454,7 @@ def page_list(what,
     if pagetypes.has_page_type("custom_snapin"):
         html.context_button(_("Custom snapins"), "custom_snapins.py", "custom_snapin")
     html.context_button(_("Bookmark lists"), "bookmark_lists.py", "bookmark_list")
+    html.context_button(_("Topics"), "pagetype_topics.py", "pagetype_topics")
 
     html.end_context_buttons()
 

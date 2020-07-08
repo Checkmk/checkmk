@@ -69,6 +69,7 @@ def test_registered_permission_sections():
         ('nagvis', (50, u'NagVis', False)),
         ('view', (50, u'Views', True)),
         ('icons_and_actions', (50, u'Icons', True)),
+        ('pagetype_topic', (50, u'Topics', True)),
     ]
 
     if not cmk_version.is_raw_edition():
@@ -120,6 +121,13 @@ def test_registered_permissions():
         'general.change_password',
         'general.configure_sidebar',
         'general.csv_export',
+        'general.delete_foreign_pagetype_topic',
+        'general.edit_pagetype_topic',
+        'general.edit_foreign_pagetype_topic',
+        'general.force_pagetype_topic',
+        'general.publish_pagetype_topic',
+        'general.publish_to_foreign_groups_pagetype_topic',
+        'general.see_user_pagetype_topic',
         'general.delete_foreign_bookmark_list',
         'general.delete_foreign_custom_snapin',
         'general.delete_foreign_dashboards',

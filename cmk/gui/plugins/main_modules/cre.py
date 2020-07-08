@@ -9,6 +9,7 @@
 
 import cmk.gui.main
 import cmk.gui.sidebar
+import cmk.gui.main_menu
 import cmk.gui.cron
 import cmk.gui.login
 import cmk.gui.weblib

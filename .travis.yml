@@ -15,7 +15,7 @@ matrix:
           env: TEST_TARGETS="test-bandit"
         - name: "Python formatting"
           python: "3.8"
-          env: TEST_TARGETS="test-format-python3"
+          env: TEST_TARGETS="test-format-python"
         - name: "Pylint tests"
           python: "3.8"
           env: TEST_TARGETS="test-pylint"
@@ -24,7 +24,7 @@ matrix:
           env: TEST_TARGETS="test-unit"
         - name: "mypy tests"
           python: "3.8"
-          env: TEST_TARGETS="test-mypy3-raw"
+          env: TEST_TARGETS="test-mypy-raw"
 env:
     global:
         # Optimize builds by caching pip and pipenv things

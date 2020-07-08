@@ -29,9 +29,9 @@ PYTHON_VERSIONS := 2.6 2.7 3.3 3.4 3.5 3.6 3.7 3.8
 .PHONY: clean format-shell help prepare-node-modules \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
-	test-docker test-format-python3 test-format-shell test-gui-crawl test-gui-crawl-docker \
-	test-integration test-integration-docker test-integration-docker-debug test-mypy3 \
-	test-mypy3-raw test-packaging test-pipenv-deps test-pylint test-shellcheck test-unit \
+	test-docker test-format-python test-format-shell test-gui-crawl test-gui-crawl-docker \
+	test-integration test-integration-docker test-integration-docker-debug test-mypy \
+	test-mypy-raw test-packaging test-pipenv-deps test-pylint test-shellcheck test-unit \
 	test-unit-coverage-html test-unit-sh
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
@@ -46,15 +46,15 @@ help:
 	@echo "test-composition-docker             - Run composition tests in container"
 	@echo "test-composition-docker-debug       - Run test container for manual debugging"
 	@echo "test-docker                         - Run docker tests"
-	@echo "test-format-python3                 - Run Python 3 formatting tests"
+	@echo "test-format-python                  - Run formatting tests"
 	@echo "test-format-shell                   - Run the shell formatting"
 	@echo "test-gui-crawl                      - Run GUI crawl locally"
 	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
 	@echo "test-integration                    - Run integration tests locally"
 	@echo "test-integration-docker             - Run integration tests in container"
 	@echo "test-integration-docker-debug       - Run test container for manual debugging"
-	@echo "test-mypy3                          - Run mypy tests for Python 3"
-	@echo "test-mypy3-raw                      - Run mypy tests for Python 3 with raw edition config"
+	@echo "test-mypy                           - Run mypy"
+	@echo "test-mypy-raw                       - Run mypy with raw edition config"
 	@echo "test-packaging                      - Run packaging tests"
 	@echo "test-pipenv-deps                    - Run pipenv dependency issue test"
 	@echo "test-pylint                         - Run pylint based tests"
@@ -122,7 +122,7 @@ test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
 	$(PYTEST) -T docker docker
 
-test-format-python3: ../.style.yapf
+test-format-python: ../.style.yapf
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
@@ -150,7 +150,7 @@ test-integration: prepare-node-modules
 test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"
 
-test-mypy3:
+test-mypy:
 	$(FIND_PYTHON_FILES) | \
 	`: filter out plugins, they are not real modules` \
 	grep -v $$(realpath '../checks') | \
@@ -161,8 +161,8 @@ test-mypy3:
 	    cat; \
 	fi | xargs -n 1500 $(MYPY) $(ADDITIONAL_MYPY_ARGS)
 
-test-mypy3-raw:
-	$(MAKE) test-mypy3 ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
+test-mypy-raw:
+	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
 test-packaging:
 	$(PYTEST) -T packaging packaging

@@ -64,7 +64,7 @@ node (NODE) {
             CONDITION: CHANGED_PYTHON_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["JUNIT_XML=--junit-xml ${RESULTS}/mypy.xml"],
-            COMMAND: 'make --quiet test-mypy3',
+            COMMAND: 'make --quiet test-mypy',
             TEXT_ON_SKIP: 'No Python files changed. Skipping.'
         )
 
@@ -73,7 +73,7 @@ node (NODE) {
             CONDITION: CHANGED_PYTHON_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["PYTHON_FILES=${CHANGED_PYTHON_FILES}"],
-            COMMAND: "make --quiet test-format-python3 &> ${RESULTS}/python-yapf.txt",
+            COMMAND: "make --quiet test-format-python &> ${RESULTS}/python-yapf.txt",
             TEXT_ON_SKIP: 'No Python files changed. Skipping.'
          )
 

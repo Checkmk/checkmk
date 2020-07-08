@@ -533,7 +533,7 @@ let g:ale_fix_on_save = 1
 
 ### Type checking: mypy
 
-Code can be checked manually with `make -C tests test-mypy3`.
+Code can be checked manually with `make -C tests test-mypy`.
 
 The configuration file is `mypy.ini` and lives in the root directory of the
 Checkmk repository. For info about how to type hint refer to

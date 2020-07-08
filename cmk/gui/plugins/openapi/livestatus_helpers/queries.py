@@ -3,7 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List, Dict, Generator, Any
+from typing import Any, Generator, List
 
 from cmk.gui.plugins.openapi.livestatus_helpers.base import BaseQuery
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
@@ -14,23 +14,44 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
 
 
-# TODO: From a typing perspective, using __getattr__ here is a very, very bad idea. Remove this!
 class ResultRow(dict):
-    """
+    """This one collects heterogenous data.
 
-    >>> d = ResultRow({'a': 'b'})
-    >>> d.a
+    We only accept str-keys as the names of our columns are str as well. Answers must be Any
+    because the values can be anything that LiveStatus will emit. Strings, Numbers, Lists,
+    you name it.
+
+    Sadly the values can't really be checked by mypy, but this won't be possible with dict-lookups
+    as well.
+
+    >>> from typing import Dict
+    >>> result: Dict[str, Any] = {'a': 'b', 'b': 5, 'c': [1, 2, 3]}
+    >>> d = ResultRow(result)
+    >>> str_value = d.a  # is of type Any
+    >>> str_value
     'b'
 
+    >>> int_value = d.b  # is of type Any
+    >>> int_value
+    5
+
+    >>> list_value = d.c  # is of type Any
+    >>> list_value
+    [1, 2, 3]
+
+    >>> row = ResultRow(list(zip(['a', 'b', 'c'], ['1', 2, [3.0]])))
+    >>> dict(row)
+    {'a': '1', 'b': 2, 'c': [3.0]}
+
     """
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Any:
         try:
             return self[item]
         except KeyError as exc:
             raise AttributeError(str(exc))
 
 
-ResultEntry = Dict[str, Any]
+ResultEntry = ResultRow
 
 
 class Query(BaseQuery):
@@ -119,7 +140,8 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
     def iterate(self, sites) -> Generator[ResultEntry, None, None]:
         names = self.column_names
         for entry in sites.query(self.compile()):
-            yield ResultRow(iter(zip(names, entry)))
+            # This is Dict[str, Any], just with Attribute based access. Can't do much about this.
+            yield ResultRow(list(zip(names, entry)))
 
     def compile(self) -> str:
         _query = []

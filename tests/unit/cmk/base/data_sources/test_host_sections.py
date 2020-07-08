@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import collections
+from functools import partial
 
 import pytest  # type: ignore[import]
 
@@ -15,9 +16,14 @@ from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources import make_sources, make_host_sections
+from cmk.base.data_sources import make_host_sections, make_sources
+from cmk.base.data_sources.abstract import AbstractHostSections, DataSource
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
+from cmk.base.data_sources.piggyback import PiggyBackDataSource
+from cmk.base.data_sources.programs import DSProgramDataSource, SpecialAgentDataSource
+from cmk.base.data_sources.snmp import SNMPDataSource, SNMPHostSections
+from cmk.base.data_sources.tcp import TCPDataSource
 
 _TestSection = collections.namedtuple(
     "TestSection",
@@ -375,28 +381,249 @@ def make_scenario(hostname, tags):
     return ts
 
 
-def test_get_host_sections(monkeypatch):
-    hostname = "testhost"
-    address = "1.2.3.4"
-    tags = {"agent": "no-agent"}
-    make_scenario(hostname, tags).apply(monkeypatch)
-    host_config = config.HostConfig.make_host_config(hostname)
+class TestMakeHostSectionsHosts:
+    @pytest.fixture(autouse=False)
+    def patch_fs(self, fs):
+        # piggyback.store_piggyback_raw_data() writes to disk.
+        pass
 
-    mhs = make_host_sections(
-        host_config,
-        address,
-        make_sources(host_config, address),
-        max_cachefile_age=host_config.max_cachefile_age,
-    )
-    assert len(mhs) == 1
+    @pytest.fixture(autouse=True)
+    def patch_io(self, monkeypatch):
+        class DummyHostSection(AbstractHostSections):
+            def _extend_section(self, section_name, section_content):
+                pass
 
-    key = HostKey(hostname, address, SourceType.HOST)
-    assert key in mhs
-    section = mhs[key]
-    assert not section.sections
-    assert not section.cache_info
-    assert not section.piggybacked_raw_data
-    assert not section.persisted_sections
+        monkeypatch.setattr(
+            DataSource, "run", lambda self: DummyHostSection(
+                sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
+                cache_info={},
+                piggybacked_raw_data={},
+                persisted_sections="",
+            ))
+
+    @pytest.fixture
+    def hostname(self):
+        return "testhost"
+
+    @pytest.fixture
+    def ipaddress(self):
+        return "1.2.3.4"
+
+    @pytest.fixture
+    def host_config(self, hostname):
+        return config.HostConfig.make_host_config(hostname)
+
+    @pytest.fixture
+    def scenario(self, hostname, ipaddress, monkeypatch):
+        ts = Scenario().add_host(hostname)
+        ts.apply(monkeypatch)
+
+    @pytest.mark.usefixtures("scenario")
+    def test_no_sources(self, hostname, ipaddress, host_config):
+        mhs = make_host_sections(
+            host_config,
+            ipaddress,
+            sources=[],
+            max_cachefile_age=0,
+        )
+        # The length is not zero because the function always sets,
+        # at least, a piggy back section.
+        assert len(mhs) == 1
+
+        key = HostKey(hostname, ipaddress, SourceType.HOST)
+        assert key in mhs
+
+        section = mhs[key]
+        assert isinstance(section, AgentHostSections)
+
+        # Public attributes from AbstractHostSections:
+        assert not section.sections
+        assert not section.cache_info
+        assert not section.piggybacked_raw_data
+        assert not section.persisted_sections
+
+    @pytest.mark.usefixtures("scenario")
+    def test_one_snmp_source(self, hostname, ipaddress, host_config):
+        mhs = make_host_sections(
+            host_config,
+            ipaddress,
+            sources=[SNMPDataSource(hostname, ipaddress)],
+            max_cachefile_age=0,
+        )
+        assert len(mhs) == 1
+
+        key = HostKey(hostname, ipaddress, SourceType.HOST)
+        assert key in mhs
+
+        section = mhs[key]
+        assert isinstance(section, SNMPHostSections)
+
+        assert len(section.sections) == 1
+        assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
+
+    @pytest.mark.usefixtures("scenario")
+    @pytest.mark.parametrize("source", [
+        PiggyBackDataSource,
+        partial(DSProgramDataSource, command_template=""),
+        partial(SpecialAgentDataSource, special_agent_id="said", params={}),
+        TCPDataSource,
+    ])
+    def test_one_nonsnmp_source(self, hostname, ipaddress, host_config, source):
+        source = source(hostname, ipaddress)
+        assert source.source_type is SourceType.HOST
+
+        mhs = make_host_sections(
+            host_config,
+            ipaddress,
+            sources=[source],
+            max_cachefile_age=0,
+        )
+        assert len(mhs) == 1
+
+        key = HostKey(hostname, ipaddress, source.source_type)
+        assert key in mhs
+
+        section = mhs[key]
+        assert isinstance(section, AgentHostSections)
+
+        assert len(section.sections) == 1
+        assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
+
+    @pytest.mark.usefixtures("scenario")
+    def test_multiple_sources_from_the_same_host(self, hostname, ipaddress, host_config):
+        sources = [
+            DSProgramDataSource(hostname, ipaddress, command_template=""),
+            SpecialAgentDataSource(hostname, ipaddress, special_agent_id="said", params={}),
+            TCPDataSource(hostname, ipaddress),
+        ]
+
+        mhs = make_host_sections(
+            host_config,
+            ipaddress,
+            sources=sources,
+            max_cachefile_age=0,
+        )
+        assert len(mhs) == 1
+
+        key = HostKey(hostname, ipaddress, SourceType.HOST)
+        assert key in mhs
+
+        section = mhs[key]
+        assert isinstance(section, AgentHostSections)
+
+        assert len(section.sections) == 1
+        # yapf: disable
+        assert (section.sections[SectionName("section_name_%s" % hostname)]
+                == 3 * [["section_content"]])
+
+    @pytest.mark.usefixtures("scenario")
+    def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, host_config):
+        sources = [
+            DSProgramDataSource(hostname + "0", ipaddress, command_template=""),
+            SpecialAgentDataSource(hostname + "1", ipaddress, special_agent_id="said", params={}),
+            TCPDataSource(hostname + "2", ipaddress)
+        ]
+
+        mhs = make_host_sections(
+            host_config,
+            ipaddress,
+            sources=sources,
+            max_cachefile_age=0,
+        )
+        assert len(mhs) == 1
+
+        key = HostKey(hostname, ipaddress, SourceType.HOST)
+        assert key in mhs
+
+        section = mhs[key]
+        assert isinstance(section, AgentHostSections)
+
+        assert len(section.sections) == len(sources)
+        for source in sources:
+            # yapf: disable
+            assert (
+                section.sections[SectionName("section_name_%s" % source.hostname)]
+                == [["section_content"]])
+
+
+class TestMakeHostSectionsClusters:
+    @pytest.fixture(autouse=False)
+    def patch_fs(self, fs):
+        # piggyback.store_piggyback_raw_data() writes to disk.
+        pass
+
+    @pytest.fixture(autouse=True)
+    def patch_io(self, monkeypatch):
+        class DummyHostSection(AbstractHostSections):
+            def _extend_section(self, section_name, section_content):
+                pass
+
+        monkeypatch.setattr(
+            DataSource, "run", lambda self: DummyHostSection(
+                sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
+                cache_info={},
+                piggybacked_raw_data={},
+                persisted_sections="",
+            ))
+
+    @pytest.fixture
+    def cluster(self):
+        return "testclu"
+
+    @pytest.fixture
+    def nodes(self):
+        return {
+            "node0": "10.0.0.10",
+            "node1": "10.0.0.11",
+            "node2": "10.0.0.12",
+        }
+
+    @pytest.fixture(autouse=True)
+    def patch_ip_lookup(self, nodes, monkeypatch):
+        monkeypatch.setattr(
+            ip_lookup,
+            "lookup_ip_address",
+            lambda hostname, family=None: nodes[hostname],
+        )
+
+    @pytest.fixture
+    def host_config(self, cluster):
+        return config.HostConfig.make_host_config(cluster)
+
+    @pytest.fixture
+    def scenario(self, cluster, nodes, monkeypatch):
+        ts = Scenario().add_cluster(cluster, nodes=nodes.keys())
+        ts.apply(monkeypatch)
+
+    @pytest.mark.usefixtures("scenario")
+    def test_host_config_for_cluster(self, host_config):
+        assert host_config.is_cluster is True
+        assert host_config.nodes
+
+    @pytest.mark.usefixtures("scenario")
+    def test_no_sources(self, cluster, nodes, host_config):
+        mhs = make_host_sections(
+            host_config,
+            None,
+            sources=[],
+            max_cachefile_age=0,
+        )
+        assert len(mhs) == len(nodes)
+
+        key_clu = HostKey(cluster, None, SourceType.HOST)
+        assert key_clu not in mhs
+
+        for hostname, addr in nodes.items():
+            key = HostKey(hostname, addr, SourceType.HOST)
+            assert key in mhs
+
+            section = mhs[key]
+            # yapf: disable
+            assert (section.sections[SectionName("section_name_%s" % hostname)]
+                    == [["section_content"]])
+            assert not section.cache_info
+            assert not section.piggybacked_raw_data
+            assert not section.persisted_sections
 
 
 def test_get_host_sections_cluster(monkeypatch, mocker):

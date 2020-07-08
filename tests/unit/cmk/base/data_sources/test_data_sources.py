@@ -8,8 +8,11 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
+from cmk.utils.type_defs import SourceType
+
 import cmk.base.config as config
-from cmk.base.data_sources import make_sources
+from cmk.base.data_sources import make_host_sections, make_sources
+from cmk.base.data_sources.host_sections import HostKey
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
 from cmk.base.data_sources.programs import DSProgramDataSource, SpecialAgentDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource

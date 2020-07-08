@@ -30,6 +30,6 @@ clean:
 	cp "$<" "$@"
 
 %.py2: %.py
-	cat "$<" | gawk -v text="# Do not test generated 2.6 files\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
+	cat "$<" | gawk -v text="# Do not test generated 2.6 files\n# yapf: disable\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
 	$(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
 	chmod +x "$@"

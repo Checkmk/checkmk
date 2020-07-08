@@ -241,7 +241,7 @@ def check_esx_vsphere_vm_guest_tools(_no_item, params, info):
         "guestToolsCurrent": (0, "VMware Tools are installed and the version is current"),
         "guestToolsNeedUpgrade": (1, "VMware Tools are installed, but the version is not current"),
         "guestToolsNotInstalled": (2, "VMware Tools are not installed"),
-        "guestToolsUnmanaged": (1, "VMware Tools are installed, but are not managed by VMWare")
+        "guestToolsUnmanaged": (0, "VMware Tools are installed, but are not managed by VMWare")
     }
     state, info = guest_tools_map.get(vm_status, (3, "Unknown status for VMware Tools"))
 

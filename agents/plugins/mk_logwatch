@@ -834,8 +834,7 @@ def find_matching_logfiles(glob_pattern):
     for match in glob.glob(glob_pattern):
         if os.path.isdir(match):
             continue
-        if os.path.islink(match):
-            match = os.readlink(match)
+
         files.append(match)
     return files
 

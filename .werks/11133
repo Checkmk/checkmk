@@ -1,0 +1,14 @@
+Title: mk_logwatch: no longer resolve symlinks
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1593610102
+
+Symbolic links of logfiles no longer get resolved to the actual path.
+Some log file paths might change on a daily basis, so resolving symlink paths could result in missing files for the software.
+This will now be avoided by this fix.

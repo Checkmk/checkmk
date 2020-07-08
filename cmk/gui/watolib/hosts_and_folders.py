@@ -1777,7 +1777,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery  # pylint: disable=import-error,no-name-in-module
             try:
                 agent_bakery.start_bake_agents(host_names=[e[0] for e in entries],
-                                               signing_data=None)
+                                               signing_credentials=None)
             except BackgroundJobAlreadyRunning:
                 pass
 

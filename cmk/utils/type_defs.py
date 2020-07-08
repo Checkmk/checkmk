@@ -10,7 +10,7 @@ import enum
 import functools
 import string
 import sys
-from typing import Any, Dict, List, NewType, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, NewType, Optional, Set, Tuple, TypedDict, Union
 
 HostName = str
 HostAddress = str
@@ -60,6 +60,12 @@ AgentHash = NewType("AgentHash", str)
 BakeryOpSys = NewType("BakeryOpSys", str)
 AgentConfig = Dict[str, Any]  # TODO Split into more sub configs
 BakeryHostName = Union[bool, None, HostName]
+
+
+class BakerySigningCredentials(TypedDict):
+    certificate: str
+    private_key: str
+
 
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.

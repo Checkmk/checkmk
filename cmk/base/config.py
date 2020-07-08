@@ -3180,6 +3180,8 @@ class HostConfig:
 
     @property
     def do_status_data_inventory(self) -> bool:
+        if self.is_cluster:
+            return False
 
         # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
         rules = active_checks.get('cmk_inv')

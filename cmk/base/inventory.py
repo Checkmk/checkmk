@@ -211,12 +211,9 @@ def do_inventory_actions_during_checking_for(sources: data_sources.DataSources,
                                              host_config: config.HostConfig,
                                              ipaddress: Optional[HostAddress]) -> None:
     hostname = host_config.hostname
-    do_status_data_inventory = not host_config.is_cluster and host_config.do_status_data_inventory
 
-    if not do_status_data_inventory:
+    if not host_config.do_status_data_inventory:
         _cleanup_status_data(hostname)
-
-    if not do_status_data_inventory:
         return  # nothing to do here
 
     # This is called during checking, but the inventory plugins are not loaded yet

@@ -9,7 +9,7 @@ from collections import OrderedDict
 import colorsys
 import random
 import shlex
-from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union, TypeVar
 
 from six import ensure_binary, ensure_str
 
@@ -28,6 +28,9 @@ from cmk.gui.valuespec import DropdownChoice
 LegacyPerfometer = Tuple[str, Any]
 Perfometer = Dict[str, Any]
 TranslatedMetrics = Dict[str, Dict[str, Any]]
+Atom = TypeVar('Atom')
+TransformedAtom = TypeVar('TransformedAtom')
+StackElement = Union[Atom, TransformedAtom]
 
 
 class AutomaticDict(OrderedDict):
@@ -404,26 +407,30 @@ def evaluate(expression, translated_metrics):
 def _evaluate_rpn(
         expression: str,
         translated_metrics: Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]:
-    parts = expression.split(",")
     # stack of (value, unit, color)
-    stack: List[Tuple[float, Dict[str, Any], Optional[str]]] = []
-    while parts:
-        operator_name = parts[0]
-        parts = parts[1:]
-        if operator_name in rpn_operators:
+    return stack_resolver(expression.split(","), lambda x: x in rpn_operators,
+                          lambda op, a, b: rpn_operators[op](a, b),
+                          lambda x: _evaluate_literal(x, translated_metrics))
+
+
+def stack_resolver(elements: List[Atom], is_operator: Callable[[Atom], bool],
+                   apply_operator: Callable[[Atom, StackElement, StackElement], StackElement],
+                   apply_element: Callable[[Atom], StackElement]) -> StackElement:
+    stack: List[StackElement] = []
+    for element in elements:
+        if is_operator(element):
             if len(stack) < 2:
                 raise MKGeneralException("Syntax error in expression '%s': too few operands" %
-                                         expression)
-            op1 = stack[-2]
-            op2 = stack[-1]
-            result = rpn_operators[operator_name](op1, op2)
-            stack = stack[:-2] + [result]
+                                         ", ".join(map(str, elements)))
+            op2 = stack.pop()
+            op1 = stack.pop()
+            stack.append(apply_operator(element, op1, op2))
         else:
-            stack.append(_evaluate_literal(operator_name, translated_metrics))
+            stack.append(apply_element(element))
 
     if len(stack) != 1:
         raise MKGeneralException("Syntax error in expression '%s': too many operands left" %
-                                 expression)
+                                 ", ".join(map(str, elements)))
 
     return stack[0]
 

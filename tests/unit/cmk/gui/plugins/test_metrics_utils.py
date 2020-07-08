@@ -170,3 +170,38 @@ def test_evaluate():
     translated_metrics = utils.translate_metrics(perfdata, 'check_mk-df')
     assert utils.evaluate("fs_size,fs_used,-#e3fff9",
                           translated_metrics) == (6291456, utils.unit_info['bytes'], '#e3fff9')
+
+
+@pytest.mark.parametrize("elements, is_operator, apply_operator, apply_element, result", [
+    pytest.param(["1", "2", "+"],
+                 lambda x: x == "+",
+                 lambda op, f, s: (op, [f, s]),
+                 lambda x: x, ("+", ["1", "2"]),
+                 id="Nest expression"),
+    pytest.param(["1", "2", "+"],
+                 lambda x: x == "+",
+                 lambda op, f, s: " ".join((op, f, s)),
+                 lambda x: x,
+                 "+ 1 2",
+                 id="Contanate elements"),
+    pytest.param(["1", "2", "+"], lambda x: x == "+", lambda op, f, s: f + s, int, 3, id="Reduce"),
+    pytest.param(["1", "2", "+", "3", "+"],
+                 lambda x: x == "+",
+                 lambda op, f, s: f + s,
+                 int,
+                 6,
+                 id="Reduce coupled"),
+])
+def test_stack_resolver(elements, is_operator, apply_operator, apply_element, result):
+    assert utils.stack_resolver(elements, is_operator, apply_operator, apply_element) == result
+
+
+def test_stack_resolver_exception():
+    with pytest.raises(utils.MKGeneralException, match="too many operands left"):
+        utils.stack_resolver('1 2 3 +'.split(), lambda x: x == "+", lambda op, f, s: f + s, int)
+
+
+def test_stack_resolver_exception_missing_operator_arguments():
+    with pytest.raises(utils.MKGeneralException,
+                       match="Syntax error in expression '3, T': too few operands"):
+        utils.stack_resolver('3 T'.split(), lambda x: x == "T", lambda op, f, s: f + s, int)

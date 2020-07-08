@@ -1182,13 +1182,11 @@ class AutomationDiagHost(Automation):
 
             if test == 'agent':
                 return self._execute_agent(
-                    data_sources.DataSources(
-                        sources=data_sources.make_sources(host_config, ipaddress)),
-                    host_config.hostname,
+                    host_config,
                     ipaddress,
-                    agent_port,
-                    cmd,
-                    tcp_connect_timeout,
+                    agent_port=agent_port,
+                    cmd=cmd,
+                    tcp_connect_timeout=tcp_connect_timeout,
                 )
 
             if test == 'traceroute':
@@ -1233,19 +1231,18 @@ class AutomationDiagHost(Automation):
 
     def _execute_agent(
         self,
-        sources: data_sources.DataSources,
-        hostname: HostName,
+        host_config: config.HostConfig,
         ipaddress: HostAddress,
         agent_port: int,
         cmd: str,
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, u""
-        for source in sources:
+        for source in data_sources.make_sources(host_config, ipaddress):
             source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source, data_sources.programs.DSProgramDataSource) and cmd:
                 source = data_sources.programs.DSProgramDataSource(
-                    hostname,
+                    host_config.hostname,
                     ipaddress,
                     cmd,
                 )
@@ -1532,18 +1529,15 @@ class AutomationGetAgentOutput(Automation):
                 data_sources.abstract.DataSource.set_may_use_cache_file(
                     not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
-                sources = data_sources.DataSources(
-                    sources=data_sources.make_sources(host_config, ipaddress))
-
                 agent_output = b""
-                for source in sources:
+                for source in data_sources.make_sources(host_config, ipaddress):
                     source.set_max_cachefile_age(config.check_max_cachefile_age)
                     if isinstance(source, data_sources.agent.AgentDataSource):
                         agent_output += source.run_raw()
                 info = agent_output
 
                 # Optionally show errors of problematic data sources
-                for source in sources:
+                for source in data_sources.make_sources(host_config, ipaddress):
                     source_state, source_output, _source_perfdata = source.get_summary_result_for_checking(
                     )
                     if source_state != 0:

@@ -9,7 +9,7 @@
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
 import collections.abc
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -33,7 +33,11 @@ from .programs import DSProgramDataSource, SpecialAgentDataSource
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .tcp import TCPDataSource
 
-__all__ = ["DataSources", "make_sources"]
+__all__ = ["DataSources", "make_host_sections", "make_sources"]
+
+# TODO(ml): Change `Sequence[DataSource` to `Iterable[DataSource]`
+#           once `_DataSources` is gone.
+DataSources = Sequence[DataSource]
 
 
 class SourceBuilder:
@@ -49,7 +53,7 @@ class SourceBuilder:
         self._initialize_data_sources(selected_raw_sections)
 
     @property
-    def sources(self) -> List[DataSource]:
+    def sources(self) -> DataSources:
         # Always execute piggyback at the end
         return sorted(self._sources.values(),
                       key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
@@ -132,7 +136,7 @@ class SourceBuilder:
         else:
             raise NotImplementedError()
 
-    def _add_sources(self, sources: Iterable[DataSource]) -> None:
+    def _add_sources(self, sources: DataSources) -> None:
         for source in sources:
             self._add_source(source)
 
@@ -188,7 +192,7 @@ def make_sources(
     ipaddress: Optional[HostAddress],
     *,
     selected_raw_sections: Optional[SelectedRawSections] = None,
-) -> List[DataSource]:
+) -> DataSources:
     """Return a list of sources for DataSources.
 
     Args:
@@ -200,13 +204,26 @@ def make_sources(
     return SourceBuilder(host_config, ipaddress, selected_raw_sections).sources
 
 
-class DataSources(collections.abc.Collection):
+def make_host_sections(
+    host_config: HostConfig,
+    ipaddress: Optional[HostAddress],
+    sources: DataSources,
+    *,
+    max_cachefile_age: int,
+) -> MultiHostSections:
+    return _DataSources.get_host_sections(
+        _DataSources(sources=sources).make_nodes(host_config, ipaddress),
+        max_cachefile_age=max_cachefile_age,
+    )
+
+
+class _DataSources(collections.abc.Collection):
     def __init__(
         self,
         *,
-        sources: List[DataSource],
+        sources: DataSources,
     ) -> None:
-        super(DataSources, self).__init__()
+        super(_DataSources, self).__init__()
         self._sources = sources
 
     def __contains__(self, item) -> bool:
@@ -220,7 +237,7 @@ class DataSources(collections.abc.Collection):
 
     @staticmethod
     def get_host_sections(
-        nodes: List[Tuple[HostName, Optional[HostAddress], "DataSources"]],
+        nodes: List[Tuple[HostName, Optional[HostAddress], "_DataSources"]],
         *,
         max_cachefile_age: int,
     ) -> MultiHostSections:
@@ -265,14 +282,15 @@ class DataSources(collections.abc.Collection):
         self,
         host_config: HostConfig,
         ipaddress: Optional[HostAddress],
-    ) -> List[Tuple[HostName, Optional[HostAddress], "DataSources"]]:
+    ) -> List[Tuple[HostName, Optional[HostAddress], "_DataSources"]]:
         if host_config.nodes is None:
             return [(host_config.hostname, ipaddress, self)]
         return self._make_piggy_nodes(host_config)
 
     @staticmethod
     def _make_piggy_nodes(
-            host_config: HostConfig) -> List[Tuple[HostName, Optional[HostAddress], "DataSources"]]:
+            host_config: HostConfig
+    ) -> List[Tuple[HostName, Optional[HostAddress], "_DataSources"]]:
         """Abstract clusters/nodes/hosts"""
         assert host_config.nodes is not None
 
@@ -291,7 +309,7 @@ class DataSources(collections.abc.Collection):
                 check_plugin_names=(
                     # TODO (mo): centralize maincheckify: CMK-4295
                     CheckPluginName(maincheckify(n)) for n in check_names),)
-            sources = DataSources(sources=make_sources(
+            sources = _DataSources(sources=make_sources(
                 HostConfig.make_host_config(hostname),
                 ipaddress,
                 selected_raw_sections=selected_raw_sections,

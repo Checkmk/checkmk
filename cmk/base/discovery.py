@@ -327,18 +327,16 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                                      config.get_relevant_raw_sections(
                                          check_plugin_names=check_plugin_names))
 
-            sources = _get_sources_for_discovery(
-                data_sources.DataSources(sources=data_sources.make_sources(
+            multi_host_sections = data_sources.make_host_sections(
+                host_config,
+                ipaddress,
+                _get_sources_for_discovery(
                     host_config,
                     ipaddress,
+                    do_snmp_scan=do_snmp_scan,
+                    on_error=on_error,
                     selected_raw_sections=selected_raw_sections,
-                )),
-                do_snmp_scan,
-                on_error,
-            )
-
-            multi_host_sections = sources.get_host_sections(
-                sources.make_nodes(host_config, ipaddress),
+                ),
                 max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
             )
 
@@ -522,23 +520,26 @@ def discover_on_host(
         else:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        sources = _get_sources_for_discovery(
-            data_sources.DataSources(sources=data_sources.make_sources(host_config, ipaddress)),
-            do_snmp_scan=do_snmp_scan,
-            on_error=on_error,
-            for_check_discovery=True,
-        )
-
-        multi_host_sections = sources.get_host_sections(
-            sources.make_nodes(host_config, ipaddress),
+        multi_host_sections = data_sources.make_host_sections(
+            host_config,
+            ipaddress,
+            _get_sources_for_discovery(
+                host_config,
+                ipaddress,
+                do_snmp_scan=do_snmp_scan,
+                on_error=on_error,
+                for_check_discovery=True,
+            ),
             max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
         )
 
         # Compute current state of new and existing checks
-        services, discovered_host_labels = _get_host_services(host_config,
-                                                              ipaddress,
-                                                              multi_host_sections,
-                                                              on_error=on_error)
+        services, discovered_host_labels = _get_host_services(
+            host_config,
+            ipaddress,
+            multi_host_sections,
+            on_error=on_error,
+        )
 
         # Create new list of checks
         new_services = _get_new_services(hostname, services, service_filters, counts, mode)
@@ -655,29 +656,35 @@ def check_discovery(
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
     sources = _get_sources_for_discovery(
-        data_sources.DataSources(sources=data_sources.make_sources(host_config, ipaddress)),
+        host_config,
+        ipaddress,
         do_snmp_scan=params["inventory_check_do_scan"],
         on_error="raise",
         for_check_discovery=True,
     )
-
     use_caches = data_sources.abstract.DataSource.get_may_use_cache_file()
-    multi_host_sections = sources.get_host_sections(
-        sources.make_nodes(host_config, ipaddress),
+    multi_host_sections = data_sources.make_host_sections(
+        host_config,
+        ipaddress,
+        sources,
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
     )
 
-    services, discovered_host_labels = _get_host_services(host_config,
-                                                          ipaddress,
-                                                          multi_host_sections,
-                                                          on_error="raise")
+    services, discovered_host_labels = _get_host_services(
+        host_config,
+        ipaddress,
+        multi_host_sections,
+        on_error="raise",
+    )
 
     status, infotexts, long_infotexts, perfdata, need_rediscovery = _check_service_table(
         hostname, services, params)
 
-    _new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(hostname,
-                                                                             discovered_host_labels,
-                                                                             only_new=True)
+    _new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
+        hostname,
+        discovered_host_labels,
+        only_new=True,
+    )
 
     if host_labels_per_plugin:
         infotexts.append("%d new host labels" % sum(host_labels_per_plugin.values()))
@@ -1175,11 +1182,19 @@ def _discover_services(
 
 
 def _get_sources_for_discovery(
-    sources: data_sources.DataSources,
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    *,
     do_snmp_scan: bool,
     on_error: str,
     for_check_discovery: bool = False,
+    selected_raw_sections: Optional[config.SelectedRawSections] = None,
 ) -> data_sources.DataSources:
+    sources = data_sources.make_sources(
+        host_config,
+        ipaddress,
+        selected_raw_sections=selected_raw_sections,
+    )
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
             source.set_on_error(on_error)
@@ -1494,14 +1509,15 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
 
     ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_name)
 
-    sources = _get_sources_for_discovery(
-        data_sources.DataSources(sources=data_sources.make_sources(host_config, ip_address),),
-        do_snmp_scan=do_snmp_scan,
-        on_error=on_error,
-    )
-
-    multi_host_sections = sources.get_host_sections(
-        sources.make_nodes(host_config, ip_address),
+    multi_host_sections = data_sources.make_host_sections(
+        host_config,
+        ip_address,
+        _get_sources_for_discovery(
+            host_config,
+            ip_address,
+            do_snmp_scan=do_snmp_scan,
+            on_error=on_error,
+        ),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
     )
 

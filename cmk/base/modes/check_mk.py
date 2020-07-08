@@ -387,13 +387,11 @@ def mode_dump_agent(hostname: HostName) -> None:
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = ip_lookup.lookup_ip_address(hostname)
-        sources = data_sources.DataSources(
-            sources=data_sources.make_sources(host_config, ipaddress))
 
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        for source in sources:
+        for source in data_sources.make_sources(host_config, ipaddress):
             source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source, data_sources.agent.AgentDataSource):
                 output.append(source.run_raw())

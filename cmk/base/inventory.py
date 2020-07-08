@@ -66,10 +66,8 @@ def do_inv(hostnames: List[HostName]) -> None:
             else:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-            sources = data_sources.DataSources(
-                sources=data_sources.make_sources(host_config, ipaddress))
             inventory_tree, status_data_tree = _do_inv_for(
-                sources,
+                data_sources.make_sources(host_config, ipaddress),
                 multi_host_sections=None,
                 host_config=host_config,
                 ipaddress=ipaddress,
@@ -115,7 +113,7 @@ def do_inv_check(
     long_infotexts: List[str] = []
     perfdata: List[Tuple] = []
 
-    sources = data_sources.DataSources(sources=data_sources.make_sources(host_config, ipaddress))
+    sources = data_sources.make_sources(host_config, ipaddress)
     inventory_tree, status_data_tree = _do_inv_for(
         sources,
         multi_host_sections=None,
@@ -124,7 +122,7 @@ def do_inv_check(
     )
 
     #TODO add cluster if and only if all sources do not fail?
-    if _all_sources_fail(host_config, sources):
+    if _all_sources_fail(host_config, ipaddress):
         old_tree, sources_state = None, 1
         status = max(status, sources_state)
         infotexts.append("Cannot update tree%s" % check_api_utils.state_markers[sources_state])
@@ -178,7 +176,10 @@ def do_inv_check(
     return status, infotexts, long_infotexts, perfdata
 
 
-def _all_sources_fail(host_config: config.HostConfig, sources: data_sources.DataSources) -> bool:
+def _all_sources_fail(
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+) -> bool:
     """We want to check if ALL data sources of a host fail:
     By default a host has the auto-piggyback data source. We remove it if
     it's not a pure piggyback host and there's no piggyback data available
@@ -187,7 +188,10 @@ def _all_sources_fail(host_config: config.HostConfig, sources: data_sources.Data
     if host_config.is_cluster:
         return False
 
-    exceptions_by_source = {source.id(): source.exception() for source in sources}
+    exceptions_by_source = {
+        source.id(): source.exception()
+        for source in data_sources.make_sources(host_config, ipaddress)
+    }
     if "piggyback" in exceptions_by_source and not len(exceptions_by_source) == 1\
        and not host_config.has_piggyback_data:
         del exceptions_by_source["piggyback"]
@@ -195,10 +199,13 @@ def _all_sources_fail(host_config: config.HostConfig, sources: data_sources.Data
     return all(exception is not None for exception in exceptions_by_source.values())
 
 
-def do_inventory_actions_during_checking_for(sources: data_sources.DataSources,
-                                             multi_host_sections: MultiHostSections,
-                                             host_config: config.HostConfig,
-                                             ipaddress: Optional[HostAddress]) -> None:
+def do_inventory_actions_during_checking_for(
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    *,
+    multi_host_sections: MultiHostSections,
+    selected_raw_sections: config.SelectedRawSections,
+) -> None:
     hostname = host_config.hostname
 
     if not host_config.do_status_data_inventory:
@@ -206,7 +213,11 @@ def do_inventory_actions_during_checking_for(sources: data_sources.DataSources,
         return  # nothing to do here
 
     _inventory_tree, status_data_tree = _do_inv_for(
-        sources,
+        sources=data_sources.make_sources(
+            host_config,
+            ipaddress,
+            selected_raw_sections=selected_raw_sections,
+        ),
         multi_host_sections=multi_host_sections,
         host_config=config.HostConfig.make_host_config(hostname),
         ipaddress=ipaddress,
@@ -222,9 +233,12 @@ def _cleanup_status_data(hostname: HostName) -> None:
         os.remove(filepath + ".gz")
 
 
-def _do_inv_for(sources: data_sources.DataSources, multi_host_sections: Optional[MultiHostSections],
-                host_config: config.HostConfig,
-                ipaddress: Optional[HostAddress]) -> Tuple[StructuredDataTree, StructuredDataTree]:
+def _do_inv_for(
+    sources: data_sources.DataSources,
+    multi_host_sections: Optional[MultiHostSections],
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+) -> Tuple[StructuredDataTree, StructuredDataTree]:
     hostname = host_config.hostname
 
     _initialize_inventory_tree()
@@ -256,10 +270,15 @@ def _do_inv_for_cluster(host_config: config.HostConfig, inventory_tree: Structur
         })
 
 
-def _do_inv_for_realhost(host_config: config.HostConfig, sources: data_sources.DataSources,
-                         multi_host_sections: Optional[MultiHostSections], hostname: HostName,
-                         ipaddress: Optional[HostAddress], inventory_tree: StructuredDataTree,
-                         status_data_tree: StructuredDataTree) -> None:
+def _do_inv_for_realhost(
+    host_config: config.HostConfig,
+    sources: data_sources.DataSources,
+    multi_host_sections: Optional[MultiHostSections],
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    inventory_tree: StructuredDataTree,
+    status_data_tree: StructuredDataTree,
+) -> None:
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
             source.set_on_error("raise")
@@ -279,9 +298,12 @@ def _do_inv_for_realhost(host_config: config.HostConfig, sources: data_sources.D
                 host_sections.update(source.run())
 
     if multi_host_sections is None:
-        nodes = sources.make_nodes(host_config, ipaddress)
-        multi_host_sections = sources.get_host_sections(
-            nodes, max_cachefile_age=host_config.max_cachefile_age)
+        multi_host_sections = data_sources.make_host_sections(
+            host_config,
+            ipaddress,
+            sources,
+            max_cachefile_age=host_config.max_cachefile_age,
+        )
 
     section.section_step("Executing inventory plugins")
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel

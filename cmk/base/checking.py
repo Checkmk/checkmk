@@ -151,23 +151,22 @@ def do_check(
         # see which raw sections we may need
         selected_raw_sections = _get_relevant_raw_sections(services, host_config)
 
-        sources = data_sources.DataSources(sources=data_sources.make_sources(
+        num_success, plugins_missing_data = _do_all_checks_on_host(
             host_config,
             ipaddress,
             selected_raw_sections=selected_raw_sections,
-        ))
-        num_success, plugins_missing_data = _do_all_checks_on_host(
-            services,
-            sources,
-            host_config,
-            ipaddress,
-            only_check_plugin_names,
+            services=services,
+            only_check_plugins=only_check_plugin_names,
         )
 
         if _submit_to_core:
             item_state.save(hostname)
 
-        for source in sources:
+        for source in data_sources.make_sources(
+                host_config,
+                ipaddress,
+                selected_raw_sections=selected_raw_sections,
+        ):
             source_state, source_output, source_perfdata = source.get_summary_result_for_checking()
             if source_output != "":
                 status = max(status, source_state)
@@ -285,10 +284,11 @@ def _check_plugins_missing_data(
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
 def _do_all_checks_on_host(
-    services: List[Service],
-    sources: data_sources.DataSources,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
+    *,
+    selected_raw_sections: config.SelectedRawSections,
+    services: List[Service],
     only_check_plugins: Optional[Set[CheckPluginName]] = None,
 ) -> Tuple[int, List[CheckPluginName]]:
     hostname: HostName = host_config.hostname
@@ -299,9 +299,16 @@ def _do_all_checks_on_host(
     check_api_utils.set_hostname(hostname)
 
     # Gather the data from the sources
-    nodes = sources.make_nodes(host_config, ipaddress)
-    multi_host_sections = sources.get_host_sections(nodes,
-                                                    max_cachefile_age=host_config.max_cachefile_age)
+    multi_host_sections = data_sources.make_host_sections(
+        host_config,
+        ipaddress,
+        data_sources.make_sources(
+            host_config,
+            ipaddress,
+            selected_raw_sections=selected_raw_sections,
+        ),
+        max_cachefile_age=host_config.max_cachefile_age,
+    )
 
     for service in services:
 
@@ -314,10 +321,10 @@ def _do_all_checks_on_host(
 
     import cmk.base.inventory as inventory  # pylint: disable=import-outside-toplevel
     inventory.do_inventory_actions_during_checking_for(
-        sources,
-        multi_host_sections,
         host_config,
         ipaddress,
+        multi_host_sections=multi_host_sections,
+        selected_raw_sections=selected_raw_sections,
     )
 
     return num_success, sorted(plugins_missing_data)

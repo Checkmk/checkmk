@@ -1119,8 +1119,7 @@ def _get_needed_check_plugin_names(
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
     # to be loaded
-    sources = data_sources.DataSources(sources=data_sources.make_sources(host_config, None))
-    for source in sources:
+    for source in data_sources.make_sources(host_config, None):
         if isinstance(source, data_sources.programs.SpecialAgentDataSource):
             needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)
 

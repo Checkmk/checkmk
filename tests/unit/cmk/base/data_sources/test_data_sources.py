@@ -9,7 +9,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 import cmk.base.config as config
-from cmk.base.data_sources import DataSources, make_sources
+from cmk.base.data_sources import make_sources
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
 from cmk.base.data_sources.programs import DSProgramDataSource, SpecialAgentDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource
@@ -62,5 +62,4 @@ def test_get_sources(monkeypatch, hostname, tags, sources):
     host_config = config.HostConfig.make_host_config(hostname)
     ipaddress = "127.0.0.1"
 
-    assert [type(source) for source in DataSources(sources=make_sources(host_config, ipaddress))
-           ] == sources
+    assert [type(source) for source in make_sources(host_config, ipaddress)] == sources

@@ -15,7 +15,7 @@ from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources import DataSources, make_sources
+from cmk.base.data_sources import make_sources, make_host_sections
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 
@@ -382,9 +382,12 @@ def test_get_host_sections(monkeypatch):
     make_scenario(hostname, tags).apply(monkeypatch)
     host_config = config.HostConfig.make_host_config(hostname)
 
-    sources = DataSources(sources=make_sources(host_config, address))
-    nodes = sources.make_nodes(host_config, address)
-    mhs = sources.get_host_sections(nodes, max_cachefile_age=host_config.max_cachefile_age)
+    mhs = make_host_sections(
+        host_config,
+        address,
+        make_sources(host_config, address),
+        max_cachefile_age=host_config.max_cachefile_age,
+    )
     assert len(mhs) == 1
 
     key = HostKey(hostname, address, SourceType.HOST)
@@ -423,9 +426,12 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     # Create a cluster
     host_config.nodes = list(hosts.keys())
 
-    sources = DataSources(sources=make_sources(host_config, address),)
-    nodes = sources.make_nodes(host_config, address)
-    mhs = sources.get_host_sections(nodes, max_cachefile_age=host_config.max_cachefile_age)
+    mhs = make_host_sections(
+        host_config,
+        address,
+        make_sources(host_config, address),
+        max_cachefile_age=host_config.max_cachefile_age,
+    )
     assert len(mhs) == len(hosts) == 3
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]
     assert cmk.utils.piggyback.remove_source_status_file.call_count == 3  # type: ignore[attr-defined]

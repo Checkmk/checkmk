@@ -1493,7 +1493,7 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.host.list_hosts
       parameters:
       - allowEmptyValue: false
-        description: A hostname.
+        description: Host name
         example: example.com
         in: query
         name: host_name
@@ -1502,24 +1502,31 @@ paths:
           pattern: '[-0-9a-zA-Z_.]+'
           type: string
       - allowEmptyValue: false
+        description: An alias name for the host
         in: query
         name: host_alias
         required: false
         schema:
           type: string
       - allowEmptyValue: false
+        description: Whether the current problem has been acknowledged (0/1)
+        example: '1'
         in: query
         name: acknowledged
         required: false
         schema:
           type: boolean
       - allowEmptyValue: false
+        description: Whether the host is currently in a downtime (0/1)
+        example: '0'
         in: query
         name: in_downtime
         required: false
         schema:
           type: boolean
       - allowEmptyValue: false
+        description: 'The current state of the object, for hosts: 0/1/2 for UP/DOWN/UNREACH,
+          for services: 0/1/2/3 for OK/WARN/CRIT/UNKNOWN'
         in: query
         name: status
         required: false
@@ -1540,6 +1547,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
+      summary: List currently monitored hosts.
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
       x-codeSamples:

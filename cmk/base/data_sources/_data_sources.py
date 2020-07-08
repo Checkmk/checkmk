@@ -291,8 +291,9 @@ class DataSources(collections.abc.Collection):
                 filter_mode="only_clustered",
             )
             selected_raw_sections = config.get_relevant_raw_sections(
-                # TODO (mo): centralize maincheckify: CMK-4295
-                CheckPluginName(maincheckify(n)) for n in check_names)
+                check_plugin_names=(
+                    # TODO (mo): centralize maincheckify: CMK-4295
+                    CheckPluginName(maincheckify(n)) for n in check_names),)
             sources = DataSources(
                 hostname,
                 ipaddress,

@@ -152,6 +152,13 @@ class CheckPluginName(ABCPluginName):
         return set()
 
 
+@functools.total_ordering
+class InventoryPluginName(ABCPluginName):
+    @property
+    def _legacy_naming_exceptions(self) -> Set[str]:
+        return set()
+
+
 class SourceType(enum.Enum):
     """Classification of management sources vs regular hosts"""
     HOST = "HOST"

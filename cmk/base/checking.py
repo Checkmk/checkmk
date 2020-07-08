@@ -148,8 +148,8 @@ def do_check(
         )
 
         # see which raw sections we may need
-        selected_raw_sections = config.get_relevant_raw_sections(
-            CheckPluginName(maincheckify(s.check_plugin_name)) for s in services)
+        selected_raw_sections = config.get_relevant_raw_sections(check_plugin_names=(
+            CheckPluginName(maincheckify(s.check_plugin_name)) for s in services),)
 
         sources = data_sources.DataSources(
             hostname,

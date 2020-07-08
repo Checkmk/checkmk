@@ -325,7 +325,8 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
             # If check plugins are specified via command line,
             # see which raw sections we may need
             selected_raw_sections = (None if check_plugin_names is None else
-                                     config.get_relevant_raw_sections(check_plugin_names))
+                                     config.get_relevant_raw_sections(
+                                         check_plugin_names=check_plugin_names))
 
             sources = _get_sources_for_discovery(
                 data_sources.DataSources(

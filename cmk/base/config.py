@@ -71,6 +71,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostgroupName,
     HostName,
+    InventoryPluginName,
     Item,
     Labels,
     LabelSources,
@@ -1299,13 +1300,25 @@ def get_registered_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckP
     return None
 
 
-def get_relevant_raw_sections(check_plugin_names: Iterable[CheckPluginName]) -> SelectedRawSections:
-    """return the raw sections potentially relevant for the given check plugins"""
+def get_relevant_raw_sections(
+        *,
+        check_plugin_names: Iterable[CheckPluginName] = (),
+        inventory_plugin_names: Iterable[InventoryPluginName] = (),
+) -> SelectedRawSections:
+    """return the raw sections potentially relevant for the given check or inventory plugins"""
     parsed_section_names: Set[ParsedSectionName] = set()
+
     for check_plugin_name in check_plugin_names:
         plugin = get_registered_check_plugin(check_plugin_name)
         if plugin:
             parsed_section_names.update(plugin.sections)
+
+    for inventory_plugin_name in inventory_plugin_names:
+        # TODO (mo): once the inventory plugins are facing the new API,
+        # this should look exactly as the block above!
+        # For now: every inventory plugin name is exactly the parsed section name
+        # Also TODO: add a few tests when this block is non-trivial.
+        parsed_section_names.add(ParsedSectionName(str(inventory_plugin_name)))
 
     iter_all_sections: Iterable[SectionPlugin] = itertools.chain(
         registered_agent_sections.values(),

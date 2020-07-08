@@ -257,7 +257,7 @@ class ModeDiagHost(WatoMode):
             ds_option: List[DictionaryEntry] = [(
                 'datasource_program',
                 TextAscii(
-                    title=_("Datasource Program (<a href=\"%s\">Rules</a>)") %
+                    title=_("Individual program call (<a href=\"%s\">Rules</a>)") %
                     watolib.folder_preserving_link([('mode', 'edit_ruleset'),
                                                     ('varname', 'datasource_programs')]),
                     help=

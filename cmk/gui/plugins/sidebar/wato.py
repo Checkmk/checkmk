@@ -7,7 +7,6 @@
 from typing import Optional
 
 import cmk.gui.config as config
-import cmk.gui.wato as wato
 import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.watolib as watolib
@@ -24,6 +23,8 @@ from cmk.gui.plugins.sidebar import (
     visuals_by_topic,
 )
 
+from cmk.gui.plugins.wato.utils.main_menu import get_modules
+
 
 def render_wato(mini):
     if not config.wato_enabled:
@@ -38,7 +39,7 @@ def render_wato(mini):
     else:
         iconlink(_("Main Menu"), "wato.py", "home")
 
-    for module in wato.get_modules():
+    for module in get_modules():
         if not module.may_see():
             continue
 

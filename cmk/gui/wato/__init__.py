@@ -365,7 +365,6 @@ from cmk.gui.plugins.wato.utils.context_buttons import (
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
-    get_modules,
     # Kept for compatibility with pre 1.6 plugins
     WatoModule,
     register_modules,

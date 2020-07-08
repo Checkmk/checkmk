@@ -315,16 +315,16 @@ def verify_ipaddress(address: Optional[HostAddress]) -> None:
 
 
 def lookup_mgmt_board_ip_address(hostname: HostName) -> Optional[HostAddress]:
-    mgmt_ipaddress = config.get_config_cache().get_host_config(hostname).management_address
+    mgmt_ip_address = config.get_config_cache().get_host_config(hostname).management_address
 
-    if mgmt_ipaddress is None:
+    if mgmt_ip_address is None:
         return None
 
-    if _is_ipaddress(mgmt_ipaddress):
-        return mgmt_ipaddress
+    if _is_ipaddress(mgmt_ip_address):
+        return mgmt_ip_address
 
     try:
-        return lookup_ip_address(mgmt_ipaddress)
+        return lookup_ip_address(mgmt_ip_address)
     except MKIPAddressLookupError:
         return None
 

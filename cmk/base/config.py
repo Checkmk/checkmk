@@ -3082,9 +3082,12 @@ class HostConfig:
 
     @property
     def management_address(self) -> Optional[HostAddress]:
-        attributes_of_host = host_attributes.get(self.hostname, {})
-        if attributes_of_host.get("management_address"):
-            return attributes_of_host["management_address"]
+        mgmt_ip_address = host_attributes.get(self.hostname, {}).get("management_address")
+        if mgmt_ip_address:
+            return mgmt_ip_address
+
+        if self.is_ipv6_primary:
+            return ipv6addresses.get(self.hostname)
 
         return ipaddresses.get(self.hostname)
 

@@ -7,7 +7,8 @@
 # TODO: This should be realized as unit tests
 
 import pytest  # type: ignore[import]
-from testlib.base import Scenario
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 
 
 @pytest.mark.parametrize("protocol,cred_attribute,credentials", [
@@ -169,3 +170,162 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(monkeypatch, protocol
     assert host_config.management_protocol == protocol
     assert host_config.management_address == "127.0.0.1"
     assert host_config.management_credentials == host_credentials
+
+
+@pytest.mark.parametrize("protocol, cred_attribute, credentials", [
+    ("snmp", "management_snmp_credentials", "HOST"),
+    ("ipmi", "management_ipmi_credentials", {
+        "username": "USER",
+        "password": "PASS",
+    }),
+])
+@pytest.mark.parametrize(
+    "tags, host_attributes, ipaddresses, ipv6addresses, ip_address_result",
+    [
+        ({}, {}, {}, {}, None),
+        # Explicit management_address
+        ({}, {
+            "management_address": "127.0.0.1"
+        }, {}, {}, "127.0.0.1"),
+        ({
+            "address_family": "ip-v4-only",
+        }, {
+            "management_address": "127.0.0.1"
+        }, {}, {}, "127.0.0.1"),
+        ({
+            "address_family": "ip-v6-only",
+        }, {
+            "management_address": "127.0.0.1"
+        }, {}, {}, "127.0.0.1"),
+        ({
+            "address_family": "ip-v4v6",
+        }, {
+            "management_address": "127.0.0.1"
+        }, {}, {}, "127.0.0.1"),
+        # Explicit management_address + ipaddresses
+        ({}, {
+            "management_address": "127.0.0.1"
+        }, {
+            "mgmt-host": "127.0.0.2"
+        }, {}, "127.0.0.1"),
+        ({
+            "address_family": "ip-v4-only",
+        }, {
+            "management_address": "127.0.0.1"
+        }, {
+            "mgmt-host": "127.0.0.2"
+        }, {}, "127.0.0.1"),
+        ({
+            "address_family": "ip-v6-only",
+        }, {
+            "management_address": "127.0.0.1"
+        }, {
+            "mgmt-host": "127.0.0.2"
+        }, {}, "127.0.0.1"),
+        ({
+            "address_family": "ip-v4v6",
+        }, {
+            "management_address": "127.0.0.1"
+        }, {
+            "mgmt-host": "127.0.0.2"
+        }, {}, "127.0.0.1"),
+        # Explicit management_address + ipv6addresses
+        ({}, {
+            "management_address": "127.0.0.1"
+        }, {}, {
+            "mgmt-host": "::2"
+        }, "127.0.0.1"),
+        ({
+            "address_family": "ip-v4-only",
+        }, {
+            "management_address": "127.0.0.1"
+        }, {}, {
+            "mgmt-host": "::2"
+        }, "127.0.0.1"),
+        ({
+            "address_family": "ip-v6-only",
+        }, {
+            "management_address": "127.0.0.1"
+        }, {}, {
+            "mgmt-host": "::2"
+        }, "127.0.0.1"),
+        ({
+            "address_family": "ip-v4v6",
+        }, {
+            "management_address": "127.0.0.1"
+        }, {}, {
+            "mgmt-host": "::2"
+        }, "127.0.0.1"),
+        # ipv4 host
+        ({
+            "address_family": "ip-v4-only",
+        }, {}, {
+            "mgmt-host": "127.0.0.1"
+        }, {}, "127.0.0.1"),
+        ({
+            "address_family": "ip-v4-only",
+        }, {}, {}, {
+            "mgmt-host": "::1"
+        }, None),
+        ({
+            "address_family": "ip-v4-only",
+        }, {}, {
+            "mgmt-host": "127.0.0.1"
+        }, {
+            "mgmt-host": "::1"
+        }, "127.0.0.1"),
+        # ipv6 host
+        ({
+            "address_family": "ip-v6-only",
+        }, {}, {
+            "mgmt-host": "127.0.0.1"
+        }, {}, None),
+        ({
+            "address_family": "ip-v6-only",
+        }, {}, {}, {
+            "mgmt-host": "::1"
+        }, "::1"),
+        ({
+            "address_family": "ip-v6-only",
+        }, {}, {
+            "mgmt-host": "127.0.0.1"
+        }, {
+            "mgmt-host": "::1"
+        }, "::1"),
+        # dual host
+        ({
+            "address_family": "ip-v4v6",
+        }, {}, {
+            "mgmt-host": "127.0.0.1"
+        }, {}, "127.0.0.1"),
+        ({
+            "address_family": "ip-v4v6",
+        }, {}, {}, {
+            "mgmt-host": "::1"
+        }, None),
+        ({
+            "address_family": "ip-v4v6",
+        }, {}, {
+            "mgmt-host": "127.0.0.1"
+        }, {
+            "mgmt-host": "::1"
+        }, "127.0.0.1"),
+    ])
+def test_mgmt_board_ip_addresses(monkeypatch, protocol, cred_attribute, credentials, tags,
+                                 host_attributes, ipaddresses, ipv6addresses, ip_address_result):
+    hostname = "mgmt-host"
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    ts.set_option("host_attributes", {hostname: host_attributes})
+    ts.set_option("ipaddresses", ipaddresses)
+    ts.set_option("ipv6addresses", ipv6addresses)
+    ts.set_option("management_protocol", {hostname: protocol})
+    ts.set_option(cred_attribute, {hostname: credentials})
+
+    config_cache = ts.apply(monkeypatch)
+    host_config = config_cache.get_host_config(hostname)
+
+    assert host_config.has_management_board
+    assert host_config.management_protocol == protocol
+    assert host_config.management_address == ip_address_result
+    assert host_config.management_credentials == credentials

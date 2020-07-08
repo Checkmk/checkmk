@@ -39,11 +39,11 @@ def enforce_localhost() -> None:
     _enforce_localhost = True
 
 
-def lookup_ipv4_address(hostname: HostName) -> Optional[str]:
+def lookup_ipv4_address(hostname: HostName) -> Optional[HostAddress]:
     return lookup_ip_address(hostname, 4)
 
 
-def lookup_ipv6_address(hostname: HostName) -> Optional[str]:
+def lookup_ipv6_address(hostname: HostName) -> Optional[HostAddress]:
     return lookup_ip_address(hostname, 6)
 
 
@@ -53,7 +53,7 @@ def lookup_ipv6_address(hostname: HostName) -> Optional[str]:
 # try to resolve a hostname. On later tries to resolve a hostname  it
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
-def lookup_ip_address(hostname: HostName, family: Optional[int] = None) -> Optional[str]:
+def lookup_ip_address(hostname: HostName, family: Optional[int] = None) -> Optional[HostAddress]:
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns

@@ -20,7 +20,9 @@ import cmk.base.check_utils
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_snmp_section_plugin_from_legacy,)
 
-from cmk.utils.type_defs import CheckPluginNameStr, InventoryPluginName
+from cmk.utils.type_defs import CheckPluginNameStr
+
+InventoryPluginNameStr = str
 InventoryInfo = Dict[str, Any]
 
 # Inventory plugins have dependencies to check plugins and the inventory
@@ -30,7 +32,7 @@ InventoryInfo = Dict[str, Any]
 #from cmk.base.config import *
 
 # Inventory plugins
-inv_info: Dict[InventoryPluginName, InventoryInfo] = {}
+inv_info: Dict[InventoryPluginNameStr, InventoryInfo] = {}
 # Inventory export hooks
 inv_export: Dict[str, Dict[str, Any]] = {}
 # The checks are loaded into this dictionary. Each check

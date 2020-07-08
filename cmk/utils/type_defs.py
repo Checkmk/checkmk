@@ -26,7 +26,6 @@ RuleSpec = Dict[str, Any]  # TODO: Improve this type
 Ruleset = List[RuleSpec]  # TODO: Improve this type
 MetricName = str
 CheckPluginNameStr = str
-InventoryPluginName = str
 ActiveCheckPluginName = str
 Item = Optional[str]
 TagValue = str

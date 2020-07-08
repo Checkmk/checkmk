@@ -31,11 +31,11 @@
 #                           3/0     => parsed = device phase + 3 phases
 
 from typing import Dict, List, Tuple, Union
-from cmk.snmplib.type_defs import SNMPTree
 from .agent_based_api.v0 import (
     all_of,
     exists,
     register,
+    SNMPTree,
     startswith,
 )
 

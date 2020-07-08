@@ -882,21 +882,19 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
 }
 
 void omd_advertize(Logger *logger) {
-    Notice(logger) << "Livestatus by Mathias Kettner started with PID "
+    Notice(logger) << "Livestatus by tribe29 GmbH started with PID "
                    << getpid();
     Notice(logger) << "version " << VERSION << " compiled " << BUILD_DATE
                    << " on " << BUILD_HOSTNAME;
     Notice(logger) << "built with " << BUILD_CXX << ", using "
                    << RegExp::engine() << " regex engine";
-    Notice(logger) << "please visit us at http://mathias-kettner.de/";
+    Notice(logger) << "please visit us at https://checkmk.com/";
     fl_paths.dump(logger);
     if (char *omd_site = getenv("OMD_SITE")) {
         Informational(logger)
-            << "running on OMD site " << omd_site << ", cool.";
+            << "running on Checkmk site " << omd_site << ", cool.";
     } else {
-        Notice(logger)
-            << "Hint: Please try out OMD - the Open Monitoring Distribution";
-        Notice(logger) << "Please visit OMD at http://omdistro.org";
+        Notice(logger) << "Hint: Please try out Checkmk (https://checkmk.com/)";
     }
 }
 

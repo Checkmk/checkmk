@@ -3,22 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Find and print the absolute paths of all Python 2/3 source code files
+# Find and print the absolute paths of all Python source code files
 set -e
 
-if [ $# = 1 -a "$1" = 2 ]; then
-    TESTS_DIR=""
-    SHEBANG_PATTERN='^#!.*python$'
-elif [ $# = 1 -a "$1" = 3 ]; then
-    TESTS_DIR="tests-py3"
-    SHEBANG_PATTERN='^#!.*python3$'
-else
-    echo "usage: $(basename $0) [ 2 | 3 ]" >&2
+if [ $# != 0 ]; then
+    echo "usage: $(basename $0)" >&2
     exit 1
 fi
 
-REPO_PATH=$(dirname $(dirname $(realpath "$0")))
-cd "$REPO_PATH"
+cd "$(dirname $(dirname $(realpath "$0")))"
 
 SEARCH=
 PRUNE=
@@ -30,7 +23,7 @@ SEARCH+=" checks"
 SEARCH+=" cmk"
 SEARCH+=" doc"
 PRUNE+=" -path $(realpath doc/treasures) -prune -o"
-if [ -d "$REPO_PATH/enterprise" ]; then
+if [ -d "enterprise" ]; then
     SEARCH+=" enterprise/agents"
     SEARCH+=" enterprise/alert_handlers"
     SEARCH+=" enterprise/bin"
@@ -47,7 +40,7 @@ fi
 SEARCH+=" inventory"
 SEARCH+=" livestatus/api/python"
 SEARCH+=" locale"
-if [ -d "$REPO_PATH/managed" ]; then
+if [ -d "managed" ]; then
     SEARCH+=" managed"
     PRUNE+=" -path $(realpath managed/cmk/gui/cme) -prune -o"
     PRUNE+=" -path $(realpath managed/cmk/base/default_config/cme.py) -prune -o"
@@ -58,7 +51,7 @@ SEARCH+=" omd/packages/appliance"
 SEARCH+=" omd/packages/maintenance"
 SEARCH+=" omd/packages/omd"
 SEARCH+=" scripts"
-test -n "$TESTS_DIR" && SEARCH+=" $TESTS_DIR"
+SEARCH+=" tests-py3"
 SEARCH+=" web/app"
 SEARCH+=" werk"
 
@@ -82,9 +75,7 @@ find -L \
     -name py26 -prune -o \
     $PRUNE \
     -type f -print | sort | while read F; do
-    if [[ $F =~ "$TESTS_DIR/" ]] && [[ $F == *.py ]]; then
-        echo "$F"
-    elif head -n 1 "$F" | grep -q "$SHEBANG_PATTERN" >/dev/null 2>&1; then
+    if head -n 1 "$F" | grep -q '^#!.*python3$' >/dev/null 2>&1; then
         echo "$F"
     fi
 done

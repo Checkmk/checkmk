@@ -64,7 +64,7 @@ def _get_files_to_check(pylint_test_dir):
     files = [pylint_test_dir]
 
     p = subprocess.Popen(
-        ["%s/scripts/find-python-files" % repo_path(), "3"],
+        ["%s/scripts/find-python-files" % repo_path()],
         stdout=subprocess.PIPE,
         encoding="utf-8",
         shell=False,

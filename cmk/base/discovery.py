@@ -341,10 +341,9 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                 on_error,
             )
 
-            multi_host_sections = _get_host_sections_for_discovery(
-                sources,
-                host_config,
-                use_caches=use_caches,
+            multi_host_sections = sources.get_host_sections(
+                sources.make_nodes(host_config),
+                max_cachefile_age=config.inventory_max_cachefile_age if use_caches else 0,
             )
 
             _do_discovery_for(hostname, ipaddress, multi_host_sections, check_plugin_names,
@@ -538,10 +537,9 @@ def discover_on_host(
             for_check_discovery=True,
         )
 
-        multi_host_sections = _get_host_sections_for_discovery(
-            sources,
-            host_config,
-            use_caches=use_caches,
+        multi_host_sections = sources.get_host_sections(
+            sources.make_nodes(host_config),
+            max_cachefile_age=config.inventory_max_cachefile_age if use_caches else 0,
         )
 
         # Compute current state of new and existing checks
@@ -675,10 +673,10 @@ def check_discovery(
         for_check_discovery=True,
     )
 
-    multi_host_sections = _get_host_sections_for_discovery(
-        sources,
-        host_config,
-        use_caches=data_sources.abstract.DataSource.get_may_use_cache_file(),
+    use_caches = data_sources.abstract.DataSource.get_may_use_cache_file()
+    multi_host_sections = sources.get_host_sections(
+        sources.make_nodes(host_config),
+        max_cachefile_age=config.inventory_max_cachefile_age if use_caches else 0,
     )
 
     services, discovered_host_labels = _get_host_services(host_config,
@@ -1188,16 +1186,6 @@ def _get_sources_for_discovery(
     return sources
 
 
-def _get_host_sections_for_discovery(
-    sources: data_sources.DataSources,
-    host_config: config.HostConfig,
-    use_caches: bool,
-) -> MultiHostSections:
-    max_cachefile_age = config.inventory_max_cachefile_age if use_caches else 0
-    nodes = sources.make_nodes(host_config)
-    return sources.get_host_sections(nodes, max_cachefile_age=max_cachefile_age)
-
-
 def _execute_discovery(
     multi_host_sections: MultiHostSections,
     hostname: HostName,
@@ -1504,10 +1492,9 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
         on_error=on_error,
     )
 
-    multi_host_sections = _get_host_sections_for_discovery(
-        sources,
-        host_config,
-        use_caches=use_caches,
+    multi_host_sections = sources.get_host_sections(
+        sources.make_nodes(host_config),
+        max_cachefile_age=config.inventory_max_cachefile_age if use_caches else 0,
     )
 
     services, discovered_host_labels = _get_host_services(

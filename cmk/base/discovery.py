@@ -343,7 +343,7 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
 
             multi_host_sections = sources.get_host_sections(
                 sources.make_nodes(host_config),
-                max_cachefile_age=config.inventory_max_cachefile_age if use_caches else 0,
+                max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
             )
 
             _do_discovery_for(hostname, ipaddress, multi_host_sections, check_plugin_names,
@@ -539,7 +539,7 @@ def discover_on_host(
 
         multi_host_sections = sources.get_host_sections(
             sources.make_nodes(host_config),
-            max_cachefile_age=config.inventory_max_cachefile_age if use_caches else 0,
+            max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
         )
 
         # Compute current state of new and existing checks
@@ -676,7 +676,7 @@ def check_discovery(
     use_caches = data_sources.abstract.DataSource.get_may_use_cache_file()
     multi_host_sections = sources.get_host_sections(
         sources.make_nodes(host_config),
-        max_cachefile_age=config.inventory_max_cachefile_age if use_caches else 0,
+        max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
     )
 
     services, discovered_host_labels = _get_host_services(host_config,
@@ -1496,7 +1496,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
 
     multi_host_sections = sources.get_host_sections(
         sources.make_nodes(host_config),
-        max_cachefile_age=config.inventory_max_cachefile_age if use_caches else 0,
+        max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
     )
 
     services, discovered_host_labels = _get_host_services(

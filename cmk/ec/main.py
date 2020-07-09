@@ -408,6 +408,7 @@ class HostConfig:
 
     def get_config_for_host(self, host_name, deflt):
         with self._lock:
+            self._update_cache()
             return self._hosts_by_name.get(host_name, deflt)
 
     def get_canonical_name(self, event_host_name: str) -> str:

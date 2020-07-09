@@ -58,7 +58,7 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
     def _render_topic(self, topic: str, entries: List[ViewMenuItem]) -> None:
-        container_id = ensure_str(re.sub('[^a-zA-Z]', '', topic))
+        container_id = ensure_str(re.sub('[^a-zA-Z0-9_-]', '', topic))
         html.begin_foldable_container(treename="views",
                                       id_=container_id,
                                       isopen=False,

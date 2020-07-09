@@ -3,12 +3,19 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Email server roundtrip active check
+"""
+
+# Cleanup includes
+# [x] argparse
+# [ ] global objects
+# [ ] typing
 
 import ast
 import email
 import email.mime.text
 import email.utils
-import getopt
+import argparse
 import imaplib
 import os
 import poplib
@@ -19,88 +26,13 @@ import socket
 import ssl
 import sys
 import time
-from typing import Union
 
 import cmk.utils.password_store
-
-cmk.utils.password_store.replace_passwords()
 
 # The documentations of imaplib and poplib do not give any information about the encodings of their
 # outputs (e.g. of imaplib.IMAP4.search). From the source codes, it seems to be either ASCII or
 # UTF-8, so this should work.
 ENCODING = 'utf-8'
-
-
-def parse_exception(exc):
-    exc = str(exc)
-    if exc[0] == '{':
-        exc = "%d - %s" % list(ast.literal_eval(exc).values())[0]
-    return str(exc)
-
-
-def output_check_result(rc, s, perfdata):
-    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    output = '%s - %s' % (stxt, s)
-    if perfdata:
-        perfdata_output_entries = ['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata]
-        output += ' | %s' % " ".join(perfdata_output_entries)
-    sys.stdout.write('%s\n' % output)
-
-
-def usage(msg=None):
-    if msg:
-        sys.stderr.write('ERROR: %s\n' % msg)
-    sys.stderr.write("""
-USAGE: check_mail_loop [OPTIONS]
-
-OPTIONS:
-  --smtp-server ADDRESS   Host address of the SMTP server to send the mail to
-  --smtp-port PORT        Port to use for SMTP (defaults to 25)
-  --smtp-username USER    Username to use for SMTP communictation
-                          (leave empty for anonymous SMTP)
-  --smtp-password PW      Password to authenticate SMTP
-  --smtp-tls              Use TLS over SMTP (disabled by default)
-  --imap-tls              Use TLS for IMAP authentification (disabled by default)
-
-  --fetch-protocol PROTO  Set to "IMAP" or "POP3", depending on your mailserver
-                          (defaults to IMAP)
-  --fetch-server ADDRESS  Host address of the IMAP/POP3 server hosting your mailbox
-  --fetch-port PORT       IMAP or POP3 port
-                          (defaults to 110 for POP3 and 995 for POP3 with SSL and
-                           143 for IMAP and 993 for IMAP with SSL)
-  --fetch-username USER   Username to use for IMAP/POP3
-  --fetch-password PW     Password to use for IMAP/POP3
-  --fetch-ssl             Use SSL for feching the mailbox (disabled by default)
-
-  --mail-from MAIL        Use this mail address as sender address
-  --mail-to MAIL          Use this mail address as recipient address
-
-  --warning AGE           Loop duration of the most recent mail in seconds or
-                          the average of all received mails within a single
-                          check to raise a WARNING state
-  --critical AGE          Loop duration of the most recent mail in seconds or
-                          the average of all received mails within a single
-                          check to raise a CRITICAL state
-
-  --connect-timeout       Timeout in seconds for network connects (defaults to 10)
-  --status-dir PATH       This plugin needs a file to store information about
-                          sent, received and expected mails. Defaults to either
-                          /tmp/ or /omd/sites/<sitename>/var/check_mk when executed
-                          from within an OMD site
-  --status-suffix SUFFIX  Concantenated with "check_mail_loop.SUFFIX.status" to
-                          generate the name of the status file. Empty by default
-  --delete-messages       Delete all messages identified as being related to this
-                          check plugin. This is disabled by default, which
-                          might make your mailbox grow when you not clean it up
-                          manually.
-  --subject SUBJECT       You can specify the subject text. If choosen the subject
-                          'Check_MK-Mail-Loop' will be replace by the stated text.
-
-  -d, --debug             Enable debug mode
-  -h, --help              Show this help message and exit
-
-""")
-    sys.exit(1)
 
 
 class FetchMailsError(Exception):
@@ -117,6 +49,146 @@ class CleanupMailboxError(Exception):
 
 class ForwardToECError(Exception):
     pass
+
+
+def parse_arguments(argv):
+    """Parse command line arguments and return argument object"""
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--debug",
+                        "-d",
+                        action="store_true",
+                        help="Enable debug mode (keep some exceptions unhandled)")
+    # TODO: seems to be unused
+    parser.add_argument("--connect-timeout",
+                        type=int,
+                        default=10,
+                        help="Timeout in seconds for network connects")
+
+    parser.add_argument("--fetch-server",
+                        type=str,
+                        required=True,
+                        metavar="ADDRESS",
+                        help="Host address of the IMAP/POP3 server hosting your mailbox")
+    parser.add_argument("--fetch-username",
+                        type=str,
+                        required=True,
+                        metavar="USER",
+                        help="Username to use for IMAP/POP3")
+    parser.add_argument("--fetch-password",
+                        type=str,
+                        required=True,
+                        metavar="PASSWORD",
+                        help="Password to use for IMAP/POP3")
+    parser.add_argument("--fetch-protocol",
+                        type=str,
+                        default="IMAP",
+                        choices={'IMAP', 'POP3'},
+                        help="Set to 'IMAP' or 'POP3', depending on your mailserver")
+    parser.add_argument("--fetch-port",
+                        type=int,
+                        metavar="PORT",
+                        help="IMAP or POP3 port (defaults to 110 for POP3 and 995 for POP3 "
+                        "with SSL and 143 for IMAP and 993 for IMAP with SSL)")
+    # TODO: bad: should be called fetch-tls
+    parser.add_argument("--fetch-ssl",
+                        action="store_true",
+                        help="Use SSL for feching the mailbox (disabled by default)")
+
+    parser.add_argument("--smtp-server",
+                        type=str,
+                        required=True,
+                        metavar="ADDRESS",
+                        help="Host address of the SMTP server to send the mail to")
+    parser.add_argument("--smtp-port",
+                        type=int,
+                        metavar="PORT",
+                        help='Port to use for SMTP (defaults to 25)')
+    parser.add_argument("--smtp-username",
+                        type=str,
+                        metavar="USER",
+                        help="Username to use for SMTP communictation "
+                        "(leave empty for anonymous SMTP)")
+    parser.add_argument("--smtp-password",
+                        type=str,
+                        metavar="PASSWORD",
+                        help="Password to authenticate SMTP")
+    parser.add_argument("--smtp-tls", action="store_true", help="Use TLS over SMTP")
+
+    # TODO: not used
+    parser.add_argument("--imap-tls", action="store_true", help="Use TLS for IMAP authentification")
+
+    parser.add_argument("--mail-from",
+                        type=str,
+                        required=True,
+                        help="Use this mail address as sender address")
+    parser.add_argument("--mail-to",
+                        type=str,
+                        required=True,
+                        help="Use this mail address as recipient address")
+
+    parser.add_argument("--warning",
+                        type=int,
+                        metavar="AGE",
+                        help="Loop duration of the most recent mail in seconds or the average of "
+                        "all received mails within a single check to raise a WARNING state")
+    parser.add_argument("--critical",
+                        type=int,
+                        metavar="AGE",
+                        default=3600,
+                        help="Loop duration in seconds of the most recent mail in seconds or the "
+                        "average of all received mails within a single check to raise a "
+                        "CRITICAL state")
+
+    default_status_dir = ((os.environ["OMD_ROOT"] + "/var/check_mk")  #
+                          if "OMD_ROOT" in os.environ else "/tmp")
+    parser.add_argument("--status-dir",
+                        type=str,
+                        metavar="PATH",
+                        default=default_status_dir,
+                        help="This plugin needs a file to store information about sent, received "
+                        "and expected mails. Defaults to either '/tmp/' or "
+                        "'/omd/sites/<sitename>/var/check_mk' when executed from within an "
+                        "OMD site")
+    parser.add_argument("--status-suffix",
+                        type=str,
+                        metavar="SUFFIX",
+                        help="Concantenated with 'check_mail_loop.SUFFIX.status' to generate "
+                        "the name of the status file.")
+    parser.add_argument("--delete-messages",
+                        action="store_true",
+                        help="Delete all messages identified as being related to this check "
+                        "plugin. This is disabled by default, which might make your mailbox "
+                        "grow when you not clean it up manually.")
+    parser.add_argument("--subject",
+                        type=str,
+                        metavar="SUBJECT",
+                        default="Check_MK-Mail-Loop",
+                        help="You can specify the subject text.")
+
+    parser.add_argument("--verbose", '-v', action="count", default=0)
+
+    args = parser.parse_args(argv)
+    args.fetch_port = args.fetch_port or (
+        (995 if args.fetch_ssl else 110) if args.fetch_protocol == 'POP3' else
+        (993 if args.fetch_ssl else 143))
+    return args
+
+
+def parse_exception(exc):
+    exc = str(exc)
+    if exc[0] == '{':
+        exc = "%d - %s" % list(ast.literal_eval(exc).values())[0]
+    return str(exc)
+
+
+def output_check_result(rc, s, perfdata):
+    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
+    output = '%s - %s' % (stxt, s)
+    if perfdata:
+        perfdata_output_entries = ['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata]
+        output += ' | %s' % " ".join(perfdata_output_entries)
+    sys.stdout.write('%s\n' % output)
 
 
 def load_expected_mails(status_path):
@@ -142,6 +214,7 @@ def save_expected_mails(expected_mails, status_path):
     open(status_path, 'w').write('\n'.join(lines) + '\n')
 
 
+# TODO: not used
 def add_starttls_support(self, conn_timeout):
     name = "STARTTLS"
     typ, dat = self._simple_command(name)
@@ -159,8 +232,7 @@ def add_starttls_support(self, conn_timeout):
     self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
 
 
-def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, imap_tls, conn_timeout,
-                subject, delete_messages, expected_mails):
+def fetch_mails(args, expected_mails):
     global g_M
 
     if not expected_mails:
@@ -169,12 +241,13 @@ def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, ima
 
     try:
         mails = {}
-        if fetch_proto == 'POP3':
+        if args.fetch_protocol == 'POP3':
             # Get mails from POP3 mailbox
-            g_M = poplib.POP3_SSL(fetch_server, fetch_port) if fetch_ssl else poplib.POP3(
-                fetch_server, fetch_port)
-            g_M.user(fetch_user)
-            g_M.pass_(fetch_pass)
+            g_M = poplib.POP3_SSL(args.fetch_server,
+                                  args.fetch_port) if args.fetch_ssl else poplib.POP3(
+                                      args.fetch_server, args.fetch_port)
+            g_M.user(args.fetch_username)
+            g_M.pass_(args.fetch_password)
 
             num_messages = len(g_M.list()[1])
 
@@ -185,17 +258,19 @@ def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, ima
 
         else:
             # Get mails from IMAP mailbox
-            g_M = imaplib.IMAP4_SSL(fetch_server, fetch_port) if fetch_ssl else imaplib.IMAP4(
-                fetch_server, fetch_port)
+            g_M = imaplib.IMAP4_SSL(
+                args.fetch_server,  # type: ignore[assignment]
+                args.fetch_port) if args.fetch_ssl else imaplib.IMAP4(args.fetch_server,
+                                                                      args.fetch_port)
 
-            g_M.login(fetch_user, fetch_pass)
-            g_M.select('INBOX', readonly=False)  # select INBOX
-            retcode, raw_messages = g_M.search(None, 'NOT', 'DELETED')
+            g_M.login(args.fetch_username, args.fetch_password)  # type: ignore[attr-defined]
+            g_M.select('INBOX', readonly=False)  # type: ignore[attr-defined]
+            retcode, raw_messages = g_M.search(None, 'NOT', 'DELETED')  # type: ignore[attr-defined]
             messages = raw_messages[0].decode(ENCODING).strip()
             if retcode == 'OK' and messages:
                 for num in messages.split():
                     try:
-                        _type, data = g_M.fetch(num, '(RFC822)')
+                        _type, data = g_M.fetch(num, '(RFC822)')  # type: ignore[attr-defined]
                         if isinstance(data[0], tuple):
                             mails[num] = email.message_from_bytes(data[0][1])
                     except Exception as e:
@@ -205,7 +280,7 @@ def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, ima
         obsolete_mails = {}
         fetched_mails = {}
         # Now filter out the messages for this check
-        pattern = re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % subject)
+        pattern = re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % args.subject)
         for index, msg in mails.items():
             matches = pattern.match(msg.get('Subject', ''))
             if matches:
@@ -222,8 +297,9 @@ def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, ima
                     rx_ts = int(time.time())
 
                 if "%s-%s" % (ts, key) not in expected_mails:
-                    # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if they are not in our list
-                    if delete_messages and int(time.time()) - rx_ts > 24 * 3600:
+                    # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if
+                    # they are not in our list
+                    if args.delete_messages and int(time.time()) - rx_ts > 24 * 3600:
                         obsolete_mails[ts + '-' + key] = (index, rx_ts)
                     continue
 
@@ -231,35 +307,34 @@ def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, ima
         return obsolete_mails, fetched_mails
 
     except Exception as e:
-        if opt_debug:
+        if args.debug:
             raise
         raise FetchMailsError('Failed to check for mails: %s' % parse_exception(e))
 
 
-def send_mail(mail_from, mail_to, subject, smtp_server, smtp_port, smtp_user, smtp_pass, smtp_tls,
-              expected_mails):
+def send_mail(args, expected_mails):
     now = time.time()
     key = random.randint(1, 1000)
 
     mail = email.mime.text.MIMEText("")
-    mail['From'] = mail_from
-    mail['To'] = mail_to
-    mail['Subject'] = '%s %d %d' % (subject, now, key)
+    mail['From'] = args.mail_from
+    mail['To'] = args.mail_to
+    mail['Subject'] = '%s %d %d' % (args.subject, now, key)
     mail['Date'] = email.utils.formatdate(localtime=True)
 
     try:
-        S = smtplib.SMTP(smtp_server, smtp_port)
-        if smtp_tls:
+        S = smtplib.SMTP(args.smtp_server, args.smtp_port)
+        if args.smtp_tls:
             S.starttls()
-        if smtp_user:
-            S.login(smtp_user, smtp_pass)
-        S.sendmail(mail_from, mail_to, mail.as_string())
+        if args.smtp_username:
+            S.login(args.smtp_username, args.smtp_password)
+        S.sendmail(args.mail_from, args.mail_to, mail.as_string())
         S.quit()
 
         add_expected_msg(now, key, expected_mails)
 
     except Exception as e:
-        if opt_debug:
+        if args.debug:
             raise
         raise SendMailError('Failed to send mail: %s' % parse_exception(e))
 
@@ -327,7 +402,7 @@ def check_mails(warning, critical, expected_mails, fetched_mails):
     return state, ", ".join(output), perfdata
 
 
-def cleanup_mailbox(obsolete_mails, fetched_mails):
+def cleanup_mailbox(args, obsolete_mails, fetched_mails):
     if not g_M:
         return  # do not deal with mailbox when none sent yet
 
@@ -349,7 +424,7 @@ def cleanup_mailbox(obsolete_mails, fetched_mails):
             g_M.expunge()
 
     except Exception as e:
-        if opt_debug:
+        if args.debug:
             raise
         raise CleanupMailboxError('Failed to delete mail: %s' % parse_exception(e))
 
@@ -363,203 +438,36 @@ def close_mailbox():
 
 
 # TODO: Nuke these global variables, just pass them around...
-g_M: Union[None, poplib.POP3, imaplib.IMAP4] = None
-opt_debug = False
-fetch_proto = 'IMAP'
-
-
-def parse_arguments(sys_args):
-    global opt_debug
-    global fetch_proto
-
-    if sys_args is None:
-        sys_args = sys.argv[1:]
-
-    short_options = 'dh'
-    long_options = [
-        'smtp-server=',
-        'smtp-port=',
-        'smtp-username=',
-        'smtp-password=',
-        'smtp-tls',
-        'imap-tls',
-        'fetch-protocol=',
-        'fetch-server=',
-        'fetch-port=',
-        'fetch-username=',
-        'fetch-password=',
-        'fetch-ssl',
-        'mail-from=',
-        'mail-to=',
-        'warning=',
-        'critical=',
-        'connect-timeout=',
-        'delete-messages',
-        'help',
-        'status-dir=',
-        'status-suffix=',
-        'subject=',
-        "debug",
-    ]
-
-    required_params = [
-        'smtp-server',
-        'fetch-server',
-        'fetch-username',
-        'fetch-password',
-        'mail-from',
-        'mail-to',
-    ]
-
-    try:
-        opts, _args = getopt.getopt(sys_args, short_options, long_options)
-    except getopt.GetoptError as err:
-        sys.stderr.write("%s\n" % err)
-        sys.exit(1)
-
-    smtp_server = None
-    smtp_port = None
-    smtp_user = None
-    smtp_pass = None
-    smtp_tls = False
-    fetch_server = None
-    fetch_port = None
-    fetch_user = None
-    fetch_pass = None
-    fetch_ssl = False
-    imap_tls = False
-    mail_from = None
-    mail_to = None
-    warning = None
-    critical = 3600
-    conn_timeout = 10
-    delete_messages = False
-    status_dir = None
-    status_suffix = None
-    subject = 'Check_MK-Mail-Loop'
-
-    for o, a in opts:
-        if o in ['-h', '--help']:
-            usage()
-        elif o in ['-d', '--debug']:
-            opt_debug = True
-        elif o == '--smtp-server':
-            smtp_server = a
-        elif o == '--smtp-port':
-            smtp_port = int(a)
-        elif o == '--smtp-username':
-            smtp_user = a
-        elif o == '--smtp-password':
-            smtp_pass = a
-        elif o == '--smtp-tls':
-            smtp_tls = True
-        elif o == '--fetch-protocol':
-            fetch_proto = a
-        elif o == '--fetch-server':
-            fetch_server = a
-        elif o == '--fetch-port':
-            fetch_port = int(a)
-        elif o == '--fetch-username':
-            fetch_user = a
-        elif o == '--fetch-password':
-            fetch_pass = a
-        elif o == '--imap-tls':
-            imap_tls = True
-        elif o == '--fetch-ssl':
-            fetch_ssl = True
-        elif o == '--mail-from':
-            mail_from = a
-        elif o == '--mail-to':
-            mail_to = a
-        elif o == '--warning':
-            warning = int(a)
-        elif o == '--critical':
-            critical = int(a)
-        elif o == '--connect-timeout':
-            conn_timeout = int(a)
-        elif o == '--delete-messages':
-            delete_messages = True
-        elif o == '--status-dir':
-            status_dir = a
-        elif o == '--status-suffix':
-            status_suffix = a
-        elif o == '--subject':
-            subject = a
-
-    d_opts = dict(opts)
-    for required_param in required_params:
-        required_opt = "--%s" % required_param
-        if required_opt not in d_opts:
-            usage('The needed parameter %s is missing' % required_opt)
-
-    if fetch_proto not in ['IMAP', 'POP3']:
-        usage('The given protocol is not supported.')
-
-    if fetch_port is None:
-        if fetch_proto == 'POP3':
-            fetch_port = 995 if fetch_ssl else 110
-        else:
-            fetch_port = 993 if fetch_ssl else 143
-
-    if not status_dir:
-        status_dir = os.environ.get('OMD_ROOT')
-        if status_dir:
-            status_dir += '/var/check_mk'
-        else:
-            status_dir = '/tmp'
-
-    if status_suffix:
-        status_path = '%s/check_mail_loop.%s.status' % (status_dir, status_suffix)
-    else:
-        status_path = '%s/check_mail_loop.status' % (status_dir)
-
-    return (
-        smtp_server,
-        smtp_port,
-        smtp_user,
-        smtp_pass,
-        smtp_tls,
-        fetch_server,
-        fetch_port,
-        fetch_user,
-        fetch_pass,
-        fetch_ssl,
-        imap_tls,
-        mail_from,
-        mail_to,
-        warning,
-        critical,
-        conn_timeout,
-        delete_messages,
-        status_path,
-        subject,
-    )
+#g_M: Union[None, poplib.POP3, imaplib.IMAP4] = None
+g_M = None
 
 
 def main(sys_args=None):
-    smtp_server, smtp_port, smtp_user, smtp_pass, smtp_tls, fetch_server, fetch_port,\
-        fetch_user, fetch_pass, fetch_ssl, imap_tls, mail_from, mail_to, warning,\
-        critical, conn_timeout, delete_messages, status_path, subject = parse_arguments(sys_args)
-
+    args = parse_arguments(sys_args or sys.argv[1:])
     # Enable showing protocol messages of imap for debugging
-    if fetch_proto == 'IMAP' and opt_debug:
+    if args.fetch_protocol == 'IMAP' and args.debug:
         # Bug in mypy's typeshed.
         imaplib.Debug = 4  # type: ignore[attr-defined]
 
     try:
+        status_path = '%s/check_mail_loop%s.status' % (args.status_dir, (".%s" % args.status_suffix)
+                                                       if args.status_suffix else "")
+
         expected_mails = load_expected_mails(status_path)
 
-        obsolete_mails, fetched_mails = fetch_mails(fetch_server, fetch_port, fetch_user,
-                                                    fetch_pass, fetch_ssl, imap_tls, conn_timeout,
-                                                    subject, delete_messages, expected_mails)
+        obsolete_mails, fetched_mails = fetch_mails(args, expected_mails)
 
-        send_mail(mail_from, mail_to, subject, smtp_server, smtp_port, smtp_user, smtp_pass,
-                  smtp_tls, expected_mails)
+        send_mail(args, expected_mails)
 
-        state, output, perfdata = check_mails(warning, critical, expected_mails, fetched_mails)
+        state, output, perfdata = check_mails(
+            args.warning,
+            args.critical,
+            expected_mails,
+            fetched_mails,
+        )
 
-        if delete_messages:
-            cleanup_mailbox(obsolete_mails, fetched_mails)
+        if args.delete_messages:
+            cleanup_mailbox(args, obsolete_mails, fetched_mails)
 
         save_expected_mails(expected_mails, status_path)
 
@@ -575,7 +483,7 @@ def main(sys_args=None):
         return 2, str(e), None
 
     except Exception as e:
-        if opt_debug:
+        if args.debug:
             raise
         return 2, 'Unhandled exception: %s' % parse_exception(e), None
 
@@ -584,6 +492,7 @@ def main(sys_args=None):
 
 
 if __name__ == "__main__":
+    cmk.utils.password_store.replace_passwords()
     exitcode, info, perf = main()
     output_check_result(exitcode, info, perf)
     sys.exit(exitcode)

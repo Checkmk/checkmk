@@ -1766,6 +1766,7 @@ class EventServer(ECServerThread):
         assert ty in ["overall", "by_rule", "by_host"]
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
+
         limit, action = self._get_event_limit(ty, event)
         self._logger.log(VERBOSE, "  Type: %s, already open events: %d, Limit: %d", ty,
                          num_already_open, limit)
@@ -1813,24 +1814,37 @@ class EventServer(ECServerThread):
 
     # protected by self._event_status.lock
     def _get_event_limit(self, ty, event):
-        # Prefer the rule individual limit for by_rule limit (in case there is some)
+        if ty == "overall":
+            return self._get_overall_event_limit()
         if ty == "by_rule":
-            rule_limit = self._rule_by_id[event["rule_id"]].get("event_limit")
-            if rule_limit:
-                return rule_limit["limit"], rule_limit["action"]
-
-        # Prefer the host individual limit for by_host limit (in case there is some)
+            return self._get_rule_event_limit(event["rule_id"])
         if ty == "by_host":
-            host_config = self.host_config.get_config_for_host(event["core_host"], {})
-            host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
-            if host_limit:
-                limit, action = host_limit.split(":", 1)
-                return int(limit), action
+            return self._get_host_event_limit(event["core_host"])
+        raise NotImplementedError()
 
-        limit = self._config["event_limit"][ty]["limit"]
-        action = self._config["event_limit"][ty]["action"]
+    def _get_overall_event_limit(self):
+        return (self._config["event_limit"]["overall"]["limit"],
+                self._config["event_limit"]["overall"]["action"])
 
-        return limit, action
+    def _get_rule_event_limit(self, rule_id):
+        """Prefer the rule individual limit for by_rule limit (in case there is some)"""
+        rule_limit = self._rule_by_id[rule_id].get("event_limit")
+        if rule_limit:
+            return rule_limit["limit"], rule_limit["action"]
+
+        return (self._config["event_limit"]["by_rule"]["limit"],
+                self._config["event_limit"]["by_rule"]["action"])
+
+    def _get_host_event_limit(self, core_host):
+        """Prefer the host individual limit for by_host limit (in case there is some)"""
+        host_config = self.host_config.get_config_for_host(core_host, {})
+        host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
+        if host_limit:
+            limit, action = host_limit.split(":", 1)
+            return int(limit), action
+
+        return (self._config["event_limit"]["by_host"]["limit"],
+                self._config["event_limit"]["by_host"]["action"])
 
     def _create_overflow_event(self, ty, event, limit):
         now = time.time()

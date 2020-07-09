@@ -14,7 +14,7 @@ import re
 import os
 from pathlib import Path
 import errno
-from typing import List
+from typing import List, Tuple, Any, Dict, Set
 import argparse
 import logging
 
@@ -33,6 +33,11 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
 import cmk.utils
+from cmk.utils.type_defs import UserId
+import cmk.gui.pagetypes as pagetypes
+import cmk.gui.visuals as visuals
+from cmk.gui.plugins.views.utils import get_all_views
+from cmk.gui.plugins.dashboard.utils import get_all_dashboards
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
@@ -83,7 +88,10 @@ class UpdateConfig:
             self._logger.log(VERBOSE, "Updating Checkmk configuration...")
             for step_func, title in self._steps():
                 self._logger.log(VERBOSE, " + %s..." % title)
-                step_func()
+                try:
+                    step_func()
+                except Exception:
+                    self._logger.log(VERBOSE, " + \"%s\" failed" % title, exc_info=True)
 
         self._logger.log(VERBOSE, "Done")
 
@@ -95,6 +103,7 @@ class UpdateConfig:
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._update_fs_used_name, "Migrating fs_used name"),
+            (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
         ]
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
@@ -173,6 +182,164 @@ class UpdateConfig:
             except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise  # Do not fail on missing directories / files
+
+    def _migrate_pagetype_topics_to_ids(self):
+        """Change all visuals / page types to use IDs as topics
+
+        1.7 changed the topic from a free form user localizable string to an ID
+        that references the builtin and user managable "pagetype_topics".
+
+        Try to detect builtin or existing topics topics, reference them and
+        also create missing topics and refernce them.
+
+        Persist all the user visuals and page types after modification.
+        """
+        topic_created_for: Set[UserId] = set()
+        pagetypes.PagetypeTopics.load()
+        topics = pagetypes.PagetypeTopics.instances_dict()
+
+        # Create the topics for all page types
+        topic_created_for.update(self._migrate_pagetype_topics(topics))
+
+        # And now do the same for all visuals (views, dashboards, reports)
+        topic_created_for.update(self._migrate_all_visuals_topics(topics))
+
+        # Now persist all added topics
+        for user_id in topic_created_for:
+            pagetypes.PagetypeTopics.save_user_instances(user_id)
+
+    def _migrate_pagetype_topics(self, topics: Dict):
+        topic_created_for: Set[UserId] = set()
+
+        for page_type_cls in pagetypes.all_page_types().values():
+            if not issubclass(page_type_cls, pagetypes.PageRenderer):
+                continue
+
+            page_type_cls.load()
+            modified_user_instances = set()
+
+            # First modify all instances in memory and remember which things have changed
+            for instance in page_type_cls.instances():
+                owner = instance.owner()
+                instance_modified, topic_created = self._transform_pre_17_topic_to_id(
+                    topics, instance.internal_representation())
+
+                if instance_modified and owner:
+                    modified_user_instances.add(owner)
+
+                if topic_created and owner:
+                    topic_created_for.add(owner)
+
+            # Now persist all modified instances
+            for user_id in modified_user_instances:
+                page_type_cls.save_user_instances(user_id)
+
+        return topic_created_for
+
+    def _migrate_all_visuals_topics(self, topics: Dict):
+        topic_created_for: Set[UserId] = set()
+
+        # Views
+        topic_created_for.update(
+            self._migrate_visuals_topics(topics, visual_type="views", all_visuals=get_all_views()))
+
+        # Dashboards
+        topic_created_for.update(
+            self._migrate_visuals_topics(topics,
+                                         visual_type="dashboards",
+                                         all_visuals=get_all_dashboards()))
+
+        # Reports
+        try:
+            import cmk.gui.cee.reporting as reporting
+        except ImportError:
+            reporting = None  # type: ignore[assignment]
+
+        if reporting:
+            reporting.load_reports()
+            topic_created_for.update(
+                self._migrate_visuals_topics(topics,
+                                             visual_type="dashboards",
+                                             all_visuals=reporting.reports))
+
+        return topic_created_for
+
+    def _migrate_visuals_topics(self, topics, visual_type: str, all_visuals: Dict) -> Set[UserId]:
+        topic_created_for: Set[UserId] = set()
+        modified_user_instances: Set[UserId] = set()
+
+        # First modify all instances in memory and remember which things have changed
+        for (owner, _name), visual_spec in all_visuals.items():
+            instance_modified, topic_created = self._transform_pre_17_topic_to_id(
+                topics, visual_spec)
+
+            if instance_modified and owner:
+                modified_user_instances.add(owner)
+
+            if topic_created and owner:
+                topic_created_for.add(owner)
+
+        # Now persist all modified instances
+        for user_id in modified_user_instances:
+            visuals.save(visual_type, all_visuals, user_id)
+
+        return topic_created_for
+
+    def _transform_pre_17_topic_to_id(self, topics: Dict, spec: Dict[str,
+                                                                     Any]) -> Tuple[bool, bool]:
+        topic = spec["topic"] or ""
+        topic_key = (spec["owner"], topic)
+        name = _id_from_title(topic)
+        name_key = (spec["owner"], topic)
+
+        topics_by_title = {v.title(): k for k, v in topics.items()}
+
+        if ("", topic) in topics:
+            # No need to transform. Found a builtin topic which has the current topic
+            # as ID
+            return False, False
+
+        if ("", name) in topics:
+            # Found a builtin topic matching the generated name, assume we have a match
+            spec["topic"] = name
+            return True, False
+
+        if name_key in topics:
+            # Found a custom topic matching the generated name, assume we have a match
+            spec["topic"] = name
+            return True, False
+
+        if topic_key in topics:
+            # No need to transform. Found a topic which has the current topic as ID
+            return False, False
+
+        if topic in topics_by_title and topics_by_title[topic][0] in ["", spec["owner"]]:
+            # Found an existing topic which title exactly matches the current topic attribute and which
+            # is either owned by the same user as the spec or builtin and accessible
+            spec["topic"] = topics_by_title[topic][1]
+            return True, False
+
+        # Found no match: Create a topic for this spec and use it
+        # Use same owner and visibility settings as the original
+        pagetypes.PagetypeTopics.add_instance(
+            (spec["owner"], name),
+            pagetypes.PagetypeTopics({
+                "name": name,
+                "title": topic,
+                "description": "",
+                "public": spec["public"],
+                "icon_name": "topic_unknown",
+                "sort_index": 99,
+                "owner": spec["owner"],
+            }),
+        )
+
+        spec["topic"] = name
+        return True, True
+
+
+def _id_from_title(title):
+    return re.sub("[^-a-zA-Z0-9_]+", "", title.lower().replace(" ", "_"))
 
 
 def main(args: List[str]) -> int:

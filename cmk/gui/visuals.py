@@ -236,6 +236,7 @@ def transform_old_visual(visual):
     visual.setdefault('single_infos', [])
     visual.setdefault('context', {})
     visual.setdefault('link_from', {})
+    visual.setdefault('topic', '')
 
     # 1.6 introduced this setting: Ensure all visuals have it set
     visual.setdefault("add_context_to_title", True)
@@ -918,7 +919,7 @@ def page_edit_visual(what,
             if not general_properties['linktitle']:
                 general_properties['linktitle'] = general_properties['title']
             if not general_properties['topic']:
-                general_properties['topic'] = _("Other")
+                general_properties['topic'] = "other"
 
             old_visual = visual
             # TODO: Currently not editable, but keep settings

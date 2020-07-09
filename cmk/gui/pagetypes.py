@@ -220,7 +220,7 @@ class Base:
     # Store for all instances of this page type. The key into
     # this dictionary????
     # TODO: Brauchen wir hier überhaupt ein dict??
-    __instances: 'Dict[str, Base]' = {}
+    __instances: 'Dict[Tuple[str, str], Base]' = {}
 
     @classmethod
     def clear_instances(cls):

@@ -53,6 +53,7 @@ def test_timespan(seconds, output):
 
 
 @pytest.mark.parametrize("value, output", [
+    (0, 1),
     (1, 1),
     (45.123123, 2),
     (1e5, 6),
@@ -63,10 +64,12 @@ def test__digits_left(value, output):
 
 
 @pytest.mark.parametrize("value, use_si_units, output", [
+    (0, True, ("0.00", "B")),
     (1, True, ("1.00", "B")),
     (101.123, True, ("101", "B")),
     (101.623, True, ("102", "B")),
     (10001.623, True, ("10.0", "KB")),
+    (0, False, ("0.00", "B")),
     (-123.123, True, ValueError),
 ])
 def test__auto_scale(value, use_si_units, output):
@@ -74,6 +77,7 @@ def test__auto_scale(value, use_si_units, output):
 
 
 @pytest.mark.parametrize("bytes_, output", [
+    (0, "0 B"),
     (1, "1 B"),
     (2345, "2.35 KB"),
     (1024**2, "1.05 MB"),
@@ -89,6 +93,7 @@ def test_disksize(bytes_, output):
 
 
 @pytest.mark.parametrize("bytes_, output", [
+    (0, "0 B"),
     (1, "1 B"),
     (2345, "2.29 KiB"),
     (1024**2, "1.00 MiB"),
@@ -104,6 +109,7 @@ def test_bytes(bytes_, output):
 
 
 @pytest.mark.parametrize("bytes_, output", [
+    (0, "0 B"),
     (1, "1 B"),
     (2345, "2,345 B"),
     (1024**2, "1,048,576 B"),
@@ -115,6 +121,7 @@ def test_filesize(bytes_, output):
 
 
 @pytest.mark.parametrize("octets_per_sec, output", [
+    (0, "0 Bit/s"),
     (1, "8 Bit/s"),
     (2345, "18.8 KBit/s"),
     (1.25 * 10**5, "1 MBit/s"),
@@ -128,6 +135,7 @@ def test_nicspeed(octets_per_sec, output):
 
 
 @pytest.mark.parametrize("octets_per_sec, output", [
+    (0, "0.00 Bit/s"),
     (1, "8.00 Bit/s"),
     (2345, "18.8 KBit/s"),
     (1.25 * 10**5, "1.00 MBit/s"),
@@ -141,6 +149,7 @@ def test_networkbandwitdh(octets_per_sec, output):
 
 
 @pytest.mark.parametrize("bytes_, output", [
+    (0, "0.00 B/s"),
     (1, "1.00 B/s"),
     (2345, "2.35 KB/s"),
     (1024**2, "1.05 MB/s"),

@@ -1727,7 +1727,7 @@ class EventServer(ECServerThread):
         for rule_id, num_existing_events in self._event_status.num_existing_events_by_rule.items():
             if rule_id is None:
                 continue  # Ignore rule unrelated overflow events. They have no rule id associated.
-            if num_existing_events >= self._config["event_limit"]["by_rule"]["limit"]:
+            if num_existing_events >= self._get_rule_event_limit(rule_id)[0]:
                 rule_ids.append(rule_id)
         return rule_ids
 

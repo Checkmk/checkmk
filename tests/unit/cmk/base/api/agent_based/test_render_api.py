@@ -3,9 +3,18 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import inspect
 import time
 import pytest  # type: ignore[import]
 import cmk.base.api.agent_based.render as render
+
+
+def _test_render_func(f, result, *args, **kwargs):
+    if inspect.isclass(result) and issubclass(result, Exception):
+        with pytest.raises(result):
+            f(*args, **kwargs)
+    else:
+        assert f(*args, **kwargs) == result
 
 
 @pytest.mark.parametrize("epoch, output", [
@@ -15,7 +24,7 @@ import cmk.base.api.agent_based.render as render
     ("1587908220", "Apr 26 2020"),
 ])
 def test_date(epoch, output):
-    assert render.date(epoch=epoch) == output
+    _test_render_func(render.date, output, epoch=epoch)
 
 
 @pytest.mark.parametrize("epoch, output", [
@@ -26,10 +35,11 @@ def test_date(epoch, output):
 ])
 def test_datetime(monkeypatch, epoch, output):
     monkeypatch.setattr(time, "localtime", time.gmtime)
-    assert render.datetime(epoch=epoch) == output
+    _test_render_func(render.datetime, output, epoch=epoch)
 
 
 @pytest.mark.parametrize("seconds, output", [
+    (0, "0 yoctoseconds"),
     (0.00000001, "10 nanoseconds"),
     (0.1, "100 milliseconds"),
     (22, "22 seconds"),
@@ -39,7 +49,28 @@ def test_datetime(monkeypatch, epoch, output):
     (31536001, "1 year 0 days"),
 ])
 def test_timespan(seconds, output):
-    assert render.timespan(seconds=seconds) == output
+    _test_render_func(render.timespan, output, seconds=seconds)
+
+
+@pytest.mark.parametrize("value, output", [
+    (1, 1),
+    (45.123123, 2),
+    (1e5, 6),
+    (-2, ValueError),
+])
+def test__digits_left(value, output):
+    _test_render_func(render._digits_left, output, value)
+
+
+@pytest.mark.parametrize("value, use_si_units, output", [
+    (1, True, ("1.00", "B")),
+    (101.123, True, ("101", "B")),
+    (101.623, True, ("102", "B")),
+    (10001.623, True, ("10.0", "KB")),
+    (-123.123, True, ValueError),
+])
+def test__auto_scale(value, use_si_units, output):
+    _test_render_func(render._auto_scale, output, value, use_si_units)
 
 
 @pytest.mark.parametrize("bytes_, output", [
@@ -51,9 +82,10 @@ def test_timespan(seconds, output):
     (12340006, "12.3 MB"),
     (123400067, "123 MB"),
     (1234000678, "1.23 GB"),
+    (-17408, ValueError),
 ])
 def test_disksize(bytes_, output):
-    assert render.disksize(bytes_) == output
+    _test_render_func(render.disksize, output, bytes_)
 
 
 @pytest.mark.parametrize("bytes_, output", [
@@ -65,9 +97,10 @@ def test_disksize(bytes_, output):
     (12340006, "11.8 MiB"),
     (123400067, "118 MiB"),
     (1234000678, "1.15 GiB"),
+    (-17408, ValueError),
 ])
 def test_bytes(bytes_, output):
-    assert render.bytes(bytes_) == output
+    _test_render_func(render.bytes, output, bytes_)
 
 
 @pytest.mark.parametrize("bytes_, output", [
@@ -78,7 +111,7 @@ def test_bytes(bytes_, output):
     (1234000678, "1,234,000,678 B"),
 ])
 def test_filesize(bytes_, output):
-    assert render.filesize(bytes_) == output
+    _test_render_func(render.filesize, output, bytes_)
 
 
 @pytest.mark.parametrize("octets_per_sec, output", [
@@ -88,9 +121,10 @@ def test_filesize(bytes_, output):
     (1.25 * 10**6, "10 MBit/s"),
     (1.25 * 10**7, "100 MBit/s"),
     (1234000678, "9.87 GBit/s"),
+    (-129873.2398409, ValueError),
 ])
 def test_nicspeed(octets_per_sec, output):
-    assert render.nicspeed(octets_per_sec) == output
+    _test_render_func(render.nicspeed, output, octets_per_sec)
 
 
 @pytest.mark.parametrize("octets_per_sec, output", [
@@ -100,9 +134,10 @@ def test_nicspeed(octets_per_sec, output):
     (1.25 * 10**6, "10.0 MBit/s"),
     (1.25 * 10**7, "100 MBit/s"),
     (1234000678, "9.87 GBit/s"),
+    (-999, ValueError),
 ])
 def test_networkbandwitdh(octets_per_sec, output):
-    assert render.networkbandwidth(octets_per_sec) == output
+    _test_render_func(render.networkbandwidth, output, octets_per_sec)
 
 
 @pytest.mark.parametrize("bytes_, output", [
@@ -111,9 +146,10 @@ def test_networkbandwitdh(octets_per_sec, output):
     (1024**2, "1.05 MB/s"),
     (1000**2, "1.00 MB/s"),
     (1234000678, "1.23 GB/s"),
+    (-999, ValueError),
 ])
 def test_iobandwidth(bytes_, output):
-    assert render.iobandwidth(bytes_) == output
+    _test_render_func(render.iobandwidth, output, bytes_)
 
 
 @pytest.mark.parametrize("percentage, output", [
@@ -131,6 +167,7 @@ def test_iobandwidth(bytes_, output):
     (100.01, "100%"),
     (100, "100%"),
     (123, "123%"),
+    (-23, ValueError),
 ])
 def test_percent(percentage, output):
-    assert render.percent(percentage) == output
+    _test_render_func(render.percent, output, percentage)

@@ -47,6 +47,7 @@ def test_datetime(monkeypatch, epoch, output):
     (98, "1 minute 38 seconds"),
     (1234567, "14 days 6 hours"),
     (31536001, "1 year 0 days"),
+    (-1231.213, ValueError),
 ])
 def test_timespan(seconds, output):
     _test_render_func(render.timespan, output, seconds=seconds)

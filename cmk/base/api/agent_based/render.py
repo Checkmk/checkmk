@@ -55,6 +55,9 @@ def datetime(epoch: Optional[float]) -> str:
 
 
 def _gen_timespan_chunks(seconds: float, nchunks: int) -> Iterable[str]:
+    if seconds < 0:
+        raise ValueError("Cannot render negative timespan")
+
     try:
         start = next(i for i, (_, v) in enumerate(_TIME_UNITS) if seconds >= v)
     except StopIteration:

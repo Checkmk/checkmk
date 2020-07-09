@@ -8,8 +8,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-import collections.abc
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -35,9 +34,7 @@ from .tcp import TCPDataSource
 
 __all__ = ["DataSources", "make_host_sections", "make_sources"]
 
-# TODO(ml): Change `Sequence[DataSource` to `Iterable[DataSource]`
-#           once `_DataSources` is gone.
-DataSources = Sequence[DataSource]
+DataSources = Iterable[DataSource]
 
 
 class SourceBuilder:
@@ -211,108 +208,89 @@ def make_host_sections(
     *,
     max_cachefile_age: int,
 ) -> MultiHostSections:
-    return _DataSources.get_host_sections(
-        _DataSources(sources=sources).make_nodes(host_config, ipaddress),
+    return _make_host_sections(
+        _make_nodes(sources, host_config, ipaddress),
         max_cachefile_age=max_cachefile_age,
     )
 
 
-class _DataSources(collections.abc.Collection):
-    def __init__(
-        self,
-        *,
-        sources: DataSources,
-    ) -> None:
-        super(_DataSources, self).__init__()
-        self._sources = sources
+def _make_host_sections(
+    nodes: Iterable[Tuple[HostName, Optional[HostAddress], DataSources]],
+    *,
+    max_cachefile_age: int,
+) -> MultiHostSections:
+    """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
-    def __contains__(self, item) -> bool:
-        return self._sources.__contains__(item)
+    Returns a dictionary object of already parsed HostSections() constructs for each related host.
+    For single hosts it's just a single entry in the dictionary. For cluster hosts it contains one
+    HostSections() entry for each related node.
 
-    def __iter__(self):
-        return self._sources.__iter__()
-
-    def __len__(self):
-        return self._sources.__len__()
-
-    @staticmethod
-    def get_host_sections(
-        nodes: List[Tuple[HostName, Optional[HostAddress], "_DataSources"]],
-        *,
-        max_cachefile_age: int,
-    ) -> MultiHostSections:
-        """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
-
-        Returns a dictionary object of already parsed HostSections() constructs for each related host.
-        For single hosts it's just a single entry in the dictionary. For cluster hosts it contains one
-        HostSections() entry for each related node.
-
-        Communication errors are not raised through by this functions. All agent related errors are
-        caught by the source.run() method and saved in it's _exception attribute. The caller should
-        use source.get_summary_result() to get the state, output and perfdata of the agent excecution
-        or source.exception() to get the exception object.
-        """
-        console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-        # Special agents can produce data for the same check_plugin_name on the same host, in this case
-        # the section lines need to be extended
-        multi_host_sections = MultiHostSections()
-        for hostname, ipaddress, sources in nodes:
-            for source in sources:
-                source.set_max_cachefile_age(max_cachefile_age)
-                host_sections = multi_host_sections.setdefault(
-                    HostKey(hostname, ipaddress, source.source_type),
-                    source._empty_host_sections(),
-                )
-                host_sections.update(source.run())
-
-            # Store piggyback information received from all sources of this host. This
-            # also implies a removal of piggyback files received during previous calls.
+    Communication errors are not raised through by this functions. All agent related errors are
+    caught by the source.run() method and saved in it's _exception attribute. The caller should
+    use source.get_summary_result() to get the state, output and perfdata of the agent excecution
+    or source.exception() to get the exception object.
+    """
+    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
+    # Special agents can produce data for the same check_plugin_name on the same host, in this case
+    # the section lines need to be extended
+    multi_host_sections = MultiHostSections()
+    for hostname, ipaddress, sources in nodes:
+        for source in sources:
+            source.set_max_cachefile_age(max_cachefile_age)
             host_sections = multi_host_sections.setdefault(
-                HostKey(hostname, ipaddress, SourceType.HOST),
-                AgentHostSections(),
+                HostKey(hostname, ipaddress, source.source_type),
+                source._empty_host_sections(),
             )
-            cmk.utils.piggyback.store_piggyback_raw_data(
-                hostname,
-                host_sections.piggybacked_raw_data,
-            )
+            host_sections.update(source.run())
 
-        return multi_host_sections
+        # Store piggyback information received from all sources of this host. This
+        # also implies a removal of piggyback files received during previous calls.
+        host_sections = multi_host_sections.setdefault(
+            HostKey(hostname, ipaddress, SourceType.HOST),
+            AgentHostSections(),
+        )
+        cmk.utils.piggyback.store_piggyback_raw_data(
+            hostname,
+            host_sections.piggybacked_raw_data,
+        )
 
-    def make_nodes(
-        self,
-        host_config: HostConfig,
-        ipaddress: Optional[HostAddress],
-    ) -> List[Tuple[HostName, Optional[HostAddress], "_DataSources"]]:
-        if host_config.nodes is None:
-            return [(host_config.hostname, ipaddress, self)]
-        return self._make_piggy_nodes(host_config)
+    return multi_host_sections
 
-    @staticmethod
-    def _make_piggy_nodes(
-            host_config: HostConfig
-    ) -> List[Tuple[HostName, Optional[HostAddress], "_DataSources"]]:
-        """Abstract clusters/nodes/hosts"""
-        assert host_config.nodes is not None
 
-        import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
-        abstract.DataSource.set_may_use_cache_file()
+def _make_nodes(
+    sources: DataSources,
+    host_config: HostConfig,
+    ipaddress: Optional[HostAddress],
+) -> Iterable[Tuple[HostName, Optional[HostAddress], DataSources]]:
+    if host_config.nodes is None:
+        return [(host_config.hostname, ipaddress, sources)]
+    return _make_piggy_nodes(host_config)
 
-        nodes = []
-        for hostname in host_config.nodes:
-            ipaddress = ip_lookup.lookup_ip_address(hostname)
-            check_names = check_table.get_needed_check_names(
-                hostname,
-                remove_duplicates=True,
-                filter_mode="only_clustered",
-            )
-            selected_raw_sections = config.get_relevant_raw_sections(
-                check_plugin_names=(
-                    # TODO (mo): centralize maincheckify: CMK-4295
-                    CheckPluginName(maincheckify(n)) for n in check_names),)
-            sources = _DataSources(sources=make_sources(
-                HostConfig.make_host_config(hostname),
-                ipaddress,
-                selected_raw_sections=selected_raw_sections,
-            ))
-            nodes.append((hostname, ipaddress, sources))
-        return nodes
+
+def _make_piggy_nodes(
+        host_config: HostConfig) -> Iterable[Tuple[HostName, Optional[HostAddress], DataSources]]:
+    """Abstract clusters/nodes/hosts"""
+    assert host_config.nodes is not None
+
+    import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
+    abstract.DataSource.set_may_use_cache_file()
+
+    nodes = []
+    for hostname in host_config.nodes:
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
+        check_names = check_table.get_needed_check_names(
+            hostname,
+            remove_duplicates=True,
+            filter_mode="only_clustered",
+        )
+        selected_raw_sections = config.get_relevant_raw_sections(
+            check_plugin_names=(
+                # TODO (mo): centralize maincheckify: CMK-4295
+                CheckPluginName(maincheckify(n)) for n in check_names),)
+        sources = make_sources(
+            HostConfig.make_host_config(hostname),
+            ipaddress,
+            selected_raw_sections=selected_raw_sections,
+        )
+        nodes.append((hostname, ipaddress, sources))
+    return nodes

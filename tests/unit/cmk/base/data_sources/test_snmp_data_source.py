@@ -137,8 +137,12 @@ def test_write_and_read_file_cache(monkeypatch, fs):
 def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
     hostname = "testhost"
     ipaddress = "1.2.3.4"
+
+    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=True):
+        return ipaddress
+
     Scenario().add_host(hostname).apply(monkeypatch)
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: ipaddress)
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config, "host_attributes", {
         hostname: {
             "management_address": ipaddress
@@ -155,11 +159,11 @@ def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(monkeypatch):
-    def failed_ip_lookup(h):
+    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=True):
         raise MKIPAddressLookupError("Failed to ...")
 
     Scenario().add_host("hostname").apply(monkeypatch)
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", failed_ip_lookup)
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config, "host_attributes", {
         "hostname": {
             "management_address": "lolo"

@@ -47,13 +47,22 @@ def lookup_ipv6_address(hostname: HostName) -> Optional[HostAddress]:
     return lookup_ip_address(hostname, 6)
 
 
+def lookup_mgmt_board_ip_address(hostname: HostName) -> Optional[HostAddress]:
+    try:
+        return lookup_ip_address(hostname, for_mgmt_board=True)
+    except MKIPAddressLookupError:
+        return None
+
+
 # Determine the IP address of a host. It returns either an IP address or, when
 # a hostname is configured as IP address, the hostname.
 # Or raise an exception when a hostname can not be resolved on the first
 # try to resolve a hostname. On later tries to resolve a hostname  it
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
-def lookup_ip_address(hostname: HostName, family: Optional[int] = None) -> Optional[HostAddress]:
+def lookup_ip_address(hostname: HostName,
+                      family: Optional[int] = None,
+                      for_mgmt_board: bool = False) -> Optional[HostAddress]:
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
@@ -76,8 +85,16 @@ def lookup_ip_address(hostname: HostName, family: Optional[int] = None) -> Optio
         return "::1"
 
     # Now check, if IP address is hard coded by the user
-    if family == 4:
+    if for_mgmt_board:
+        # TODO Cleanup:
+        # host_config.management_address also looks up "hostname" in ipaddresses/ipv6addresses
+        # dependent on host_config.is_ipv6_primary as above. Thus we get the "right" IP address
+        # here.
+        ipa = host_config.management_address
+
+    elif family == 4:
         ipa = config.ipaddresses.get(hostname)
+
     else:
         ipa = config.ipv6addresses.get(hostname)
 
@@ -302,47 +319,3 @@ def verify_ipaddress(address: Optional[HostAddress]) -> None:
     if address in ["0.0.0.0", "::"]:
         raise MKIPAddressLookupError(
             "Failed to lookup IP address and no explicit IP address configured")
-
-
-#   .--MGMT board----------------------------------------------------------.
-#   |       __  __  ____ __  __ _____   _                         _        |
-#   |      |  \/  |/ ___|  \/  |_   _| | |__   ___   __ _ _ __ __| |       |
-#   |      | |\/| | |  _| |\/| | | |   | '_ \ / _ \ / _` | '__/ _` |       |
-#   |      | |  | | |_| | |  | | | |   | |_) | (_) | (_| | | | (_| |       |
-#   |      |_|  |_|\____|_|  |_| |_|   |_.__/ \___/ \__,_|_|  \__,_|       |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def lookup_mgmt_board_ip_address(hostname: HostName) -> Optional[HostAddress]:
-    mgmt_ip_address = config.get_config_cache().get_host_config(hostname).management_address
-
-    if mgmt_ip_address is None:
-        return None
-
-    if _is_ipaddress(mgmt_ip_address):
-        return mgmt_ip_address
-
-    try:
-        return lookup_ip_address(mgmt_ip_address)
-    except MKIPAddressLookupError:
-        return None
-
-
-def _is_ipaddress(address: Optional[HostAddress]) -> bool:
-    if address is None:
-        return False
-
-    try:
-        socket.inet_pton(socket.AF_INET, address)
-        return True
-    except socket.error:
-        # not a ipv4 address
-        pass
-
-    try:
-        socket.inet_pton(socket.AF_INET6, address)
-        return True
-    except socket.error:
-        # no ipv6 address either
-        return False

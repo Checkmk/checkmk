@@ -8,7 +8,8 @@ from functools import partial
 
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
 from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
@@ -92,7 +93,10 @@ def _set_up(monkeypatch, hostname, nodes, cluster_mapping) -> None:
     def host_of_clustered_service(hostname, _service_description):
         return cluster_mapping[hostname]
 
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.0.1")
+    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=False):
+        return "127.0.0.1"
+
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config_cache, "host_of_clustered_service", host_of_clustered_service)
     monkeypatch.setattr(config, "get_registered_section_plugin", MOCK_SECTIONS.get)
 
@@ -637,7 +641,10 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     make_scenario(hostname, tags).apply(monkeypatch)
     host_config = config.HostConfig.make_host_config(hostname)
 
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda hostname: hosts[hostname])
+    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=False):
+        return hosts[hostname]
+
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     mocker.patch.object(
         cmk.utils.piggyback,
         "remove_source_status_file",

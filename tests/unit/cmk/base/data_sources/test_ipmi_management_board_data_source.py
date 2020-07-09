@@ -36,8 +36,12 @@ def test_attribute_defaults(monkeypatch):
 def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
     hostname = "testhost"
     ipaddress = "127.0.0.1"
+
+    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=True):
+        return ipaddress
+
     Scenario().add_host(hostname).apply(monkeypatch)
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: ipaddress)
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config, "host_attributes", {
         hostname: {
             "management_address": ipaddress

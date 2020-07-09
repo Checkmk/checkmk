@@ -9,7 +9,8 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 import cmk.base.ip_lookup as ip_lookup
 
 
@@ -177,3 +178,59 @@ def test_get_dns_cache_lookup_hosts(monkeypatch):
         ('dual', 6),
         ('blub', 4),
     ])
+
+
+@pytest.mark.parametrize(
+    "hostname, tags, result_address",
+    [
+        #("unresolveable-hostname", {}, None),
+        # default IPv4 host
+        ("localhost", {}, "127.0.0.1"),
+        ("127.0.0.1", {}, "127.0.0.1"),
+        # explicit IPv4 host
+        ("localhost", {
+            "address_family": "ip-v4-only",
+        }, "127.0.0.1"),
+        ("127.0.0.1", {
+            "address_family": "ip-v4-only",
+        }, "127.0.0.1"),
+        # explicit IPv6 host
+        ("localhost", {
+            "address_family": "ip-v6-only",
+        }, "::1"),
+        ("::1", {
+            "address_family": "ip-v6-only",
+        }, "::1"),
+        # dual host
+        ("localhost", {
+            "address_family": "ip-v4v6",
+        }, "127.0.0.1"),
+        ("127.0.0.1", {
+            "address_family": "ip-v4v6",
+        }, "127.0.0.1"),
+    ])
+def test_lookup_mgmt_board_ip_address(monkeypatch, hostname, tags, result_address):
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    ts.apply(monkeypatch)
+    assert ip_lookup.lookup_mgmt_board_ip_address(hostname) == result_address
+
+
+@pytest.mark.parametrize("tags, family", [
+    ({}, 4),
+    ({
+        "address_family": "ip-v4-only",
+    }, 4),
+    ({
+        "address_family": "ip-v6-only",
+    }, 6),
+    ({
+        "address_family": "ip-v4v6",
+    }, 4),
+])
+def test_lookup_mgmt_board_ip_address_unresolveable(monkeypatch, tags, family):
+    hostname = "unresolveable-hostname"
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    ts.apply(monkeypatch)
+    assert ip_lookup.lookup_mgmt_board_ip_address(hostname) is None

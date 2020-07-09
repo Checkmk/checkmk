@@ -23,8 +23,6 @@ import poplib
 import random
 import re
 import smtplib
-import socket
-import ssl
 import sys
 import time
 
@@ -90,11 +88,10 @@ def parse_arguments(argv):
                         type=int,
                         metavar="PORT",
                         help="IMAP or POP3 port (defaults to 110 for POP3 and 995 for POP3 "
-                        "with SSL and 143 for IMAP and 993 for IMAP with SSL)")
-    # TODO: bad: should be called fetch-tls
-    parser.add_argument("--fetch-ssl",
+                        "with TLS/SSL and 143 for IMAP and 993 for IMAP with TLS/SSL)")
+    parser.add_argument("--fetch-tls",
                         action="store_true",
-                        help="Use SSL for feching the mailbox (disabled by default)")
+                        help="Use TLS/SSL for feching the mailbox (disabled by default)")
 
     parser.add_argument("--smtp-server",
                         type=str,
@@ -115,9 +112,6 @@ def parse_arguments(argv):
                         metavar="PASSWORD",
                         help="Password to authenticate SMTP")
     parser.add_argument("--smtp-tls", action="store_true", help="Use TLS over SMTP")
-
-    # TODO: not used
-    parser.add_argument("--imap-tls", action="store_true", help="Use TLS for IMAP authentification")
 
     parser.add_argument("--mail-from",
                         type=str,
@@ -171,8 +165,8 @@ def parse_arguments(argv):
 
     args = parser.parse_args(argv)
     args.fetch_port = args.fetch_port or (
-        (995 if args.fetch_ssl else 110) if args.fetch_protocol == 'POP3' else
-        (993 if args.fetch_ssl else 143))
+        (995 if args.fetch_tls else 110) if args.fetch_protocol == 'POP3' else
+        (993 if args.fetch_tls else 143))
     return args
 
 
@@ -213,24 +207,6 @@ def save_expected_mails(expected_mails, status_path):
     for ts, key in expected_mails.values():
         lines.append('%d %s' % (ts, key))
     open(status_path, 'w').write('\n'.join(lines) + '\n')
-
-
-# TODO: not used
-def add_starttls_support(self, conn_timeout):
-    name = "STARTTLS"
-    typ, dat = self._simple_command(name)
-    if typ != 'OK':
-        raise self.error(dat[-1])
-
-    socket.setdefaulttimeout(conn_timeout)
-    self.sock = ssl.wrap_socket(self.sock)
-    self.file = self.sock.makefile()
-
-    cap = 'CAPABILITY'
-    self._simple_command(cap)
-    if cap not in self.untagged_responses:
-        raise self.error('no CAPABILITY response from server')
-    self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
 
 
 def send_mail(args, expected_mails):
@@ -363,7 +339,7 @@ class MailBox:
                 # Get mails from IMAP mailbox
                 self._mailbox = imaplib.IMAP4_SSL(
                     self._args.fetch_server,
-                    self._args.fetch_port) if self._args.fetch_ssl else imaplib.IMAP4(
+                    self._args.fetch_port) if self._args.fetch_tls else imaplib.IMAP4(
                         self._args.fetch_server, self._args.fetch_port)
 
                 self._mailbox.login(self._args.fetch_username, self._args.fetch_password)

@@ -13,8 +13,9 @@ def check_mail_loop_arguments(params):
     else:
         args.append("--smtp-server=$HOSTADDRESS$")
 
+    # note: 'imap_tls' is also used for POP3, so it should be called "fetch_tls"
     if "imap_tls" in params:
-        args.append("--imap-tls")
+        args.append("--fetch-tls")
 
     if "smtp_tls" in params:
         args.append("--smtp-tls")

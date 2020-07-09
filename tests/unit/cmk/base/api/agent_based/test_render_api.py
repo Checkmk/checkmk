@@ -39,7 +39,7 @@ def test_datetime(monkeypatch, epoch, output):
 
 
 @pytest.mark.parametrize("seconds, output", [
-    (0, "0 yoctoseconds"),
+    (0, "0 seconds"),
     (0.00000001, "10 nanoseconds"),
     (0.1, "100 milliseconds"),
     (22, "22 seconds"),

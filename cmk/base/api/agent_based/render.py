@@ -71,7 +71,10 @@ def _gen_timespan_chunks(seconds: float, nchunks: int) -> Iterable[str]:
 def timespan(seconds: float) -> str:
     """Render a time span in seconds
     """
-    return " ".join(_gen_timespan_chunks(float(seconds), nchunks=2))
+    ts = " ".join(_gen_timespan_chunks(float(seconds), nchunks=2))
+    if ts == "0 %s" % _TIME_UNITS[-1][0]:
+        ts = "0 seconds"
+    return ts
 
 
 def _digits_left(value: float) -> int:

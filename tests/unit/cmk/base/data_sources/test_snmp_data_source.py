@@ -196,7 +196,7 @@ def test_detector_requires_ipaddress(monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
     source = SNMPDataSource(hostname, None)
 
-    with pytest.raises(Exception):
+    with pytest.raises(NotImplementedError):
         source._get_raw_section_names_to_process()
 
 

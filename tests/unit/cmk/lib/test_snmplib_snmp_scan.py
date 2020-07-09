@@ -12,6 +12,8 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
+from cmk.utils.type_defs import SectionName
+
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_scan as snmp_scan
@@ -260,7 +262,7 @@ def test_snmp_scan_find_plugins__success(backend):
     sections = [
         SNMPScanSection(_.name, _.detect_spec) for _ in config.registered_snmp_sections.values()
     ]
-    found = snmp_scan._snmp_scan_find_plugins(
+    found = snmp_scan._snmp_scan_find_sections(
         sections,
         do_snmp_scan=False,
         on_error="raise",
@@ -285,10 +287,10 @@ def test_gather_available_raw_section_names_defaults(backend, mocker):
         binary_host=False,
         backend=backend,
     ) == {
-        "hr_mem",
-        "mgmt_snmp_info",
-        "mgmt_snmp_uptime",
-        "snmp_info",
-        "snmp_os",
-        "snmp_uptime",
+        SectionName("hr_mem"),
+        SectionName("mgmt_snmp_info"),
+        SectionName("mgmt_snmp_uptime"),
+        SectionName("snmp_info"),
+        SectionName("snmp_os"),
+        SectionName("snmp_uptime"),
     }

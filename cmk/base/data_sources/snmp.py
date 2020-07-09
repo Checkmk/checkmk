@@ -91,7 +91,7 @@ class CachedSNMPDetector:
         if self._cached_result is not None:
             return self._cached_result
 
-        found_plugins = gather_available_raw_section_names(
+        self._cached_result = gather_available_raw_section_names(
             self.sections(),
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
@@ -101,14 +101,6 @@ class CachedSNMPDetector:
             ),
             backend=factory.backend(snmp_config),
         )
-        self._cached_result = {
-            SectionName(s) for s in config.filter_by_management_board(
-                snmp_config.hostname,
-                found_plugins,
-                for_mgmt_board=for_mgmt_board,
-                for_discovery=True,
-            )
-        }
         return self._cached_result
 
 

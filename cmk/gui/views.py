@@ -2511,8 +2511,9 @@ def ajax_popup_icon_selector():
     varprefix = html.request.var('varprefix')
     value = html.request.var('value')
     allow_empty = html.request.var('allow_empty') == '1'
+    show_builtin_icons = html.request.var('show_builtin_icons') == '1'
 
-    vs = IconSelector(allow_empty=allow_empty)
+    vs = IconSelector(allow_empty=allow_empty, show_builtin_icons=show_builtin_icons)
     vs.render_popup_input(varprefix, value)
 
 

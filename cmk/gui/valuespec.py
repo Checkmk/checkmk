@@ -5461,10 +5461,11 @@ def _encode_labels_for_tagify(labels):
 
 
 class IconSelector(ValueSpec):
-    def __init__(self, **kwargs):
+    def __init__(self, allow_empty=True, empty_img="empty", show_builtin_icons=False, **kwargs):
         super(IconSelector, self).__init__(**kwargs)
-        self._allow_empty = kwargs.get('allow_empty', True)
-        self._empty_img = kwargs.get('emtpy_img', 'empty')
+        self._allow_empty = allow_empty
+        self._empty_img = empty_img
+        self._show_builtin_icons = show_builtin_icons
 
         self._exclude = [
             'trans',
@@ -5482,7 +5483,33 @@ class IconSelector(ValueSpec):
     # All icons within the images/icons directory have the ident of a category
     # witten in the PNG meta data. For the default images we have done this scripted.
     # During upload of user specific icons, the meta data is added to the images.
-    def available_icons(self, only_local=False):
+    def available_icons(self, only_local: bool = False) -> Dict[str, str]:
+        icons = {}
+        icons.update(self._available_builtin_icons(only_local))
+        icons.update(self._available_user_icons(only_local))
+        return icons
+
+    def _available_builtin_icons(self, only_local: bool = False) -> Dict[str, str]:
+        if not self._show_builtin_icons:
+            return {}
+
+        dirs = [
+            os.path.join(cmk.utils.paths.omd_root,
+                         "local/share/check_mk/web/htdocs/themes/%s/images" % html.get_theme()),
+        ]
+        if not only_local:
+            dirs.append(
+                os.path.join(cmk.utils.paths.omd_root,
+                             "share/check_mk/web/htdocs/themes/%s/images" % html.get_theme()))
+
+        # Only include icon_*.png, but strip the icon prefix
+        return {
+            i[0][5:]: i[1]
+            for i in self._get_icons_from_directories(dirs, default_topic="builtin").items()
+            if i[0].startswith("icon_")
+        }
+
+    def _available_user_icons(self, only_local=False) -> Dict[str, str]:
         dirs = [
             os.path.join(cmk.utils.paths.omd_root, "local/share/check_mk/web/htdocs/images/icons"),
         ]
@@ -5490,12 +5517,12 @@ class IconSelector(ValueSpec):
             dirs.append(
                 os.path.join(cmk.utils.paths.omd_root, "share/check_mk/web/htdocs/images/icons"))
 
+        return self._get_icons_from_directories(dirs, default_topic="misc")
+
+    def _get_icons_from_directories(self, dirs: List[str], default_topic: str) -> Dict[str, str]:
         valid_categories = set(k for k, _v in self.categories())
 
-        #
-        # Read all icons from the icon directories
-        #
-        icons = {}
+        icons: Dict[str, str] = {}
         for directory in dirs:
             try:
                 files = os.listdir(directory)
@@ -5516,7 +5543,7 @@ class IconSelector(ValueSpec):
 
                     category = im.info.get('Comment')
                     if category not in valid_categories:
-                        category = 'misc'
+                        category = default_topic
 
                     icon_name = file_name[:-4]
                     icons[icon_name] = category
@@ -5534,6 +5561,10 @@ class IconSelector(ValueSpec):
         for icon_name, category_name in icons.items():
             by_cat.setdefault(category_name, [])
             by_cat[category_name].append(icon_name)
+
+        categories = self.categories()
+        if self._show_builtin_icons:
+            categories.append(("builtin", _("Builtin")))
 
         icon_categories = []
         for category_name, category_alias in self.categories():
@@ -5575,6 +5606,7 @@ class IconSelector(ValueSpec):
                            ('value', value),
                            ('varprefix', varprefix),
                            ('allow_empty', '1' if self._allow_empty else '0'),
+                           ('show_builtin_icons', '1' if self._show_builtin_icons else '0'),
                            ('back', html.makeuri([])),
                        ]),
             resizable=True,

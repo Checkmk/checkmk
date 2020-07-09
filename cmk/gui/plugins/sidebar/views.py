@@ -103,34 +103,42 @@ def get_view_menu_items() -> Dict[str, List[ViewMenuItem]]:
     page_type_topics: Dict[str, List[Tuple[str, str, str, bool]]] = {}
     for page_type in pagetypes.all_page_types().values():
         if issubclass(page_type, pagetypes.PageRenderer):
-            for t, title, url in page_type.sidebar_links():
-                page_type_topics.setdefault(t, []).append((t, title, url, False))
+            for topic_id, title, url in page_type.sidebar_links():
+                page_type_topics.setdefault(topic_id, []).append((topic_id, title, url, False))
 
     visuals_topics_with_entries = visuals_by_topic(
         list(views.get_permitted_views().items()) +
         list(dashboard.get_permitted_dashboards().items()))
     all_topics_with_entries = []
-    for topic, entries in visuals_topics_with_entries:
-        if topic in page_type_topics:
-            entries = entries + page_type_topics[topic]
-            del page_type_topics[topic]
-        all_topics_with_entries.append((topic, entries))
+    for topic_id, entries in visuals_topics_with_entries:
+        if topic_id in page_type_topics:
+            entries = entries + page_type_topics[topic_id]
+            del page_type_topics[topic_id]
+        all_topics_with_entries.append((topic_id, entries))
 
     all_topics_with_entries.extend(page_type_topics.items())
 
+    pagetypes.PagetypeTopics.load()
+    topics = {p.name(): p for p in pagetypes.PagetypeTopics.permitted_instances_sorted()}
+
     # Filter hidden / not permitted entries
     by_topic: Dict[str, List[ViewMenuItem]] = OrderedDict()
-    for topic, entries in all_topics_with_entries:
-        for t, title, name, is_view in entries:
+    for topic_id, entries in all_topics_with_entries:
+        for this_topic_id, title, name, is_view in entries:
             if is_view and config.visible_views and name not in config.visible_views:
                 continue
             if is_view and config.hidden_views and name in config.hidden_views:
                 continue
-            if t != topic:
+            if this_topic_id != topic_id:
                 continue
 
+            if topic_id in topics:
+                topic_title = topics[topic_id].title()
+            else:
+                topic_title = topic_id
+
             url = view_menu_url(name, is_view)
-            by_topic.setdefault(topic, []).append(
+            by_topic.setdefault(topic_title, []).append(
                 ViewMenuItem(title=title, name=name, is_view=is_view, url=url))
 
     return by_topic

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -91,7 +91,8 @@ if which smartctl > /dev/null 2>&1 ; then
 
     echo '<<<smart>>>'
     SEEN=
-    for D in /dev/disk/by-id/{scsi,ata,nvme}-*; do
+    # don't use brace expansion here to stay POSIX conform
+    for D in /dev/disk/by-id/scsi-* /dev/disk/by-id/ata-* /dev/disk/by-id/nvme-*; do
         [ "$D" != "${D%scsi-\*}" ] && continue
         [ "$D" != "${D%ata-\*}" ] && continue
         [ "$D" != "${D%nvme-\*}" ] && continue

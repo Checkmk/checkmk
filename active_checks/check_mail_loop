@@ -8,7 +8,8 @@
 
 # Cleanup includes
 # [x] argparse
-# [ ] global objects
+# [x] global objects
+# [ ] structural refactoring
 # [ ] typing
 
 import ast
@@ -232,86 +233,6 @@ def add_starttls_support(self, conn_timeout):
     self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
 
 
-def fetch_mails(args, expected_mails):
-    global g_M
-
-    if not expected_mails:
-        # not expecting any mail, do not check for mails
-        return {}, {}
-
-    try:
-        mails = {}
-        if args.fetch_protocol == 'POP3':
-            # Get mails from POP3 mailbox
-            g_M = poplib.POP3_SSL(args.fetch_server,
-                                  args.fetch_port) if args.fetch_ssl else poplib.POP3(
-                                      args.fetch_server, args.fetch_port)
-            g_M.user(args.fetch_username)
-            g_M.pass_(args.fetch_password)
-
-            num_messages = len(g_M.list()[1])
-
-            for i in range(num_messages):
-                index = i + 1
-                lines = g_M.retr(index)[1]
-                mails[i] = email.message_from_bytes(b"\n".join(lines))
-
-        else:
-            # Get mails from IMAP mailbox
-            g_M = imaplib.IMAP4_SSL(
-                args.fetch_server,  # type: ignore[assignment]
-                args.fetch_port) if args.fetch_ssl else imaplib.IMAP4(args.fetch_server,
-                                                                      args.fetch_port)
-
-            g_M.login(args.fetch_username, args.fetch_password)  # type: ignore[attr-defined]
-            g_M.select('INBOX', readonly=False)  # type: ignore[attr-defined]
-            retcode, raw_messages = g_M.search(None, 'NOT', 'DELETED')  # type: ignore[attr-defined]
-            messages = raw_messages[0].decode(ENCODING).strip()
-            if retcode == 'OK' and messages:
-                for num in messages.split():
-                    try:
-                        _type, data = g_M.fetch(num, '(RFC822)')  # type: ignore[attr-defined]
-                        if isinstance(data[0], tuple):
-                            mails[num] = email.message_from_bytes(data[0][1])
-                    except Exception as e:
-                        raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
-                                        (num, parse_exception(e), messages))
-
-        obsolete_mails = {}
-        fetched_mails = {}
-        # Now filter out the messages for this check
-        pattern = re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % args.subject)
-        for index, msg in mails.items():
-            matches = pattern.match(msg.get('Subject', ''))
-            if matches:
-                ts = matches.group(1).strip()
-                key = matches.group(2).strip()
-
-                # extract received time
-                rx = msg.get('Received')
-                if rx:
-                    parsed = email.utils.parsedate_tz(rx.split(';')[-1])
-                    rx_ts = int(time.time()) if parsed is None else email.utils.mktime_tz(parsed)
-                else:
-                    # use current time as fallback where no Received header could be found
-                    rx_ts = int(time.time())
-
-                if "%s-%s" % (ts, key) not in expected_mails:
-                    # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if
-                    # they are not in our list
-                    if args.delete_messages and int(time.time()) - rx_ts > 24 * 3600:
-                        obsolete_mails[ts + '-' + key] = (index, rx_ts)
-                    continue
-
-                fetched_mails[ts + '-' + key] = (index, rx_ts)
-        return obsolete_mails, fetched_mails
-
-    except Exception as e:
-        if args.debug:
-            raise
-        raise FetchMailsError('Failed to check for mails: %s' % parse_exception(e))
-
-
 def send_mail(args, expected_mails):
     now = time.time()
     key = random.randint(1, 1000)
@@ -402,44 +323,130 @@ def check_mails(warning, critical, expected_mails, fetched_mails):
     return state, ", ".join(output), perfdata
 
 
-def cleanup_mailbox(args, obsolete_mails, fetched_mails):
-    if not g_M:
-        return  # do not deal with mailbox when none sent yet
+class MailBox:
+    def __init__(self, args):
+        #g_M: Union[None, poplib.POP3, imaplib.IMAP4] = None
+        self._mailbox = None
+        self._args = args
 
-    try:
-        # Do not delete all messages in the inbox. Only the ones which were
-        # processed before! In the meantime there might be occured new ones.
-        for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(
-                obsolete_mails.values()):
-            if isinstance(g_M, poplib.POP3):
-                response = g_M.dele(mail_index + 1).decode(ENCODING)
-                if not response.startswith("+OK"):
-                    raise Exception("Response from server: [%s]" % response)
-            elif isinstance(g_M, imaplib.IMAP4):
-                response = g_M.store(mail_index, '+FLAGS', '\\Deleted')[0]
-                if response != 'OK':
-                    raise Exception("Response from server: [%s]" % response)
+    def __enter__(self):
+        return self
 
-        if isinstance(g_M, imaplib.IMAP4):
-            g_M.expunge()
+    def __exit__(self, *exc):
+        self._close_mailbox()
+        return False
 
-    except Exception as e:
-        if args.debug:
-            raise
-        raise CleanupMailboxError('Failed to delete mail: %s' % parse_exception(e))
+    def fetch_mails(self, expected_mails):
+        if not expected_mails:
+            # not expecting any mail, do not check for mails
+            return {}, {}
 
+        try:
+            mails = {}
+            if self._args.fetch_protocol == 'POP3':
+                # Get mails from POP3 mailbox
+                self._mailbox = poplib.POP3_SSL(
+                    self._args.fetch_server,
+                    self._args.fetch_port) if self._args.fetch_ssl else poplib.POP3(
+                        self._args.fetch_server, self._args.fetch_port)
+                self._mailbox.user(self._args.fetch_username)
+                self._mailbox.pass_(self._args.fetch_password)
 
-def close_mailbox():
-    if isinstance(g_M, poplib.POP3):
-        g_M.quit()
-    elif isinstance(g_M, imaplib.IMAP4):
-        g_M.close()
-        g_M.logout()
+                num_messages = len(self._mailbox.list()[1])
 
+                for i in range(num_messages):
+                    index = i + 1
+                    lines = self._mailbox.retr(index)[1]
+                    mails[i] = email.message_from_bytes(b"\n".join(lines))
 
-# TODO: Nuke these global variables, just pass them around...
-#g_M: Union[None, poplib.POP3, imaplib.IMAP4] = None
-g_M = None
+            else:
+                # Get mails from IMAP mailbox
+                self._mailbox = imaplib.IMAP4_SSL(
+                    self._args.fetch_server,
+                    self._args.fetch_port) if self._args.fetch_ssl else imaplib.IMAP4(
+                        self._args.fetch_server, self._args.fetch_port)
+
+                self._mailbox.login(self._args.fetch_username, self._args.fetch_password)
+                self._mailbox.select('INBOX', readonly=False)  # select INBOX
+                retcode, raw_messages = self._mailbox.search(None, 'NOT', 'DELETED')
+                messages = raw_messages[0].decode(ENCODING).strip()
+                if retcode == 'OK' and messages:
+                    for num in messages.split():
+                        try:
+                            _type, data = self._mailbox.fetch(num, '(RFC822)')
+                            if isinstance(data[0], tuple):
+                                mails[num] = email.message_from_bytes(data[0][1])
+                        except Exception as e:
+                            raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
+                                            (num, parse_exception(e), messages))
+
+            obsolete_mails = {}
+            fetched_mails = {}
+            # Now filter out the messages for this check
+            pattern = re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % self._args.subject)
+            for index, msg in mails.items():
+                matches = pattern.match(msg.get('Subject', ''))
+                if matches:
+                    ts = matches.group(1).strip()
+                    key = matches.group(2).strip()
+
+                    # extract received time
+                    rx = msg.get('Received')
+                    if rx:
+                        parsed = email.utils.parsedate_tz(rx.split(';')[-1])
+                        rx_ts = int(
+                            time.time()) if parsed is None else email.utils.mktime_tz(parsed)
+                    else:
+                        # use current time as fallback where no Received header could be found
+                        rx_ts = int(time.time())
+
+                    if "%s-%s" % (ts, key) not in expected_mails:
+                        # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if
+                        # they are not in our list
+                        if self._args.delete_messages and int(time.time()) - rx_ts > 24 * 3600:
+                            obsolete_mails[ts + '-' + key] = (index, rx_ts)
+                        continue
+
+                    fetched_mails[ts + '-' + key] = (index, rx_ts)
+            return obsolete_mails, fetched_mails
+
+        except Exception as e:
+            if self._args.debug:
+                raise
+            raise FetchMailsError('Failed to check for mails: %s' % parse_exception(e))
+
+    def cleanup_mailbox(self, obsolete_mails, fetched_mails):
+        if not self._mailbox:
+            return  # do not deal with mailbox when none sent yet
+
+        try:
+            # Do not delete all messages in the inbox. Only the ones which were
+            # processed before! In the meantime there might be occured new ones.
+            for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(
+                    obsolete_mails.values()):
+                if isinstance(self._mailbox, poplib.POP3):
+                    response = self._mailbox.dele(mail_index + 1).decode(ENCODING)
+                    if not response.startswith("+OK"):
+                        raise Exception("Response from server: [%s]" % response)
+                elif isinstance(self._mailbox, imaplib.IMAP4):
+                    response = self._mailbox.store(mail_index, '+FLAGS', '\\Deleted')[0]
+                    if response != 'OK':
+                        raise Exception("Response from server: [%s]" % response)
+
+            if isinstance(self._mailbox, imaplib.IMAP4):
+                self._mailbox.expunge()
+
+        except Exception as e:
+            if self._args.debug:
+                raise
+            raise CleanupMailboxError('Failed to delete mail: %s' % parse_exception(e))
+
+    def _close_mailbox(self):
+        if isinstance(self._mailbox, poplib.POP3):
+            self._mailbox.quit()
+        elif isinstance(self._mailbox, imaplib.IMAP4):
+            self._mailbox.close()
+            self._mailbox.logout()
 
 
 def main(sys_args=None):
@@ -452,25 +459,21 @@ def main(sys_args=None):
     try:
         status_path = '%s/check_mail_loop%s.status' % (args.status_dir, (".%s" % args.status_suffix)
                                                        if args.status_suffix else "")
-
         expected_mails = load_expected_mails(status_path)
 
-        obsolete_mails, fetched_mails = fetch_mails(args, expected_mails)
-
-        send_mail(args, expected_mails)
-
-        state, output, perfdata = check_mails(
-            args.warning,
-            args.critical,
-            expected_mails,
-            fetched_mails,
-        )
-
-        if args.delete_messages:
-            cleanup_mailbox(args, obsolete_mails, fetched_mails)
+        with MailBox(args) as mailbox:
+            obsolete_mails, fetched_mails = mailbox.fetch_mails(expected_mails)
+            send_mail(args, expected_mails)
+            state, output, perfdata = check_mails(
+                args.warning,
+                args.critical,
+                expected_mails,
+                fetched_mails,
+            )
+            if args.delete_messages:
+                mailbox.cleanup_mailbox(obsolete_mails, fetched_mails)
 
         save_expected_mails(expected_mails, status_path)
-
         return state, output, perfdata
 
     except FetchMailsError as e:
@@ -486,9 +489,6 @@ def main(sys_args=None):
         if args.debug:
             raise
         return 2, 'Unhandled exception: %s' % parse_exception(e), None
-
-    finally:
-        close_mailbox()
 
 
 if __name__ == "__main__":

@@ -334,7 +334,7 @@ def object_property(
     }
     if linkable:
         property_obj['links'] = [
-            link_rel('self', base + '/properties/' + name, profile='.../object_property')
+            link_rel('self', f"{base}/properties/{name}", profile='.../object_property')
         ]
         if links:
             property_obj['links'].extend(links)
@@ -385,8 +385,7 @@ def collection_href(domain_type: DomainType, name: str = 'all') -> str:
         The href as a string
 
     """
-    return '/domain-types/{domain_type}/collections/{name}'.format(domain_type=domain_type,
-                                                                   name=name)
+    return f'/domain-types/{domain_type}/collections/{name}'
 
 
 def object_action_href(domain_type: DomainType, obj_id: Union[int, str], action_name: str) -> str:
@@ -413,11 +412,13 @@ def object_action_href(domain_type: DomainType, obj_id: Union[int, str], action_
         The href.
 
     """
-    return object_href(domain_type,
-                       obj_id) + '/actions/{action_name}/invoke'.format(action_name=action_name)
+    return object_href(domain_type, obj_id) + f'/actions/{action_name}/invoke'
 
 
-def object_href(domain_type: DomainType, obj_id: Union[int, str]) -> str:
+def object_href(
+    domain_type: DomainType,
+    obj_id: Union[int, str],
+) -> str:
     """Constructs a href to a domain-object.
 
     Args:
@@ -438,10 +439,7 @@ def object_href(domain_type: DomainType, obj_id: Union[int, str]) -> str:
     Returns:
 
     """
-    return '/objects/{domain_type}/{obj_id}'.format(
-        domain_type=domain_type,
-        obj_id=obj_id,
-    )
+    return f'/objects/{domain_type}/{obj_id}'
 
 
 def domain_object(

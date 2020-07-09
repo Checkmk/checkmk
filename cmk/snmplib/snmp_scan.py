@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Callable, Iterable, NamedTuple, Set
-
-from mypy_extensions import NamedArg
+from typing import Iterable, NamedTuple, Set
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
@@ -52,15 +50,6 @@ def _evaluate_snmp_detection_atom(atom: SNMPDetectAtom, cp_name: str, do_snmp_sc
         return pattern == '.*' and not flag
     # ignore case!
     return bool(regex(pattern, re.IGNORECASE).fullmatch(value)) is flag
-
-
-SectionNameFilterFunction = Callable[[
-    Iterable[SNMPScanSection],
-    NamedArg(str, 'on_error'),
-    NamedArg(bool, 'do_snmp_scan'),
-    NamedArg(bool, "binary_host"),
-    NamedArg(ABCSNMPBackend, 'backend'),
-], Set[CheckPluginNameStr]]
 
 
 # gather auto_discovered check_plugin_names for this host

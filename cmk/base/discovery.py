@@ -60,8 +60,6 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-import cmk.snmplib.snmp_scan as snmp_scan
-
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
@@ -1195,8 +1193,6 @@ def _get_sources_for_discovery(
             # since this would affect the WATO service discovery page.
             if for_check_discovery and source.get_may_use_cache_file():
                 data_sources.snmp.SNMPDataSource.disable_data_source_cache()
-
-            source.set_check_plugin_name_filter(snmp_scan.gather_available_raw_section_names)
 
     return sources
 

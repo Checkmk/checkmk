@@ -9,10 +9,12 @@ import ast
 import time
 from typing import cast, Dict, Iterable, List, Optional, Set
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
-from cmk.snmplib.snmp_scan import SectionNameFilterFunction, SNMPScanSection
+from cmk.snmplib.snmp_scan import (
+    gather_available_raw_section_names,
+    SNMPScanSection,
+)
 from cmk.snmplib.type_defs import (
     SNMPCredentials,
     SNMPHostConfig,
@@ -25,7 +27,6 @@ from cmk.snmplib.type_defs import (
 
 from cmk.fetchers import factory, SNMPDataFetcher
 
-import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
@@ -71,14 +72,8 @@ class CachedSNMPDetector:
     """Object to run/cache SNMP detection"""
     def __init__(self):
         super(CachedSNMPDetector, self).__init__()
-        # TODO (mo): With the new API we may be able to set this here.
-        #            For now, it is set later :-(
-        self._filter_function: Optional[SectionNameFilterFunction] = None
         # Optional set: None: we never tried, empty: we tried, but found nothing
         self._cached_result: Optional[Set[SectionName]] = None
-
-    def set_filter_function(self, filter_function: SectionNameFilterFunction) -> None:
-        self._filter_function = filter_function
 
     def sections(self) -> Iterable[SNMPScanSection]:
         return [
@@ -97,17 +92,10 @@ class CachedSNMPDetector:
 
         The logic is only processed once. Once processed, the answer is cached.
         """
-        if self._filter_function is None:
-            raise MKGeneralException("The check type filter function has not been set")
-
         if self._cached_result is not None:
             return self._cached_result
 
-        # Make hostname globally available for scan functions.
-        # This is rarely used, but e.g. the scan for if/if64 needs
-        # this to evaluate if_disabled_if64_checks.
-        check_api_utils.set_hostname(snmp_config.hostname)
-        found_plugins = self._filter_function(
+        found_plugins = gather_available_raw_section_names(
             self.sections(),
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
@@ -231,9 +219,6 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     def get_do_snmp_scan(self) -> bool:
         return self._do_snmp_scan
-
-    def set_check_plugin_name_filter(self, filter_func: SectionNameFilterFunction) -> None:
-        self._detector.set_filter_function(filter_func)
 
     def set_fetched_raw_section_names(self, raw_section_names: Set[SectionName]) -> None:
         """Sets a list of already fetched host sections/check plugin names.

@@ -187,24 +187,13 @@ def test_attribute_defaults(monkeypatch, ipaddress):
     assert source.exception() is None
 
 
-@pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-def test_detector_requires_type_filter_function_and_ipaddress(monkeypatch, ipaddress):
+def test_detector_requires_ipaddress(monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    source = SNMPDataSource(hostname, ipaddress)
+    source = SNMPDataSource(hostname, None)
 
     with pytest.raises(Exception):
         source._get_raw_section_names_to_process()
-
-    def dummy_filter_func(sections, on_error, do_snmp_scan, *, binary_host, backend):
-        return set()
-
-    source.set_check_plugin_name_filter(dummy_filter_func)
-    if ipaddress is None:
-        with pytest.raises(NotImplementedError):
-            source._get_raw_section_names_to_process()
-    else:
-        assert source._get_raw_section_names_to_process() == set()
 
 
 def test_describe_with_ipaddress(monkeypatch):

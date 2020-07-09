@@ -132,6 +132,7 @@ def check_ceph_status_osds(_no_item, params, parsed):
         ('nearfull', 'Near full', 1),
     ]:
         if data.get(ds, False):
+            # Return false if 'full' or 'nearfull' indicators are not in the datasets (relevant for newer ceph versions after 13.2.7)
             yield state, title
 
     yield 0, "OSDs: %s, Remapped PGs: %s" % (num_osds, data["num_remapped_pgs"])

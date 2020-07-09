@@ -2195,3 +2195,11 @@ def get_check_information():
             "get-check-information")
 
     return g.automation_get_check_information
+
+
+def get_section_information():
+    if 'automation_get_section_information' not in g:
+        g.automation_get_section_information = watolib.check_mk_local_automation(
+            "get-section-information")
+
+    return g.automation_get_section_information

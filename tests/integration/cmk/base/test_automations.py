@@ -309,6 +309,17 @@ def test_automation_get_check_information(test_cfg, site):
         assert "snmp" in info
 
 
+def test_automation_get_section_information(test_cfg, site):
+    data = _execute_automation(site, "get-section-information")
+    assert isinstance(data, dict)
+    assert len(data) > 1000
+
+    for _name, info in data.items():
+        assert isinstance(info["name"], str)
+        assert "type" in info
+        assert info["type"] in ("snmp", "agent")
+
+
 def test_automation_get_real_time_checks(test_cfg, site):
     data = _execute_automation(site, "get-real-time-checks")
     assert isinstance(data, list)

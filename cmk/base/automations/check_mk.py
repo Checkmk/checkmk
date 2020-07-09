@@ -1017,6 +1017,32 @@ class AutomationGetCheckInformation(Automation):
 automations.register(AutomationGetCheckInformation())
 
 
+class AutomationGetSectionInformation(Automation):
+    cmd = "get-section-information"
+    needs_config = False
+    needs_checks = True
+
+    def execute(self, args: List[str]) -> Dict[str, Dict[str, str]]:
+
+        section_infos = {
+            str(section.name): {
+                # for now, we need only these two.
+                "name": str(section.name),
+                "type": "agent",
+            } for section in config.registered_agent_sections.values()
+        }
+        section_infos.update({
+            str(section.name): {
+                "name": str(section.name),
+                "type": "snmp",
+            } for section in config.registered_snmp_sections.values()
+        })
+        return section_infos
+
+
+automations.register(AutomationGetSectionInformation())
+
+
 class AutomationGetRealTimeChecks(Automation):
     cmd = "get-real-time-checks"
     needs_config = False

@@ -10,7 +10,7 @@ for further information.
 """
 
 import os
-import astroid.node_classes  # type: ignore[import]
+from astroid.node_classes import Statement, Import, ImportFrom  # type: ignore[import]
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 from testlib import cmk_path
@@ -64,25 +64,25 @@ class CMKModuleLayerChecker(BaseChecker):
         'C8410': ('Import of %r not allowed in module %r', 'cmk-module-layer-violation', 'whoop?'),
     }
 
+    # This doesn't change during a pylint run, so let's save a realpath() call per import.
+    path_prefix_len_to_strip = len(cmk_path()) + 1
+
     @utils.check_messages('cmk-module-layer-violation')
-    def visit_import(self, node: astroid.node_classes.Import) -> None:
-        names = [name for name, _ in node.names]
-        for name in names:
+    def visit_import(self, node: Import) -> None:
+        for name, _ in node.names:
             self._check_import(node, name)
 
     @utils.check_messages('cmk-module-layer-violation')
-    def visit_importfrom(self, node: astroid.node_classes.ImportFrom) -> None:
+    def visit_importfrom(self, node: ImportFrom) -> None:
         self._check_import(node, node.modname)
 
-    def _check_import(self, node: astroid.node_classes.Statement, import_modname: str) -> None:
-        file_path = node.root().file
-
+    def _check_import(self, node: Statement, import_modname: str) -> None:
         if not import_modname.startswith("cmk"):
             return  # We only care about our own modules, ignore this
 
-        file_path = file_path[len(cmk_path()) + 1:]  # Make relative
+        file_path = node.root().file[self.path_prefix_len_to_strip:]  # Make relative
 
-        if file_path.startswith("tests/") or file_path.startswith("tests/"):
+        if file_path.startswith("tests/"):
             return  # No validation in tests
 
         # Pylint fails to detect the correct module path here. Instead of realizing that the file
@@ -98,9 +98,8 @@ class CMKModuleLayerChecker(BaseChecker):
                              node=node,
                              args=(import_modname, mod_name))
 
-    def _get_module_name_of_file(self, node: astroid.node_classes.Statement, file_path: str) -> str:
-        """Fixup module names
-        """
+    def _get_module_name_of_file(self, node: Statement, file_path: str) -> str:
+        """Fixup module names"""
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
         module_name = removeprefix(node.root().name, "flycheck_")
 

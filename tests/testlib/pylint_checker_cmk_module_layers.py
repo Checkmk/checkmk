@@ -18,6 +18,7 @@ from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 from testlib import cmk_path
 
 ModuleName = NewType('ModuleName', str)
+Component = NewType('Component', str)
 
 
 def register(linter):
@@ -30,33 +31,33 @@ def removeprefix(text: str, prefix: str) -> str:
 
 
 _COMPONENTS = (
-    "cmk.base",
-    "cmk.fetchers",
-    "cmk.snmplib",
-    "cmk.gui",
-    "cmk.ec",
-    "cmk.notification_plugins",
-    "cmk.special_agents",
-    "cmk.update_config",
-    "cmk.cee.dcd",
-    "cmk.cee.mknotifyd",
-    "cmk.cee.snmp_backend",
-    "cmk.cee.liveproxy",
-    "cmk.cee.notification_plugins",
+    Component("cmk.base"),
+    Component("cmk.fetchers"),
+    Component("cmk.snmplib"),
+    Component("cmk.gui"),
+    Component("cmk.ec"),
+    Component("cmk.notification_plugins"),
+    Component("cmk.special_agents"),
+    Component("cmk.update_config"),
+    Component("cmk.cee.dcd"),
+    Component("cmk.cee.mknotifyd"),
+    Component("cmk.cee.snmp_backend"),
+    Component("cmk.cee.liveproxy"),
+    Component("cmk.cee.notification_plugins"),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {
-    "web/app/index.wsgi": "cmk.gui",
-    "bin/update_rrd_fs_names.py": "cmk.base",
-    "bin/check_mk": "cmk.base",
-    "bin/cmk-update-config": "cmk.update_config",
-    "bin/mkeventd": "cmk.ec",
-    "enterprise/bin/liveproxyd": "cmk.cee.liveproxy",
-    "enterprise/bin/mknotifyd": "cmk.cee.mknotifyd",
-    "enterprise/bin/dcd": "cmk.cee.dcd",
+    "web/app/index.wsgi": Component("cmk.gui"),
+    "bin/update_rrd_fs_names.py": Component("cmk.base"),
+    "bin/check_mk": Component("cmk.base"),
+    "bin/cmk-update-config": Component("cmk.update_config"),
+    "bin/mkeventd": Component("cmk.ec"),
+    "enterprise/bin/liveproxyd": Component("cmk.cee.liveproxy"),
+    "enterprise/bin/mknotifyd": Component("cmk.cee.mknotifyd"),
+    "enterprise/bin/dcd": Component("cmk.cee.dcd"),
     # CEE specific notification plugins
-    "notifications/servicenow": "cmk.cee.notification_plugins",
-    "notifications/jira_issues": "cmk.cee.notification_plugins",
+    "notifications/servicenow": Component("cmk.cee.notification_plugins"),
+    "notifications/jira_issues": Component("cmk.cee.notification_plugins"),
 }
 
 
@@ -150,7 +151,8 @@ class CMKModuleLayerChecker(BaseChecker):
 
         return self._is_utility_import(imported)
 
-    def _is_part_of_component(self, importing: ModuleName, file_path: str, component: str) -> bool:
+    def _is_part_of_component(self, importing: ModuleName, file_path: str,
+                              component: Component) -> bool:
         if self._is_import_in_component(importing, component):
             return True
 
@@ -171,7 +173,7 @@ class CMKModuleLayerChecker(BaseChecker):
 
         return False
 
-    def _is_disallowed_fetchers_import(self, importing: ModuleName, component: str) -> bool:
+    def _is_disallowed_fetchers_import(self, importing: ModuleName, component: Component) -> bool:
         """Disallow import of `fetchers` in `cmk.utils`.
 
         The layering is such that `fetchers` is between `utils` and
@@ -181,15 +183,15 @@ class CMKModuleLayerChecker(BaseChecker):
         """
         return not (component.startswith("cmk.fetchers") and importing.startswith("cmk.utils"))
 
-    def _is_disallowed_snmplib_import(self, importing: ModuleName, component: str) -> bool:
+    def _is_disallowed_snmplib_import(self, importing: ModuleName, component: Component) -> bool:
         """Disallow import of `snmplib` in `cmk.utils`."""
         return not component.startswith("cmk.snmplib") and importing.startswith("cmk.utils")
 
-    def _is_import_in_component(self, imported: ModuleName, component: str) -> bool:
-        return imported == component or imported.startswith(component + ".")
+    def _is_import_in_component(self, imported: ModuleName, component: Component) -> bool:
+        return imported == ModuleName(component) or imported.startswith(component + ".")
 
     def _is_import_in_cee_component_part(self, importing: ModuleName, imported: ModuleName,
-                                         component: str) -> bool:
+                                         component: Component) -> bool:
         """If a module is split into cmk.cee.[mod] and cmk.[mod] it's allowed
         to import non-cee parts in the cee part."""
         return importing.startswith("cmk.cee.") and self._is_import_in_component(

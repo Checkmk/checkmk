@@ -397,6 +397,28 @@ class NotificationParameterPagerDuty(NotificationParameter):
 
 
 @notification_parameter_registry.register
+class NotificationParameterSIGNL4(NotificationParameter):
+    @property
+    def ident(self):
+        return "signl4"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            optional_keys = [],
+            elements = [
+                ("password", Password(
+                    title = _("Team Secret"),
+                    help = _("The team secret of your SIGNL4 team. That is the last part of your webhook URL: https://connect.signl4.com/webhook/<team_secret>"),
+                    size = 64,
+                    allow_empty = False,
+                )),
+            ],
+        )
+
+
+@notification_parameter_registry.register
 class NotificationParameterASCIIMail(NotificationParameter):
     @property
     def ident(self):

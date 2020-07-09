@@ -10,10 +10,14 @@ for further information.
 """
 
 import os
+from typing import NewType
+
 from astroid.node_classes import Statement, Import, ImportFrom  # type: ignore[import]
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 from testlib import cmk_path
+
+ModuleName = NewType('ModuleName', str)
 
 
 def register(linter):
@@ -70,14 +74,14 @@ class CMKModuleLayerChecker(BaseChecker):
     @utils.check_messages('cmk-module-layer-violation')
     def visit_import(self, node: Import) -> None:
         for name, _ in node.names:
-            self._check_import(node, name)
+            self._check_import(node, ModuleName(name))
 
     @utils.check_messages('cmk-module-layer-violation')
     def visit_importfrom(self, node: ImportFrom) -> None:
-        self._check_import(node, node.modname)
+        self._check_import(node, ModuleName(node.modname))
 
-    def _check_import(self, node: Statement, import_modname: str) -> None:
-        if not import_modname.startswith("cmk"):
+    def _check_import(self, node: Statement, imported: ModuleName) -> None:
+        if not imported.startswith("cmk"):
             return  # We only care about our own modules, ignore this
 
         file_path = node.root().file[self.path_prefix_len_to_strip:]  # Make relative
@@ -91,14 +95,12 @@ class CMKModuleLayerChecker(BaseChecker):
         if os.path.islink(file_path):
             return  # Ignore symlinked files instead of checking them twice, ignore this
 
-        mod_name = self._get_module_name_of_file(node, file_path)
+        importing = self._get_module_name_of_file(node, file_path)
 
-        if not self._is_import_allowed(file_path, mod_name, import_modname):
-            self.add_message("cmk-module-layer-violation",
-                             node=node,
-                             args=(import_modname, mod_name))
+        if not self._is_import_allowed(file_path, importing, imported):
+            self.add_message("cmk-module-layer-violation", node=node, args=(imported, importing))
 
-    def _get_module_name_of_file(self, node: Statement, file_path: str) -> str:
+    def _get_module_name_of_file(self, node: Statement, file_path: str) -> ModuleName:
         """Fixup module names"""
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
         module_name = removeprefix(node.root().name, "flycheck_")
@@ -108,7 +110,7 @@ class CMKModuleLayerChecker(BaseChecker):
             ("cmk", "base", "plugins", "agent_based", ""),
         ]:
             if file_path.startswith('/'.join(segments)):
-                return '.'.join(segments) + module_name
+                return ModuleName('.'.join(segments) + module_name)
 
         # Fixup managed and enterprise module names
         # astroid does not produce correct module names, because it does not know
@@ -122,33 +124,34 @@ class CMKModuleLayerChecker(BaseChecker):
                     "managed/cmk/%s/cme/" % component,
             ]:
                 if file_path.startswith(prefix):
-                    return "cmk.%s.%s" % (component, module_name)
+                    return ModuleName("cmk.%s.%s" % (component, module_name))
 
         if module_name.startswith("cee.") or module_name.startswith("cme."):
-            return "cmk.%s" % module_name
-        return module_name
+            return ModuleName("cmk.%s" % module_name)
+        return ModuleName(module_name)
 
-    def _is_import_allowed(self, file_path: str, mod_name: str, import_modname: str) -> bool:
+    def _is_import_allowed(self, file_path: str, importing: ModuleName,
+                           imported: ModuleName) -> bool:
         for component in _COMPONENTS:
-            if not self._is_part_of_component(mod_name, file_path, component):
+            if not self._is_part_of_component(importing, file_path, component):
                 continue
 
-            if self._is_disallowed_snmplib_import(mod_name, component):
+            if self._is_disallowed_snmplib_import(importing, component):
                 return True
 
-            if self._is_disallowed_fetchers_import(mod_name, component):
+            if self._is_disallowed_fetchers_import(importing, component):
                 return True
 
-            if self._is_import_in_component(import_modname, component):
+            if self._is_import_in_component(imported, component):
                 return True
 
-            if self._is_import_in_cee_component_part(mod_name, import_modname, component):
+            if self._is_import_in_cee_component_part(importing, imported, component):
                 return True
 
-        return self._is_utility_import(import_modname)
+        return self._is_utility_import(imported)
 
-    def _is_part_of_component(self, mod_name: str, file_path: str, component: str) -> bool:
-        if self._is_import_in_component(mod_name, component):
+    def _is_part_of_component(self, importing: ModuleName, file_path: str, component: str) -> bool:
+        if self._is_import_in_component(importing, component):
             return True
 
         explicit_component = _EXPLICIT_FILE_TO_COMPONENT.get(file_path)
@@ -157,7 +160,7 @@ class CMKModuleLayerChecker(BaseChecker):
 
         # The check and bakery plugins are all compiled together by tests/pylint/test_pylint.py.
         # They clearly belong to the cmk.base component.
-        if component == "cmk.base" and mod_name.startswith("cmk_pylint"):
+        if component == "cmk.base" and importing.startswith("cmk_pylint"):
             return True
 
         if component == "cmk.notification_plugins" and file_path.startswith("notifications/"):
@@ -168,7 +171,7 @@ class CMKModuleLayerChecker(BaseChecker):
 
         return False
 
-    def _is_disallowed_fetchers_import(self, mod_name: str, component: str) -> bool:
+    def _is_disallowed_fetchers_import(self, importing: ModuleName, component: str) -> bool:
         """Disallow import of `fetchers` in `cmk.utils`.
 
         The layering is such that `fetchers` is between `utils` and
@@ -176,22 +179,22 @@ class CMKModuleLayerChecker(BaseChecker):
         anywhere else is OK.
 
         """
-        return not (component.startswith("cmk.fetchers") and mod_name.startswith("cmk.utils"))
+        return not (component.startswith("cmk.fetchers") and importing.startswith("cmk.utils"))
 
-    def _is_disallowed_snmplib_import(self, mod_name: str, component: str) -> bool:
+    def _is_disallowed_snmplib_import(self, importing: ModuleName, component: str) -> bool:
         """Disallow import of `snmplib` in `cmk.utils`."""
-        return not component.startswith("cmk.snmplib") and mod_name.startswith("cmk.utils")
+        return not component.startswith("cmk.snmplib") and importing.startswith("cmk.utils")
 
-    def _is_import_in_component(self, import_modname: str, component: str) -> bool:
-        return import_modname == component or import_modname.startswith(component + ".")
+    def _is_import_in_component(self, imported: ModuleName, component: str) -> bool:
+        return imported == component or imported.startswith(component + ".")
 
-    def _is_import_in_cee_component_part(self, mod_name: str, import_modname: str,
+    def _is_import_in_cee_component_part(self, importing: ModuleName, imported: ModuleName,
                                          component: str) -> bool:
         """If a module is split into cmk.cee.[mod] and cmk.[mod] it's allowed
         to import non-cee parts in the cee part."""
-        return mod_name.startswith("cmk.cee.") and self._is_import_in_component(
-            import_modname, component)
+        return importing.startswith("cmk.cee.") and self._is_import_in_component(
+            imported, component)
 
-    def _is_utility_import(self, import_modname: str) -> bool:
+    def _is_utility_import(self, imported: ModuleName) -> bool:
         """cmk and cmk.utils are allowed to be imported from all over the place"""
-        return import_modname in {"cmk", "cmk.utils"} or import_modname.startswith("cmk.utils.")
+        return imported in {"cmk", "cmk.utils"} or imported.startswith("cmk.utils.")

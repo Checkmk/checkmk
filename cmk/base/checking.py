@@ -668,7 +668,7 @@ def _aggregate_results(
             perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
             continue
 
-        status = checking_types.state_worst(status, subr.state)
+        status = checking_types.state.worst(status, subr.state)
         state_marker = check_api_utils.state_markers[int(subr.state)]
 
         if subr.summary:

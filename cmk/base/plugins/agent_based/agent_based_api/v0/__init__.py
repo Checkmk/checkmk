@@ -26,6 +26,7 @@ from cmk.base.api.agent_based.checking_types import (
     Result,
     Service,
     ServiceLabel,
+    state,
 )
 from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.api.agent_based.utils import (
@@ -52,7 +53,7 @@ from cmk.base.api.agent_based.utils import (
 from cmk.base.api.agent_based.value_store import get_value_store
 from cmk.base.discovered_labels import HostLabel
 
-from . import register, render, state
+from . import register, render
 
 __all__ = [
     # register functions

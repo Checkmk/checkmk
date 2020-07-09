@@ -114,6 +114,8 @@ class Service:
 
 @enum.unique
 class state(enum.Enum):
+    """States of check results
+    """
     # Don't use IntEnum to prevent "state.CRIT < state.UNKNOWN" from evaluating to True.
     OK = 0
     WARN = 1
@@ -123,19 +125,19 @@ class state(enum.Enum):
     def __int__(self):
         return int(self.value)
 
+    @classmethod
+    def worst(cls, *args: 'state') -> 'state':
+        """Returns the worst of all passed states
 
-def state_worst(*args: state) -> state:
-    """Returns the worst of all passed states
+        You can pass an arbitrary number of arguments, and the return value will be
+        the "worst" of them, where
 
-    You can pass an arbitrary number of arguments, and the return value will be
-    the "worst" of them, where
-
-        `OK < WARN < UNKNOWN < CRIT`
-    """
-    # we are nice, and handle ints and None as well (although mypy wouldn't allow it)
-    if state.CRIT in args or 2 in args:  # type: ignore[comparison-overlap]
-        return state.CRIT
-    return state(max(int(s or 0) for s in args))
+            `OK < WARN < UNKNOWN < CRIT`
+        """
+        # we are nice, and handle ints and None as well (although mypy wouldn't allow it)
+        if cls.CRIT in args or 2 in args:  # type: ignore[comparison-overlap]
+            return cls.CRIT
+        return cls(max(int(s or 0) for s in args))
 
 
 class Metric:

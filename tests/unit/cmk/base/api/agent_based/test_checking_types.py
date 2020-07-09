@@ -10,11 +10,10 @@ from cmk.base.api.agent_based.checking_types import (
     Parameters,
     ServiceLabel,
     Service,
+    state,
     Metric,
     Result,
 )
-# get the exposed version for states (so we have state.worst)
-from cmk.base.plugins.agent_based.agent_based_api.v0 import state  # type: ignore[import]
 
 
 @pytest.mark.parametrize("data", [
@@ -106,6 +105,16 @@ def test_state():
     assert state.worst(state.OK, state.WARN, state.UNKNOWN) == state.UNKNOWN
     assert state.worst(state.OK, state.WARN) == state.WARN
     assert state.worst(state.OK) == state.OK
+
+    assert state(0) is state.OK
+    assert state(1) is state.WARN
+    assert state(2) is state.CRIT
+    assert state(3) is state.UNKNOWN
+
+    assert state["OK"] is state.OK
+    assert state["WARN"] is state.WARN
+    assert state["CRIT"] is state.CRIT
+    assert state["UNKNOWN"] is state.UNKNOWN
 
     with pytest.raises(TypeError):
         _ = state.OK < state.WARN  # type: ignore[operator]

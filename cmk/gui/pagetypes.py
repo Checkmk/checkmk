@@ -43,6 +43,7 @@ from cmk.gui.valuespec import (
     Optional,
     IconSelector,
     Integer,
+    DropdownChoice,
 )
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _u, _
@@ -215,7 +216,7 @@ class Base:
 
     @classmethod
     def default_topic(cls) -> str:
-        return _("Other")
+        return "other"
 
     # Store for all instances of this page type. The key into
     # this dictionary????
@@ -332,12 +333,10 @@ class PageRenderer(Base):
         parameters = super(PageRenderer, cls).parameters(mode)
 
         parameters += [(_("General Properties"), [
-            (1.4, 'topic',
-             TextUnicode(
-                 title=_('Topic') + '<sup>*</sup>',
-                 size=50,
-                 allow_empty=False,
-             )),
+            (1.4, 'topic', DropdownChoice(
+                title=_('Topic'),
+                choices=PagetypeTopics.choices(),
+            )),
             (2.0, 'hidden',
              Checkbox(
                  title=_("Sidebar integration"),
@@ -379,7 +378,7 @@ class PageRenderer(Base):
                 yield page.topic(), page.title(), page.page_url()
 
     def topic(self):
-        return self._.get("topic", _("Other"))
+        return self._.get("topic", "other")
 
     # Helper functions for page handlers and render function
     def page_header(self):
@@ -1480,6 +1479,15 @@ class PagetypeTopics(Overridable):
                 "sort_index": 70,
             },
         }
+
+    def sort_index(self) -> int:
+        return self._["sort_index"]
+
+    @classmethod
+    def choices(cls):
+        cls.load()
+        return [(p.name(), p.title()) for p in sorted(cls.instances(), key=lambda p: p.sort_index())
+               ]
 
 
 declare(PagetypeTopics)

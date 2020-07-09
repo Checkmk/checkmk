@@ -46,6 +46,7 @@ from cmk.gui.valuespec import (
     TextUnicode,
     TextAscii,
     TextAreaUnicode,
+    DropdownChoice,
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
@@ -885,7 +886,10 @@ def page_edit_visual(what,
                  help=_("Whether or not additional information from the page context "
                         "(filters) should be added to the title given above."),
              )),
-            ('topic', TextUnicode(title=_('Topic') + '<sup>*</sup>', size=50)),
+            ('topic', DropdownChoice(
+                title=_('Topic'),
+                choices=pagetypes.PagetypeTopics.choices(),
+            )),
             ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
                                             rows=4,
                                             cols=50)),

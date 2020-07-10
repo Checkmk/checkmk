@@ -334,12 +334,11 @@ if type ethtool >/dev/null; then
 fi
 
 # Current state of bonding interfaces
-if [ -e /proc/net/bonding ]; then
+(
+    cd /proc/net/bonding || return
     echo '<<<lnx_bonding:sep(58)>>>'
-    pushd /proc/net/bonding >/dev/null
-    head -v -n 1000 *
-    popd >/dev/null
-fi
+    head -v -n 1000 ./*
+)
 
 # Same for Open vSwitch bonding
 if type ovs-appctl >/dev/null; then
@@ -703,7 +702,8 @@ fi
 # is a sub directory per user that ran a job. That directory must be
 # owned by the user so that a symlink or hardlink attack for reading
 # arbitrary files can be avoided.
-if pushd $MK_VARDIR/job >/dev/null; then
+(
+    cd "$MK_VARDIR/job" || return
     echo '<<<job>>>'
     for username in *; do
         if [ -d "$username" ] && cd "$username"; then
@@ -715,8 +715,7 @@ if pushd $MK_VARDIR/job >/dev/null; then
             cd ..
         fi
     done
-    popd >/dev/null
-fi
+)
 
 # Gather thermal information provided e.g. by acpi
 # At the moment only supporting thermal sensors
@@ -799,8 +798,8 @@ if cd $PLUGINSDIR; then
 fi
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
-    pushd "$SPOOLDIR" >/dev/null
+(
+    cd "$SPOOLDIR" || return
     now=$(date +%s)
 
     for file in *; do
@@ -828,5 +827,4 @@ if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
         # Output the file
         cat "$file"
     done
-    popd >/dev/null
-fi
+)

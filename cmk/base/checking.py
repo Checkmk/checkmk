@@ -34,7 +34,6 @@ import cmk.utils.debug
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
-from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
@@ -510,21 +509,25 @@ def get_aggregated_result(
 
 def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname: HostName,
                                ipaddress: Optional[HostAddress], service: Service) -> bool:
-    check_function = config.check_info[service.check_plugin_name].get("check_function")
+    # This is weird, for the moment. Once service.check_plugin_name no longer *is*
+    # the legacy name, this will make much more sense.
+    legacy_check_plugin_name = service.check_plugin_name
+    service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
+
+    check_function = config.check_info[legacy_check_plugin_name].get("check_function")
     if check_function is None:
         _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
         return True
     # Make a bit of context information globally available, so that functions
     # called by checks know this context
-    check_api_utils.set_service(service.check_plugin_name, service.description)
-    item_state.set_item_state_prefix(service.check_plugin_name, service.item)
+    check_api_utils.set_service(str(service_check_plugin_name), service.description)
+    item_state.set_item_state_prefix(str(service_check_plugin_name), service.item)
 
-    section_name = section_name_of(service.check_plugin_name)
+    section_name = legacy_check_plugin_name.split('.')[0]
 
     section_content = None
     mgmt_board_info = config.get_management_board_precedence(section_name, config.check_info)
     try:
-        # TODO: There is duplicate code with discovery._execute_discovery().
         section_content = multi_host_sections.get_section_content(
             HostKey(
                 hostname,

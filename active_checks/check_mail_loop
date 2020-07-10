@@ -6,12 +6,6 @@
 """Email server roundtrip active check
 """
 
-# Cleanup includes
-# [x] argparse
-# [x] global objects
-# [x] structural refactoring
-# [ ] typing
-
 import sys
 import time
 import ast
@@ -21,6 +15,7 @@ import logging
 import os
 import random
 import re
+from typing import Sequence, Optional, Tuple, Any, Dict, Union
 import email
 import email.mime.text
 import email.utils
@@ -34,6 +29,14 @@ import cmk.utils.password_store
 # outputs (e.g. of imaplib.IMAP4.search). From the source codes, it seems to be either ASCII or
 # UTF-8, so this should work.
 ENCODING = 'utf-8'
+
+MailID = Tuple[int, int]
+MailDict = Dict[str, MailID]
+Args = argparse.Namespace
+Status = int
+PerfData = Any
+CheckResult = Tuple[Status, str, PerfData]
+MailBoxType = Union[poplib.POP3_SSL, poplib.POP3, imaplib.IMAP4_SSL, imaplib.IMAP4]
 
 
 class FetchMailsError(Exception):
@@ -52,7 +55,7 @@ class ForwardToECError(Exception):
     pass
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> Args:
     """Parse command line arguments and return argument object"""
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -171,12 +174,12 @@ def parse_arguments(argv):
     return args
 
 
-def parse_exception(exc):
+def parse_exception(exc: Exception) -> str:
     what = str(exc)
     return "%d - %s" % list(ast.literal_eval(what).values())[0] if what[0] == '{' else what
 
 
-def output_check_result(rc, text, perfdata):
+def output_check_result(rc: Status, text: str, perfdata: PerfData) -> None:
     sys.stdout.write('%s - %s' % (
         ('OK', 'WARN', 'CRIT', 'UNKNOWN')[rc],
         text,
@@ -187,7 +190,7 @@ def output_check_result(rc, text, perfdata):
     sys.stdout.write("\n")
 
 
-def load_expected_mails(status_path):
+def load_expected_mails(status_path: str) -> MailDict:
     with suppress(IOError):
         with open(status_path) as file:
             return {
@@ -195,15 +198,16 @@ def load_expected_mails(status_path):
                 for line in file  #
                 for ts, key in (line.rstrip().split(' ', 1),)
             }
+    return {}
 
 
-def save_expected_mails(expected_mails, status_path):
+def save_expected_mails(expected_mails: MailDict, status_path: str) -> None:
     with open(status_path, 'w') as file:
         file.write('\n'.join('%d %s' % (ts, key) for ts, key in expected_mails.values()))
         file.write('\n')
 
 
-def _send_mail(args):
+def _send_mail(args: Args) -> Tuple[str, MailID]:
     """Send an email with provided content using SMTP and provided credentials"""
     now = int(time.time())
     key = random.randint(1, 1000)
@@ -224,7 +228,7 @@ def _send_mail(args):
         return "%d-%d" % (now, key), (now, key)
 
 
-def send_mail(args):
+def send_mail(args: Args) -> Tuple[str, MailID]:
     """Send an email with provided content using SMTP and provided credentials.
     This function just manages exceptions for _send_mail()"""
     try:
@@ -246,7 +250,8 @@ def send_mail(args):
         raise SendMailError('Failed to send mail: %s' % parse_exception(e))
 
 
-def check_mails(warning, critical, expected_mails, fetched_mails):
+def check_mails(warning: int, critical: int, expected_mails: MailDict,
+                fetched_mails: MailDict) -> CheckResult:
     state = 0
     perfdata = []
     output = []
@@ -311,47 +316,47 @@ def check_mails(warning, critical, expected_mails, fetched_mails):
 
 
 class MailBox:
-    def __init__(self, args):
-        #g_M: Union[None, poplib.POP3, imaplib.IMAP4] = None
+    def __init__(self, args: Args) -> None:
         self._mailbox = None
         self._args = args
 
-    def __enter__(self):
+    def __enter__(self) -> Any:
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:
         self._close_mailbox()
-        return False
 
-    def _connect_pop3(self):
+    def _connect_pop3(self) -> None:
         self._mailbox = (poplib.POP3_SSL if self._args.fetch_tls else poplib.POP3)(
             self._args.fetch_server,
             self._args.fetch_port,
             timeout=self._args.connect_timeout,
         )
-        self._mailbox.user(self._args.fetch_username)
-        self._mailbox.pass_(self._args.fetch_password)
+        if isinstance(self._mailbox, (poplib.POP3_SSL, poplib.POP3)):
+            self._mailbox.user(self._args.fetch_username)
+            self._mailbox.pass_(self._args.fetch_password)
 
-    def _connect_imap(self):
+    def _connect_imap(self) -> None:
         # seems to not support timeout
         self._mailbox = (imaplib.IMAP4_SSL if self._args.fetch_tls else imaplib.IMAP4)(
             self._args.fetch_server,
             self._args.fetch_port,
         )
-        self._mailbox.login(self._args.fetch_username, self._args.fetch_password)
-        self._mailbox.select('INBOX', readonly=False)
+        if isinstance(self._mailbox, (imaplib.IMAP4_SSL, imaplib.IMAP4)):
+            self._mailbox.login(self._args.fetch_username, self._args.fetch_password)
+            self._mailbox.select('INBOX', readonly=False)
 
-    def _fetch_mails_pop3(self):
+    def _fetch_mails_pop3(self) -> Dict[int, email.message.Message]:
         if self._mailbox is None:
             return {}
         num_messages = len(self._mailbox.list()[1])
         # TODO: this should not be a dict
-        mails = {}
-        for i in range(num_messages):
-            mails[i] = email.message_from_bytes(b"\n".join(self._mailbox.retr(i + 1)[1]))
-        return mails
+        return {
+            i: email.message_from_bytes(b"\n".join(self._mailbox.retr(i + 1)[1]))
+            for i in range(num_messages)
+        }
 
-    def _fetch_mails_imap(self):
+    def _fetch_mails_imap(self) -> Dict[int, email.message.Message]:
         if self._mailbox is None:
             return {}
         retcode, raw_messages = self._mailbox.search(None, 'NOT', 'DELETED')
@@ -372,7 +377,7 @@ class MailBox:
             return mails
         return {}
 
-    def fetch_mails(self, expected_mails):
+    def fetch_mails(self, expected_mails: MailDict) -> Tuple[MailDict, MailDict]:
         try:
             if self._args.fetch_protocol == 'POP3':
                 self._connect_pop3()
@@ -416,7 +421,7 @@ class MailBox:
                 raise
             raise FetchMailsError('Failed to check for mails: %s' % parse_exception(e))
 
-    def cleanup_mailbox(self, obsolete_mails, fetched_mails):
+    def cleanup_mailbox(self, obsolete_mails: MailDict, fetched_mails: MailDict) -> None:
         if not self._mailbox:
             return  # do not deal with mailbox when none sent yet
 
@@ -442,7 +447,7 @@ class MailBox:
                 raise
             raise CleanupMailboxError('Failed to delete mail: %s' % parse_exception(e))
 
-    def _close_mailbox(self):
+    def _close_mailbox(self) -> None:
         if isinstance(self._mailbox, poplib.POP3):
             self._mailbox.quit()
         elif isinstance(self._mailbox, imaplib.IMAP4):
@@ -450,7 +455,7 @@ class MailBox:
             self._mailbox.logout()
 
 
-def main(sys_args=None):
+def main(sys_args: Optional[Sequence[str]] = None) -> CheckResult:
     args = parse_arguments(sys_args or sys.argv[1:])
     logging.basicConfig(level={
         0: logging.WARN,

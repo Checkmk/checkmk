@@ -57,7 +57,7 @@ def test_timespan(seconds, output):
     (0, 1),
     (1, 1),
     (45.123123, 2),
-    (1e3, 3),
+    (1e3, 4),
     (1e5, 6),
     (-2, ValueError),
 ])

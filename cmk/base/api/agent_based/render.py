@@ -83,7 +83,7 @@ def timespan(seconds: float) -> str:
 def _digits_left(value: float) -> int:
     """Return the number of didgits left of the decimal point"""
     try:
-        return max(int(math.log(value, 10) + 1), 1)
+        return max(int(math.log10(value) + 1), 1)
     except ValueError:  # value is exactly zero
         if value < 0:
             raise

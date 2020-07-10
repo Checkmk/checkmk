@@ -46,12 +46,6 @@ class HostCheckTable:
         filter_mode: "only_clustered"    -> returns only checks belonging to clusters
         filter_mode: "include_clustered" -> returns checks of own host, including clustered checks
         """
-        # TODO: Clean them up
-        self.remove_duplicates = remove_duplicates
-        self.use_cache = use_cache
-        self.skip_autochecks = skip_autochecks
-        self.filter_mode = filter_mode
-        self.skip_ignored = skip_ignored
         hostname = self._host_config.hostname
 
         if self._host_config.is_ping_host:
@@ -77,13 +71,13 @@ class HostCheckTable:
             check_table.update({
                 service.id(): service
                 for service in self._config_cache.get_autochecks_of(hostname)
-                if self._keep_service(service)
+                if self._keep_service(service, filter_mode, skip_ignored)
             })
 
         check_table.update({
             service.id(): service
             for service in self._get_static_check_entries(self._host_config)
-            if self._keep_service(service)
+            if self._keep_service(service, filter_mode, skip_ignored)
         })
 
         # Now add checks a cluster might receive from its nodes
@@ -91,7 +85,7 @@ class HostCheckTable:
             check_table.update({
                 service.id(): service
                 for service in self._get_clustered_services(hostname, skip_autochecks)
-                if self._keep_service(service)
+                if self._keep_service(service, filter_mode, skip_ignored)
             })
 
         if not skip_autochecks and use_cache:
@@ -134,7 +128,8 @@ class HostCheckTable:
         # a host with the same combination of check type and item.
         return reversed(entries)
 
-    def _keep_service(self, service: Service) -> bool:
+    def _keep_service(self, service: Service, filter_mode: Optional[str],
+                      skip_ignored: bool) -> bool:
         hostname = self._host_config.hostname
         # TODO (mo): centralize maincheckify: CMK-4295
         service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
@@ -143,8 +138,8 @@ class HostCheckTable:
         if config.get_registered_check_plugin(service_check_plugin_name) is None:
             return False
 
-        if self.skip_ignored and config.service_ignored(hostname, service_check_plugin_name,
-                                                        service.description):
+        if skip_ignored and config.service_ignored(hostname, service_check_plugin_name,
+                                                   service.description):
             return False
 
         if self._host_config.part_of_clusters:
@@ -154,10 +149,10 @@ class HostCheckTable:
         else:
             svc_is_mine = True
 
-        if self.filter_mode is None and not svc_is_mine:
+        if filter_mode is None and not svc_is_mine:
             return False
 
-        if self.filter_mode == "only_clustered" and svc_is_mine:
+        if filter_mode == "only_clustered" and svc_is_mine:
             return False
 
         return True

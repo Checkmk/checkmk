@@ -1535,6 +1535,9 @@ class PagetypeTopics(Overridable):
     def sort_index(self) -> int:
         return self._["sort_index"]
 
+    def icon_name(self) -> str:
+        return self._["icon_name"]
+
     @classmethod
     def choices(cls):
         cls.load()

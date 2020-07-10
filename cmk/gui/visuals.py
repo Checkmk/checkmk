@@ -239,6 +239,7 @@ def transform_old_visual(visual):
     visual.setdefault('context', {})
     visual.setdefault('link_from', {})
     visual.setdefault('topic', '')
+    visual.setdefault("icon", None)
 
     # 1.6 introduced this setting: Ensure all visuals have it set
     visual.setdefault("add_context_to_title", True)

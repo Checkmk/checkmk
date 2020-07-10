@@ -60,6 +60,7 @@ def get_view_menu_items() -> List[ViewMenuTopic]:
             if page._show_in_sidebar():
                 visual = page.internal_representation().copy()
                 visual["hidden"] = False  # Is currently to configurable for pagetypes
+                visual["icon"] = None  # Is currently to configurable for pagetypes
 
                 page_type_items.append((page_type.type_name(), (page.name(), visual)))
 

@@ -1430,7 +1430,7 @@ declare_1to1_sorter("history_addinfo", cmp_simple_string)
 
 def mkeventd_view(d):
     x = {
-        'topic': _('Event Console'),
+        'topic': "events",
         'browser_reload': 60,
         'column_headers': 'pergroup',
         'icon': 'mkeventd',
@@ -1455,6 +1455,7 @@ def mkeventd_view(d):
 
 # Table of all open events
 multisite_builtin_views['ec_events'] = mkeventd_view({
+    "sort_index": 10,
     'title': _('Events'),
     'description': _('Table of all currently open events (handled and unhandled)'),
     'datasource': 'mkeventd_events',
@@ -1625,6 +1626,7 @@ multisite_builtin_views['ec_event'] = mkeventd_view({
 })
 
 multisite_builtin_views['ec_history_recent'] = mkeventd_view({
+    "sort_index": 20,
     'title': _('Recent Event History'),
     'description': _('Information about events and actions on events during the recent 24 hours.'),
     'datasource': 'mkeventd_history',

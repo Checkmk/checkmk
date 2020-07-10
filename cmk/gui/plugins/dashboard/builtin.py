@@ -18,7 +18,8 @@ builtin_dashboards["main"] = {
     "mtime": 0,
     "show_title": True,
     "title": _("Main Overview"),
-    "topic": _("Overview"),
+    "topic": "overview",
+    "sort_index": 10,
     "description": _("This dashboard gives you a general overview on the state of your "
                      "monitored devices."),
     "dashlets": [
@@ -184,7 +185,8 @@ builtin_dashboards["topology"] = {
     "mtime": 0,
     "show_title": False,
     "title": _("Network Topology"),
-    "topic": _("Overview"),
+    "topic": "overview",
+    "sort_index": 50,
     "description": _("This dashboard uses the parent relationships of your hosts to display a "
                      "hierarchical map."),
     "dashlets": [{
@@ -208,7 +210,8 @@ builtin_dashboards["simple_problems"] = {
     "mtime": 0,
     "show_title": True,
     "title": _("Host & Services Problems"),
-    "topic": _("Overview"),
+    "topic": "problems",
+    "sort_index": 10,
     "description": _("A compact dashboard which lists your unhandled host and service problems."),
     "dashlets": [
         {
@@ -311,7 +314,8 @@ builtin_dashboards["simple_problems"] = {
 }
 
 builtin_dashboards["cmk_overview"] = {
-    'topic': u'Overview',
+    "topic": "analyze",
+    "sort_index": 70,
     'name': 'cmk_overview',
     'hidebutton': False,
     'title': u'Checkmk overview',

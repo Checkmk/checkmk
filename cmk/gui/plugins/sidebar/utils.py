@@ -347,8 +347,7 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[ViewM
         try:
             topic = topics[visual["topic"]]
         except KeyError:
-            # TODO: Which fallback to use?
-            topic_id = "overview"
+            topic_id = "other"
             topic = topics[topic_id]
 
         url = _visual_url(visual_type_name, name)

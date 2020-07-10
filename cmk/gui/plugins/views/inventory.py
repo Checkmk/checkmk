@@ -970,7 +970,8 @@ def _declare_views(infoname, title_plural, painters, filters, invpaths):
     # for the items of one host.
     view_spec = {
         'datasource': infoname,
-        'topic': _('Inventory'),
+        "topic": "inventory",
+        "sort_index": 30,
         'public': True,
         'layout': 'table',
         'num_columns': 1,
@@ -1258,7 +1259,8 @@ generic_host_filters = multisite_builtin_views["allhosts"]["show_filters"]
 multisite_builtin_views["inv_hosts_cpu"] = {
     # General options
     'datasource': 'hosts',
-    'topic': _('Inventory'),
+    "topic": "inventory",
+    "sort_index": 10,
     'title': _('CPU Related Inventory of all Hosts'),
     'linktitle': _('CPU Inv. (all Hosts)'),
     'description': _('A list of all hosts with some CPU related inventory data'),
@@ -1304,7 +1306,8 @@ multisite_builtin_views["inv_hosts_cpu"] = {
 multisite_builtin_views["inv_hosts_ports"] = {
     # General options
     'datasource': 'hosts',
-    'topic': _('Inventory'),
+    "topic": "inventory",
+    "sort_index": 20,
     'title': _('Switch port statistics'),
     'linktitle': _('Switch ports (all Hosts)'),
     'description':

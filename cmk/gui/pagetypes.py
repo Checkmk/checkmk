@@ -1481,21 +1481,21 @@ class PagetypeTopics(Overridable):
                 "description": "",
                 "sort_index": 10,
             },
-            "analyse": {
-                "title": _('Analyse'),
-                "icon_name": "topic_analyze",
+            "problems": {
+                "title": _("Problems"),
+                "icon_name": "topic_problems",
                 "description": "",
                 "sort_index": 20,
-            },
-            "operating": {
-                "title": _("Operating"),
-                "icon_name": "topic_operating",
-                "description": "",
-                "sort_index": 30,
             },
             "history": {
                 "title": _("History"),
                 "icon_name": "topic_history",
+                "description": "",
+                "sort_index": 30,
+            },
+            "analyze": {
+                "title": _('Analyze'),
+                "icon_name": "topic_analyze",
                 "description": "",
                 "sort_index": 40,
             },
@@ -1505,9 +1505,9 @@ class PagetypeTopics(Overridable):
                 "description": "",
                 "sort_index": 50,
             },
-            "inventory": {
-                "title": _("Inventory"),
-                "icon_name": "topic_inventory",
+            "bi": {
+                "title": _("Business Intelligence"),
+                "icon_name": "topic_bi",
                 "description": "",
                 "sort_index": 60,
             },
@@ -1516,6 +1516,19 @@ class PagetypeTopics(Overridable):
                 "icon_name": "topic_applications",
                 "description": "",
                 "sort_index": 70,
+            },
+            "inventory": {
+                "title": _("Inventory"),
+                "icon_name": "topic_inventory",
+                "description": "",
+                "sort_index": 80,
+            },
+            # Only fallback for items without topic
+            "other": {
+                "title": _("Other"),
+                "icon_name": "topic_other",
+                "description": "",
+                "sort_index": 90,
             },
         }
 

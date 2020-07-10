@@ -244,7 +244,8 @@ def transform_old_visual(visual):
     visual.setdefault("add_context_to_title", True)
 
     # 1.7 introduced these settings for the new mega menus
-    visual.setdefault('sort_index', 99)
+    visual.setdefault("sort_index", 99)
+    visual.setdefault("is_advanced", False)
 
 
 def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
@@ -903,6 +904,15 @@ def page_edit_visual(what,
                         "Topics with the same number will be sorted alphabetically.") %
                  visual_type.title,
              )),
+            ("is_advanced",
+             Checkbox(
+                 title=_("Is advanced"),
+                 default_value=99,
+                 help=_("The navigation allows to hide items based on a basic / advanced "
+                        "toggle. You can specify here whether or not this %s should be "
+                        "treated as basic or advanced %s.") %
+                 (visual_type.title, visual_type.title),
+             )),
             ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
                                             rows=4,
                                             cols=50)),
@@ -950,6 +960,7 @@ def page_edit_visual(what,
                     'title',
                     'topic',
                     'sort_index',
+                    'is_advanced',
                     'description',
                     'linktitle',
                     'icon',

@@ -323,6 +323,7 @@ ViewMenuItem = NamedTuple("ViewMenuItem", [
     ("title", str),
     ("url", str),
     ("sort_index", int),
+    ("is_advanced", bool),
 ])
 
 ViewMenuTopic = NamedTuple("ViewMenu", [
@@ -364,6 +365,7 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[ViewM
                 title=visual["title"],
                 url=url,
                 sort_index=visual["sort_index"],
+                is_advanced=visual["is_advanced"],
             ))
 
     # Sort the items of all topics

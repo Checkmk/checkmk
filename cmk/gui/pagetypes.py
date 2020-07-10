@@ -346,6 +346,15 @@ class PageRenderer(Base):
                         "Topics with the same number will be sorted alphabetically.") %
                  cls.phrase("title_plural"),
              )),
+            (1.6, "is_advanced",
+             Checkbox(
+                 title=_("Is advanced"),
+                 default_value=False,
+                 help=_("The navigation allows to hide items based on a basic / advanced "
+                        "toggle. You can specify here whether or not this %s should be "
+                        "treated as basic or advanced %s.") %
+                 (cls.phrase("title_plural"), cls.phrase("title_plural")),
+             )),
             (2.0, 'hidden',
              Checkbox(
                  title=_("Sidebar integration"),
@@ -357,8 +366,8 @@ class PageRenderer(Base):
 
     @classmethod
     def _transform_old_spec(cls, spec):
-        """May be used to transform old persisted data structures"""
         spec.setdefault("sort_index", 99)
+        spec.setdefault("is_advanced", False)
         return spec
 
     @classmethod
@@ -397,6 +406,9 @@ class PageRenderer(Base):
 
     def sort_index(self) -> int:
         return self._.get("sort_index", 99)
+
+    def is_advanced(self) -> bool:
+        return self._.get("is_advanced", False)
 
     # Helper functions for page handlers and render function
     def page_header(self):

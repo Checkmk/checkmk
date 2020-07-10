@@ -18,14 +18,13 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     DomainObject,
     DomainType,
     EndpointName,
+    ENDPOINT_REGISTRY,
     HTTPMethod,
     LinkType,
     PropertyFormat,
     ResultType,
     Serializable,
 )
-from cmk.gui.plugins.openapi.restful_objects.utils import (
-    ENDPOINT_REGISTRY,)
 
 
 def link_rel(
@@ -357,8 +356,35 @@ def domain_type_action_href(domain_type: DomainType, action: str) -> str:
         The href.
 
     """
-    return "/domain-types/{domain_type}/actions/{action}/invoke".format(domain_type=domain_type,
-                                                                        action=action)
+    return f"/domain-types/{domain_type}/actions/{action}/invoke"
+
+
+def domain_object_sub_collection_href(
+    domain_type: DomainType,
+    obj_id: str,
+    collection_name: str,
+) -> str:
+    """Construct a href for a collection specific to a domain-object.
+
+    Args:
+        domain_type:
+            The domain-type.
+
+        obj_id:
+            The domain-object's object-id.
+
+        collection_name:
+            The name of the collection.
+
+    Examples:
+        >>> domain_object_sub_collection_href('folder_config', 'stuff', 'hosts')
+        '/objects/folder_config/stuff/collections/hosts'
+
+    Returns:
+        The href as a string.
+
+    """
+    return f"/objects/{domain_type}/{obj_id}/collections/{collection_name}"
 
 
 def collection_href(domain_type: DomainType, name: str = 'all') -> str:
@@ -385,7 +411,11 @@ def collection_href(domain_type: DomainType, name: str = 'all') -> str:
     return f'/domain-types/{domain_type}/collections/{name}'
 
 
-def object_action_href(domain_type: DomainType, obj_id: Union[int, str], action_name: str) -> str:
+def object_action_href(
+    domain_type: DomainType,
+    obj_id: Union[int, str],
+    action_name: str,
+) -> str:
     """Construct a href of a domain-object action.
 
     Args:
@@ -409,7 +439,7 @@ def object_action_href(domain_type: DomainType, obj_id: Union[int, str], action_
         The href.
 
     """
-    return object_href(domain_type, obj_id) + f'/actions/{action_name}/invoke'
+    return f"/objects/{domain_type}/{obj_id}/actions/{action_name}/invoke"
 
 
 def object_href(

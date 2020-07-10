@@ -55,7 +55,7 @@ If you have a client which can't do the HTTP PUT or DELETE methods, then you can
 such a method. In these cases the HTTP method to use has to be POST. You can't override from GET.
 
 """
-from typing import Any, Dict, List, Literal, Sequence
+from typing import List, Literal, Sequence, Union
 
 import apispec.utils  # type: ignore
 import apispec_oneofschema  # type: ignore
@@ -64,7 +64,7 @@ from cmk.gui.plugins.openapi import plugins
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, IDENT, NAME, ACCEPT_HEADER
 
 # Path parameters look like {varname} and need to be checked.
-from cmk.gui.plugins.openapi.restful_objects.utils import PrimitiveParameter
+from cmk.gui.plugins.openapi.restful_objects.type_defs import ParameterReference, PrimitiveParameter
 
 DEFAULT_HEADERS = [
     ('Accept', 'Media type(s) that is/are acceptable for the response.', 'application/json'),
@@ -153,9 +153,9 @@ ErrorType = Literal['ignore', 'raise']
 
 
 def find_all_parameters(
-    params: Sequence[PrimitiveParameter],
+    params: Sequence[Union[PrimitiveParameter, ParameterReference]],
     errors: ErrorType = 'ignore',
-) -> List[Dict[str, Any]]:
+) -> List[PrimitiveParameter]:
     """Find all parameters, while de-referencing string based parameters.
 
     Parameters can come in dictionary, or string form. If they are a dictionary they are supposed

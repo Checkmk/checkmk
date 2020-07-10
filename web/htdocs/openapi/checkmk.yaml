@@ -794,6 +794,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObject'
           description: ''
+          headers: {}
       summary: Activate pending changes.
       tags:
       - cmk.gui.plugins.openapi.endpoints.activate_changes
@@ -839,6 +840,7 @@ paths:
             see this resource for further information.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       summary: Wait for an activation-run to complete.
       tags:
       - cmk.gui.plugins.openapi.endpoints.activate_changes
@@ -885,6 +887,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObject'
           description: ''
+          headers: {}
       summary: Show the status of a particular activation-run.
       tags:
       - cmk.gui.plugins.openapi.endpoints.activate_changes
@@ -922,6 +925,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
+          headers: {}
       summary: List currently running activations.
       tags:
       - cmk.gui.plugins.openapi.endpoints.activate_changes
@@ -959,6 +963,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
+          headers: {}
       summary: List contact-groups
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group_config
@@ -1060,6 +1065,7 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       summary: Delete a contact-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group_config
@@ -1356,6 +1362,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/FolderCollection'
           description: ''
+          headers: {}
       summary: List folders
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder_config
@@ -1460,6 +1467,7 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       summary: Delete a folder
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder_config
@@ -1731,6 +1739,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
+          headers: {}
       summary: List currently monitored hosts.
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
@@ -1767,6 +1776,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HostCollection'
           description: ''
+          headers: {}
       summary: List all hosts
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_config
@@ -1872,6 +1882,7 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       summary: Delete a host
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_config
@@ -2033,6 +2044,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
+          headers: {}
       summary: List service-groups
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group_config
@@ -2134,6 +2146,7 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       summary: Delete a host-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group_config
@@ -2325,6 +2338,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
+          headers: {}
       tags:
       - cmk.gui.plugins.openapi.endpoints.service
       x-codeSamples:
@@ -2384,6 +2398,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObject'
           description: ''
+          headers: {}
       summary: Show services of specific state
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_discovery
@@ -2439,6 +2454,7 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_discovery
       x-codeSamples:
@@ -2483,6 +2499,7 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_discovery
       x-codeSamples:
@@ -2519,6 +2536,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
+          headers: {}
       summary: List service-groups
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group_config
@@ -2620,6 +2638,7 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       summary: Delete a service-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group_config
@@ -2778,6 +2797,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/InstalledVersions'
           description: ''
+          headers: {}
       tags:
       - cmk.gui.plugins.openapi.endpoints.version
       x-codeSamples:
@@ -2819,6 +2839,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ActionResult'
           description: ''
+          headers: {}
       summary: Sign all agents
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agent
@@ -2859,6 +2880,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
+          headers: {}
       summary: List all agents
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agent
@@ -2895,6 +2917,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ActionResultScalar'
           description: ''
+          headers: {}
       summary: Bake all agents
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agent
@@ -2931,6 +2954,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ActionResultObject'
           description: ''
+          headers: {}
       summary: Show the status of the automatic deployment system
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agent
@@ -2968,6 +2992,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ActionResultObject'
           description: ''
+          headers: {}
       summary: Show the baking status
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agent
@@ -3032,6 +3057,7 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       summary: Download a single agent
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agent

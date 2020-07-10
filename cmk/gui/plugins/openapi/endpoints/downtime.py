@@ -10,7 +10,7 @@ from cmk.gui.http import Response
 from cmk.gui import sites
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
-from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
+from cmk.gui.plugins.openapi.restful_objects import ParamDict
 from cmk.gui.watolib.downtime import (execute_livestatus_command, determine_downtime_mode,
                                       remove_downtime_command, DowntimeSchedule)
 from cmk.gui.plugins.openapi.restful_objects import (endpoint_schema, request_schemas, constructors,

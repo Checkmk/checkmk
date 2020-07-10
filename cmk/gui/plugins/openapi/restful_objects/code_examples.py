@@ -7,12 +7,19 @@ import collections
 import json
 import re
 import threading
+from typing import Dict, List
 
 import jinja2
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
-from cmk.gui.plugins.openapi.restful_objects.utils import fill_out_path_template, ParamDict
+from cmk.gui.plugins.openapi.restful_objects.type_defs import (
+    fill_out_path_template,
+    HTTPMethod,
+    OperationSpecType,
+    ParamDict,
+    RequestSchema,
+)
 
 CODE_TEMPLATES_LOCK = threading.Lock()
 
@@ -175,13 +182,13 @@ def _transform_params(param_list):
 
 
 # noinspection PyDefaultArgument
-def code_samples(
-    path,
-    method,
-    request_schema,
-    operation_spec,
+def code_samples(  # pylint: disable=dangerous-default-value
+    path: str,
+    method: HTTPMethod,
+    request_schema: RequestSchema,
+    operation_spec: OperationSpecType,
     code_templates=[],
-):  # pylint: disable=dangerous-default-value
+) -> List[Dict[str, str]]:
     """Create a list of rendered code sample Objects
 
     These are not specified by OpenAPI but are specific to ReDoc."""

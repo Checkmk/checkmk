@@ -8,7 +8,8 @@
 import abc
 import traceback
 import json
-from typing import Optional, Any, Dict, List, Tuple, Type
+import re
+from typing import NamedTuple, Optional, Any, Dict, List, Tuple, Type
 
 import cmk.utils.plugin_registry
 
@@ -16,10 +17,11 @@ from cmk.gui.sites import SiteId
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
-from cmk.gui.i18n import _, _u
+import cmk.gui.pagetypes as pagetypes
+from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import Choices
-from cmk.gui.type_defs import RoleName, PermissionName
+from cmk.gui.type_defs import RoleName, PermissionName, Visual
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
@@ -316,31 +318,88 @@ def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Opti
     return only_sites
 
 
-def visuals_by_topic(permitted_visuals, default_order=None):
-    if default_order is None:
-        default_order = [
-            _("Overview"),
-            _("Hosts"),
-            _("Host Groups"),
-            _("Services"),
-            _("Service Groups"),
-            _("Metrics"),
-            _("Business Intelligence"),
-            _("Problems"),
-        ]
+ViewMenuItem = NamedTuple("ViewMenuItem", [
+    ("name", str),
+    ("title", str),
+    ("url", str),
+])
 
-    s = sorted([(_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name, 'painters'
-                 in visual)
-                for name, visual in permitted_visuals
-                if not visual["hidden"] and not visual.get("mobile")])
+ViewMenuTopic = NamedTuple("ViewMenu", [
+    ("name", "str"),
+    ("title", "str"),
+    ("items", List[ViewMenuItem]),
+])
 
-    result = []
-    for topic in default_order:
-        result.append((topic, s))
 
-    rest = sorted({t for (t, _t, _v, _i) in s if t not in default_order})
-    for topic in rest:
-        if topic:
-            result.append((topic, s))
+def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[ViewMenuTopic]:
+    pagetypes.PagetypeTopics.load()
+    topics = pagetypes.PagetypeTopics.get_permitted_instances()
 
-    return result
+    by_topic: Dict[pagetypes.PagetypeTopics, ViewMenuTopic] = {}
+
+    for visual_type_name, (name, visual) in visuals:
+        if visual["hidden"] or visual.get("mobile"):
+            continue  # Skip views not inteded to be shown in the menus
+
+        topic_id = visual["topic"]
+        try:
+            topic = topics[visual["topic"]]
+        except KeyError:
+            # TODO: Which fallback to use?
+            topic_id = "overview"
+            topic = topics[topic_id]
+
+        url = _visual_url(visual_type_name, name)
+
+        topic = by_topic.setdefault(
+            topic, ViewMenuTopic(
+                name=topic.name(),
+                title=topic.title(),
+                items=[],
+            ))
+        topic.items.append(ViewMenuItem(
+            name=name,
+            title=visual["title"],
+            url=url,
+        ))
+
+    return [v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title()))]
+
+
+def _visual_url(visual_type_name: str, name: str) -> str:
+    if visual_type_name == "views":
+        return "view.py?view_name=%s" % name
+
+    if visual_type_name == "dashboards":
+        return "dashboard.py?name=%s" % name
+
+    if visual_type_name == "reports":
+        return "report.py?name=%s" % name
+
+    # Handle page types
+    if visual_type_name in ["custom_graph", "graph_collection"]:
+        return "%s.py?name=%s" % (visual_type_name, name)
+
+    raise NotImplementedError("Unkown visual type: %s" % visual_type_name)
+
+
+def show_topic_menu(treename: str, menu: List[ViewMenuTopic]) -> None:
+    for topic in menu:
+        _show_topic(treename, topic)
+
+
+def _show_topic(treename: str, topic: ViewMenuTopic) -> None:
+    if not topic.items:
+        return
+
+    container_id = re.sub('[^a-zA-Z0-9_-]', '', topic.title)
+    html.begin_foldable_container(treename=treename,
+                                  id_=container_id,
+                                  isopen=False,
+                                  title=topic.title,
+                                  indent=True)
+
+    for item in topic.items:
+        bulletlink(item.title, item.url, onclick="return cmk.sidebar.wato_views_clicked(this)")
+
+    html.end_foldable_container()

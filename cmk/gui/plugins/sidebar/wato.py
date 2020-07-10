@@ -11,7 +11,7 @@ import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, Choices
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.sidebar import (
     snapin_registry,
     iconlink,
     footnotelinks,
-    visuals_by_topic,
+    make_topic_menu,
 )
 
 from cmk.gui.plugins.wato.utils.main_menu import get_modules
@@ -240,17 +240,24 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         selected_topic, selected_target = config.user.load_file("foldertree",
                                                                 (_('Hosts'), 'allhosts'))
 
-        topic_views = visuals_by_topic(
-            list(views.get_permitted_views().items()) +
-            list(dashboard.get_permitted_dashboards().items()))
-        topics = [(t, t) for t, _s in topic_views]
+        # Apply some view specific filters
+        views_to_show = [(name, view)
+                         for name, view in views.get_permitted_views().items()
+                         if (not config.visible_views or name in config.visible_views) and
+                         (not config.hidden_views or name not in config.hidden_views)]
+
+        visuals_to_show = [("views", e) for e in views_to_show]
+        visuals_to_show += [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
+
+        topics = make_topic_menu(visuals_to_show)
+        topic_choices: Choices = [(topic.title, topic.title) for topic in topics]
 
         html.open_table()
         html.open_tr()
         html.td(_('Topic:'), class_="label")
         html.open_td()
         html.dropdown("topic",
-                      topics,
+                      topic_choices,
                       deflt=selected_topic,
                       onchange='cmk.sidebar.wato_tree_topic_changed(this)')
         html.close_td()
@@ -260,25 +267,22 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         html.td(_("View:"), class_="label")
         html.open_td()
 
-        for topic, view_list in topic_views:
-            targets = []
-            for t, title, name, is_view in view_list:
-                if config.visible_views and name not in config.visible_views:
-                    continue
-                if config.hidden_views and name in config.hidden_views:
-                    continue
-                if t == topic:
-                    if not is_view:
-                        name = 'dashboard|' + name
-                    targets.append((name, title))
+        for topic in topics:
+            targets: Choices = []
+            for item in topic.items:
+                if item.url.startswith("dashboards.py"):
+                    name = 'dashboard|' + item.name
+                else:
+                    name = item.name
+                targets.append((name, item.title))
 
-            if topic != selected_topic:
+            if topic.title != selected_topic:
                 default = ''
                 style: Optional[str] = 'display:none'
             else:
                 default = selected_target
                 style = None
-            html.dropdown("target_%s" % topic,
+            html.dropdown("target_%s" % topic.title,
                           targets,
                           deflt=default,
                           onchange='cmk.sidebar.wato_tree_target_changed(this)',

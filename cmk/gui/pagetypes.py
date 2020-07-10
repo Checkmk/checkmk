@@ -1489,5 +1489,10 @@ class PagetypeTopics(Overridable):
         return [(p.name(), p.title()) for p in sorted(cls.instances(), key=lambda p: p.sort_index())
                ]
 
+    @classmethod
+    def get_permitted_instances(cls):
+        cls.load()
+        return {p.name(): p for p in cls.permitted_instances_sorted()}
+
 
 declare(PagetypeTopics)

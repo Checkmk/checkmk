@@ -337,6 +337,15 @@ class PageRenderer(Base):
                 title=_('Topic'),
                 choices=PagetypeTopics.choices(),
             )),
+            (1.5, "sort_index",
+             Integer(
+                 title=_("Sort index"),
+                 default_value=99,
+                 help=_("You can customize the order of the %s by changing "
+                        "this number. Lower numbers will be sorted first. "
+                        "Topics with the same number will be sorted alphabetically.") %
+                 cls.phrase("title_plural"),
+             )),
             (2.0, 'hidden',
              Checkbox(
                  title=_("Sidebar integration"),
@@ -345,6 +354,12 @@ class PageRenderer(Base):
         ])]
 
         return parameters
+
+    @classmethod
+    def _transform_old_spec(cls, spec):
+        """May be used to transform old persisted data structures"""
+        spec.setdefault("sort_index", 99)
+        return spec
 
     @classmethod
     def page_handlers(cls):
@@ -377,8 +392,11 @@ class PageRenderer(Base):
             if page._show_in_sidebar():
                 yield page.topic(), page.title(), page.page_url()
 
-    def topic(self):
+    def topic(self) -> str:
         return self._.get("topic", "other")
+
+    def sort_index(self) -> int:
+        return self._.get("sort_index", 99)
 
     # Helper functions for page handlers and render function
     def page_header(self):
@@ -758,6 +776,8 @@ class Overridable(Base):
             page_dict["owner"] = UserId(u'')  # might have been forgotten on copy action
             page_dict["public"] = True
             page_dict["name"] = name
+            page_dict = cls._transform_old_spec(page_dict)
+
             new_page = cls(page_dict)
             cls.add_instance(("", name), new_page)
 
@@ -776,6 +796,8 @@ class Overridable(Base):
                 for name, page_dict in user_pages.items():
                     page_dict["owner"] = user
                     page_dict["name"] = name
+                    page_dict = cls._transform_old_spec(page_dict)
+
                     cls.add_instance((user, name), cls(page_dict))
 
             except SyntaxError as e:
@@ -784,6 +806,11 @@ class Overridable(Base):
 
         cls._load()
         cls._declare_instance_permissions()
+
+    @classmethod
+    def _transform_old_spec(cls, spec: Dict) -> Dict:
+        """May be used to transform old persisted data structures"""
+        return spec
 
     @classmethod
     def _declare_instance_permissions(cls):

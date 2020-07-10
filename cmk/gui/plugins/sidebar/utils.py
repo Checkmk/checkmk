@@ -322,6 +322,7 @@ ViewMenuItem = NamedTuple("ViewMenuItem", [
     ("name", str),
     ("title", str),
     ("url", str),
+    ("sort_index", int),
 ])
 
 ViewMenuTopic = NamedTuple("ViewMenu", [
@@ -357,12 +358,19 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[ViewM
                 title=topic.title(),
                 items=[],
             ))
-        topic.items.append(ViewMenuItem(
-            name=name,
-            title=visual["title"],
-            url=url,
-        ))
+        topic.items.append(
+            ViewMenuItem(
+                name=name,
+                title=visual["title"],
+                url=url,
+                sort_index=visual["sort_index"],
+            ))
 
+    # Sort the items of all topics
+    for topic in by_topic.values():
+        topic.items.sort(key=lambda i: (i.sort_index, i.title))
+
+    # Return the sorted topics
     return [v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title()))]
 
 

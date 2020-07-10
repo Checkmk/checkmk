@@ -47,6 +47,7 @@ from cmk.gui.valuespec import (
     TextAscii,
     TextAreaUnicode,
     DropdownChoice,
+    Integer,
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
@@ -241,6 +242,9 @@ def transform_old_visual(visual):
 
     # 1.6 introduced this setting: Ensure all visuals have it set
     visual.setdefault("add_context_to_title", True)
+
+    # 1.7 introduced these settings for the new mega menus
+    visual.setdefault('sort_index', 99)
 
 
 def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
@@ -890,6 +894,15 @@ def page_edit_visual(what,
                 title=_('Topic'),
                 choices=pagetypes.PagetypeTopics.choices(),
             )),
+            ("sort_index",
+             Integer(
+                 title=_("Sort index"),
+                 default_value=99,
+                 help=_("You can customize the order of the %s by changing "
+                        "this number. Lower numbers will be sorted first. "
+                        "Topics with the same number will be sorted alphabetically.") %
+                 visual_type.title,
+             )),
             ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
                                             rows=4,
                                             cols=50)),
@@ -936,6 +949,7 @@ def page_edit_visual(what,
                     'name',
                     'title',
                     'topic',
+                    'sort_index',
                     'description',
                     'linktitle',
                     'icon',

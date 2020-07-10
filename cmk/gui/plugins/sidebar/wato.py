@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
+from typing import Optional, List, Dict
 
 import cmk.gui.config as config
 import cmk.gui.views as views
@@ -18,12 +18,17 @@ from cmk.gui.globals import html
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,
-    iconlink,
     footnotelinks,
     make_topic_menu,
+    show_topic_menu,
+    ViewMenuTopic,
+    ViewMenuItem,
 )
 
-from cmk.gui.plugins.wato.utils.main_menu import get_modules
+from cmk.gui.plugins.wato.utils.main_menu import (
+    MainModuleTopic,
+    main_module_registry,
+)
 
 
 def render_wato(mini):
@@ -34,25 +39,56 @@ def render_wato(mini):
         html.write_text(_("You are not allowed to use Check_MK's web configuration GUI."))
         return False
 
+    menu = get_wato_menu_items()
+
     if mini:
-        html.icon_button("wato.py", _("Main Menu"), "home", target="main")
+        for topic in menu:
+            for item in topic.items:
+                html.icon_button(url=item.url,
+                                 title=item.title,
+                                 icon=item.icon_name or "wato",
+                                 target="main")
     else:
-        iconlink(_("Main Menu"), "wato.py", "home")
-
-    for module in get_modules():
-        if not module.may_see():
-            continue
-
-        url = module.get_url()
-        if mini:
-            html.icon_button(url, module.title, module.icon, target="main")
-        else:
-            iconlink(module.title, url, module.icon)
+        show_topic_menu(treename="wato", menu=menu, show_item_icons=True)
 
     pending_info = watolib.get_pending_changes_info()
     if pending_info:
         footnotelinks([(pending_info, "wato.py?mode=changelog")])
         html.div('', class_="clear")
+
+
+def get_wato_menu_items() -> List[ViewMenuTopic]:
+    by_topic: Dict[MainModuleTopic, ViewMenuTopic] = {}
+    for module_class in main_module_registry.values():
+        module = module_class()
+
+        if not module.may_see():
+            continue
+
+        topic = by_topic.setdefault(
+            module.topic,
+            ViewMenuTopic(
+                name=module.topic.name,
+                title=module.topic.title,
+                icon_name=module.topic.icon_name,
+                items=[],
+            ))
+        topic.items.append(
+            ViewMenuItem(
+                name=module.mode_or_url,
+                title=module.title,
+                icon_name=module.icon,
+                url=module.get_url(),
+                sort_index=module.sort_index,
+                is_advanced=False,
+            ))
+
+    # Sort the items of all topics
+    for topic in by_topic.values():
+        topic.items.sort(key=lambda i: (i.sort_index, i.title))
+
+    # Return the sorted topics
+    return [v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index, e[0].title))]
 
 
 @snapin_registry.register

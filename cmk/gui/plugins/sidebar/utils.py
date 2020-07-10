@@ -397,12 +397,14 @@ def _visual_url(visual_type_name: str, name: str) -> str:
     raise NotImplementedError("Unkown visual type: %s" % visual_type_name)
 
 
-def show_topic_menu(treename: str, menu: List[ViewMenuTopic]) -> None:
+def show_topic_menu(treename: str,
+                    menu: List[ViewMenuTopic],
+                    show_item_icons: bool = False) -> None:
     for topic in menu:
-        _show_topic(treename, topic)
+        _show_topic(treename, topic, show_item_icons)
 
 
-def _show_topic(treename: str, topic: ViewMenuTopic) -> None:
+def _show_topic(treename: str, topic: ViewMenuTopic, show_item_icons: bool) -> None:
     if not topic.items:
         return
 
@@ -414,6 +416,11 @@ def _show_topic(treename: str, topic: ViewMenuTopic) -> None:
                                   indent=True)
 
     for item in topic.items:
-        bulletlink(item.title, item.url, onclick="return cmk.sidebar.wato_views_clicked(this)")
+        if show_item_icons:
+            html.open_li(class_="sidebar")
+            iconlink(item.title, item.url, item.icon_name)
+            html.close_li()
+        else:
+            bulletlink(item.title, item.url, onclick="return cmk.sidebar.wato_views_clicked(this)")
 
     html.end_foldable_container()

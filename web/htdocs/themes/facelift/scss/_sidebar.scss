@@ -453,6 +453,11 @@ div.snapin {
   }
 }
 
+
+div.snapin div.content div.foldable ul.treeangle a.iconlink {
+    padding: 0;
+}
+
 div.snapin div.content div.foldable a.iconlink,
 /* TODO: Reproduce these two html elements */
 div.snapin div.content div.foldable body.main .popup_menu span.iconlink,

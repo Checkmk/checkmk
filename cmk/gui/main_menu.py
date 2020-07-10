@@ -15,7 +15,6 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.sidebar.quicksearch import QuicksearchSnapin
 from cmk.gui.utils.popups import MethodInline
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 from cmk.gui.plugins.main_menu.utils import (
     mega_menu_registry,
@@ -56,14 +55,6 @@ class MainMenuRenderer:
             )
             html.close_li()
 
-        html.open_li()
-        html.popup_trigger(
-            html.render_icon("main_account") + html.render_div(_("User")),
-            "mega_menu_account",
-            method=MethodInline(self._get_user_menu_content()),
-        )
-        html.close_li()
-
     def _get_main_menu_items(self) -> List[MainMenuItem]:
         # TODO: Add permissions? For example WATO is not allowed for all users
         items: List[MainMenuItem] = []
@@ -88,36 +79,6 @@ class MainMenuRenderer:
             menu = mega_menu_registry[menu_item.name]
             html.open_div(class_="popup_menu")
             MegaMenuRenderer().show(menu)
-            html.close_div()
-            return html.drain()
-
-    # TODO(tb): can we use the MegaMenuRenderer here and move this code to mega_menu.py?
-    def _get_user_menu_content(self) -> str:
-        with html.plugged():
-            html.open_div(class_="popup_menu")
-            html.open_ul()
-            entries = [
-                ("user_profile.py", _("Personal settings"), "topic_profile"),
-                ("custom_snapins.py", _("Custom snapins"), "custom_snapin"),
-                ("logout.py", _("Logout"), "sidebar_logout"),
-            ]
-
-            if rulebased_notifications_enabled() and config.user.may('general.edit_notifications'):
-                entries.insert(
-                    1,
-                    ("wato.py?mode=user_notifications_p", _("Notification rules"), "topic_events"),
-                )
-
-            for page, title, icon in entries:
-                html.open_li()
-                html.open_a(href=html.makeuri_contextless([], page),
-                            onclick="cmk.popup_menu.close_popup()",
-                            target="main")
-                html.icon(title=None, icon=icon)
-                html.write_text(title)
-                html.close_a()
-                html.close_li()
-            html.close_ul()
             html.close_div()
             return html.drain()
 

@@ -10,11 +10,14 @@ Registers the different mega menus and builds the content for each of them.
 
 from typing import List
 
+import cmk.gui.config as config
 from cmk.gui.i18n import _
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.plugins.main_menu import (
     mega_menu_registry,
     MegaMenu,
     TopicMenuTopic,
+    TopicMenuItem,
 )
 
 
@@ -45,4 +48,62 @@ MegaMenuSetup = mega_menu_registry.register(
         icon_name="main_setup",
         sort_index=5,
         topics=_setup_menu_topics,
+    ))
+
+
+def _user_menu_topics() -> List[TopicMenuTopic]:
+    items = [
+        TopicMenuItem(
+            name="user_profile",
+            title=_("Personal settings"),
+            url="user_profile.py",
+            sort_index=10,
+            is_advanced=False,
+            icon_name="topic_profile",
+        ),
+        TopicMenuItem(
+            name="custom_snapins",
+            title=_("Custom snapins"),
+            url="custom_snapins.py",
+            sort_index=20,
+            is_advanced=False,
+            icon_name="custom_snapin",
+        ),
+        TopicMenuItem(
+            name="logout",
+            title=_("Logout"),
+            url="logout.py",
+            sort_index=30,
+            is_advanced=False,
+            icon_name="sidebar_logout",
+        ),
+    ]
+
+    if rulebased_notifications_enabled() and config.user.may('general.edit_notifications'):
+        items.insert(
+            1,
+            TopicMenuItem(
+                name="notification_rules",
+                title=_("Notification rules"),
+                url="wato.py?mode=user_notifications_p",
+                sort_index=30,
+                is_advanced=False,
+                icon_name="topic_events",
+            ))
+
+    return [TopicMenuTopic(
+        name="user",
+        title=_("User"),
+        icon_name="topic_profile",
+        items=items,
+    )]
+
+
+MegaMenuUser = mega_menu_registry.register(
+    MegaMenu(
+        name="user",
+        title=_("User"),
+        icon_name="main_user",
+        sort_index=10,
+        topics=_user_menu_topics,
     ))

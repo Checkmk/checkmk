@@ -57,6 +57,7 @@ def test_timespan(seconds, output):
     (0, 1),
     (1, 1),
     (45.123123, 2),
+    (1e3, 3),
     (1e5, 6),
     (-2, ValueError),
 ])
@@ -69,7 +70,9 @@ def test__digits_left(value, output):
     (1, True, ("1.00", "B")),
     (101.123, True, ("101", "B")),
     (101.623, True, ("102", "B")),
+    (1000.0, True, ("1.00", "KB")),
     (10001.623, True, ("10.0", "KB")),
+    (100000.0, True, ("100", "KB")),
     (0, False, ("0.00", "B")),
     (-123.123, True, ValueError),
 ])

@@ -286,6 +286,7 @@ def test_registered_permissions():
         'view.alerthandlers',
         'view.alertstats',
         'view.allhosts',
+        'view.allservices',
         'view.bi_map_hover_host',
         'view.bi_map_hover_service',
         'view.api_downtimes',

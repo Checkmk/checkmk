@@ -40,7 +40,7 @@ from cmk.gui.plugins.visuals.inventory import (
 
 from cmk.gui.plugins.views import (
     data_source_registry,
-    DataSource,
+    ABCDataSource,
     RowTable,
     painter_registry,
     Painter,
@@ -821,7 +821,7 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
 
     # Create the datasource (like a database view)
     ds_class = type(
-        "DataSourceInventory%s" % infoname.title(), (DataSource,), {
+        "DataSourceInventory%s" % infoname.title(), (ABCDataSource,), {
             "_ident": infoname,
             "_inventory_path": invpath,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
@@ -912,7 +912,7 @@ def declare_joined_inventory_table_view(tablename, title_singular, title_plural,
 
     # Create the datasource (like a database view)
     ds_class = type(
-        "DataSourceInventory%s" % tablename.title(), (DataSource,), {
+        "DataSourceInventory%s" % tablename.title(), (ABCDataSource,), {
             "_ident": tablename,
             "_sources": list(zip(info_names, invpaths)),
             "_match_by": match_by,
@@ -1383,7 +1383,7 @@ class RowTableInventoryHistory(ABCRowTable):
 
 
 @data_source_registry.register
-class DataSourceInventoryHistory(DataSource):
+class DataSourceInventoryHistory(ABCDataSource):
     @property
     def ident(self):
         return "invhist"

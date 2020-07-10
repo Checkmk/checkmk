@@ -27,7 +27,7 @@ from cmk.gui.type_defs import (
     Rows,)
 from cmk.gui.plugins.views.utils import (
     Cell,
-    DataSource,
+    ABCDataSource,
 )
 from cmk.gui.plugins.visuals.utils import Filter
 
@@ -418,7 +418,7 @@ def show_filter_form(show_filters: List[Filter]) -> None:
     """)
 
 
-def show_command_form(datasource: DataSource, rows: Rows) -> None:
+def show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
     what = datasource.infos[0]
     html.javascript("""
     $(document).ready(function() {

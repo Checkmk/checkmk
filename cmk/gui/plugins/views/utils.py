@@ -492,7 +492,7 @@ def register_legacy_command(spec: Dict[str, Any]) -> None:
     command_registry.register(cls)
 
 
-class DataSource(metaclass=abc.ABCMeta):
+class ABCDataSource(metaclass=abc.ABCMeta):
     """Provider of rows for the views (basically tables of data) in the GUI"""
     @abc.abstractproperty
     def ident(self) -> str:
@@ -606,7 +606,7 @@ class DataSource(metaclass=abc.ABCMeta):
         return rows
 
 
-class DataSourceLivestatus(DataSource):
+class DataSourceLivestatus(ABCDataSource):
     """Base class for all simple data sources which 1:1 base on a livestatus table"""
     @property
     def table(self) -> 'RowTableLivestatus':
@@ -614,10 +614,10 @@ class DataSourceLivestatus(DataSource):
 
 
 class DataSourceRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[DataSource]:
-        return DataSource
+    def plugin_base_class(self) -> Type[ABCDataSource]:
+        return ABCDataSource
 
-    def plugin_name(self, plugin_class: Type[DataSource]) -> str:
+    def plugin_name(self, plugin_class: Type[ABCDataSource]) -> str:
         return plugin_class().ident
 
     # TODO: Sort the datasources by (assumed) common usage

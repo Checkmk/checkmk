@@ -25,7 +25,7 @@ from cmk.gui.plugins.views import (
     command_registry,
     Command,
     data_source_registry,
-    DataSource,
+    ABCDataSource,
     RowTableLivestatus,
     painter_registry,
     Painter,
@@ -203,7 +203,7 @@ class PermissionECSeeInTacticalOverview(Permission):
 
 
 @data_source_registry.register
-class DataSourceECEvents(DataSource):
+class DataSourceECEvents(ABCDataSource):
     @property
     def ident(self):
         return "mkeventd_events"
@@ -238,7 +238,7 @@ class DataSourceECEvents(DataSource):
 
 
 @data_source_registry.register
-class DataSourceECEventHistory(DataSource):
+class DataSourceECEventHistory(ABCDataSource):
     @property
     def ident(self):
         return "mkeventd_history"

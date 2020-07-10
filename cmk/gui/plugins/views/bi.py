@@ -15,7 +15,7 @@ from cmk.gui.globals import html
 
 from cmk.gui.plugins.views import (
     data_source_registry,
-    DataSource,
+    ABCDataSource,
     RowTable,
     PainterOptions,
     painter_option_registry,
@@ -33,7 +33,7 @@ from cmk.gui.plugins.views import (
 
 
 @data_source_registry.register
-class DataSourceBIAggregations(DataSource):
+class DataSourceBIAggregations(ABCDataSource):
     @property
     def ident(self):
         return "bi_aggregations"
@@ -65,7 +65,7 @@ class RowTableBIAggregations(RowTable):
 
 
 @data_source_registry.register
-class DataSourceBIHostAggregations(DataSource):
+class DataSourceBIHostAggregations(ABCDataSource):
     @property
     def ident(self):
         return "bi_host_aggregations"
@@ -97,7 +97,7 @@ class RowTableBIHostAggregations(RowTable):
 
 
 @data_source_registry.register
-class DataSourceBIHostnameAggregations(DataSource):
+class DataSourceBIHostnameAggregations(ABCDataSource):
     """Similar to host aggregations, but the name of the aggregation
     is used to join the host table rather then the affected host"""
     @property
@@ -131,7 +131,7 @@ class RowTableBIHostnameAggregations(RowTable):
 
 
 @data_source_registry.register
-class DataSourceBIHostnameByGroupAggregations(DataSource):
+class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
     """The same but with group information"""
     @property
     def ident(self):

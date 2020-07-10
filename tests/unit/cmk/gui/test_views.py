@@ -5801,7 +5801,7 @@ def test_create_view_basics():
 
     assert view.name == view_name
     assert view.spec == view_spec
-    assert isinstance(view.datasource, cmk.gui.plugins.views.utils.DataSource)
+    assert isinstance(view.datasource, cmk.gui.plugins.views.utils.ABCDataSource)
     assert isinstance(view.datasource.table, cmk.gui.plugins.views.utils.RowTable)
     assert view.row_limit is None
     assert view.user_sorters is None

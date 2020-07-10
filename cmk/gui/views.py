@@ -102,7 +102,7 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
     cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
     get_custom_var, get_perfdata_nth_value, join_row, get_view_infos, replace_action_url_macros,
-    Cell, JoinCell, register_legacy_command, register_painter, register_sorter, DataSource,
+    Cell, JoinCell, register_legacy_command, register_painter, register_sorter, ABCDataSource,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -300,7 +300,7 @@ class View:
         self._user_sorters: 'Optional[List[SorterSpec]]' = None
 
     @property
-    def datasource(self) -> DataSource:
+    def datasource(self) -> ABCDataSource:
         try:
             return data_source_registry[self.spec["datasource"]]()
         except KeyError:
@@ -1542,7 +1542,7 @@ def _is_ec_unrelated_host_view(view: View) -> bool:
 
 
 def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
-                                datasource: DataSource) -> 'List[ColumnName]':
+                                datasource: ABCDataSource) -> 'List[ColumnName]':
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
     if html.request.var("mode") == "availability" and "aggr" in datasource.infos:

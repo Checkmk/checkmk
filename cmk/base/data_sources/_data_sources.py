@@ -23,7 +23,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
 
-from .abstract import DataSource
+from .abstract import ABCDataSource
 from .agent import AgentDataSource, AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMIManagementBoardDataSource
@@ -34,7 +34,7 @@ from .tcp import TCPDataSource
 
 __all__ = ["DataSources", "make_host_sections", "make_sources"]
 
-DataSources = Iterable[DataSource]
+DataSources = Iterable[ABCDataSource]
 
 
 class SourceBuilder:
@@ -45,7 +45,7 @@ class SourceBuilder:
         self._host_config = host_config
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
-        self._sources: Dict[str, DataSource] = {}
+        self._sources: Dict[str, ABCDataSource] = {}
 
         self._initialize_data_sources(selected_raw_sections)
 
@@ -137,7 +137,7 @@ class SourceBuilder:
         for source in sources:
             self._add_source(source)
 
-    def _add_source(self, source: DataSource) -> None:
+    def _add_source(self, source: ABCDataSource) -> None:
         self._sources[source.id()] = source
 
     def _get_agent_data_source(
@@ -273,7 +273,7 @@ def _make_piggy_nodes(
     assert host_config.nodes is not None
 
     import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
-    abstract.DataSource.set_may_use_cache_file()
+    abstract.ABCDataSource.set_may_use_cache_file()
 
     nodes = []
     for hostname in host_config.nodes:

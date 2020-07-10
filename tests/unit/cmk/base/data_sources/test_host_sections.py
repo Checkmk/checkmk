@@ -17,7 +17,7 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources import make_host_sections, make_sources
-from cmk.base.data_sources.abstract import AbstractHostSections, DataSource
+from cmk.base.data_sources.abstract import AbstractHostSections, ABCDataSource
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
@@ -394,7 +394,7 @@ class TestMakeHostSectionsHosts:
                 pass
 
         monkeypatch.setattr(
-            DataSource, "run", lambda self: DummyHostSection(
+            ABCDataSource, "run", lambda self: DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
@@ -559,7 +559,7 @@ class TestMakeHostSectionsClusters:
                 pass
 
         monkeypatch.setattr(
-            DataSource, "run", lambda self: DummyHostSection(
+            ABCDataSource, "run", lambda self: DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},

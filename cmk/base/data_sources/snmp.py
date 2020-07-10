@@ -33,7 +33,7 @@ from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
 import cmk.base.ip_lookup as ip_lookup
 
-from .abstract import DataSource
+from .abstract import ABCDataSource
 from .host_sections import AbstractHostSections
 
 #.
@@ -119,8 +119,8 @@ class CachedSNMPDetector:
 # TODO: Move common functionality of SNMPManagementBoardDataSource and
 # SNMPDataSource to ABCSNMPDataSource and make SNMPManagementBoardDataSource
 # inherit from ABCSNMPDataSource instead of SNMPDataSource
-class ABCSNMPDataSource(DataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
-                                   SNMPHostSections],
+class ABCSNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
+                                      SNMPHostSections],
                         metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _snmp_config(self) -> SNMPHostConfig:

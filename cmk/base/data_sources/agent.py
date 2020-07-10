@@ -38,7 +38,7 @@ from cmk.base.check_utils import (
 from cmk.base.data_sources.abstract import AbstractHostSections
 from cmk.base.exceptions import MKGeneralException
 
-from .abstract import DataSource
+from .abstract import ABCDataSource
 
 __all__ = ["AgentHostSections", "AgentDataSource"]
 
@@ -67,8 +67,8 @@ class AgentHostSections(AbstractHostSections[RawAgentData, AgentSections, Persis
 # def _execute(self):
 # def id(self):
 # def describe(self):
-class AgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSections,
-                                 AgentHostSections],
+class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentSections,
+                                    AgentHostSections],
                       metaclass=abc.ABCMeta):
     """Abstract base class for all data sources that work with the Check_MK agent data format"""
 

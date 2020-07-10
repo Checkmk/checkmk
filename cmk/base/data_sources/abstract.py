@@ -120,9 +120,9 @@ BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=Abstr
 # def _cpu_tracking_id(self):
 # def id(self):
 # def describe(self):
-class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
-                         BoundedAbstractPersistedSections, BoundedAbstractHostSections],
-                 metaclass=abc.ABCMeta):
+class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
+                            BoundedAbstractPersistedSections, BoundedAbstractHostSections],
+                    metaclass=abc.ABCMeta):
     """Abstract base class for all data source classes"""
 
     source_type = SourceType.HOST
@@ -158,7 +158,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             If set, we assume that these sections should be produced if possible, and any raw
             section that is not listed here *may* be omitted.
         """
-        super(DataSource, self).__init__()
+        super(ABCDataSource, self).__init__()
         self.hostname: Final = hostname
         self.ipaddress: Final = ipaddress
         self._max_cachefile_age: Optional[int] = None
@@ -377,11 +377,11 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
     @staticmethod
     def get_may_use_cache_file() -> bool:
-        return DataSource._may_use_cache_file
+        return ABCDataSource._may_use_cache_file
 
     @staticmethod
     def set_may_use_cache_file(state: bool = True) -> None:
-        DataSource._may_use_cache_file = state
+        ABCDataSource._may_use_cache_file = state
 
     def get_summary_result_for_discovery(self) -> ServiceCheckResult:
         return self._get_summary_result(for_checking=False)

@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import SourceType
 
-from cmk.base.data_sources.abstract import DataSource
+from cmk.base.data_sources.abstract import ABCDataSource
 from cmk.base.data_sources.agent import AgentDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource
 
@@ -32,10 +32,10 @@ def reset_mutable_global_state():
     delete(SNMPDataSource, "_no_cache")
     delete(SNMPDataSource, "_use_outdated_persisted_sections")
 
-    reset(DataSource, "source_type", SourceType.HOST)
-    reset(DataSource, "_no_cache", False)
-    reset(DataSource, "_may_use_cache_file", False)
-    reset(DataSource, "_use_outdated_cache_file", False)
-    reset(DataSource, "_use_outdated_persisted_sections", False)
+    reset(ABCDataSource, "source_type", SourceType.HOST)
+    reset(ABCDataSource, "_no_cache", False)
+    reset(ABCDataSource, "_may_use_cache_file", False)
+    reset(ABCDataSource, "_use_outdated_cache_file", False)
+    reset(ABCDataSource, "_use_outdated_persisted_sections", False)
 
     reset(SNMPDataSource, "source_type", SourceType.HOST)

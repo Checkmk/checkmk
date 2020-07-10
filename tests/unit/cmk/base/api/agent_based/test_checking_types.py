@@ -101,10 +101,11 @@ def test_state():
     assert int(state.CRIT) == 2
     assert int(state.UNKNOWN) == 3
 
-    assert state.worst(state.WARN, state.UNKNOWN, state.CRIT) == state.CRIT
-    assert state.worst(state.OK, state.WARN, state.UNKNOWN) == state.UNKNOWN
-    assert state.worst(state.OK, state.WARN) == state.WARN
-    assert state.worst(state.OK) == state.OK
+    assert state.worst(state.WARN, state.UNKNOWN, state.CRIT) is state.CRIT
+    assert state.worst(state.OK, state.WARN, state.UNKNOWN) is state.UNKNOWN
+    assert state.worst(state.OK, state.WARN) is state.WARN
+    assert state.worst(state.OK) is state.OK
+    assert state.worst(state.OK, 3) is state.UNKNOWN
 
     assert state(0) is state.OK
     assert state(1) is state.WARN

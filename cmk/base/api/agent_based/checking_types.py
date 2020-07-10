@@ -163,18 +163,30 @@ class state(enum.Enum):
         return best
 
     @classmethod
-    def worst(cls, *args: 'state') -> 'state':
-        """Returns the worst of all passed states
+    def worst(cls, *args: Union['state', int]) -> 'state':
+        """Returns the worst of all passed states.
 
         You can pass an arbitrary number of arguments, and the return value will be
         the "worst" of them, where
 
             `OK < WARN < UNKNOWN < CRIT`
+
+        Args:
+            args: Any number of either one of state.OK, state.WARN, state.CRIT, state.UNKNOWN or an
+            integer in [0, 3].
+
+        Returns:
+            The worst of the input states, one of state.OK, state.WARN, state.CRIT, state.UNKNOWN.
+
+        Examples:
+            >>> state.worst(state.OK, state.WARN, state.CRIT, state.UNKNOWN)
+            <state.CRIT: 2>
+            >>> state.worst(0, 1, state.CRIT)
+            <state.CRIT: 2>
         """
-        # we are nice, and handle ints and None as well (although mypy wouldn't allow it)
-        if cls.CRIT in args or 2 in args:  # type: ignore[comparison-overlap]
+        if cls.CRIT in args or 2 in args:
             return cls.CRIT
-        return cls(max(int(s or 0) for s in args))
+        return cls(max(int(s) for s in args))
 
 
 class Metric:

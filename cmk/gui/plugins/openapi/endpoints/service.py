@@ -9,6 +9,7 @@
 from cmk.gui import sites
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Services
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.restful_objects import (
     endpoint_schema,
     constructors,
@@ -16,46 +17,59 @@ from cmk.gui.plugins.openapi.restful_objects import (
     ParamDict,
 )
 
+PARAMETERS = [
+    ParamDict.create(
+        'host_alias',
+        'query',
+        example="example",
+        required=False,
+        schema_type='string',
+    ),
+    ParamDict.create(
+        'acknowledged',
+        'query',
+        example="0",
+        required=False,
+        schema_type='boolean',
+    ),
+    ParamDict.create(
+        'in_downtime',
+        'query',
+        example="1",
+        required=False,
+        schema_type='boolean',
+    ),
+    ParamDict.create(
+        'status',
+        'query',
+        required=False,
+        example="0",
+        schema_type='integer',
+        schema_num_minimum=0,
+        schema_num_maximum=3,
+    )
+]
+
+
+@endpoint_schema(constructors.domain_object_sub_collection_href('host', '{host_name}', 'services'),
+                 '.../collection',
+                 method='get',
+                 parameters=[HOST_NAME] + PARAMETERS,
+                 response_schema=response_schemas.DomainObjectCollection)
+def _list_host_services(param):
+    return _list_services(param)
+
 
 @endpoint_schema(constructors.collection_href('service'),
                  '.../collection',
                  method='get',
-                 parameters=[
-                     ParamDict.create(
-                         'host_name',
-                         'query',
-                         required=False,
-                         schema_type='string',
-                     ).to_dict(),
-                     ParamDict.create(
-                         'host_alias',
-                         'query',
-                         required=False,
-                         schema_type='string',
-                     ).to_dict(),
-                     ParamDict.create(
-                         'acknowledged',
-                         'query',
-                         required=False,
-                         schema_type='boolean',
-                     ).to_dict(),
-                     ParamDict.create(
-                         'in_downtime',
-                         'query',
-                         required=False,
-                         schema_type='boolean',
-                     ).to_dict(),
-                     ParamDict.create(
-                         'status',
-                         'query',
-                         required=False,
-                         schema_type='integer',
-                         schema_num_minimum=0,
-                         schema_num_maximum=3,
-                     ).to_dict(),
-                 ],
+                 parameters=[HOST_NAME(location='query', required=False)] + PARAMETERS,
                  response_schema=response_schemas.DomainObjectCollection)
-def list_services(param):
+def _list_all_services(param):
+    return _list_services(param)
+
+
+def _list_services(param):
     live = sites.live()
 
     q = Query([
@@ -63,6 +77,8 @@ def list_services(param):
         Services.description,
         Services.last_check,
         Services.state,
+        Services.state_type,
+        Services.acknowledged,
     ])
 
     host_name = param.get('host_name')
@@ -97,6 +113,7 @@ def list_services(param):
                 identifier=entry['description'],
                 editable=False,
                 deletable=False,
+                extensions=dict(entry),
             ) for entry in result
         ],
         base='',

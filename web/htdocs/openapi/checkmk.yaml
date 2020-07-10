@@ -2297,36 +2297,120 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
           \ a20ceacf346041dc' \\\n    alias='Windows Servers' \\\n    name='windows'"
-  /domain-types/service/collections/all:
+  /objects/host/{host_name}/collections/services:
     get:
       description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.service.list_services
+      operationId: cmk.gui.plugins.openapi.endpoints.service._list_host_services
       parameters:
       - allowEmptyValue: false
-        in: query
+        description: A hostname.
+        example: example.com
+        in: path
         name: host_name
-        required: false
+        required: true
         schema:
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       - allowEmptyValue: false
+        example: example
         in: query
         name: host_alias
         required: false
         schema:
           type: string
       - allowEmptyValue: false
+        example: '0'
         in: query
         name: acknowledged
         required: false
         schema:
           type: boolean
       - allowEmptyValue: false
+        example: '1'
         in: query
         name: in_downtime
         required: false
         schema:
           type: boolean
       - allowEmptyValue: false
+        example: '0'
+        in: query
+        name: status
+        required: false
+        schema:
+          maximum: 3
+          minimum: 0
+          type: integer
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+          headers: {}
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.service
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/objects/host/example.com/collections/services\",\n)\n\
+          resp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/host/example.com/collections/services\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/host/example.com/collections/services\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
+  /domain-types/service/collections/all:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.service._list_all_services
+      parameters:
+      - allowEmptyValue: false
+        description: A hostname.
+        example: example.com
+        in: query
+        name: host_name
+        required: false
+        schema:
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - allowEmptyValue: false
+        example: example
+        in: query
+        name: host_alias
+        required: false
+        schema:
+          type: string
+      - allowEmptyValue: false
+        example: '0'
+        in: query
+        name: acknowledged
+        required: false
+        schema:
+          type: boolean
+      - allowEmptyValue: false
+        example: '1'
+        in: query
+        name: in_downtime
+        required: false
+        schema:
+          type: boolean
+      - allowEmptyValue: false
+        example: '0'
         in: query
         name: status
         required: false

@@ -22,7 +22,7 @@ def test_openapi_livestatus_service(
     live.expect_query(
         [
             'GET services',
-            'Columns: host_name description last_check state',
+            'Columns: host_name description last_check state state_type acknowledged',
         ],
         result=result,
     )
@@ -40,7 +40,7 @@ def test_openapi_livestatus_service(
     live.expect_query(
         [
             'GET services',
-            'Columns: host_name description last_check state',
+            'Columns: host_name description last_check state state_type acknowledged',
             'Filter: host_alias ~ heute',
         ],
         result=result,
@@ -50,6 +50,22 @@ def test_openapi_livestatus_service(
         resp = wsgi_app.call_method(
             'get',
             base + "/domain-types/service/collections/all?host_alias=heute",
+            status=200,
+        )
+        assert len(resp.json['value']) == 1
+
+    live.expect_query([
+        'GET services',
+        'Columns: host_name description last_check state state_type acknowledged',
+        'Filter: host_name ~ example.com',
+    ],
+                      result=[
+                          ['example.com', 'The service', 0, 0],
+                      ])
+    with live:
+        resp = wsgi_app.call_method(
+            'get',
+            base + "/objects/host/example.com/collections/services",
             status=200,
         )
         assert len(resp.json['value']) == 1

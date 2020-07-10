@@ -53,7 +53,7 @@ from cmk.base.api.agent_based.utils import (
 from cmk.base.api.agent_based.value_store import get_value_store
 from cmk.base.discovered_labels import HostLabel
 
-from . import register, render
+from . import register, render, clusterize
 
 __all__ = [
     # register functions
@@ -91,6 +91,8 @@ __all__ = [
     "Service",
     "ServiceLabel",
     "state",
+    # cluster tools
+    "clusterize",
     # persising values
     "get_value_store",
     # utils

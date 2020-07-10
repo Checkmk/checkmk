@@ -9,7 +9,7 @@ import abc
 import traceback
 import json
 import re
-from typing import NamedTuple, Optional, Any, Dict, List, Tuple, Type
+from typing import Optional, Any, Dict, List, Tuple, Type
 
 import cmk.utils.plugin_registry
 
@@ -26,6 +26,10 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
     declare_permission,
+)
+from cmk.gui.plugins.main_menu.utils import (
+    TopicMenuTopic,
+    TopicMenuItem,
 )
 
 # TODO: Actually this is cmk.gui.sidebar.CustomSnapins, but we run into a hell
@@ -316,23 +320,6 @@ def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Opti
     html.dropdown("site", dropdown_choices, deflt=site, onchange=onchange)
 
     return only_sites
-
-
-TopicMenuItem = NamedTuple("TopicMenuItem", [
-    ("name", str),
-    ("title", str),
-    ("url", str),
-    ("sort_index", int),
-    ("is_advanced", bool),
-    ("icon_name", Optional[str]),
-])
-
-TopicMenuTopic = NamedTuple("TopicMenuTopic", [
-    ("name", "str"),
-    ("title", "str"),
-    ("items", List[TopicMenuItem]),
-    ("icon_name", Optional[str]),
-])
 
 
 def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[TopicMenuTopic]:

@@ -13,6 +13,22 @@ from typing import NamedTuple, Optional, List
 
 from cmk.utils.plugin_registry import InstanceRegistry
 
+TopicMenuItem = NamedTuple("TopicMenuItem", [
+    ("name", str),
+    ("title", str),
+    ("url", str),
+    ("sort_index", int),
+    ("is_advanced", bool),
+    ("icon_name", Optional[str]),
+])
+
+TopicMenuTopic = NamedTuple("TopicMenuTopic", [
+    ("name", "str"),
+    ("title", "str"),
+    ("items", List[TopicMenuItem]),
+    ("icon_name", Optional[str]),
+])
+
 MegaMenuItem = NamedTuple("MegaMenuItem", [
     ("text", str),
     ("icon_name", Optional[str]),

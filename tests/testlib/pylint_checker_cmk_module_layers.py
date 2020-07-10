@@ -30,6 +30,9 @@ def removeprefix(text: str, prefix: str) -> str:
     return text[len(prefix):] if text.startswith(prefix) else text
 
 
+def removesuffix(text: str, suffix: str, /) -> str:
+    return text[:-len(suffix)] if suffix and text.endswith(suffix) else text
+
 _COMPONENTS = (
     Component("cmk.base"),
     Component("cmk.fetchers"),
@@ -60,15 +63,6 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),
 }
 
-# Astroid gets confused about the node names because of our symlinks to
-# modules, so we provide a mapping here to work around that.
-_SYMLINK_TO_NAME = {
-    ModulePath("cmk/base/automations/cee.py"): "cmk.base.automations.cee",
-    ModulePath("cmk/base/default_config/cee.py"): "cmk.base.default_config.cee",
-    ModulePath("cmk/base/default_config/cme.py"): "cmk.base.default_config.cme",
-    ModulePath("cmk/base/modes/cee.py"): "cmk.base.modes.cee",
-}
-
 
 class CMKModuleLayerChecker(BaseChecker):
     __implements__ = IAstroidChecker
@@ -79,7 +73,7 @@ class CMKModuleLayerChecker(BaseChecker):
     }
 
     # This doesn't change during a pylint run, so let's save a realpath() call per import.
-    path_prefix_len_to_strip = len(cmk_path()) + 1
+    cmk_path_cached = cmk_path() + "/"
 
     @utils.check_messages('cmk-module-layer-violation')
     def visit_import(self, node: Import) -> None:
@@ -91,46 +85,39 @@ class CMKModuleLayerChecker(BaseChecker):
         self._check_import(node, ModuleName(node.modname))
 
     def _check_import(self, node: Statement, imported: ModuleName) -> None:
+        # We only care about imports of our own modules.
         if not imported.startswith("cmk"):
-            return  # We only care about our own modules, ignore this
+            return
 
-        # We use paths relative to our project root only.
+        # We use paths relative to our project root, but not for our "pasting magic".
         absolute_path: str = node.root().file
-        importing_path = ModulePath(absolute_path[self.path_prefix_len_to_strip:])
+        importing_path = ModulePath(removeprefix(absolute_path, self.cmk_path_cached))
 
+        # Tests are allowed to import anyting.
         if importing_path.startswith("tests/"):
-            return  # No validation in tests
+            return
 
-        importing = self._get_module_name_of_file(node, importing_path)
-
+        importing = self._get_module_name_of_files(importing_path)
         if not self._is_import_allowed(importing_path, importing, imported):
             self.add_message("cmk-module-layer-violation", node=node, args=(imported, importing))
 
-    def _get_module_name_of_file(self, node: Statement, importing_path: ModulePath) -> ModuleName:
-        """Fixup module names"""
-        fixed_name = _SYMLINK_TO_NAME.get(importing_path)
-        name = node.root().name if fixed_name is None else fixed_name
-
+    def _get_module_name_of_files(self, importing_path: ModulePath) -> ModuleName:
+        # Due to our symlinks and pasting magic, astroid gets confused, so we need to compute the
+        # real module name from the file path of the module.
+        parts = importing_path.split("/")
+        parts[-1] = removesuffix(parts[-1], ".py")
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
-        module_name = removeprefix(name, "flycheck_")
-
-        # Fixup managed and enterprise module names
-        # astroid does not produce correct module names, because it does not know
-        # that we link/copy our CEE/CME parts to the cmk.* module in the site.
-        # Fake the final module name here.
-        for component in ["base", "gui"]:
-            for prefix in [
-                    "cmk/%s/cee/" % component,
-                    "cmk/%s/cme/" % component,
-                    "enterprise/cmk/%s/cee/" % component,
-                    "managed/cmk/%s/cme/" % component,
-            ]:
-                if importing_path.startswith(prefix):
-                    return ModuleName("cmk.%s.%s" % (component, module_name))
-
-        if module_name.startswith("cee.") or module_name.startswith("cme."):
-            return ModuleName("cmk.%s" % module_name)
-        return ModuleName(module_name)
+        parts[-1] = removeprefix(parts[-1], "flycheck_")
+        # Strip CEE/CME prefix, we use symlink magic to combine editions. :-P
+        if parts[:2] in (["enterprise", "cmk"], ["managed", "cmk"]):
+            parts = parts[1:]
+        # Pretend that the combined checks and inventory/bakery plugins live below cmk.base.
+        if len(parts) >= 2 and parts[-2].startswith("cmk_pylint_"):
+            parts = ["cmk", "base", parts[-1]]
+        # For all modules which don't live below cmk after mangling, just assume a toplevel module.
+        if parts[0] != "cmk":
+            parts = [parts[-1]]
+        return ModuleName(".".join(parts))
 
     def _is_import_allowed(self, importing_path: ModulePath, importing: ModuleName,
                            imported: ModuleName) -> bool:

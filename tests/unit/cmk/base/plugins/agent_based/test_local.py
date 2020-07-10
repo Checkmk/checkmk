@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict
+
 import pytest  # type: ignore[import]
 
 import cmk.base.plugins.agent_based.local as local
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Result, state, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v0 import Result, state, Metric, Parameters
 
 
 @pytest.mark.parametrize(
@@ -228,7 +230,7 @@ def test_compute_state():
 
 
 def test_cluster():
-    section = {
+    section: Dict[str, Dict[str, local.LocalResult]] = {
         "node0": {
             "item": local.LocalResult(
                 cached=None,
@@ -258,13 +260,13 @@ def test_cluster():
         },
     }
 
-    worst = local.cluster_check_local("item", {}, section)
-    best = local.cluster_check_local("item", {"outcome_on_cluster": "best"}, section)
+    worst = local.cluster_check_local("item", Parameters({}), section)
+    best = local.cluster_check_local("item", Parameters({"outcome_on_cluster": "best"}), section)
 
     assert list(worst) == [
         Result(state=state.CRIT, summary="[node2]: Service is CRIT"),
         Result(state=state.OK, details="[node0]: Service is OK"),
-        Result(state=state.WARN, details="[node1]: Service is WARN"),
+        Result(state=state.WARN, details="[node1]: Service is WARN(!)"),
     ]
     assert list(best) == [
         Result(state=state.OK, summary="[node0]: Service is OK"),
@@ -274,7 +276,7 @@ def test_cluster():
 
 
 def test_cluster_missing_item():
-    section = {
+    section: Dict[str, Dict[str, local.LocalResult]] = {
         "node0": {
             "item": local.LocalResult(
                 cached=None,
@@ -287,8 +289,8 @@ def test_cluster_missing_item():
         "node1": {},
     }
 
-    worst = local.cluster_check_local("item", {}, section)
-    best = local.cluster_check_local("item", {"outcome_on_cluster": "best"}, section)
+    worst = local.cluster_check_local("item", Parameters({}), section)
+    best = local.cluster_check_local("item", Parameters({"outcome_on_cluster": "best"}), section)
 
     assert list(worst) == [
         Result(state=state.OK, summary="[node0]: Service is OK"),

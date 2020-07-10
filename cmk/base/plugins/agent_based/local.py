@@ -16,11 +16,21 @@
 import shlex
 import time
 
-from typing import Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 
 import six
 
-from .agent_based_api.v0 import check_levels, register, Service, Result, state, render, Metric
+from .agent_based_api.v0 import (
+    check_levels,
+    Metric,
+    Parameters,
+    register,
+    render,
+    Result,
+    Service,
+    state,
+)
+from .agent_based_api.v0.clusterize import aggregate_node_details
 
 Perfdata = NamedTuple("Perfdata", [
     ("name", str),
@@ -257,70 +267,82 @@ def check_local(item, params, section):
         yield Result(state=state.OK, summary=infotext)
 
 
-def cluster_check_local(item, params, section):
+def cluster_check_local(
+    item: str,
+    params: Parameters,
+    section: Dict[str, Dict[str, LocalResult]],
+) -> Generator[Union[Result, Metric], None, None]:
 
     # collect the result instances and yield the rest
-    results_by_node = {}
+    results_by_node: Dict[str, List[Union[Result, Metric]]] = {}
     for node, node_section in section.items():
-        subresults = []
-        for subresult in check_local(item, {}, node_section):
-            if isinstance(subresult, Result):
-                subresults.append(subresult)
-            else:
-                yield subresult
-        if subresults:
-            results_by_node[node] = (state.worst(*(r.state for r in subresults)), subresults)
+        results_by_node[node] = list(check_local(item, {}, node_section))
+
+    aggregated_results = {
+        node: aggregate_node_details(node, results) for node, results in results_by_node.items()
+    }
 
     if params is None or params.get("outcome_on_cluster", "worst") == "worst":
-        yield from _aggregate_worst(results_by_node)
+        yield from _aggregate_worst(results_by_node, aggregated_results)
     else:
-        yield from _aggregate_best(results_by_node)
+        yield from _aggregate_best(results_by_node, aggregated_results)
 
 
-def _aggregate_worst(results_by_node):
+def _aggregate_worst(
+    results_by_node: Dict[str, List[Union[Result, Metric]]],
+    aggregated_results: Dict[str, Optional[Result]],
+) -> Generator[Union[Result, Metric], None, None]:
 
-    global_worst_state = state.worst(*(s for s, _results in results_by_node.values()))
+    global_worst_state = state.worst(*(
+        r.state for r in aggregated_results.values() if r is not None))
 
-    worst_node = sorted(node for node, (sum_state, _results) in results_by_node.items()
-                        if sum_state == global_worst_state)[0]
+    worst_node = sorted(node for node, result in aggregated_results.items()
+                        if result is not None and result.state == global_worst_state)[0]
 
-    for subr in results_by_node.pop(worst_node)[1]:
-        yield Result(
-            state=subr.state,
-            summary="[%s]: %s" % (worst_node, subr.summary),
-            details="[%s]: %s" % (worst_node, subr.details),
-        )
-
-    for node, (_sum_state, subresults) in sorted(results_by_node.items()):
-        for subr in subresults:
+    for node_result in results_by_node[worst_node]:
+        if isinstance(node_result, Result):
             yield Result(
-                state=subr.state,
-                details="[%s]: %s" % (node, subr.summary),
+                state=node_result.state,
+                summary="[%s]: %s" % (worst_node, node_result.summary),
+                details="[%s]: %s" % (worst_node, node_result.details),
             )
+        else:  # Metric
+            yield node_result
+
+    for node, details_result in aggregated_results.items():
+        if node != worst_node and details_result is not None:
+            yield details_result
 
 
-def _aggregate_best(results_by_node):
+def _aggregate_best(
+    results_by_node: Dict[str, List[Union[Result, Metric]]],
+    aggregated_results: Dict[str, Optional[Result]],
+) -> Generator[Union[Result, Metric], None, None]:
 
+    # TODO: use state.best
     global_best_state = min(
-        (sum_state for sum_state, _results in results_by_node.values()),
+        (r.state for r in aggregated_results.values() if r is not None),
         key=_SORT_FOR_BEST.get,
     )
 
-    best_node = sorted(node for node, (sum_state, _results) in results_by_node.items()
-                       if sum_state == global_best_state)[0]
+    best_node = sorted(node for node, result in aggregated_results.items()
+                       if result is not None and result.state == global_best_state)[0]
 
-    for subr in results_by_node.pop(best_node)[1]:
-        yield Result(
-            state=subr.state,
-            summary="[%s]: %s" % (best_node, subr.summary),
-            details="[%s]: %s" % (best_node, subr.details),
-        )
+    for node_result in results_by_node[best_node]:
+        if isinstance(node_result, Result):
+            yield Result(
+                state=node_result.state,
+                summary="[%s]: %s" % (best_node, node_result.summary),
+                details="[%s]: %s" % (best_node, node_result.details),
+            )
+        else:  # Metric
+            yield node_result
 
-    for node, (_sum_state, subresults) in sorted(results_by_node.items()):
-        for subr in subresults:
+    for node, details_result in aggregated_results.items():
+        if node != best_node and details_result is not None:
             yield Result(
                 state=state.OK,
-                details="[%s]: %s%s" % (node, subr.details, _STATE_MARKERS[subr.state]),
+                details=details_result.details,
             )
 
 

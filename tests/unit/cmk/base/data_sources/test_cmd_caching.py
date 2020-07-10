@@ -29,7 +29,7 @@ import cmk.base.config as config
 import cmk.base.inventory_plugins
 import cmk.base.modes
 import cmk.base.modes.check_mk
-from cmk.base.data_sources.abstract import ABCDataSource
+from cmk.base.data_sources import ABCDataSource
 from cmk.base.data_sources.agent import AgentDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource
 

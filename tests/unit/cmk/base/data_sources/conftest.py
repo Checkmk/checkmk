@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import SourceType
 
-from cmk.base.data_sources.abstract import ABCDataSource
+from cmk.base.data_sources import ABCDataSource
 from cmk.base.data_sources.agent import AgentDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource
 

@@ -23,7 +23,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
 
-from .abstract import ABCDataSource
+from ._abstract import ABCDataSource
 from .agent import AgentDataSource, AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMIManagementBoardDataSource
@@ -271,10 +271,6 @@ def _make_piggy_nodes(
         host_config: HostConfig) -> Iterable[Tuple[HostName, Optional[HostAddress], DataSources]]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
-
-    import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
-    abstract.ABCDataSource.set_may_use_cache_file()
-
     nodes = []
     for hostname in host_config.nodes:
         ipaddress = ip_lookup.lookup_ip_address(hostname)

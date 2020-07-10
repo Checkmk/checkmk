@@ -304,7 +304,7 @@ def _get_rediscovery_mode(params: Dict) -> str:
 def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[CheckPluginName]],
                  arg_only_new: bool) -> None:
     config_cache = config.get_config_cache()
-    use_caches = not arg_hostnames or data_sources.abstract.ABCDataSource.get_may_use_cache_file()
+    use_caches = not arg_hostnames or data_sources.ABCDataSource.get_may_use_cache_file()
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
@@ -662,7 +662,7 @@ def check_discovery(
         on_error="raise",
         for_check_discovery=True,
     )
-    use_caches = data_sources.abstract.ABCDataSource.get_may_use_cache_file()
+    use_caches = data_sources.ABCDataSource.get_may_use_cache_file()
     multi_host_sections = data_sources.make_host_sections(
         host_config,
         ipaddress,

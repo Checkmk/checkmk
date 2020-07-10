@@ -43,7 +43,6 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_nagios
 import cmk.base.data_sources as data_sources
-import cmk.base.data_sources.abstract
 import cmk.base.diagnostics
 import cmk.base.discovery as discovery
 import cmk.base.dump_host
@@ -97,8 +96,8 @@ _verbosity = 0
 
 
 def option_cache() -> None:
-    data_sources.abstract.ABCDataSource.set_may_use_cache_file()
-    data_sources.abstract.ABCDataSource.set_use_outdated_cache_file()
+    data_sources.ABCDataSource.set_may_use_cache_file()
+    data_sources.ABCDataSource.set_use_outdated_cache_file()
 
 
 modes.register_general_option(
@@ -112,7 +111,7 @@ modes.register_general_option(
 
 
 def option_no_cache() -> None:
-    cmk.base.data_sources.abstract.ABCDataSource.disable_data_source_cache()
+    cmk.base.data_sources.ABCDataSource.disable_data_source_cache()
 
 
 modes.register_general_option(
@@ -1281,8 +1280,8 @@ def mode_inventory(options: Dict, args: List[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        data_sources.abstract.ABCDataSource.set_may_use_cache_file(
-            not data_sources.abstract.ABCDataSource.is_agent_cache_disabled())
+        data_sources.ABCDataSource.set_may_use_cache_file(
+            not data_sources.ABCDataSource.is_agent_cache_disabled())
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
@@ -1545,8 +1544,8 @@ def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
         # by default. Otherwise Check_MK would have to connect to ALL hosts.
         # This will make Check_MK only contact hosts in case the cache is not
         # new enough.
-        data_sources.abstract.ABCDataSource.set_may_use_cache_file(
-            not data_sources.abstract.ABCDataSource.is_agent_cache_disabled())
+        data_sources.ABCDataSource.set_may_use_cache_file(
+            not data_sources.ABCDataSource.is_agent_cache_disabled())
 
     discovery.do_discovery(set(hostnames), options.get("checks"), options["discover"] == 1)
 

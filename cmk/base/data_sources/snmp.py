@@ -33,7 +33,7 @@ from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
 import cmk.base.ip_lookup as ip_lookup
 
-from .abstract import ABCDataSource, ABCHostSections
+from ._abstract import ABCDataSource, ABCHostSections
 
 #.
 #   .--SNMP----------------------------------------------------------------.

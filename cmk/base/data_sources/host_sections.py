@@ -41,7 +41,7 @@ from cmk.base.check_utils import (
 )
 from cmk.base.exceptions import MKParseFunctionError
 
-from .abstract import ABCHostSections
+from ._abstract import ABCHostSections
 
 HostKey = NamedTuple("HostKey", [
     ("hostname", HostName),

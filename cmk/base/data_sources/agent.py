@@ -35,10 +35,9 @@ from cmk.base.check_utils import (
     PiggybackRawData,
     SectionCacheInfo,
 )
-from cmk.base.data_sources.abstract import ABCHostSections
 from cmk.base.exceptions import MKGeneralException
 
-from .abstract import ABCDataSource
+from ._abstract import ABCDataSource, ABCHostSections
 
 __all__ = ["AgentHostSections", "AgentDataSource"]
 

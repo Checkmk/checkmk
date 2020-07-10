@@ -16,3 +16,4 @@
 
 from . import agent, host_sections, ipmi, piggyback, programs, snmp, tcp
 from ._data_sources import *
+from ._abstract import *

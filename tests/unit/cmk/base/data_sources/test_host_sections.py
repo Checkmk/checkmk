@@ -16,8 +16,7 @@ from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources import make_host_sections, make_sources
-from cmk.base.data_sources.abstract import ABCHostSections, ABCDataSource
+from cmk.base.data_sources import ABCDataSource, ABCHostSections, make_host_sections, make_sources
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.data_sources.piggyback import PiggyBackDataSource

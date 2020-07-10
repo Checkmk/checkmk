@@ -9,7 +9,6 @@ See chapter "Module hierarchy" in coding_guidelines_python in wiki
 for further information.
 """
 
-import os
 from typing import NewType
 
 from astroid.node_classes import Statement, Import, ImportFrom  # type: ignore[import]
@@ -61,6 +60,15 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),
 }
 
+# Astroid gets confused about the node names because of our symlinks to
+# modules, so we provide a mapping here to work around that.
+_SYMLINK_TO_NAME = {
+    ModulePath("cmk/base/automations/cee.py"): "cmk.base.automations.cee",
+    ModulePath("cmk/base/default_config/cee.py"): "cmk.base.default_config.cee.py",
+    ModulePath("cmk/base/default_config/cme.py"): "cmk.base.default_config.cme",
+    ModulePath("cmk/base/modes/cee.py"): "cmk.base.modes.cee",
+}
+
 
 class CMKModuleLayerChecker(BaseChecker):
     __implements__ = IAstroidChecker
@@ -93,12 +101,6 @@ class CMKModuleLayerChecker(BaseChecker):
         if importing_path.startswith("tests/"):
             return  # No validation in tests
 
-        # Pylint fails to detect the correct module path here. Instead of realizing that the file
-        # cmk/base/automations/cee.py is cmk.base.automations.cee it thinks the module is "cee".
-        # We can silently ignore these files because the linked files at enterprise/... are checked.
-        if os.path.islink(importing_path):
-            return  # Ignore symlinked files instead of checking them twice, ignore this
-
         importing = self._get_module_name_of_file(node, importing_path)
 
         if not self._is_import_allowed(importing_path, importing, imported):
@@ -106,8 +108,11 @@ class CMKModuleLayerChecker(BaseChecker):
 
     def _get_module_name_of_file(self, node: Statement, importing_path: ModulePath) -> ModuleName:
         """Fixup module names"""
+        fixed_name = _SYMLINK_TO_NAME.get(importing_path)
+        name = node.root().name if fixed_name is None else fixed_name
+
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
-        module_name = removeprefix(node.root().name, "flycheck_")
+        module_name = removeprefix(name, "flycheck_")
 
         for segments in [
             ("cmk", "base", "plugins", "agent_based", "utils", ""),

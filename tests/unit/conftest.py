@@ -16,8 +16,10 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
-from testlib import is_managed_repo, is_enterprise_repo
-from testlib.debug_utils import cmk_debug_enabled
+# No stub file
+from testlib import is_managed_repo, is_enterprise_repo  # type: ignore[import]
+# No stub file
+from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
 from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 logger = logging.getLogger(__name__)

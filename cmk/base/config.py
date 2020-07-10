@@ -3242,6 +3242,10 @@ class HostConfig:
     def max_cachefile_age(self) -> int:
         return check_max_cachefile_age if self.nodes is None else cluster_max_cachefile_age
 
+    @property
+    def is_dyndns_host(self) -> bool:
+        return self._config_cache.in_binary_hostlist(self.hostname, dyndns_hosts)
+
 
 #.
 #   .--Configuration Cache-------------------------------------------------.

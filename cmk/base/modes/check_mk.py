@@ -385,7 +385,7 @@ def mode_dump_agent(hostname: HostName) -> None:
         if host_config.is_cluster:
             raise MKBailOut("Can not be used with cluster hosts")
 
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(host_config)
 
         output = []
         # Show errors of problematic data sources
@@ -837,8 +837,11 @@ def mode_snmpwalk(options: Dict, hostnames: List[str]) -> None:
     if not hostnames:
         raise MKBailOut("Please specify host names to walk on.")
 
+    config_cache = config.get_config_cache()
+
     for hostname in hostnames:
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
+        host_config = config_cache.get_host_config(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(host_config)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
@@ -896,15 +899,18 @@ modes.register(
 def mode_snmpget(args: List[str]) -> None:
     if not args:
         raise MKBailOut("You need to specify an OID.")
+
+    config_cache = config.get_config_cache()
     oid, *hostnames = args
+
     if not hostnames:
-        cache = config.get_config_cache()
-        hostnames.extend(host for host in cache.all_active_realhosts()
-                         if cache.get_host_config(host).is_snmp_host)
+        hostnames.extend(host for host in config_cache.all_active_realhosts()
+                         if config_cache.get_host_config(host).is_snmp_host)
 
     assert hostnames
     for hostname in hostnames:
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
+        host_config = config_cache.get_host_config(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(host_config)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 

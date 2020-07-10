@@ -316,7 +316,7 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
         host_config = config_cache.get_host_config(hostname)
         section.section_begin(hostname)
         try:
-            ipaddress = ip_lookup.lookup_ip_address(hostname)
+            ipaddress = ip_lookup.lookup_ip_address(host_config)
 
             # Usually we disable SNMP scan if cmk -I is used without a list of
             # explicit hosts. But for host that have never been service-discovered
@@ -330,6 +330,7 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                                          check_plugin_names=check_plugin_names))
 
             multi_host_sections = data_sources.make_host_sections(
+                config_cache,
                 host_config,
                 ipaddress,
                 _get_sources_for_discovery(
@@ -518,9 +519,10 @@ def discover_on_host(
         if host_config.is_cluster:
             ipaddress = None
         else:
-            ipaddress = ip_lookup.lookup_ip_address(hostname)
+            ipaddress = ip_lookup.lookup_ip_address(host_config)
 
         multi_host_sections = data_sources.make_host_sections(
+            config_cache,
             host_config,
             ipaddress,
             _get_sources_for_discovery(
@@ -653,7 +655,7 @@ def check_discovery(
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
     if ipaddress is None and not host_config.is_cluster:
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(host_config)
 
     sources = _get_sources_for_discovery(
         host_config,
@@ -664,6 +666,7 @@ def check_discovery(
     )
     use_caches = data_sources.ABCDataSource.get_may_use_cache_file()
     multi_host_sections = data_sources.make_host_sections(
+        config_cache,
         host_config,
         ipaddress,
         sources,
@@ -1456,10 +1459,10 @@ def _get_cluster_services(
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
     for node in host_config.nodes:
-
+        node_config = config_cache.get_host_config(node)
         services, discovered_host_labels = _get_discovered_services(
             node,
-            ip_lookup.lookup_ip_address(node),
+            ip_lookup.lookup_ip_address(node_config),
             multi_host_sections,
             on_error,
         )
@@ -1499,11 +1502,13 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
                       on_error: str) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
-    host_config = config.get_config_cache().get_host_config(host_name)
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(host_name)
 
-    ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_name)
+    ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_config)
 
     multi_host_sections = data_sources.make_host_sections(
+        config_cache,
         host_config,
         ip_address,
         _get_sources_for_discovery(

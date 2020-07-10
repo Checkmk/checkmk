@@ -57,6 +57,8 @@ def do_inv(hostnames: List[HostName]) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
+    config_cache = config.get_config_cache()
+
     for hostname in hostnames:
         section.section_begin(hostname)
         try:
@@ -64,9 +66,10 @@ def do_inv(hostnames: List[HostName]) -> None:
             if host_config.is_cluster:
                 ipaddress = None
             else:
-                ipaddress = ip_lookup.lookup_ip_address(hostname)
+                ipaddress = ip_lookup.lookup_ip_address(host_config)
 
             inventory_tree, status_data_tree = _do_inv_for(
+                config_cache,
                 host_config,
                 ipaddress,
                 sources=data_sources.make_sources(host_config, ipaddress),
@@ -102,11 +105,12 @@ def do_inv_check(
     _inv_sw_missing = options.get("sw-missing", 0)
     _inv_fail_status = options.get("inv-fail-status", 1)
 
+    config_cache = config.get_config_cache()
     host_config = config.HostConfig.make_host_config(hostname)
     if host_config.is_cluster:
         ipaddress = None
     else:
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(host_config)
 
     status = 0
     infotexts: List[str] = []
@@ -115,6 +119,7 @@ def do_inv_check(
 
     sources = data_sources.make_sources(host_config, ipaddress)
     inventory_tree, status_data_tree = _do_inv_for(
+        config_cache,
         host_config,
         ipaddress,
         sources=sources,
@@ -200,6 +205,7 @@ def _all_sources_fail(
 
 
 def do_inventory_actions_during_checking_for(
+    config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
@@ -214,6 +220,7 @@ def do_inventory_actions_during_checking_for(
         return  # nothing to do here
 
     _inventory_tree, status_data_tree = _do_inv_for(
+        config_cache,
         config.HostConfig.make_host_config(hostname),
         ipaddress,
         sources=sources,
@@ -231,6 +238,7 @@ def _cleanup_status_data(hostname: HostName) -> None:
 
 
 def _do_inv_for(
+    config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
@@ -250,6 +258,7 @@ def _do_inv_for(
     else:
         node["is_cluster"] = False
         _do_inv_for_realhost(
+            config_cache,
             host_config,
             sources,
             multi_host_sections,
@@ -276,6 +285,7 @@ def _do_inv_for_cluster(host_config: config.HostConfig, inventory_tree: Structur
 
 
 def _do_inv_for_realhost(
+    config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     sources: data_sources.DataSources,
     multi_host_sections: Optional[MultiHostSections],
@@ -304,6 +314,7 @@ def _do_inv_for_realhost(
 
     if multi_host_sections is None:
         multi_host_sections = data_sources.make_host_sections(
+            config_cache,
             host_config,
             ipaddress,
             sources,

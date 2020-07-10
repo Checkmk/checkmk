@@ -9,7 +9,8 @@ import time
 
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
 

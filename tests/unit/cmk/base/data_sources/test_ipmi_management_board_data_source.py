@@ -17,9 +17,11 @@ from cmk.base.data_sources.ipmi import IPMIManagementBoardDataSource
 def test_attribute_defaults(monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
+
+    host_config = config.get_config_cache().get_host_config(hostname)
     source = IPMIManagementBoardDataSource(
         hostname,
-        ip_lookup.lookup_mgmt_board_ip_address(hostname),
+        ip_lookup.lookup_mgmt_board_ip_address(host_config),
     )
 
     assert source.source_type is SourceType.MANAGEMENT
@@ -37,7 +39,7 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
     hostname = "testhost"
     ipaddress = "127.0.0.1"
 
-    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=True):
+    def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
         return ipaddress
 
     Scenario().add_host(hostname).apply(monkeypatch)
@@ -47,9 +49,11 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
             "management_address": ipaddress
         },
     })
+
+    host_config = config.get_config_cache().get_host_config(hostname)
     source = IPMIManagementBoardDataSource(
         hostname,
-        ip_lookup.lookup_mgmt_board_ip_address(hostname),
+        ip_lookup.lookup_mgmt_board_ip_address(host_config),
     )
 
     assert source._host_config.management_address == ipaddress

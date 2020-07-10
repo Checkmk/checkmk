@@ -1191,7 +1191,7 @@ class AutomationDiagHost(Automation):
 
         if not ipaddress:
             try:
-                resolved_address = ip_lookup.lookup_ip_address(hostname)
+                resolved_address = ip_lookup.lookup_ip_address(host_config)
             except Exception:
                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
@@ -1547,7 +1547,7 @@ class AutomationGetAgentOutput(Automation):
         info = b""
 
         try:
-            ipaddress = ip_lookup.lookup_ip_address(hostname)
+            ipaddress = ip_lookup.lookup_ip_address(host_config)
             if ty == "agent":
                 data_sources.ABCDataSource.set_may_use_cache_file(
                     not data_sources.ABCDataSource.is_agent_cache_disabled())

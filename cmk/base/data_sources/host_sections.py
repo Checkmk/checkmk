@@ -363,8 +363,9 @@ class MultiHostSections(collections.abc.MutableMapping):
             return [host_key]
 
         return [
-            HostKey(hostname, ip_lookup.lookup_ip_address(hostname), host_key.source_type)
-            for hostname in host_config.nodes
+            HostKey(hostname,
+                    ip_lookup.lookup_ip_address(self._config_cache.get_host_config(hostname)),
+                    host_key.source_type) for hostname in host_config.nodes
         ]
 
     def _update_with_extra_sections(

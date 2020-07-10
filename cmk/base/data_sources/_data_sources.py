@@ -115,7 +115,7 @@ class SourceBuilder:
         if protocol is None:
             return
 
-        ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._hostname)
+        ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._host_config)
         if protocol == "snmp":
             self._add_source(
                 SNMPManagementBoardDataSource(
@@ -202,6 +202,7 @@ def make_sources(
 
 
 def make_host_sections(
+    config_cache: config.ConfigCache,
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     sources: DataSources,
@@ -209,8 +210,8 @@ def make_host_sections(
     max_cachefile_age: int,
 ) -> MultiHostSections:
     return _make_host_sections(
-        [(host_config.hostname, ipaddress,
-          sources)] if host_config.nodes is None else _make_piggyback_nodes(host_config),
+        [(host_config.hostname, ipaddress, sources)]
+        if host_config.nodes is None else _make_piggyback_nodes(config_cache, host_config),
         max_cachefile_age=max_cachefile_age,
     )
 
@@ -259,12 +260,15 @@ def _make_host_sections(
 
 
 def _make_piggyback_nodes(
+        config_cache: config.ConfigCache,
         host_config: HostConfig) -> Iterable[Tuple[HostName, Optional[HostAddress], DataSources]]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
+
     nodes = []
     for hostname in host_config.nodes:
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
+        node_config = config_cache.get_host_config(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(node_config)
         check_names = check_table.get_needed_check_names(
             hostname,
             remove_duplicates=True,

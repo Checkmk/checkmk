@@ -138,7 +138,7 @@ def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
     hostname = "testhost"
     ipaddress = "1.2.3.4"
 
-    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=True):
+    def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
         return ipaddress
 
     Scenario().add_host(hostname).apply(monkeypatch)
@@ -149,9 +149,10 @@ def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
         },
     })
 
+    host_config = config.get_config_cache().get_host_config(hostname)
     source = SNMPManagementBoardDataSource(
         hostname,
-        ip_lookup.lookup_mgmt_board_ip_address(hostname),
+        ip_lookup.lookup_mgmt_board_ip_address(host_config),
     )
 
     assert source._host_config.management_address == ipaddress
@@ -159,17 +160,19 @@ def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(monkeypatch):
-    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=True):
+    def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
         raise MKIPAddressLookupError("Failed to ...")
 
-    Scenario().add_host("hostname").apply(monkeypatch)
+    hostname = "hostname"
+    Scenario().add_host(hostname).apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config, "host_attributes", {
         "hostname": {
             "management_address": "lolo"
         },
     })
-    assert ip_lookup.lookup_mgmt_board_ip_address("hostname") is None
+    host_config = config.get_config_cache().get_host_config(hostname)
+    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])

@@ -126,7 +126,8 @@ def scan_parents_of(config_cache: config.ConfigCache,
         settings = {}
 
     if config.monitoring_host:
-        nagios_ip = ip_lookup.lookup_ipv4_address(config.monitoring_host)
+        host_config = config_cache.get_host_config(config.monitoring_host)
+        nagios_ip = ip_lookup.lookup_ipv4_address(host_config)
     else:
         nagios_ip = None
 
@@ -137,8 +138,9 @@ def scan_parents_of(config_cache: config.ConfigCache,
     procs: List[Tuple[HostName, Optional[HostAddress], Union[str, subprocess.Popen]]] = []
     for host in hosts:
         console.verbose("%s " % host)
+        host_config = config_cache.get_host_config(host)
         try:
-            ip = ip_lookup.lookup_ipv4_address(host)
+            ip = ip_lookup.lookup_ipv4_address(host_config)
             if ip is None:
                 raise RuntimeError()
             command = [
@@ -312,8 +314,9 @@ def _ip_to_hostname(config_cache: config.ConfigCache,
         cache = _config_cache.get_dict("ip_to_hostname")
 
         for host in config_cache.all_active_realhosts():
+            host_config = config_cache.get_host_config(host)
             try:
-                cache[ip_lookup.lookup_ipv4_address(host)] = host
+                cache[ip_lookup.lookup_ipv4_address(host_config)] = host
             except Exception:
                 pass
     else:

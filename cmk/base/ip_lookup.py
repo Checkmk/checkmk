@@ -41,17 +41,17 @@ def enforce_localhost() -> None:
     _enforce_localhost = True
 
 
-def lookup_ipv4_address(hostname: HostName) -> Optional[HostAddress]:
-    return lookup_ip_address(hostname, 4)
+def lookup_ipv4_address(host_config: config.HostConfig) -> Optional[HostAddress]:
+    return lookup_ip_address(host_config, 4)
 
 
-def lookup_ipv6_address(hostname: HostName) -> Optional[HostAddress]:
-    return lookup_ip_address(hostname, 6)
+def lookup_ipv6_address(host_config: config.HostConfig) -> Optional[HostAddress]:
+    return lookup_ip_address(host_config, 6)
 
 
-def lookup_mgmt_board_ip_address(hostname: HostName) -> Optional[HostAddress]:
+def lookup_mgmt_board_ip_address(host_config: config.HostConfig) -> Optional[HostAddress]:
     try:
-        return lookup_ip_address(hostname, for_mgmt_board=True)
+        return lookup_ip_address(host_config, for_mgmt_board=True)
     except MKIPAddressLookupError:
         return None
 
@@ -62,7 +62,7 @@ def lookup_mgmt_board_ip_address(hostname: HostName) -> Optional[HostAddress]:
 # try to resolve a hostname. On later tries to resolve a hostname  it
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
-def lookup_ip_address(hostname: HostName,
+def lookup_ip_address(host_config: config.HostConfig,
                       family: Optional[int] = None,
                       for_mgmt_board: bool = False) -> Optional[HostAddress]:
     # Quick hack, where all IP addresses are faked (--fake-dns)
@@ -71,9 +71,6 @@ def lookup_ip_address(hostname: HostName,
 
     if config.fake_dns:
         return config.fake_dns
-
-    config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
 
     if family is None:  # choose primary family
         family = 6 if host_config.is_ipv6_primary else 4
@@ -85,6 +82,8 @@ def lookup_ip_address(hostname: HostName,
             return "127.0.0.1"
 
         return "::1"
+
+    hostname = host_config.hostname
 
     # Now check, if IP address is hard coded by the user
     if for_mgmt_board:
@@ -105,15 +104,16 @@ def lookup_ip_address(hostname: HostName,
 
     # Hosts listed in dyndns hosts always use dynamic DNS lookup.
     # The use their hostname as IP address at all places
-    if config_cache.in_binary_hostlist(hostname, config.dyndns_hosts):
+    if host_config.is_dyndns_host:
         return hostname
 
-    return cached_dns_lookup(hostname, family)
+    return cached_dns_lookup(hostname, family, host_config.is_no_ip_host)
 
 
 # Variables needed during the renaming of hosts (see automation.py)
-def cached_dns_lookup(hostname: HostName, family: int) -> Optional[str]:
+def cached_dns_lookup(hostname: HostName, family: int, is_no_ip_host: bool) -> Optional[str]:
     cache = _config_cache.get_dict("cached_dns_lookup")
+
     cache_id = hostname, family
 
     # Address has already been resolved in prior call to this function?
@@ -129,9 +129,7 @@ def cached_dns_lookup(hostname: HostName, family: int) -> Optional[str]:
         cache[cache_id] = cached_ip
         return cached_ip
 
-    host_config = config.get_config_cache().get_host_config(hostname)
-
-    if host_config.is_no_ip_host:
+    if is_no_ip_host:
         cache[cache_id] = None
         return None
 
@@ -255,6 +253,8 @@ def _cache_path() -> str:
 
 
 def update_dns_cache() -> UpdateDNSCacheResult:
+    config_cache = config.get_config_cache()
+
     failed = []
 
     ip_lookup_cache = _get_ip_lookup_cache()
@@ -264,10 +264,11 @@ def update_dns_cache() -> UpdateDNSCacheResult:
     _clear_ip_lookup_cache(ip_lookup_cache)
 
     console.verbose("Updating DNS cache...\n")
-    for hostname, family in _get_dns_cache_lookup_hosts():
+    for hostname, family in _get_dns_cache_lookup_hosts(config_cache):
+        host_config = config_cache.get_host_config(hostname)
         console.verbose("%s (IPv%d)..." % (hostname, family))
         try:
-            ip = lookup_ip_address(hostname, family)
+            ip = lookup_ip_address(host_config, family)
             console.verbose("%s\n" % ip)
 
         except (MKTerminate, MKTimeout):
@@ -299,8 +300,7 @@ def _clear_ip_lookup_cache(ip_lookup_cache: IPLookupCache) -> None:
     ip_lookup_cache.clear()
 
 
-def _get_dns_cache_lookup_hosts() -> List[IPLookupCacheId]:
-    config_cache = config.get_config_cache()
+def _get_dns_cache_lookup_hosts(config_cache: config.ConfigCache) -> List[IPLookupCacheId]:
     hosts = []
     for hostname in config_cache.all_active_hosts():
         host_config = config_cache.get_host_config(hostname)

@@ -135,7 +135,7 @@ def do_check(
         # address is unknown). When called as non keepalive ipaddress may be None or
         # is already an address (2nd argument)
         if ipaddress is None and not host_config.is_cluster:
-            ipaddress = ip_lookup.lookup_ip_address(hostname)
+            ipaddress = ip_lookup.lookup_ip_address(host_config)
 
         item_state.load(hostname)
 
@@ -155,12 +155,14 @@ def do_check(
             selected_raw_sections=selected_raw_sections,
         )
         mhs = data_sources.make_host_sections(
+            config_cache,
             host_config,
             ipaddress,
             sources=sources,
             max_cachefile_age=host_config.max_cachefile_age,
         )
         num_success, plugins_missing_data = _do_all_checks_on_host(
+            config_cache,
             host_config,
             ipaddress,
             multi_host_sections=mhs,
@@ -169,6 +171,7 @@ def do_check(
             only_check_plugins=only_check_plugin_names,
         )
         inventory.do_inventory_actions_during_checking_for(
+            config_cache,
             host_config,
             ipaddress,
             sources=sources,
@@ -297,6 +300,7 @@ def _check_plugins_missing_data(
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
 def _do_all_checks_on_host(
+    config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,

@@ -129,11 +129,11 @@ def _ip_address_for_dump_host(host_config: config.HostConfig,
                               family: Optional[int] = None) -> Optional[str]:
     if host_config.is_cluster:
         try:
-            return ip_lookup.lookup_ip_address(host_config.hostname, family)
+            return ip_lookup.lookup_ip_address(host_config, family)
         except Exception:
             return ""
 
     try:
-        return ip_lookup.lookup_ip_address(host_config.hostname, family)
+        return ip_lookup.lookup_ip_address(host_config, family)
     except Exception:
         return core_config.fallback_ip_for(host_config, family)

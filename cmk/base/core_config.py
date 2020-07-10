@@ -601,7 +601,7 @@ def _verify_cluster_datasource(nodes: List[str], config_cache: config.ConfigCach
 
 def ip_address_of(host_config: config.HostConfig, family: Optional[int] = None) -> Optional[str]:
     try:
-        return ip_lookup.lookup_ip_address(host_config.hostname, family)
+        return ip_lookup.lookup_ip_address(host_config, family)
     except Exception as e:
         if host_config.is_cluster:
             return ""

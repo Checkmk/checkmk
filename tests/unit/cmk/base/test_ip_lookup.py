@@ -13,6 +13,7 @@ import pytest  # type: ignore[import]
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 import cmk.base.ip_lookup as ip_lookup
+import cmk.base.config as config
 
 
 # TODO: Can be removed when this is not executed through a symlink anymore.
@@ -165,22 +166,6 @@ def test_clear_ip_lookup_cache(_cache_file):
     assert not _cache_file.exists()
 
 
-def test_get_dns_cache_lookup_hosts(monkeypatch):
-    ts = Scenario()
-    ts.add_host("blub", tags={"criticality": "offline"})
-    ts.add_host("bla")
-    ts.add_host("dual", tags={"address_family": "ip-v4v6"})
-
-    ts.apply(monkeypatch)
-
-    assert sorted(ip_lookup._get_dns_cache_lookup_hosts()) == sorted([
-        ('bla', 4),
-        ('dual', 4),
-        ('dual', 6),
-        ('blub', 4),
-    ])
-
-
 @pytest.mark.parametrize(
     "hostname, tags, result_address",
     [
@@ -199,7 +184,8 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(monkeypatch, hostname, tags, res
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
     ts.apply(monkeypatch)
-    assert ip_lookup.lookup_mgmt_board_ip_address(hostname) == result_address
+    host_config = config.get_config_cache().get_host_config(hostname)
+    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.skipif(
@@ -215,7 +201,8 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(monkeypatch, hostname, result_ad
         "address_family": "ip-v6-only",
     })
     ts.apply(monkeypatch)
-    assert ip_lookup.lookup_mgmt_board_ip_address(hostname) == result_address
+    host_config = config.get_config_cache().get_host_config(hostname)
+    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.parametrize("hostname, result_address", [
@@ -228,7 +215,8 @@ def test_lookup_mgmt_board_ip_address_dual_host(monkeypatch, hostname, result_ad
         "address_family": "ip-v4v6",
     })
     ts.apply(monkeypatch)
-    assert ip_lookup.lookup_mgmt_board_ip_address(hostname) == result_address
+    host_config = config.get_config_cache().get_host_config(hostname)
+    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.parametrize("tags, family", [
@@ -248,7 +236,8 @@ def test_lookup_mgmt_board_ip_address_unresolveable(monkeypatch, tags, family):
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
     ts.apply(monkeypatch)
-    assert ip_lookup.lookup_mgmt_board_ip_address(hostname) is None
+    host_config = config.get_config_cache().get_host_config(hostname)
+    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
 
 
 def test_normalize_ip():

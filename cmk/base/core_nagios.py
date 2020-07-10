@@ -1029,28 +1029,28 @@ if '-d' in sys.argv:
         for node in host_config.nodes:
             node_config = config_cache.get_host_config(node)
             if node_config.is_ipv4_host:
-                needed_ipaddresses[node] = ip_lookup.lookup_ipv4_address(node)
+                needed_ipaddresses[node] = ip_lookup.lookup_ipv4_address(node_config)
 
             if node_config.is_ipv6_host:
-                needed_ipv6addresses[node] = ip_lookup.lookup_ipv6_address(node)
+                needed_ipv6addresses[node] = ip_lookup.lookup_ipv6_address(node_config)
 
         try:
             if host_config.is_ipv4_host:
-                needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(hostname)
+                needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(host_config)
         except Exception:
             pass
 
         try:
             if host_config.is_ipv6_host:
-                needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(hostname)
+                needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(host_config)
         except Exception:
             pass
     else:
         if host_config.is_ipv4_host:
-            needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(hostname)
+            needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(host_config)
 
         if host_config.is_ipv6_host:
-            needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(hostname)
+            needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(host_config)
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
     output.write("config.ipv6addresses = %r\n\n" % needed_ipv6addresses)

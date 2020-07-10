@@ -417,13 +417,13 @@ class TestMakeHostSectionsHosts:
         return config.HostConfig.make_host_config(hostname)
 
     @pytest.fixture
-    def scenario(self, hostname, ipaddress, monkeypatch):
+    def config_cache(self, hostname, ipaddress, monkeypatch):
         ts = Scenario().add_host(hostname)
-        ts.apply(monkeypatch)
+        return ts.apply(monkeypatch)
 
-    @pytest.mark.usefixtures("scenario")
-    def test_no_sources(self, hostname, ipaddress, host_config):
+    def test_no_sources(self, hostname, ipaddress, config_cache, host_config):
         mhs = make_host_sections(
+            config_cache,
             host_config,
             ipaddress,
             sources=[],
@@ -445,9 +445,9 @@ class TestMakeHostSectionsHosts:
         assert not section.piggybacked_raw_data
         assert not section.persisted_sections
 
-    @pytest.mark.usefixtures("scenario")
-    def test_one_snmp_source(self, hostname, ipaddress, host_config):
+    def test_one_snmp_source(self, hostname, ipaddress, config_cache, host_config):
         mhs = make_host_sections(
+            config_cache,
             host_config,
             ipaddress,
             sources=[SNMPDataSource(hostname, ipaddress)],
@@ -464,18 +464,18 @@ class TestMakeHostSectionsHosts:
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
 
-    @pytest.mark.usefixtures("scenario")
     @pytest.mark.parametrize("source", [
         PiggyBackDataSource,
         partial(DSProgramDataSource, command_template=""),
         partial(SpecialAgentDataSource, special_agent_id="said", params={}),
         TCPDataSource,
     ])
-    def test_one_nonsnmp_source(self, hostname, ipaddress, host_config, source):
+    def test_one_nonsnmp_source(self, hostname, ipaddress, config_cache, host_config, source):
         source = source(hostname, ipaddress)
         assert source.source_type is SourceType.HOST
 
         mhs = make_host_sections(
+            config_cache,
             host_config,
             ipaddress,
             sources=[source],
@@ -492,8 +492,8 @@ class TestMakeHostSectionsHosts:
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
 
-    @pytest.mark.usefixtures("scenario")
-    def test_multiple_sources_from_the_same_host(self, hostname, ipaddress, host_config):
+    def test_multiple_sources_from_the_same_host(self, hostname, ipaddress, config_cache,
+                                                 host_config):
         sources = [
             DSProgramDataSource(hostname, ipaddress, command_template=""),
             SpecialAgentDataSource(hostname, ipaddress, special_agent_id="said", params={}),
@@ -501,6 +501,7 @@ class TestMakeHostSectionsHosts:
         ]
 
         mhs = make_host_sections(
+            config_cache,
             host_config,
             ipaddress,
             sources=sources,
@@ -519,8 +520,7 @@ class TestMakeHostSectionsHosts:
         assert (section.sections[SectionName("section_name_%s" % hostname)]
                 == 3 * [["section_content"]])
 
-    @pytest.mark.usefixtures("scenario")
-    def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, host_config):
+    def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, config_cache, host_config):
         sources = [
             DSProgramDataSource(hostname + "0", ipaddress, command_template=""),
             SpecialAgentDataSource(hostname + "1", ipaddress, special_agent_id="said", params={}),
@@ -528,6 +528,7 @@ class TestMakeHostSectionsHosts:
         ]
 
         mhs = make_host_sections(
+            config_cache,
             host_config,
             ipaddress,
             sources=sources,
@@ -582,11 +583,11 @@ class TestMakeHostSectionsClusters:
         }
 
     @pytest.fixture(autouse=True)
-    def patch_ip_lookup(self, nodes, monkeypatch):
+    def fake_lookup_ip_address(self, nodes, monkeypatch):
         monkeypatch.setattr(
             ip_lookup,
             "lookup_ip_address",
-            lambda hostname, family=None: nodes[hostname],
+            lambda host_config, family=None, for_mgmt_board=False: nodes[host_config.hostname],
         )
 
     @pytest.fixture
@@ -594,18 +595,18 @@ class TestMakeHostSectionsClusters:
         return config.HostConfig.make_host_config(cluster)
 
     @pytest.fixture
-    def scenario(self, cluster, nodes, monkeypatch):
+    def config_cache(self, cluster, nodes, monkeypatch):
         ts = Scenario().add_cluster(cluster, nodes=nodes.keys())
-        ts.apply(monkeypatch)
+        return ts.apply(monkeypatch)
 
-    @pytest.mark.usefixtures("scenario")
+    @pytest.mark.usefixtures("config_cache")
     def test_host_config_for_cluster(self, host_config):
         assert host_config.is_cluster is True
         assert host_config.nodes
 
-    @pytest.mark.usefixtures("scenario")
-    def test_no_sources(self, cluster, nodes, host_config):
+    def test_no_sources(self, cluster, nodes, config_cache, host_config):
         mhs = make_host_sections(
+            config_cache,
             host_config,
             None,
             sources=[],
@@ -638,11 +639,11 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     }
     address = "1.2.3.4"
     tags = {"agent": "no-agent"}
-    make_scenario(hostname, tags).apply(monkeypatch)
+    config_cache = make_scenario(hostname, tags).apply(monkeypatch)
     host_config = config.HostConfig.make_host_config(hostname)
 
-    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=False):
-        return hosts[hostname]
+    def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=False):
+        return hosts[host_config.hostname]
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     mocker.patch.object(
@@ -660,6 +661,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     host_config.nodes = list(hosts.keys())
 
     mhs = make_host_sections(
+        config_cache,
         host_config,
         address,
         make_sources(host_config, address),

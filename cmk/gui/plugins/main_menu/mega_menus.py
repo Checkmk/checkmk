@@ -31,3 +31,18 @@ MegaMenuMonitoring = mega_menu_registry.register(
         sort_index=5,
         topics=_view_menu_topics,
     ))
+
+
+def _setup_menu_topics() -> List[TopicMenuTopic]:
+    from cmk.gui.plugins.sidebar.wato import get_wato_menu_items
+    return get_wato_menu_items()
+
+
+MegaMenuSetup = mega_menu_registry.register(
+    MegaMenu(
+        name="setup",
+        title=_("Setup"),
+        icon_name="main_setup",
+        sort_index=5,
+        topics=_setup_menu_topics,
+    ))

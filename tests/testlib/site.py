@@ -270,13 +270,13 @@ class Site:
             return p.stdout.read()
         return open(self.path(rel_path)).read()
 
-    def delete_file(self, rel_path):
+    def delete_file(self, rel_path, missing_ok=False):
         if not self._is_running_as_site_user():
             p = self.execute(["rm", "-f", self.path(rel_path)])
             if p.wait() != 0:
                 raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            os.unlink(self.path(rel_path))
+            self.path(rel_path).unlink(missing_ok=missing_ok)
 
     def delete_dir(self, rel_path):
         if not self._is_running_as_site_user():

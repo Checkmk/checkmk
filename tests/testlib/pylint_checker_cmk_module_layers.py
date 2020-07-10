@@ -114,13 +114,6 @@ class CMKModuleLayerChecker(BaseChecker):
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
         module_name = removeprefix(name, "flycheck_")
 
-        for segments in [
-            ("cmk", "base", "plugins", "agent_based", "utils", ""),
-            ("cmk", "base", "plugins", "agent_based", ""),
-        ]:
-            if importing_path.startswith('/'.join(segments)):
-                return ModuleName('.'.join(segments) + module_name)
-
         # Fixup managed and enterprise module names
         # astroid does not produce correct module names, because it does not know
         # that we link/copy our CEE/CME parts to the cmk.* module in the site.

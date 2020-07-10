@@ -118,6 +118,7 @@ def test_mkevent_check_query_perf(config, event_status, status_server):
                     "%s %s BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R"
                     " j:O#A@J$ KLA@J $L:A@J :AMW: RAMR@: RMA@:LRMA@ L:RMA@ :AL@R MA:L@RM A@:LRMA@ :RLMA@ R:LA@RMM@RL:MA@R: AM@"
                     % (time.time(), num),
+                "core_host": "heute-%d" % num,
             }))
 
     assert len(event_status.events()) == 10000

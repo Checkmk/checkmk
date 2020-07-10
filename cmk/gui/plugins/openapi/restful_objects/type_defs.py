@@ -22,7 +22,7 @@ DomainType = Literal[
 
 DomainObject = Dict[str, Any]
 
-EndpointName = Literal[
+CmkEndpointName = Literal[
     'cmk/run',
     'cmk/activate',
     'cmk/bake',
@@ -77,6 +77,8 @@ RestfulEndpointName = Literal[
     ".../value",  # takes params
     ".../version",
 ]  # yapf: disable
+
+EndpointName = Union[CmkEndpointName, RestfulEndpointName]
 
 HTTPMethod = Literal["get", "put", "post", "delete"]
 

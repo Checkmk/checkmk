@@ -21,18 +21,15 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     HTTPMethod,
     LinkType,
     PropertyFormat,
-    RestfulEndpointName,
     ResultType,
     Serializable,
 )
 from cmk.gui.plugins.openapi.restful_objects.utils import (
-    fill_out_path_template,
-    ENDPOINT_REGISTRY,
-)
+    ENDPOINT_REGISTRY,)
 
 
 def link_rel(
-    rel: Union[RestfulEndpointName, EndpointName],
+    rel: EndpointName,
     href: str,
     method: HTTPMethod = 'get',
     content_type: str = 'application/json',
@@ -548,10 +545,9 @@ def collection_object(domain_type: DomainType,
 
 
 def link_endpoint(
-    module_name,
-    rel: Union[EndpointName, RestfulEndpointName],
+    module_name: str,
+    rel: EndpointName,
     parameters: Dict[str, str],
-    _registry=ENDPOINT_REGISTRY,
 ):
     """Link to a specific endpoint by name.
 
@@ -566,48 +562,12 @@ def link_endpoint(
             A dict, mapping parameter names to their desired values. e.g. if the link should have
             "/foo/{baz}" rendered to "/foo/bar", this mapping should be {'baz': 'bar'}.
 
-        _registry:
-            Internal use only.
-
-    Examples:
-
-        >>> from cmk.gui.plugins.openapi.restful_objects.utils import make_endpoint_entry
-        >>> registry = {
-        ...     ('roll', '.../invoke'): make_endpoint_entry(
-        ...          'post',
-        ...          '/random/{dice_roll_result}',
-        ...          [],  # not needed for this example
-        ...     ),
-        ... }
-        >>> expected = {
-        ...     'rel': 'urn:org.restfulobjects:rels/invoke',
-        ...     'href': '/random/4',
-        ...     'method': 'POST',
-        ...     'type': 'application/json',
-        ...     'domainType': 'link',
-        ... }
-        >>> link = link_endpoint(
-        ...     'roll',
-        ...     '.../invoke',
-        ...     parameters={'dice_roll_result': "4"},
-        ...     _registry=registry,  # for doctest, not be used
-        ... )
-        >>> assert link == expected, link
-
     """
-    try:
-        endpoint = _registry[(module_name, rel)]
-    except KeyError:
-        raise KeyError(list(_registry.keys()))
-
-    param_values = {key: {'example': value} for key, value in parameters.items()}
-
+    endpoint = ENDPOINT_REGISTRY.lookup(module_name, rel, parameters)
     return link_rel(
-        rel=rel,
-        href=fill_out_path_template(endpoint['path'], param_values),
+        href=endpoint['href'],
+        rel=endpoint['rel'],
         method=endpoint['method'],
-        # This one needs more work to get the structure right.
-        # parameters=endpoint['parameters']
     )
 
 

@@ -13,7 +13,8 @@ connexion is disabled.
 
 """
 import functools
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union, Sequence
+from types import FunctionType
+from typing import Any, Dict, List, Optional, Set, Union, Sequence, Type
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -23,10 +24,7 @@ from werkzeug.utils import import_string
 
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
-from cmk.gui.plugins.openapi.restful_objects.specification import (
-    add_operation,
-    SPEC,
-)
+from cmk.gui.plugins.openapi.restful_objects.specification import SPEC, find_all_parameters
 from cmk.gui.plugins.openapi.restful_objects.parameters import (
     ETAG_HEADER_PARAM,
     ETAG_IF_MATCH_HEADER,
@@ -35,11 +33,9 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     EndpointName,
     ETagBehaviour,
     HTTPMethod,
-    RestfulEndpointName,
 )
 from cmk.gui.plugins.openapi.restful_objects.utils import (
     ENDPOINT_REGISTRY,
-    make_endpoint_entry,
     ParamDict,
     Parameter,
     PARAM_RE,
@@ -51,8 +47,7 @@ def _constantly(arg):
     return lambda *args, **kw: arg
 
 
-_SEEN_PATHS: Set[Tuple[str, str, str]] = set()
-
+_SEEN_ENDPOINTS: Set[FunctionType] = set()
 ResponseSchema = Optional[Schema]
 RequestSchema = Optional[Schema]
 
@@ -64,7 +59,7 @@ def reduce_to_primitives(parameters: Optional[List[Parameter]]) -> List[Primitiv
 
 
 def endpoint_schema(path: str,
-                    name: Union[EndpointName, RestfulEndpointName],
+                    name: EndpointName,
                     method: HTTPMethod = 'get',
                     parameters: List[Parameter] = None,
                     content_type: str = 'application/json',
@@ -151,11 +146,6 @@ def endpoint_schema(path: str,
     # Everything inside of it needs the decorated function for filling out the spec.
     #
 
-    endpoint_identifier = (path, method, content_type)
-    if endpoint_identifier in _SEEN_PATHS:
-        raise ValueError("%s [%s, %s] must be unique. Already defined." % endpoint_identifier)
-    _SEEN_PATHS.add(endpoint_identifier)
-
     if etag is not None and etag not in ('input', 'output', 'both'):
         raise ValueError("etag must be one of 'input', 'output', 'both'.")
 
@@ -168,17 +158,14 @@ def endpoint_schema(path: str,
         module_obj = import_string(func.__module__)
         module_name = module_obj.__name__
         operation_id = func.__module__ + "." + func.__name__
-        endpoint_key = (module_name, name)
 
-        try:
-            ENDPOINT_REGISTRY[endpoint_key] = make_endpoint_entry(
-                method,
-                path,
-                primitive_parameters,
-            )
-        except ValueError:
-            raise RuntimeError("The endpoint %r has already been set to %r" %
-                               (endpoint_key, ENDPOINT_REGISTRY[endpoint_key]))
+        ENDPOINT_REGISTRY.add_endpoint(
+            module_name,
+            name,
+            method,
+            path,
+            primitive_parameters,
+        )
 
         if not output_empty and response_schema is None:
             raise ValueError("%s: 'response_schema' required when output is to be sent!" %
@@ -270,10 +257,16 @@ def endpoint_schema(path: str,
         operation_spec.update(_docstring_keys(func.__doc__, 'summary', 'description'))
         apispec.utils.deepupdate(operation_spec, options)
 
-        add_operation(path, method, operation_spec)
+        apispec.utils.deepupdate(operation_spec, options)
 
-        if response_schema is None and request_schema is None:
-            return func
+        if func not in _SEEN_ENDPOINTS:
+            # NOTE:
+            # Only add the endpoint to the spec if not already done. We don't want
+            # to add it multiple times. While this shouldn't be happening, doctest
+            # sometimes complains that it would be happening. Not sure why. Anyways,
+            # it's not a big deal as long as the SPEC is written correctly.
+            SPEC.path(path=path, operations={method.lower(): operation_spec})
+            _SEEN_ENDPOINTS.add(func)
 
         return wrap_with_validation(func, request_schema, response_schema)
 
@@ -337,10 +330,7 @@ def _verify_parameters(path: str, parameters: List[PrimitiveParameter]):
             raise ValueError("Param %r, which is specified as 'path', not used in path. Found "
                              "params: %r" % (param['name'], path_params))
 
-    global_param_names = SPEC.components.to_dict().get('parameters', {}).keys()
-    for param in parameters:
-        if isinstance(param, str) and param not in global_param_names:
-            raise ValueError("Param %r, assumed globally defined, was not found." % (param,))
+    find_all_parameters(parameters, errors='raise')
 
 
 def _assign_to_tag_group(tag_group: str, name: str) -> None:
@@ -365,6 +355,9 @@ def _add_tag(tag: dict, tag_group: Optional[str] = None) -> None:
 
 def wrap_with_validation(func, _request_schema, response_schema):
     """Wrap a function """
+    if _request_schema is None and response_schema is None:
+        return func
+
     if response_schema:
         validate_response = response_schema().validate
     else:

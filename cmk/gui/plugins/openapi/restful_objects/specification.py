@@ -55,6 +55,7 @@ If you have a client which can't do the HTTP PUT or DELETE methods, then you can
 such a method. In these cases the HTTP method to use has to be POST. You can't override from GET.
 
 """
+from typing import Any, Dict, List, Literal, Sequence
 
 import apispec.utils  # type: ignore
 import apispec_oneofschema  # type: ignore
@@ -63,6 +64,7 @@ from cmk.gui.plugins.openapi import plugins
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, IDENT, NAME, ACCEPT_HEADER
 
 # Path parameters look like {varname} and need to be checked.
+from cmk.gui.plugins.openapi.restful_objects.utils import PrimitiveParameter
 
 DEFAULT_HEADERS = [
     ('Accept', 'Media type(s) that is/are acceptable for the response.', 'application/json'),
@@ -147,10 +149,51 @@ SPEC.components.parameter(*IDENT.spec_tuple())
 SPEC.components.parameter(*HOST_NAME.spec_tuple())
 SPEC.components.parameter(*NAME.spec_tuple())
 
+ErrorType = Literal['ignore', 'raise']
 
-def add_operation(path, method, operation_spec):
-    """Add an operation spec to the SPEC object.
+
+def find_all_parameters(
+    params: Sequence[PrimitiveParameter],
+    errors: ErrorType = 'ignore',
+) -> List[Dict[str, Any]]:
+    """Find all parameters, while de-referencing string based parameters.
+
+    Parameters can come in dictionary, or string form. If they are a dictionary they are supposed
+    to be completely self-contained and can be specified with the same name multiple times for
+    different endpoints even with different values.
+
+    A string parameter is just a reference to a globally defined parameter, which can only be
+    defined once with that name.
+
+    This function de-references these string based parameters and emits a list of all parameters
+    that it has been given in their dictionary form.
+
+    Args:
+        params:
+            Either as a dict or ParamDict or as a string. If it is a string it will be replaced
+            by it's globally defined parameter (if found).
+
+        errors:
+            What to do when an error is detected. Can be either 'raise' or 'ignore'.
+
+    Returns:
+        A list of parameters, all in their dictionary form.
+
+    Raises:
+        ValueError: Whenever a parameter could not be de-referenced.
 
     """
-    # TODO: check if path method combination already there, if not raise exception
-    SPEC.path(path=path, operations={method.lower(): operation_spec})
+    result = []
+    global_params = SPEC.components.to_dict().get('parameters', {})
+
+    for _param in params:
+        if isinstance(_param, dict):
+            result.append(_param)
+        elif isinstance(_param, str):
+            if _param in global_params:
+                result.append(global_params[_param])
+                continue
+
+            if errors == 'raise':
+                raise ValueError(f"Param {_param!r}, assumed globally defined, was not found.")
+    return result

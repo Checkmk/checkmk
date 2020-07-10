@@ -3531,15 +3531,18 @@ class ConfigCache:
 
         return attrs
 
-    def icons_and_actions_of_service(self, hostname: HostName, description: ServiceName,
-                                     checkname: Optional[CheckPluginNameStr],
-                                     params: LegacyCheckParameters) -> List[str]:
+    def icons_and_actions_of_service(
+        self,
+        hostname: HostName,
+        description: ServiceName,
+        check_plugin_name: Optional[CheckPluginName],
+        params: LegacyCheckParameters,
+    ) -> List[str]:
         actions = set(self.service_extra_conf(hostname, description, service_icons_and_actions))
 
         # Some WATO rules might register icons on their own
-        if checkname:
-            # TODO (mo): centralize maincheckify: CMK-4295
-            plugin = get_registered_check_plugin(CheckPluginName(maincheckify(checkname)))
+        if check_plugin_name:
+            plugin = get_registered_check_plugin(check_plugin_name)
             if (plugin is not None and str(plugin.check_ruleset_name) in ('ps', 'services') and
                     isinstance(params, dict)):
                 icon = params.get('icon')

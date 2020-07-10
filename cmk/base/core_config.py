@@ -16,14 +16,15 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.password_store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
-    LabelSources,
-    Labels,
-    HostName,
+    CheckPluginName,
     HostAddress,
+    HostName,
+    Labels,
+    LabelSources,
     ServiceName,
-    CheckPluginNameStr,
 )
 
 import cmk.base.obsolete_output as out
@@ -348,24 +349,35 @@ def active_check_arguments(hostname: HostName, description: Optional[ServiceName
 #   '----------------------------------------------------------------------'
 
 
-def get_cmk_passive_service_attributes(config_cache: ConfigCache, host_config: HostConfig,
-                                       service: Service,
-                                       check_mk_attrs: ObjectAttributes) -> ObjectAttributes:
-    attrs = get_service_attributes(host_config.hostname, service.description, config_cache,
-                                   service.check_plugin_name, service.parameters)
+def get_cmk_passive_service_attributes(
+    config_cache: ConfigCache,
+    host_config: HostConfig,
+    service: Service,
+    check_mk_attrs: ObjectAttributes,
+) -> ObjectAttributes:
+    attrs = get_service_attributes(
+        host_config.hostname,
+        service.description,
+        config_cache,
+        # TODO (mo): centralize maincheckify: CMK-4295
+        CheckPluginName(maincheckify(service.check_plugin_name)),
+        service.parameters,
+    )
 
     attrs["check_interval"] = check_mk_attrs["check_interval"]
 
     return attrs
 
 
-def get_service_attributes(hostname: HostName,
-                           description: ServiceName,
-                           config_cache: ConfigCache,
-                           checkname: Optional[CheckPluginNameStr] = None,
-                           params: LegacyCheckParameters = None) -> ObjectAttributes:
+def get_service_attributes(
+    hostname: HostName,
+    description: ServiceName,
+    config_cache: ConfigCache,
+    check_plugin_name: Optional[CheckPluginName] = None,
+    params: LegacyCheckParameters = None,
+) -> ObjectAttributes:
     attrs: ObjectAttributes = _extra_service_attributes(hostname, description, config_cache,
-                                                        checkname, params)
+                                                        check_plugin_name, params)
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
 
     # TODO: Remove ignore once we are on Python 3
@@ -378,9 +390,13 @@ def get_service_attributes(hostname: HostName,
     return attrs
 
 
-def _extra_service_attributes(hostname: HostName, description: ServiceName,
-                              config_cache: ConfigCache, checkname: Optional[CheckPluginNameStr],
-                              params: LegacyCheckParameters) -> ObjectAttributes:
+def _extra_service_attributes(
+    hostname: HostName,
+    description: ServiceName,
+    config_cache: ConfigCache,
+    check_plugin_name: Optional[CheckPluginName],
+    params: LegacyCheckParameters,
+) -> ObjectAttributes:
     attrs = {}  # ObjectAttributes
 
     # Add service custom_variables. Name conflicts are prevented by the GUI, but just
@@ -396,7 +412,8 @@ def _extra_service_attributes(hostname: HostName, description: ServiceName,
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
-    actions = config_cache.icons_and_actions_of_service(hostname, description, checkname, params)
+    actions = config_cache.icons_and_actions_of_service(hostname, description, check_plugin_name,
+                                                        params)
     if actions:
         attrs["_ACTIONS"] = ','.join(actions)
     return attrs

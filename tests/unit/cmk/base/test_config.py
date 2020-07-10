@@ -1465,8 +1465,9 @@ def test_config_cache_icons_and_actions(monkeypatch, hostname, result):
         ("icon2", [], ["testhost2"], "CPU load$", {}),
     ])
     config_cache = ts.apply(monkeypatch)
-    assert sorted(config_cache.icons_and_actions_of_service(hostname, "CPU load", "ps",
-                                                            {})) == sorted(result)
+    assert sorted(
+        config_cache.icons_and_actions_of_service(hostname, "CPU load", CheckPluginName("ps"),
+                                                  {})) == sorted(result)
 
 
 @pytest.mark.parametrize("hostname,result", [

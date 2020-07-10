@@ -657,7 +657,7 @@ class AutomationAnalyseServices(Automation):
         # our service there
         for service in services:
 
-            if (service.check_plugin_name, service.item) not in table:
+            if service.id() not in table:
                 continue  # this is a removed duplicate or clustered service
 
             if service.description == servicedesc:

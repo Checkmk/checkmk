@@ -16,7 +16,6 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.password_store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -359,8 +358,7 @@ def get_cmk_passive_service_attributes(
         host_config.hostname,
         service.description,
         config_cache,
-        # TODO (mo): centralize maincheckify: CMK-4295
-        CheckPluginName(maincheckify(service.check_plugin_name)),
+        service.check_plugin_name,
         service.parameters,
     )
 

@@ -14,6 +14,7 @@ from testlib.base import Scenario
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
@@ -148,7 +149,7 @@ def test_parse_autochecks_file_not_existing():
         (u"""[
   ('hostxyz', 'df', '/', {}),
 ]""", [
-            ('df', u'/', {}),
+            (CheckPluginName('df'), u'/', {}),
         ]),
         # Tuple: Convert non unicode item
         (
@@ -156,7 +157,7 @@ def test_parse_autochecks_file_not_existing():
           ('df', '/', {}),
         ]""",
             [
-                ('df', u'/', {}),
+                (CheckPluginName('df'), u'/', {}),
             ],
         ),
         # Tuple: Regular processing
@@ -171,16 +172,16 @@ def test_parse_autochecks_file_not_existing():
           ('if64', u'00001001', { "errors" : if_default_error_levels, "traffic" : if_default_traffic_levels, "average" : if_default_average , "state" : "1", "speed" : 1000000000}),
         ]""",
             [
-                ('df', u'/', {}),
-                ('df', u'/xyz', 'lala'),
-                ('df', u'/zzz', ['abc', 'xyz']),
-                ('cpu.loads', None, (5.0, 10.0)),
-                ('chrony', None, {}),
-                ('lnx_if', u'2', {
+                (CheckPluginName('df'), u'/', {}),
+                (CheckPluginName('df'), u'/xyz', 'lala'),
+                (CheckPluginName('df'), u'/zzz', ['abc', 'xyz']),
+                (CheckPluginName('cpu_loads'), None, (5.0, 10.0)),
+                (CheckPluginName('chrony'), None, {}),
+                (CheckPluginName('lnx_if'), u'2', {
                     'speed': 10000000,
                     'state': ['1']
                 }),
-                ('if64', u'00001001', {
+                (CheckPluginName('if64'), u'00001001', {
                     'average': None,
                     'errors': (0.01, 0.1),
                     'speed': 1000000000,
@@ -200,12 +201,12 @@ def test_parse_autochecks_file_not_existing():
           {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {u"x": u"y"}},
         ]""",
             [
-                ('df', u'/', {}),
-                ('df', u'/xyz', "lala"),
-                ('df', u'/zzz', ['abc', 'xyz']),
-                ('cpu.loads', None, (5.0, 10.0)),
-                ('chrony', None, {}),
-                ('lnx_if', u'2', {
+                (CheckPluginName('df'), u'/', {}),
+                (CheckPluginName('df'), u'/xyz', "lala"),
+                (CheckPluginName('df'), u'/zzz', ['abc', 'xyz']),
+                (CheckPluginName('cpu_loads'), None, (5.0, 10.0)),
+                (CheckPluginName('chrony'), None, {}),
+                (CheckPluginName('lnx_if'), u'2', {
                     'speed': 10000000,
                     'state': ['1']
                 }),
@@ -262,10 +263,10 @@ def test_remove_autochecks_file():
                           DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
         discovery.Service('df', u'/', u"Filesystem /", {},
                           DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
-        discovery.Service('cpu.loads', None, "CPU load", {},
+        discovery.Service('cpu_loads', None, "CPU load", {},
                           DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
     ], """[
-  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': {}, 'service_labels': {'x': 'y'}},
+  {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': {}, 'service_labels': {'x': 'y'}},
   {'check_plugin_name': 'df', 'item': '/', 'parameters': {}, 'service_labels': {'x': 'y'}},
   {'check_plugin_name': 'df', 'item': '/xyz', 'parameters': None, 'service_labels': {'x': 'y'}},
 ]\n"""),

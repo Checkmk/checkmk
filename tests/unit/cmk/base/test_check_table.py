@@ -33,8 +33,8 @@ from cmk.base.api.agent_based import checking_types
         # Skip the autochecks automatically for ping hosts
         ("ping-host", {}),
         ("no-autochecks", {
-            ('smart.temp', '/dev/sda'): Service(
-                check_plugin_name="smart.temp",
+            (CheckPluginName('smart_temp'), '/dev/sda'): Service(
+                check_plugin_name="smart_temp",
                 item=u"/dev/sda",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART /dev/sda',
@@ -42,14 +42,14 @@ from cmk.base.api.agent_based import checking_types
         }),
         # Static checks overwrite the autocheck definitions
         ("autocheck-overwrite", {
-            ('smart.temp', '/dev/sda'): Service(
-                check_plugin_name="smart.temp",
+            (CheckPluginName('smart_temp'), '/dev/sda'): Service(
+                check_plugin_name="smart_temp",
                 item=u"/dev/sda",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART /dev/sda',
             ),
-            ('smart.temp', '/dev/sdb'): Service(
-                check_plugin_name='smart.temp',
+            (CheckPluginName('smart_temp'), '/dev/sdb'): Service(
+                check_plugin_name='smart_temp',
                 item=u'/dev/sdb',
                 parameters={'is_autocheck': True},
                 description=u'Temperature SMART /dev/sdb',
@@ -57,16 +57,16 @@ from cmk.base.api.agent_based import checking_types
         }),
         ("ignore-not-existing-checks", {}),
         ("ignore-disabled-rules", {
-            ('smart.temp', 'ITEM2'): Service(
-                check_plugin_name='smart.temp',
+            (CheckPluginName('smart_temp'), 'ITEM2'): Service(
+                check_plugin_name='smart_temp',
                 item=u"ITEM2",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART ITEM2',
             ),
         }),
         ("static-check-overwrite", {
-            ('smart.temp', '/dev/sda'): Service(
-                check_plugin_name="smart.temp",
+            (CheckPluginName('smart_temp'), '/dev/sda'): Service(
+                check_plugin_name="smart_temp",
                 item=u"/dev/sda",
                 parameters={
                     'levels': (35, 40),
@@ -76,26 +76,27 @@ from cmk.base.api.agent_based import checking_types
             )
         }),
         ("node1", {
-            ('smart.temp', 'auto-not-clustered'): Service(
-                check_plugin_name="smart.temp",
+            (CheckPluginName('smart_temp'), 'auto-not-clustered'): Service(
+                check_plugin_name="smart_temp",
                 item=u"auto-not-clustered",
                 parameters={},
                 description=u'Temperature SMART auto-not-clustered',
             ),
-            ('smart.temp', 'static-node1'): Service(check_plugin_name="smart.temp",
-                                                    item=u"static-node1",
-                                                    parameters={'levels': (35, 40)},
-                                                    description=u'Temperature SMART static-node1'),
+            (CheckPluginName('smart_temp'), 'static-node1'): Service(
+                check_plugin_name="smart_temp",
+                item=u"static-node1",
+                parameters={'levels': (35, 40)},
+                description=u'Temperature SMART static-node1'),
         }),
         ("cluster1", {
-            ('smart.temp', 'static-cluster'): Service(
-                check_plugin_name="smart.temp",
+            (CheckPluginName('smart_temp'), 'static-cluster'): Service(
+                check_plugin_name="smart_temp",
                 item=u"static-cluster",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART static-cluster',
             ),
-            ('smart.temp', 'auto-clustered'): Service(
-                check_plugin_name="smart.temp",
+            (CheckPluginName('smart_temp'), 'auto-clustered'): Service(
+                check_plugin_name="smart_temp",
                 item=u"auto-clustered",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART auto-clustered',
@@ -154,8 +155,8 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
 
 
 @pytest.mark.parametrize("hostname, expected_result", [
-    ("mgmt-board-ipmi", [("mgmt_ipmi_sensors", "TEMP X")]),
-    ("ipmi-host", [("ipmi_sensors", "TEMP Y")]),
+    ("mgmt-board-ipmi", [(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X")]),
+    ("ipmi-host", [(CheckPluginName("ipmi_sensors"), "TEMP Y")]),
 ])
 def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
     autochecks = {
@@ -198,10 +199,10 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
 @pytest.mark.parametrize(
     "hostname,expected_result",
     [
-        ("df_host", [("df", "/snap/core/9066")]),
+        ("df_host", [(CheckPluginName("df"), "/snap/core/9066")]),
         # old format, without TimespecificParamList
-        ("df_host_1", [("df", "/snap/core/9067")]),
-        ("df_host_2", [("df", "/snap/core/9068")]),
+        ("df_host_1", [(CheckPluginName("df"), "/snap/core/9067")]),
+        ("df_host_2", [(CheckPluginName("df"), "/snap/core/9068")]),
     ])
 def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result):
     static_checks = {
@@ -302,7 +303,7 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
 def _service_list():
     return [
         Service(
-            check_plugin_name="plugin %s" % d,
+            check_plugin_name="plugin_%s" % d,
             item="item",
             description="description %s" % d,
             parameters={},
@@ -357,8 +358,8 @@ def test_get_sorted_check_table_cyclic(monkeypatch, service_list):
     with pytest.raises(MKGeneralException,
                        match=re.escape(
                            "Cyclic service dependency of host MyHost. Problematic are:"
-                           " 'description A' (plugin A / item), 'description B' (plugin B / item),"
-                           " 'description D' (plugin D / item)")):
+                           " 'description A' (plugin_A / item), 'description B' (plugin_B / item),"
+                           " 'description D' (plugin_D / item)")):
         _ = check_table.get_sorted_service_list("MyHost", True, None, True)
 
 

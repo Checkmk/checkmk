@@ -237,9 +237,6 @@ def _get_relevant_raw_sections(services: List[Service], host_config: config.Host
     # see if we can remove this function, once inventory plugins have been migrated to
     # the new API. In particular, we schould be able to get rid of the imports.
 
-    check_plugin_names: Iterable[CheckPluginName] = (
-        CheckPluginName(maincheckify(s.check_plugin_name)) for s in services)
-
     if host_config.do_status_data_inventory:
         # This is called during checking, but the inventory plugins are not loaded yet
         import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
@@ -252,7 +249,7 @@ def _get_relevant_raw_sections(services: List[Service], host_config: config.Host
         inventory_plugin_names = ()
 
     return config.get_relevant_raw_sections(
-        check_plugin_names=check_plugin_names,
+        check_plugin_names=(s.check_plugin_name for s in services),
         inventory_plugin_names=inventory_plugin_names,
     )
 
@@ -316,8 +313,7 @@ def _do_all_checks_on_host(
         if success:
             num_success += 1
         else:
-            # TODO (mo): centralize maincheckify: CMK-4295
-            plugins_missing_data.add(CheckPluginName(maincheckify(service.check_plugin_name)))
+            plugins_missing_data.add(service.check_plugin_name)
 
     return num_success, sorted(plugins_missing_data)
 
@@ -338,11 +334,7 @@ def _get_filtered_services(
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
     if only_check_plugins is None:
-        only_check_plugins = {
-            # TODO (mo): make service.check_plugin_name a CheckPluginName instance and thus
-            # TODO (mo): centralize maincheckify: CMK-4295
-            CheckPluginName(maincheckify(service.check_plugin_name)) for service in services
-        }
+        only_check_plugins = {service.check_plugin_name for service in services}
 
     def _is_not_of_host(service):
         return host_name != config_cache.host_of_clustered_service(host_name, service.description)
@@ -352,15 +344,13 @@ def _get_filtered_services(
         removed_plugins = {
             plugin for plugin in only_check_plugins if all(
                 _is_not_of_host(service) for service in services
-                # TODO (mo): centralize maincheckify: CMK-4295
-                if CheckPluginName(maincheckify(service.check_plugin_name)) == plugin)
+                if service.check_plugin_name == plugin)
         }
         only_check_plugins -= removed_plugins
 
     return [
-        service for service in services if (
-            # TODO (mo): centralize maincheckify: CMK-4295
-            CheckPluginName(maincheckify(service.check_plugin_name)) in only_check_plugins and
+        service for service in services
+        if (service.check_plugin_name in only_check_plugins and
             not (belongs_to_cluster and _is_not_of_host(service)) and
             not service_outside_check_period(config_cache, host_name, service.description))
     ]
@@ -384,15 +374,14 @@ def service_outside_check_period(config_cache: config.ConfigCache, hostname: Hos
 
 def execute_check(multi_host_sections: MultiHostSections, host_config: config.HostConfig,
                   ipaddress: Optional[HostAddress], service: Service) -> bool:
-    # TODO (mo): centralize maincheckify: CMK-4295
-    plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
-    plugin = config.get_registered_check_plugin(plugin_name)
+
+    plugin = config.get_registered_check_plugin(service.check_plugin_name)
 
     # Make a bit of context information globally available, so that functions
     # called by checks know this context. set_service is needed for predictive levels!
     # TODO: This should be a context manager, similar to value_store (f.k.a. item_state)
     # This is used for both legacy and agent_based API.
-    check_api_utils.set_service(str(plugin_name), service.description)
+    check_api_utils.set_service(str(service.check_plugin_name), service.description)
 
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
@@ -511,10 +500,13 @@ def get_aggregated_result(
 
 def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname: HostName,
                                ipaddress: Optional[HostAddress], service: Service) -> bool:
-    # This is weird, for the moment. Once service.check_plugin_name no longer *is*
-    # the legacy name, this will make much more sense.
-    legacy_check_plugin_name = service.check_plugin_name
-    service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
+    legacy_check_plugin_name = _find_legacy_check_name(
+        str(service.check_plugin_name),
+        config.check_info,
+    )
+    if legacy_check_plugin_name is None:
+        _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
+        return True
 
     check_function = config.check_info[legacy_check_plugin_name].get("check_function")
     if check_function is None:
@@ -524,7 +516,7 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
     # Make a bit of context information globally available, so that functions
     # called by checks know this context. check_api_utils.set_service has
     # already been called.
-    item_state.set_item_state_prefix(str(service_check_plugin_name), service.item)
+    item_state.set_item_state_prefix(str(service.check_plugin_name), service.item)
 
     section_name = legacy_check_plugin_name.split('.')[0]
 
@@ -589,6 +581,16 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
         _legacy_determine_cache_info(multi_host_sections, SectionName(section_name)),
     )
     return True
+
+
+def _find_legacy_check_name(
+    new_check_plugin_name_str: str,
+    potential_legacy_names: Iterable[str],
+) -> Optional[str]:
+    for pot_legacy_name in potential_legacy_names:
+        if maincheckify(pot_legacy_name) == new_check_plugin_name_str:
+            return pot_legacy_name
+    return None
 
 
 def _legacy_determine_cache_info(multi_host_sections: MultiHostSections,

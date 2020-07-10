@@ -40,7 +40,6 @@ import cmk.utils.tty as tty
 from cmk.utils.check_utils import (
     ensure_management_name,
     is_management_name,
-    maincheckify,
     unwrap_parameters,
     wrap_parameters,
 )
@@ -262,8 +261,7 @@ def _filter_service_by_patterns(
     # Is discovered_service.description already finalized as
     # in config.service_description?
     # (mo): we should indeed make sure that is the case, and use it
-    check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
-    description = config.service_description(hostname, check_plugin_name, service.item)
+    description = config.service_description(hostname, service.check_plugin_name, service.item)
     return whitelist.match(description) is not None and blacklist.match(description) is None
 
 
@@ -416,11 +414,11 @@ def _do_discovery_for(
     # Take over old items if -I is selected or if -II is selected with
     # --checks= and the check type is not one of the listed ones
     for existing_service in existing_services:
-        service_plugin_name = CheckPluginName(maincheckify(existing_service.check_plugin_name))
-        if only_new or (check_plugin_names and service_plugin_name not in check_plugin_names):
+        if only_new or (check_plugin_names and
+                        existing_service.check_plugin_name not in check_plugin_names):
             new_services.append(existing_service)
 
-    services_per_plugin: Counter[CheckPluginNameStr] = Counter()
+    services_per_plugin: Counter[CheckPluginName] = Counter()
     for discovered_service in discovered_services:
         if discovered_service not in new_services:
             new_services.append(discovered_service)
@@ -463,7 +461,7 @@ def _do_discovery_for(
 
 def _perform_host_label_discovery(
         hostname: HostName, discovered_host_labels: DiscoveredHostLabels,
-        only_new: bool) -> Tuple[DiscoveredHostLabels, Counter[CheckPluginNameStr]]:
+        only_new: bool) -> Tuple[DiscoveredHostLabels, Counter[CheckPluginName]]:
 
     # Take over old items if -I is selected
     if only_new:
@@ -472,7 +470,7 @@ def _perform_host_label_discovery(
     else:
         return_host_labels = DiscoveredHostLabels()
 
-    new_host_labels_per_plugin: Counter[CheckPluginNameStr] = Counter()
+    new_host_labels_per_plugin: Counter[CheckPluginName] = Counter()
     for discovered_label in discovered_host_labels.values():
         if discovered_label.name in return_host_labels:
             continue
@@ -757,7 +755,7 @@ def _check_service_lists(
         ("vanished", "vanished", "severity_vanished", 0, service_filters.vanished),
     ]:
 
-        affected_check_plugin_names: Counter[str] = Counter()
+        affected_check_plugin_names: Counter[CheckPluginName] = Counter()
         unfiltered = False
 
         for discovered_service in services_by_transition.get(transition, []):
@@ -1345,9 +1343,7 @@ def _get_node_services(
     for check_source, service in services.values():
         clustername = config_cache.host_of_clustered_service(hostname, service.description)
         if hostname != clustername:
-            # TODO(mo): centralize maincheckify: CMK-4295
-            service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
-            if config.service_ignored(clustername, service_check_plugin_name, service.description):
+            if config.service_ignored(clustername, service.check_plugin_name, service.description):
                 check_source = "ignored"
             services[service.id()] = ("clustered_" + check_source, service)
 
@@ -1408,7 +1404,7 @@ def _merge_manual_services(host_config: config.HostConfig, services: ServicesTab
 
     # Add custom checks -> "custom"
     for entry in host_config.custom_checks:
-        services[('custom', entry['service_description'])] = (
+        services[(CheckPluginName('custom'), entry['service_description'])] = (
             'custom',
             Service(
                 check_plugin_name='custom',
@@ -1422,7 +1418,7 @@ def _merge_manual_services(host_config: config.HostConfig, services: ServicesTab
     for plugin_name, entries in host_config.active_checks:
         for params in entries:
             descr = config.active_check_service_description(hostname, plugin_name, params)
-            services[(plugin_name, descr)] = (
+            services[(CheckPluginName(plugin_name), descr)] = (
                 'active',
                 Service(
                     check_plugin_name=plugin_name,
@@ -1441,10 +1437,7 @@ def _merge_manual_services(host_config: config.HostConfig, services: ServicesTab
             # "[source]_ignored" instead of ignored.
             continue
 
-        # TODO(mo): centralize maincheckify: CMK-4295
-        service_check_plugin_name = CheckPluginName(
-            maincheckify(discovered_service.check_plugin_name))
-        if config.service_ignored(hostname, service_check_plugin_name,
+        if config.service_ignored(hostname, discovered_service.check_plugin_name,
                                   discovered_service.description):
             services[discovered_service.id()] = ("ignored", discovered_service)
 
@@ -1547,9 +1540,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
     table: CheckPreviewTable = []
     for check_source, services in grouped_services.items():
         for service in services:
-            # TODO (mo): centralize maincheckify: CMK-4295
-            plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
-            plugin = config.get_registered_check_plugin(plugin_name)
+            plugin = config.get_registered_check_plugin(service.check_plugin_name)
             params = _preview_params(host_name, service, plugin, check_source)
 
             if check_source in ['legacy', 'active', 'custom']:
@@ -1575,7 +1566,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
 
             table.append((
                 _preview_check_source(host_name, service, check_source),
-                service.check_plugin_name,
+                str(service.check_plugin_name),
                 ruleset_name,
                 service.item,
                 # this `repr` is a result of various refactorings, I'm not sure it is needed.

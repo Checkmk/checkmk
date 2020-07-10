@@ -665,9 +665,7 @@ class AutomationAnalyseServices(Automation):
             if service.description != servicedesc:
                 continue
 
-            # TODO (mo): centralize maincheckify: CMK-4295
-            service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
-            plugin = config.get_registered_check_plugin(service_check_plugin_name)
+            plugin = config.get_registered_check_plugin(service.check_plugin_name)
             if plugin is None:
                 # Just to be safe, and to let mypy know.
                 # plugin should never be None for services that are in the check_table.
@@ -1659,7 +1657,7 @@ class AutomationGetServiceConfigurations(Automation):
     def _get_config_for_host(
             self, host_config: config.HostConfig) -> Dict[str, List[Tuple[str, str, Any]]]:
         return {
-            "checks": [(s.check_plugin_name, s.description, s.parameters)
+            "checks": [(str(s.check_plugin_name), s.description, s.parameters)
                        for s in check_table.get_check_table(host_config.hostname,
                                                             remove_duplicates=True).values()],
             "active_checks": self._get_active_checks(host_config)

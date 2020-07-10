@@ -19,7 +19,7 @@ import cmk.base.config as config
 
 def test_discovered_service_init():
     ser = discovery.Service("abc", u"Item", u"ABC Item", None)
-    assert ser.check_plugin_name == "abc"
+    assert ser.check_plugin_name == CheckPluginName("abc")
     assert ser.item == u"Item"
     assert ser.description == u"ABC Item"
     assert ser.parameters is None
@@ -184,34 +184,42 @@ def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
 @pytest.fixture
 def service_table() -> discovery.ServicesTable:
     return {
-        ("check_plugin_name", "New Item 1"): ("new",
-                                              discovery.Service(
-                                                  "check_plugin_name",
-                                                  "New Item 1",
-                                                  "Test Description New Item 1",
-                                                  {},
-                                              )),
-        ("check_plugin_name", "New Item 2"): ("new",
-                                              discovery.Service(
-                                                  "check_plugin_name",
-                                                  "New Item 2",
-                                                  "Test Description New Item 2",
-                                                  {},
-                                              )),
-        ("check_plugin_name", "Vanished Item 1"): ("vanished",
-                                                   discovery.Service(
-                                                       "check_plugin_name",
-                                                       "Vanished Item 1",
-                                                       "Test Description Vanished Item 1",
-                                                       {},
-                                                   )),
-        ("check_plugin_name", "Vanished Item 2"): ("vanished",
-                                                   discovery.Service(
-                                                       "check_plugin_name",
-                                                       "Vanished Item 2",
-                                                       "Test Description Vanished Item 2",
-                                                       {},
-                                                   )),
+        (CheckPluginName("check_plugin_name"), "New Item 1"): (
+            "new",
+            discovery.Service(
+                "check_plugin_name",
+                "New Item 1",
+                "Test Description New Item 1",
+                {},
+            ),
+        ),
+        (CheckPluginName("check_plugin_name"), "New Item 2"): (
+            "new",
+            discovery.Service(
+                "check_plugin_name",
+                "New Item 2",
+                "Test Description New Item 2",
+                {},
+            ),
+        ),
+        (CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
+            "vanished",
+            discovery.Service(
+                "check_plugin_name",
+                "Vanished Item 1",
+                "Test Description Vanished Item 1",
+                {},
+            ),
+        ),
+        (CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
+            "vanished",
+            discovery.Service(
+                "check_plugin_name",
+                "Vanished Item 2",
+                "Test Description Vanished Item 2",
+                {},
+            ),
+        ),
     }
 
 

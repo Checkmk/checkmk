@@ -11,7 +11,7 @@ import sys
 import py_compile
 import tempfile
 import errno
-from typing import Tuple, Any, IO, Optional, List, Set, Dict
+from typing import Tuple, Any, IO, Optional, List, Set, Dict, Union
 
 from six import ensure_binary, ensure_str
 
@@ -45,9 +45,14 @@ from cmk.base.config import (
     HostConfig,
     ObjectAttributes,
 )
+from cmk.base.check_utils import ServiceID
 from cmk.base.core_config import CoreCommand, CoreCommandName
 
 ObjectSpec = Dict[str, Any]
+
+ActiveServiceID = Tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
+CustomServiceID = Tuple[str, Item]  # #     at which point these will be the same as "ServiceID"
+AbstractServiceID = Union[ActiveServiceID, CustomServiceID, ServiceID]
 
 
 class NagiosCore(core_config.MonitoringCore):
@@ -109,7 +114,7 @@ class NagiosConfig:
         self.hostgroups_to_define: Set[HostgroupName] = set()
         self.servicegroups_to_define: Set[ServicegroupName] = set()
         self.contactgroups_to_define: Set[ContactgroupName] = set()
-        self.checknames_to_define: Set[CheckPluginNameStr] = set()
+        self.checknames_to_define: Set[CheckPluginName] = set()
         self.active_checks_to_define: Set[CheckPluginNameStr] = set()
         self.custom_commands_to_define: Set[CoreCommandName] = set()
         self.hostcheck_commands_to_define: List[Tuple[CoreCommand, str]] = []
@@ -130,7 +135,7 @@ def create_config(outfile: IO[str], hostnames: Optional[List[HostName]]) -> None
             "service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead."
         )
 
-    # Map service_period to _SERVICE_PERIOD. This field das not exist in Nagios.
+    # Map service_period to _SERVICE_PERIOD. This field does not exist in Nagios.
     # The CMC has this field natively.
     if "service_period" in config.extra_host_conf:
         config.extra_host_conf["_SERVICE_PERIOD"] = config.extra_host_conf["service_period"]
@@ -306,9 +311,14 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
 
         return result
 
+    check_info_by_migrated_name = {
+        # TODO (mo): centralize maincheckify: CMK-4295
+        CheckPluginName(maincheckify(k)): v for k, v in config.check_info.items()
+    }
+
     host_check_table = get_check_table(hostname, remove_duplicates=True)
     have_at_least_one_service = False
-    used_descriptions: Dict[ServiceName, Tuple[CheckPluginNameStr, Item]] = {}
+    used_descriptions: Dict[ServiceName, AbstractServiceID] = {}
     for service in sorted(host_check_table.values(), key=lambda s: (s.check_plugin_name, s.item)):
 
         # TODO (mo): This should be done by the service object, much earlier.
@@ -323,8 +333,9 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
         # For now, for every check plugin developed against the new check API
         # we just assume that it may have metrics. The careful review of this
         # mechanism is subject of issue CMK-1125
-        check = config.check_info.get(service.check_plugin_name)
-        if check is not None and check.get("has_perfdata", False):
+        check_info_value = check_info_by_migrated_name.get(service.check_plugin_name,
+                                                           {"has_perfdata": True})
+        if check_info_value.get("has_perfdata", False):
             template = config.passive_service_template_perf
         else:
             template = config.passive_service_template

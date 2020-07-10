@@ -121,14 +121,12 @@ class HostCheckTable:
     def _keep_service(self, service: Service, filter_mode: Optional[str],
                       skip_ignored: bool) -> bool:
         hostname = self._host_config.hostname
-        # TODO (mo): centralize maincheckify: CMK-4295
-        service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
 
         # drop unknown plugins:
-        if config.get_registered_check_plugin(service_check_plugin_name) is None:
+        if config.get_registered_check_plugin(service.check_plugin_name) is None:
             return False
 
-        if skip_ignored and config.service_ignored(hostname, service_check_plugin_name,
+        if skip_ignored and config.service_ignored(hostname, service.check_plugin_name,
                                                    service.description):
             return False
 
@@ -208,8 +206,7 @@ def get_needed_check_names(hostname: HostName,
                            filter_mode: Optional[str] = None,
                            skip_ignored: bool = True) -> Set[CheckPluginName]:
     return {
-        # TODO (mo): centralize maincheckify: CMK-4295
-        CheckPluginName(maincheckify(s.check_plugin_name)) for s in get_check_table(
+        s.check_plugin_name for s in get_check_table(
             hostname,
             remove_duplicates=remove_duplicates,
             filter_mode=filter_mode,

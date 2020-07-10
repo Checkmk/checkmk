@@ -126,6 +126,43 @@ class state(enum.Enum):
         return int(self.value)
 
     @classmethod
+    def best(cls, *args: Union['state', int]) -> 'state':
+        """Returns the best of all passed states
+
+        You can pass an arbitrary number of arguments, and the return value will be
+        the "best" of them, where
+
+            `OK -> WARN -> UNKNOWN -> CRIT`
+
+        Args:
+            args: Any number of either one of state.OK, state.WARN, state.CRIT, state.UNKNOWN or an
+            integer in [0, 3].
+
+        Returns:
+            The best of the input states, one of state.OK, state.WARN, state.CRIT, state.UNKNOWN.
+
+        Examples:
+            >>> state.best(state.OK, state.WARN, state.CRIT, state.UNKNOWN)
+            <state.OK: 0>
+            >>> state.best(0, 1, state.CRIT)
+            <state.OK: 0>
+        """
+        _sorted = {
+            cls.OK: 0,
+            cls.WARN: 1,
+            cls.UNKNOWN: 2,
+            cls.CRIT: 3,
+        }
+
+        # we are nice and handle ints
+        best = min(
+            (cls(int(s)) for s in args),
+            key=_sorted.get,
+        )
+
+        return best
+
+    @classmethod
     def worst(cls, *args: 'state') -> 'state':
         """Returns the worst of all passed states
 

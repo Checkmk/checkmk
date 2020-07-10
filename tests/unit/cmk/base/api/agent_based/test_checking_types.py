@@ -120,6 +120,23 @@ def test_state():
         _ = state.OK < state.WARN  # type: ignore[operator]
 
 
+@pytest.mark.parametrize("states, best_state", [
+    ((state.OK,), state.OK),
+    ((state.OK, state.WARN), state.OK),
+    ((state.OK, state.WARN, state.UNKNOWN), state.OK),
+    ((state.OK, state.WARN, state.UNKNOWN, state.CRIT), state.OK),
+    ((state.WARN,), state.WARN),
+    ((state.WARN, state.UNKNOWN), state.WARN),
+    ((state.WARN, state.UNKNOWN, state.CRIT), state.WARN),
+    ((state.UNKNOWN,), state.UNKNOWN),
+    ((state.UNKNOWN, state.CRIT), state.UNKNOWN),
+    ((state.CRIT,), state.CRIT),
+    ((0, 1, 2, 3, state.UNKNOWN), state.OK),
+])
+def test_best_state(states, best_state):
+    assert state.best(*states) is best_state
+
+
 def test_metric_kwarg():
     with pytest.raises(TypeError):
         _ = Metric("universe", 42, (23, 23))  # type: ignore[misc] # pylint: disable=too-many-function-args

@@ -40,11 +40,9 @@ from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
     CheckPluginName,
-    CheckPluginNameStr,
     HostAddress,
     HostName,
     InventoryPluginName,
-    Item,
     Metric,
     SectionName,
     ServiceAdditionalDetails,
@@ -71,7 +69,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
     CLUSTER_LEGACY_MODE_FROM_HELL,
     wrap_parameters,
 )
-from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 
@@ -503,7 +501,7 @@ def get_aggregated_result(
             host_config.hostname,
             service.check_plugin_name,
             kwargs,
-            is_manual_check(host_config.hostname, service.check_plugin_name, service.item),
+            is_manual_check(host_config.hostname, service.id()),
             service.description,
         ), []
 
@@ -574,7 +572,7 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
                 "params": used_params,
                 "section_content": section_content
             },
-            is_manual_check(hostname, service.check_plugin_name, service.item),
+            is_manual_check(hostname, service.id()),
             service.description,
         ), []
 
@@ -676,11 +674,12 @@ def _evaluate_timespecific_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
     return combined_entry
 
 
-def is_manual_check(hostname: HostName, check_plugin_name: CheckPluginNameStr, item: Item) -> bool:
-    manual_checks = check_table.get_check_table(hostname,
-                                                remove_duplicates=True,
-                                                skip_autochecks=True)
-    return (check_plugin_name, item) in manual_checks
+def is_manual_check(hostname: HostName, service_id: ServiceID) -> bool:
+    return service_id in check_table.get_check_table(
+        hostname,
+        remove_duplicates=True,
+        skip_autochecks=True,
+    )
 
 
 def _aggregate_results(

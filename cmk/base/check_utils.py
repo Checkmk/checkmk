@@ -45,6 +45,9 @@ BoundedAbstractSections = TypeVar("BoundedAbstractSections", bound=AbstractSecti
 BoundedAbstractPersistedSections = TypeVar("BoundedAbstractPersistedSections",
                                            bound=AbstractPersistedSections)
 
+ServiceID = Tuple[CheckPluginNameStr, Item]
+CheckTable = Dict[ServiceID, 'Service']
+
 
 class Service:
     __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
@@ -83,7 +86,7 @@ class Service:
     def service_labels(self) -> DiscoveredServiceLabels:
         return self._service_labels
 
-    def id(self) -> Tuple[CheckPluginNameStr, Item]:
+    def id(self) -> ServiceID:
         return self.check_plugin_name, self.item
 
     def __eq__(self, other: Any) -> bool:
@@ -110,9 +113,6 @@ class Service:
             self.parameters,
             self.service_labels.to_dict(),
         )
-
-
-CheckTable = Dict[Tuple[CheckPluginNameStr, Item], Service]
 
 
 def is_snmp_check(check_plugin_name: str) -> bool:

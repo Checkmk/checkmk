@@ -9,9 +9,13 @@
 from cmk.gui import sites
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
-from cmk.gui.plugins.openapi.restful_objects import endpoint_schema, constructors, response_schemas
+from cmk.gui.plugins.openapi.restful_objects import (
+    endpoint_schema,
+    constructors,
+    response_schemas,
+    ParamDict,
+)
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
-from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
 
 
 @endpoint_schema(constructors.collection_href('host'),

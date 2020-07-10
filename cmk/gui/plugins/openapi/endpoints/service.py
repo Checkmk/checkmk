@@ -9,8 +9,12 @@
 from cmk.gui import sites
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Services
-from cmk.gui.plugins.openapi.restful_objects import endpoint_schema, constructors, response_schemas
-from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
+from cmk.gui.plugins.openapi.restful_objects import (
+    endpoint_schema,
+    constructors,
+    response_schemas,
+    ParamDict,
+)
 
 
 @endpoint_schema(constructors.collection_href('service'),

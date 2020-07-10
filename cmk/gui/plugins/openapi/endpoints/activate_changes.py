@@ -7,9 +7,12 @@
 from cmk.gui import watolib
 from cmk.gui.globals import request
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.restful_objects import (constructors, endpoint_schema,
-                                                     response_schemas)
-from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    endpoint_schema,
+    response_schemas,
+    ParamDict,
+)
 
 ACTIVATION_ID = ParamDict.create(
     'activation_id',

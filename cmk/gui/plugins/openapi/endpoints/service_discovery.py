@@ -10,8 +10,11 @@ from cmk.gui import watolib
 from cmk.gui.watolib.services import (Discovery, StartDiscoveryRequest, DiscoveryOptions,
                                       get_check_table, checkbox_id)
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
-from cmk.gui.plugins.openapi.restful_objects import (endpoint_schema, response_schemas)
+from cmk.gui.plugins.openapi.restful_objects import (
+    endpoint_schema,
+    response_schemas,
+    ParamDict,
+)
 from cmk.gui.plugins.openapi.restful_objects.constructors import (domain_object, object_property,
                                                                   link_rel, collection_href)
 

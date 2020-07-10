@@ -300,6 +300,7 @@ multisite_builtin_views.update({
         'title': _('Service check durations'),
         "topic": "history",
         "sort_index": 100,
+        "is_advanced": True,
     },
     'comments': {
         'column_headers': 'pergroup',
@@ -1638,6 +1639,7 @@ multisite_builtin_views.update({
         'title': _('Pending services'),
         'topic': "analyze",
         "sort_index": 50,
+        "is_advanced": True,
     },
     'searchhost': {
         'browser_reload': 60,
@@ -2094,6 +2096,7 @@ multisite_builtin_views.update({
         'title': _('Search time graphs'),
         "topic": "history",
         "sort_index": 80,
+        "is_advanced": True,
     },
     'hostpnp': {
         'browser_reload': 90,
@@ -2203,6 +2206,7 @@ multisite_builtin_views.update({
         'title': _('Stale services'),
         "topic": "problems",
         "sort_index": 40,
+        "is_advanced": True,
     },
     'stale_hosts': {
         'browser_reload': 30,
@@ -2533,6 +2537,7 @@ multisite_builtin_views.update({
         'title': _('Search global logfile'),
         "topic": "history",
         "sort_index": 70,
+        "is_advanced": True,
     },
     'sitesvcs_ok': {
         'browser_reload': 60,
@@ -2854,6 +2859,7 @@ multisite_builtin_views.update({
         'title': _('Alert Statistics'),
         "topic": "problems",
         "sort_index": 50,
+        "is_advanced": True,
     },
 
     # Special views for NagStaMon
@@ -4498,6 +4504,7 @@ multisite_builtin_views['crash_reports'] = {
     'user_sortable': True,
     "topic": "analyze",
     "sort_index": 30,
+    "is_advanced": True,
 }
 
 multisite_builtin_views['cmk_servers'] = {

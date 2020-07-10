@@ -64,7 +64,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
 # modules, so we provide a mapping here to work around that.
 _SYMLINK_TO_NAME = {
     ModulePath("cmk/base/automations/cee.py"): "cmk.base.automations.cee",
-    ModulePath("cmk/base/default_config/cee.py"): "cmk.base.default_config.cee.py",
+    ModulePath("cmk/base/default_config/cee.py"): "cmk.base.default_config.cee",
     ModulePath("cmk/base/default_config/cme.py"): "cmk.base.default_config.cme",
     ModulePath("cmk/base/modes/cee.py"): "cmk.base.modes.cee",
 }

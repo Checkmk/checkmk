@@ -396,7 +396,21 @@ def wrap_with_validation(func, _request_schema, response_schema):
 
 
 def _schema_name(schema):
-    return schema.__name__.rstrip("Schema")
+    """Strip the suffix 'Schema' from a schema.
+
+    Examples:
+
+        >>> class SchemaSchema:
+        ...     pass
+
+        >>> _schema_name(SchemaSchema)
+        'Schema'
+
+    Returns:
+        The name of the schema, without the suffix.
+
+    """
+    return schema.__name__[:-6] if schema.__name__.endswith("Schema") else schema.__name__
 
 
 def _schema_definition(schema):

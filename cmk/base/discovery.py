@@ -1163,9 +1163,10 @@ def _discover_services(
     try:
         for check_plugin_name in sorted(plugin_candidates):
             try:
-                for service in _execute_discovery(multi_host_sections, hostname, ipaddress,
-                                                  check_plugin_name, on_error):
-                    service_table[(service.check_plugin_name, service.item)] = service
+                service_table.update({
+                    service.id(): service for service in _execute_discovery(
+                        multi_host_sections, hostname, ipaddress, check_plugin_name, on_error)
+                })
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as e:
@@ -1174,8 +1175,8 @@ def _discover_services(
                 if on_error == "warn":
                     console.error("Discovery of '%s' failed: %s\n" % (check_plugin_name, e))
 
-        check_table_formatted = check_table.remove_duplicate_checks(service_table)
-        return list(check_table_formatted.values())
+        check_table_dedup = check_table.remove_duplicate_checks(service_table)
+        return list(check_table_dedup.values())
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

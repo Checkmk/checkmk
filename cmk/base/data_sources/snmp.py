@@ -33,8 +33,7 @@ from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
 import cmk.base.ip_lookup as ip_lookup
 
-from .abstract import ABCDataSource
-from .host_sections import AbstractHostSections
+from .abstract import ABCDataSource, ABCHostSections
 
 #.
 #   .--SNMP----------------------------------------------------------------.
@@ -49,8 +48,8 @@ from .host_sections import AbstractHostSections
 #   '----------------------------------------------------------------------'
 
 
-class SNMPHostSections(AbstractHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
-                                            SNMPSectionContent]):
+class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
+                                       SNMPSectionContent]):
     def __init__(self,
                  sections: Optional[SNMPSections] = None,
                  cache_info: Optional[SectionCacheInfo] = None,

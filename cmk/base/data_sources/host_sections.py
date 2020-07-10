@@ -41,7 +41,7 @@ from cmk.base.check_utils import (
 )
 from cmk.base.exceptions import MKParseFunctionError
 
-from .abstract import AbstractHostSections
+from .abstract import ABCHostSections
 
 HostKey = NamedTuple("HostKey", [
     ("hostname", HostName),
@@ -54,9 +54,9 @@ class MultiHostSections(collections.abc.MutableMapping):
     """Container object for wrapping the host sections of a host being processed
     or multiple hosts when a cluster is processed. Also holds the functionality for
     merging these information together for a check"""
-    def __init__(self, data: Optional[Dict[HostKey, AbstractHostSections]] = None) -> None:
+    def __init__(self, data: Optional[Dict[HostKey, ABCHostSections]] = None) -> None:
         super(MultiHostSections, self).__init__()
-        self._data: Dict[HostKey, AbstractHostSections] = {} if data is None else data
+        self._data: Dict[HostKey, ABCHostSections] = {} if data is None else data
         self._config_cache = config.get_config_cache()
         self._section_content_cache = caching.DictCache()
         # This is not quite the same as section_content_cache.
@@ -75,7 +75,7 @@ class MultiHostSections(collections.abc.MutableMapping):
     def __getitem__(self, key: HostKey):
         return self._data.__getitem__(key)
 
-    def __setitem__(self, key: HostKey, value: AbstractHostSections) -> None:
+    def __setitem__(self, key: HostKey, value: ABCHostSections) -> None:
         self._data.__setitem__(key, value)
 
     def __delitem__(self, key: HostKey) -> None:

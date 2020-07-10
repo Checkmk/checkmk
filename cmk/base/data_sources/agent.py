@@ -35,7 +35,7 @@ from cmk.base.check_utils import (
     PiggybackRawData,
     SectionCacheInfo,
 )
-from cmk.base.data_sources.abstract import AbstractHostSections
+from cmk.base.data_sources.abstract import ABCHostSections
 from cmk.base.exceptions import MKGeneralException
 
 from .abstract import ABCDataSource
@@ -43,8 +43,8 @@ from .abstract import ABCDataSource
 __all__ = ["AgentHostSections", "AgentDataSource"]
 
 
-class AgentHostSections(AbstractHostSections[RawAgentData, AgentSections, PersistedAgentSections,
-                                             AgentSectionContent]):
+class AgentHostSections(ABCHostSections[RawAgentData, AgentSections, PersistedAgentSections,
+                                        AgentSectionContent]):
     def __init__(self,
                  sections: Optional[AgentSections] = None,
                  cache_info: Optional[SectionCacheInfo] = None,

@@ -17,7 +17,7 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources import make_host_sections, make_sources
-from cmk.base.data_sources.abstract import AbstractHostSections, ABCDataSource
+from cmk.base.data_sources.abstract import ABCHostSections, ABCDataSource
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
@@ -389,7 +389,7 @@ class TestMakeHostSectionsHosts:
 
     @pytest.fixture(autouse=True)
     def patch_io(self, monkeypatch):
-        class DummyHostSection(AbstractHostSections):
+        class DummyHostSection(ABCHostSections):
             def _extend_section(self, section_name, section_content):
                 pass
 
@@ -436,7 +436,7 @@ class TestMakeHostSectionsHosts:
         section = mhs[key]
         assert isinstance(section, AgentHostSections)
 
-        # Public attributes from AbstractHostSections:
+        # Public attributes from ABCHostSections:
         assert not section.sections
         assert not section.cache_info
         assert not section.piggybacked_raw_data
@@ -554,7 +554,7 @@ class TestMakeHostSectionsClusters:
 
     @pytest.fixture(autouse=True)
     def patch_io(self, monkeypatch):
-        class DummyHostSection(AbstractHostSections):
+        class DummyHostSection(ABCHostSections):
             def _extend_section(self, section_name, section_content):
                 pass
 

@@ -43,9 +43,9 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLooku
 from ._cache import FileCache, SectionStore
 
 
-class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
-                                   BoundedAbstractPersistedSections, BoundedAbstractSectionContent],
-                           metaclass=abc.ABCMeta):
+class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
+                              BoundedAbstractPersistedSections, BoundedAbstractSectionContent],
+                      metaclass=abc.ABCMeta):
     """A wrapper class for the host information read by the data sources
 
     It contains the following information:
@@ -60,7 +60,7 @@ class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSectio
     def __init__(self, sections: BoundedAbstractSections, cache_info: SectionCacheInfo,
                  piggybacked_raw_data: PiggybackRawData,
                  persisted_sections: BoundedAbstractPersistedSections) -> None:
-        super(AbstractHostSections, self).__init__()
+        super(ABCHostSections, self).__init__()
         self.sections = sections
         self.cache_info = cache_info
         self.piggybacked_raw_data = piggybacked_raw_data
@@ -80,7 +80,7 @@ class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSectio
     # of the sections, but for the self.cache_info this is not done. Why?
     # TODO: checking.execute_check() is using the oldest cached_at and the largest interval.
     #       Would this be correct here?
-    def update(self, host_sections: "AbstractHostSections") -> None:
+    def update(self, host_sections: "ABCHostSections") -> None:
         """Update this host info object with the contents of another one"""
         for section_name, section_content in host_sections.sections.items():
             self._extend_section(section_name, section_content)
@@ -106,7 +106,7 @@ class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSectio
         self.sections[section_name] = section  # type: ignore[assignment]
 
 
-BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=AbstractHostSections)
+BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=ABCHostSections)
 
 
 # Abstract methods:
@@ -184,9 +184,9 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         del self._logger.handlers[:]  # Remove all previously existing handlers
         self._logger.addHandler(handler)
 
-    def run(self) -> AbstractHostSections:
+    def run(self) -> ABCHostSections:
         result = self._run(get_raw_data=False)
-        if not isinstance(result, AbstractHostSections):
+        if not isinstance(result, ABCHostSections):
             raise TypeError("Got invalid type: %r" % result)
         return result
 
@@ -227,7 +227,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             raw_data, is_cached_data = self._get_raw_data()
 
             self._host_sections = host_sections = self._convert_to_sections(raw_data)
-            assert isinstance(host_sections, AbstractHostSections)
+            assert isinstance(host_sections, ABCHostSections)
 
             if get_raw_data:
                 return raw_data

@@ -6,7 +6,7 @@
 
 import abc
 import re
-from typing import Optional, NamedTuple
+from typing import Optional, NamedTuple, List
 
 from cmk.gui.i18n import _
 import cmk.gui.config as config
@@ -193,7 +193,7 @@ def register_modules(*args):
         main_module_registry.register(cls)
 
 
-def get_modules():
+def get_modules() -> List[MainModule]:
     return sorted([m() for m in main_module_registry.values()],
                   key=lambda m: (m.sort_index, m.title))
 

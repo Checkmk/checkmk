@@ -9,7 +9,7 @@ Place for shared code between the main module (cmk.gui.main_menu) and the plugin
 in cmk.gui.plugins.main_menu.
 """
 
-from typing import NamedTuple, Optional, List
+from typing import NamedTuple, List, Callable, Optional
 
 from cmk.utils.plugin_registry import InstanceRegistry
 
@@ -29,27 +29,12 @@ TopicMenuTopic = NamedTuple("TopicMenuTopic", [
     ("icon_name", Optional[str]),
 ])
 
-MegaMenuItem = NamedTuple("MegaMenuItem", [
-    ("text", str),
-    ("icon_name", Optional[str]),
-    ("url", str),
-    ("target", Optional[str]),
-    ("description", Optional[str]),
-    ("advanced", bool),
-])
-
-MegaMenuTopic = NamedTuple("MegaMenuTopic", [
-    ("title", str),
-    ("icon_name", Optional[str]),
-    ("items", List[MegaMenuItem]),
-])
-
 MegaMenu = NamedTuple("MegaMenu", [
     ("name", str),
     ("title", str),
     ("icon_name", str),
     ("sort_index", int),
-    ("topics", List[MegaMenuTopic]),
+    ("topics", Callable[[], List[TopicMenuTopic]]),
 ])
 
 

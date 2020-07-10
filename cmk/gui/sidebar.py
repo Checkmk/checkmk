@@ -29,6 +29,7 @@ import cmk.gui.notify as notify
 import cmk.gui.werks as werks
 import cmk.gui.sites as sites
 import cmk.gui.pages
+from cmk.gui.main_menu import MainMenuRenderer
 import cmk.gui.plugins.sidebar
 import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
@@ -333,37 +334,27 @@ class SidebarRenderer:
         else:
             html.open_body(
                 class_=body_classes,
-                onload=
-                'cmk.sidebar.initialize_scroll_position(); cmk.sidebar.set_sidebar_size(); cmk.sidebar.init_messages(%s);'
-                % interval,
+                onload='cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages(%s);' %
+                interval,
                 onunload="cmk.sidebar.store_scroll_position()")
-            html.open_div(id_="check_mk_sidebar")
 
+            html.open_div(id_="check_mk_sidebar")
             self._sidebar_head()
-            user_config = UserSidebarConfig(config.user, config.sidebar)
-            refresh_snapins = []
-            restart_snapins = []
-            static_snapins = []
+            html.close_div()
+
+            html.open_div(id_="check_mk_snapinbar",
+                          class_=["left" if config.user.get_attribute("ui_snapinbar") else None])
+
+            self._show_shortcuts()
 
             html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None,
                           id_="side_content")
-            for snapin in user_config.snapins:
-                name = snapin.snapin_type.type_name()
 
-                # Performs the initial rendering and might return an optional refresh url,
-                # when the snapin contents are refreshed from an external source
-                refresh_url = self.render_snapin(snapin)
-
-                if snapin.snapin_type.refresh_regularly():
-                    refresh_snapins.append([name, refresh_url])
-                elif snapin.snapin_type.refresh_on_restart():
-                    refresh_snapins.append([name, refresh_url])
-                    restart_snapins.append(name)
-                else:
-                    static_snapins.append(name)
+            refresh_snapins, restart_snapins, static_snapins = self._show_snapins()
+            self._show_add_snapin_button()
 
             html.close_div()
-            self._sidebar_foot(user_config)
+
             html.close_div()
 
             html.javascript("cmk.sidebar.initialize_sidebar(%0.2f, %s, %s, %s);\n" % (
@@ -380,12 +371,67 @@ class SidebarRenderer:
 
         html.body_end()
 
+    def _show_shortcuts(self) -> None:
+        html.open_div(class_="shortcuts")
+        for description, icon, url, target in (
+            (_("Main"), "main_dashboard",
+             html.makeuri_contextless([("name", "main")], "dashboard.py"), "main"),
+            (_("System"), "main_cmk_dashboard",
+             html.makeuri_contextless([("name", "cmk_overview")], "dashboard.py"), "main"),
+            (_("Problems"), "main_problems",
+             html.makeuri_contextless([("name", "simple_problems")], "dashboard.py"), "main"),
+            (_("Hosts"), "main_folder", html.makeuri_contextless([("mode", "folder")],
+                                                                 "wato.py"), "main"),
+            (_("Manual"), "main_help", "https://checkmk.de/cms.html", "blank"),
+        ):
+            html.open_a(href=url, target=target)
+            html.icon(title=None, icon=icon)
+            html.div(description)
+            html.close_a()
+        html.close_div()
+
+    def _show_snapins(self) -> Tuple[List, List, List]:
+        user_config = UserSidebarConfig(config.user, config.sidebar)
+        refresh_snapins = []
+        restart_snapins = []
+        static_snapins = []
+
+        for snapin in user_config.snapins:
+            name = snapin.snapin_type.type_name()
+
+            # Performs the initial rendering and might return an optional refresh url,
+            # when the snapin contents are refreshed from an external source
+            refresh_url = self.render_snapin(snapin)
+
+            if snapin.snapin_type.refresh_regularly():
+                refresh_snapins.append([name, refresh_url])
+            elif snapin.snapin_type.refresh_on_restart():
+                refresh_snapins.append([name, refresh_url])
+                restart_snapins.append(name)
+            else:
+                static_snapins.append(name)
+
+        return refresh_snapins, restart_snapins, static_snapins
+
+    def _show_add_snapin_button(self) -> None:
+        html.open_div(id_="add_snapin")
+        html.open_a(href=html.makeuri_contextless([], filename="sidebar_add_snapin.py"),
+                    target="main")
+        html.icon(title=_("Add snapins to your sidebar"), icon="add")
+        html.close_a()
+        html.close_div()
+
     def render_snapin(self, snapin: UserSidebarSnapin) -> str:
         snapin_class = snapin.snapin_type
         name = snapin_class.type_name()
         snapin_instance = snapin_class()
 
-        html.open_div(id_="snapin_container_%s" % name, class_="snapin")
+        more_id = "sidebar_snapin_" + name
+        show_more = html.foldable_container_is_open("more_buttons", more_id, isopen=False)
+
+        html.open_div(id_="snapin_container_%s" % name,
+                      class_=["snapin", ("more" if show_more else "less")])
+
         self._render_snapin_styles(snapin_instance)
         # When not permitted to open/close snapins, the snapins are always opened
         if snapin.visible == SnapinVisibility.OPEN or not config.user.may(
@@ -408,20 +454,32 @@ class SidebarRenderer:
 
         html.open_div(class_=["head", snapin.visible.value], **head_actions)
 
-        if config.user.may("general.configure_sidebar"):
-            # Icon for mini/maximizing
-            html.div("",
-                     class_="minisnapin",
-                     title=_("Toggle this snapin"),
-                     onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
-
-            # Button for closing (removing) a snapin
-            html.open_div(class_="closesnapin")
-            close_url = "sidebar_openclose.py?name=%s&state=off" % name
-            html.icon_button(url=None,
-                             title=_("Remove this snapin"),
-                             icon="closesnapin",
-                             onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" % close_url)
+        # TODO: Implement this
+        advanced = False  # snapin_instance.has_advanced_items()
+        may_configure = config.user.may("general.configure_sidebar")
+        if advanced or may_configure:
+            html.open_div(class_="snapin_buttons")
+            if may_configure:
+                # Icon for mini/maximizing
+                html.span("",
+                          class_="minisnapin",
+                          title=_("Toggle this snapin"),
+                          onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
+            # TODO: implement this
+            #if advanced:
+            #    html.open_span(class_="moresnapin")
+            #    html.more_button(more_id, dom_levels_up=4)
+            #    html.close_span()
+            if may_configure:
+                # Button for closing (removing) a snapin
+                html.open_span(class_="closesnapin")
+                close_url = "sidebar_openclose.py?name=%s&state=off" % name
+                html.icon_button(url=None,
+                                 title=_("Remove this snapin"),
+                                 icon="close",
+                                 onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" %
+                                 close_url)
+                html.close_span()
             html.close_div()
 
         # The heading. A click on the heading mini/maximizes the snapin
@@ -466,11 +524,16 @@ class SidebarRenderer:
 
     def _sidebar_head(self):
         html.open_div(id_="side_header")
-        html.div('', id_="side_fold")
         html.open_a(href=config.user.get_attribute("start_url") or config.start_url,
                     target="main",
                     title=_("Go to main overview"))
         html.div("", id_="side_bg")
+        html.close_a()
+        html.close_div()
+
+        self._show_main_menu()
+
+        html.div('', id_="side_fold")
 
         if config.sidebar_show_version_in_sidebar:
             html.open_div(id_="side_version")
@@ -487,10 +550,11 @@ class SidebarRenderer:
                               title=_("%d unacknowledged incompatible werks") %
                               num_unacknowledged_werks)
 
-        html.close_a()
-        html.close_div()
-        html.close_a()
-        html.close_div()
+            html.close_a()
+            html.close_div()
+
+    def _show_main_menu(self) -> None:
+        MainMenuRenderer().show()
 
     def _get_check_mk_edition_title(self):
         if cmk_version.is_enterprise_edition():

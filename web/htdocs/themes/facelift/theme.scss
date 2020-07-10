@@ -23,6 +23,7 @@
 @import "scss/_snapins.scss";
 @import "scss/_node_visualization.scss";
 @import "scss/_cmk_figures.scss";
+@import "scss/_mega_menu.scss";
 
 // CEE specific files. Would love to add some kind of conditional import here,
 // but that is simply not possible at the moment using SCSS. Hack around this

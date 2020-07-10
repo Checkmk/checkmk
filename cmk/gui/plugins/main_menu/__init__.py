@@ -10,7 +10,10 @@
 
 from cmk.utils.plugin_loader import load_plugins
 
-#from cmk.gui.plugins.main_menu.utils import (
-#)
+from cmk.gui.plugins.main_menu.utils import (
+    mega_menu_registry,
+    MegaMenu,
+    TopicMenuTopic,
+)
 
 load_plugins(__file__, __package__)

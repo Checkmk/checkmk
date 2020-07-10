@@ -15,7 +15,7 @@ from cmk.gui.plugins.sidebar import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
-    ViewMenuTopic,
+    TopicMenuTopic,
 )
 
 
@@ -43,7 +43,7 @@ class Dashboards(SidebarSnapin):
             links.append((_("Edit"), "edit_dashboards.py"))
             footnotelinks(links)
 
-    def _get_dashboard_menu_items(self) -> List[ViewMenuTopic]:
+    def _get_dashboard_menu_items(self) -> List[TopicMenuTopic]:
         return make_topic_menu([
             ("dashboards", e) for e in dashboard.get_permitted_dashboards().items()
         ])

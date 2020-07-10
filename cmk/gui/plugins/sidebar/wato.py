@@ -21,8 +21,8 @@ from cmk.gui.plugins.sidebar import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
-    ViewMenuTopic,
-    ViewMenuItem,
+    TopicMenuTopic,
+    TopicMenuItem,
 )
 
 from cmk.gui.plugins.wato.utils.main_menu import (
@@ -57,8 +57,8 @@ def render_wato(mini):
         html.div('', class_="clear")
 
 
-def get_wato_menu_items() -> List[ViewMenuTopic]:
-    by_topic: Dict[MainModuleTopic, ViewMenuTopic] = {}
+def get_wato_menu_items() -> List[TopicMenuTopic]:
+    by_topic: Dict[MainModuleTopic, TopicMenuTopic] = {}
     for module_class in main_module_registry.values():
         module = module_class()
 
@@ -67,14 +67,14 @@ def get_wato_menu_items() -> List[ViewMenuTopic]:
 
         topic = by_topic.setdefault(
             module.topic,
-            ViewMenuTopic(
+            TopicMenuTopic(
                 name=module.topic.name,
                 title=module.topic.title,
                 icon_name=module.topic.icon_name,
                 items=[],
             ))
         topic.items.append(
-            ViewMenuItem(
+            TopicMenuItem(
                 name=module.mode_or_url,
                 title=module.title,
                 icon_name=module.icon,

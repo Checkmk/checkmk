@@ -318,7 +318,7 @@ def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Opti
     return only_sites
 
 
-ViewMenuItem = NamedTuple("ViewMenuItem", [
+TopicMenuItem = NamedTuple("TopicMenuItem", [
     ("name", str),
     ("title", str),
     ("url", str),
@@ -327,19 +327,19 @@ ViewMenuItem = NamedTuple("ViewMenuItem", [
     ("icon_name", Optional[str]),
 ])
 
-ViewMenuTopic = NamedTuple("ViewMenu", [
+TopicMenuTopic = NamedTuple("TopicMenuTopic", [
     ("name", "str"),
     ("title", "str"),
-    ("items", List[ViewMenuItem]),
+    ("items", List[TopicMenuItem]),
     ("icon_name", Optional[str]),
 ])
 
 
-def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[ViewMenuTopic]:
+def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[TopicMenuTopic]:
     pagetypes.PagetypeTopics.load()
     topics = pagetypes.PagetypeTopics.get_permitted_instances()
 
-    by_topic: Dict[pagetypes.PagetypeTopics, ViewMenuTopic] = {}
+    by_topic: Dict[pagetypes.PagetypeTopics, TopicMenuTopic] = {}
 
     for visual_type_name, (name, visual) in visuals:
         if visual["hidden"] or visual.get("mobile"):
@@ -356,14 +356,14 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[ViewM
 
         topic = by_topic.setdefault(
             topic,
-            ViewMenuTopic(
+            TopicMenuTopic(
                 name=topic.name(),
                 title=topic.title(),
                 items=[],
                 icon_name=topic.icon_name(),
             ))
         topic.items.append(
-            ViewMenuItem(
+            TopicMenuItem(
                 name=name,
                 title=visual["title"],
                 url=url,
@@ -398,13 +398,13 @@ def _visual_url(visual_type_name: str, name: str) -> str:
 
 
 def show_topic_menu(treename: str,
-                    menu: List[ViewMenuTopic],
+                    menu: List[TopicMenuTopic],
                     show_item_icons: bool = False) -> None:
     for topic in menu:
         _show_topic(treename, topic, show_item_icons)
 
 
-def _show_topic(treename: str, topic: ViewMenuTopic, show_item_icons: bool) -> None:
+def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> None:
     if not topic.items:
         return
 

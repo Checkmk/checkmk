@@ -17,7 +17,7 @@ from cmk.gui.plugins.sidebar import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
-    ViewMenuTopic,
+    TopicMenuTopic,
 )
 from cmk.gui.i18n import _
 
@@ -47,7 +47,7 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
 
-def get_view_menu_items() -> List[ViewMenuTopic]:
+def get_view_menu_items() -> List[TopicMenuTopic]:
     # The page types that are implementing the PageRenderer API should also be
     # part of the menu. Bring them into a visual like structure to make it easy to
     # integrate them.

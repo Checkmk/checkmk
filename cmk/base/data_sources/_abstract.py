@@ -428,6 +428,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
         return status, exc_msg + check_api_utils.state_markers[status], []
 
+    @abc.abstractmethod
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         """Produce a source specific summary result in case no exception occured.
 
@@ -436,7 +437,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
         The default is to return empty summary information, which will then be
         ignored by the code that processes the summary result."""
-        return 0, "Success", []
+        raise NotImplementedError()
 
     def exception(self) -> Optional[Exception]:
         """Provides exceptions happened during last self.run() call or None"""

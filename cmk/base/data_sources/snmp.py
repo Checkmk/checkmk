@@ -9,12 +9,9 @@ import ast
 import time
 from typing import cast, Dict, Iterable, List, Optional, Set
 
-from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
-from cmk.snmplib.snmp_scan import (
-    gather_available_raw_section_names,
-    SNMPScanSection,
-)
+from cmk.snmplib.snmp_scan import gather_available_raw_section_names, SNMPScanSection
 from cmk.snmplib.type_defs import (
     SNMPCredentials,
     SNMPHostConfig,
@@ -28,10 +25,10 @@ from cmk.snmplib.type_defs import (
 from cmk.fetchers import factory, SNMPDataFetcher
 
 import cmk.base.config as config
+import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
-import cmk.base.ip_lookup as ip_lookup
 
 from ._abstract import ABCDataSource, ABCHostSections
 
@@ -189,6 +186,9 @@ class SNMPDataSource(ABCSNMPDataSource):
 
         return "%s (%s, Bulk walk: %s, Port: %d, Inline: %s)" % \
                (self.title(), credentials_text, bulk, snmp_config.port, inline)
+
+    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
+        return 0, "Success", []
 
     def _empty_raw_data(self) -> SNMPRawData:
         return {}

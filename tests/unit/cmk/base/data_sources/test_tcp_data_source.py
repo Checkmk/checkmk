@@ -10,7 +10,7 @@ from testlib.base import Scenario
 
 from cmk.utils.type_defs import ServiceCheckResult
 
-from cmk.base.data_sources.agent import AgentHostSections
+from cmk.base.data_sources.agent import AgentHostSections, Summarizer
 from cmk.base.data_sources.tcp import TCPDataSource
 
 
@@ -30,7 +30,9 @@ def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):
 
     source = TCPDataSource("hostname", "ipaddress")
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
-    assert source._sub_result_only_from({"onlyfrom": reported}) == result
+
+    summarizer = Summarizer(source._empty_host_sections(), source._host_config)
+    assert summarizer._sub_result_only_from({"onlyfrom": reported}) == result
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])

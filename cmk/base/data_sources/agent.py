@@ -63,15 +63,12 @@ class AgentHostSections(ABCHostSections[RawAgentData, AgentSections, PersistedAg
 
 class Summarizer:
     # TODO: refactor
-    def __init__(self, host_sections: AgentHostSections, host_config: config.HostConfig):
+    def __init__(self, host_config: config.HostConfig):
         super().__init__()
-        self._host_sections = host_sections
         self._host_config = host_config
 
-    def summarize(self, for_checking: bool) -> ServiceCheckResult:
-        assert isinstance(self._host_sections, AgentHostSections)
-
-        cmk_section = self._host_sections.sections.get(SectionName("check_mk"))
+    def summarize(self, cmk_section: Optional[AgentSectionContent],
+                  for_checking: bool) -> ServiceCheckResult:
         agent_info = self._get_agent_info(cmk_section)
         agent_version = agent_info["version"]
 
@@ -97,16 +94,13 @@ class Summarizer:
                 perfdata += sub_perfdata
         return status, ", ".join(output), perfdata
 
-    def _get_agent_info(
-        self,
-        cmk_section: Optional[AgentSectionContent],
-    ) -> Dict[str, Optional[str]]:
+    @staticmethod
+    def _get_agent_info(cmk_section: Optional[AgentSectionContent],) -> Dict[str, Optional[str]]:
         agent_info: Dict[str, Optional[str]] = {
             "version": u"unknown",
             "agentos": u"unknown",
         }
-
-        if self._host_sections is None or not cmk_section:
+        if not cmk_section:
             return agent_info
 
         for line in cmk_section:
@@ -122,7 +116,7 @@ class Summarizer:
         expected_version = self._host_config.agent_target_version
 
         if expected_version and agent_version \
-             and not self._is_expected_agent_version(agent_version, expected_version):
+             and not Summarizer._is_expected_agent_version(agent_version, expected_version):
             expected = u""
             # expected version can either be:
             # a) a single version string
@@ -179,8 +173,8 @@ class Summarizer:
         return 1, "Unexpected allowed IP ranges (%s)%s" % (", ".join(infotexts),
                                                            state_markers[1]), []
 
+    @staticmethod
     def _is_expected_agent_version(
-        self,
         agent_version: Optional[str],
         expected_version: config.AgentTargetVersion,
     ) -> bool:
@@ -428,8 +422,8 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         if not isinstance(self._host_sections, AgentHostSections):
             raise TypeError(self._host_sections)
 
-        summary = Summarizer(self._host_sections, self._host_config)
-        return summary.summarize(for_checking)
+        return Summarizer(self._host_config).summarize(
+            self._host_sections.sections.get(SectionName("check_mk")), for_checking)
 
 
 def _normalize_ip_addresses(ip_addresses: Union[AnyStr, List[AnyStr]]) -> List[str]:

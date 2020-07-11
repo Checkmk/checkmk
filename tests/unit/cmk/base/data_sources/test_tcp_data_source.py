@@ -28,10 +28,11 @@ def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):
     ts.set_option("agent_config", {"only_from": [rule]} if rule else {})
     config_cache = ts.apply(monkeypatch)
 
+    # TODO(ml): Instantiating the DS here does not seem to be very useful.
     source = TCPDataSource("hostname", "ipaddress")
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
-    summarizer = Summarizer(source._empty_host_sections(), source._host_config)
+    summarizer = Summarizer(source._host_config)
     assert summarizer._sub_result_only_from({"onlyfrom": reported}) == result
 
 

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import logging
 import os
 import time
 from typing import AnyStr, cast, Dict, List, Optional, Set, Tuple, Union
@@ -220,6 +221,155 @@ class Summarizer:
                 (agent_version, expected_version, e))
 
 
+class Parser:
+    def __init__(self, host_config: config.HostConfig, logger: logging.Logger) -> None:
+        super().__init__()
+        self._host_config = host_config
+        self._logger = logger
+
+    def parse(self, raw_data: RawAgentData) -> AgentHostSections:
+        raw_data = cast(RawAgentData, raw_data)
+        if config.agent_simulator:
+            raw_data = agent_simulator.process(raw_data)
+
+        return self._parse_host_section(raw_data)
+
+    def _parse_host_section(self, raw_data: RawAgentData) -> AgentHostSections:
+        """Split agent output in chunks, splits lines by whitespaces.
+
+        Returns a HostSections() object.
+        """
+        sections: AgentSections = {}
+        # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
+        # The value is a list of lines which were received for this host.
+        piggybacked_raw_data: PiggybackRawData = {}
+        piggybacked_hostname = None
+        piggybacked_cached_at = int(time.time())
+        # Transform to seconds and give the piggybacked host a little bit more time
+        piggybacked_cache_age = int(1.5 * 60 * self._host_config.check_mk_check_interval)
+
+        # handle sections with option persist(...)
+        persisted_sections: PersistedAgentSections = {}
+        section_content: Optional[AgentSectionContent] = None
+        section_options: Dict[str, Optional[str]] = {}
+        agent_cache_info: SectionCacheInfo = {}
+        separator: Optional[str] = None
+        encoding = None
+        for line in raw_data.split(b"\n"):
+            line = line.rstrip(b"\r")
+            stripped_line = line.strip()
+            if stripped_line[:4] == b'<<<<' and stripped_line[-4:] == b'>>>>':
+                piggybacked_hostname =\
+                    Parser._get_sanitized_and_translated_piggybacked_hostname(stripped_line, self._host_config.hostname)
+
+            elif piggybacked_hostname:  # processing data for an other host
+                if stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
+                    line = Parser._add_cached_info_to_piggybacked_section_header(
+                        stripped_line, piggybacked_cached_at, piggybacked_cache_age)
+                piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
+
+            # Found normal section header
+            # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
+            elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
+                section_name, section_options = Parser._parse_section_header(stripped_line[3:-3])
+
+                if section_name is None:
+                    self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
+                    section_content = None
+                    continue
+                section_content = sections.setdefault(section_name, [])
+
+                raw_separator = section_options.get("sep")
+                if raw_separator is None:
+                    separator = None
+                else:
+                    separator = chr(int(raw_separator))
+
+                # Split of persisted section for server-side caching
+                raw_persist = section_options.get("persist")
+                if raw_persist is not None:
+                    until = int(raw_persist)
+                    cached_at = int(time.time())  # Estimate age of the data
+                    cache_interval = int(until - cached_at)
+                    agent_cache_info[section_name] = (cached_at, cache_interval)
+                    persisted_sections[section_name] = (cached_at, until, section_content)
+
+                raw_cached = section_options.get("cached")
+                if raw_cached is not None:
+                    cache_times = list(map(int, raw_cached.split(",")))
+                    agent_cache_info[section_name] = cache_times[0], cache_times[1]
+
+                # The section data might have a different encoding
+                encoding = section_options.get("encoding")
+
+            elif stripped_line != b'':
+                if section_content is None:
+                    continue
+
+                raw_nostrip = section_options.get("nostrip")
+                if raw_nostrip is None:
+                    line = stripped_line
+
+                decoded_line = ensure_str_with_fallback(
+                    line, encoding=("utf-8" if encoding is None else encoding), fallback="latin-1")
+
+                section_content.append(decoded_line.split(separator))
+
+        return AgentHostSections(sections, agent_cache_info, piggybacked_raw_data,
+                                 persisted_sections)
+
+    @staticmethod
+    def _parse_section_header(
+        headerline: bytes,) -> Tuple[Optional[SectionName], Dict[str, Optional[str]]]:
+        headerparts = ensure_str(headerline).split(":")
+        try:
+            section_name = SectionName(headerparts[0])
+        except ValueError:
+            return None, {}
+
+        section_options: Dict[str, Optional[str]] = {}
+        for option in headerparts[1:]:
+            if "(" not in option:
+                section_options[option] = None
+            else:
+                opt_name, opt_part = option.split("(", 1)
+                section_options[opt_name] = opt_part[:-1]
+        return section_name, section_options
+
+    @staticmethod
+    def _get_sanitized_and_translated_piggybacked_hostname(
+        orig_piggyback_header: bytes,
+        hostname: HostName,
+    ) -> Optional[HostName]:
+        piggybacked_hostname = ensure_str(orig_piggyback_header[4:-4])
+        if not piggybacked_hostname:
+            return None
+
+        piggybacked_hostname = config.translate_piggyback_host(hostname, piggybacked_hostname)
+        if piggybacked_hostname == hostname or not piggybacked_hostname:
+            return None  # unpiggybacked "normal" host
+
+        # Protect Check_MK against unallowed host names. Normally source scripts
+        # like agent plugins should care about cleaning their provided host names
+        # up, but we need to be sure here to prevent bugs in Check_MK code.
+        # a) Replace spaces by underscores
+        return piggybacked_hostname.replace(" ", "_")
+
+    @staticmethod
+    def _add_cached_info_to_piggybacked_section_header(
+        orig_section_header: bytes,
+        cached_at: int,
+        cache_age: int,
+    ) -> bytes:
+        if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
+            return orig_section_header
+        return b'<<<%s:cached(%s,%s)>>>' % (
+            orig_section_header[3:-3],
+            ensure_binary("%d" % cached_at),
+            ensure_binary("%d" % cache_age),
+        )
+
+
 # Abstract methods:
 #
 # def _execute(self):
@@ -286,137 +436,7 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         return ensure_binary(raw_data)
 
     def _convert_to_sections(self, raw_data: RawAgentData) -> AgentHostSections:
-        raw_data = cast(RawAgentData, raw_data)
-        if config.agent_simulator:
-            raw_data = agent_simulator.process(raw_data)
-
-        return self._parse_host_section(raw_data)
-
-    def _parse_host_section(self, raw_data: RawAgentData) -> AgentHostSections:
-        """Split agent output in chunks, splits lines by whitespaces.
-
-        Returns a HostSections() object.
-        """
-        sections: AgentSections = {}
-        # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
-        # The value is a list of lines which were received for this host.
-        piggybacked_raw_data: PiggybackRawData = {}
-        piggybacked_hostname = None
-        piggybacked_cached_at = int(time.time())
-        # Transform to seconds and give the piggybacked host a little bit more time
-        piggybacked_cache_age = int(1.5 * 60 * self._host_config.check_mk_check_interval)
-
-        # handle sections with option persist(...)
-        persisted_sections: PersistedAgentSections = {}
-        section_content: Optional[AgentSectionContent] = None
-        section_options: Dict[str, Optional[str]] = {}
-        agent_cache_info: SectionCacheInfo = {}
-        separator: Optional[str] = None
-        encoding = None
-        for line in raw_data.split(b"\n"):
-            line = line.rstrip(b"\r")
-            stripped_line = line.strip()
-            if stripped_line[:4] == b'<<<<' and stripped_line[-4:] == b'>>>>':
-                piggybacked_hostname =\
-                    self._get_sanitized_and_translated_piggybacked_hostname(stripped_line)
-
-            elif piggybacked_hostname:  # processing data for an other host
-                if stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
-                    line = self._add_cached_info_to_piggybacked_section_header(
-                        stripped_line, piggybacked_cached_at, piggybacked_cache_age)
-                piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
-
-            # Found normal section header
-            # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
-            elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
-                section_name, section_options = self._parse_section_header(stripped_line[3:-3])
-
-                if section_name is None:
-                    self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
-                    section_content = None
-                    continue
-                section_content = sections.setdefault(section_name, [])
-
-                raw_separator = section_options.get("sep")
-                if raw_separator is None:
-                    separator = None
-                else:
-                    separator = chr(int(raw_separator))
-
-                # Split of persisted section for server-side caching
-                raw_persist = section_options.get("persist")
-                if raw_persist is not None:
-                    until = int(raw_persist)
-                    cached_at = int(time.time())  # Estimate age of the data
-                    cache_interval = int(until - cached_at)
-                    agent_cache_info[section_name] = (cached_at, cache_interval)
-                    persisted_sections[section_name] = (cached_at, until, section_content)
-
-                raw_cached = section_options.get("cached")
-                if raw_cached is not None:
-                    cache_times = list(map(int, raw_cached.split(",")))
-                    agent_cache_info[section_name] = cache_times[0], cache_times[1]
-
-                # The section data might have a different encoding
-                encoding = section_options.get("encoding")
-
-            elif stripped_line != b'':
-                if section_content is None:
-                    continue
-
-                raw_nostrip = section_options.get("nostrip")
-                if raw_nostrip is None:
-                    line = stripped_line
-
-                decoded_line = ensure_str_with_fallback(
-                    line, encoding=("utf-8" if encoding is None else encoding), fallback="latin-1")
-
-                section_content.append(decoded_line.split(separator))
-
-        return AgentHostSections(sections, agent_cache_info, piggybacked_raw_data,
-                                 persisted_sections)
-
-    @staticmethod
-    def _parse_section_header(
-            headerline: bytes) -> Tuple[Optional[SectionName], Dict[str, Optional[str]]]:
-        headerparts = ensure_str(headerline).split(":")
-        try:
-            section_name = SectionName(headerparts[0])
-        except ValueError:
-            return None, {}
-
-        section_options: Dict[str, Optional[str]] = {}
-        for option in headerparts[1:]:
-            if "(" not in option:
-                section_options[option] = None
-            else:
-                opt_name, opt_part = option.split("(", 1)
-                section_options[opt_name] = opt_part[:-1]
-        return section_name, section_options
-
-    def _get_sanitized_and_translated_piggybacked_hostname(
-            self, orig_piggyback_header: bytes) -> Optional[HostName]:
-        piggybacked_hostname = ensure_str(orig_piggyback_header[4:-4])
-        if not piggybacked_hostname:
-            return None
-
-        piggybacked_hostname = config.translate_piggyback_host(self.hostname, piggybacked_hostname)
-        if piggybacked_hostname == self.hostname or not piggybacked_hostname:
-            return None  # unpiggybacked "normal" host
-
-        # Protect Check_MK against unallowed host names. Normally source scripts
-        # like agent plugins should care about cleaning their provided host names
-        # up, but we need to be sure here to prevent bugs in Check_MK code.
-        # a) Replace spaces by underscores
-        return piggybacked_hostname.replace(" ", "_")
-
-    def _add_cached_info_to_piggybacked_section_header(self, orig_section_header: bytes,
-                                                       cached_at: int, cache_age: int) -> bytes:
-        if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
-            return orig_section_header
-        return b'<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3],
-                                            ensure_binary(
-                                                "%d" % cached_at), ensure_binary("%d" % cache_age))
+        return Parser(self._host_config, self._logger).parse(raw_data)
 
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         if not isinstance(self._host_sections, AgentHostSections):

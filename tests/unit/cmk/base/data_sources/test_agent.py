@@ -33,6 +33,6 @@ def test_normalize_ip():
         (b"my.section:sep(0):cached(23,42)", None, {}),  # invalid section name
     ])
 def test_parse_section_header(headerline, section_name, section_options):
-    parsed_name, parsed_options = agent.AgentDataSource._parse_section_header(headerline)
+    parsed_name, parsed_options = agent.Parser._parse_section_header(headerline)
     assert parsed_name == section_name
     assert parsed_options == section_options

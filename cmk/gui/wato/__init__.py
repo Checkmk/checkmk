@@ -201,7 +201,6 @@ from cmk.gui.wato.pages.tags import (
 from cmk.gui.wato.pages.hosts import ModeEditHost, ModeCreateHost, ModeCreateCluster
 from cmk.gui.wato.pages.icons import ModeIcons
 from cmk.gui.wato.pages.ldap import ModeLDAPConfig, ModeEditLDAPConnection
-from cmk.gui.wato.pages.main import ModeMain
 from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
 from cmk.gui.wato.pages.notifications import (
     ModeNotifications,

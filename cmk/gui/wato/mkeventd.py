@@ -2798,6 +2798,10 @@ class MainModuleEventConsole(MainModule):
     def enabled(self):
         return config.mkeventd_enabled
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 #.
 #   .--Settings & Rules----------------------------------------------------.

@@ -156,6 +156,10 @@ class MainModule(MenuItem, metaclass=abc.ABCMeta):
     def sort_index(self) -> int:
         raise NotImplementedError()
 
+    @abc.abstractproperty
+    def is_advanced(self) -> bool:
+        raise NotImplementedError()
+
 
 class ModuleRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
@@ -189,6 +193,7 @@ def register_modules(*args):
                 "permission": wato_module.permission,
                 "description": wato_module.description,
                 "sort_index": wato_module.sort_index,
+                "is_advanced": False,
             })
         main_module_registry.register(cls)
 

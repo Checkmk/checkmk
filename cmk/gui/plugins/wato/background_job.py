@@ -51,6 +51,10 @@ class MainModuleBackgroundJobs(MainModule):
     def sort_index(self):
         return 90
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @mode_registry.register
 class ModeBackgroundJobsOverview(WatoMode):

@@ -82,3 +82,5 @@ def test_register_module(monkeypatch):
     assert registered.title == 'Custom DING'
     assert registered.sort_index == 100
     assert registered.icon == 'icons'
+    assert registered.is_advanced is False
+    assert registered.topic == main_menu.MainModuleTopicCustom

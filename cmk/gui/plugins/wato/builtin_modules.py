@@ -54,6 +54,10 @@ class MainModuleFolder(MainModule):
     def sort_index(self):
         return 10
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @main_module_registry.register
 class MainModuleTags(MainModule):
@@ -87,6 +91,10 @@ class MainModuleTags(MainModule):
     def sort_index(self):
         return 15
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @main_module_registry.register
 class MainModuleGlobalSettings(MainModule):
@@ -117,6 +125,10 @@ class MainModuleGlobalSettings(MainModule):
     @property
     def sort_index(self):
         return 20
+
+    @property
+    def is_advanced(self):
+        return False
 
 
 @main_module_registry.register
@@ -149,6 +161,10 @@ class MainModuleHostAndServiceParameters(MainModule):
     def sort_index(self):
         return 25
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @main_module_registry.register
 class MainModuleStaticChecks(MainModule):
@@ -179,6 +195,10 @@ class MainModuleStaticChecks(MainModule):
     @property
     def sort_index(self):
         return 30
+
+    @property
+    def is_advanced(self):
+        return False
 
 
 @main_module_registry.register
@@ -211,6 +231,10 @@ class MainModuleCheckPlugins(MainModule):
     def sort_index(self):
         return 35
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @main_module_registry.register
 class MainModuleHostAndServiceGroups(MainModule):
@@ -241,6 +265,10 @@ class MainModuleHostAndServiceGroups(MainModule):
     @property
     def sort_index(self):
         return 40
+
+    @property
+    def is_advanced(self):
+        return False
 
 
 @main_module_registry.register
@@ -273,6 +301,10 @@ class MainModuleUsers(MainModule):
     def sort_index(self):
         return 45
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @main_module_registry.register
 class MainModuleRoles(MainModule):
@@ -303,6 +335,10 @@ class MainModuleRoles(MainModule):
     @property
     def sort_index(self):
         return 50
+
+    @property
+    def is_advanced(self):
+        return False
 
 
 @main_module_registry.register
@@ -335,6 +371,10 @@ class MainModuleContactGroups(MainModule):
     def sort_index(self):
         return 55
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @main_module_registry.register
 class MainModuleNotifications(MainModule):
@@ -365,6 +405,10 @@ class MainModuleNotifications(MainModule):
     @property
     def sort_index(self):
         return 60
+
+    @property
+    def is_advanced(self):
+        return False
 
 
 @main_module_registry.register
@@ -398,6 +442,10 @@ class MainModuleTimeperiods(MainModule):
     def sort_index(self):
         return 65
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @main_module_registry.register
 class MainModuleSites(MainModule):
@@ -428,6 +476,10 @@ class MainModuleSites(MainModule):
     @property
     def sort_index(self):
         return 75
+
+    @property
+    def is_advanced(self):
+        return False
 
 
 @main_module_registry.register
@@ -460,6 +512,10 @@ class MainModuleBackup(MainModule):
     def sort_index(self):
         return 80
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @main_module_registry.register
 class MainModulePasswords(MainModule):
@@ -491,6 +547,10 @@ class MainModulePasswords(MainModule):
     def sort_index(self):
         return 85
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @main_module_registry.register
 class MainModuleAnalyzeConfig(MainModule):
@@ -521,6 +581,10 @@ class MainModuleAnalyzeConfig(MainModule):
     @property
     def sort_index(self):
         return 90
+
+    @property
+    def is_advanced(self):
+        return False
 
 
 @main_module_registry.register
@@ -556,6 +620,10 @@ class MainModuleDiagnostics(MainModule):
     def sort_index(self):
         return 91
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 @main_module_registry.register
 class MainModulePatternEditor(MainModule):
@@ -586,6 +654,10 @@ class MainModulePatternEditor(MainModule):
     @property
     def sort_index(self):
         return 95
+
+    @property
+    def is_advanced(self):
+        return False
 
 
 @main_module_registry.register
@@ -618,6 +690,10 @@ class MainModuleIcons(MainModule):
     def sort_index(self):
         return 100
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 class MainModuleDownloadAgents(MainModule):
     @property
@@ -647,6 +723,10 @@ class MainModuleDownloadAgents(MainModule):
     @property
     def sort_index(self):
         return 5
+
+    @property
+    def is_advanced(self):
+        return False
 
 
 # Register the builtin agent download page on the top level of WATO only when the agent bakery

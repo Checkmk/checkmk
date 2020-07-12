@@ -2400,6 +2400,10 @@ class MainModuleBI(MainModule):
     def sort_index(self):
         return 70
 
+    @property
+    def is_advanced(self):
+        return False
+
 
 #.
 #   .--Rename Hosts--------------------------------------------------------.

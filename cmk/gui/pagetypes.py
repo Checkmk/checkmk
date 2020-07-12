@@ -332,7 +332,7 @@ class PageRenderer(Base):
     def parameters(cls, mode):
         parameters = super(PageRenderer, cls).parameters(mode)
 
-        parameters += [(_("General Properties"), [
+        parameters += [(_("Navigation"), [
             (1.4, 'topic', DropdownChoice(
                 title=_('Topic'),
                 choices=PagetypeTopics.choices(),

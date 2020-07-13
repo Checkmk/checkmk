@@ -580,6 +580,12 @@ def _update_config_based_host_attributes():
     def _compute_config_hash():
         return hash(repr(config.tags.get_dict_format()) + repr(config.wato_host_attrs))
 
+    # The topic conversion needs to take place before the _compute_config_hash runs
+    # The actual generated topics may be pre-1.5 converted topics
+    # e.g. "Custom attributes" -> "custom_attributes"
+    # If we do not convert the topics here, the config_hash comparison will always fail
+    transform_pre_16_host_topics(config.wato_host_attrs)
+
     if hasattr(_update_config_based_host_attributes, "_config_hash") \
        and _update_config_based_host_attributes._config_hash == _compute_config_hash():
         return  # No re-register needed :-)

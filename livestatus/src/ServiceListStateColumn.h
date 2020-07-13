@@ -26,20 +26,21 @@ class Row;
 
 class ServiceListStateColumn : public IntColumn {
 public:
-    // TODO(sp) Remove the magic arithmetic
     enum class Type {
-        num = -1,
-        num_pending = 4,
-        num_ok = 0,
-        num_warn = 1,
-        num_crit = 2,
-        num_unknown = 3,
-        worst_state = -2,
-        num_hard_ok = (0 + 64),
-        num_hard_warn = (1 + 64),
-        num_hard_crit = (2 + 64),
-        num_hard_unknown = (3 + 64),
-        worst_hard_state = (-2 + 64)
+        num,
+        num_pending,
+        //
+        num_ok,
+        num_warn,
+        num_crit,
+        num_unknown,
+        worst_state,
+        //
+        num_hard_ok,
+        num_hard_warn,
+        num_hard_crit,
+        num_hard_unknown,
+        worst_hard_state,
     };
 
     ServiceListStateColumn(const std::string &name,

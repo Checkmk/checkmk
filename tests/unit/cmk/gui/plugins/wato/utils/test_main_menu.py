@@ -40,6 +40,17 @@ def test_registered_modules():
         'ldap_config',
         'diagnostics',
         'version.py',
+        'wato.py?mode=rulesets&group=activechecks',
+        'wato.py?mode=rulesets&group=agent',
+        'wato.py?mode=rulesets&group=checkparams',
+        'wato.py?mode=rulesets&group=custom_checks',
+        'wato.py?mode=rulesets&group=custom_integrations',
+        'wato.py?mode=rulesets&group=datasource_programs',
+        'wato.py?mode=rulesets&group=inventory',
+        'wato.py?mode=rulesets&group=monconf',
+        'wato.py?mode=rulesets&group=snmp',
+        'wato.py?mode=rulesets&group=user_interface',
+        'wato.py?mode=rulesets&group=vm_cloud_container',
     ]
 
     if cmk_version.is_raw_edition():

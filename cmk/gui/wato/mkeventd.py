@@ -122,9 +122,10 @@ from cmk.gui.plugins.wato.utils import (
 )
 
 from cmk.gui.plugins.wato.check_mk_configuration import (
+    RulespecGroupMonitoringConfigurationServiceChecks,
+    RulespecGroupMonitoringConfigurationHostChecks,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
-    RulespecGroupGrouping,
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
@@ -1106,7 +1107,13 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
         html.context_button(_("Rule Packs"),
                             html.makeuri_contextless([("mode", "mkeventd_rule_packs")]), "back")
 
-    def _config_button(self):
+    def _config_buttons(self):
+        if config.user.may("mkeventd.config") and config.user.may("wato.rulesets"):
+            html.context_button(
+                _("Rulesets"),
+                html.makeuri_contextless([("mode", "rulesets"), ("group", "eventconsole")]),
+                "rulesets")
+
         if config.user.may("mkeventd.config"):
             html.context_button(_("Settings"),
                                 html.makeuri_contextless([("mode", "mkeventd_config")]),
@@ -1214,7 +1221,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 make_action_link([("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")]),
                 "resetcounters")
         self._status_button()
-        self._config_button()
+        self._config_buttons()
         self._mibs_button()
 
     def action(self):
@@ -2110,7 +2117,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
     def buttons(self):
         home_button()
         self._rules_button()
-        self._config_button()
+        self._config_buttons()
         self._mibs_button()
 
     def action(self):
@@ -2354,7 +2361,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         self._rules_button()
         self._changes_button()
         self._status_button()
-        self._config_button()
+        self._config_buttons()
 
     def action(self):
         if html.request.has_var("_delete"):
@@ -3956,7 +3963,7 @@ def _valuespec_extra_host_conf__ec_sl():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupMonitoringConfigurationHostChecks,
         name="extra_host_conf:_ec_sl",
         valuespec=_valuespec_extra_host_conf__ec_sl,
     ))
@@ -3973,7 +3980,7 @@ def _valuespec_extra_service_conf__ec_sl():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupMonitoringConfigurationServiceChecks,
         item_type="service",
         name="extra_service_conf:_ec_sl",
         valuespec=_valuespec_extra_service_conf__ec_sl,

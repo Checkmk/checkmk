@@ -406,7 +406,7 @@ class ModeStaticChecksRulesets(RulesetMode):
         return watolib.StaticChecksRulesets()
 
     def _set_title_and_help(self):
-        self._title = _("Manual Checks")
+        self._title = _("Manual services")
         self._help = _("Here you can create explicit checks that are not being created by the "
                        "automatic service discovery.")
 

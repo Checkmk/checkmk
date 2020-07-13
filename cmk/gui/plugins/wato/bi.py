@@ -530,6 +530,11 @@ class ModeBI(WatoMode, BIManagement):
             html.context_button(_("All Packs"), html.makeuri_contextless([("mode", "bi_packs")]),
                                 "back")
 
+        if config.user.may("wato.rulesets"):
+            html.context_button(_("Rulesets"),
+                                html.makeuri_contextless([("mode", "rulesets"), ("group", "bi")]),
+                                "rulesets")
+
     def _add_change(self, action_name, text):
         site_ids = list(config.wato_slave_sites().keys()) + [config.omd_site()]
         add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)

@@ -239,6 +239,112 @@ class MainModuleHostAndServiceParameters(MainModule):
 
 
 @main_module_registry.register
+class MainModuleHWSWInventory(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=inventory"
+
+    @property
+    def topic(self):
+        return MainModuleTopicHosts
+
+    @property
+    def title(self):
+        return _("HW/SW inventory")
+
+    @property
+    def icon(self):
+        return "inventory"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Manage Hard- and software inventory related rulesets")
+
+    @property
+    def sort_index(self):
+        return 60
+
+    @property
+    def is_advanced(self):
+        return True
+
+
+@main_module_registry.register
+class MainModuleNetworkingServices(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=activechecks"
+
+    @property
+    def topic(self):
+        return MainModuleTopicServices
+
+    @property
+    def title(self):
+        return _("Check networking services")
+
+    @property
+    def icon(self):
+        return "rulesets"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Configure monitoring of networking services using classical nagios plugins"
+                 " (so called active checks)")
+
+    @property
+    def sort_index(self):
+        return 30
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+@main_module_registry.register
+class MainModuleIntegrateNagiosPlugins(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=custom_checks"
+
+    @property
+    def topic(self):
+        return MainModuleTopicServices
+
+    @property
+    def title(self):
+        return _("Integrate Nagios plugins")
+
+    @property
+    def icon(self):
+        return "rulesets"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Integrate custom nagios plugins (so called active checks)")
+
+    @property
+    def sort_index(self):
+        return 40
+
+    @property
+    def is_advanced(self):
+        return True
+
+
+@main_module_registry.register
 class MainModuleStaticChecks(MainModule):
     @property
     def mode_or_url(self):
@@ -590,6 +696,41 @@ class MainModuleTimeperiods(MainModule):
 
 
 @main_module_registry.register
+class MainModuleUserInterface(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=user_interface"
+
+    @property
+    def topic(self):
+        return MainModuleTopicGeneral
+
+    @property
+    def title(self):
+        return _("User interface")
+
+    @property
+    def icon(self):
+        return "rulesets"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Configure rulesets setting user interface related settings")
+
+    @property
+    def sort_index(self):
+        return 60
+
+    @property
+    def is_advanced(self):
+        return True
+
+
+@main_module_registry.register
 class MainModuleSites(MainModule):
     @property
     def mode_or_url(self):
@@ -617,7 +758,7 @@ class MainModuleSites(MainModule):
 
     @property
     def sort_index(self):
-        return 80
+        return 70
 
     @property
     def is_advanced(self):
@@ -802,6 +943,76 @@ class MainModuleDiagnostics(MainModule):
         return False
 
 
+@main_module_registry.register
+class MainModuleMonitoringSettings(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=monconf"
+
+    @property
+    def topic(self):
+        return MainModuleTopicServices
+
+    @property
+    def title(self):
+        return _("Monitoring settings")
+
+    @property
+    def icon(self):
+        return "rulesets"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Monitoring settings")
+
+    @property
+    def sort_index(self):
+        return 10
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+@main_module_registry.register
+class MainModuleDiscoverySettings(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=checkparams"
+
+    @property
+    def topic(self):
+        return MainModuleTopicServices
+
+    @property
+    def title(self):
+        return _("Discovery settings")
+
+    @property
+    def icon(self):
+        return "rulesets"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Discovery settings")
+
+    @property
+    def sort_index(self):
+        return 20
+
+    @property
+    def is_advanced(self):
+        return False
+
+
 class MainModuleDownloadAgents(MainModule):
     @property
     def mode_or_url(self):
@@ -840,3 +1051,178 @@ class MainModuleDownloadAgents(MainModule):
 # does not exist (e.g. when using CRE)
 if cmk_version.is_raw_edition():
     main_module_registry.register(MainModuleDownloadAgents)
+
+
+@main_module_registry.register
+class MainModuleAgentAccessSettings(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=agent"
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
+
+    @property
+    def title(self):
+        return _("Agent access settings")
+
+    @property
+    def icon(self):
+        return "rulesets"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Configure agent access related settings using rulesets")
+
+    @property
+    def sort_index(self):
+        return 60
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+@main_module_registry.register
+class MainModuleSNMPSettings(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=snmp"
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
+
+    @property
+    def title(self):
+        return _("SNMP settings")
+
+    @property
+    def icon(self):
+        return "rulesets"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Configure SNMP related settings using rulesets")
+
+    @property
+    def sort_index(self):
+        return 70
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+@main_module_registry.register
+class MainModuleVMCloudContainer(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=vm_cloud_container"
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
+
+    @property
+    def title(self):
+        return _("VM, Cloud, Container")
+
+    @property
+    def icon(self):
+        return "rulesets"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Integrate with VM, cloud or container platforms")
+
+    @property
+    def sort_index(self):
+        return 30
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+@main_module_registry.register
+class MainModuleOtherIntegrations(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=datasource_programs"
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
+
+    @property
+    def title(self):
+        return _("Other integrations")
+
+    @property
+    def icon(self):
+        return "rulesets"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Integrate platforms using special agents, e.g. SAP R/3")
+
+    @property
+    def sort_index(self):
+        return 40
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+@main_module_registry.register
+class MainModuleCustomIntegrations(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=custom_integrations"
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
+
+    @property
+    def title(self):
+        return _("Custom integrations")
+
+    @property
+    def icon(self):
+        return "rulesets"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Integrate custom platform connections (special agents)")
+
+    @property
+    def sort_index(self):
+        return 50
+
+    @property
+    def is_advanced(self):
+        return True

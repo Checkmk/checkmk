@@ -194,11 +194,11 @@ class RulespecGroupManualChecks(RulespecGroup):
 
     @property
     def title(self):
-        return _("Manual Checks")
+        return _("Manual services")
 
     @property
     def help(self):
-        return _("Statically configured Check_MK checks that do not rely on the inventory")
+        return _("Statically configured Checkmk services that do not rely on the service discovery")
 
 
 @rulespec_group_registry.register

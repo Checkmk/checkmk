@@ -50,6 +50,21 @@ from cmk.gui.plugins.metrics.utils import MetricName
 
 
 @rulespec_group_registry.register
+class RulespecGroupVMCloudContainer(RulespecGroup):
+    @property
+    def name(self):
+        return "vm_cloud_container"
+
+    @property
+    def title(self):
+        return _("VM, Cloud, Container")
+
+    @property
+    def help(self):
+        return _("Integrate with VM, cloud or container platforms")
+
+
+@rulespec_group_registry.register
 class RulespecGroupDatasourcePrograms(RulespecGroup):
     @property
     def name(self):
@@ -57,11 +72,26 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
 
     @property
     def title(self):
-        return _("Datasource Programs")
+        return _("Other integrations")
 
     @property
     def help(self):
-        return _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3")
+        return _("Integrate platforms using special agents, e.g. SAP R/3")
+
+
+@rulespec_group_registry.register
+class RulespecGroupCustomIntegrations(RulespecGroup):
+    @property
+    def name(self):
+        return "custom_integrations"
+
+    @property
+    def title(self):
+        return _("Custom integrations")
+
+    @property
+    def help(self):
+        return _("Integrate custom platform connections (special agents)")
 
 
 def _valuespec_datasource_programs():
@@ -82,7 +112,7 @@ def _valuespec_datasource_programs():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupCustomIntegrations,
         name="datasource_programs",
         valuespec=_valuespec_datasource_programs,
     ))
@@ -122,7 +152,7 @@ def _valuespec_special_agents_proxmox():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupVMCloudContainer,
         name="special_agents:proxmox",
         valuespec=_valuespec_special_agents_proxmox,
     ))
@@ -272,7 +302,7 @@ def _valuespec_special_agents_kubernetes():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupVMCloudContainer,
         name="special_agents:kubernetes",
         valuespec=_valuespec_special_agents_kubernetes,
     ))
@@ -538,7 +568,7 @@ def _validate_prometheus_service_metrics(value, _varprefix):
 
 
 rulespec_registry.register((HostRulespec(
-    group=RulespecGroupDatasourcePrograms,
+    group=RulespecGroupVMCloudContainer,
     name="special_agents:prometheus",
     valuespec=_valuespec_generic_metrics_prometheus,
 )))
@@ -716,7 +746,7 @@ def _valuespec_special_agents_vsphere():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_vsphere(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupVMCloudContainer,
         name="special_agents:vsphere",
         valuespec=_valuespec_special_agents_vsphere,
     ))
@@ -1989,7 +2019,7 @@ def _valuespec_special_agents_azure():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupVMCloudContainer,
         name="special_agents:azure",
         valuespec=_valuespec_special_agents_azure,
     ))
@@ -2397,7 +2427,7 @@ def _valuespec_special_agents_aws():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupVMCloudContainer,
         name="special_agents:aws",
         title=lambda: _("Amazon Web Services (AWS)"),
         valuespec=_valuespec_special_agents_aws,

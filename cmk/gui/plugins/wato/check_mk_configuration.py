@@ -1275,12 +1275,12 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
 
     @property
     def title(self):
-        return _("Monitoring Configuration")
+        return _("Monitoring settings")
 
     @property
     def help(self):
         return _(
-            "Intervals for checking, retries, clustering, configuration for inventory and similar")
+            "Intervals for checking, retries, clustering, configuration for discovery and similar")
 
 
 @rulespec_group_registry.register
@@ -3597,7 +3597,7 @@ class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
 
     @property
     def title(self):
-        return _("Inventory and Check_MK settings")
+        return _("Discovery and Checkmk settings")
 
 
 def _help_only_hosts():
@@ -4240,18 +4240,18 @@ rulespec_registry.register(
 
 
 @rulespec_group_registry.register
-class RulespecGroupAgentSNMP(RulespecSubGroup):
+class RulespecGroupAgentSNMP(RulespecGroup):
     @property
-    def main_group(self):
-        return RulespecGroupAgent
-
-    @property
-    def sub_group_name(self):
+    def name(self):
         return "snmp"
 
     @property
     def title(self):
-        return _("SNMP")
+        return _("SNMP settings")
+
+    @property
+    def help(self):
+        return _("Configure SNMP related settings using rulesets")
 
 
 def _valuespec_snmp_communities():

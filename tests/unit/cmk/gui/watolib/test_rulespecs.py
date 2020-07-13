@@ -1262,11 +1262,10 @@ def test_grouped_rulespecs():
 
 def _expected_rulespec_group_choices():
     expected = [
-        ('activechecks', u'Active checks (HTTP, TCP, etc.)'),
+        ('activechecks', u'Check networking services'),
         ('agent', u'Access to Agents'),
         ('agent/check_mk_agent', u'&nbsp;&nbsp;\u2319 Check_MK Agent'),
         ('agent/general_settings', u'&nbsp;&nbsp;\u2319 General Settings'),
-        ('agent/snmp', u'&nbsp;&nbsp;\u2319 SNMP'),
         ('agents', u'Monitoring Agents'),
         ('agents/generic_options', u'&nbsp;&nbsp;\u2319 Generic Options'),
         ('checkparams', u'Parameters for discovered services'),
@@ -1280,19 +1279,23 @@ def _expected_rulespec_group_choices():
          u'&nbsp;&nbsp;\u2319 Temperature, Humidity, Electrical Parameters, etc.'),
         ('checkparams/hardware', u'&nbsp;&nbsp;\u2319 Hardware, BIOS'),
         ('checkparams/virtualization', u'&nbsp;&nbsp;\u2319 Virtualization'),
-        ('datasource_programs', u'Datasource Programs'),
+        ('datasource_programs', u'Other integrations'),
         ('eventconsole', u'Event Console'),
         ('grouping', u'Grouping'),
         ('inventory', u'Hardware / Software Inventory'),
-        ('monconf', u'Monitoring Configuration'),
+        ('monconf', u'Monitoring settings'),
         ('monconf/host_checks', u'&nbsp;&nbsp;\u2319 Host Checks'),
         ('monconf/inventory_and_check_mk_settings',
-         u'&nbsp;&nbsp;\u2319 Inventory and Check_MK settings'),
+         u'&nbsp;&nbsp;\u2319 Discovery and Checkmk settings'),
         ('monconf/notifications', u'&nbsp;&nbsp;\u2319 Notifications'),
         ('monconf/service_checks', u'&nbsp;&nbsp;\u2319 Service Checks'),
         ('monconf/various', u'&nbsp;&nbsp;\u2319 Various'),
         ('user_interface', u'User Interface'),
-
+        ('bi', 'Check state of BI aggregations'),
+        ('custom_checks', 'Integrate Nagios plugins'),
+        ('custom_integrations', 'Custom integrations'),
+        ('snmp', 'SNMP settings'),
+        ('vm_cloud_container', 'VM, Cloud, Container'),
     ]
 
     if not cmk_version.is_raw_edition():
@@ -1311,7 +1314,7 @@ def _expected_rulespec_group_choices():
 @pytest.mark.parametrize("mode,result", [
     ("rulesets", _expected_rulespec_group_choices()),
     ("static_checks", [
-        ('static', u'Manual Checks'),
+        ('static', u'Manual services'),
         ('static/applications', u'&nbsp;&nbsp;\u2319 Applications, Processes & Services'),
         ('static/hardware', u'&nbsp;&nbsp;\u2319 Hardware, BIOS'),
         ('static/networking', u'&nbsp;&nbsp;\u2319 Networking'),
@@ -1342,7 +1345,6 @@ def test_rulespec_group_choices(mode, result):
         'agent',
         'agent/check_mk_agent',
         'agent/general_settings',
-        'agent/snmp',
     ]),
 ])
 def test_rulespec_get_matching_group_names(term, result):
@@ -1365,6 +1367,11 @@ def test_rulespec_get_main_groups():
         'datasource_programs',
         'inventory',
         'eventconsole',
+        'bi',
+        'custom_checks',
+        'custom_integrations',
+        'snmp',
+        'vm_cloud_container',
     ])
 
 
@@ -1379,9 +1386,13 @@ def test_rulespec_get_all_groups():
         'monconf/various',
         'user_interface',
         'agent/general_settings',
-        'agent/snmp',
         'agent/check_mk_agent',
         'agents/generic_options',
+        'bi',
+        'custom_checks',
+        'custom_integrations',
+        'snmp',
+        'vm_cloud_container',
         'checkparams/hardware',
         'checkparams/networking',
         'static/networking',
@@ -1427,12 +1438,16 @@ def test_rulespec_get_host_groups():
         'monconf/various',
         'user_interface',
         'agent/general_settings',
-        'agent/snmp',
         'agent/check_mk_agent',
         'agents/generic_options',
         'datasource_programs',
         'inventory',
         'eventconsole',
+        'bi',
+        'custom_checks',
+        'custom_integrations',
+        'snmp',
+        'vm_cloud_container',
     ]
 
     if not cmk_version.is_raw_edition():

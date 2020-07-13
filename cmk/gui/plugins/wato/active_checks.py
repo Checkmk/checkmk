@@ -49,6 +49,21 @@ from cmk.gui.exceptions import MKUserError
 
 
 @rulespec_group_registry.register
+class RulespecGroupIntegrateNagiosPlugins(RulespecGroup):
+    @property
+    def name(self):
+        return "custom_checks"
+
+    @property
+    def title(self):
+        return _("Integrate Nagios plugins")
+
+    @property
+    def help(self):
+        return _("Integrate custom nagios plugins (so called active checks)")
+
+
+@rulespec_group_registry.register
 class RulespecGroupActiveChecks(RulespecGroup):
     @property
     def name(self):
@@ -56,11 +71,29 @@ class RulespecGroupActiveChecks(RulespecGroup):
 
     @property
     def title(self):
-        return _("Active checks (HTTP, TCP, etc.)")
+        return _("Check networking services")
 
     @property
     def help(self):
         return _("Configure active networking checks like HTTP and TCP")
+
+
+@rulespec_group_registry.register
+class RulespecGroupBI(RulespecGroup):
+    @property
+    def name(self):
+        return "bi"
+
+    @property
+    def title(self):
+        return _("Check state of BI aggregations")
+
+    @property
+    def help(self):
+        return _(
+            "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
+            "several states to a single BI aggregation, which you want to show up as a single "
+            "service.")
 
 
 # These elements are also used in check_parameters.py
@@ -1554,7 +1587,7 @@ rulespec_registry.register(
 
 def _valuespec_custom_checks():
     return Dictionary(
-        title=_("Classical active and passive Monitoring checks"),
+        title=_("Integrate Nagios plugins"),
         help=_("With this ruleset you can configure \"classical Monitoring checks\" "
                "to be executed directly on your monitoring server. These checks "
                "will not use Check_MK. It is also possible to configure passive "
@@ -1632,7 +1665,7 @@ def _valuespec_custom_checks():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateNagiosPlugins,
         match_type="all",
         name="custom_checks",
         valuespec=_valuespec_custom_checks,
@@ -1753,7 +1786,7 @@ def _valuespec_active_checks_bi_aggr():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupBI,
         match_type="all",
         name="active_checks:bi_aggr",
         valuespec=_valuespec_active_checks_bi_aggr,
@@ -2339,7 +2372,7 @@ def _valuespec_active_checks_by_ssh():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateNagiosPlugins,
         match_type="all",
         name="active_checks:by_ssh",
         valuespec=_valuespec_active_checks_by_ssh,

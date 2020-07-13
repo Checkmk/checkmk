@@ -165,28 +165,17 @@ def sap_value_groups_precompile(hostname, item, _unused):
     return host_extra_conf(hostname, sap_value_groups)
 
 
+def _patterns_match(name, exclusion, inclusion):
+    if exclusion and regex(exclusion).match(name):
+        return False
+    return regex(inclusion).match(name)
+
+
 def sap_groups_of_value(value_name, patterns):
-    groups = []
-
-    for line in patterns:
-        for group_name, pattern in line:
-            no_match = False
-            inclusion, exclusion = pattern
-            # Exclude:
-            if exclusion:
-                reg = regex(exclusion)
-                if reg.match(value_name):
-                    no_match = True
-                    break
-            #no match for this group, go on with the next group
-            if no_match:
-                break
-
-            # Include
-            reg = regex(inclusion)
-            if reg.match(value_name):
-                groups.append(group_name)
-    return groups
+    return {
+        group_name for line in patterns for group_name, (inclusion, exclusion) in line
+        if _patterns_match(value_name, exclusion, inclusion)
+    }
 
 
 def inventory_sap_value_groups(info):

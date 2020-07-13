@@ -62,14 +62,6 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             icon_name="topic_profile",
         ),
         TopicMenuItem(
-            name="custom_snapins",
-            title=_("Custom snapins"),
-            url="custom_snapins.py",
-            sort_index=20,
-            is_advanced=False,
-            icon_name="custom_snapin",
-        ),
-        TopicMenuItem(
             name="logout",
             title=_("Logout"),
             url="logout.py",

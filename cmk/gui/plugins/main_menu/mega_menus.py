@@ -55,10 +55,18 @@ MegaMenuSetup = mega_menu_registry.register(
 def _user_menu_topics() -> List[TopicMenuTopic]:
     items = [
         TopicMenuItem(
-            name="user_profile",
-            title=_("Personal settings"),
-            url="user_profile.py",
+            name="change_password",
+            title=_("Change password"),
+            url="user_change_pw.py",
             sort_index=10,
+            is_advanced=False,
+            icon_name="topic_change_password",
+        ),
+        TopicMenuItem(
+            name="user_profile",
+            title=_("Edit profile"),
+            url="user_profile.py",
+            sort_index=20,
             is_advanced=False,
             icon_name="topic_profile",
         ),

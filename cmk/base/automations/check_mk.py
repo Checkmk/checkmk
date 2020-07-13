@@ -1530,14 +1530,15 @@ class AutomationGetAgentOutput(Automation):
                     not data_sources.ABCDataSource.is_agent_cache_disabled())
 
                 agent_output = b""
-                for source in data_sources.make_sources(host_config, ipaddress):
+                sources = data_sources.make_sources(host_config, ipaddress)
+                for source in sources:
                     source.set_max_cachefile_age(config.check_max_cachefile_age)
                     if isinstance(source, data_sources.agent.AgentDataSource):
                         agent_output += source.run_raw()
                 info = agent_output
 
                 # Optionally show errors of problematic data sources
-                for source in data_sources.make_sources(host_config, ipaddress):
+                for source in sources:
                     source_state, source_output, _source_perfdata = source.get_summary_result_for_checking(
                     )
                     if source_state != 0:

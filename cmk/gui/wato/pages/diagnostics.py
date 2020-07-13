@@ -44,7 +44,6 @@ from cmk.gui.watolib import (
 )
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 from cmk.gui.watolib.automations import check_mk_automation
-from cmk.gui.plugins.wato.utils.context_buttons import home_button
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -74,9 +73,6 @@ class ModeDiagnostics(WatoMode):
 
     def title(self) -> str:
         return _("Diagnostics")
-
-    def buttons(self) -> None:
-        home_button()
 
     def action(self) -> None:
         if not html.check_transaction():

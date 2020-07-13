@@ -23,9 +23,7 @@ from cmk.gui.valuespec import (
     AbsoluteDate,
 )
 from cmk.gui.plugins.wato.utils.context_buttons import (
-    changelog_button,
-    home_button,
-)
+    changelog_button,)
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import WatoMode, mode_registry, wato_confirm
@@ -52,7 +50,6 @@ class ModeAuditLog(WatoMode):
 
     def buttons(self):
         changelog_button()
-        home_button()
         if self._log_exists() and config.user.may("wato.clear_auditlog") \
            and config.user.may("wato.auditlog") and config.user.may("wato.edit"):
             html.context_button(_("Download"), html.makeactionuri([("_action", "csv")]), "download")

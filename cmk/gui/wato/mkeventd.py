@@ -104,7 +104,6 @@ from cmk.gui.plugins.wato.utils import (
     get_search_expression,
     add_change,
     changelog_button,
-    home_button,
     make_action_link,
     rulespec_group_registry,
     RulespecGroup,
@@ -1211,7 +1210,6 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
     def buttons(self):
         self._changes_button()
-        home_button()
         if config.user.may("mkeventd.edit"):
             html.context_button(_("New Rule Pack"),
                                 html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack")]),
@@ -1990,7 +1988,6 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
 
     def buttons(self):
-        home_button()
         self._rules_button()
         self._changes_button()
         if self._clone_nr >= 0:
@@ -2115,7 +2112,6 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         return _("Local server status")
 
     def buttons(self):
-        home_button()
         self._rules_button()
         self._config_buttons()
         self._mibs_button()
@@ -2222,7 +2218,6 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, GlobalSettingsMode):
         return _('Event Console Configuration')
 
     def buttons(self):
-        home_button()
         self._rules_button()
         self._changes_button()
         html.context_button(_("Server Status"),
@@ -2357,7 +2352,6 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         return _('SNMP MIBs for Trap Translation')
 
     def buttons(self):
-        home_button()
         self._rules_button()
         self._changes_button()
         self._status_button()

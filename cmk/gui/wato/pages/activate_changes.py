@@ -21,7 +21,6 @@ import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.context_buttons import home_button
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
@@ -54,8 +53,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         return _("Activate pending changes")
 
     def buttons(self):
-        home_button()
-
         # TODO: Remove once new changes mechanism has been implemented
         if self._may_discard_changes():
             html.context_button(_("Discard Changes!"),
@@ -123,10 +120,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     show_body_start=display_options.enabled(display_options.H),
                     show_top_heading=display_options.enabled(display_options.T))
         html.open_div(class_="wato")
-
-        html.begin_context_buttons()
-        home_button()
-        html.end_context_buttons()
 
         html.show_message(_("Successfully discarded all pending changes."))
         html.javascript("hide_changes_buttons();")

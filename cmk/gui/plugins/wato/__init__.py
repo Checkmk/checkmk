@@ -34,7 +34,6 @@ from cmk.gui.plugins.wato.utils import (
     ReplicationPath,
     global_buttons,
     changelog_button,
-    home_button,
     host_status_button,
     CheckTypeSelection,
     config_domain_registry,

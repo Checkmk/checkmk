@@ -12,7 +12,6 @@ import cmk.gui.watolib as watolib
 import cmk.gui.backup as backup
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.plugins.wato.utils.context_buttons import home_button
 from cmk.gui.valuespec import Checkbox
 from cmk.gui.pages import page_registry, AjaxPage
 
@@ -46,9 +45,6 @@ class ModeBackup(backup.PageBackup, WatoMode):
 
     def keys(self):
         return SiteBackupKeypairStore()
-
-    def home_button(self):
-        home_button()
 
 
 @mode_registry.register

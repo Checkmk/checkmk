@@ -11,11 +11,6 @@ from cmk.gui.globals import html
 
 def global_buttons():
     changelog_button()
-    home_button()
-
-
-def home_button():
-    html.context_button(_("Main Menu"), watolib.folder_preserving_link([("mode", "main")]), "home")
 
 
 def changelog_button():

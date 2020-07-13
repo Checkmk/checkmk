@@ -8,7 +8,6 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.plugins.wato.utils.context_buttons import home_button
 
 
 @mode_registry.register
@@ -23,9 +22,6 @@ class ModeNotImplemented(WatoMode):
 
     def title(self):
         return _("Sorry")
-
-    def buttons(self):
-        home_button()
 
     def page(self):
         html.show_error(_("This module has not yet been implemented."))

@@ -18,6 +18,8 @@
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Standardized Response Time/ResponseTime(StandardTran.)   7   msec
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Users Logged On/UsersLoggedIn    97  -
 
+import typing  # no from import allowed :-(
+
 # This map converts between the SAP color codes (key values) and the
 # nagios state codes
 sap_nagios_state_map = [
@@ -160,9 +162,8 @@ check_info['sap.value'] = {
     "has_perfdata": True,
 }
 
-
-def sap_value_groups_precompile(hostname, item, _unused):
-    return host_extra_conf(hostname, sap_value_groups)
+GroupPatterns = typing.List[typing.Tuple[str, str]]
+SAPRules = typing.List[typing.List[typing.Tuple[str, typing.Tuple[str, str]]]]
 
 
 def _patterns_match(name, exclusion, inclusion):
@@ -171,11 +172,22 @@ def _patterns_match(name, exclusion, inclusion):
     return regex(inclusion).match(name)
 
 
-def sap_groups_of_value(value_name, patterns):
+def sap_groups_of_value(
+    value_name: str,
+    patterns: SAPRules,
+) -> typing.Set[str]:
     return {
         group_name for line in patterns for group_name, (inclusion, exclusion) in line
         if _patterns_match(value_name, exclusion, inclusion)
     }
+
+
+def get_patterns_by_group_name(params: SAPRules) -> typing.Dict[str, GroupPatterns]:
+    rules_by_group: typing.Dict[str, GroupPatterns] = {}
+    for rule in params:
+        for group_name, patterns in rule:
+            rules_by_group.setdefault(group_name, []).append(patterns)
+    return rules_by_group
 
 
 def discover_sap_value_groups(info):
@@ -188,15 +200,30 @@ def discover_sap_value_groups(info):
         path = line[3]
         inventory.update(sap_groups_of_value(path, params))
 
-    return [(item, None) for item in inventory]
+    if not inventory:
+        return
+
+    patterns_by_group = get_patterns_by_group_name(params)
+    for item in inventory:
+        yield (item, {'_group_relevant_patterns': patterns_by_group[item]})
 
 
-def check_sap_value_groups(item, params, info, deprecated=False):
+def check_sap_value_groups(item, params, info):
+
+    try:
+        patterns: GroupPatterns = params['_group_relevant_patterns']
+    except KeyError:
+        yield 3, "Rules not found. Please rediscover the services of this host"
+        return
+
+    # this fake rules instance already only contains relevant patterns
+    precompiled_rule: SAPRules = [[(item, pattern) for pattern in patterns]]
+
     non_ok_results, all_results = [], []
     count_ok, count_crit = 0, 0
     for line in info:
         path = line[3]
-        if item in sap_groups_of_value(path, params):
+        if item in sap_groups_of_value(path, precompiled_rule):
             status = sap_nagios_state_map[int(line[1])]
             output = ''
             if line[4] == '-':
@@ -217,26 +244,19 @@ def check_sap_value_groups(item, params, info, deprecated=False):
     for result in non_ok_results:
         yield result
 
-    if deprecated:
-        yield 1, "This service uses a deprecated check. Please rediscover the services "\
-              "of this host to get this fixed automatically"
-
     for state, text in all_results:
         yield state, "\n%s" % text
 
 
 # Deprecated with 1.4.0i1. Remove some versions after!
 check_info['sap.value-groups'] = {
-    'check_function'      : lambda item_params_info: \
-                                check_sap_value_groups(item_params_info[0], item_params_info[1], item_params_info[2], deprecated=True),
-    'inventory_function'  : lambda info: [],
-    'service_description' : "%s",
+    'check_function': check_sap_value_groups,
+    'inventory_function': lambda info: [],
+    'service_description': "%s",
 }
-precompile_params['sap.value-groups'] = sap_value_groups_precompile
 
 check_info['sap.value_groups'] = {
     'check_function': check_sap_value_groups,
     'inventory_function': discover_sap_value_groups,
     'service_description': "%s",
 }
-precompile_params['sap.value_groups'] = sap_value_groups_precompile

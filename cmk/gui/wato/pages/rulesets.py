@@ -610,6 +610,14 @@ class ModeEditRuleset(WatoMode):
         if agent_bakery:
             agent_bakery.agent_bakery_context_button(self._name)
 
+        if self._name == "logwatch_rules":
+            html.context_button(
+                _("Pattern analyzer"),
+                watolib.folder_preserving_link([
+                    ("mode", "pattern_editor"),
+                    ("host", self._hostname),
+                ]), "logwatch")
+
     def action(self):
         rule_folder = watolib.Folder.folder(html.request.var("_folder", html.request.var("folder")))
         rule_folder.need_permission("write")

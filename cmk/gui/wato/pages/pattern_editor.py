@@ -59,12 +59,12 @@ class ModePatternEditor(WatoMode):
 
     def title(self):
         if not self._hostname and not self._item:
-            return _("Logfile Pattern Analyzer")
+            return _("Logfile pattern analyzer")
         if not self._hostname:
-            return _("Logfile Patterns of Logfile %s on all Hosts") % (self._item)
+            return _("Logfile patterns of logfile %s on all hosts") % (self._item)
         if not self._item:
-            return _("Logfile Patterns of Host %s") % (self._hostname)
-        return _("Logfile Patterns of Logfile %s on Host %s") % (self._item, self._hostname)
+            return _("Logfile patterns of Host %s") % (self._hostname)
+        return _("Logfile patterns of logfile %s on host %s") % (self._item, self._hostname)
 
     def buttons(self):
         global_buttons()
@@ -80,11 +80,11 @@ class ModePatternEditor(WatoMode):
                                          filename="logwatch.py"), 'logwatch')
 
         html.context_button(
-            _('Edit Logfile Rules'),
+            _('Logfile patterns'),
             watolib.folder_preserving_link([
                 ('mode', 'edit_ruleset'),
                 ('varname', 'logwatch_rules'),
-            ]), 'edit')
+            ]), 'rulesets')
 
     def page(self):
         html.help(
@@ -123,7 +123,7 @@ class ModePatternEditor(WatoMode):
         collection.load()
         ruleset = collection.get("logwatch_rules")
 
-        html.h3(_('Logfile Patterns'))
+        html.h3(_('Logfile patterns'))
         if ruleset.is_empty():
             html.open_div(class_="info")
             html.write_text('There are no logfile patterns defined. You may create '

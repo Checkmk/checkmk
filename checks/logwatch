@@ -252,8 +252,9 @@ def inventory_logwatch_groups(parsed):
                 inventory.setdefault(group_name, set()).update(pattern_set)
 
     for group_name, patterns in inventory.items():
-        # Convert pattern containers to lists (sets are not possible in autochecks)
-        yield group_name, {"group_patterns": sorted(patterns)}
+        params = {"group_patterns": sorted(patterns)}
+        params.update(logwatch_precompile(group_name))
+        yield group_name, params
 
 
 #.
@@ -316,22 +317,6 @@ check_info['logwatch'] = {
 #   '----------------------------------------------------------------------'
 
 
-def logwatch_group_precompile(hostname, item, params):
-    patterns = []
-    for line in host_extra_conf(hostname, logwatch_groups):
-        for group_name_pattern, pattern in line:
-            if group_name_pattern == item:
-                patterns.append(pattern)
-
-    if params is None:
-        precomped = {}
-    else:
-        precomped = params.copy()
-    precomped["pre_comp_group_patterns"] = patterns
-    precomped.update(logwatch_precompile(item))
-    return precomped
-
-
 def _logwatch_instantiate_matched(match, group_name, inclusion):
     num_perc_s = group_name.count("%s")
     matches = [g or "" for g in match.groups()]
@@ -373,6 +358,7 @@ def logwatch_groups_of_logfile(group_patterns, filename):
         else:
             excl_match = fnmatch.fnmatch(filename, exclusion)
 
+        # NOTE: exclusion wins.
         if incl_match and not excl_match:
             found_these_groups.setdefault(group_name, set())
             found_these_groups[group_name].add((inclusion, exclusion))
@@ -403,9 +389,11 @@ def check_logwatch_groups(item, params, parsed):
     for error_msg in parsed['errors']:
         yield 3, error_msg
 
-    group_patterns = set(params.get("pre_comp_group_patterns", []))
-    for entry in params.get('group_patterns', []):
-        group_patterns.add(entry)
+    if not isinstance(params, dict) or "reclassify_patterns" not in params:
+        yield 3, "Patterns not found. Please rediscover the services of this host."
+        return
+
+    group_patterns = set(params['group_patterns'])
 
     loglines = []
     for logfile_name, item_data in parsed['logfiles'].items():
@@ -416,12 +404,7 @@ def check_logwatch_groups(item, params, parsed):
                     loglines.extend(node_data['lines'])
                 break
 
-    # Get the patterns (either compile or reuse the precompiled ones)
-    # Check_MK creates an empty string if the precompile function has
-    # not been executed yet.
-    patterns = logwatch_precompile(item) if params in ('', None) else params
-
-    yield check_logwatch_generic(item, patterns, loglines, True)
+    yield check_logwatch_generic(item, params, loglines, True)
 
 
 check_info['logwatch.groups'] = {
@@ -432,8 +415,6 @@ check_info['logwatch.groups'] = {
     'group': 'logwatch',
     'includes': ['eval_regex.include']
 }
-
-precompile_params['logwatch.groups'] = logwatch_group_precompile
 
 #.
 

@@ -60,7 +60,8 @@ def test_logwatch_inventory_single(check_manager, info, fwd_rule, inventory_grou
         (INFO1, [{}], [[('my_%s_group', ('~(log)[^5]', '~.*1')),
                         ('my_%s_group', ('~(log).*', '~.*5'))]], [
                             ('my_log_group', {
-                                'group_patterns': [('~log.*', '~.*5'), ('~log[^5]', '~.*1')]
+                                'group_patterns': [('~log.*', '~.*5'), ('~log[^5]', '~.*1')],
+                                'reclassify_patterns': [],
                             }),
                         ]),
         (INFO1, [{}], [[('my_group', ('~.*sing', '~.*1'))]], []),  # don't match :missing!

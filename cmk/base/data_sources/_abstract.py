@@ -58,9 +58,13 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         4. cache_info:              Agent cache information
                                     (dict section name -> (cached_at, cache_interval))
     """
-    def __init__(self, sections: BoundedAbstractSections, cache_info: SectionCacheInfo,
-                 piggybacked_raw_data: PiggybackRawData,
-                 persisted_sections: BoundedAbstractPersistedSections) -> None:
+    def __init__(
+        self,
+        sections: BoundedAbstractSections,
+        cache_info: SectionCacheInfo,
+        piggybacked_raw_data: PiggybackRawData,
+        persisted_sections: BoundedAbstractPersistedSections,
+    ) -> None:
         super(ABCHostSections, self).__init__()
         self.sections = sections
         self.cache_info = cache_info
@@ -96,12 +100,20 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             self.persisted_sections.update(host_sections.persisted_sections)
 
     @abc.abstractmethod
-    def _extend_section(self, section_name: SectionName,
-                        section_content: BoundedAbstractSectionContent) -> None:
+    def _extend_section(
+        self,
+        section_name: SectionName,
+        section_content: BoundedAbstractSectionContent,
+    ) -> None:
         raise NotImplementedError()
 
-    def add_cached_section(self, section_name: SectionName, section: BoundedAbstractSectionContent,
-                           persisted_from: int, persisted_until: int) -> None:
+    def add_cached_section(
+        self,
+        section_name: SectionName,
+        section: BoundedAbstractSectionContent,
+        persisted_from: int,
+        persisted_until: int,
+    ) -> None:
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
         # TODO: Find out why mypy complains about this
         self.sections[section_name] = section  # type: ignore[assignment]
@@ -210,8 +222,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return result
 
     @cpu_tracking.track
-    def _run(self,
-             get_raw_data: bool) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]:
+    def _run(
+        self,
+        get_raw_data: bool,
+    ) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]:
         """Wrapper for self._execute() that unifies several things:
 
         a) Exception handling
@@ -242,9 +256,12 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                 return raw_data
 
             # Add information from previous persisted infos
-            host_sections = self._update_info_with_persisted_sections(persisted_sections_from_disk,
-                                                                      host_sections, is_cached_data,
-                                                                      section_store)
+            host_sections = self._update_info_with_persisted_sections(
+                persisted_sections_from_disk,
+                host_sections,
+                is_cached_data,
+                section_store,
+            )
             self._persisted_sections = host_sections.persisted_sections
 
             return host_sections
@@ -326,7 +343,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _convert_to_sections(self, raw_data: BoundedAbstractRawData) -> BoundedAbstractHostSections:
+    def _convert_to_sections(
+        self,
+        raw_data: BoundedAbstractRawData,
+    ) -> BoundedAbstractHostSections:
         """See _execute() for details"""
         raise NotImplementedError()
 
@@ -401,7 +421,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def get_summary_result_for_checking(self) -> ServiceCheckResult:
         return self._get_summary_result()
 
-    def _get_summary_result(self, for_checking: bool = True) -> ServiceCheckResult:
+    def _get_summary_result(
+        self,
+        for_checking: bool = True,
+    ) -> ServiceCheckResult:
         """Returns a three element tuple of state, output and perfdata (list) that summarizes
         the execution result of this data source.
 
@@ -443,23 +466,13 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         """Provides exceptions happened during last self.run() call or None"""
         return self._exception
 
-    #.
-    #   .--PersistedCache------------------------------------------------------.
-    #   |  ____               _     _           _  ____           _            |
-    #   | |  _ \ ___ _ __ ___(_)___| |_ ___  __| |/ ___|__ _  ___| |__   ___   |
-    #   | | |_) / _ \ '__/ __| / __| __/ _ \/ _` | |   / _` |/ __| '_ \ / _ \  |
-    #   | |  __/  __/ |  \__ \ \__ \ ||  __/ (_| | |__| (_| | (__| | | |  __/  |
-    #   | |_|   \___|_|  |___/_|___/\__\___|\__,_|\____\__,_|\___|_| |_|\___|  |
-    #   |                                                                      |
-    #   +----------------------------------------------------------------------+
-    #   | Caching of info for multiple executions of Check_MK. Mostly caching  |
-    #   | of sections that are not provided on each query.                     |
-    #   '----------------------------------------------------------------------'
-
     def _update_info_with_persisted_sections(
-            self, persisted_sections: BoundedAbstractPersistedSections,
-            host_sections: BoundedAbstractHostSections, is_cached_data: bool,
-            section_store: SectionStore) -> BoundedAbstractHostSections:
+        self,
+        persisted_sections: BoundedAbstractPersistedSections,
+        host_sections: BoundedAbstractHostSections,
+        is_cached_data: bool,
+        section_store: SectionStore,
+    ) -> BoundedAbstractHostSections:
         if host_sections.persisted_sections and not is_cached_data:
             persisted_sections.update(host_sections.persisted_sections)
             section_store.store(persisted_sections)
@@ -479,8 +492,12 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                                    section_name)
             else:
                 self._logger.debug("Using persisted section %r", section_name)
-                host_sections.add_cached_section(section_name, section_info, persisted_from,
-                                                 persisted_until)
+                host_sections.add_cached_section(
+                    section_name,
+                    section_info,
+                    persisted_from,
+                    persisted_until,
+                )
         return host_sections
 
     @classmethod

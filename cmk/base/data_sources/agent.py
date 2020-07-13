@@ -222,19 +222,29 @@ class Summarizer:
 
 
 class Parser:
-    def __init__(self, host_config: config.HostConfig, logger: logging.Logger) -> None:
+    def __init__(self, logger: logging.Logger) -> None:
         super().__init__()
-        self._host_config = host_config
         self._logger = logger
 
-    def parse(self, raw_data: RawAgentData) -> AgentHostSections:
+    def parse(
+        self,
+        hostname: HostName,
+        raw_data: RawAgentData,
+        *,
+        check_interval: int,
+    ) -> AgentHostSections:
         raw_data = cast(RawAgentData, raw_data)
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
-        return self._parse_host_section(raw_data)
+        return self._parse_host_section(hostname, raw_data, check_interval)
 
-    def _parse_host_section(self, raw_data: RawAgentData) -> AgentHostSections:
+    def _parse_host_section(
+        self,
+        hostname: HostName,
+        raw_data: RawAgentData,
+        check_interval: int,
+    ) -> AgentHostSections:
         """Split agent output in chunks, splits lines by whitespaces.
 
         Returns a HostSections() object.
@@ -246,7 +256,7 @@ class Parser:
         piggybacked_hostname = None
         piggybacked_cached_at = int(time.time())
         # Transform to seconds and give the piggybacked host a little bit more time
-        piggybacked_cache_age = int(1.5 * 60 * self._host_config.check_mk_check_interval)
+        piggybacked_cache_age = int(1.5 * 60 * check_interval)
 
         # handle sections with option persist(...)
         persisted_sections: PersistedAgentSections = {}
@@ -260,7 +270,7 @@ class Parser:
             stripped_line = line.strip()
             if stripped_line[:4] == b'<<<<' and stripped_line[-4:] == b'>>>>':
                 piggybacked_hostname =\
-                    Parser._get_sanitized_and_translated_piggybacked_hostname(stripped_line, self._host_config.hostname)
+                    Parser._get_sanitized_and_translated_piggybacked_hostname(stripped_line, hostname)
 
             elif piggybacked_hostname:  # processing data for an other host
                 if stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
@@ -436,7 +446,11 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         return ensure_binary(raw_data)
 
     def _convert_to_sections(self, raw_data: RawAgentData) -> AgentHostSections:
-        return Parser(self._host_config, self._logger).parse(raw_data)
+        return Parser(self._logger).parse(
+            self._host_config.hostname,
+            raw_data,
+            check_interval=self._host_config.check_mk_check_interval,
+        )
 
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         if not isinstance(self._host_sections, AgentHostSections):

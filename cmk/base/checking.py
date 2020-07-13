@@ -229,8 +229,8 @@ def _get_relevant_raw_sections(services: List[Service], host_config: config.Host
         from cmk.base.inventory import get_inventory_context  # pylint: disable=import-outside-toplevel
         from cmk.base.check_api import get_check_api_context  # pylint: disable=import-outside-toplevel
         inventory_plugins.load_plugins(get_check_api_context, get_inventory_context)
-        inventory_plugin_names: Iterable[InventoryPluginName] = (
-            InventoryPluginName(n) for n, _plugin in inventory_plugins.sorted_inventory_plugins())
+        inventory_plugin_names: Iterable[InventoryPluginName] = (InventoryPluginName(
+            n.split('.')[0]) for n, _plugin in inventory_plugins.sorted_inventory_plugins())
     else:
         inventory_plugin_names = ()
 

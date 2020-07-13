@@ -53,8 +53,8 @@ def fixture_local_test_hosts(web, site):  # noqa: F811 # pylint: disable=redefin
 
 
 def test_global_settings(site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
-    r = web.get("wato.py")
-    assert "Global Settings" in r.text
+    r = web.get("wato.py?mode=globalvars")
+    assert "Global settings" in r.text
 
 
 def test_add_host(web):  # noqa: F811 # pylint: disable=redefined-outer-name

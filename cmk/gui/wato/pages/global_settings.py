@@ -333,8 +333,8 @@ class ModeEditGlobals(GlobalSettingsMode):
 
     def title(self):
         if self._search:
-            return _("Global Settings matching '%s'") % html.render_text(self._search)
-        return _("Global Settings")
+            return _("Global settings matching '%s'") % html.render_text(self._search)
+        return _("Global settings")
 
     def buttons(self):
         global_buttons()

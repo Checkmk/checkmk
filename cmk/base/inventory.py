@@ -67,10 +67,10 @@ def do_inv(hostnames: List[HostName]) -> None:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
             inventory_tree, status_data_tree = _do_inv_for(
-                data_sources.make_sources(host_config, ipaddress),
+                host_config,
+                ipaddress,
+                sources=data_sources.make_sources(host_config, ipaddress),
                 multi_host_sections=None,
-                host_config=host_config,
-                ipaddress=ipaddress,
             )
             _run_inventory_export_hooks(host_config, inventory_tree)
             _show_inventory_results_on_console(inventory_tree, status_data_tree)
@@ -115,10 +115,10 @@ def do_inv_check(
 
     sources = data_sources.make_sources(host_config, ipaddress)
     inventory_tree, status_data_tree = _do_inv_for(
-        sources,
+        host_config,
+        ipaddress,
+        sources=sources,
         multi_host_sections=None,
-        host_config=host_config,
-        ipaddress=ipaddress,
     )
 
     #TODO add cluster if and only if all sources do not fail?
@@ -203,6 +203,7 @@ def do_inventory_actions_during_checking_for(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
+    sources: data_sources.DataSources,
     multi_host_sections: MultiHostSections,
     selected_raw_sections: config.SelectedRawSections,
 ) -> None:
@@ -213,14 +214,10 @@ def do_inventory_actions_during_checking_for(
         return  # nothing to do here
 
     _inventory_tree, status_data_tree = _do_inv_for(
-        sources=data_sources.make_sources(
-            host_config,
-            ipaddress,
-            selected_raw_sections=selected_raw_sections,
-        ),
+        config.HostConfig.make_host_config(hostname),
+        ipaddress,
+        sources=sources,
         multi_host_sections=multi_host_sections,
-        host_config=config.HostConfig.make_host_config(hostname),
-        ipaddress=ipaddress,
     )
     _save_status_data_tree(hostname, status_data_tree)
 
@@ -234,10 +231,11 @@ def _cleanup_status_data(hostname: HostName) -> None:
 
 
 def _do_inv_for(
-    sources: data_sources.DataSources,
-    multi_host_sections: Optional[MultiHostSections],
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
+    *,
+    sources: data_sources.DataSources,
+    multi_host_sections: Optional[MultiHostSections],
 ) -> Tuple[StructuredDataTree, StructuredDataTree]:
     hostname = host_config.hostname
 
@@ -251,8 +249,15 @@ def _do_inv_for(
         _do_inv_for_cluster(host_config, inventory_tree)
     else:
         node["is_cluster"] = False
-        _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ipaddress,
-                             inventory_tree, status_data_tree)
+        _do_inv_for_realhost(
+            host_config,
+            sources,
+            multi_host_sections,
+            hostname,
+            ipaddress,
+            inventory_tree,
+            status_data_tree,
+        )
 
     inventory_tree.normalize_nodes()
     status_data_tree.normalize_nodes()

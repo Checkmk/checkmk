@@ -60,6 +60,7 @@ import cmk.base.cpu_tracking as cpu_tracking
 import cmk.base.crash_reporting
 import cmk.base.data_sources as data_sources
 import cmk.base.decorator
+import cmk.base.inventory as inventory
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.utils
@@ -148,22 +149,37 @@ def do_check(
         # see which raw sections we may need
         selected_raw_sections = _get_relevant_raw_sections(services, host_config)
 
-        num_success, plugins_missing_data = _do_all_checks_on_host(
+        sources = data_sources.make_sources(
             host_config,
             ipaddress,
             selected_raw_sections=selected_raw_sections,
+        )
+        mhs = data_sources.make_host_sections(
+            host_config,
+            ipaddress,
+            sources=sources,
+            max_cachefile_age=host_config.max_cachefile_age,
+        )
+        num_success, plugins_missing_data = _do_all_checks_on_host(
+            host_config,
+            ipaddress,
+            multi_host_sections=mhs,
+            selected_raw_sections=selected_raw_sections,
             services=services,
             only_check_plugins=only_check_plugin_names,
+        )
+        inventory.do_inventory_actions_during_checking_for(
+            host_config,
+            ipaddress,
+            sources=sources,
+            multi_host_sections=mhs,
+            selected_raw_sections=selected_raw_sections,
         )
 
         if _submit_to_core:
             item_state.save(hostname)
 
-        for source in data_sources.make_sources(
-                host_config,
-                ipaddress,
-                selected_raw_sections=selected_raw_sections,
-        ):
+        for source in sources:
             source_state, source_output, source_perfdata = source.get_summary_result_for_checking()
             if source_output != "":
                 status = max(status, source_state)
@@ -283,46 +299,24 @@ def _check_plugins_missing_data(
 def _do_all_checks_on_host(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
+    multi_host_sections: MultiHostSections,
     *,
     selected_raw_sections: config.SelectedRawSections,
     services: List[Service],
     only_check_plugins: Optional[Set[CheckPluginName]] = None,
 ) -> Tuple[int, List[CheckPluginName]]:
     hostname: HostName = host_config.hostname
-
     num_success = 0
     plugins_missing_data: Set[CheckPluginName] = set()
 
     check_api_utils.set_hostname(hostname)
-
-    # Gather the data from the sources
-    multi_host_sections = data_sources.make_host_sections(
-        host_config,
-        ipaddress,
-        data_sources.make_sources(
-            host_config,
-            ipaddress,
-            selected_raw_sections=selected_raw_sections,
-        ),
-        max_cachefile_age=host_config.max_cachefile_age,
-    )
-
     for service in services:
-
         success = execute_check(multi_host_sections, host_config, ipaddress, service)
         if success:
             num_success += 1
         else:
             # TODO (mo): centralize maincheckify: CMK-4295
             plugins_missing_data.add(CheckPluginName(maincheckify(service.check_plugin_name)))
-
-    import cmk.base.inventory as inventory  # pylint: disable=import-outside-toplevel
-    inventory.do_inventory_actions_during_checking_for(
-        host_config,
-        ipaddress,
-        multi_host_sections=multi_host_sections,
-        selected_raw_sections=selected_raw_sections,
-    )
 
     return num_success, sorted(plugins_missing_data)
 

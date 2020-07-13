@@ -209,6 +209,9 @@ class Worker(threading.Thread):
 
         for element in elements:
             orig_url = element.get(attr)
+            if orig_url is None:
+                continue  # Skip elements that don't have the attribute in question
+
             url = self.normalize_url(self.crawler.site.internal_url, orig_url)
 
             if url is None:

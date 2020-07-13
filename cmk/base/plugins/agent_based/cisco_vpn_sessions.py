@@ -53,8 +53,7 @@ def raw_data_to_int(raw_data: Union[str, List[int]]) -> int:
     return int(raw_data)
 
 
-def parse_cisco_vpn_sessions(
-        string_table: List[List[List[Union[str, List[int]]]]]) -> Dict[str, Dict[str, int]]:
+def parse_cisco_vpn_sessions(string_table: List[List[List[str]]]) -> Dict[str, Dict[str, int]]:
 
     raw_data = string_table[0][0]
     parsed = {}

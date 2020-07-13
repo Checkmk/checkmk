@@ -8,14 +8,13 @@
 import functools
 import inspect
 import itertools
-from inspect import signature
-from typing import Any, Generator, List, Optional, Union
+from typing import Any, Generator, List, Optional, Tuple, Type, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ParsedSectionName, SectionName
 
-from cmk.snmplib.type_defs import OIDSpec, SNMPDetectSpec, SNMPTree
+from cmk.snmplib.type_defs import OIDBytes, OIDSpec, SNMPDetectSpec, SNMPTree
 
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
@@ -24,10 +23,16 @@ from cmk.base.api.agent_based.section_types import (
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
+from cmk.base.api.agent_based.type_defs import (
+    AgentStringTable,
+    SNMPStringByteTable,
+    SNMPStringTable,
+)
 from cmk.base.discovered_labels import HostLabel
 
 
-def _validate_parse_function(parse_function: Union[AgentParseFunction, SNMPParseFunction]) -> None:
+def _validate_parse_function(parse_function: Union[AgentParseFunction, SNMPParseFunction], *,
+                             expected_annotation: Tuple[Type, str]) -> None:
     """Validate the parse functions signature and type"""
 
     if not inspect.isfunction(parse_function):
@@ -36,9 +41,15 @@ def _validate_parse_function(parse_function: Union[AgentParseFunction, SNMPParse
     if inspect.isgeneratorfunction(parse_function):
         raise TypeError("parse function must not be a generator function: %r" % (parse_function,))
 
-    parameters = signature(parse_function).parameters
+    parameters = inspect.signature(parse_function).parameters
     if list(parameters) != ['string_table']:
         raise ValueError("parse function must accept exactly one argument 'string_table'")
+
+    arg = parameters['string_table']
+    if arg.annotation is not arg.empty:  # why is inspect._empty trueish?!
+        if arg.annotation != expected_annotation[0]:
+            raise TypeError('expected parse function argument annotation %r, got %r' %
+                            (expected_annotation[1], arg.annotation))
 
 
 def _validate_host_label_function(host_label_function: HostLabelFunction) -> None:
@@ -48,7 +59,7 @@ def _validate_host_label_function(host_label_function: HostLabelFunction) -> Non
         raise TypeError("host label function must be a generator function: %r" %
                         (host_label_function,))
 
-    parameters = signature(host_label_function).parameters
+    parameters = inspect.signature(host_label_function).parameters
     if list(parameters) != ['section']:
         raise ValueError("host label function must accept exactly one argument 'section'")
 
@@ -155,7 +166,10 @@ def create_agent_section_plugin(
 
     section_name = SectionName(name)
 
-    _validate_parse_function(parse_function)
+    _validate_parse_function(
+        parse_function,
+        expected_annotation=(AgentStringTable, "AgentStringTable"),
+    )
 
     return AgentSectionPlugin(
         section_name,
@@ -191,7 +205,12 @@ def create_snmp_section_plugin(
 
     section_name = SectionName(name)
 
-    _validate_parse_function(parse_function)
+    if any(isinstance(oid, OIDBytes) for tree in trees for oid in tree.oids):
+        expected_annotation: Tuple[Type, str] = (SNMPStringByteTable, "SNMPStringByteTable")
+    else:
+        expected_annotation = (SNMPStringTable, "SNMPStringTable")
+
+    _validate_parse_function(parse_function, expected_annotation=expected_annotation)
     _validate_detect_spec(detect_spec)
     _validate_snmp_trees(trees)
 

@@ -7,7 +7,7 @@
 """
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
 
-from cmk.snmplib.type_defs import SNMPTable, SNMPTree
+from cmk.snmplib.type_defs import SNMPTree
 
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
@@ -17,12 +17,12 @@ from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function impo
     create_detect_spec,)
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
-    AgentSectionContent,
     AgentSectionPlugin,
     HostLabelFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
+from cmk.base.api.agent_based.type_defs import AgentStringTable
 from cmk.base.api.agent_based.utils import parse_to_string_table
 from cmk.base.check_api_utils import Service
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
@@ -41,7 +41,7 @@ def _create_agent_parse_function(original_parse_function: Optional[Callable]) ->
         return parse_to_string_table
 
     # do not use functools.wraps, the point is the new argument name!
-    def parse_function(string_table: AgentSectionContent) -> Any:
+    def parse_function(string_table: AgentStringTable) -> Any:
         return original_parse_function(string_table)  # type: ignore
 
     parse_function.__name__ = original_parse_function.__name__
@@ -175,7 +175,7 @@ def _create_snmp_parse_function(original_parse_function: Optional[Callable],
         original_parse_function = parse_to_string_table
 
     # do not use functools.wraps, the point is the new argument name!
-    def parse_function(string_table: List[SNMPTable]) -> Any:
+    def parse_function(string_table) -> Any:
         return original_parse_function(  # type: ignore
             recover_layout_function(string_table),)
 

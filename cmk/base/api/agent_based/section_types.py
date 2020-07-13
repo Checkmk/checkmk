@@ -5,22 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types and classes used by the API for agent_based plugins
 """
-from typing import Any, Callable, Generator, List, NamedTuple, Optional
+from typing import List, NamedTuple, Optional
 
 from cmk.utils.type_defs import SectionName, ParsedSectionName
 
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTable, SNMPTree
+from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
-from cmk.base.check_utils import AgentSectionContent
-from cmk.base.discovered_labels import HostLabel
-
-AgentParseFunction = Callable[[AgentSectionContent], Any]
-
-# we do *not* use SNMPSectionContent here, because List[SNMPTable]
-# is more specific.
-SNMPParseFunction = Callable[[List[SNMPTable]], Any]
-
-HostLabelFunction = Callable[[Any], Generator[HostLabel, None, None]]
+from cmk.base.api.agent_based.type_defs import (
+    AgentParseFunction,
+    HostLabelFunction,
+    SNMPParseFunction,
+)
 
 AgentSectionPlugin = NamedTuple(
     "AgentSectionPlugin",

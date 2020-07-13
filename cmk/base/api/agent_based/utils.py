@@ -9,22 +9,21 @@ These are meant to be exposed in the API
 """
 import itertools
 import re
-from typing import Any, Callable, Generator, List, MutableMapping, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Generator, MutableMapping, Optional, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTable
+from cmk.snmplib.type_defs import SNMPDetectSpec
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.prediction
 from cmk.base.api.agent_based.checking_types import IgnoreResultsError, Metric, Result, state
-from cmk.base.api.agent_based.section_types import AgentSectionContent
-
-RawSection = TypeVar('RawSection', List[SNMPTable], AgentSectionContent)
 
 
-def parse_to_string_table(string_table: RawSection) -> RawSection:
+# annotating this breaks validation.
+# yet another reason to not use this.
+def parse_to_string_table(string_table):
     """Identity function
 
     Provided for developers who don't want to implement a parse function (which they should).

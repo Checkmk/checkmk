@@ -16,6 +16,7 @@ from cmk.snmplib.type_defs import OIDEnd, SNMPTree
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 import cmk.base.api.agent_based.section_types as section_types
+from cmk.base.api.agent_based.type_defs import SNMPStringTable, SNMPStringByteTable
 
 
 def _generator_function():
@@ -36,7 +37,10 @@ def _parse_dummy(string_table):  # pylint: disable=unused-argument
 ])
 def test_validate_parse_function_type(parse_function):
     with pytest.raises(TypeError):
-        section_plugins._validate_parse_function(parse_function)
+        section_plugins._validate_parse_function(
+            parse_function,
+            expected_annotation=(str, "str"),  # irrelevant for test
+        )
 
 
 @pytest.mark.parametrize(
@@ -49,7 +53,26 @@ def test_validate_parse_function_type(parse_function):
     ])
 def test_validate_parse_function_value(parse_function):
     with pytest.raises(ValueError):
-        section_plugins._validate_parse_function(parse_function)
+        section_plugins._validate_parse_function(
+            parse_function,
+            expected_annotation=(str, "str"),  # ignored
+        )
+
+
+def test_validate_parse_function_annotation_string_table():
+    def _parse_function(string_table: SNMPStringTable):
+        return string_table
+
+    with pytest.raises(TypeError):
+        section_plugins._validate_parse_function(
+            _parse_function,
+            expected_annotation=(SNMPStringByteTable, "SNMPStringByteTable"),
+        )
+
+    section_plugins._validate_parse_function(
+        _parse_function,
+        expected_annotation=(SNMPStringTable, "SNMPStringTable"),
+    )
 
 
 @pytest.mark.parametrize(

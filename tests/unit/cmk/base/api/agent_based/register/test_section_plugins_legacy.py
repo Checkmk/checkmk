@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName
@@ -11,6 +13,7 @@ from cmk.utils.type_defs import ParsedSectionName, SectionName
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.base.api.agent_based.type_defs import AgentStringTable
 from cmk.base.check_api_utils import Service
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
@@ -50,18 +53,40 @@ def test_get_section_name(name_in, name_out):
     assert name_out == section_plugins_legacy.get_section_name(name_in)
 
 
-@pytest.mark.parametrize("creator_func", [
-    section_plugins_legacy._create_agent_parse_function,
-    lambda x: section_plugins_legacy._create_snmp_parse_function(x, lambda x: x),
-])
-def test_create_parse_function(creator_func):
-    compliant_parse_function = creator_func(old_school_parse_function)
+def test_create_agent_parse_function():
+    compliant_parse_function = section_plugins_legacy._create_agent_parse_function(
+        old_school_parse_function)
 
     with pytest.raises(ValueError):
         # raises b/c of wrong signature!
-        section_plugins._validate_parse_function(old_school_parse_function)
+        section_plugins._validate_parse_function(
+            old_school_parse_function,
+            expected_annotation=(str, "str"),  # irrelevant in test
+        )
 
-    section_plugins._validate_parse_function(compliant_parse_function)
+    section_plugins._validate_parse_function(
+        compliant_parse_function,
+        expected_annotation=(AgentStringTable, "AgentStringTable"),
+    )
+
+    assert old_school_parse_function([]) == compliant_parse_function([])
+
+
+def test_create_snmp_parse_function():
+    compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
+        old_school_parse_function, lambda x: x)
+
+    with pytest.raises(ValueError):
+        # raises b/c of wrong signature!
+        section_plugins._validate_parse_function(
+            old_school_parse_function,
+            expected_annotation=(str, "str"),  # irrelevant in test
+        )
+
+    section_plugins._validate_parse_function(
+        compliant_parse_function,
+        expected_annotation=(str, "str"),  # irrel. in test, SNMP parse function is not annotated
+    )
 
     assert old_school_parse_function([]) == compliant_parse_function([])
 

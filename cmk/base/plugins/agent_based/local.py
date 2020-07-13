@@ -23,7 +23,6 @@ import six
 from .agent_based_api.v0 import (
     check_levels,
     Metric,
-    Parameters,
     register,
     render,
     Result,
@@ -31,6 +30,7 @@ from .agent_based_api.v0 import (
     state,
 )
 from .agent_based_api.v0.clusterize import aggregate_node_details
+from .agent_based_api.v0.type_defs import Parameters
 
 Perfdata = NamedTuple("Perfdata", [
     ("name", str),

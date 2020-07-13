@@ -39,7 +39,6 @@ from .agent_based_api.v0 import (
     startswith,
 )
 
-InfoEntry = Union[str, List[int]]
 StatusInfo = Tuple[float, Tuple[int, str]]
 Parsed = Dict[str, Dict[str, Union[float, StatusInfo]]]
 
@@ -51,17 +50,11 @@ STATE_MAP = {
 }
 
 
-def get_status_info(amperage_str: InfoEntry, device_state: InfoEntry) -> StatusInfo:
-    """
-    The assert-statements make mypy happy because they handle input of type List[int], which would
-    only happen if we used OIDBytes("...") in the SNMP trees.
-    """
-    assert isinstance(amperage_str, str)
-    assert isinstance(device_state, str)
+def get_status_info(amperage_str: str, device_state: str) -> StatusInfo:
     return float(amperage_str) / 10, STATE_MAP[device_state]
 
 
-def parse_apc_rackpdu_power(string_table: List[List[List[InfoEntry]]]) -> Parsed:
+def parse_apc_rackpdu_power(string_table: List[List[List[str]]]) -> Parsed:
 
     parsed: Parsed = {}
     device_info, n_phases, phase_bank_info = string_table

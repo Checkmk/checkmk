@@ -413,6 +413,7 @@ setup:
 	    libclang-10-dev \
 	    libclang-common-10-dev \
 	    libclang1-10 \
+	    libjpeg-dev \
 	    doxygen \
 	    figlet \
 	    g++ \
@@ -434,7 +435,8 @@ setup:
 	    chrpath \
 	    enchant \
 	    ksh \
-	    p7zip-full
+	    p7zip-full \
+	    zlib1g-dev
 	sudo -H pip install -U pipenv wheel
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup

@@ -6,7 +6,9 @@
 """Simple download page for the builtin agents and plugins"""
 
 import os
+import abc
 import glob
+import fnmatch
 from typing import List
 
 import cmk.utils.paths
@@ -21,37 +23,60 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
     global_buttons,
+    folder_preserving_link,
 )
 
 
-@mode_registry.register
-class ModeDownloadAgents(WatoMode):
-    @classmethod
-    def name(cls) -> str:
-        return "download_agents"
-
+class ABCModeDownloadAgents(WatoMode):
     @classmethod
     def permissions(cls) -> List[str]:
         return ["download_agents"]
 
-    def title(self) -> str:
-        return _("Agents and Plugins")
-
     def buttons(self) -> None:
         global_buttons()
+
+        if self.name() != "download_agents_windows":
+            html.context_button(_("Windows files"),
+                                folder_preserving_link([("mode", "download_agents_windows")]),
+                                "download_agents")
+        if self.name() != "download_agents_linux":
+            html.context_button(_("Linux files"),
+                                folder_preserving_link([("mode", "download_agents_linux")]),
+                                "download_agents")
+        if self.name() != "download_agents":
+            html.context_button(_("Other files"),
+                                folder_preserving_link([("mode", "download_agents")]),
+                                "download_agents")
+
         if watolib.has_agent_bakery():
             html.context_button(_("Baked agents"),
-                                watolib.folder_preserving_link([("mode", "agents")]),
-                                "download_agents")
-        html.context_button(_("Release Notes"), "version.py", "mk")
+                                watolib.folder_preserving_link([("mode", "agents")]), "agents")
+
+    @abc.abstractmethod
+    def _packed_agents(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _walk_base_dir(self):
+        raise NotImplementedError()
+
+    def _exclude_file_glob_patterns(self):
+        return []
+
+    def _exclude_paths(self):
+        return set([
+            '/bakery',
+            '/special',
+            '/windows/baked_container.msi',
+            '/windows/plugins/.gitattributes',
+        ])
 
     def page(self) -> None:
         html.open_div(class_="rulesets")
-        packed = glob.glob(cmk.utils.paths.agents_dir + "/*.deb") \
-                + glob.glob(cmk.utils.paths.agents_dir + "/*.rpm") \
-                + glob.glob(cmk.utils.paths.agents_dir + "/windows/c*.msi")
 
-        self._download_table(_("Packaged Agents"), packed)
+        packed = self._packed_agents()
+        if packed:
+            self._download_table(_("Packaged Agents"), packed)
 
         titles = {
             '': _('Linux/Unix Agents'),
@@ -67,32 +92,41 @@ class ModeDownloadAgents(WatoMode):
             '/sap': _('SAP R/3'),
         }
 
-        banned_paths = [
-            '/bakery',
-            '/special',
-            '/windows/msibuild',
-            '/windows/msibuild/patches',
-            '/windows/sections',
-        ]
+        banned_paths = self._exclude_paths()
 
         other_sections = []
-        for root, _dirs, files in os.walk(cmk.utils.paths.agents_dir):
+        for root, _dirs, files in os.walk(self._walk_base_dir()):
             file_paths = []
             relpath = root.split('agents')[1]
-            if relpath not in banned_paths:
-                title = titles.get(relpath, relpath)
-                for filename in files:
-                    path = root + '/' + filename
-                    if path not in packed and 'deprecated' not in path:
-                        file_paths.append(path)
+            if relpath in banned_paths:
+                continue
 
-                other_sections.append((title, file_paths))
+            title = titles.get(relpath, relpath)
+            for filename in files:
+                rel_file_path = relpath + '/' + filename
+                if rel_file_path in banned_paths:
+                    continue
+
+                if self._exclude_by_pattern(rel_file_path):
+                    continue
+
+                path = root + '/' + filename
+                if path not in packed and 'deprecated' not in path:
+                    file_paths.append(path)
+
+            other_sections.append((title, file_paths))
 
         for title, file_paths in sorted(other_sections):
             useful_file_paths = [p for p in file_paths if not p.endswith("/CONTENTS")]
             if useful_file_paths:
                 self._download_table(title, sorted(useful_file_paths))
         html.close_div()
+
+    def _exclude_by_pattern(self, rel_file_path):
+        for exclude_pattern in self._exclude_file_glob_patterns():
+            if fnmatch.fnmatch(rel_file_path, exclude_pattern):
+                return True
+        return False
 
     def _download_table(self, title: str, paths: List[str]) -> None:
         forms.header(title)
@@ -114,3 +148,97 @@ class ModeDownloadAgents(WatoMode):
             html.close_div()
             html.close_div()
         forms.end()
+
+
+@mode_registry.register
+class ModeDownloadAgentsOther(ABCModeDownloadAgents):
+    @classmethod
+    def name(cls) -> str:
+        return "download_agents"
+
+    def title(self) -> str:
+        return _("Download other agents and plugins")
+
+    def _packed_agents(self):
+        return []
+
+    def _walk_base_dir(self):
+        return cmk.utils.paths.agents_dir
+
+    def _exclude_file_glob_patterns(self):
+        return [
+            "*.rpm",
+            "*.deb",
+            "*.linux",
+        ]
+
+    def _exclude_paths(self):
+        exclude = super()._exclude_paths()
+        exclude.add("/cfg_examples/systemd")
+        exclude.add("/sap")
+        exclude.add("/windows")
+        exclude.add("/windows/cfg_examples")
+        exclude.add("/windows/mrpe")
+        exclude.add("/windows/mrpe")
+        exclude.add("/windows/ohm")
+        exclude.add("/windows/plugins")
+        return exclude
+
+
+@mode_registry.register
+class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
+    @classmethod
+    def name(cls) -> str:
+        return "download_agents_windows"
+
+    def title(self) -> str:
+        return _("Download Windows agents and plugins")
+
+    def _packed_agents(self):
+        return glob.glob(cmk.utils.paths.agents_dir + "/windows/c*.msi")
+
+    def _walk_base_dir(self):
+        return cmk.utils.paths.agents_dir + "/windows"
+
+
+@mode_registry.register
+class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
+    @classmethod
+    def name(cls) -> str:
+        return "download_agents_linux"
+
+    def title(self) -> str:
+        return _("Download Linux agents and plugins")
+
+    def _packed_agents(self):
+        return glob.glob(cmk.utils.paths.agents_dir +
+                         "/*.deb") + glob.glob(cmk.utils.paths.agents_dir + "/*.rpm")
+
+    def _walk_base_dir(self):
+        return cmk.utils.paths.agents_dir
+
+    def _exclude_file_glob_patterns(self):
+        return [
+            "*.solaris",
+            "*.aix",
+            "*.hpux",
+            "*.macosx",
+            "*.freebsd",
+            "*.openbsd",
+            "*.netbsd",
+            "*.openwrt",
+            "*.openvms",
+            "hpux_*",
+        ]
+
+    def _exclude_paths(self):
+        exclude = super()._exclude_paths()
+        exclude.add("/z_os")
+        exclude.add("/sap")
+        exclude.add("/windows")
+        exclude.add("/windows/cfg_examples")
+        exclude.add("/windows/mrpe")
+        exclude.add("/windows/mrpe")
+        exclude.add("/windows/ohm")
+        exclude.add("/windows/plugins")
+        return exclude

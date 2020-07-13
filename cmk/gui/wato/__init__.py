@@ -166,7 +166,7 @@ from cmk.gui.wato.pages.custom_attributes import (
     ModeCustomUserAttrs,
     ModeCustomHostAttrs,
 )
-from cmk.gui.wato.pages.download_agents import ModeDownloadAgents
+from cmk.gui.wato.pages.download_agents import ModeDownloadAgentsOther
 from cmk.gui.wato.pages.folders import (
     ModeFolder,
     ModeAjaxPopupMoveToFolder,

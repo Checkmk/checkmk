@@ -578,7 +578,7 @@ class MainModuleLDAP(MainModule):
 
     @property
     def description(self):
-        return _("Connect Checkmk with your LDAP or Active Directory to create users in Checmk.")
+        return _("Connect Checkmk with your LDAP or Active Directory to create users in Checkmk.")
 
     @property
     def sort_index(self):
@@ -1013,7 +1013,83 @@ class MainModuleDiscoverySettings(MainModule):
         return False
 
 
-class MainModuleDownloadAgents(MainModule):
+class MainModuleAgentsWindows(MainModule):
+    @property
+    def mode_or_url(self):
+        return "download_agents_windows"
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
+
+    @property
+    def title(self):
+        return _("Windows")
+
+    @property
+    def icon(self):
+        return "download_agents_windows"
+
+    @property
+    def permission(self):
+        return "download_agents"
+
+    @property
+    def description(self):
+        return _("Downloads Checkmk agent and plugins for Windows")
+
+    @property
+    def sort_index(self):
+        return 10
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+class MainModuleAgentsLinux(MainModule):
+    @property
+    def mode_or_url(self):
+        return "download_agents_linux"
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
+
+    @property
+    def title(self):
+        return _("Linux")
+
+    @property
+    def icon(self):
+        return "download_agents_linux"
+
+    @property
+    def permission(self):
+        return "download_agents"
+
+    @property
+    def description(self):
+        return _("Downloads Checkmk agent and plugins for Linux")
+
+    @property
+    def sort_index(self):
+        return 15
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+# Register the builtin agent download page on the top level of WATO only when the agent bakery
+# does not exist (e.g. when using CRE)
+if not cmk_version.is_raw_edition():
+    main_module_registry.register(MainModuleAgentsWindows)
+    main_module_registry.register(MainModuleAgentsLinux)
+
+
+@main_module_registry.register
+class MainModuleOtherAgents(MainModule):
     @property
     def mode_or_url(self):
         return "download_agents"
@@ -1024,7 +1100,7 @@ class MainModuleDownloadAgents(MainModule):
 
     @property
     def title(self):
-        return _("Monitoring agents")
+        return _("Other operating systems")
 
     @property
     def icon(self):
@@ -1036,21 +1112,15 @@ class MainModuleDownloadAgents(MainModule):
 
     @property
     def description(self):
-        return _("Downloads the Checkmk monitoring agents")
+        return _("Downloads Checkmk agents for other operating systems")
 
     @property
     def sort_index(self):
-        return 10
+        return 20
 
     @property
     def is_advanced(self):
         return False
-
-
-# Register the builtin agent download page on the top level of WATO only when the agent bakery
-# does not exist (e.g. when using CRE)
-if cmk_version.is_raw_edition():
-    main_module_registry.register(MainModuleDownloadAgents)
 
 
 @main_module_registry.register

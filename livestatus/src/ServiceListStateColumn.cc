@@ -5,7 +5,6 @@
 
 #include "ServiceListStateColumn.h"
 
-#include "LogEntry.h"
 #include "Row.h"
 
 #ifdef CMC
@@ -44,7 +43,11 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
     if (mem != nullptr) {
         for (const auto &svc : *mem) {
             if (auth_user == nullptr || svc->hasContact(auth_user)) {
-                update(logictype, svc.get(), result);
+                update(
+                    logictype,
+                    static_cast<ServiceState>(svc->state()->_current_state),
+                    static_cast<ServiceState>(svc->state()->_last_hard_state),
+                    svc->state()->_has_been_checked, result);
             }
         }
     }
@@ -53,7 +56,9 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
         service *svc = mem->service_ptr;
         if (auth_user == nullptr ||
             is_authorized_for(mc, auth_user, svc->host_ptr, svc)) {
-            update(logictype, svc, result);
+            update(logictype, static_cast<ServiceState>(svc->current_state),
+                   static_cast<ServiceState>(svc->last_hard_state),
+                   svc->has_been_checked != 0, result);
         }
     }
 #endif
@@ -61,33 +66,10 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
 }
 
 // static
-void ServiceListStateColumn::update(Type logictype, service *svc,
-                                    int32_t &result) {
-#ifdef CMC
-    uint32_t last_hard_state = svc->state()->_last_hard_state;
-    uint32_t current_state = svc->state()->_current_state;
-    bool has_been_checked = svc->state()->_has_been_checked;
-#else
-    int last_hard_state = svc->last_hard_state;
-    int current_state = svc->current_state;
-    bool has_been_checked = svc->has_been_checked != 0;
-#endif
-    int service_state = 0;
-    Type lt;
-    if (static_cast<int>(logictype) >= 60) {
-        service_state = last_hard_state;
-        lt = static_cast<Type>(static_cast<int>(logictype) - 64);
-    } else {
-        service_state = current_state;
-        lt = logictype;
-    }
-    switch (lt) {
-        case Type::worst_state:
-            if (worse(static_cast<ServiceState>(service_state),
-                      static_cast<ServiceState>(result))) {
-                result = service_state;
-            }
-            break;
+void ServiceListStateColumn::update(Type logictype, ServiceState current_state,
+                                    ServiceState last_hard_state,
+                                    bool has_been_checked, int32_t &result) {
+    switch (logictype) {
         case Type::num:
             result++;
             break;
@@ -96,9 +78,54 @@ void ServiceListStateColumn::update(Type logictype, service *svc,
                 result++;
             }
             break;
-        default:
-            if (has_been_checked && service_state == static_cast<int>(lt)) {
+        case Type::num_ok:
+            if (has_been_checked && current_state == ServiceState::ok) {
                 result++;
+            }
+            break;
+        case Type::num_warn:
+            if (has_been_checked && current_state == ServiceState::warning) {
+                result++;
+            }
+            break;
+        case Type::num_crit:
+            if (has_been_checked && current_state == ServiceState::critical) {
+                result++;
+            }
+            break;
+        case Type::num_unknown:
+            if (has_been_checked && current_state == ServiceState::unknown) {
+                result++;
+            }
+            break;
+        case Type::worst_state:
+            if (worse(current_state, static_cast<ServiceState>(result))) {
+                result = static_cast<int>(current_state);
+            }
+            break;
+        case Type::num_hard_ok:
+            if (has_been_checked && last_hard_state == ServiceState::ok) {
+                result++;
+            }
+            break;
+        case Type::num_hard_warn:
+            if (has_been_checked && last_hard_state == ServiceState::warning) {
+                result++;
+            }
+            break;
+        case Type::num_hard_crit:
+            if (has_been_checked && last_hard_state == ServiceState::critical) {
+                result++;
+            }
+            break;
+        case Type::num_hard_unknown:
+            if (has_been_checked && last_hard_state == ServiceState::unknown) {
+                result++;
+            }
+            break;
+        case Type::worst_hard_state:
+            if (worse(last_hard_state, static_cast<ServiceState>(result))) {
+                result = static_cast<int>(last_hard_state);
             }
             break;
     }

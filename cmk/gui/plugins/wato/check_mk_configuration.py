@@ -2010,7 +2010,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
             ),
             title=_("Icon categories"),
             help=_("You can customize the list of icon categories to be able to assign "
-                   "your <a href=\"?mode=icons\">custom icons</a> to these categories. "
+                   "your <a href=\"wato.py?mode=icons\">custom icons</a> to these categories. "
                    "They will then be shown under this category in the icon selector."),
         )
 

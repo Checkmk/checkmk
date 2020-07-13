@@ -118,28 +118,21 @@ def inventory_sap_value(info):
 def sap_value_path_matches(path, pattern):
     if pattern is None:
         return True
-    elif pattern[0] != '~' and path == pattern:
-        # exact path match
-        return True
-    elif pattern[0] == '~':
-        # regex matching
-        pattern = pattern[1:]
-        reg = regex(pattern)
-        matchobject = reg.match(path)
-        if matchobject:
-            return True
-    return False
+
+    if pattern.startswith('~'):  # regex matching
+        reg = regex(pattern[1:])
+        return bool(reg.match(path))
+
+    return path == pattern
 
 
 def check_sap_value(item, params, info):
     status = None
     perfdata = []
+    limit = params.get('limit_item_levels')
 
     for line in info:
-        if params.get('limit_item_levels'):
-            this_path = '/'.join(line[3].split('/')[-params.get('limit_item_levels'):])
-        else:
-            this_path = line[3]
+        this_path = '/'.join(line[3].split('/')[-limit:]) if limit else line[3]
 
         if line[0] + ' ' + this_path == item:
             status = sap_nagios_state_map[int(line[1])]
@@ -172,10 +165,8 @@ def sap_value_groups_precompile(hostname, item, _unused):
     return host_extra_conf(hostname, sap_value_groups)
 
 
-def sap_groups_of_value(value_name, patterns=False):
+def sap_groups_of_value(value_name, patterns):
     groups = []
-    if not patterns:
-        patterns = host_extra_conf(host_name(), sap_value_groups)
 
     for line in patterns:
         for group_name, pattern in line:
@@ -201,9 +192,11 @@ def sap_groups_of_value(value_name, patterns=False):
 def inventory_sap_value_groups(info):
     inventory = []
     found_groups = []
+    patterns = host_extra_conf(host_name(), sap_value_groups)
+
     for line in info:
         path = line[3]
-        for group in sap_groups_of_value(path):
+        for group in sap_groups_of_value(path, patterns):
             if group not in found_groups:
                 inventory.append((group, None))
                 found_groups.append(group)

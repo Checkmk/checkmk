@@ -26,6 +26,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     NamedTuple,
     Optional,
     Sequence,
@@ -64,6 +65,7 @@ from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
+    BuiltinBakeryHostName,
     CheckPluginName,
     CheckPluginNameStr,
     CheckVariables,
@@ -3931,16 +3933,16 @@ class CEEConfigCache(ConfigCache):
             cmc_graphite_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=None)
 
-    def matched_agent_config_entries(self, hostname: Union[bool, HostName]) -> Dict[str, Any]:
+    def matched_agent_config_entries(
+            self, hostname: Union[HostName,
+                                  Literal[BuiltinBakeryHostName.GENERIC]]) -> Dict[str, Any]:
         matched = {}
         for varname, ruleset in list(
                 agent_config.items()) + [("agent_port", agent_ports),
                                          ("agent_encryption", agent_encryption),
                                          ("agent_exclude_sections", agent_exclude_sections)]:
 
-            # mypy compatible check of cmk.base.cee.agent_bakyery.GENERIC_AGENT
-            # GENERIC_AGENT = True
-            if isinstance(hostname, bool):
+            if hostname is BuiltinBakeryHostName.GENERIC:
                 matched[varname] = self.ruleset_matcher.get_values_for_generic_agent_host(ruleset)
             else:
                 matched[varname] = self.host_extra_conf(hostname, ruleset)

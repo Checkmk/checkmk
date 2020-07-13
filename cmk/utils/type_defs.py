@@ -9,7 +9,7 @@ import abc
 import enum
 import string
 import sys
-from typing import Any, Dict, List, NewType, Optional, Set, Tuple, TypedDict, Union
+from typing import Any, Dict, List, Literal, NewType, Optional, Set, Tuple, TypedDict, Union
 
 HostName = str
 HostAddress = str
@@ -58,7 +58,37 @@ EventRule = Dict[str, Any]  # TODO Improve this
 AgentHash = NewType("AgentHash", str)
 BakeryOpSys = NewType("BakeryOpSys", str)
 AgentConfig = Dict[str, Any]  # TODO Split into more sub configs
-BakeryHostName = Union[bool, None, HostName]
+
+
+class BuiltinBakeryHostName(enum.Enum):
+    """ Type for representation of the special agent types
+    VANILLA and GENERIC. Yields the same interface as OrdinaryBakeryHostName
+    in order to enable a generic handling in one data structure.
+    """
+    def __init__(self, raw_name: str, name: str) -> None:
+        self.raw_name = raw_name
+        self._display_name = name
+
+    def __str__(self):
+        return self._display_name
+
+    VANILLA = ("_VANILLA", "VANILLA")
+    GENERIC = ("_GENERIC", "GENERIC")
+
+
+class OrdinaryBakeryHostName(str):
+    """ Wrapper for normal HostNames, when used as a mapping to an agent,
+    that enables a generic handling alongside the special agent types
+    VANILLA and GENERIC.
+    """
+    @property
+    def raw_name(self) -> str:
+        return self
+
+
+# Type for entries in data structures that contain both of the above types.
+BakeryHostName = Union[Literal[BuiltinBakeryHostName.VANILLA, BuiltinBakeryHostName.GENERIC],
+                       OrdinaryBakeryHostName]
 
 
 class BakerySigningCredentials(TypedDict):

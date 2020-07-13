@@ -43,11 +43,14 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
     if (mem != nullptr) {
         for (const auto &svc : *mem) {
             if (auth_user == nullptr || svc->hasContact(auth_user)) {
-                update(
-                    logictype,
-                    static_cast<ServiceState>(svc->state()->_current_state),
-                    static_cast<ServiceState>(svc->state()->_last_hard_state),
-                    svc->state()->_has_been_checked, result);
+                auto state = svc->state();
+                update(logictype,
+                       static_cast<ServiceState>(state->_current_state),
+                       static_cast<ServiceState>(state->_last_hard_state),
+                       state->_has_been_checked,
+                       state->_acknowledged ||
+                           state->_scheduled_downtime_depth > 0,
+                       result);
             }
         }
     }
@@ -58,7 +61,10 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
             is_authorized_for(mc, auth_user, svc->host_ptr, svc)) {
             update(logictype, static_cast<ServiceState>(svc->current_state),
                    static_cast<ServiceState>(svc->last_hard_state),
-                   svc->has_been_checked != 0, result);
+                   svc->has_been_checked != 0,
+                   svc->problem_has_been_acknowledged != 0 ||
+                       svc->scheduled_downtime_depth > 0,
+                   result);
         }
     }
 #endif
@@ -68,13 +74,26 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
 // static
 void ServiceListStateColumn::update(Type logictype, ServiceState current_state,
                                     ServiceState last_hard_state,
-                                    bool has_been_checked, int32_t &result) {
+                                    bool has_been_checked, bool handled,
+                                    int32_t &result) {
     switch (logictype) {
         case Type::num:
             result++;
             break;
         case Type::num_pending:
             if (!has_been_checked) {
+                result++;
+            }
+            break;
+        case Type::num_handled_problems:
+            if (has_been_checked && current_state != ServiceState::ok &&
+                handled) {
+                result++;
+            }
+            break;
+        case Type::num_unhandled_problems:
+            if (has_been_checked && current_state != ServiceState::ok &&
+                !handled) {
                 result++;
             }
             break;

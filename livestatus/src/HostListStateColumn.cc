@@ -87,6 +87,16 @@ void HostListStateColumn::update(const contact *auth_user,
                 _mc, ServiceListStateColumn::Type::num_pending, services,
                 auth_user);
             break;
+        case Type::num_svc_handled_problems:
+            result += ServiceListStateColumn::getValueFromServices(
+                _mc, ServiceListStateColumn::Type::num_handled_problems,
+                services, auth_user);
+            break;
+        case Type::num_svc_unhandled_problems:
+            result += ServiceListStateColumn::getValueFromServices(
+                _mc, ServiceListStateColumn::Type::num_unhandled_problems,
+                services, auth_user);
+            break;
         case Type::num_svc_ok:
             result += ServiceListStateColumn::getValueFromServices(
                 _mc, ServiceListStateColumn::Type::num_ok, services, auth_user);

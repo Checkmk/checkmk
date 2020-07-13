@@ -112,6 +112,18 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
                         DANGEROUS_OFFSETOF(servicegroup, members)},
         table->core(), ServiceListStateColumn::Type::num_pending));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
+        prefix + "num_services_handled_problems",
+        "The number of services in the group that have handled problems",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        table->core(), ServiceListStateColumn::Type::num_handled_problems));
+    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        prefix + "num_services_unhandled_problems",
+        "The number of services in the group that have unhandled problems",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        table->core(), ServiceListStateColumn::Type::num_unhandled_problems));
+    table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
         "The number of services in the group that are OK",
         Column::Offsets{indirect_offset, -1, -1,

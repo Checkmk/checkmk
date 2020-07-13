@@ -29,6 +29,8 @@ public:
     enum class Type {
         num,
         num_pending,
+        num_handled_problems,
+        num_unhandled_problems,
         //
         num_ok,
         num_warn,
@@ -69,7 +71,7 @@ private:
 
     static void update(Type logictype, ServiceState current_state,
                        ServiceState last_hard_state, bool has_been_checked,
-                       int32_t &result);
+                       bool handled, int32_t &result);
 };
 
 #endif  // ServiceListStateColumn_h

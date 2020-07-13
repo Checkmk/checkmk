@@ -37,6 +37,8 @@ public:
         //
         num_svc,
         num_svc_pending,
+        num_svc_handled_problems,
+        num_svc_unhandled_problems,
         //
         num_svc_ok,
         num_svc_warn,

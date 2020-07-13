@@ -2807,7 +2807,7 @@ class MainModuleEventConsole(MainModule):
 
     @property
     def is_advanced(self):
-        return False
+        return True
 
 
 #.

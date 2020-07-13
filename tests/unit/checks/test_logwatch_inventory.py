@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, List
 import pytest  # type: ignore[import]
 
 from checktestlib import DiscoveryResult, MockHostExtraConf, assertDiscoveryResultsEqual
@@ -19,16 +20,19 @@ INFO1 = [
     ['NODE2', '[[[log1:missing]]]'],
 ]
 
+_DEFAULT_PARAMS: Dict[str, List] = {'reclassify_patterns': []}
+
 
 @pytest.mark.parametrize('info, fwd_rule, inventory_groups, expected_result', [
-    (INFO1, {}, {}, [('log1', None), ('log2', None), ('log5', None)]),
+    (INFO1, {}, {}, [('log1', _DEFAULT_PARAMS), ('log2', _DEFAULT_PARAMS),
+                     ('log5', _DEFAULT_PARAMS)]),
     (INFO1, [{
         'foo': 'bar'
     }], {}, []),
     (INFO1, [{
         'restrict_logfiles': [u'.*2']
-    }], {}, [('log1', None), ('log5', None)]),
-    (INFO1, [{}], [[('my_group', ('~log.*', '~.*1'))]], [('log1', None)]),
+    }], {}, [('log1', _DEFAULT_PARAMS), ('log5', _DEFAULT_PARAMS)]),
+    (INFO1, [{}], [[('my_group', ('~log.*', '~.*1'))]], [('log1', _DEFAULT_PARAMS)]),
 ])
 def test_logwatch_inventory_single(check_manager, info, fwd_rule, inventory_groups,
                                    expected_result):

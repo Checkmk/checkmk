@@ -178,12 +178,12 @@ def _logwatch_select_forwarded(discoverable_items):
 
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
-def logwatch_precompile(hostname, item, _unused):
+def logwatch_precompile(item: str) -> Dict[str, Any]:
     # Initialize the patterns list with the logwatch_rules
     params = {"reclassify_patterns": []}
 
     # This is the new (-> WATO controlled) variable
-    rules = service_extra_conf(hostname, item, logwatch_rules)
+    rules = service_extra_conf(host_name(), item, logwatch_rules)
 
     for rule in rules:
         if isinstance(rule, dict):
@@ -236,7 +236,7 @@ def inventory_logwatch_single(parsed):
         if not any(
                 logwatch_groups_of_logfile(group_patterns, logfile)
                 for group_patterns in inventory_groups):
-            yield logfile, None  # file was in no group
+            yield logfile, logwatch_precompile(logfile)  # file was in no group
 
 
 def inventory_logwatch_groups(parsed):
@@ -277,6 +277,10 @@ def check_logwatch(item, params, parsed):
     for error_msg in parsed['errors']:
         yield 3, error_msg
 
+    if not isinstance(params, dict) or "reclassify_patterns" not in params:
+        yield 3, "Patterns not found. Please rediscover the services of this host."
+        return
+
     now = time.time()
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)
     set_item_state("logwatch_last_run_%s" % item, now)
@@ -301,8 +305,6 @@ check_info['logwatch'] = {
     'group': 'logwatch',
 }
 
-precompile_params['logwatch'] = logwatch_precompile
-
 #.
 #   .--logwatch.groups-----------------------------------------------------.
 #   |              _                                                       |
@@ -326,7 +328,7 @@ def logwatch_group_precompile(hostname, item, params):
     else:
         precomped = params.copy()
     precomped["pre_comp_group_patterns"] = patterns
-    precomped.update(logwatch_precompile(hostname, item, None))
+    precomped.update(logwatch_precompile(item))
     return precomped
 
 
@@ -380,6 +382,7 @@ def logwatch_groups_of_logfile(group_patterns, filename):
 
 def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
 
+    # NOTE: in the grouped sap and fileinfo checks, the *exclusion* pattern wins.
     inclusion_is_regex = inclusion.startswith("~")
     if inclusion_is_regex:
         incl_match = regex(inclusion[1:]).match(logfile_name)
@@ -413,7 +416,12 @@ def check_logwatch_groups(item, params, parsed):
                     loglines.extend(node_data['lines'])
                 break
 
-    yield check_logwatch_generic(item, params, loglines, True)
+    # Get the patterns (either compile or reuse the precompiled ones)
+    # Check_MK creates an empty string if the precompile function has
+    # not been executed yet.
+    patterns = logwatch_precompile(item) if params in ('', None) else params
+
+    yield check_logwatch_generic(item, patterns, loglines, True)
 
 
 check_info['logwatch.groups'] = {
@@ -530,7 +538,7 @@ class LogwatchBlockCollector(object):
         return "%s messages" % ', '.join(count_txt)
 
 
-def check_logwatch_generic(item, params, loglines, found):
+def check_logwatch_generic(item, patterns, loglines, found):
     import six
     import hashlib
     logmsg_dir = pathlib.Path(logwatch_dir, host_name())
@@ -544,14 +552,6 @@ def check_logwatch_generic(item, params, loglines, found):
     if not found and not logmsg_file_path.exists():
         return (3, "log not present anymore")
 
-    # Get the patterns (either compile or reuse the precompiled ones)
-    # Check_MK creates an empty string if the precompile function has
-    # not been executed yet. The precompile function creates an empty
-    # list when no ruless/patterns are defined. In case of the logwatch.groups
-    # checks, params are a tuple with the normal logwatch parameters on the first
-    # and the grouping patterns on the second position
-    patterns = logwatch_precompile(host_name(), item, None) if params in ('', None) else params
-
     block_collector = LogwatchBlockCollector()
     current_block = None
 
@@ -563,6 +563,7 @@ def check_logwatch_generic(item, params, loglines, found):
         raise MKGeneralException("User %s cannot open file for writing: %s" %
                                  (logwatch_username(), exc))
 
+    # TODO: repr() of a dict may change.
     pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()
     net_lines = 0
     # parse cached log lines

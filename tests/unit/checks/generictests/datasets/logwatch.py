@@ -23,9 +23,9 @@ info = [[None, '[[[mylog]]]'],
 
 discovery = {
     '': [
-        ('empty.log', None),
-        ('my_other_log', None),
-        ('mylog', None)],
+        ('empty.log', {'reclassify_patterns': []}),
+        ('my_other_log', {'reclassify_patterns': []}),
+        ('mylog', {'reclassify_patterns': []})],
     'ec': [],
     'ec_single': [],
     'groups': []}
@@ -33,13 +33,13 @@ discovery = {
 
 checks = {
     '': [
-        ('empty.log', {}, [
+        ('empty.log', {'reclassify_patterns': []}, [
             (0, 'no error messages', []),
         ]),
-        ('my_other_log', {}, [
+        ('my_other_log', {'reclassify_patterns': []}, [
             (1, '1 WARN messages (Last worst: "watch your step!")', []),
         ]),
-        ('mylog', {}, [
+        ('mylog', {'reclassify_patterns': []}, [
             (2, '1 CRIT messages (Last worst: "whoha! Someone mooped!")', []),
         ]),
     ],

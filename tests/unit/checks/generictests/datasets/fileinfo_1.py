@@ -68,7 +68,7 @@ checks = {
     ],
     "groups": [
         ("log", {
-            "precompiled_patterns": [("*syslog*", "")],
+            "group_patterns": [("*syslog*", "")],
             "maxsize": (2, 2097152),
             "minage_newest": (5, 2),
             "maxage_oldest": (3600, 3600 * 5),
@@ -87,7 +87,7 @@ checks = {
              []),
         ]),
         ("today", {
-            "precompiled_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]
+            "group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]
         }, [
             (0, 'Count: 1', [('count', 1, None, None, None, None)]),
             (0, 'Size: 1235157 B', [('size', 1235157, None, None, None, None)]),

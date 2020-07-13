@@ -231,24 +231,6 @@ def check_fileinfo(item, params, parsed):
         return params.get("state_missing", 3), "File not found"
 
 
-# FIXME the following does not apply anymore, because "%s" is allowed in group_name
-# WHAT TO DO WITH precompile?
-# Extracts patterns that are relevant for the current host and item.
-# Constructs simple list of patterns and makes them available for the check
-def fileinfo_groups_precompile(hostname, item, params):
-    patterns = []
-    for line in host_extra_conf(hostname, fileinfo_groups):
-        for group_name_pattern, pattern in line:
-            if group_name_pattern == item:
-                patterns.append(pattern)
-
-    # TODO: Cleanup this separation violation. This should be accessed through the check API
-    import cmk.base.checking
-    precomped = cmk.base.checking.legacy_determine_check_params(params).copy()
-    precomped['precompiled_patterns'] = patterns
-    return precomped
-
-
 def _filename_matches(filename, reftime, inclusion, exclusion):
     date_inclusion = ""
     inclusion_is_regex = False
@@ -298,10 +280,12 @@ def check_fileinfo_groups(_item, params, parsed):
         yield 3, "Missing reference timestamp"
         return
 
-    # Old format does not support '%s' in group name
-    group_patterns = set(params.get('precompiled_patterns', []))
-    for entry in params.get('group_patterns', []):
-        group_patterns.add(entry)
+    try:
+        group_patterns = set(params['group_patterns'])
+    except KeyError:
+        yield 3, ("No group pattern found in autocheck. Please rediscover the services "
+                  "of this host to get this fixed automatically")
+        return
 
     # Start counting values on all files
     for file_stat in parsed['files'].values():
@@ -477,5 +461,3 @@ check_info['fileinfo.groups'] = {
     "group": "fileinfo-groups",
     "includes": ["eval_regex.include"],
 }
-
-precompile_params['fileinfo.groups'] = fileinfo_groups_precompile

@@ -1451,10 +1451,12 @@ class PagetypeTopics(Overridable):
                 _("Topic"),
                 [
                     # sort-index, key, valuespec
-                    (2.5, "icon_name", IconSelector(
-                        title=_("Icon"),
-                        show_builtin_icons=True,
-                    )),
+                    (2.5, "icon_name",
+                     IconSelector(
+                         title=_("Icon"),
+                         show_builtin_icons=True,
+                         allow_empty=False,
+                     )),
                     (2.5, "sort_index",
                      Integer(
                          title=_("Sort index"),

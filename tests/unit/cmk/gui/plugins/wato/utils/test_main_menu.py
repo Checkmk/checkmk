@@ -40,8 +40,6 @@ def test_registered_modules():
         'ldap_config',
         'diagnostics',
         'download_agents',
-        'download_agents_linux',
-        'download_agents_windows',
         'version.py',
         'wato.py?mode=rulesets&group=activechecks',
         'wato.py?mode=rulesets&group=agent',
@@ -55,6 +53,12 @@ def test_registered_modules():
         'wato.py?mode=rulesets&group=user_interface',
         'wato.py?mode=rulesets&group=vm_cloud_container',
     ]
+
+    if cmk_version.is_raw_edition():
+        expected_modules += [
+            'download_agents_linux',
+            'download_agents_windows',
+        ]
 
     if not cmk_version.is_raw_edition():
         expected_modules += [

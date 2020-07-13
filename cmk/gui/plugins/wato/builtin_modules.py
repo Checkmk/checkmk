@@ -16,11 +16,13 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     main_module_registry,
     MainModule,
-    MainModuleTopicMonitoring,
-    MainModuleTopicSites,
+    MainModuleTopicHosts,
+    MainModuleTopicServices,
     MainModuleTopicUsers,
     MainModuleTopicAgents,
     MainModuleTopicEvents,
+    MainModuleTopicGeneral,
+    MainModuleTopicMaintenance,
 )
 
 
@@ -32,7 +34,7 @@ class MainModuleFolder(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicMonitoring
+        return MainModuleTopicHosts
 
     @property
     def title(self):
@@ -67,7 +69,7 @@ class MainModuleTags(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicMonitoring
+        return MainModuleTopicHosts
 
     @property
     def title(self):
@@ -89,7 +91,7 @@ class MainModuleTags(MainModule):
 
     @property
     def sort_index(self):
-        return 15
+        return 30
 
     @property
     def is_advanced(self):
@@ -104,11 +106,11 @@ class MainModuleGlobalSettings(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicSites
+        return MainModuleTopicGeneral
 
     @property
     def title(self):
-        return _("Global Settings")
+        return _("Global settings")
 
     @property
     def icon(self):
@@ -124,11 +126,81 @@ class MainModuleGlobalSettings(MainModule):
 
     @property
     def sort_index(self):
-        return 20
+        return 10
 
     @property
     def is_advanced(self):
         return False
+
+
+@main_module_registry.register
+class MainModuleReadOnly(MainModule):
+    @property
+    def mode_or_url(self):
+        return "read_only"
+
+    @property
+    def topic(self):
+        return MainModuleTopicGeneral
+
+    @property
+    def title(self):
+        return _("Read only mode")
+
+    @property
+    def icon(self):
+        return "read_only"
+
+    @property
+    def permission(self):
+        return "read_only"
+
+    @property
+    def description(self):
+        return _("Set the Checkmk configuration interface to read only mode for maintenance.")
+
+    @property
+    def sort_index(self):
+        return 20
+
+    @property
+    def is_advanced(self):
+        return True
+
+
+@main_module_registry.register
+class MainModulePredefinedConditions(MainModule):
+    @property
+    def mode_or_url(self):
+        return "predefined_conditions"
+
+    @property
+    def topic(self):
+        return MainModuleTopicGeneral
+
+    @property
+    def title(self):
+        return _("Predefined conditions")
+
+    @property
+    def icon(self):
+        return "predefined_conditions"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Use predefined conditions to centralize the coniditions of your rulesets.")
+
+    @property
+    def sort_index(self):
+        return 30
+
+    @property
+    def is_advanced(self):
+        return True
 
 
 @main_module_registry.register
@@ -139,11 +211,11 @@ class MainModuleHostAndServiceParameters(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicMonitoring
+        return MainModuleTopicHosts
 
     @property
     def title(self):
-        return _("Host & Service Parameters")
+        return _("Monitoring settings")
 
     @property
     def icon(self):
@@ -159,7 +231,7 @@ class MainModuleHostAndServiceParameters(MainModule):
 
     @property
     def sort_index(self):
-        return 25
+        return 20
 
     @property
     def is_advanced(self):
@@ -174,11 +246,11 @@ class MainModuleStaticChecks(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicMonitoring
+        return MainModuleTopicServices
 
     @property
     def title(self):
-        return _("Manual Checks")
+        return _("Manual services")
 
     @property
     def icon(self):
@@ -194,11 +266,11 @@ class MainModuleStaticChecks(MainModule):
 
     @property
     def sort_index(self):
-        return 30
+        return 50
 
     @property
     def is_advanced(self):
-        return False
+        return True
 
 
 @main_module_registry.register
@@ -209,11 +281,11 @@ class MainModuleCheckPlugins(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicMonitoring
+        return MainModuleTopicServices
 
     @property
     def title(self):
-        return _("Check Plugins")
+        return _("Catalog of check plugins")
 
     @property
     def icon(self):
@@ -229,26 +301,26 @@ class MainModuleCheckPlugins(MainModule):
 
     @property
     def sort_index(self):
-        return 35
+        return 70
 
     @property
     def is_advanced(self):
-        return False
+        return True
 
 
 @main_module_registry.register
-class MainModuleHostAndServiceGroups(MainModule):
+class MainModuleHostGroups(MainModule):
     @property
     def mode_or_url(self):
         return "host_groups"
 
     @property
     def topic(self):
-        return MainModuleTopicMonitoring
+        return MainModuleTopicHosts
 
     @property
     def title(self):
-        return _("Host & Service Groups")
+        return _("Groups")
 
     @property
     def icon(self):
@@ -260,11 +332,46 @@ class MainModuleHostAndServiceGroups(MainModule):
 
     @property
     def description(self):
-        return _("Organize your hosts and services in groups independent of the tree structure.")
+        return _("Organize your hosts in groups independent of the tree structure.")
 
     @property
     def sort_index(self):
-        return 40
+        return 50
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+@main_module_registry.register
+class MainModuleServiceGroups(MainModule):
+    @property
+    def mode_or_url(self):
+        return "service_groups"
+
+    @property
+    def topic(self):
+        return MainModuleTopicServices
+
+    @property
+    def title(self):
+        return _("Groups")
+
+    @property
+    def icon(self):
+        return "servicegroups"
+
+    @property
+    def permission(self):
+        return "groups"
+
+    @property
+    def description(self):
+        return _("Organize your services in groups")
+
+    @property
+    def sort_index(self):
+        return 60
 
     @property
     def is_advanced(self):
@@ -299,7 +406,7 @@ class MainModuleUsers(MainModule):
 
     @property
     def sort_index(self):
-        return 45
+        return 20
 
     @property
     def is_advanced(self):
@@ -318,7 +425,7 @@ class MainModuleRoles(MainModule):
 
     @property
     def title(self):
-        return _("Roles & Permissions")
+        return _("Roles & permissions")
 
     @property
     def icon(self):
@@ -334,11 +441,46 @@ class MainModuleRoles(MainModule):
 
     @property
     def sort_index(self):
-        return 50
+        return 40
 
     @property
     def is_advanced(self):
         return False
+
+
+@main_module_registry.register
+class MainModuleLDAP(MainModule):
+    @property
+    def mode_or_url(self):
+        return "ldap_config"
+
+    @property
+    def topic(self):
+        return MainModuleTopicUsers
+
+    @property
+    def title(self):
+        return _("LDAP & Active Directory")
+
+    @property
+    def icon(self):
+        return "roles"
+
+    @property
+    def permission(self):
+        return "users"
+
+    @property
+    def description(self):
+        return _("Connect Checkmk with your LDAP or Active Directory to create users in Checmk.")
+
+    @property
+    def sort_index(self):
+        return 50
+
+    @property
+    def is_advanced(self):
+        return True
 
 
 @main_module_registry.register
@@ -353,7 +495,7 @@ class MainModuleContactGroups(MainModule):
 
     @property
     def title(self):
-        return _("Contact Groups")
+        return _("Groups")
 
     @property
     def icon(self):
@@ -365,11 +507,11 @@ class MainModuleContactGroups(MainModule):
 
     @property
     def description(self):
-        return _("Contact groups are used to assign persons to hosts and services")
+        return _("Contact groups are used to assign users to hosts and services")
 
     @property
     def sort_index(self):
-        return 55
+        return 30
 
     @property
     def is_advanced(self):
@@ -404,7 +546,7 @@ class MainModuleNotifications(MainModule):
 
     @property
     def sort_index(self):
-        return 60
+        return 10
 
     @property
     def is_advanced(self):
@@ -419,11 +561,11 @@ class MainModuleTimeperiods(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicEvents
+        return MainModuleTopicGeneral
 
     @property
     def title(self):
-        return _("Time Periods")
+        return _("Time periods")
 
     @property
     def icon(self):
@@ -440,7 +582,7 @@ class MainModuleTimeperiods(MainModule):
 
     @property
     def sort_index(self):
-        return 65
+        return 40
 
     @property
     def is_advanced(self):
@@ -455,11 +597,11 @@ class MainModuleSites(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicSites
+        return MainModuleTopicGeneral
 
     @property
     def title(self):
-        return _("Distributed Monitoring")
+        return _("Distributed monitoring")
 
     @property
     def icon(self):
@@ -475,7 +617,7 @@ class MainModuleSites(MainModule):
 
     @property
     def sort_index(self):
-        return 75
+        return 80
 
     @property
     def is_advanced(self):
@@ -490,11 +632,11 @@ class MainModuleBackup(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicSites
+        return MainModuleTopicMaintenance
 
     @property
     def title(self):
-        return _("Backup")
+        return _("Backups")
 
     @property
     def icon(self):
@@ -510,7 +652,7 @@ class MainModuleBackup(MainModule):
 
     @property
     def sort_index(self):
-        return 80
+        return 10
 
     @property
     def is_advanced(self):
@@ -525,7 +667,7 @@ class MainModulePasswords(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicMonitoring
+        return MainModuleTopicGeneral
 
     @property
     def title(self):
@@ -545,7 +687,7 @@ class MainModulePasswords(MainModule):
 
     @property
     def sort_index(self):
-        return 85
+        return 50
 
     @property
     def is_advanced(self):
@@ -560,7 +702,7 @@ class MainModuleAnalyzeConfig(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicSites
+        return MainModuleTopicMaintenance
 
     @property
     def title(self):
@@ -576,11 +718,46 @@ class MainModuleAnalyzeConfig(MainModule):
 
     @property
     def description(self):
-        return _("See hints how to improve your Check_MK installation")
+        return _("See hints how to improve your Checkmk installation")
 
     @property
     def sort_index(self):
-        return 90
+        return 40
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+@main_module_registry.register
+class MainModuleReleaseNotes(MainModule):
+    @property
+    def mode_or_url(self):
+        return "version.py"
+
+    @property
+    def topic(self):
+        return MainModuleTopicMaintenance
+
+    @property
+    def title(self):
+        return _("Release notes")
+
+    @property
+    def icon(self):
+        return "release_notes"
+
+    @property
+    def permission(self):
+        return None
+
+    @property
+    def description(self):
+        return _("Learn something about what changed at Checkmk.")
+
+    @property
+    def sort_index(self):
+        return 60
 
     @property
     def is_advanced(self):
@@ -595,11 +772,11 @@ class MainModuleDiagnostics(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicSites
+        return MainModuleTopicMaintenance
 
     @property
     def title(self):
-        return _("Diagnostics")
+        return _("Support diagnostics")
 
     @property
     def icon(self):
@@ -618,77 +795,7 @@ class MainModuleDiagnostics(MainModule):
 
     @property
     def sort_index(self):
-        return 91
-
-    @property
-    def is_advanced(self):
-        return False
-
-
-@main_module_registry.register
-class MainModulePatternEditor(MainModule):
-    @property
-    def mode_or_url(self):
-        return "pattern_editor"
-
-    @property
-    def topic(self):
-        return MainModuleTopicEvents
-
-    @property
-    def title(self):
-        return _("Logfile Pattern Analyzer")
-
-    @property
-    def icon(self):
-        return "analyze"
-
-    @property
-    def permission(self):
-        return "pattern_editor"
-
-    @property
-    def description(self):
-        return _("Analyze logfile pattern rules and validate logfile patterns against custom text.")
-
-    @property
-    def sort_index(self):
-        return 95
-
-    @property
-    def is_advanced(self):
-        return False
-
-
-@main_module_registry.register
-class MainModuleIcons(MainModule):
-    @property
-    def mode_or_url(self):
-        return "icons"
-
-    @property
-    def topic(self):
-        return MainModuleTopicSites
-
-    @property
-    def title(self):
-        return _("Custom Icons")
-
-    @property
-    def icon(self):
-        return "icons"
-
-    @property
-    def permission(self):
-        return "icons"
-
-    @property
-    def description(self):
-        return _("Upload your own icons that can be used in views or custom actions")
-
-    @property
-    def sort_index(self):
-        return 100
+        return 30
 
     @property
     def is_advanced(self):
@@ -706,7 +813,7 @@ class MainModuleDownloadAgents(MainModule):
 
     @property
     def title(self):
-        return _("Monitoring Agents")
+        return _("Monitoring agents")
 
     @property
     def icon(self):
@@ -718,11 +825,11 @@ class MainModuleDownloadAgents(MainModule):
 
     @property
     def description(self):
-        return _("Downloads the Check_MK monitoring agents")
+        return _("Downloads the Checkmk monitoring agents")
 
     @property
     def sort_index(self):
-        return 5
+        return 10
 
     @property
     def is_advanced(self):

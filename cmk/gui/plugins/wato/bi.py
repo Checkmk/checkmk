@@ -64,7 +64,7 @@ from cmk.gui.plugins.wato import (
     MenuItem,
     main_module_registry,
     MainModule,
-    MainModuleTopicMonitoring,
+    MainModuleTopicServices,
     global_buttons,
     add_change,
     wato_confirm,
@@ -2378,7 +2378,7 @@ class MainModuleBI(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicMonitoring
+        return MainModuleTopicServices
 
     @property
     def title(self):
@@ -2398,11 +2398,11 @@ class MainModuleBI(MainModule):
 
     @property
     def sort_index(self):
-        return 70
+        return 80
 
     @property
     def is_advanced(self):
-        return False
+        return True
 
 
 #.

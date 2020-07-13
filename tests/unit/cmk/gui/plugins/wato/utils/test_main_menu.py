@@ -21,7 +21,10 @@ def test_registered_modules():
         'ruleeditor',
         'static_checks',
         'check_plugins',
+        'read_only',
+        'predefined_conditions',
         'host_groups',
+        'service_groups',
         'users',
         'roles',
         'contact_groups',
@@ -34,9 +37,9 @@ def test_registered_modules():
         'passwords',
         'analyze_config',
         'background_jobs_overview',
-        'pattern_editor',
-        'icons',
+        'ldap_config',
         'diagnostics',
+        'version.py',
     ]
 
     if cmk_version.is_raw_edition():
@@ -49,6 +52,7 @@ def test_registered_modules():
             'agents',
             'alert_handlers',
             'mkps',
+            'dcd_connections',
         ]
 
     if cmk_version.is_managed_edition():

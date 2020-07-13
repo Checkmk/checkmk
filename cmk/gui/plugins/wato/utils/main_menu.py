@@ -217,28 +217,20 @@ def get_modules() -> List[MainModule]:
 #   '----------------------------------------------------------------------'
 #.
 
-MainModuleTopicMonitoring = main_module_topic_registry.register(
+MainModuleTopicHosts = main_module_topic_registry.register(
     MainModuleTopic(
-        name="monitoring",
-        title=_("Monitoring"),
-        icon_name="topic_monitoring",
+        name="hosts",
+        title=_("Hosts"),
+        icon_name="topic_hosts",
         sort_index=10,
     ))
 
-MainModuleTopicUsers = main_module_topic_registry.register(
+MainModuleTopicServices = main_module_topic_registry.register(
     MainModuleTopic(
-        name="users",
-        title=_("Users"),
-        icon_name="topic_users",
-        sort_index=120,
-    ))
-
-MainModuleTopicAdministration = main_module_topic_registry.register(
-    MainModuleTopic(
-        name="administration",
-        title=_("Administration"),
-        icon_name="topic_administration",
-        sort_index=130,
+        name="services",
+        title=_("Services"),
+        icon_name="topic_services",
+        sort_index=20,
     ))
 
 MainModuleTopicAgents = main_module_topic_registry.register(
@@ -246,15 +238,7 @@ MainModuleTopicAgents = main_module_topic_registry.register(
         name="agents",
         title=_("Agents"),
         icon_name="topic_agents",
-        sort_index=40,
-    ))
-
-MainModuleTopicInventory = main_module_topic_registry.register(
-    MainModuleTopic(
-        name="inventory",
-        title=_("Inventory"),
-        icon_name="topic_inventory",
-        sort_index=60,
+        sort_index=30,
     ))
 
 MainModuleTopicEvents = main_module_topic_registry.register(
@@ -262,15 +246,31 @@ MainModuleTopicEvents = main_module_topic_registry.register(
         name="events",
         title=_("Events"),
         icon_name="topic_events",
+        sort_index=40,
+    ))
+
+MainModuleTopicUsers = main_module_topic_registry.register(
+    MainModuleTopic(
+        name="users",
+        title=_("Users"),
+        icon_name="topic_users",
+        sort_index=50,
+    ))
+
+MainModuleTopicGeneral = main_module_topic_registry.register(
+    MainModuleTopic(
+        name="general",
+        title=_("General"),
+        icon_name="topic_general",
         sort_index=60,
     ))
 
-MainModuleTopicSites = main_module_topic_registry.register(
+MainModuleTopicMaintenance = main_module_topic_registry.register(
     MainModuleTopic(
-        name="site",
-        title=_("Site"),
-        icon_name="topic_site",
-        sort_index=20,
+        name="maintenance",
+        title=_("Maintenance"),
+        icon_name="topic_maintenance",
+        sort_index=70,
     ))
 
 MainModuleTopicCustom = main_module_topic_registry.register(

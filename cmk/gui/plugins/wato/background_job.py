@@ -15,7 +15,7 @@ from cmk.gui.log import logger
 from cmk.gui.plugins.wato import (
     main_module_registry,
     MainModule,
-    MainModuleTopicSites,
+    MainModuleTopicMaintenance,
     WatoMode,
     mode_registry,
 )
@@ -29,7 +29,7 @@ class MainModuleBackgroundJobs(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicSites
+        return MainModuleTopicMaintenance
 
     @property
     def title(self):
@@ -49,11 +49,11 @@ class MainModuleBackgroundJobs(MainModule):
 
     @property
     def sort_index(self):
-        return 90
+        return 60
 
     @property
     def is_advanced(self):
-        return False
+        return True
 
 
 @mode_registry.register

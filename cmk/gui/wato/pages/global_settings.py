@@ -339,11 +339,6 @@ class ModeEditGlobals(GlobalSettingsMode):
     def buttons(self):
         global_buttons()
 
-        if config.user.may("wato.set_read_only"):
-            html.context_button(_("Read only mode"),
-                                watolib.folder_preserving_link([("mode", "read_only")]),
-                                "read_only")
-
         if cmk_version.is_managed_edition():
             import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module,import-outside-toplevel
             cmk.gui.cme.plugins.wato.managed.cme_global_settings_buttons()

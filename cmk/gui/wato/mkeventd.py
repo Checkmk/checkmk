@@ -2792,7 +2792,7 @@ class MainModuleEventConsole(MainModule):
 
     @property
     def sort_index(self):
-        return 68
+        return 20
 
     @property
     def enabled(self):

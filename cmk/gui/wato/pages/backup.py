@@ -46,6 +46,9 @@ class ModeBackup(backup.PageBackup, WatoMode):
     def keys(self):
         return SiteBackupKeypairStore()
 
+    def home_button(self):
+        pass
+
 
 @mode_registry.register
 class ModeBackupTargets(backup.PageBackupTargets, WatoMode):

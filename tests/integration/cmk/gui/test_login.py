@@ -10,14 +10,14 @@ from testlib import CMKWebSession
 def test_01_login_and_logout(site):
     web = CMKWebSession(site)
 
-    r = web.get("wato.py", allow_redirect_to_login=True)
+    r = web.get("wato.py?mode=globalvars", allow_redirect_to_login=True)
     assert "Global settings" not in r.text
 
     web.login()
     web.set_language("en")
-    r = web.get("wato.py")
+    r = web.get("wato.py?mode=globalvars")
     assert "Global settings" in r.text
 
     web.logout()
-    r = web.get("wato.py", allow_redirect_to_login=True)
+    r = web.get("wato.py?mode=globalvars", allow_redirect_to_login=True)
     assert "Global settings" not in r.text

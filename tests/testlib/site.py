@@ -276,7 +276,7 @@ class Site:
             if p.wait() != 0:
                 raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            self.path(rel_path).unlink(missing_ok=missing_ok)
+            Path(self.path(rel_path)).unlink(missing_ok=missing_ok)
 
     def delete_dir(self, rel_path):
         if not self._is_running_as_site_user():

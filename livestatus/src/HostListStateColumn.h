@@ -13,6 +13,7 @@
 
 #include "Column.h"
 #include "IntColumn.h"
+#include "LogEntry.h"
 #include "ServiceListStateColumn.h"
 class MonitoringCore;
 class Row;
@@ -67,7 +68,10 @@ private:
     MonitoringCore *_mc;
     const Type _logictype;
 
-    void update(host *hst, const contact *auth_user, int32_t &result) const;
+    void update(const contact *auth_user, HostState current_state,
+                bool has_been_checked,
+                ServiceListStateColumn::service_list services,
+                int32_t &result) const;
 };
 
 #endif  // HostListStateColumn_h

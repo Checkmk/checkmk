@@ -100,7 +100,7 @@ void ServiceListStateColumn::update(Type logictype, ServiceState current_state,
             break;
         case Type::worst_state:
             if (worse(current_state, static_cast<ServiceState>(result))) {
-                result = static_cast<int>(current_state);
+                result = static_cast<int32_t>(current_state);
             }
             break;
         case Type::num_hard_ok:
@@ -125,7 +125,7 @@ void ServiceListStateColumn::update(Type logictype, ServiceState current_state,
             break;
         case Type::worst_hard_state:
             if (worse(last_hard_state, static_cast<ServiceState>(result))) {
-                result = static_cast<int>(last_hard_state);
+                result = static_cast<int32_t>(last_hard_state);
             }
             break;
     }

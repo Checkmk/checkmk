@@ -264,10 +264,10 @@ def _make_nodes(
 ) -> Iterable[Tuple[HostName, Optional[HostAddress], DataSources]]:
     if host_config.nodes is None:
         return [(host_config.hostname, ipaddress, sources)]
-    return _make_piggy_nodes(host_config)
+    return _make_piggyback_nodes(host_config)
 
 
-def _make_piggy_nodes(
+def _make_piggyback_nodes(
         host_config: HostConfig) -> Iterable[Tuple[HostName, Optional[HostAddress], DataSources]]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None

@@ -534,3 +534,30 @@ export function tag_update_value(object_type, prefix, grp) {
         value_select.appendChild(opt);
     }
 }
+
+export function toggle_more(trigger, toggle_id, dom_levels_up) {
+    event.stopPropagation();
+    let container = trigger;
+    let state;
+    for (var i=0; i < dom_levels_up; i++) {
+        container = container.parentNode;
+        while (container.className.includes("simplebar-"))
+            container = container.parentNode;
+    }
+
+    if (has_class(container, "more")) {
+        change_class(container, "more", "less");
+        state = "off";
+    } else {
+        change_class(container, "less", "more");
+        // The class withanimation is used to fade in the formlery
+        // hidden items - which must not be done when they are already
+        // visible when rendering the page.
+        add_class(container, "withanimation");
+        state = "on";
+    }
+
+    ajax.get_url("tree_openclose.py?tree=more_buttons"
+            + "&name=" + encodeURIComponent(toggle_id)
+            + "&state=" + encodeURIComponent (state));
+}

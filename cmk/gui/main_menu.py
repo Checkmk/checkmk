@@ -90,7 +90,7 @@ class MegaMenuRenderer:
         show_more = html.foldable_container_is_open("more_buttons", more_id, isopen=False)
 
         html.open_div(id_="main_menu_" + menu.name, class_=("more" if show_more else "less"))
-        # TODO: html.more_button(id_=more_id, dom_levels_up=1)
+        html.more_button(id_=more_id, dom_levels_up=1)
         html.open_div(class_="content inner")
         for topic in menu.topics():
             self._show_topic(topic, menu.name)

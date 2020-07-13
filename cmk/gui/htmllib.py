@@ -2800,6 +2800,18 @@ class html(ABCHTMLGenerator):
             self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
                                     class_))
 
+    def more_button(self, id_, dom_levels_up):
+        self.open_a(href="javascript:void(0)",
+                    class_="more",
+                    onfocus="if (this.blur) this.blur();",
+                    onclick="cmk.utils.toggle_more(this, %s, %d)" %
+                    (json.dumps(id_), dom_levels_up))
+        self.icon(title=_("Show more items"), icon="more_0", class_="more_0")
+        self.icon(title=_(""), icon="more_1", class_="more_1")
+        self.icon(title=_(""), icon="more_2", class_="more_2")
+        self.icon(title=_("Show less items"), icon="more_3", class_="more_3")
+        self.close_a()
+
     def popup_trigger(self,
                       content: HTML,
                       ident: str,

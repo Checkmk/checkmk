@@ -126,7 +126,7 @@ class CMKWebSession:
             base_url = os.path.dirname(base_url)
 
         # There might be other resources like iframe, audio, ... but we don't care about them
-        self._check_resources(soup, base_url, "img", "src", ["image/png"])
+        self._check_resources(soup, base_url, "img", "src", ["image/png", "image/svg+xml"])
         self._check_resources(soup, base_url, "script", "src",
                               ["application/javascript", "text/javascript"])
         self._check_resources(soup,

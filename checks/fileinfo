@@ -118,6 +118,13 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
             if incl_match:
                 num_perc_s = group_name.count("%s")
                 matches = [g and g or "" for g in incl_match.groups()]
+                if len(matches) < num_perc_s:
+                    raise MKGeneralException(
+                        "Invalid entry in inventory_fileinfo_groups: "
+                        "group name '%s' contains %d times '%%s', but regular expression "
+                        "'%s' contains only %d subexpression(s)." %
+                        (group_name, num_perc_s, inclusion, len(matches)))
+
         else:
             incl_match = fnmatch.fnmatch(filename, inclusion)
 
@@ -126,14 +133,6 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
         else:
             excl_match = fnmatch.fnmatch(filename, exclusion)
 
-        if len(matches) < num_perc_s:
-            raise MKGeneralException(
-                "Invalid entry in inventory_fileinfo_groups: "
-                "group name '%s' contains %d times '%%s', but regular expression "
-                "'%s' contains only %d subexpression(s)." %
-                (group_name, num_perc_s, inclusion, len(matches)))
-
-        this_group_name = None
         if incl_match and not excl_match:
             if matches:
                 for nr, group in enumerate(matches):
@@ -147,11 +146,10 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
                 this_group_name = group_name
                 this_pattern = pattern
 
-        if this_group_name is not None:
-            found_these_groups.setdefault(this_group_name, set())
-            found_these_groups[this_group_name].add(this_pattern)
+            found_these_groups.setdefault(this_group_name, set()).add(this_pattern)
 
     # Convert pattern containers to lists (sets are not possible in autochecks)
+    # It is possible now. keep this to not break the "append" in the check function
     return dict([(k, list(v)) for k, v in found_these_groups.items()])
 
 

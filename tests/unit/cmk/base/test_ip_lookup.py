@@ -249,3 +249,9 @@ def test_lookup_mgmt_board_ip_address_unresolveable(monkeypatch, tags, family):
     ts.add_host(hostname, tags=tags)
     ts.apply(monkeypatch)
     assert ip_lookup.lookup_mgmt_board_ip_address(hostname) is None
+
+
+def test_normalize_ip():
+    assert ip_lookup.normalize_ip_addresses("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
+    assert ip_lookup.normalize_ip_addresses(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
+    assert ip_lookup.normalize_ip_addresses("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]

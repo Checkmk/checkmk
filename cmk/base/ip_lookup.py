@@ -4,21 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import socket
 import errno
 import os
-from typing import Optional, Dict, Tuple, Union, List, cast
+import socket
+from typing import AnyStr, cast, Dict, List, Optional, Tuple, Union
 
-import cmk.utils.paths
+from six import ensure_str
+
 import cmk.utils.debug
+import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKTimeout, MKTerminate
+from cmk.utils.exceptions import MKTerminate, MKTimeout
 from cmk.utils.log import console
+from cmk.utils.type_defs import HostAddress, HostName
 
-from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
-from cmk.utils.type_defs import HostName, HostAddress
-from cmk.base.exceptions import MKIPAddressLookupError
+from cmk.base.caching import config_cache as _config_cache
+from cmk.base.exceptions import MKGeneralException, MKIPAddressLookupError
 
 IPLookupCacheId = Tuple[HostName, int]
 NewIPLookupCache = Dict[IPLookupCacheId, str]
@@ -319,3 +321,22 @@ def verify_ipaddress(address: Optional[HostAddress]) -> None:
     if address in ["0.0.0.0", "::"]:
         raise MKIPAddressLookupError(
             "Failed to lookup IP address and no explicit IP address configured")
+
+
+def normalize_ip_addresses(ip_addresses: Union[AnyStr, List[AnyStr]]) -> List[HostAddress]:
+    """Expand 10.0.0.{1,2,3}."""
+    if not isinstance(ip_addresses, list):
+        ip_addresses = ip_addresses.split()
+
+    decoded_ip_addresses = [ensure_str(word) for word in ip_addresses]
+    expanded = [word for word in decoded_ip_addresses if '{' not in word]
+    for word in decoded_ip_addresses:
+        if word in expanded:
+            continue
+        try:
+            prefix, tmp = word.split('{')
+            curly, suffix = tmp.split('}')
+            expanded.extend(prefix + i + suffix for i in curly.split(','))
+        except Exception:
+            raise MKGeneralException("could not expand %r" % word)
+    return expanded

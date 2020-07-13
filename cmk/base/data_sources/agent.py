@@ -8,7 +8,7 @@ import abc
 import logging
 import os
 import time
-from typing import AnyStr, cast, Dict, List, Optional, Set, Tuple, Union
+from typing import cast, Dict, List, Optional, Set, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -37,6 +37,7 @@ from cmk.base.check_utils import (
     SectionCacheInfo,
 )
 from cmk.base.exceptions import MKGeneralException
+from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import ABCDataSource, ABCHostSections
 
@@ -158,8 +159,8 @@ class Summarizer:
         if config_only_from is None:
             return None
 
-        allowed_nets = set(_normalize_ip_addresses(agent_only_from))
-        expected_nets = set(_normalize_ip_addresses(config_only_from))
+        allowed_nets = set(normalize_ip_addresses(agent_only_from))
+        expected_nets = set(normalize_ip_addresses(config_only_from))
         if allowed_nets == expected_nets:
             return 0, "Allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0]), []
 
@@ -458,22 +459,3 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
 
         return Summarizer(self._host_config).summarize(
             self._host_sections.sections.get(SectionName("check_mk")), for_checking)
-
-
-def _normalize_ip_addresses(ip_addresses: Union[AnyStr, List[AnyStr]]) -> List[str]:
-    '''factorize 10.0.0.{1,2,3}'''
-    if not isinstance(ip_addresses, list):
-        ip_addresses = ip_addresses.split()
-
-    decoded_ip_addresses = [ensure_str(word) for word in ip_addresses]
-    expanded = [word for word in decoded_ip_addresses if '{' not in word]
-    for word in decoded_ip_addresses:
-        if word in expanded:
-            continue
-        try:
-            prefix, tmp = word.split('{')
-            curly, suffix = tmp.split('}')
-            expanded.extend(prefix + i + suffix for i in curly.split(','))
-        except Exception:
-            raise MKGeneralException("could not expand %r" % word)
-    return expanded

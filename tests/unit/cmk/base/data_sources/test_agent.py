@@ -13,12 +13,6 @@ from cmk.utils.type_defs import SectionName
 import cmk.base.data_sources.agent as agent
 
 
-def test_normalize_ip():
-    assert agent._normalize_ip_addresses("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
-    assert agent._normalize_ip_addresses(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
-    assert agent._normalize_ip_addresses("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]
-
-
 @pytest.mark.parametrize(
     "headerline, section_name, section_options",
     [

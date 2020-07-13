@@ -178,18 +178,17 @@ def sap_groups_of_value(value_name, patterns):
     }
 
 
-def inventory_sap_value_groups(info):
-    inventory = []
-    found_groups = []
-    patterns = host_extra_conf(host_name(), sap_value_groups)
+def discover_sap_value_groups(info):
+    # TODO: this becomes a proper argument in the new API
+    params = host_extra_conf(host_name(), sap_value_groups)
+
+    inventory = set()
 
     for line in info:
         path = line[3]
-        for group in sap_groups_of_value(path, patterns):
-            if group not in found_groups:
-                inventory.append((group, None))
-                found_groups.append(group)
-    return inventory
+        inventory.update(sap_groups_of_value(path, params))
+
+    return [(item, None) for item in inventory]
 
 
 def check_sap_value_groups(item, params, info, deprecated=False):
@@ -237,7 +236,7 @@ precompile_params['sap.value-groups'] = sap_value_groups_precompile
 
 check_info['sap.value_groups'] = {
     'check_function': check_sap_value_groups,
-    'inventory_function': inventory_sap_value_groups,
+    'inventory_function': discover_sap_value_groups,
     'service_description': "%s",
 }
 precompile_params['sap.value_groups'] = sap_value_groups_precompile

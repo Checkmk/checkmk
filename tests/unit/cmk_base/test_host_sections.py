@@ -84,7 +84,10 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
             nodename, "127.0.0.1",
             host_sections.HostSections(sections={"check_plugin_name": node_section_content}))
 
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.0.1")
+    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=False):
+        return "127.0.0.1"
+
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config_cache, "host_of_clustered_service", host_of_clustered_service)
 
     section_content = multi_host_sections.get_section_content(hostname,

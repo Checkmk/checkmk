@@ -26,7 +26,6 @@
 
 import errno
 import os
-import socket
 import time
 import abc
 
@@ -821,42 +820,8 @@ class ManagementBoardDataSource(DataSource):
         super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
-        self._ipaddress = self._management_board_ipaddress(hostname)
+        self._ipaddress = ip_lookup.lookup_mgmt_board_ip_address(hostname)
         self._credentials = self._host_config.management_credentials
-
-    def _management_board_ipaddress(self, hostname):
-        mgmt_ipaddress = self._host_config.management_address
-
-        if mgmt_ipaddress is None:
-            return None
-
-        if not self._is_ipaddress(mgmt_ipaddress):
-            try:
-                return ip_lookup.lookup_ip_address(mgmt_ipaddress)
-            except MKIPAddressLookupError:
-                return None
-        else:
-            return mgmt_ipaddress
-
-    # TODO: Why is it used only here?
-    @staticmethod
-    def _is_ipaddress(address):
-        if address is None:
-            return False
-
-        try:
-            socket.inet_pton(socket.AF_INET, address)
-            return True
-        except socket.error:
-            # not a ipv4 address
-            pass
-
-        try:
-            socket.inet_pton(socket.AF_INET6, address)
-            return True
-        except socket.error:
-            # no ipv6 address either
-            return False
 
 
 def has_persisted_agent_sections(datasource_id, hostname):

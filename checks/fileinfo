@@ -24,7 +24,9 @@
 # "maxsize" : ( 8000,  9000 ),  in bytes
 # "minage"  : ( 600,  1200 ),  in seconds
 # "maxage"  : ( 6000, 12000 ), in seconds
+
 import collections
+import typing
 
 fileinfo_groups = []
 
@@ -92,61 +94,55 @@ def parse_fileinfo(info):
     return parsed
 
 
+def _match(name: str, pattern: str) -> typing.Union[bool, typing.Match]:
+    return (regex(pattern[1:]).match(name) if pattern.startswith("~") else  #
+            fnmatch.fnmatch(name, pattern))
+
+
 def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
     found_these_groups = {}
     for group_name, pattern in group_patterns:
         if isinstance(pattern, str):  # support old format
-            pattern = (pattern, '')
+            inclusion, exclusion = pattern, ''
+        else:
+            inclusion, exclusion = pattern
 
-        inclusion, exclusion = pattern
-        inclusion_is_regex = False
-        exclusion_is_regex = False
+        if _match(filename, exclusion):
+            continue
 
-        if inclusion.startswith("~"):
-            inclusion_is_regex = True
-            inclusion = inclusion[1:]
-        if exclusion.startswith("~"):
-            exclusion_is_regex = True
-            exclusion = exclusion[1:]
+        inclusion = (("~" + fileinfo_process_date(inclusion[1:], reftime))
+                     if inclusion.startswith("~") else fileinfo_process_date(inclusion, reftime))
 
-        inclusion = fileinfo_process_date(inclusion, reftime)
+        incl_match = _match(filename, inclusion)
+        if not incl_match:
+            continue
 
         matches = []
         num_perc_s = 0
-        if inclusion_is_regex:
-            incl_match = regex(inclusion).match(filename)
-            if incl_match:
-                num_perc_s = group_name.count("%s")
-                matches = [g and g or "" for g in incl_match.groups()]
-                if len(matches) < num_perc_s:
-                    raise MKGeneralException(
-                        "Invalid entry in inventory_fileinfo_groups: "
-                        "group name '%s' contains %d times '%%s', but regular expression "
-                        "'%s' contains only %d subexpression(s)." %
-                        (group_name, num_perc_s, inclusion, len(matches)))
+        if incl_match is not True:  # it's match object then!
+            num_perc_s = group_name.count("%s")
+            matches = [g and g or "" for g in incl_match.groups()]
+
+            if len(matches) < num_perc_s:
+                raise MKGeneralException(
+                    "Invalid entry in inventory_fileinfo_groups: "
+                    "group name '%s' contains %d times '%%s', but regular expression "
+                    "'%s' contains only %d subexpression(s)." %
+                    (group_name, num_perc_s, inclusion, len(matches)))
+
+        if matches:
+            for nr, group in enumerate(matches):
+                inclusion = instantiate_regex_pattern_once(inclusion, group)
+                group_name = group_name.replace("%%%d" % (nr + 1), group)
+
+            this_group_name = group_name % tuple(matches[:num_perc_s])
+            this_pattern = ("~%s" % inclusion, exclusion)
 
         else:
-            incl_match = fnmatch.fnmatch(filename, inclusion)
+            this_group_name = group_name
+            this_pattern = pattern
 
-        if exclusion_is_regex:
-            excl_match = regex(exclusion).match(filename)
-        else:
-            excl_match = fnmatch.fnmatch(filename, exclusion)
-
-        if incl_match and not excl_match:
-            if matches:
-                for nr, group in enumerate(matches):
-                    inclusion = instantiate_regex_pattern_once(inclusion, group)
-                    group_name = group_name.replace("%%%d" % (nr + 1), group)
-
-                this_group_name = group_name % tuple(matches[:num_perc_s])
-                this_pattern = ("~%s" % inclusion, exclusion)
-
-            else:
-                this_group_name = group_name
-                this_pattern = pattern
-
-            found_these_groups.setdefault(this_group_name, set()).add(this_pattern)
+        found_these_groups.setdefault(this_group_name, set()).add(this_pattern)
 
     # Convert pattern containers to lists (sets are not possible in autochecks)
     # It is possible now. keep this to not break the "append" in the check function

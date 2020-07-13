@@ -50,6 +50,34 @@ void HostListStateColumn::update(const contact *auth_user,
                                  ServiceListStateColumn::service_list services,
                                  int32_t &result) const {
     switch (_logictype) {
+        case Type::num_hst:
+            result++;
+            break;
+        case Type::num_hst_pending:
+            if (!has_been_checked) {
+                result++;
+            }
+            break;
+        case Type::num_hst_up:
+            if (has_been_checked && current_state == HostState::up) {
+                result++;
+            }
+            break;
+        case Type::num_hst_down:
+            if (has_been_checked && current_state == HostState::down) {
+                result++;
+            }
+            break;
+        case Type::num_hst_unreach:
+            if (has_been_checked && current_state == HostState::unreachable) {
+                result++;
+            }
+            break;
+        case Type::worst_hst_state:
+            if (worse(current_state, static_cast<HostState>(result))) {
+                result = static_cast<int32_t>(current_state);
+            }
+            break;
         case Type::num_svc:
             result += ServiceListStateColumn::getValueFromServices(
                 _mc, ServiceListStateColumn::Type::num, services, auth_user);
@@ -88,40 +116,35 @@ void HostListStateColumn::update(const contact *auth_user,
             }
             break;
         }
-        case Type::num_hst:
-            result++;
-            break;
-        case Type::num_hst_pending:
-            if (!has_been_checked) {
-                result++;
-            }
-            break;
-        case Type::num_hst_up:
-            if (has_been_checked && current_state == HostState::up) {
-                result++;
-            }
-            break;
-        case Type::num_hst_down:
-            if (has_been_checked && current_state == HostState::down) {
-                result++;
-            }
-            break;
-        case Type::num_hst_unreach:
-            if (has_been_checked && current_state == HostState::unreachable) {
-                result++;
-            }
-            break;
-        case Type::worst_hst_state:
-            if (worse(current_state, static_cast<HostState>(result))) {
-                result = static_cast<int32_t>(current_state);
-            }
-            break;
         case Type::num_svc_hard_ok:
-        case Type::num_svc_hard_warn:
-        case Type::num_svc_hard_crit:
-        case Type::num_svc_hard_unknown:
-        case Type::worst_svc_hard_state:
-            // TODO(sp) Why are these not handled?
+            result += ServiceListStateColumn::getValueFromServices(
+                _mc, ServiceListStateColumn::Type::num_hard_ok, services,
+                auth_user);
             break;
+        case Type::num_svc_hard_warn:
+            result += ServiceListStateColumn::getValueFromServices(
+                _mc, ServiceListStateColumn::Type::num_hard_warn, services,
+                auth_user);
+            break;
+        case Type::num_svc_hard_crit:
+            result += ServiceListStateColumn::getValueFromServices(
+                _mc, ServiceListStateColumn::Type::num_hard_crit, services,
+                auth_user);
+            break;
+        case Type::num_svc_hard_unknown:
+            result += ServiceListStateColumn::getValueFromServices(
+                _mc, ServiceListStateColumn::Type::num_hard_unknown, services,
+                auth_user);
+            break;
+        case Type::worst_svc_hard_state: {
+            auto state = ServiceListStateColumn::getValueFromServices(
+                _mc, ServiceListStateColumn::Type::worst_hard_state, services,
+                auth_user);
+            if (worse(static_cast<ServiceState>(state),
+                      static_cast<ServiceState>(result))) {
+                result = state;
+            }
+            break;
+        }
     }
 }

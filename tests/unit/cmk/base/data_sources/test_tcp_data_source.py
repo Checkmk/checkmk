@@ -58,11 +58,11 @@ def test_get_summary_result_requires_host_sections(monkeypatch, ipaddress):
     Scenario().add_host(hostname).apply(monkeypatch)
     source = TCPDataSource(hostname, ipaddress)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         source.get_summary_result_for_discovery()
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         source.get_summary_result_for_inventory()
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         source.get_summary_result_for_checking()
 
     source._host_sections = AgentHostSections()

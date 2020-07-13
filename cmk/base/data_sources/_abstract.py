@@ -7,6 +7,7 @@
 import abc
 import logging
 import os
+import reprlib
 import sys
 from typing import cast, Final, Generic, Optional, Set, Tuple, TypeVar, Union
 
@@ -174,6 +175,14 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
         self._config_cache = config.get_config_cache()
         self._host_config = self._config_cache.get_host_config(self.hostname)
+
+    def __repr__(self):
+        return "%s(%r, %r, %r)" % (
+            type(self).__name__,
+            self.hostname,
+            self.ipaddress,
+            reprlib.repr(self._selected_raw_section_names),
+        )
 
     def _setup_logger(self) -> None:
         """Add the source log prefix to the class logger"""

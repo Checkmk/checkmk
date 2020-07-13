@@ -261,7 +261,8 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
 
     # TODO: refactor
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
-        assert isinstance(self._host_sections, AgentHostSections)
+        if not isinstance(self._host_sections, AgentHostSections):
+            raise TypeError(self._host_sections)
 
         cmk_section = self._host_sections.sections.get(SectionName("check_mk"))
         agent_info = self._get_agent_info(cmk_section)

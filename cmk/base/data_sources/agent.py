@@ -223,6 +223,12 @@ class Summarizer:
 
 
 class Parser:
+    # TODO(ml): Refactor, we should structure the code so that we have one
+    #   function per attribute in AgentHostSections (AgentHostSections.sections,
+    #   AgentHostSections.cache_info, AgentHostSections.piggybacked_raw_data,
+    #   and AgentHostSections.persisted_sections) and a few simple helper functions.
+    #   Moreover, the main loop of the parser (at `for line in raw_data.split(b"\n")`)
+    #   is an FSM and shoule be written as such.  (See CMK-5004)
     def __init__(self, logger: logging.Logger) -> None:
         super().__init__()
         self._logger = logger

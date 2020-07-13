@@ -11,6 +11,7 @@ Registers the different mega menus and builds the content for each of them.
 from typing import List
 
 import cmk.gui.config as config
+import cmk.gui.pagetypes as pagetypes
 from cmk.gui.i18n import _
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.plugins.main_menu import (
@@ -46,7 +47,7 @@ MegaMenuSetup = mega_menu_registry.register(
         name="setup",
         title=_("Setup"),
         icon_name="main_setup",
-        sort_index=5,
+        sort_index=15,
         topics=_setup_menu_topics,
     ))
 
@@ -96,6 +97,69 @@ MegaMenuUser = mega_menu_registry.register(
         name="user",
         title=_("User"),
         icon_name="main_user",
-        sort_index=10,
+        sort_index=20,
         topics=_user_menu_topics,
+    ))
+
+
+def _configure_menu_topics() -> List[TopicMenuTopic]:
+    monitoring_items = [
+        TopicMenuItem(
+            name="views",
+            title=_("Views"),
+            url="edit_views.py",
+            sort_index=10,
+            is_advanced=False,
+            icon_name="view",
+        ),
+        TopicMenuItem(
+            name="dashboards",
+            title=_("Dashboards"),
+            url="edit_dashboards.py",
+            sort_index=20,
+            is_advanced=False,
+            icon_name="dashboard",
+        ),
+    ]
+
+    graph_items = []
+
+    for index, page_type in enumerate(pagetypes.all_page_types().values()):
+        item = TopicMenuItem(
+            name=page_type.type_name(),
+            title=page_type.phrase("title_plural"),
+            url="%ss.py" % page_type.type_name(),
+            sort_index=30 + (index * 10),
+            is_advanced=False,
+            icon_name=page_type.type_name(),
+        )
+
+        if "graph" in page_type.type_name():
+            graph_items.append(item)
+        else:
+            monitoring_items.append(item)
+
+    return [
+        TopicMenuTopic(
+            name="monitoring",
+            title=_("Monitoring"),
+            icon_name="topic_configure",
+            items=monitoring_items,
+        ),
+        TopicMenuTopic(
+            name="graphs",
+            title=_("Graphs"),
+            icon_name="topic_graphs",
+            items=graph_items,
+        )
+    ]
+
+
+MegaMenuConfigure = mega_menu_registry.register(
+    MegaMenu(
+        name="configure",
+        title=_("Configure"),
+        icon_name="main_configure",
+        sort_index=15,
+        topics=_configure_menu_topics,
     ))

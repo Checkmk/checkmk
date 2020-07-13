@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 import socket
 from pathlib import Path
 
@@ -183,7 +184,6 @@ def test_get_dns_cache_lookup_hosts(monkeypatch):
 @pytest.mark.parametrize(
     "hostname, tags, result_address",
     [
-        #("unresolveable-hostname", {}, None),
         # default IPv4 host
         ("localhost", {}, "127.0.0.1"),
         ("127.0.0.1", {}, "127.0.0.1"),
@@ -194,24 +194,39 @@ def test_get_dns_cache_lookup_hosts(monkeypatch):
         ("127.0.0.1", {
             "address_family": "ip-v4-only",
         }, "127.0.0.1"),
-        # explicit IPv6 host
-        ("localhost", {
-            "address_family": "ip-v6-only",
-        }, "::1"),
-        ("::1", {
-            "address_family": "ip-v6-only",
-        }, "::1"),
-        # dual host
-        ("localhost", {
-            "address_family": "ip-v4v6",
-        }, "127.0.0.1"),
-        ("127.0.0.1", {
-            "address_family": "ip-v4v6",
-        }, "127.0.0.1"),
     ])
-def test_lookup_mgmt_board_ip_address(monkeypatch, hostname, tags, result_address):
+def test_lookup_mgmt_board_ip_address_ipv4_host(monkeypatch, hostname, tags, result_address):
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
+    ts.apply(monkeypatch)
+    assert ip_lookup.lookup_mgmt_board_ip_address(hostname) == result_address
+
+
+@pytest.mark.skipif(
+    os.environ.get('TRAVIS') == 'true',
+    reason="Travis may not resolve localhost -> IPv6 (https://github.com/njh/travis-ipv6-test)")
+@pytest.mark.parametrize("hostname, result_address", [
+    ("localhost", "::1"),
+    ("::1", "::1"),
+])
+def test_lookup_mgmt_board_ip_address_ipv6_host(monkeypatch, hostname, result_address):
+    ts = Scenario()
+    ts.add_host(hostname, tags={
+        "address_family": "ip-v6-only",
+    })
+    ts.apply(monkeypatch)
+    assert ip_lookup.lookup_mgmt_board_ip_address(hostname) == result_address
+
+
+@pytest.mark.parametrize("hostname, result_address", [
+    ("localhost", "127.0.0.1"),
+    ("127.0.0.1", "127.0.0.1"),
+])
+def test_lookup_mgmt_board_ip_address_dual_host(monkeypatch, hostname, result_address):
+    ts = Scenario()
+    ts.add_host(hostname, tags={
+        "address_family": "ip-v4v6",
+    })
     ts.apply(monkeypatch)
     assert ip_lookup.lookup_mgmt_board_ip_address(hostname) == result_address
 

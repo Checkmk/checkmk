@@ -92,7 +92,7 @@ from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 _marked_host_discovery_timeout = 120
 
 ServicesTable = Dict[ServiceID, Tuple[str, Service]]
-CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], check_table.Item,
+CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
                           LegacyCheckParameters, LegacyCheckParameters, str, Optional[int], str,
                           List[Metric], Dict[str, str]]
 CheckPreviewTable = List[CheckPreviewEntry]
@@ -1592,23 +1592,11 @@ def _preview_params(
             return params
         params = service.parameters
         if check_source != 'manual':
-            params = check_table.get_precompiled_check_parameters(
+            params = config.compute_check_parameters(
                 host_name,
-                service.item,
-                config.compute_check_parameters(
-                    host_name,
-                    service.check_plugin_name,
-                    service.item,
-                    params,
-                ),
                 service.check_plugin_name,
-            )
-        else:
-            params = check_table.get_precompiled_check_parameters(
-                host_name,
                 service.item,
                 params,
-                service.check_plugin_name,
             )
 
     if check_source == "active":

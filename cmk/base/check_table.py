@@ -5,26 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Callable, cast, Iterable, Iterator, List, Optional, Set
+from typing import Iterable, Iterator, List, Optional, Set
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr
 
 import cmk.base.config as config
-import cmk.base.item_state as item_state
-import cmk.base.check_api_utils as check_api_utils
 from cmk.utils.type_defs import HostName
-from cmk.base.check_utils import (
-    CheckTable,
-    Item,
-    LegacyCheckParameters,
-    Service,
-)
-
-# Add WATO-configured explicit checks to (possibly empty) checks
-# statically defined in checks.
-#def add_wato_static_checks_to_checks():
+from cmk.base.check_utils import CheckTable, Service
 
 
 # TODO: This is just a first cleanup step: Continue cleaning this up.
@@ -203,70 +192,6 @@ def get_check_table(hostname: str,
     return table.get(remove_duplicates, use_cache, skip_autochecks, filter_mode, skip_ignored)
 
 
-def get_precompiled_check_table(hostname: str,
-                                remove_duplicates: bool = True,
-                                filter_mode: Optional[str] = None,
-                                skip_ignored: bool = True) -> List[Service]:
-    """The precompiled check table is somehow special compared to the regular check table.
-
-    a) It is sorted by the service dependencies (which are only relevant for Nagios). The
-       sorting is important here to send the state updates to Nagios in the correct order.
-       Sending the updates in this order gives Nagios a consistent state in a shorter time.
-    b) More important: Some special checks pre-compue a new set of parameters
-       using a plugin specific precompile_params function. It's purpose is to
-       perform time consuming ruleset evaluations once without the need to perform
-       it during each check execution.
-
-       The effective check parameters are calculated in these steps:
-
-       1. Read from config
-         a) autochecks + cmk.base.config.compute_check_parameters()
-         b) static checks
-
-       2. Execute the precompile params function
-         The precompile_params function can base on the "params" from a static check or
-         autocheck and computes a new "params".
-
-         This is the last step that may be cached across the single executions.
-
-       3. Execute the check
-         During check execution will update the check parameters once more with
-         checking.legacy_determine_check_params() right before execution the check.
-    """
-    host_checks = _get_sorted_service_list(
-        hostname,
-        remove_duplicates,
-        filter_mode=filter_mode,
-        skip_ignored=skip_ignored,
-    )
-    services: List[Service] = []
-    for service in host_checks:
-        # make these globals available to the precompile function
-        check_api_utils.set_service(service.check_plugin_name, service.description)
-        item_state.set_item_state_prefix(service.check_plugin_name, service.item)
-
-        precompiled_parameters = get_precompiled_check_parameters(hostname, service.item,
-                                                                  service.parameters,
-                                                                  service.check_plugin_name)
-        services.append(
-            Service(service.check_plugin_name, service.item, service.description,
-                    precompiled_parameters, service.service_labels))
-    return services
-
-
-def get_precompiled_check_parameters(
-        hostname: HostName, item: Item, params: LegacyCheckParameters,
-        check_plugin_name: CheckPluginNameStr) -> LegacyCheckParameters:
-    precomp_func = config.precompile_params.get(check_plugin_name)
-    if precomp_func:
-        if not callable(precomp_func):
-            raise TypeError("Invalid precompile_params function: %r" % precomp_func)
-        precomp_func = cast(
-            Callable[[HostName, Item, LegacyCheckParameters], LegacyCheckParameters], precomp_func)
-        return precomp_func(hostname, item, params)
-    return params
-
-
 def remove_duplicate_checks(check_table: CheckTable) -> CheckTable:
     service_keys_by_description = {
         # This will sort by check plugin name and item, which is as good as anything else,
@@ -290,7 +215,7 @@ def get_needed_check_names(hostname: HostName,
     }
 
 
-def _get_sorted_service_list(
+def get_sorted_service_list(
     hostname: HostName,
     remove_duplicates: bool = False,
     filter_mode: Optional[str] = None,

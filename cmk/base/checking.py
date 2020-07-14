@@ -328,7 +328,7 @@ def _get_filtered_services(
     only_check_plugins: Optional[Set[CheckPluginName]] = None,
 ) -> List[Service]:
 
-    services = check_table.get_precompiled_check_table(
+    services = check_table.get_sorted_service_list(
         host_name,
         remove_duplicates=True,
         filter_mode="include_clustered" if belongs_to_cluster else None,

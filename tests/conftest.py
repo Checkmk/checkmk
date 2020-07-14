@@ -7,19 +7,21 @@
 # This file initializes the py.test environment
 # pylint: disable=redefined-outer-name,wrong-import-order
 
-import pytest  # type: ignore[import]
-# TODO: Can we somehow push some of the registrations below to the subdirectories?
-pytest.register_assert_rewrite(
-    "testlib",  #
-    "unit.checks.checktestlib",  #
-    "unit.checks.generictests.run")
-
 import collections
 import errno
 import shutil
 from pathlib import Path
 
+import pytest  # type: ignore[import]
+from _pytest.doctest import DoctestItem
+
 import testlib
+
+# TODO: Can we somehow push some of the registrations below to the subdirectories?
+pytest.register_assert_rewrite(
+    "testlib",  #
+    "unit.checks.checktestlib",  #
+    "unit.checks.generictests.run")
 
 #TODO Hack: Exclude cee tests in cre repo
 if not Path(testlib.utils.cmc_path()).exists():
@@ -83,7 +85,9 @@ def pytest_collection_modifyitems(items):
         repo_rel_path = file_path.relative_to(testlib.repo_path())
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
-            raise Exception("Test in %s not TYPE marked: %r (%r)" % (repo_rel_path, item, ty))
+            if not isinstance(item, DoctestItem):
+                raise Exception("Test in %s not TYPE marked: %r (%r)" % (repo_rel_path, item, ty))
+
         item.add_marker(pytest.mark.type.with_args(ty))
 
 
@@ -126,8 +130,8 @@ def pytest_cmdline_main(config):
     context = test_types[config.getoption("-T")]
     if context == EXECUTE_IN_SITE and not testlib.is_running_as_site_user():
         raise Exception()
-    else:
-        verify_virtualenv()
+
+    verify_virtualenv()
 
 
 def verify_virtualenv():

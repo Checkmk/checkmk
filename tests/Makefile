@@ -182,15 +182,26 @@ test-shellcheck:
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
 test-unit:
-	$(PYTEST) -T unit unit
+	$(PYTEST) \
+		-T unit \
+		--doctest-modules \
+		../cmk/utils \
+		../cmk/special_agents \
+		../cmk/gui \
+		unit
 
 test-unit-coverage-html:
 	$(PYTEST) \
-	    --cov=cmk \
-	    --cov-report=html \
-	    --cov-config=.coveragerc_unit \
-	    --no-cov-on-fail \
-	    -T unit unit
+		-T unit \
+		--cov=cmk \
+		--cov-report=html \
+		--cov-config=.coveragerc_unit \
+		--no-cov-on-fail \
+		--doctest-modules \
+		../cmk/utils \
+		../cmk/special_agents \
+		../cmk/gui \
+		unit
 
 test-unit-sh:
 	./sh_test_runner.sh

@@ -209,7 +209,8 @@ def make_host_sections(
     max_cachefile_age: int,
 ) -> MultiHostSections:
     return _make_host_sections(
-        _make_nodes(sources, host_config, ipaddress),
+        [(host_config.hostname, ipaddress,
+          sources)] if host_config.nodes is None else _make_piggyback_nodes(host_config),
         max_cachefile_age=max_cachefile_age,
     )
 
@@ -255,16 +256,6 @@ def _make_host_sections(
         )
 
     return multi_host_sections
-
-
-def _make_nodes(
-    sources: DataSources,
-    host_config: HostConfig,
-    ipaddress: Optional[HostAddress],
-) -> Iterable[Tuple[HostName, Optional[HostAddress], DataSources]]:
-    if host_config.nodes is None:
-        return [(host_config.hostname, ipaddress, sources)]
-    return _make_piggyback_nodes(host_config)
 
 
 def _make_piggyback_nodes(

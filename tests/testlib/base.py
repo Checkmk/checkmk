@@ -13,7 +13,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
-    ('section', 'aix_diskiod'),
     ('section', 'bluecat_dhcp'),
     ('section', 'bluecat_dns'),
     ('section', 'cisco_mem_asa'),
@@ -61,7 +60,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'tsm_stagingpools'),
     ('section', 'veritas_vcs'),
     ('section', 'winperf_phydisk'),
-    ('check', 'aix_diskiod'),
     ('check', 'bluecat_dhcp'),
     ('check', 'bluecat_dns'),
     ('check', 'chrony'),

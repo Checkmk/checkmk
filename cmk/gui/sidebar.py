@@ -314,65 +314,65 @@ class SidebarRenderer:
         #
         # In both cases this method would only render the sidebar
         # content afterwards.
-        if config.sidebar_notify_interval is not None:
-            interval = config.sidebar_notify_interval
-        else:
-            interval = 'null'
 
         html.clear_default_javascript()
-        if title is None:
-            title = _("Check_MK Sidebar")
-        html.html_head(title, javascripts=["side"])
+        html.html_head(title or _("Checkmk Sidebar"), javascripts=["side"])
 
-        body_classes = ['side']
-        if config.screenshotmode:
-            body_classes.append("screenshotmode")
-
-        if not config.user.may("general.see_sidebar"):
-            html.open_body(class_=body_classes)
-            html.div("", id_="check_mk_sidebar")
-        else:
-            html.open_body(
-                class_=body_classes,
-                onload='cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages(%s);' %
-                interval,
-                onunload="cmk.sidebar.store_scroll_position()")
-
-            html.open_div(id_="check_mk_sidebar")
-            self._sidebar_head()
-            html.close_div()
-
-            html.open_div(
-                id_="check_mk_snapinbar",
-                class_=["left" if config.user.get_attribute("ui_snapinbar_position") else None])
-
-            self._show_shortcuts()
-
-            html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None,
-                          id_="side_content")
-
-            refresh_snapins, restart_snapins, static_snapins = self._show_snapins()
-            self._show_add_snapin_button()
-
-            html.close_div()
-
-            html.close_div()
-
-            html.javascript("cmk.sidebar.initialize_sidebar(%0.2f, %s, %s, %s);\n" % (
-                config.sidebar_update_interval,
-                json.dumps(refresh_snapins),
-                json.dumps(restart_snapins),
-                json.dumps(static_snapins),
-            ))
-
-        html.open_div(id_="content_area")
-        if content is not None:
-            html.write(content)
-        html.close_div()
+        self._show_body_start()
+        self._show_sidebar()
+        self._show_page_content(content)
 
         html.body_end()
 
-    def _show_shortcuts(self) -> None:
+    def _show_body_start(self) -> None:
+        body_classes = ['side', "screenshotmode" if config.screenshotmode else None]
+
+        if not config.user.may("general.see_sidebar"):
+            html.open_body(class_=body_classes)
+            return
+
+        interval = config.sidebar_notify_interval if config.sidebar_notify_interval is not None else "null"
+        html.open_body(
+            class_=body_classes,
+            onload='cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages(%s);' %
+            interval,
+            onunload="cmk.sidebar.store_scroll_position()")
+
+    def _show_sidebar(self) -> None:
+        if not config.user.may("general.see_sidebar"):
+            html.div("", id_="check_mk_sidebar")
+            return
+
+        html.open_div(id_="check_mk_sidebar")
+        self._show_sidebar_head()
+        html.close_div()
+
+        html.open_div(
+            id_="check_mk_snapinbar",
+            class_=["left" if config.user.get_attribute("ui_snapinbar_position") else None])
+
+        self._show_shortcut_bar()
+        self._show_snapin_bar()
+
+        html.close_div()
+
+    def _show_snapin_bar(self) -> None:
+        html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None,
+                      id_="side_content")
+
+        refresh_snapins, restart_snapins, static_snapins = self._show_snapins()
+        self._show_add_snapin_button()
+
+        html.close_div()
+
+        html.javascript("cmk.sidebar.initialize_sidebar(%0.2f, %s, %s, %s);\n" % (
+            config.sidebar_update_interval,
+            json.dumps(refresh_snapins),
+            json.dumps(restart_snapins),
+            json.dumps(static_snapins),
+        ))
+
+    def _show_shortcut_bar(self) -> None:
         html.open_div(class_="shortcuts")
         for description, icon, url, target in (
             (_("Main"), "main_dashboard",
@@ -525,7 +525,13 @@ class SidebarRenderer:
             html.write(styles)
             html.close_style()
 
-    def _sidebar_head(self):
+    def _show_page_content(self, content: Optional[HTML]):
+        html.open_div(id_="content_area")
+        if content is not None:
+            html.write(content)
+        html.close_div()
+
+    def _show_sidebar_head(self):
         html.open_div(id_="side_header")
         html.open_a(href=config.user.get_attribute("start_url") or config.start_url,
                     target="main",

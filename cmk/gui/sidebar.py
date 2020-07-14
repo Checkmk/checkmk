@@ -9,7 +9,7 @@ import copy
 import traceback
 import json
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union, NamedTuple
 
 from six import ensure_str
 
@@ -300,6 +300,16 @@ class UserSidebarSnapin:
         return not self.__eq__(other)
 
 
+ShortcutMenuItem = NamedTuple("ShortcutMenuItem", [
+    ("name", str),
+    ("title", str),
+    ("icon_name", str),
+    ("url", str),
+    ("target_name", str),
+    ("permission_name", Optional[str]),
+])
+
+
 class SidebarRenderer:
     def show(self, title: Optional[str] = None, content: Optional[HTML] = None) -> None:
         # TODO: Right now the method renders the full HTML page, i.e.
@@ -374,20 +384,13 @@ class SidebarRenderer:
 
     def _show_shortcut_bar(self) -> None:
         html.open_div(class_="shortcuts")
-        for description, icon, url, target in (
-            (_("Main"), "main_dashboard",
-             html.makeuri_contextless([("name", "main")], "dashboard.py"), "main"),
-            (_("System"), "main_cmk_dashboard",
-             html.makeuri_contextless([("name", "cmk_overview")], "dashboard.py"), "main"),
-            (_("Problems"), "main_problems",
-             html.makeuri_contextless([("name", "simple_problems")], "dashboard.py"), "main"),
-            (_("Hosts"), "main_folder", html.makeuri_contextless([("mode", "folder")],
-                                                                 "wato.py"), "main"),
-            (_("Manual"), "main_help", "https://checkmk.de/cms.html", "blank"),
-        ):
-            html.open_a(href=url, target=target)
-            html.icon(title=None, icon=icon)
-            html.div(description)
+        for item in _shortcut_menu_items():
+            if item.permission_name and not config.user.may(item.permission_name):
+                continue
+
+            html.open_a(href=item.url, target=item.target_name)
+            html.icon(title=None, icon=item.icon_name)
+            html.div(item.title)
             html.close_a()
         html.close_div()
 
@@ -627,6 +630,51 @@ class SidebarRenderer:
                     ensure_str(
                         'alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
                         (escaping.escape_attribute(msg['text']).replace('\n', '\\n'), msg['id'])))
+
+
+def _shortcut_menu_items() -> List[ShortcutMenuItem]:
+    return [
+        ShortcutMenuItem(
+            name="main",
+            title=_("Main"),
+            icon_name="main_dashboard",
+            url=html.makeuri_contextless([("name", "main")], "dashboard.py"),
+            target_name="main",
+            permission_name="dashboard.main",
+        ),
+        ShortcutMenuItem(
+            name="system",
+            title=_("System"),
+            icon_name="main_cmk_dashboard",
+            url=html.makeuri_contextless([("name", "cmk_overview")], "dashboard.py"),
+            target_name="main",
+            permission_name="dashboard.cmk_overview",
+        ),
+        ShortcutMenuItem(
+            name="problems",
+            title=_("Problems"),
+            icon_name="main_problems",
+            url=html.makeuri_contextless([("name", "simple_problems")], "dashboard.py"),
+            target_name="main",
+            permission_name="dashboard.simple_problems",
+        ),
+        ShortcutMenuItem(
+            name="hosts",
+            title=_("Hosts"),
+            icon_name="main_folder",
+            url=html.makeuri_contextless([("mode", "folder")], "wato.py"),
+            target_name="main",
+            permission_name="wato.hosts",
+        ),
+        ShortcutMenuItem(
+            name="manual",
+            title=_("Manual"),
+            icon_name="main_help",
+            url="https://checkmk.com/cms.html",
+            target_name="blank",
+            permission_name=None,
+        ),
+    ]
 
 
 @cmk.gui.pages.register("side")

@@ -12,7 +12,7 @@ from typing import List
 
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.plugins.main_menu import (
     mega_menu_registry,
@@ -30,7 +30,7 @@ def _view_menu_topics() -> List[TopicMenuTopic]:
 MegaMenuMonitoring = mega_menu_registry.register(
     MegaMenu(
         name="monitoring",
-        title=_("Monitor"),
+        title=_l("Monitor"),
         icon_name="main_monitoring",
         sort_index=5,
         topics=_view_menu_topics,
@@ -45,7 +45,7 @@ def _setup_menu_topics() -> List[TopicMenuTopic]:
 MegaMenuSetup = mega_menu_registry.register(
     MegaMenu(
         name="setup",
-        title=_("Setup"),
+        title=_l("Setup"),
         icon_name="main_setup",
         sort_index=15,
         topics=_setup_menu_topics,
@@ -103,7 +103,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
 MegaMenuUser = mega_menu_registry.register(
     MegaMenu(
         name="user",
-        title=_("User"),
+        title=_l("User"),
         icon_name="main_user",
         sort_index=20,
         topics=_user_menu_topics,
@@ -166,7 +166,7 @@ def _configure_menu_topics() -> List[TopicMenuTopic]:
 MegaMenuConfigure = mega_menu_registry.register(
     MegaMenu(
         name="configure",
-        title=_("Configure"),
+        title=_l("Configure"),
         icon_name="main_configure",
         sort_index=15,
         topics=_configure_menu_topics,

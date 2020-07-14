@@ -8,7 +8,7 @@ import abc
 import re
 from typing import Optional, NamedTuple, List
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _l
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.utils.plugin_registry
@@ -220,7 +220,7 @@ def get_modules() -> List[MainModule]:
 MainModuleTopicHosts = main_module_topic_registry.register(
     MainModuleTopic(
         name="hosts",
-        title=_("Hosts"),
+        title=_l("Hosts"),
         icon_name="topic_hosts",
         sort_index=10,
     ))
@@ -228,7 +228,7 @@ MainModuleTopicHosts = main_module_topic_registry.register(
 MainModuleTopicServices = main_module_topic_registry.register(
     MainModuleTopic(
         name="services",
-        title=_("Services"),
+        title=_l("Services"),
         icon_name="topic_services",
         sort_index=20,
     ))
@@ -236,7 +236,7 @@ MainModuleTopicServices = main_module_topic_registry.register(
 MainModuleTopicAgents = main_module_topic_registry.register(
     MainModuleTopic(
         name="agents",
-        title=_("Agents"),
+        title=_l("Agents"),
         icon_name="topic_agents",
         sort_index=30,
     ))
@@ -244,7 +244,7 @@ MainModuleTopicAgents = main_module_topic_registry.register(
 MainModuleTopicEvents = main_module_topic_registry.register(
     MainModuleTopic(
         name="events",
-        title=_("Events"),
+        title=_l("Events"),
         icon_name="topic_events",
         sort_index=40,
     ))
@@ -252,7 +252,7 @@ MainModuleTopicEvents = main_module_topic_registry.register(
 MainModuleTopicUsers = main_module_topic_registry.register(
     MainModuleTopic(
         name="users",
-        title=_("Users"),
+        title=_l("Users"),
         icon_name="topic_users",
         sort_index=50,
     ))
@@ -260,7 +260,7 @@ MainModuleTopicUsers = main_module_topic_registry.register(
 MainModuleTopicGeneral = main_module_topic_registry.register(
     MainModuleTopic(
         name="general",
-        title=_("General"),
+        title=_l("General"),
         icon_name="topic_general",
         sort_index=60,
     ))
@@ -268,7 +268,7 @@ MainModuleTopicGeneral = main_module_topic_registry.register(
 MainModuleTopicMaintenance = main_module_topic_registry.register(
     MainModuleTopic(
         name="maintenance",
-        title=_("Maintenance"),
+        title=_l("Maintenance"),
         icon_name="topic_maintenance",
         sort_index=70,
     ))
@@ -276,7 +276,7 @@ MainModuleTopicMaintenance = main_module_topic_registry.register(
 MainModuleTopicCustom = main_module_topic_registry.register(
     MainModuleTopic(
         name="custom",
-        title=_("Custom"),
+        title=_l("Custom"),
         icon_name="topic_custom",
         sort_index=150,
     ))

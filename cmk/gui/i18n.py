@@ -8,6 +8,8 @@ import gettext as gettext_module
 from typing import Dict, NamedTuple, Optional, List, Tuple
 from pathlib import Path
 
+from flask_babel.speaklater import LazyString  # type: ignore[import]
+
 import cmk.utils.paths
 
 #.
@@ -36,6 +38,12 @@ def _(message: str) -> str:
     if _translation:
         return _translation.translation.gettext(message)
     return str(message)
+
+
+def _l(string: str) -> str:
+    """Like _() but the string returned is lazy which means it will be translated when it is used as
+    an actual string."""
+    return LazyString(_, string)
 
 
 def ungettext(singular: str, plural: str, n: int) -> str:

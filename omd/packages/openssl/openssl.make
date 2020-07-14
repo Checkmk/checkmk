@@ -26,17 +26,13 @@ $(OPENSSL_BUILD): $(OPENSSL_UNPACK)
 	$(TOUCH) $@
 else
 $(OPENSSL_BUILD): $(OPENSSL_UNPACK)
-	if [ "$(DISTRO_CODE)" == "el8" ]; then 
-	    exit 0
-	else
-	    cd $(OPENSSL_BUILD_DIR) && \
-	        ./config --prefix=$(OMD_ROOT) \
-                     --openssldir=$(OMD_ROOT)/etc \
-                     -Wl,-rpath,$(OMD_ROOT)/lib \
-                     enable-md2
-	    $(MAKE) -C $(OPENSSL_BUILD_DIR) -j6
-	    $(TOUCH) $@
-	fi
+	cd $(OPENSSL_BUILD_DIR) && \
+	    ./config --prefix=$(OMD_ROOT) \
+                 --openssldir=$(OMD_ROOT)/etc \
+                 -Wl,-rpath,$(OMD_ROOT)/lib \
+                 enable-md2
+	$(MAKE) -C $(OPENSSL_BUILD_DIR) -j6
+	$(TOUCH) $@
 endif
 
 # This is horrible...

@@ -451,7 +451,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     # Now lookup configured IP addresses
     v4address: Optional[str] = None
     if host_config.is_ipv4_host:
-        v4address = _ip_address_of(host_config, 4)
+        v4address = ip_address_of(host_config, 4)
 
     if v4address is None:
         v4address = ""
@@ -459,7 +459,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     v6address: Optional[str] = None
     if host_config.is_ipv6_host:
-        v6address = _ip_address_of(host_config, 6)
+        v6address = ip_address_of(host_config, 6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
@@ -517,7 +517,7 @@ def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config
     if host_config.is_ipv4_host:
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = _ip_address_of(node_config, 4)
+            addr = ip_address_of(node_config, 4)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
@@ -527,7 +527,7 @@ def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config
     if host_config.is_ipv6_host:
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = _ip_address_of(node_config, 6)
+            addr = ip_address_of(node_config, 6)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
@@ -599,7 +599,7 @@ def _verify_cluster_datasource(nodes: List[str], config_cache: config.ConfigCach
             warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_snmp_ds, node_snmp_ds))
 
 
-def _ip_address_of(host_config: config.HostConfig, family: Optional[int] = None) -> Optional[str]:
+def ip_address_of(host_config: config.HostConfig, family: Optional[int] = None) -> Optional[str]:
     try:
         return ip_lookup.lookup_ip_address(host_config.hostname, family)
     except Exception as e:

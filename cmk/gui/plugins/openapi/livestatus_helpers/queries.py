@@ -51,9 +51,6 @@ class ResultRow(dict):
             raise AttributeError(str(exc))
 
 
-ResultEntry = ResultRow
-
-
 class Query(BaseQuery):
     """A representation of a Livestatus query.
 
@@ -137,13 +134,70 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
     def __str__(self) -> str:
         return self.compile()
 
-    def iterate(self, sites) -> Generator[ResultEntry, None, None]:
+    def fetchone(self, sites) -> ResultRow:
+        """Fetch one row of the result.
+
+        If the result from livestatus is more or less than exactly one row long it
+        will throw an Exception.
+
+        Args:
+            sites:
+
+        Returns:
+            One ResultRow entry.
+
+        Raises:
+            ValueError: When the row-count is not equal to 1.
+
+        """
+        result = list(self.iterate(sites))
+        if len(result) != 1:
+            raise ValueError(f"Expected one row, got {len(result)} row.")
+        return result[0]
+
+    def value(self, sites) -> Any:
+        """Fetch one cell from the result.
+
+        For this to work, the result must be exactly one row long and this row needs to have
+        exactly one column. Any other combination will lead to a ValueError
+
+        Args:
+            sites:
+
+        Returns:
+            The queried value.
+
+        Raises:
+            ValueError: When the row-count is not 1 and the column-count is not 1.
+
+        """
+        result = self.fetchone(sites)
+        if len(result) != 1:
+            raise ValueError(f"Expected only one column, got {len(result)} columns.")
+        return result[0]
+
+    def iterate(self, sites) -> Generator[ResultRow, None, None]:
+        """Return a generator of the result.
+
+        Args:
+            sites:
+
+        Returns:
+            The generator which yields one ResultRow per row.
+
+        """
         names = self.column_names
         for entry in sites.query(self.compile()):
             # This is Dict[str, Any], just with Attribute based access. Can't do much about this.
             yield ResultRow(list(zip(names, entry)))
 
     def compile(self) -> str:
+        """Compile the current query and return it in string-form.
+
+        Returns:
+            The Livestatus-Query as a string.
+
+        """
         _query = []
         column_names = ' '.join(column.name for column in self.columns)
         _query.append(("Columns", column_names))

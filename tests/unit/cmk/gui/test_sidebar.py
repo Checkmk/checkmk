@@ -129,8 +129,6 @@ def test_load_default_config(monkeypatch):
     assert user_config.snapins == [
         UserSidebarSnapin.from_snapin_type_id('tactical_overview'),
         UserSidebarSnapin.from_snapin_type_id('search'),
-        UserSidebarSnapin.from_snapin_type_id('views'),
-        UserSidebarSnapin.from_snapin_type_id('admin'),
         UserSidebarSnapin.from_snapin_type_id('bookmarks'),
         UserSidebarSnapin(sidebar.snapin_registry["master_control"],
                           sidebar.SnapinVisibility.CLOSED),

@@ -63,7 +63,7 @@ checks = {
         {},
         [(
             0,
-            "15 min load: 0.00 at 16 Cores (0.00 per Core)",
+            "15 min load: 0.00 at 16 logical cores (0.00 per core)",
             [('load1', 0, None, None, 0, 16), ('load5', 0, None, None, 0, 16),
              ('load15', 0, None, None, 0, 16)],
         )],

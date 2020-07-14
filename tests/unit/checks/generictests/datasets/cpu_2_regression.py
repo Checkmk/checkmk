@@ -23,7 +23,7 @@ checks = {
         (5.0, 10.0),
         [(
             0,
-            '15 min load: 0.87 at 8 Cores (0.11 per Core)',
+            '15 min load: 0.87 at 8 cores (0.11 per core)',
             [
                 ('load1', 0.88, 40.0, 80.0, 0, 8),
                 ('load5', 0.83, 40.0, 80.0, 0, 8),

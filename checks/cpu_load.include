@@ -9,10 +9,26 @@
 # of processes in the running state (on some systems, like Linux,
 # also Disk wait is account for the load).
 
+from enum import Enum
+
+
+class ProcessorType(Enum):
+    unspecified = 0
+    physical = 1
+    logical = 2
+
+
+def _format_cores_info(num_cpus, processor_type, load_per_core):
+    if processor_type == ProcessorType.unspecified:
+        cores_info = "cores"
+    else:
+        cores_info = "%s cores" % processor_type.name
+    return " at %d %s (%.2f per core)" % (num_cpus, cores_info, load_per_core)
+
 
 # load is a triple of three floats: average load of
 # the last 1, 5 or 15 minutes
-def check_cpu_load_generic(params, load, num_cpus=1):
+def check_cpu_load_generic(params, load, num_cpus=1, processor_type=ProcessorType.unspecified):
     # Prepare performance data
     if isinstance(params, tuple):
         warn, crit = [p * num_cpus for p in params]
@@ -29,6 +45,5 @@ def check_cpu_load_generic(params, load, num_cpus=1):
                                          infoname="15 min load")
     perfdata += perf[1:]
     if num_cpus > 1:
-        infotext += " at %d Cores (%.2f per Core)" % (num_cpus, load[2] / num_cpus
-                                                     )  # fixed:true-division
+        infotext += _format_cores_info(num_cpus, processor_type, load[2] / num_cpus)
     return state, infotext, perfdata

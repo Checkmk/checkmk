@@ -1055,11 +1055,11 @@ def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disa
                         u'operator', u'+',
                         [[
                             u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'user_time',
-                            None, 1.0
+                            'max', 1.0
                         ],
                          [
                              u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                             u'children_user_time', None, 1.0
+                             u'children_user_time', 'max', 1.0
                          ]]
                     ],
                     u'line_type': u'stack',
@@ -1071,11 +1071,11 @@ def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disa
                         u'operator', u'+',
                         [[
                             u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                            u'system_time', None, 1.0
+                            u'system_time', 'max', 1.0
                         ],
                          [
                              u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                             u'children_system_time', None, 1.0
+                             u'children_system_time', 'max', 1.0
                          ]]
                     ],
                     u'line_type': u'stack',
@@ -1085,7 +1085,7 @@ def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disa
                     u'color': u'#0093ff',
                     u'expression': [
                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_agent',
-                        None, 1.0
+                        'max', 1.0
                     ],
                     u'line_type': u'stack',
                     u'title': u'Time spent waiting for Check_MK agent',
@@ -1094,7 +1094,7 @@ def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disa
                     u'color': u'#00d1ff',
                     u'expression': [
                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_ds',
-                        None, 1.0
+                        'max', 1.0
                     ],
                     u'line_type': u'stack',
                     u'title': u'Time spent waiting for special agent',
@@ -1103,7 +1103,7 @@ def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disa
                     u'color': u'#d080af',
                     u'expression': [
                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'execution_time',
-                        None, 1.0
+                        'max', 1.0
                     ],
                     u'line_type': u'line',
                     u'title': u'Total execution time',

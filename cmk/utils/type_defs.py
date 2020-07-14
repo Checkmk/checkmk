@@ -7,7 +7,6 @@
 
 import abc
 import enum
-import functools
 import string
 import sys
 from typing import Any, Dict, List, NewType, Optional, Set, Tuple, TypedDict, Union
@@ -72,8 +71,8 @@ class BakerySigningCredentials(TypedDict):
 TimeperiodSpec = Dict[str, Union[str, List[Tuple[str, str]]]]
 
 
-class ABCPluginName(abc.ABC):
-    """Common class for all plugin names
+class ABCName(abc.ABC):
+    """Common class for all names.
 
     A plugin name must be a non-empty string consisting only of letters A-z, digits
     and the underscore.
@@ -116,26 +115,32 @@ class ABCPluginName(abc.ABC):
             raise TypeError("Can only be compared with %s objects" % self.__class__)
         return self._value < other._value
 
+    def __le__(self, other: Any) -> bool:
+        return self < other or self == other
+
+    def __gt__(self, other: Any) -> bool:
+        return not self <= other
+
+    def __ge__(self, other: Any) -> bool:
+        return not self < other
+
     def __hash__(self) -> int:
         return hash(type(self).__name__ + self._value)
 
 
-@functools.total_ordering
-class ParsedSectionName(ABCPluginName):
+class ParsedSectionName(ABCName):
     @property
     def _legacy_naming_exceptions(self) -> Set[str]:
         return set()
 
 
-@functools.total_ordering
-class SectionName(ABCPluginName):
+class SectionName(ABCName):
     @property
     def _legacy_naming_exceptions(self) -> Set[str]:
         return set()
 
 
-@functools.total_ordering
-class RuleSetName(ABCPluginName):
+class RuleSetName(ABCName):
     @property
     def _legacy_naming_exceptions(self) -> Set[str]:
         """
@@ -151,15 +156,13 @@ class RuleSetName(ABCPluginName):
         }
 
 
-@functools.total_ordering
-class CheckPluginName(ABCPluginName):
+class CheckPluginName(ABCName):
     @property
     def _legacy_naming_exceptions(self) -> Set[str]:
         return set()
 
 
-@functools.total_ordering
-class InventoryPluginName(ABCPluginName):
+class InventoryPluginName(ABCName):
     @property
     def _legacy_naming_exceptions(self) -> Set[str]:
         return set()

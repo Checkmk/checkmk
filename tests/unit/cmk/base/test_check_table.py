@@ -4,9 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest  # type: ignore[import]
 from testlib import CheckManager
 from testlib.base import Scenario
+
+from cmk.utils.exceptions import MKGeneralException
+from cmk.base import config
 import cmk.base.check_table as check_table
 from cmk.base.check_utils import Service
 
@@ -283,3 +288,63 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
 
     CheckManager().load(["df"])
     assert list(check_table.get_check_table(hostname).keys()) == expected_result
+
+
+@pytest.fixture(name="service_list")
+def _service_list():
+    return [
+        Service(
+            check_plugin_name="plugin %s" % d,
+            item="item",
+            description="description %s" % d,
+            parameters={},
+        ) for d in "FDACEB"
+    ]
+
+
+def test_get_sorted_check_table_cmc(monkeypatch, service_list):
+    monkeypatch.setattr(config, "is_cmc", lambda: True)
+    monkeypatch.setattr(check_table, "get_check_table",
+                        lambda *a, **kw: {s.id(): s for s in service_list})
+
+    # all arguments are ignored in test
+    sorted_service_list = check_table._get_sorted_check_table("", True, None, True)
+    assert sorted_service_list == sorted(service_list, key=lambda s: s.description)
+
+
+def test_get_sorted_check_table_no_cmc(monkeypatch, service_list):
+    monkeypatch.setattr(config, "is_cmc", lambda: False)
+    monkeypatch.setattr(check_table, "get_check_table",
+                        lambda *a, **kw: {s.id(): s for s in service_list})
+    monkeypatch.setattr(
+        config, "service_depends_on", lambda _hn, descr: {
+            "description A": ["description C"],
+            "description B": ["description D"],
+            "description D": ["description A", "description F"],
+        }.get(descr, []))
+
+    # all arguments are ignored in test
+    sorted_service_list = check_table._get_sorted_check_table("", True, None, True)
+    assert [s.description for s in sorted_service_list] == [
+        "description C",  #
+        "description E",  # no deps, alphabetical order
+        "description F",  #
+        "description A",
+        "description D",
+        "description B",
+    ]
+
+
+def test_get_sorted_check_table_cyclic(monkeypatch, service_list):
+    monkeypatch.setattr(config, "is_cmc", lambda: False)
+    monkeypatch.setattr(check_table, "get_check_table",
+                        lambda *a, **kw: {s.id(): s for s in service_list})
+    monkeypatch.setattr(
+        config, "service_depends_on", lambda _hn, descr: {
+            "description A": ["description B"],
+            "description B": ["description D"],
+            "description D": ["description A"],
+        }.get(descr, []))
+
+    with pytest.raises(MKGeneralException):
+        _ = check_table._get_sorted_check_table("", True, None, True)

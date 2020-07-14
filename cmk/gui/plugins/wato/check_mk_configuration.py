@@ -53,36 +53,35 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.plugins.wato import (
-    config_variable_group_registry,
-    ConfigVariableGroup,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigDomainGUI,
-    ConfigDomainCore,
-    ConfigDomainCACertificates,
-    ConfigDomainOMD,
-    site_neutral_path,
-    rulespec_registry,
-    HostRulespec,
-    ServiceRulespec,
     BinaryHostRulespec,
     BinaryServiceRulespec,
-    rulespec_group_registry,
-    RulespecGroup,
-    RulespecSubGroup,
-    PluginCommandLine,
-    UserIconOrAction,
-    SNMPCredentials,
-    IPMIParameters,
-    HostnameTranslation,
-    ServiceDescriptionTranslation,
+    CheckTypeSelection,
+    ConfigDomainCACertificates,
+    ConfigDomainCore,
+    ConfigDomainGUI,
+    ConfigDomainOMD,
+    ConfigVariable,
+    ConfigVariableGroup,
+    config_variable_group_registry,
+    config_variable_registry,
     ContactGroupSelection,
     HostGroupSelection,
-    ServiceGroupSelection,
-    CheckTypeSelection,
-    TimeperiodSelection,
+    HostnameTranslation,
+    HostRulespec,
     HTTPProxyInput,
-    get_check_information,
+    IPMIParameters,
+    PluginCommandLine,
+    RulespecGroup,
+    rulespec_group_registry,
+    rulespec_registry,
+    RulespecSubGroup,
+    ServiceDescriptionTranslation,
+    ServiceGroupSelection,
+    ServiceRulespec,
+    site_neutral_path,
+    SNMPCredentials,
+    TimeperiodSelection,
+    UserIconOrAction,
 )
 
 from cmk.gui.plugins.views.icons import icon_and_action_registry
@@ -4957,14 +4956,6 @@ rulespec_registry.register(
     ))
 
 
-def get_snmp_checktypes():
-    checks = get_check_information()
-    types = sorted([(cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
-                    for (cn, c) in checks.items()
-                    if c['snmp']])
-    return [(None, _('All SNMP Checks'))] + types
-
-
 def get_snmp_section_names():
     sections = get_section_information()
     section_choices = {(s['name'], s['name']) for s in sections.values() if s['type'] == 'snmp'}
@@ -5014,12 +5005,17 @@ def _valuespec_snmpv3_contexts():
         title=_('SNMPv3 contexts to use in requests'),
         help=_('By default Check_MK does not use a specific context during SNMPv3 queries, '
                'but some devices are offering their information in different SNMPv3 contexts. '
-               'This rule can be used to configure, based on hosts and check type, which SNMPv3 '
-               'contexts Check_MK should ask for when getting information via SNMPv3.'),
+               'This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 '
+               'contexts Checkmk should ask for when getting information via SNMPv3.'),
         elements=[
-            DropdownChoice(
-                title=_("Checktype"),
-                choices=get_snmp_checktypes,
+            Transform(
+                DropdownChoice(
+                    title=_("Section name"),
+                    choices=get_snmp_section_names,
+                ),
+                # Legacy plugins had dots in their names, but sections have only ever been
+                # associated with the part left of the dot.
+                forth=lambda e: e.split(".")[0] if e is not None else None,
             ),
             ListOfStrings(
                 title=_("SNMP Context IDs"),

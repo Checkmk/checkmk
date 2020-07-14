@@ -184,3 +184,27 @@ class UISnapinBarPosition(UserAttribute):
 
     def domain(self):
         return "multisite"
+
+
+@user_attribute_registry.register
+class UIBasicAdvancedToggle(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "ui_basic_advanced_mode"
+
+    def topic(self):
+        return "personal"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Basic / Advanced mode"),
+            choices=[
+                (None, _("Default to basic mode")),
+                ("default_advanced", _("Default to advanced mode")),
+                ("enforce_basic", _("Enforce basic mode")),
+                ("enforce_advanced", _("Enforce advanced mode")),
+            ],
+        )
+
+    def domain(self):
+        return "multisite"

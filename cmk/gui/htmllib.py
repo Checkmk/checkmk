@@ -2801,6 +2801,10 @@ class html(ABCHTMLGenerator):
                                     class_))
 
     def more_button(self, id_, dom_levels_up):
+        if config.user.get_attribute("ui_basic_advanced_mode") in ("enforce_basic",
+                                                                   "enforce_advanced"):
+            return
+
         self.open_a(href="javascript:void(0)",
                     class_="more",
                     onfocus="if (this.blur) this.blur();",

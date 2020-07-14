@@ -10,6 +10,7 @@ Cares about the main navigation of our GUI. This is a) the small sidebar and b) 
 
 from typing import NamedTuple, List
 
+import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.sidebar.quicksearch import QuicksearchSnapin
@@ -27,6 +28,19 @@ MainMenuItem = NamedTuple("MainMenuItem", [
     ("title", str),
     ("icon_name", str),
 ])
+
+
+def get_show_more_setting(more_id: str) -> bool:
+    if config.user.get_attribute("ui_basic_advanced_mode") == "enforce_advanced":
+        return True
+
+    if config.user.get_attribute("ui_basic_advanced_mode") == "enforce_basic":
+        return False
+
+    return html.foldable_container_is_open(
+        treename="more_buttons",
+        id_=more_id,
+        isopen=config.user.get_attribute("ui_basic_advanced_mode") == "default_advanced")
 
 
 class MainMenuRenderer:
@@ -86,8 +100,8 @@ class MegaMenuRenderer:
     """Renders the content of the mega menu popups"""
     def show(self, menu: MegaMenu) -> None:
         more_id = "main_menu_" + menu.name
-        show_more = html.foldable_container_is_open("more_buttons", more_id, isopen=False)
 
+        show_more = get_show_more_setting(more_id)
         html.open_div(id_="main_menu_" + menu.name, class_=("more" if show_more else "less"))
         html.more_button(id_=more_id, dom_levels_up=1)
         html.open_div(class_="content inner")

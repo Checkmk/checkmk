@@ -29,7 +29,7 @@ import cmk.gui.notify as notify
 import cmk.gui.werks as werks
 import cmk.gui.sites as sites
 import cmk.gui.pages
-from cmk.gui.main_menu import MainMenuRenderer
+from cmk.gui.main_menu import MainMenuRenderer, get_show_more_setting
 import cmk.gui.plugins.sidebar
 import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
@@ -430,9 +430,9 @@ class SidebarRenderer:
         name = snapin_class.type_name()
         snapin_instance = snapin_class()
 
-        more_id = "sidebar_snapin_" + name
-        show_more = html.foldable_container_is_open("more_buttons", more_id, isopen=False)
+        more_id = "sidebar_snapin_%s" % name
 
+        show_more = get_show_more_setting(more_id)
         html.open_div(id_="snapin_container_%s" % name,
                       class_=["snapin", ("more" if show_more else "less")])
 

@@ -1004,8 +1004,6 @@ class AutomationGetCheckInformation(Automation):
 
                 check_infos[check_plugin_name]["service_description"] = check.get(
                     "service_description", "%s")
-                check_infos[check_plugin_name]["snmp"] = cmk.base.check_utils.is_snmp_check(
-                    check_plugin_name)
             except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise

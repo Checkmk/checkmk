@@ -563,13 +563,10 @@ class ModeEditUser(WatoMode):
         ]
 
         # Language configuration
-        set_lang = html.get_checkbox("_set_lang")
-        language = html.request.var("language")
-        if set_lang:
-            if language == "":
-                language = None
+        language = html.request.get_ascii_input_mandatory("language", "")
+        if language != "_default_":
             user_attrs["language"] = language
-        elif not set_lang and "language" in user_attrs:
+        elif "language" in user_attrs:
             del user_attrs["language"]
 
         # Contact groups
@@ -988,29 +985,16 @@ class ModeEditUser(WatoMode):
 
 def select_language(user):
     languages: Choices = [l for l in get_languages() if not config.hide_language(l[0])]
-    if languages:
-        active = 'language' in user
-        forms.section(_("Language"), checkbox=('_set_lang', active, 'language'))
-        default_label = _('Default: %s') % get_language_alias(config.default_language)
-        html.div(default_label,
-                 class_="inherited",
-                 id_="attr_default_language",
-                 style="display: none" if active else "")
-        html.open_div(id_="attr_entry_language", style="display: none" if not active else "")
+    if not languages:
+        return
 
-        language = user.get('language') if user.get('language') is not None else ''
+    current_language = user.get("language")
+    if current_language is None:
+        current_language = "_default_"
 
-        # Transform 'en' configured language to empty string for compatibility reasons
-        if language == "en":
-            language = ""
+    languages.insert(0, ("_default_", _("Use the default language (%s)") %
+                         get_language_alias(config.default_language)))
 
-        html.dropdown("language", languages, deflt=language)
-        html.close_div()
-        html.help(
-            _('Configure the default language '
-              'to be used by the user in the user interface here. If you do not check '
-              'the checkbox, then the system default will be used.<br><br>'
-              'Note: currently Multisite is internationalized '
-              'but comes without any actual localisations (translations). If you want to '
-              'create you own translation, you find <a href="%(url)s">documentation online</a>.') %
-            {"url": "https://checkmk.com/checkmk_multisite_cmk.gui.i18n.html"})
+    forms.section(_("Language"))
+    html.dropdown("language", languages, deflt=current_language)
+    html.help(_('Configure the language to be used by the user in the user interface here.'))

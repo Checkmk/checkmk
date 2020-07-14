@@ -203,7 +203,6 @@ class CMKWebSession:
         r = self.post("user_profile.py",
                       data={
                           "filled_in": "profile",
-                          "_set_lang": "on",
                           "ua_start_url_use": "0",
                           "ua_ui_theme_use": "0",
                           "language": lang,

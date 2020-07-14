@@ -272,19 +272,14 @@ class UserProfile(ABCUserProfilePage):
         users = userdb.load_users(lock=True)
         user = users[config.user.id]
 
-        set_lang = html.get_checkbox('_set_lang')
-        language = html.request.get_ascii_input('language')
-        # Set the users language if requested
-        if set_lang:
-            if language == '':
-                language = None
-            # Set custom language
+        language = html.request.get_ascii_input_mandatory('language', "")
+        # Set the users language if requested to set it explicitly
+        if language != "_default_":
             user['language'] = language
             config.user.language = language
             html.set_language_cookie(language)
 
         else:
-            # Remove the customized language
             if 'language' in user:
                 del user['language']
             config.user.reset_language()

@@ -291,7 +291,7 @@ def fill_out_parameters(ctx, val):
         >>> tmpl.render(endpoint_parameters={})
         Traceback (most recent call last):
         ...
-        KeyError: 'host'
+        ValueError: Parameter 'host' needed, but not supplied.
 
         >>> tmpl.render(endpoint_parameters={'host': host, 'service': service})
         '/host/service'

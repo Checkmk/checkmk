@@ -10,7 +10,6 @@ Cares about the main navigation of our GUI. This is a) the small sidebar and b) 
 
 from typing import NamedTuple, List
 
-import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.sidebar.quicksearch import QuicksearchSnapin
@@ -115,8 +114,7 @@ class MegaMenuRenderer:
                     onclick="cmk.popup_menu.mega_menu_show_all_topics('%s')" % topic_id)
         html.icon(title=_("Show all %s topics") % menu_ident, icon="collapse_arrow")
         html.close_a()
-        # TODO: use one icon per topic or per item?
-        if not config.user.get_attribute("ui_icons") and topic.icon_name:
+        if topic.icon_name:
             html.icon(title=None, icon=topic.icon_name)
         html.span(topic.title)
         html.close_h2()
@@ -145,18 +143,11 @@ class MegaMenuRenderer:
         cls = ["advanced" if item.is_advanced else None, "extended" if extended else None]
         html.open_li(class_=cls)
 
-        # TODO: Add description when needed
-        # TODO: Add target when needed
-        html.open_a(
+        html.a(
+            item.title,
             href=item.url,
-            target="main",  # item.target or "main",
+            target="main",
             onclick="cmk.popup_menu.close_popup()",
         )
-
-        if config.user.get_attribute("ui_icons") and item.icon_name:
-            html.icon(title=None, icon=item.icon_name)
-
-        html.write_text(item.title)
-        html.close_a()
 
         html.close_li()

@@ -342,8 +342,9 @@ class SidebarRenderer:
             self._sidebar_head()
             html.close_div()
 
-            html.open_div(id_="check_mk_snapinbar",
-                          class_=["left" if config.user.get_attribute("ui_snapinbar") else None])
+            html.open_div(
+                id_="check_mk_snapinbar",
+                class_=["left" if config.user.get_attribute("ui_snapinbar_position") else None])
 
             self._show_shortcuts()
 

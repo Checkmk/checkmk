@@ -18,6 +18,7 @@ import cmk.utils.debug
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.type_defs import SectionName
 
 from . import snmp_cache
 from .type_defs import ABCSNMPBackend, OID, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
@@ -40,7 +41,7 @@ SNMPWalkOptions = Dict[str, List[OID]]
 
 # Contextes can only be used when check_plugin_name is given.
 def get_single_oid(oid: str,
-                   check_plugin_name: Optional[str] = None,
+                   section_name: Optional[SectionName] = None,
                    do_snmp_scan: bool = True,
                    *,
                    backend: ABCSNMPBackend) -> Optional[SNMPDecodedString]:
@@ -62,7 +63,7 @@ def get_single_oid(oid: str,
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
     # SNMP contexts, all contextes will be queried until the first answer is received.
     console.vverbose("       Getting OID %s: " % oid)
-    for context_name in backend.config.snmpv3_contexts_of(check_plugin_name):
+    for context_name in backend.config.snmpv3_contexts_of(section_name):
         try:
             value = backend.get(
                 oid=oid,

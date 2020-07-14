@@ -13,7 +13,7 @@ import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginNameStr, HostName
+from cmk.utils.type_defs import HostName, SectionName
 
 from .type_defs import (
     ABCSNMPBackend,
@@ -45,14 +45,14 @@ ResultColumnsSanitized = List[Tuple[List[SNMPRawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
 
-def get_snmp_table(check_plugin_name: CheckPluginNameStr, oid_info: Union[OIDInfo, SNMPTree], *,
+def get_snmp_table(section_name: Optional[SectionName], oid_info: Union[OIDInfo, SNMPTree], *,
                    backend: ABCSNMPBackend) -> SNMPTable:
-    return _get_snmp_table(check_plugin_name, oid_info, False, backend=backend)
+    return _get_snmp_table(section_name, oid_info, False, backend=backend)
 
 
-def get_snmp_table_cached(check_plugin_name: CheckPluginNameStr, oid_info: Union[OIDInfo, SNMPTree],
+def get_snmp_table_cached(section_name: Optional[SectionName], oid_info: Union[OIDInfo, SNMPTree],
                           *, backend: ABCSNMPBackend) -> SNMPTable:
-    return _get_snmp_table(check_plugin_name, oid_info, True, backend=backend)
+    return _get_snmp_table(section_name, oid_info, True, backend=backend)
 
 
 SPECIAL_COLUMNS = [
@@ -65,7 +65,7 @@ SPECIAL_COLUMNS = [
 
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
-def _get_snmp_table(check_plugin_name: CheckPluginNameStr, oid_info: Union[OIDInfo, SNMPTree],
+def _get_snmp_table(section_name: Optional[SectionName], oid_info: Union[OIDInfo, SNMPTree],
                     use_snmpwalk_cache: bool, *, backend: ABCSNMPBackend) -> SNMPTable:
     oid, suboids, targetcolumns = _make_target_columns(oid_info)
 
@@ -94,7 +94,7 @@ def _get_snmp_table(check_plugin_name: CheckPluginNameStr, oid_info: Union[OIDIn
                     "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN and OID_END_OCTET_STRING."
                 )
 
-            rowinfo = _get_snmpwalk(check_plugin_name,
+            rowinfo = _get_snmpwalk(section_name,
                                     oid,
                                     fetchoid,
                                     column,
@@ -233,9 +233,8 @@ def _key_oid_pairs(pair1: Tuple[OID, SNMPRawValue]) -> List[int]:
     return _oid_to_intlist(pair1[0].lstrip('.'))
 
 
-def _get_snmpwalk(check_plugin_name: CheckPluginNameStr, oid: OID, fetchoid: OID,
-                  column: SNMPColumn, use_snmpwalk_cache: bool, *,
-                  backend: ABCSNMPBackend) -> SNMPRowInfo:
+def _get_snmpwalk(section_name: Optional[SectionName], oid: OID, fetchoid: OID, column: SNMPColumn,
+                  use_snmpwalk_cache: bool, *, backend: ABCSNMPBackend) -> SNMPRowInfo:
     if column in SPECIAL_COLUMNS:
         return []
 
@@ -244,22 +243,26 @@ def _get_snmpwalk(check_plugin_name: CheckPluginNameStr, oid: OID, fetchoid: OID
     cached = _get_cached_snmpwalk(backend.hostname, fetchoid) if get_from_cache else None
     if cached is not None:
         return cached
-    rowinfo = _perform_snmpwalk(check_plugin_name, oid, fetchoid, backend=backend)
+    rowinfo = _perform_snmpwalk(section_name, oid, fetchoid, backend=backend)
     if save_to_cache:
         _save_snmpwalk_cache(backend.hostname, fetchoid, rowinfo)
     return rowinfo
 
 
-def _perform_snmpwalk(check_plugin_name: CheckPluginNameStr, base_oid: OID, fetchoid: OID, *,
+def _perform_snmpwalk(section_name: Optional[SectionName], base_oid: OID, fetchoid: OID, *,
                       backend: ABCSNMPBackend) -> SNMPRowInfo:
     added_oids: Set[OID] = set([])
     rowinfo: SNMPRowInfo = []
 
-    for context_name in backend.config.snmpv3_contexts_of(check_plugin_name):
-        rows = backend.walk(oid=fetchoid,
-                            check_plugin_name=check_plugin_name,
-                            table_base_oid=base_oid,
-                            context_name=context_name)
+    for context_name in backend.config.snmpv3_contexts_of(section_name):
+        rows = backend.walk(
+            oid=fetchoid,
+            # revert back to legacy "possilbly-empty-string"-Type
+            # TODO: pass Optional[SectionName] along!
+            check_plugin_name=str(section_name) if section_name else "",
+            table_base_oid=base_oid,
+            context_name=context_name,
+        )
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when

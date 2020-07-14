@@ -7,6 +7,7 @@
 import pytest  # type: ignore[import]
 
 from cmk.utils.exceptions import MKSNMPError
+from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
@@ -43,7 +44,7 @@ def test_get_data_types(backend, type_name, oid, expected_response):
 
     oid_start, oid_end = oid.rsplit(".", 1)
     table = snmp_table.get_snmp_table(
-        check_plugin_name="",
+        section_name=SectionName("my_Section"),
         oid_info=(oid_start, [oid_end]),
         backend=backend,
     )
@@ -70,7 +71,7 @@ def test_get_simple_snmp_table_not_resolvable(backend):
 
     with pytest.raises(MKSNMPError, match=exc_match):
         snmp_table.get_snmp_table(
-            check_plugin_name="",
+            section_name=SectionName("my_Section"),
             oid_info=oid_info,
             backend=backend,
         )
@@ -94,7 +95,7 @@ def test_get_simple_snmp_table_wrong_credentials(backend):
 
     with pytest.raises(MKSNMPError, match=exc_match):
         snmp_table.get_snmp_table(
-            check_plugin_name="",
+            section_name=SectionName("my_Section"),
             oid_info=oid_info,
             backend=backend,
         )
@@ -108,7 +109,7 @@ def test_get_simple_snmp_table_bulkwalk(backend, bulk):
         ["1.0", "2.0", "5.0"],
     )
     table = snmp_table.get_snmp_table(
-        check_plugin_name="",
+        section_name=SectionName("my_Section"),
         oid_info=oid_info,
         backend=backend,
     )
@@ -129,7 +130,7 @@ def test_get_simple_snmp_table(backend):
         ["1.0", "2.0", "5.0"],
     )
     table = snmp_table.get_snmp_table(
-        check_plugin_name="",
+        section_name=SectionName("my_Section"),
         oid_info=oid_info,
         backend=backend,
     )
@@ -150,7 +151,7 @@ def test_get_simple_snmp_table_oid_end(backend):
         ["1", "2", "3", OID_END],
     )
     table = snmp_table.get_snmp_table(
-        check_plugin_name="",
+        section_name=SectionName("my_Section"),
         oid_info=oid_info,
         backend=backend,
     )
@@ -167,7 +168,7 @@ def test_get_simple_snmp_table_oid_string(backend):
         ["1", "2", "3", OID_STRING],
     )
     table = snmp_table.get_snmp_table(
-        check_plugin_name="",
+        section_name=SectionName("my_Section"),
         oid_info=oid_info,
         backend=backend,
     )
@@ -184,7 +185,7 @@ def test_get_simple_snmp_table_oid_bin(backend):
         ["1", "2", "3", OID_BIN],
     )
     table = snmp_table.get_snmp_table(
-        check_plugin_name="",
+        section_name=SectionName("my_Section"),
         oid_info=oid_info,
         backend=backend,
     )
@@ -201,7 +202,7 @@ def test_get_simple_snmp_table_oid_end_bin(backend):
         ["1", "2", "3", OID_END_BIN],
     )
     table = snmp_table.get_snmp_table(
-        check_plugin_name="",
+        section_name=SectionName("my_Section"),
         oid_info=oid_info,
         backend=backend,
     )
@@ -221,7 +222,7 @@ def test_get_simple_snmp_table_with_hex_str(backend):
     )
 
     table = snmp_table.get_snmp_table(
-        check_plugin_name="",
+        section_name=SectionName("my_Section"),
         oid_info=oid_info,
         backend=backend,
     )

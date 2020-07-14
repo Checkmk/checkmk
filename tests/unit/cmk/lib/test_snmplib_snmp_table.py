@@ -8,6 +8,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
+from cmk.utils.type_defs import SectionName
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import ABCSNMPBackend, OID_END, OIDBytes, OIDEnd, SNMPHostConfig, SNMPTree
 
@@ -90,8 +91,10 @@ def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     def get_all_snmp_tables(info):
         backend = SNMPTestBackend(SNMPConfig)
         if not isinstance(info, list):
-            return snmp_table.get_snmp_table("unit-test", info, backend=backend)
-        return [snmp_table.get_snmp_table("unit-test", i, backend=backend) for i in info]
+            return snmp_table.get_snmp_table(SectionName("unit_test"), info, backend=backend)
+        return [
+            snmp_table.get_snmp_table(SectionName("unit_test"), i, backend=backend) for i in info
+        ]
 
     assert get_all_snmp_tables(snmp_info) == expected_values
 

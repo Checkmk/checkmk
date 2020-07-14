@@ -41,7 +41,7 @@ def _evaluate_snmp_detection_atom(atom: SNMPDetectAtom, s_name: SectionName, do_
     oid, pattern, flag = atom
     value = snmp_modes.get_single_oid(
         oid,
-        str(s_name),
+        s_name,
         do_snmp_scan=do_snmp_scan,
         backend=backend,
     )

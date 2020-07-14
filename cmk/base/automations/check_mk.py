@@ -39,7 +39,7 @@ from cmk.utils.type_defs import (
 
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig
+from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig, SNMPTree
 
 from cmk.fetchers import factory
 
@@ -1409,10 +1409,9 @@ class AutomationDiagHost(Automation):
             record_stats=config.record_inline_snmp_stats,
         )
 
-        # TODO: It is unclear why mypy complains about this structure. Investigate!
         data = snmp_table.get_snmp_table_cached(
-            "",
-            ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore[arg-type]
+            None,
+            SNMPTree(base='.1.3.6.1.2.1.1', oids=['1.0', '4.0', '5.0', '6.0']),
             backend=factory.backend(snmp_config),
         )
 

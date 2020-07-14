@@ -92,12 +92,12 @@ class SNMPHostConfig(
     def is_snmpv3_host(self) -> bool:
         return isinstance(self.credentials, tuple)
 
-    def snmpv3_contexts_of(self,
-                           check_plugin_name: Optional[_CheckPluginName]) -> List[SNMPContext]:
-        if not check_plugin_name or not self.is_snmpv3_host:
+    def snmpv3_contexts_of(self, section_name: Optional[_SectionName]) -> List[SNMPContext]:
+        if not section_name or not self.is_snmpv3_host:
             return [None]
+        section_name_str = str(section_name)
         for ty, rules in self.snmpv3_contexts:
-            if ty is None or ty == check_plugin_name:
+            if ty is None or ty == section_name_str:
                 return rules
         return [None]
 

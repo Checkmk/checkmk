@@ -85,30 +85,54 @@ class DSProgramDataSource(ABCProgramDataSource):
 
     @property
     def source_cmdline(self) -> str:
-        cmd = self._command_template
-        cmd = self._translate_legacy_macros(cmd)
-        cmd = self._translate_host_macros(cmd)
-        return cmd
+        return DSProgramDataSource._translate(
+            self._command_template,
+            self._host_config,
+            self.ipaddress,
+        )
 
     @property
     def source_stdin(self):
         return None
 
-    def _translate_legacy_macros(self, cmd: str) -> str:
-        # Make "legacy" translation. The users should use the $...$ macros in future
-        return cmd.replace("<IP>", self.ipaddress or "").replace("<HOST>", self.hostname)
+    @staticmethod
+    def _translate(
+        cmd: str,
+        host_config: config.HostConfig,
+        ipaddress: Optional[HostAddress],
+    ) -> str:
+        return DSProgramDataSource._translate_host_macros(
+            DSProgramDataSource._translate_legacy_macros(cmd, host_config.hostname, ipaddress),
+            host_config,
+        )
 
-    def _translate_host_macros(self, cmd: str) -> str:
-        attrs = core_config.get_host_attributes(self.hostname, self._config_cache)
-        if self._host_config.is_cluster:
-            parents_list = core_config.get_cluster_nodes_for_config(self._config_cache,
-                                                                    self._host_config)
+    @staticmethod
+    def _translate_legacy_macros(
+        cmd: str,
+        hostname: HostName,
+        ipaddress: Optional[HostName],
+    ) -> str:
+        # Make "legacy" translation. The users should use the $...$ macros in future
+        return cmd.replace("<IP>", ipaddress or "").replace("<HOST>", hostname)
+
+    @staticmethod
+    def _translate_host_macros(cmd: str, host_config: config.HostConfig) -> str:
+        config_cache = config.get_config_cache()
+        attrs = core_config.get_host_attributes(host_config.hostname, config_cache)
+        if host_config.is_cluster:
+            parents_list = core_config.get_cluster_nodes_for_config(
+                config_cache,
+                host_config,
+            )
             attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
             attrs.update(
-                core_config.get_cluster_attributes(self._config_cache, self._host_config,
-                                                   parents_list))
+                core_config.get_cluster_attributes(
+                    config_cache,
+                    host_config,
+                    parents_list,
+                ))
 
-        macros = core_config.get_host_macros_from_attributes(self.hostname, attrs)
+        macros = core_config.get_host_macros_from_attributes(host_config.hostname, attrs)
         return ensure_str(core_config.replace_macros(cmd, macros))
 
 

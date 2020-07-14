@@ -454,22 +454,23 @@ class SidebarRenderer:
 
         html.open_div(class_=["head", snapin.visible.value], **head_actions)
 
-        # TODO: Implement this
-        advanced = False  # snapin_instance.has_advanced_items()
+        advanced = snapin_instance.has_advanced_items()
         may_configure = config.user.may("general.configure_sidebar")
         if advanced or may_configure:
             html.open_div(class_="snapin_buttons")
+
             if may_configure:
                 # Icon for mini/maximizing
                 html.span("",
                           class_="minisnapin",
                           title=_("Toggle this snapin"),
                           onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
-            # TODO: implement this
-            #if advanced:
-            #    html.open_span(class_="moresnapin")
-            #    html.more_button(more_id, dom_levels_up=4)
-            #    html.close_span()
+
+            if advanced:
+                html.open_span(class_="moresnapin")
+                html.more_button(more_id, dom_levels_up=4)
+                html.close_span()
+
             if may_configure:
                 # Button for closing (removing) a snapin
                 html.open_span(class_="closesnapin")
@@ -480,6 +481,7 @@ class SidebarRenderer:
                                  onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" %
                                  close_url)
                 html.close_span()
+
             html.close_div()
 
         # The heading. A click on the heading mini/maximizes the snapin

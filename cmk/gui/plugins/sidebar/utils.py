@@ -82,6 +82,10 @@ class SidebarSnapin(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @classmethod
+    def has_advanced_items(cls) -> bool:
+        return False
+
+    @classmethod
     def refresh_regularly(cls) -> bool:
         return False
 

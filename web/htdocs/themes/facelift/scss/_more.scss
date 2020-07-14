@@ -8,9 +8,19 @@
   opacity: 0;
 }
 
-.more .advanced {
-  display: block;
-  animation: fadein 0s both;
+.more {
+  .advanced {
+    display: block;
+    animation: fadein 0s both;
+  }
+
+  td.advanced {
+    display: table-cell;
+  }
+
+  tr.advanced {
+    display: table-row;
+  }
 }
 
 .more.withanimation .advanced {

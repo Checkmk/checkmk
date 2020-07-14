@@ -43,7 +43,7 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
     if (mem != nullptr) {
         for (const auto &svc : *mem) {
             if (auth_user == nullptr || svc->hasContact(auth_user)) {
-                auto state = svc->state();
+                const auto *state = svc->state();
                 update(logictype,
                        static_cast<ServiceState>(state->_current_state),
                        static_cast<ServiceState>(state->_last_hard_state),

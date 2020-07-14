@@ -32,18 +32,6 @@ from cmk.base.exceptions import MKAgentError
 
 from ._abstract import ABCDataSource, ABCHostSections
 
-#.
-#   .--SNMP----------------------------------------------------------------.
-#   |                      ____  _   _ __  __ ____                         |
-#   |                     / ___|| \ | |  \/  |  _ \                        |
-#   |                     \___ \|  \| | |\/| | |_) |                       |
-#   |                      ___) | |\  | |  | |  __/                        |
-#   |                     |____/|_| \_|_|  |_|_|                           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Realize the data source for dealing with SNMP data                   |
-#   '----------------------------------------------------------------------'
-
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                        SNMPSectionContent]):
@@ -309,18 +297,6 @@ class SNMPDataSource(ABCSNMPDataSource):
 
         return persisted_sections
 
-
-#.
-#   .--SNMP Mgmt.----------------------------------------------------------.
-#   |       ____  _   _ __  __ ____    __  __                 _            |
-#   |      / ___|| \ | |  \/  |  _ \  |  \/  | __ _ _ __ ___ | |_          |
-#   |      \___ \|  \| | |\/| | |_) | | |\/| |/ _` | '_ ` _ \| __|         |
-#   |       ___) | |\  | |  | |  __/  | |  | | (_| | | | | | | |_ _        |
-#   |      |____/|_| \_|_|  |_|_|     |_|  |_|\__, |_| |_| |_|\__(_)       |
-#   |                                         |___/                        |
-#   +----------------------------------------------------------------------+
-#   | Special case for managing the Management Board SNMP data             |
-#   '----------------------------------------------------------------------'
 
 #TODO
 # 1. TCP host + SNMP MGMT Board: standard SNMP beibehalten

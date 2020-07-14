@@ -23,18 +23,6 @@ from cmk.base.exceptions import MKAgentError
 
 from .agent import AgentDataSource
 
-#.
-#   .--Datasoure Programs--------------------------------------------------.
-#   |      ____        _                     ____                          |
-#   |     |  _ \  __ _| |_ __ _ ___ _ __ ___|  _ \ _ __ ___   __ _         |
-#   |     | | | |/ _` | __/ _` / __| '__/ __| |_) | '__/ _ \ / _` |        |
-#   |     | |_| | (_| | || (_| \__ \ | | (__|  __/| | | (_) | (_| |_       |
-#   |     |____/ \__,_|\__\__,_|___/_|  \___|_|   |_|  \___/ \__, (_)      |
-#   |                                                        |___/         |
-#   +----------------------------------------------------------------------+
-#   | Fetching agent data from program calls instead of an agent           |
-#   '----------------------------------------------------------------------'
-
 
 class ProgramDataSource(AgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""

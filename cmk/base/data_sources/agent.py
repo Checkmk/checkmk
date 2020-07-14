@@ -387,11 +387,6 @@ class Parser:
         )
 
 
-# Abstract methods:
-#
-# def _execute(self):
-# def id(self):
-# def describe(self):
 class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentSections,
                                     AgentHostSections],
                       metaclass=abc.ABCMeta):

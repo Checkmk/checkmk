@@ -122,17 +122,6 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=ABCHostSections)
 
 
-# Abstract methods:
-#
-# def _execute(self):
-# def _empty_raw_data(self):
-# def _empty_host_sections(self):
-# def _from_cache_file(self, raw_data):
-# def _to_cache_file(self, raw_data):
-# def _convert_to_sections(self, raw_data):
-# def _cpu_tracking_id(self):
-# def id(self):
-# def describe(self):
 class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                             BoundedAbstractPersistedSections, BoundedAbstractHostSections],
                     metaclass=abc.ABCMeta):

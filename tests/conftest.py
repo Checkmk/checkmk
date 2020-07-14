@@ -15,13 +15,13 @@ from pathlib import Path
 import pytest  # type: ignore[import]
 from _pytest.doctest import DoctestItem
 
-import testlib
-
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
     "testlib",  #
     "unit.checks.checktestlib",  #
     "unit.checks.generictests.run")
+
+import testlib
 
 #TODO Hack: Exclude cee tests in cre repo
 if not Path(testlib.utils.cmc_path()).exists():

@@ -759,6 +759,7 @@ check_metrics["check_mk-3par_capacity"] = df_translation
 check_metrics["check_mk-3par_volumes"] = df_translation
 check_metrics["check_mk-storeonce_clusterinfo.space"] = df_translation
 check_metrics["check_mk-storeonce_servicesets.capacity"] = df_translation
+check_metrics["check_mk-storeonce4x_appliances.storage"] = df_translation
 check_metrics["check_mk-numble_volumes"] = df_translation
 check_metrics["check_mk-zpool"] = df_translation
 check_metrics["check_mk-vnx_quotas"] = df_translation

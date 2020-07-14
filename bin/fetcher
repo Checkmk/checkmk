@@ -30,7 +30,7 @@ class ArgumentParser(argparse.ArgumentParser):
         """fetcher output is always protocol compatible, even when arguments are bad"""
 
         sys.stdout.write(
-            controller.make_failure_answer("\n" + message + '\n' + self.format_help(), "main"))
+            controller.make_failure_answer("\n" + message + '\n' + self.format_help(), hint="main"))
         self.exit(21)
 
 
@@ -70,7 +70,7 @@ def main() -> int:
         result = create_fetcher_crash_dump(serial=serial, host=host)
 
         # reporting to check
-        sys.stdout.write(controller.make_failure_answer(result, "main"))
+        sys.stdout.write(controller.make_failure_answer(result, hint="main"))
         return 15
 
 

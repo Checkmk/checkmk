@@ -317,8 +317,11 @@ def _get_sorted_service_list(
             service for service, dependencies in unresolved if dependencies <= resolved_descriptions
         ]
         if not newly_resolved:
+            problems = [
+                "%r (%s / %s)" % (s.description, s.check_plugin_name, s.item) for s, _ in unresolved
+            ]
             raise MKGeneralException("Cyclic service dependency of host %s. Problematic are: %s" %
-                                     (hostname, ",".join("%r" % s for s, _ in unresolved)))
+                                     (hostname, ", ".join(problems)))
 
         unresolved = [(s, d) for s, d in unresolved if s not in newly_resolved]
         resolved.extend(newly_resolved)

@@ -6,6 +6,8 @@
 
 # pylint: disable=protected-access
 
+import re
+
 import pytest  # type: ignore[import]
 from testlib import CheckManager
 from testlib.base import Scenario
@@ -346,5 +348,9 @@ def test_get_sorted_check_table_cyclic(monkeypatch, service_list):
             "description D": ["description A"],
         }.get(descr, []))
 
-    with pytest.raises(MKGeneralException):
-        _ = check_table._get_sorted_service_list("", True, None, True)
+    with pytest.raises(MKGeneralException,
+                       match=re.escape(
+                           "Cyclic service dependency of host MyHost. Problematic are:"
+                           " 'description A' (plugin A / item), 'description B' (plugin B / item),"
+                           " 'description D' (plugin D / item)")):
+        _ = check_table._get_sorted_service_list("MyHost", True, None, True)

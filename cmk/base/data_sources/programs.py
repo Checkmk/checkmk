@@ -24,7 +24,7 @@ from cmk.base.exceptions import MKAgentError
 from .agent import AgentDataSource
 
 
-class ProgramDataSource(AgentDataSource):
+class ABCProgramDataSource(AgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
     @property
     @abc.abstractmethod
@@ -59,7 +59,7 @@ class ProgramDataSource(AgentDataSource):
         return "\n".join(response)
 
 
-class DSProgramDataSource(ProgramDataSource):
+class DSProgramDataSource(ABCProgramDataSource):
     def __init__(
         self,
         hostname: HostName,
@@ -114,7 +114,7 @@ class DSProgramDataSource(ProgramDataSource):
         return ensure_str(core_config.replace_macros(cmd, macros))
 
 
-class SpecialAgentDataSource(ProgramDataSource):
+class SpecialAgentDataSource(ABCProgramDataSource):
     def __init__(
         self,
         hostname: HostName,

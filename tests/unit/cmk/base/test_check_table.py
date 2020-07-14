@@ -308,7 +308,7 @@ def test_get_sorted_check_table_cmc(monkeypatch, service_list):
                         lambda *a, **kw: {s.id(): s for s in service_list})
 
     # all arguments are ignored in test
-    sorted_service_list = check_table._get_sorted_check_table("", True, None, True)
+    sorted_service_list = check_table._get_sorted_service_list("", True, None, True)
     assert sorted_service_list == sorted(service_list, key=lambda s: s.description)
 
 
@@ -324,7 +324,7 @@ def test_get_sorted_check_table_no_cmc(monkeypatch, service_list):
         }.get(descr, []))
 
     # all arguments are ignored in test
-    sorted_service_list = check_table._get_sorted_check_table("", True, None, True)
+    sorted_service_list = check_table._get_sorted_service_list("", True, None, True)
     assert [s.description for s in sorted_service_list] == [
         "description C",  #
         "description E",  # no deps, alphabetical order
@@ -347,4 +347,4 @@ def test_get_sorted_check_table_cyclic(monkeypatch, service_list):
         }.get(descr, []))
 
     with pytest.raises(MKGeneralException):
-        _ = check_table._get_sorted_check_table("", True, None, True)
+        _ = check_table._get_sorted_service_list("", True, None, True)

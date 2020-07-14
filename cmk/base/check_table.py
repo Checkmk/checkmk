@@ -232,10 +232,12 @@ def get_precompiled_check_table(hostname: str,
          During check execution will update the check parameters once more with
          checking.legacy_determine_check_params() right before execution the check.
     """
-    host_checks = _get_sorted_check_table(hostname,
-                                          remove_duplicates,
-                                          filter_mode=filter_mode,
-                                          skip_ignored=skip_ignored)
+    host_checks = _get_sorted_service_list(
+        hostname,
+        remove_duplicates,
+        filter_mode=filter_mode,
+        skip_ignored=skip_ignored,
+    )
     services: List[Service] = []
     for service in host_checks:
         # make these globals available to the precompile function
@@ -287,44 +289,38 @@ def get_needed_check_names(hostname: HostName,
     }
 
 
-# TODO: Clean this up!
-def _get_sorted_check_table(hostname: HostName,
-                            remove_duplicates: bool = False,
-                            filter_mode: Optional[str] = None,
-                            skip_ignored: bool = True) -> List[Service]:
-    # Convert from dictionary into simple tuple list. Then sort it according to
-    # the service dependencies.
-    # TODO: Use the Service objects from get_check_table once it returns these objects
-    is_cmc = config.is_cmc()
-    unsorted = [(service,
-                 [] if is_cmc else config.service_depends_on(hostname, service.description))
-                for service in get_check_table(hostname,
-                                               remove_duplicates=remove_duplicates,
-                                               filter_mode=filter_mode,
-                                               skip_ignored=skip_ignored).values()]
+def _get_sorted_service_list(
+    hostname: HostName,
+    remove_duplicates: bool = False,
+    filter_mode: Optional[str] = None,
+    skip_ignored: bool = True,
+) -> List[Service]:
 
-    unsorted.sort(key=lambda x: x[0].description)
+    sorted_services_unresolved = sorted(
+        get_check_table(hostname,
+                        remove_duplicates=remove_duplicates,
+                        filter_mode=filter_mode,
+                        skip_ignored=skip_ignored).values(),
+        key=lambda service: service.description,
+    )
 
-    ordered: List[Service] = []
-    while len(unsorted) > 0:
-        unsorted_descrs = {entry[0].description for entry in unsorted}
-        left = []
-        at_least_one_hit = False
-        for check in unsorted:
-            deps_fulfilled = True
-            for dep in check[1]:  # dependencies
-                if dep in unsorted_descrs:
-                    deps_fulfilled = False
-                    break
-            if deps_fulfilled:
-                ordered.append(check[0])
-                at_least_one_hit = True
-            else:
-                left.append(check)
-        if len(left) == 0:
-            break
-        if not at_least_one_hit:
+    if config.is_cmc():
+        return sorted_services_unresolved
+
+    unresolved = [(service, set(config.service_depends_on(hostname, service.description)))
+                  for service in sorted_services_unresolved]
+
+    resolved: List[Service] = []
+    while unresolved:
+        resolved_descriptions = {service.description for service in resolved}
+        newly_resolved = [
+            service for service, dependencies in unresolved if dependencies <= resolved_descriptions
+        ]
+        if not newly_resolved:
             raise MKGeneralException("Cyclic service dependency of host %s. Problematic are: %s" %
-                                     (hostname, ",".join(unsorted_descrs)))
-        unsorted = left
-    return ordered
+                                     (hostname, ",".join("%r" % s for s, _ in unresolved)))
+
+        unresolved = [(s, d) for s, d in unresolved if s not in newly_resolved]
+        resolved.extend(newly_resolved)
+
+    return resolved

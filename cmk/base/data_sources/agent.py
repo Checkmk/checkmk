@@ -403,9 +403,18 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         selected_raw_section_names: Optional[Set[SectionName]] = None,
+        *,
+        id_: str,
+        cpu_tracking_id: str,
         main_data_source: bool = False,
     ) -> None:
-        super(AgentDataSource, self).__init__(hostname, ipaddress, selected_raw_section_names)
+        super(AgentDataSource, self).__init__(
+            hostname,
+            ipaddress,
+            selected_raw_section_names,
+            id_=id_,
+            cpu_tracking_id=cpu_tracking_id,
+        )
         self._is_main_agent_data_source = main_data_source
         """Tell the data source that it's the main agent based data source
 
@@ -415,9 +424,6 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         directories.
         """
         # TODO: We should cleanup these old directories one day. Then we can remove this special case
-
-    def _cpu_tracking_id(self) -> str:
-        return "agent"
 
     def _cache_dir(self) -> str:
         # The main agent has another cache directory to be compatible with older Check_MK

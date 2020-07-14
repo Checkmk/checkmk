@@ -36,12 +36,10 @@ class TCPDataSource(AgentDataSource):
             selected_raw_section_names=None if selected_raw_sections is None else
             {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
             main_data_source=main_data_source,
-        )
+            id_="agent",
+            cpu_tracking_id="agent")
         self._port: Optional[int] = None
         self._timeout: Optional[float] = None
-
-    def id(self) -> str:
-        return "agent"
 
     @property
     def port(self) -> int:

@@ -40,13 +40,12 @@ class PiggyBackDataSource(AgentDataSource):
             None if selected_raw_sections is None else
             {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
             main_data_source=main_data_source,
+            id_="piggyback",
+            cpu_tracking_id="agent",
         )
         self._summary: Optional[ServiceCheckResult] = None
         self._time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings(
             piggybacked_hostname=self.hostname)
-
-    def id(self) -> str:
-        return "piggyback"
 
     def describe(self) -> str:
         path = os.path.join(tmp_dir, "piggyback", self.hostname)

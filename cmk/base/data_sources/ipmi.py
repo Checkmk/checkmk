@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import cast, Dict, Optional
+from typing import cast, Dict, Final, Optional
 
 from cmk.utils.type_defs import (
     HostAddress,
@@ -43,14 +43,11 @@ class IPMIManagementBoardDataSource(AgentDataSource):
             selected_raw_section_names=None
             if selected_raw_sections is None else self._raw_sections,
             main_data_source=main_data_source,
+            id_="mgmt_ipmi",
+            cpu_tracking_id="mgmt_ipmi",
         )
         self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
-
-    def id(self) -> str:
-        return "mgmt_ipmi"
-
-    def title(self) -> str:
-        return "Management board - IPMI"
+        self.title: Final[str] = "Management board - IPMI"
 
     def describe(self) -> str:
         items = []
@@ -58,10 +55,7 @@ class IPMIManagementBoardDataSource(AgentDataSource):
             items.append("Address: %s" % self.ipaddress)
         if self._credentials:
             items.append("User: %s" % self._credentials["username"])
-        return "%s (%s)" % (self.title(), ", ".join(items))
-
-    def _cpu_tracking_id(self) -> str:
-        return self.id()
+        return "%s (%s)" % (self.title, ", ".join(items))
 
     def _execute(self) -> RawAgentData:
         if not self._credentials:

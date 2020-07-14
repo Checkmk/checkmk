@@ -16,6 +16,6 @@ def test_attribute_defaults(monkeypatch, ipaddress):
     Scenario().add_host(hostname).apply(monkeypatch)
     source = PiggyBackDataSource(hostname, ipaddress)
 
-    assert source.id() == "piggyback"
+    assert source.id == "piggyback"
     assert source.describe().startswith("Process piggyback data from")
     assert source._summary_result(False) == (0, "", [])

@@ -7,7 +7,7 @@
 import abc
 import ast
 import time
-from typing import cast, Dict, Iterable, List, Optional, Set
+from typing import cast, Dict, Final, Iterable, List, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -110,12 +110,18 @@ class SNMPDataSource(ABCSNMPDataSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
+        *,
+        id_: Optional[str] = None,
+        cpu_tracking_id: Optional[str] = None,
+        title: Optional[str] = None,
     ) -> None:
         super(SNMPDataSource, self).__init__(
             hostname,
             ipaddress,
             None if selected_raw_sections is None else
             {s.name for s in selected_raw_sections.values() if isinstance(s, SNMPSectionPlugin)},
+            id_="snmp" if id_ is None else id_,
+            cpu_tracking_id="snmp" if cpu_tracking_id is None else cpu_tracking_id,
         )
         self._detector = CachedSNMPDetector()
         self._do_snmp_scan = False
@@ -123,15 +129,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
         self._fetched_raw_section_names: Set[SectionName] = set()
-
-    def id(self) -> str:
-        return "snmp"
-
-    def title(self) -> str:
-        return "SNMP"
-
-    def _cpu_tracking_id(self) -> str:
-        return "snmp"
+        self.title: Final[str] = "SNMP" if title is None else title
 
     @property
     def _snmp_config(self) -> SNMPHostConfig:
@@ -164,7 +162,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             bulk = "no"
 
         return "%s (%s, Bulk walk: %s, Port: %d, Inline: %s)" % \
-               (self.title(), credentials_text, bulk, snmp_config.port, inline)
+               (self.title, credentials_text, bulk, snmp_config.port, inline)
 
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         return 0, "Success", []
@@ -310,15 +308,15 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
         ipaddress: Optional[HostAddress],
         selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
     ) -> None:
-        super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress,
-                                                            selected_raw_sections)
-        self._credentials = cast(SNMPCredentials, self._host_config.management_credentials)
-
-    def id(self) -> str:
-        return "mgmt_snmp"
-
-    def title(self) -> str:
-        return "Management board - SNMP"
+        super(SNMPManagementBoardDataSource, self).__init__(
+            hostname,
+            ipaddress,
+            selected_raw_sections,
+            id_="mgmt_snmp",
+            cpu_tracking_id="snmp",
+            title="Management board - SNMP",
+        )
+        self._credentials: Final = cast(SNMPCredentials, self._host_config.management_credentials)
 
     @property
     def _snmp_config(self) -> SNMPHostConfig:

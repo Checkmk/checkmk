@@ -63,10 +63,10 @@ class TestDSProgramDataSource:
         Scenario().add_host(hostname).apply(monkeypatch)
         source = DSProgramDataSource(hostname, ipaddress, template)
 
-        assert source.id() == "agent"
+        assert source.id == "agent"
         assert source.name() == ""
         # ProgramDataSource
-        assert source._cpu_tracking_id() == "ds"
+        assert source._cpu_tracking_id == "ds"
         assert source.source_cmdline == ""
         assert source.source_stdin is None
         assert source.describe() == "Program: "
@@ -93,9 +93,9 @@ class TestSpecialAgentDataSource:
         Scenario().add_host(hostname).apply(monkeypatch)
         source = SpecialAgentDataSource(hostname, ipaddress, the_id, params)
 
-        assert source.id() == "special_%s" % the_id
+        assert source.id == "special_%s" % the_id
         # ProgramDataSource
-        assert source._cpu_tracking_id() == "ds"
+        assert source._cpu_tracking_id == "ds"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_unconfigured_command_line_raise_KeyError(self, monkeypatch, ipaddress):

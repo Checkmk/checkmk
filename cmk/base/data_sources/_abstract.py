@@ -151,6 +151,9 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         selected_raw_section_names: Optional[Set[SectionName]] = None,
+        *,
+        id_: str,
+        cpu_tracking_id: str,
     ) -> None:
         """Initialize the abstract base class
 
@@ -161,12 +164,14 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             section that is not listed here *may* be omitted.
         """
         super(ABCDataSource, self).__init__()
-        self.hostname: Final = hostname
-        self.ipaddress: Final = ipaddress
+        self.hostname: Final[HostName] = hostname
+        self.ipaddress: Final[Optional[HostAddress]] = ipaddress
+        self.id: Final[str] = id_
+        self._cpu_tracking_id: Final[str] = cpu_tracking_id
         self._max_cachefile_age: Optional[int] = None
         self._selected_raw_section_names = selected_raw_section_names
 
-        self._logger = logging.getLogger("cmk.base.data_source.%s" % self.id())
+        self._logger = logging.getLogger("cmk.base.data_source.%s" % self.id)
         self._setup_logger()
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
@@ -189,7 +194,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         """Add the source log prefix to the class logger"""
         self._logger.propagate = False
         handler = logging.StreamHandler(stream=sys.stdout)
-        fmt = " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id(), tty.bold, tty.normal)
+        fmt = " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id, tty.bold, tty.normal)
         handler.setFormatter(logging.Formatter(fmt))
         del self._logger.handlers[:]  # Remove all previously existing handlers
         self._logger.addHandler(handler)
@@ -343,27 +348,17 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return os.path.join(self._cache_dir(), self.hostname)
 
     def _cache_dir(self) -> str:
-        return os.path.join(cmk.utils.paths.data_source_cache_dir, self.id())
+        return os.path.join(cmk.utils.paths.data_source_cache_dir, self.id)
 
     def _persisted_sections_file_path(self) -> str:
         return os.path.join(self._persisted_sections_dir(), self.hostname)
 
     def _persisted_sections_dir(self) -> str:
-        return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
+        return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id)
 
     def is_relevant_raw_section(self, raw_section_name: SectionName) -> bool:
         return (self._selected_raw_section_names is None or
                 raw_section_name in self._selected_raw_section_names)
-
-    @abc.abstractmethod
-    def _cpu_tracking_id(self) -> str:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def id(self) -> str:
-        """Return a unique identifier for this data source type
-        It is used to identify the different data source types."""
-        raise NotImplementedError()
 
     def name(self) -> str:
         """Return a unique (per host) textual identification of the data source
@@ -375,7 +370,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         It is only used during execution of Check_MK and not persisted. This means
         the algorithm can be changed at any time.
         """
-        return ":".join([self.id(), self.hostname, self.ipaddress or ""])
+        return ":".join([self.id, self.hostname, self.ipaddress or ""])
 
     @abc.abstractmethod
     def describe(self) -> str:

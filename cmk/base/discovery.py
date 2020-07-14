@@ -710,7 +710,7 @@ def check_discovery(
         # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
         if source_state != 0:
             status = max(status, source_state)
-            infotexts.append(u"[%s] %s" % (source.id(), source_output))
+            infotexts.append(u"[%s] %s" % (source.id, source_output))
 
     return status, infotexts, long_infotexts, perfdata
 

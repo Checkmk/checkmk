@@ -183,7 +183,7 @@ def do_check(
             source_state, source_output, source_perfdata = source.get_summary_result_for_checking()
             if source_output != "":
                 status = max(status, source_state)
-                infotexts.append("[%s] %s" % (source.id(), source_output))
+                infotexts.append("[%s] %s" % (source.id, source_output))
                 perfdata.extend([_convert_perf_data(p) for p in source_perfdata])
 
         if plugins_missing_data:

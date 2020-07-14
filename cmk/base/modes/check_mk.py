@@ -397,7 +397,7 @@ def mode_dump_agent(hostname: HostName) -> None:
 
             source_state, source_output, _source_perfdata = source.get_summary_result_for_checking()
             if source_state != 0:
-                console.error("ERROR [%s]: %s\n", source.id(), ensure_str(source_output))
+                console.error("ERROR [%s]: %s\n", source.id, ensure_str(source_output))
                 has_errors = True
 
         out.output(ensure_str(b"".join(output), errors="surrogateescape"))

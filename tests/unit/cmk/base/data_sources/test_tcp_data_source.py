@@ -44,7 +44,7 @@ def test_attribute_defaults(monkeypatch, ipaddress):
 
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
-    assert source.id() == "agent"
+    assert source.id == "agent"
     assert source.port == 6556
     assert source.timeout == 5.0
     # From the base class

@@ -180,12 +180,12 @@ def test_attribute_defaults(monkeypatch, ipaddress):
 
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
-    assert source.id() == "snmp"
-    assert source.title() == "SNMP"
-    assert source._cpu_tracking_id() == "snmp"
+    assert source.id == "snmp"
+    assert source.title == "SNMP"
+    assert source._cpu_tracking_id == "snmp"
     assert source.get_do_snmp_scan() is False
     # From the base class
-    assert source.name() == ("snmp:%s:%s" % (hostname, ipaddress if ipaddress else ""))
+    assert source.name() == "snmp:%s:%s" % (hostname, ipaddress if ipaddress else "")
     assert source.is_agent_cache_disabled() is False
     assert source.get_may_use_cache_file() is False
     assert source.exception() is None

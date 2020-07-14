@@ -171,7 +171,7 @@ def do_inv_check(
             # "Do hardware/software Inventory".
             # These information and source states are handled by the "Check_MK" service
             status = max(_inv_fail_status, status)
-            infotexts.append("[%s] %s" % (source.id(), source_output))
+            infotexts.append("[%s] %s" % (source.id, source_output))
 
     return status, infotexts, long_infotexts, perfdata
 
@@ -189,7 +189,7 @@ def _all_sources_fail(
         return False
 
     exceptions_by_source = {
-        source.id(): source.exception()
+        source.id: source.exception()
         for source in data_sources.make_sources(host_config, ipaddress)
     }
     if "piggyback" in exceptions_by_source and not len(exceptions_by_source) == 1\

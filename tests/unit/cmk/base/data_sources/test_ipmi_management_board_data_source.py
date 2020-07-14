@@ -26,9 +26,9 @@ def test_attribute_defaults(monkeypatch):
     assert source.hostname == hostname
     # Address comes from management board.
     assert source.ipaddress is None
-    assert source.id() == "mgmt_ipmi"
-    assert source.title() == "Management board - IPMI"
-    assert source._cpu_tracking_id() == source.id()
+    assert source.id == "mgmt_ipmi"
+    assert source.title == "Management board - IPMI"
+    assert source._cpu_tracking_id == source.id
     assert source._summary_result(True) == (0, "Version: unknown", [])
     assert source._get_ipmi_version() == "unknown"
 

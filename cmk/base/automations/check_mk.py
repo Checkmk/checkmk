@@ -1566,7 +1566,7 @@ class AutomationGetAgentOutput(Automation):
                     )
                     if source_state != 0:
                         success = False
-                        output += "[%s] %s\n" % (source.id(), source_output)
+                        output += "[%s] %s\n" % (source.id, source_output)
             else:
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)

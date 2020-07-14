@@ -53,7 +53,7 @@ class SourceBuilder:
     def sources(self) -> DataSources:
         # Always execute piggyback at the end
         return sorted(self._sources.values(),
-                      key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
+                      key=lambda s: (isinstance(s, PiggyBackDataSource), s.id))
 
     def _initialize_data_sources(self,
                                  selected_raw_sections: Optional[SelectedRawSections]) -> None:
@@ -138,7 +138,7 @@ class SourceBuilder:
             self._add_source(source)
 
     def _add_source(self, source: ABCDataSource) -> None:
-        self._sources[source.id()] = source
+        self._sources[source.id] = source
 
     def _get_agent_data_source(
         self,

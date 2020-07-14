@@ -38,9 +38,6 @@ class ABCProgramDataSource(AgentDataSource):
         """Return the standard in of the source, or None."""
         raise NotImplementedError()
 
-    def _cpu_tracking_id(self) -> str:
-        return "ds"
-
     def _execute(self) -> RawAgentData:
         self._logger.debug("Calling external program %r" % (self.source_cmdline))
         with ProgramDataFetcher(
@@ -67,6 +64,8 @@ class DSProgramDataSource(ABCProgramDataSource):
         command_template: str,
         selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
         main_data_source: bool = False,
+        id_="agent",
+        cpu_tracking_id="ds",
     ) -> None:
         super(DSProgramDataSource, self).__init__(
             hostname,
@@ -74,11 +73,10 @@ class DSProgramDataSource(ABCProgramDataSource):
             selected_raw_section_names=None if selected_raw_sections is None else
             {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
             main_data_source=main_data_source,
+            id_="agent",
+            cpu_tracking_id="ds",
         )
         self._command_template = command_template
-
-    def id(self) -> str:
-        return "agent"
 
     def name(self) -> str:
         """Return a unique (per host) textual identification of the data source"""
@@ -124,18 +122,17 @@ class SpecialAgentDataSource(ABCProgramDataSource):
         selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
         main_data_source: bool = False,
     ) -> None:
-        self._special_agent_id = special_agent_id
         super(SpecialAgentDataSource, self).__init__(
             hostname,
             ipaddress,
             selected_raw_section_names=None if selected_raw_sections is None else
             {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
             main_data_source=main_data_source,
+            id_="special_%s" % special_agent_id,
+            cpu_tracking_id="ds",
         )
+        self._special_agent_id = special_agent_id
         self._params = params
-
-    def id(self) -> str:
-        return "special_%s" % self._special_agent_id
 
     @property
     def special_agent_plugin_file_name(self) -> str:

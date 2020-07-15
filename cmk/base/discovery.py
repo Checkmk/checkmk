@@ -496,12 +496,12 @@ def discover_on_host(
     use_caches: bool,
     service_filters: ServiceFilters,
     on_error: str = "ignore",
-) -> Tuple[Dict[str, int], Optional[str]]:
+) -> Tuple[Counter[str], Optional[str]]:
 
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
 
     hostname = host_config.hostname
-    counts = _empty_counts()
+    counts = _empty_counts()  # TODO: see if this can be replaced by counts = Counter()
 
     if hostname not in config_cache.all_active_hosts():
         return counts, ""
@@ -566,18 +566,18 @@ def discover_on_host(
     return counts, err
 
 
-def _empty_counts() -> Dict[str, int]:
-    return {
-        "self_new": 0,
-        "self_removed": 0,
-        "self_kept": 0,
-        "self_total": 0,
-        "self_new_host_labels": 0,
-        "self_total_host_labels": 0,
-        "clustered_new": 0,
-        "clustered_old": 0,
-        "clustered_vanished": 0,
-    }
+def _empty_counts() -> Counter[str]:
+    return Counter(
+        self_new=0,
+        self_removed=0,
+        self_kept=0,
+        self_total=0,
+        self_new_host_labels=0,
+        self_total_host_labels=0,
+        clustered_new=0,
+        clustered_old=0,
+        clustered_vanished=0,
+    )
 
 
 def _get_new_services(
@@ -739,14 +739,11 @@ def _check_service_table(
         ("vanished", "vanished", "severity_vanished", 0, service_filters.vanished),
     ]:
 
-        affected_check_plugin_names: Dict[str, int] = {}
-        count = 0
+        affected_check_plugin_names: Counter[str] = Counter()
         unfiltered = False
 
         for check_source, discovered_service in services.values():
             if check_source == check_state:
-                count += 1
-                affected_check_plugin_names.setdefault(discovered_service.check_plugin_name, 0)
                 affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
                 if not unfiltered and service_filter(hostname, discovered_service):
@@ -763,8 +760,12 @@ def _check_service_table(
             info = ", ".join(["%s:%d" % e for e in affected_check_plugin_names.items()])
             st = params.get(params_key, default_state)
             status = cmk.base.utils.worst_service_state(status, st)
-            infotexts.append(u"%d %s services (%s)%s" %
-                             (count, title, info, check_api_utils.state_markers[st]))
+            infotexts.append(u"%d %s services (%s)%s" % (
+                sum(affected_check_plugin_names.values()),
+                title,
+                info,
+                check_api_utils.state_markers[st],
+            ))
 
             if (unfiltered and
                 ((check_state == "new" and rediscovery_mode in ("new", "fixall", "refresh")) or

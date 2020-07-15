@@ -17,50 +17,39 @@ from cmk.base.data_sources.programs import (
 )
 from testlib.base import Scenario
 
-info_func_result_and_expected: List[Tuple[SpecialAgentInfoFunctionResult,
-                                          Tuple[str, Optional[str]]]] = [
-                                              (
-                                                  "arg0 arg1",
-                                                  ("arg0 arg1", None),
-                                              ),
-                                              (
-                                                  ["arg0", "arg1"],
-                                                  ("'arg0' 'arg1'", None),
-                                              ),
-                                              (
-                                                  SpecialAgentConfiguration("arg0", None),
-                                                  ("arg0", None),
-                                              ),
-                                              (
-                                                  SpecialAgentConfiguration("arg0 arg1", None),
-                                                  ("arg0 arg1", None),
-                                              ),
-                                              (
-                                                  SpecialAgentConfiguration(["list0", "list1"],
-                                                                            None),
-                                                  ("'list0' 'list1'", None),
-                                              ),
-                                              (
-                                                  SpecialAgentConfiguration(
-                                                      "arg0 arg1", "stdin_blob"),
-                                                  ("arg0 arg1", "stdin_blob"),
-                                              ),
-                                              (
-                                                  SpecialAgentConfiguration(["list0", "list1"],
-                                                                            "stdin_blob"),
-                                                  ("'list0' 'list1'", "stdin_blob"),
-                                              ),
-                                          ]
+info_func_result_and_expected: List[  #
+    Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]  #
+] = [  #
+    ("arg0 arg1", ("arg0 arg1", None)),
+    (["arg0", "arg1"], ("'arg0' 'arg1'", None)),
+    (SpecialAgentConfiguration("arg0", None), ("arg0", None)),
+    (SpecialAgentConfiguration("arg0 arg1", None), ("arg0 arg1", None)),
+    (SpecialAgentConfiguration(["list0", "list1"], None), ("'list0' 'list1'", None)),
+    (
+        SpecialAgentConfiguration("arg0 arg1", "stdin_blob"),
+        ("arg0 arg1", "stdin_blob"),
+    ),
+    (
+        SpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
+        ("'list0' 'list1'", "stdin_blob"),
+    ),
+]
 
 
 @pytest.mark.parametrize("info_func_result,expected", info_func_result_and_expected)
 def test_command_line_and_stdin(monkeypatch, info_func_result, expected):
     Scenario().add_host("testhost").apply(monkeypatch)
     special_agent_id = "bi"
-    agent_prefix = "%s/special/agent_%s " % (cmk.utils.paths.agents_dir, special_agent_id)
+    agent_prefix = "%s/special/agent_%s " % (
+        cmk.utils.paths.agents_dir,
+        special_agent_id,
+    )
     ds = SpecialAgentDataSource("testhost", "127.0.0.1", special_agent_id, {})
-    monkeypatch.setattr(config, "special_agent_info",
-                        {special_agent_id: lambda a, b, c: info_func_result})
+    monkeypatch.setattr(
+        config,
+        "special_agent_info",
+        {special_agent_id: lambda a, b, c: info_func_result},
+    )
 
     assert ds.source_cmdline == agent_prefix + expected[0]
     assert ds.source_stdin == expected[1]
@@ -90,7 +79,9 @@ class TestDSProgramDataSource:
         source = DSProgramDataSource(hostname, ipaddress, template)
 
         assert source.source_cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
-            ipaddress if ipaddress is not None else "", hostname)
+            ipaddress if ipaddress is not None else "",
+            hostname,
+        )
 
 
 class TestSpecialAgentDataSource:

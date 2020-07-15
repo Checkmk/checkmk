@@ -15,6 +15,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.htmllib as htmllib
+from cmk.gui.watolib.utils import has_agent_bakery
 
 from cmk.gui.http import Request
 from cmk.gui.globals import AppContext, RequestContext
@@ -38,6 +39,19 @@ def test_env(mocked_user, load_config, load_plugins):
     # Cleanup WATO folders created by the test
     shutil.rmtree(hosts_and_folders.Folder.root_folder().filesystem_path(), ignore_errors=True)
     os.makedirs(hosts_and_folders.Folder.root_folder().filesystem_path())
+
+
+@pytest.fixture(autouse=True)
+def fake_start_bake_agents(monkeypatch):
+    if not has_agent_bakery():
+        return
+
+    import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery
+
+    def _fake_start_bake_agents(host_names, signing_credentials):
+        pass
+
+    monkeypatch.setattr(agent_bakery, "start_bake_agents", _fake_start_bake_agents)
 
 
 @pytest.mark.parametrize("attributes,expected_tags", [

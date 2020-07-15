@@ -11,13 +11,10 @@ import json
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Type, Union, NamedTuple
 
-from six import ensure_str
-
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
 import cmk.gui.i18n
-import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -353,6 +350,8 @@ class SidebarRenderer:
             html.div("", id_="check_mk_sidebar")
             return
 
+        user_config = UserSidebarConfig(config.user, config.sidebar)
+
         html.open_div(id_="check_mk_sidebar")
         self._show_sidebar_head()
         html.close_div()
@@ -362,15 +361,18 @@ class SidebarRenderer:
             class_=["left" if config.user.get_attribute("ui_snapinbar_position") else None])
 
         self._show_shortcut_bar()
-        self._show_snapin_bar()
+        self._show_snapin_bar(user_config)
 
         html.close_div()
 
-    def _show_snapin_bar(self) -> None:
+        if user_config.folded:
+            html.final_javascript("cmk.sidebar.fold_sidebar();")
+
+    def _show_snapin_bar(self, user_config: UserSidebarConfig) -> None:
         html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None,
                       id_="side_content")
 
-        refresh_snapins, restart_snapins, static_snapins = self._show_snapins()
+        refresh_snapins, restart_snapins, static_snapins = self._show_snapins(user_config)
         self._show_add_snapin_button()
 
         html.close_div()
@@ -394,8 +396,7 @@ class SidebarRenderer:
             html.close_a()
         html.close_div()
 
-    def _show_snapins(self) -> Tuple[List, List, List]:
-        user_config = UserSidebarConfig(config.user, config.sidebar)
+    def _show_snapins(self, user_config: UserSidebarConfig) -> Tuple[List, List, List]:
         refresh_snapins = []
         restart_snapins = []
         static_snapins = []
@@ -577,59 +578,33 @@ class SidebarRenderer:
             return "Managed"
         return "Raw"
 
-    def _sidebar_foot(self, user_config):
-        html.open_div(id_="side_footer")
-        if config.user.may("general.configure_sidebar"):
-            html.icon_button("sidebar_add_snapin.py",
-                             _("Add snapin to the sidebar"),
-                             "sidebar_addsnapin",
-                             target="main")
-        # editing the profile is not possible on remote sites which are sync targets
-        # of a central WATO system
-        if config.wato_enabled and \
-           (config.user.may("general.edit_profile") or config.user.may("general.change_password")):
-            html.icon_button("user_profile.py",
-                             _("Edit your personal settings, change your password"),
-                             "sidebar_settings",
-                             target="main")
-        if config.user.may("general.logout") and not config.auth_by_http_header:
-            html.icon_button("logout.py", _("Log out"), "sidebar_logout", target="_top")
+    # TODO: Re-add with new UX?
+    #def _sidebar_foot(self, user_config):
+    #    html.icon_button("return void();",
+    #                     _("You have pending messages."),
+    #                     "sidebar_messages",
+    #                     onclick='cmk.sidebar.read_message()',
+    #                     id_='msg_button',
+    #                     style='display:none')
+    #    html.open_div(style="display:none;", id_="messages")
+    #    self.render_messages()
+    #    html.close_div()
 
-        html.icon_button("return void();",
-                         _("You have pending messages."),
-                         "sidebar_messages",
-                         onclick='cmk.sidebar.read_message()',
-                         id_='msg_button',
-                         style='display:none')
-        html.open_div(style="display:none;", id_="messages")
-        self.render_messages()
-        html.close_div()
-
-        html.open_div(class_=["copyright"])
-        html.write(
-            HTML("&copy; ") +
-            html.render_a("tribe29 GmbH", target="_blank", href="https://checkmk.com"))
-        html.close_div()
-        html.close_div()
-
-        if user_config.folded:
-            html.final_javascript("cmk.sidebar.fold_sidebar();")
-
-    def render_messages(self):
-        for msg in notify.get_gui_messages():
-            if 'gui_hint' in msg['methods']:
-                html.open_div(id_="message-%s" % msg['id'], class_=["popup_msg"])
-                html.a("x",
-                       href="javascript:void(0)",
-                       class_=["close"],
-                       onclick="cmk.sidebar.message_close(\'%s\')" % msg['id'])
-                html.write_text(msg['text'].replace('\n', '<br>\n'))
-                html.close_div()
-            if 'gui_popup' in msg['methods']:
-                html.javascript(
-                    ensure_str(
-                        'alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
-                        (escaping.escape_attribute(msg['text']).replace('\n', '\\n'), msg['id'])))
+    #def render_messages(self):
+    #    for msg in notify.get_gui_messages():
+    #        if 'gui_hint' in msg['methods']:
+    #            html.open_div(id_="message-%s" % msg['id'], class_=["popup_msg"])
+    #            html.a("x",
+    #                   href="javascript:void(0)",
+    #                   class_=["close"],
+    #                   onclick="cmk.sidebar.message_close(\'%s\')" % msg['id'])
+    #            html.write_text(msg['text'].replace('\n', '<br>\n'))
+    #            html.close_div()
+    #        if 'gui_popup' in msg['methods']:
+    #            html.javascript(
+    #                ensure_str(
+    #                    'alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
+    #                    (escaping.escape_attribute(msg['text']).replace('\n', '\\n'), msg['id'])))
 
 
 def _shortcut_menu_items() -> List[ShortcutMenuItem]:
@@ -805,7 +780,9 @@ def move_snapin() -> None:
 
 @cmk.gui.pages.register("sidebar_get_messages")
 def ajax_get_messages():
-    SidebarRenderer().render_messages()
+    # TODO: Readd with new UX?
+    pass
+    #SidebarRenderer().render_messages()
 
 
 @cmk.gui.pages.register("sidebar_message_read")

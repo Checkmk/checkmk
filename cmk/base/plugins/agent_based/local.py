@@ -293,8 +293,8 @@ def _aggregate_worst(
     aggregated_results: Dict[str, Optional[Result]],
 ) -> Generator[Union[Result, Metric], None, None]:
 
-    global_worst_state = state.worst(*(
-        r.state for r in aggregated_results.values() if r is not None))
+    states = (r.state for r in aggregated_results.values() if r is not None)
+    global_worst_state = state.worst(*states)
 
     worst_node = sorted(node for node, result in aggregated_results.items()
                         if result is not None and result.state == global_worst_state)[0]

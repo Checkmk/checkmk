@@ -8,7 +8,7 @@
 import os
 import sys
 import traceback
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 from pathlib import Path
 
 import cmk.utils.debug
@@ -16,8 +16,9 @@ import cmk.utils.paths
 import cmk.utils.encoding
 import cmk.utils.crash_reporting as crash_reporting
 from cmk.utils.type_defs import (
-    HostName,
+    CheckPluginName,
     CheckPluginNameStr,
+    HostName,
     ServiceName,
 )
 
@@ -45,7 +46,7 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
 
 def create_check_crash_dump(
     hostname: HostName,
-    check_plugin_name: CheckPluginNameStr,
+    check_plugin_name: Union[CheckPluginNameStr, CheckPluginName],
     check_plugin_kwargs: Dict[str, Any],
     is_manual_check: bool,
     description: ServiceName,
@@ -60,7 +61,7 @@ def create_check_crash_dump(
     try:
         crash = CheckCrashReport.from_exception_and_context(
             hostname=hostname,
-            check_plugin_name=check_plugin_name,
+            check_plugin_name=str(check_plugin_name),
             check_plugin_kwargs=check_plugin_kwargs,
             is_manual_check=is_manual_check,
             description=description,
@@ -85,7 +86,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
     def from_exception_and_context(
         cls,
         hostname: HostName,
-        check_plugin_name: CheckPluginNameStr,
+        check_plugin_name: str,
         check_plugin_kwargs: Dict[str, Any],
         is_manual_check: bool,
         description: ServiceName,

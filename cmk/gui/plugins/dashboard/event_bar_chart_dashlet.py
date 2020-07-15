@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Type
+from typing import Type
 from livestatus import lqencode
 from cmk.utils.render import date_and_time
 import cmk.gui.sites as sites
@@ -60,44 +60,33 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
               ))])
 
     @classmethod
-    def _get_data(cls, properties, context, return_column_headers=True):
+    def _get_data(cls, properties, context):
         time_range = cls._int_time_range_from_rangespec(properties["time_range"])
-        # TODO KO: check typing
-        c_headers = "ColumnHeaders: on\n" if return_column_headers else ""  # type: Any
         filter_headers, only_sites = get_filter_headers("log", cls.filter_infos(), context)
 
         query = ("GET log\n"
                  "Columns: log_state host_name service_description log_type log_time\n"
-                 "%s"
                  "Filter: class = %d\n"
                  "Filter: log_time >= %f\n"
                  "Filter: log_time <= %f\n"
                  "Filter: log_type ~ %s .*\n"
-                 "%s" % (c_headers, cls.log_class(), time_range[0], time_range[1],
+                 "%s" % (cls.log_class(), time_range[0], time_range[1],
                          lqencode(properties["log_target"].upper()), lqencode(filter_headers)))
 
-        try:
-            if only_sites:
-                sites.live().set_only_sites(only_sites)
-            rows = sites.live().query(query)
-        except MKTimeout:
-            raise
-        except Exception as _e:
-            raise MKGeneralException(_("The query returned no data."))
-        finally:
-            sites.live().set_only_sites(None)
-
-        c_headers = ""
-        if return_column_headers:
-            c_headers = rows.pop(0)
-        return rows, c_headers
+        with sites.only_sites(only_sites):
+            try:
+                return sites.live().query(query)
+            except MKTimeout:
+                raise
+            except Exception as _e:
+                raise MKGeneralException(_("The query returned no data."))
 
     @classmethod
     def _forge_tooltip_and_url(cls, time_frame, properties, context):
         time_range = cls._int_time_range_from_rangespec(properties["time_range"])
-        end_time = min(time_frame["end_time"], time_range[1])
-        from_time_str = date_and_time(time_frame["start_time"])
-        to_time_str = date_and_time(end_time)
+        ending_timestamp = min(time_frame["ending_timestamp"], time_range[1])
+        from_time_str = date_and_time(time_frame["timestamp"])
+        to_time_str = date_and_time(ending_timestamp)
         # TODO: Can this be simplified by passing a list as argument to html.render_table()?
         tooltip = html.render_table(
             html.render_tr(html.render_td(_("From:")) + html.render_td(from_time_str)) +
@@ -105,13 +94,13 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
             html.render_tr(html.render_td("%ss:" % properties["log_target"].capitalize()) +
                 html.render_td(time_frame["value"])))
 
-        args = []  # type: HTTPVariables
+        args: HTTPVariables = []
         # Generic filters
         args.append(("filled_in", "filter"))
         args.append(("view_name", "events"))
-        args.append(("logtime_from", str(time_frame["start_time"])))
+        args.append(("logtime_from", str(time_frame["timestamp"])))
         args.append(("logtime_from_range", "unix"))
-        args.append(("logtime_until", str(end_time)))
+        args.append(("logtime_until", str(ending_timestamp)))
         args.append(("logtime_until_range", "unix"))
         args.append(("logclass%d" % cls.log_class(), "on"))
 
@@ -136,12 +125,11 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
 
 class ABCEventBarChartDashlet(ABCFigureDashlet):
     @classmethod
-    def data_generator(cls):
-        # type: () -> Type[ABCEventBarChartDataGenerator]
+    def data_generator(cls) -> Type[ABCEventBarChartDataGenerator]:
         raise NotImplementedError()
 
     def show(self):
-        args = []  # type: HTTPVariables
+        args: HTTPVariables = []
         args.append(("context", json.dumps(self._dashlet_spec["context"])))
         args.append(
             ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
@@ -150,11 +138,13 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
 
         fetch_url = "ajax_%s_dashlet.py" % self.type_name()
         div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
+
         html.div("", id_=div_id)
         html.javascript(
             """
             let bar_chart_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("timeseries");
             let %(instance_name)s = new bar_chart_class_%(dashlet_id)d(%(div_selector)s);
+            %(instance_name)s.lock_zoom_y = true;
             %(instance_name)s.initialize();
             %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
             %(instance_name)s.scheduler.set_update_interval(%(update)d);
@@ -193,8 +183,7 @@ class NotificationsBarChartDashlet(ABCEventBarChartDashlet):
         return _("Displays a bar chart for host and service notifications.")
 
     @classmethod
-    def data_generator(cls):
-        # type: () -> Type[NotificationsBarChartDataGenerator]
+    def data_generator(cls) -> 'Type[NotificationsBarChartDataGenerator]':
         return NotificationsBarChartDataGenerator
 
 
@@ -246,8 +235,7 @@ class AlertsBarChartDashlet(ABCEventBarChartDashlet):
         return _("Displays a bar chart for host and service alerts.")
 
     @classmethod
-    def data_generator(cls):
-        # type: () -> Type[AlertBarChartDataGenerator]
+    def data_generator(cls) -> 'Type[AlertBarChartDataGenerator]':
         return AlertBarChartDataGenerator
 
 

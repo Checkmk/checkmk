@@ -13,6 +13,7 @@
 
 #include "Column.h"
 #include "IntColumn.h"
+#include "LogEntry.h"
 class MonitoringCore;
 class Row;
 
@@ -25,20 +26,23 @@ class Row;
 
 class ServiceListStateColumn : public IntColumn {
 public:
-    // TODO(sp) Remove the magic arithmetic
     enum class Type {
-        num_ok = 0,
-        num_warn = 1,
-        num_crit = 2,
-        num_unknown = 3,
-        num_pending = 4,
-        worst_state = -2,
-        num_hard_ok = (0 + 64),
-        num_hard_warn = (1 + 64),
-        num_hard_crit = (2 + 64),
-        num_hard_unknown = (3 + 64),
-        worst_hard_state = (-2 + 64),
-        num = -1
+        num,
+        num_pending,
+        num_handled_problems,
+        num_unhandled_problems,
+        //
+        num_ok,
+        num_warn,
+        num_crit,
+        num_unknown,
+        worst_state,
+        //
+        num_hard_ok,
+        num_hard_warn,
+        num_hard_crit,
+        num_hard_unknown,
+        worst_hard_state,
     };
 
     ServiceListStateColumn(const std::string &name,
@@ -65,7 +69,9 @@ private:
     MonitoringCore *_mc;
     const Type _logictype;
 
-    static void update(Type logictype, service *svc, int32_t &result);
+    static void update(Type logictype, ServiceState current_state,
+                       ServiceState last_hard_state, bool has_been_checked,
+                       bool handled, int32_t &result);
 };
 
 #endif  // ServiceListStateColumn_h

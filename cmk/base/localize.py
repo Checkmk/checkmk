@@ -32,41 +32,34 @@ class LocalizeException(MKException):
 domain = 'multisite'
 
 
-def _locale_base():
-    # type: () -> str
+def _locale_base() -> str:
     return str(cmk.utils.paths.local_locale_dir)
 
 
-def _pot_file():
-    # type: () -> str
+def _pot_file() -> str:
     local_pot_file = cmk.utils.paths.local_locale_dir / 'multisite.pot'
     if local_pot_file.exists():
         return str(local_pot_file)
     return _locale_base() + '/multisite.pot'
 
 
-def _builtin_po_file(lang):
-    # type: (str) -> Path
+def _builtin_po_file(lang: str) -> Path:
     return cmk.utils.paths.locale_dir / lang / 'LC_MESSAGES' / ('%s.po' % domain)
 
 
-def _po_file(lang):
-    # type: (str) -> str
+def _po_file(lang: str) -> str:
     return _locale_base() + '/%s/LC_MESSAGES/%s.po' % (lang, domain)
 
 
-def _mo_file(lang):
-    # type: (str) -> str
+def _mo_file(lang: str) -> str:
     return _locale_base() + '/%s/LC_MESSAGES/%s.mo' % (lang, domain)
 
 
-def _alias_file(lang):
-    # type: (str) -> Path
+def _alias_file(lang: str) -> Path:
     return Path(_locale_base(), lang, "alias")
 
 
-def _localize_usage():
-    # type: () -> None
+def _localize_usage() -> None:
     sys.stdout.write("""Usage: check_mk [-v] --localize COMMAND [ARGS]
 
 Available commands are:
@@ -88,8 +81,7 @@ Available commands are:
 """ % _locale_base())
 
 
-def do_localize(args):
-    # type: (List[str]) -> None
+def do_localize(args: List[str]) -> None:
     if len(args) == 0:
         _localize_usage()
         sys.exit(1)
@@ -97,14 +89,14 @@ def do_localize(args):
     command = args[0]
 
     try:
-        lang = args[1]  # type: LanguageName
+        lang: LanguageName = args[1]
     except IndexError:
         raise LocalizeException('No language given')
 
     if not lang:
         raise LocalizeException('No language given')
 
-    alias = None  # type: Optional[str]
+    alias: Optional[str] = None
     if len(args) > 2:
         alias = ensure_str(args[2])
 
@@ -131,8 +123,7 @@ def do_localize(args):
         sys.exit(1)
 
 
-def _write_alias(lang, alias):
-    # type: (LanguageName, Optional[str]) -> None
+def _write_alias(lang: LanguageName, alias: Optional[str]) -> None:
     if not alias:
         return
 
@@ -145,21 +136,18 @@ def _write_alias(lang, alias):
         f.write(alias)
 
 
-def _check_binaries():
-    # type: () -> None
+def _check_binaries() -> None:
     """Are the xgettext utils available?"""
     for b in ['xgettext', 'msgmerge', 'msgfmt']:
         if subprocess.call(['which', b], stdout=open(os.devnull, "wb")) != 0:
             raise LocalizeException('%s binary not found in PATH\n' % b)
 
 
-def _get_languages():
-    # type: () -> List[LanguageName]
+def _get_languages() -> List[LanguageName]:
     return [l for l in os.listdir(_locale_base()) if os.path.isdir(_locale_base() + '/' + l)]
 
 
-def _localize_update_po(lang):
-    # type: (LanguageName) -> None
+def _localize_update_po(lang: LanguageName) -> None:
     """Merge the current .pot file with a given .po file"""
     logger.log(VERBOSE, "Merging translations...")
     if subprocess.call(
@@ -169,8 +157,7 @@ def _localize_update_po(lang):
         logger.info('Success! Output: %s', _po_file(lang))
 
 
-def _localize_init_po(lang):
-    # type: (LanguageName) -> None
+def _localize_init_po(lang: LanguageName) -> None:
     if subprocess.call(
         ['msginit', '-i',
          _pot_file(), '--no-translator', '-l', lang, '-o',
@@ -179,8 +166,7 @@ def _localize_init_po(lang):
         logger.error('Failed!\n')
 
 
-def _localize_sniff():
-    # type: () -> None
+def _localize_sniff() -> None:
     """Dig into the source code and generate a new .pot file"""
     logger.info('Sniffing source code...')
 
@@ -230,8 +216,7 @@ msgstr ""
         logger.info('Success! Output: %s', _pot_file())
 
 
-def _localize_edit(lang):
-    # type: (LanguageName) -> None
+def _localize_edit(lang: LanguageName) -> None:
     _localize_update(lang)
 
     editor = os.getenv("VISUAL", os.getenv("EDITOR", "/usr/bin/vi"))
@@ -244,8 +229,7 @@ def _localize_edit(lang):
         logger.error("Aborted.")
 
 
-def _localize_update(lang):
-    # type: (LanguageName) -> None
+def _localize_update(lang: LanguageName) -> None:
     """Start translating in a new language"""
     po_file = _po_file(lang)
     _initialize_local_po_file(lang)
@@ -259,8 +243,7 @@ def _localize_update(lang):
         _localize_update_po(lang)
 
 
-def _localize_compile(lang):
-    # type: (LanguageName) -> None
+def _localize_compile(lang: LanguageName) -> None:
     """Create a .mo file from the given .po file"""
     if lang not in _get_languages():
         raise LocalizeException('Invalid language given. Available: %s' %
@@ -278,8 +261,7 @@ def _localize_compile(lang):
         logger.info('Success! Output: %s', _mo_file(lang))
 
 
-def _initialize_local_po_file(lang):
-    # type: (LanguageName) -> None
+def _initialize_local_po_file(lang: LanguageName) -> None:
     """Initialize the file in the local hierarchy with the file in the default hierarchy if needed"""
     po_file = _po_file(lang)
 

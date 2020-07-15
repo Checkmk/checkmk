@@ -16,14 +16,19 @@ from cmk.gui.sites import SiteId
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
-from cmk.gui.i18n import _, _u
+import cmk.gui.pagetypes as pagetypes
+from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import Choices
-from cmk.gui.type_defs import RoleName, PermissionName
+from cmk.gui.type_defs import RoleName, PermissionName, Visual
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
     declare_permission,
+)
+from cmk.gui.plugins.main_menu.utils import (
+    TopicMenuTopic,
+    TopicMenuItem,
 )
 
 # TODO: Actually this is cmk.gui.sidebar.CustomSnapins, but we run into a hell
@@ -33,7 +38,7 @@ CustomSnapins = Any
 # Constants to be used in snapins
 snapin_width = 230
 
-search_plugins = []  # type: List
+search_plugins: List = []
 
 PageHandlers = Dict[str, "cmk.gui.pages.PageHandlerFunc"]
 
@@ -41,18 +46,15 @@ PageHandlers = Dict[str, "cmk.gui.pages.PageHandlerFunc"]
 @permission_section_registry.register
 class PermissionSectionSidebarSnapins(PermissionSection):
     @property
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         return "sidesnap"
 
     @property
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Sidebar snapins")
 
     @property
-    def do_sort(self):
-        # type: () -> bool
+    def do_sort(self) -> bool:
         return True
 
 
@@ -61,59 +63,52 @@ class SidebarSnapin(metaclass=abc.ABCMeta):
     """Abstract base class for all sidebar snapins"""
     @classmethod
     @abc.abstractmethod
-    def type_name(cls):
-        # type: () -> str
+    def type_name(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def title(cls):
-        # type: () -> str
+    def title(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def description(cls):
-        # type: () -> str
+    def description(cls) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         raise NotImplementedError()
 
     @classmethod
-    def refresh_regularly(cls):
-        # type: () -> bool
+    def has_advanced_items(cls) -> bool:
         return False
 
     @classmethod
-    def refresh_on_restart(cls):
-        # type: () -> bool
+    def refresh_regularly(cls) -> bool:
         return False
 
     @classmethod
-    def is_custom_snapin(cls):
-        # type: () -> bool
+    def refresh_on_restart(cls) -> bool:
+        return False
+
+    @classmethod
+    def is_custom_snapin(cls) -> bool:
         """Whether or not a snapin type is a customized snapin"""
         return False
 
     @classmethod
-    def permission_name(cls):
-        # type: () -> PermissionName
+    def permission_name(cls) -> PermissionName:
         return "sidesnap.%s" % cls.type_name()
 
     @classmethod
-    def allowed_roles(cls):
-        # type: () -> List[RoleName]
+    def allowed_roles(cls) -> List[RoleName]:
         return ["admin", "user", "guest"]
 
-    def styles(self):
-        # type: () -> Optional[str]
+    def styles(self) -> Optional[str]:
         return None
 
-    def page_handlers(self):
-        # type: () -> PageHandlers
+    def page_handlers(self) -> PageHandlers:
         return {}
 
 
@@ -145,8 +140,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_name(self, plugin_class):
         return plugin_class.type_name()
 
-    def registration_hook(self, plugin_class):
-        # type: (Type[SidebarSnapin]) -> None
+    def registration_hook(self, plugin_class: Type[SidebarSnapin]) -> None:
         declare_permission(
             "sidesnap.%s" % self.plugin_name(plugin_class),
             plugin_class.title(),
@@ -157,27 +151,23 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
         for path, page_func in plugin_class().page_handlers().items():
             cmk.gui.pages.register_page_handler(path, page_func)
 
-    def get_customizable_snapin_types(self):
-        # type: () -> List[Tuple[str, CustomizableSidebarSnapin]]
+    def get_customizable_snapin_types(self) -> List[Tuple[str, CustomizableSidebarSnapin]]:
         return [(snapin_type_id, snapin_type)
                 for snapin_type_id, snapin_type in self.items()
                 if (issubclass(snapin_type, CustomizableSidebarSnapin) and
                     not snapin_type.is_custom_snapin())]
 
-    def register_custom_snapins(self, custom_snapins):
-        # type: (List[CustomSnapins]) -> None
+    def register_custom_snapins(self, custom_snapins: List[CustomSnapins]) -> None:
         """Extends the snapin registry with the ones configured in the site (for the current user)"""
         self._clear_custom_snapins()
         self._add_custom_snapins(custom_snapins)
 
-    def _clear_custom_snapins(self):
-        # type: () -> None
-        for snapin_type_id, snapin_type in self.items():
+    def _clear_custom_snapins(self) -> None:
+        for snapin_type_id, snapin_type in list(self.items()):
             if snapin_type.is_custom_snapin():
                 self.unregister(snapin_type_id)
 
-    def _add_custom_snapins(self, custom_snapins):
-        # type: (List[CustomSnapins]) -> None
+    def _add_custom_snapins(self, custom_snapins: List[CustomSnapins]) -> None:
         for custom_snapin in custom_snapins:
             base_snapin_type_id = custom_snapin._["custom_snapin"][0]
 
@@ -313,8 +303,7 @@ def nagioscgilink(text, target):
     html.close_li()
 
 
-def snapin_site_choice(ident, choices):
-    # type: (SiteId, List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]
+def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:
     sites = config.user.load_file("sidebar_sites", {})
     site = sites.get(ident, "")
     if site == "":
@@ -325,9 +314,9 @@ def snapin_site_choice(ident, choices):
     if len(choices) <= 1:
         return None
 
-    dropdown_choices = [
+    dropdown_choices: Choices = [
         ("", _("All sites")),
-    ]  # type: Choices
+    ]
     dropdown_choices += choices
 
     onchange = "cmk.sidebar.set_snapin_site(event, %s, this)" % json.dumps(ident)
@@ -336,31 +325,91 @@ def snapin_site_choice(ident, choices):
     return only_sites
 
 
-def visuals_by_topic(permitted_visuals, default_order=None):
-    if default_order is None:
-        default_order = [
-            _("Overview"),
-            _("Hosts"),
-            _("Host Groups"),
-            _("Services"),
-            _("Service Groups"),
-            _("Metrics"),
-            _("Business Intelligence"),
-            _("Problems"),
-        ]
+def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[TopicMenuTopic]:
+    pagetypes.PagetypeTopics.load()
+    topics = pagetypes.PagetypeTopics.get_permitted_instances()
 
-    s = sorted([(_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name, 'painters'
-                 in visual)
-                for name, visual in permitted_visuals
-                if not visual["hidden"] and not visual.get("mobile")])
+    by_topic: Dict[pagetypes.PagetypeTopics, TopicMenuTopic] = {}
 
-    result = []
-    for topic in default_order:
-        result.append((topic, s))
+    for visual_type_name, (name, visual) in visuals:
+        if visual["hidden"] or visual.get("mobile"):
+            continue  # Skip views not inteded to be shown in the menus
 
-    rest = sorted({t for (t, _t, _v, _i) in s if t not in default_order})
-    for topic in rest:
-        if topic:
-            result.append((topic, s))
+        topic_id = visual["topic"]
+        try:
+            topic = topics[visual["topic"]]
+        except KeyError:
+            topic_id = "other"
+            topic = topics[topic_id]
 
-    return result
+        url = _visual_url(visual_type_name, name)
+
+        topic = by_topic.setdefault(
+            topic,
+            TopicMenuTopic(
+                name=topic.name(),
+                title=topic.title(),
+                items=[],
+                icon_name=topic.icon_name(),
+            ))
+        topic.items.append(
+            TopicMenuItem(
+                name=name,
+                title=visual["title"],
+                url=url,
+                sort_index=visual["sort_index"],
+                is_advanced=visual["is_advanced"],
+                icon_name=visual["icon"],
+            ))
+
+    # Sort the items of all topics
+    for topic in by_topic.values():
+        topic.items.sort(key=lambda i: (i.sort_index, i.title))
+
+    # Return the sorted topics
+    return [v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title()))]
+
+
+def _visual_url(visual_type_name: str, name: str) -> str:
+    if visual_type_name == "views":
+        return "view.py?view_name=%s" % name
+
+    if visual_type_name == "dashboards":
+        return "dashboard.py?name=%s" % name
+
+    if visual_type_name == "reports":
+        return "report.py?name=%s" % name
+
+    # Handle page types
+    if visual_type_name in ["custom_graph", "graph_collection", "forecast_graph"]:
+        return "%s.py?name=%s" % (visual_type_name, name)
+
+    raise NotImplementedError("Unknown visual type: %s" % visual_type_name)
+
+
+def show_topic_menu(treename: str,
+                    menu: List[TopicMenuTopic],
+                    show_item_icons: bool = False) -> None:
+    for topic in menu:
+        _show_topic(treename, topic, show_item_icons)
+
+
+def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> None:
+    if not topic.items:
+        return
+
+    html.begin_foldable_container(treename=treename,
+                                  id_=topic.name,
+                                  isopen=False,
+                                  title=topic.title,
+                                  indent=True)
+
+    for item in topic.items:
+        if show_item_icons:
+            html.open_li(class_="sidebar")
+            iconlink(item.title, item.url, item.icon_name)
+            html.close_li()
+        else:
+            bulletlink(item.title, item.url, onclick="return cmk.sidebar.wato_views_clicked(this)")
+
+    html.end_foldable_container()

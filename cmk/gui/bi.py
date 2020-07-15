@@ -1513,7 +1513,7 @@ def compile_forest(only_hosts=None, only_groups=None):
             # Passive apache processes simply reload the cachefile (if applicable) and wait
             g_bi_cache_manager.load_cachefile()
 
-            log("Wait for jobs to finish: %r" % jobs.keys())
+            log("Wait for jobs to finish: %r" % list(jobs.keys()))
             time.sleep(1)
 
     except Exception:
@@ -1694,7 +1694,7 @@ def get_services_filtered_by_host_alias(host_spec):
     honor_site = SITE_SEP in host_spec[1]
     if g_services_items:
         return host_spec, honor_site, g_services_items
-    return host_spec, honor_site, g_services.items()
+    return host_spec, honor_site, list(g_services.items())
 
 
 def get_services_filtered_by_host_name(host_re):
@@ -1805,7 +1805,7 @@ def remove_empty_nodes(node):
     for subnode in subnodes:
         remove_empty_nodes(subnode)
     # remove all subnode rules which have no subnodes
-    for i in range(0, len(subnodes))[::-1]:
+    for i in reversed(range(len(subnodes))):
         if node_is_empty(subnodes[i]):
             del subnodes[i]
 

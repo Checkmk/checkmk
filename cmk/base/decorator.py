@@ -18,8 +18,7 @@ import cmk.base.config as config
 import cmk.base.obsolete_output as out
 import cmk.base.crash_reporting
 from cmk.base.exceptions import MKAgentError, MKIPAddressLookupError
-from cmk.base.check_utils import CheckPluginName
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
@@ -27,14 +26,12 @@ else:
     keepalive = None  # type: ignore[assignment]
 
 
-def handle_check_mk_check_result(check_plugin_name, description):
-    # type: (CheckPluginName, ServiceName) -> Callable
+def handle_check_mk_check_result(check_plugin_name: CheckPluginNameStr,
+                                 description: ServiceName) -> Callable:
     """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
     Main purpose: Equalize the exception handling of all such functions"""
-    def wrap(check_func):
-        # type: (Callable) -> Callable
-        def wrapped_check_func(hostname, *args, **kwargs):
-            # type: (HostName, Any, Any) -> int
+    def wrap(check_func: Callable) -> Callable:
+        def wrapped_check_func(hostname: HostName, *args: Any, **kwargs: Any) -> int:
             host_config = config.get_config_cache().get_host_config(hostname)
             exit_spec = host_config.exit_code_spec()
 
@@ -75,7 +72,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
             output_txt += "\n"
 
             if _in_keepalive_mode():
-                keepalive.add_keepalive_active_check_result(hostname, output_txt)
+                keepalive.add_active_check_result(hostname, output_txt)
                 console.verbose(ensure_str(output_txt))
             else:
                 out.output(ensure_str(output_txt))
@@ -87,6 +84,5 @@ def handle_check_mk_check_result(check_plugin_name, description):
     return wrap
 
 
-def _in_keepalive_mode():
-    # type: () -> bool
+def _in_keepalive_mode() -> bool:
     return bool(keepalive and keepalive.enabled())

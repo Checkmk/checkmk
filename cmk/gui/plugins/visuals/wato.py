@@ -73,7 +73,7 @@ class FilterWatoFolder(Filter):
                 subfolder += part
                 allowed_folders.add(subfolder)
 
-        choices = [("", "")]  # type: Choices
+        choices: Choices = [("", "")]
         html.dropdown(self.ident,
                       choices + [entry for entry in self.selection if entry[0] in allowed_folders])
 

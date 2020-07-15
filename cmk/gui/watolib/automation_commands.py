@@ -15,13 +15,11 @@ import cmk.utils.plugin_registry
 class AutomationCommand(metaclass=abc.ABCMeta):
     """Abstract base class for all automation commands"""
     @abc.abstractmethod
-    def command_name(self):
-        # type: () -> str
+    def command_name(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_request(self):
-        # type: () -> Any
+    def get_request(self) -> Any:
         """Get request variables from environment
 
         In case an automation command needs to read variables from the HTTP request this has to be done
@@ -29,18 +27,15 @@ class AutomationCommand(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, request):
-        # type: (Any) -> Any
+    def execute(self, request: Any) -> Any:
         raise NotImplementedError()
 
 
 class AutomationCommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[AutomationCommand]
+    def plugin_base_class(self) -> Type[AutomationCommand]:
         return AutomationCommand
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[AutomationCommand]) -> str
+    def plugin_name(self, plugin_class: Type[AutomationCommand]) -> str:
         return plugin_class().command_name()
 
 
@@ -49,16 +44,13 @@ automation_command_registry = AutomationCommandRegistry()
 
 @automation_command_registry.register
 class AutomationPing(AutomationCommand):
-    def command_name(self):
-        # type: () -> str
+    def command_name(self) -> str:
         return "ping"
 
-    def get_request(self):
-        # type: () -> None
+    def get_request(self) -> None:
         return None
 
-    def execute(self, _unused_request):
-        # type: (None) -> Dict[str, str]
+    def execute(self, _unused_request: None) -> Dict[str, str]:
         return {
             "version": cmk_version.__version__,
             "edition": cmk_version.edition_short(),

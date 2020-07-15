@@ -24,18 +24,20 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import sys
+import shutil
 import contextlib
 from typing import Iterator
 
+import cmk.utils.tty as tty
 
-def is_dockerized():
-    # type: () -> bool
+
+def is_dockerized() -> bool:
     return os.path.exists("/.dockerenv")
 
 
 @contextlib.contextmanager
-def chdir(path):
-    # type: (str) -> Iterator[None]
+def chdir(path: str) -> Iterator[None]:
     """Change working directory and return on exit"""
     prev_cwd = os.getcwd()
     os.chdir(path)
@@ -43,3 +45,19 @@ def chdir(path):
         yield
     finally:
         os.chdir(prev_cwd)
+
+
+def ok() -> None:
+    sys.stdout.write(tty.ok + "\n")
+
+
+def delete_user_file(user_path: str) -> None:
+    if not os.path.islink(user_path) and os.path.isdir(user_path):
+        shutil.rmtree(user_path)
+    else:
+        os.remove(user_path)
+
+
+def delete_directory_contents(d: str) -> None:
+    for f in os.listdir(d):
+        delete_user_file(d + '/' + f)

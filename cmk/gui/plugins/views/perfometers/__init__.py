@@ -35,7 +35,7 @@ from cmk.utils.plugin_loader import load_plugins
 #   '----------------------------------------------------------------------'
 
 # TODO: Is this unused?
-perfometers = {}  # type: _Dict
+perfometers: _Dict = {}
 
 #   .--Old Style-----------------------------------------------------------.
 #   |                ___  _     _   ____  _         _                      |

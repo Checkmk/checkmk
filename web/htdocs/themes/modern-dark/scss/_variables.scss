@@ -500,3 +500,24 @@ $dc-graph-color-1:			    rgb(255, 205, 20);
 $dc-graph-color-2:			    rgb(255, 125, 20);
 $timeseries-legend-bg-color:		    $darkgrey;
 $scatterdot-hilite-color:		    $yellow;
+
+/* NOTE: preliminary variables defined for the UX project mockups */
+
+$ux-light-grey: #38445d;
+$ux-grey: rgba(255, 255, 255, 0.5);
+$ux-dimmed-grey: rgba(255, 255, 255, 0.2);
+$ux-buttons: #353f4a;
+$ux-buttons-dark: #303944;
+$ux-sidebar-background: #172127;
+$ux-sidebar-snapin: #151c28;
+$ux-form-background: #353f4a;
+$ux-text-primary: #eaeaea;
+$ux-text-highlight: #fff;
+$ux-table-odd: #151c28;
+$ux-table-even: #1e262e;
+$ux-medium-blue: #262f38;
+$ux-filter-group-title-color:               $white;
+$ux-popup-filters-border-radius:            2px;
+$ux-popup-button-border:                    1px solid $grey-2;
+$ux-spacing: 10px;
+$mega-menu-min-height:                          339px

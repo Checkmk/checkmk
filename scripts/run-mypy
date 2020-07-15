@@ -8,16 +8,15 @@
 set -e
 
 REPO_PATH=$(dirname $(dirname $(realpath "$0")))
-PYTHON_VERSION=3.8
 
 # Detect whether or not mypy is available and print out an error that is in the
 # same format as mypy issues. This message is understood by e.g. vims ALE and
 # displays and error that mypy could not be executed.
-VENV_MYPY_PATH="$REPO_PATH/virtual-envs/$PYTHON_VERSION/.venv/bin/mypy"
+VENV_MYPY_PATH="$REPO_PATH/.venv/bin/mypy"
 if [ ! -f "$VENV_MYPY_PATH" ]; then
     # Try to fix this first
-    rm -rf "$REPO_PATH/virtual-envs/$PYTHON_VERSION/.venv"
-    make --silent -C "$REPO_PATH/virtual-envs/$PYTHON_VERSION" .venv 1>&2
+    rm -rf "$REPO_PATH/.venv"
+    make --silent -C "$REPO_PATH" .venv 1>&2
 
     if [ ! -f "$VENV_MYPY_PATH" ]; then
         for LAST_ARG; do :; done
@@ -26,14 +25,12 @@ if [ ! -f "$VENV_MYPY_PATH" ]; then
     fi
 fi
 
-PYTHON_VERSION_TO_TEST=$("$REPO_PATH/scripts/detect-python-version" "$@")
-
 # NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
 # NOTE: In case of failure, we exit with code 255 to stop a potential xargs.
-MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed" \
-    exec "$REPO_PATH/scripts/run-pipenv" 3 run mypy \
-    --python-version ${PYTHON_VERSION_TO_TEST} \
+MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests:$REPO_PATH/tests/typeshed" \
+    exec "$REPO_PATH/scripts/run-pipenv" run mypy \
+    --python-version 3.8 \
     --scripts-are-modules \
     --show-error-codes \
     --check-untyped-defs \

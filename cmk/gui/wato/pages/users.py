@@ -16,6 +16,7 @@ import cmk.utils.render as render
 from cmk.utils.type_defs import UserId, timeperiod_spec_alias
 
 import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.escaping as escaping
@@ -42,6 +43,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -211,11 +213,11 @@ class ModeUsers(WatoMode):
 
         users = userdb.load_users()
 
-        entries = users.items()
+        entries = list(users.items())
 
         html.begin_form("bulk_delete_form", method="POST")
 
-        roles = userdb.load_roles()
+        roles = userdb_utils.load_roles()
         timeperiods = watolib.timeperiods.load_timeperiods()
         contact_groups = load_contact_group_information()
 
@@ -255,7 +257,7 @@ class ModeUsers(WatoMode):
 
                 notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"),
                                                                     ("user", uid)])
-                if watolib.load_configuration_settings().get("enable_rulebased_notifications"):
+                if rulebased_notifications_enabled():
                     html.icon_button(notifications_url, _("Custom notification table of this user"),
                                      "notifications")
 
@@ -361,7 +363,7 @@ class ModeUsers(WatoMode):
                 #                                                vs_authorized_sites().default_value())))
 
                 # notifications
-                if not watolib.load_configuration_settings().get("enable_rulebased_notifications"):
+                if not rulebased_notifications_enabled():
                     table.cell(_("Notifications"))
                     if not cgs:
                         html.i(_("not a contact"))
@@ -426,7 +428,7 @@ class ModeEditUser(WatoMode):
         # boxes and to check for validity.
         self._contact_groups = load_contact_group_information()
         self._timeperiods = watolib.timeperiods.load_timeperiods()
-        self._roles = userdb.load_roles()
+        self._roles = userdb_utils.load_roles()
 
         if cmk_version.is_managed_edition():
             self._vs_customer = managed.vs_customer()
@@ -561,13 +563,10 @@ class ModeEditUser(WatoMode):
         ]
 
         # Language configuration
-        set_lang = html.get_checkbox("_set_lang")
-        language = html.request.var("language")
-        if set_lang:
-            if language == "":
-                language = None
+        language = html.request.get_ascii_input_mandatory("language", "")
+        if language != "_default_":
             user_attrs["language"] = language
-        elif not set_lang and "language" in user_attrs:
+        elif "language" in user_attrs:
             del user_attrs["language"]
 
         # Contact groups
@@ -936,10 +935,9 @@ class ModeEditUser(WatoMode):
 
     def _rbn_enabled(self):
         # Check if rule based notifications are enabled (via WATO)
-        return watolib.load_configuration_settings().get("enable_rulebased_notifications")
+        return rulebased_notifications_enabled()
 
-    def _pw_suffix(self):
-        # type: () -> str
+    def _pw_suffix(self) -> str:
         return 'new' if self._user_id is None else ensure_str(
             base64.b64encode(self._user_id.encode("utf-8")))
 
@@ -986,30 +984,17 @@ class ModeEditUser(WatoMode):
 
 
 def select_language(user):
-    languages = [l for l in get_languages() if not config.hide_language(l[0])]  # type: Choices
-    if languages:
-        active = 'language' in user
-        forms.section(_("Language"), checkbox=('_set_lang', active, 'language'))
-        default_label = _('Default: %s') % get_language_alias(config.default_language)
-        html.div(default_label,
-                 class_="inherited",
-                 id_="attr_default_language",
-                 style="display: none" if active else "")
-        html.open_div(id_="attr_entry_language", style="display: none" if not active else "")
+    languages: Choices = [l for l in get_languages() if not config.hide_language(l[0])]
+    if not languages:
+        return
 
-        language = user.get('language') if user.get('language') is not None else ''
+    current_language = user.get("language")
+    if current_language is None:
+        current_language = "_default_"
 
-        # Transform 'en' configured language to empty string for compatibility reasons
-        if language == "en":
-            language = ""
+    languages.insert(0, ("_default_", _("Use the default language (%s)") %
+                         get_language_alias(config.default_language)))
 
-        html.dropdown("language", languages, deflt=language)
-        html.close_div()
-        html.help(
-            _('Configure the default language '
-              'to be used by the user in the user interface here. If you do not check '
-              'the checkbox, then the system default will be used.<br><br>'
-              'Note: currently Multisite is internationalized '
-              'but comes without any actual localisations (translations). If you want to '
-              'create you own translation, you find <a href="%(url)s">documentation online</a>.') %
-            {"url": "https://checkmk.com/checkmk_multisite_cmk.gui.i18n.html"})
+    forms.section(_("Language"))
+    html.dropdown("language", languages, deflt=current_language)
+    html.help(_('Configure the language to be used by the user in the user interface here.'))

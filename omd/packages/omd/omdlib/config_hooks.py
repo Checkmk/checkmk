@@ -57,15 +57,13 @@ ConfigHookResult = Tuple[int, str]
 
 # Put all site configuration (explicit and defaults) into environment
 # variables beginning with CONFIG_
-def create_config_environment(site):
-    # type: (SiteContext) -> None
+def create_config_environment(site: 'SiteContext') -> None:
     for varname, value in site.conf.items():
         os.environ["CONFIG_" + varname] = value
 
 
 # TODO: RENAME
-def save_site_conf(site):
-    # type: (SiteContext) -> None
+def save_site_conf(site: 'SiteContext') -> None:
     confdir = site.dir + "/etc/omd"
 
     if not os.path.exists(confdir):
@@ -79,9 +77,8 @@ def save_site_conf(site):
 
 # Get information about all hooks. Just needed for
 # the "omd config" command.
-def load_config_hooks(site):
-    # type: (SiteContext) -> ConfigHooks
-    config_hooks = {}  # type: ConfigHooks
+def load_config_hooks(site: 'SiteContext') -> ConfigHooks:
+    config_hooks: ConfigHooks = {}
 
     hook_dir = site.dir + "/lib/omd/hooks"
     for hook_name in os.listdir(hook_dir):
@@ -99,12 +96,11 @@ def load_config_hooks(site):
     return config_hooks
 
 
-def _config_load_hook(site, hook_name):
-    # type: (SiteContext, str) -> ConfigHook
-    hook = {
+def _config_load_hook(site: 'SiteContext', hook_name: str) -> ConfigHook:
+    hook: ConfigHook = {
         "name": hook_name,
         "deprecated": False,
-    }  # type: ConfigHook
+    }
 
     description = ""
     description_active = False
@@ -123,8 +119,7 @@ def _config_load_hook(site, hook_name):
             description_active = False
     hook["description"] = description
 
-    def get_hook_info(info):
-        # type: (str) -> str
+    def get_hook_info(info: str) -> str:
         return call_hook(site, hook_name, [info])[1]
 
     # The choices can either be a list of possible keys. Then
@@ -133,7 +128,7 @@ def _config_load_hook(site, hook_name):
     # where that line is an extended regular expression matching the
     # possible values.
     choicestxt = get_hook_info("choices").split("\n")
-    choices = None  # type: ConfigHookChoices
+    choices: ConfigHookChoices = None
     if len(choicestxt) == 1:
         regextext = choicestxt[0].strip()
         if regextext != "":
@@ -155,8 +150,7 @@ def _config_load_hook(site, hook_name):
     return hook
 
 
-def load_hook_dependencies(site, config_hooks):
-    # type: (SiteContext, ConfigHooks) -> ConfigHooks
+def load_hook_dependencies(site: 'SiteContext', config_hooks: ConfigHooks) -> ConfigHooks:
     for hook_name in sort_hooks(list(config_hooks.keys())):
         hook = config_hooks[hook_name]
         exitcode, _content = call_hook(site, hook_name, ["depends"])
@@ -169,19 +163,16 @@ def load_hook_dependencies(site, config_hooks):
 
 # Always sort CORE hook to the end because it runs "cmk -U" which
 # relies on files created by other hooks.
-def sort_hooks(hook_names):
-    # type: (List[str]) -> Iterable[str]
+def sort_hooks(hook_names: List[str]) -> Iterable[str]:
     return sorted(hook_names, key=lambda n: (n == "CORE", n))
 
 
-def hook_exists(site, hook_name):
-    # type: (SiteContext, str) -> bool
+def hook_exists(site: 'SiteContext', hook_name: str) -> bool:
     hook_file = site.dir + "/lib/omd/hooks/" + hook_name
     return os.path.exists(hook_file)
 
 
-def call_hook(site, hook_name, args):
-    # type: (SiteContext, str, List[str]) -> ConfigHookResult
+def call_hook(site: 'SiteContext', hook_name: str, args: List[str]) -> ConfigHookResult:
 
     cmd = [site.dir + "/lib/omd/hooks/" + hook_name] + args
     hook_env = os.environ.copy()

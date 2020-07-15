@@ -28,7 +28,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
 
 
 def _parameter_valuespec_cisco_mem():
-    elements = [
+    elements: List[DictionaryEntry] = [
         ("levels",
          Alternative(
              title=_("Levels for memory usage"),
@@ -53,7 +53,7 @@ def _parameter_valuespec_cisco_mem():
                  ),
              ],
          )),
-    ]  # type: List[DictionaryEntry]
+    ]
     return Transform(
         Dictionary(elements=elements + size_trend_elements),
         forth=lambda spec: spec if isinstance(spec, dict) else {"levels": spec},

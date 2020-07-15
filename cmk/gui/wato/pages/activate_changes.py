@@ -21,7 +21,6 @@ import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.context_buttons import home_button
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
@@ -54,8 +53,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         return _("Activate pending changes")
 
     def buttons(self):
-        home_button()
-
         # TODO: Remove once new changes mechanism has been implemented
         if self._may_discard_changes():
             html.context_button(_("Discard Changes!"),
@@ -124,10 +121,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     show_top_heading=display_options.enabled(display_options.T))
         html.open_div(class_="wato")
 
-        html.begin_context_buttons()
-        home_button()
-        html.end_context_buttons()
-
         html.show_message(_("Successfully discarded all pending changes."))
         html.javascript("hide_changes_buttons();")
         html.footer()
@@ -138,8 +131,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         self._extract_from_file(cmk.gui.watolib.snapshots.snapshot_dir + snapshot_file,
                                 watolib.backup_domains)
 
-    def _extract_from_file(self, filename, elements):
-        # type: (str, Dict[str, cmk.gui.watolib.snapshots.DomainSpec]) -> None
+    def _extract_from_file(self, filename: str,
+                           elements: Dict[str, cmk.gui.watolib.snapshots.DomainSpec]) -> None:
         if not isinstance(elements, dict):
             raise NotImplementedError()
 
@@ -230,7 +223,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.end_form()
 
     def _vs_activation(self):
-        elements = [
+        elements: List[DictionaryEntry] = [
             ("comment",
              TextAreaUnicode(
                  title=_("Comment (optional)"),
@@ -241,7 +234,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         "This can be useful to document the reason why the changes you "
                         "activate have been made."),
              )),
-        ]  # type: List[DictionaryEntry]
+        ]
 
         if self.has_foreign_changes() and config.user.may("wato.activateforeign"):
             elements.append(("foreign",
@@ -439,7 +432,7 @@ class ModeAjaxStartActivation(AjaxPage):
         else:
             affected_sites = affected_sites_request.split(",")
 
-        comment = request.get("comment", "").strip()  # type: Optional[str]
+        comment: Optional[str] = request.get("comment", "").strip()
         if comment == "":
             comment = None
 

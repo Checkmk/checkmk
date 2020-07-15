@@ -200,7 +200,7 @@ class SNMPTrapTranslator:
             # This loads all or specified pysnmp MIBs into memory
             builder.loadModules()
 
-            loaded_mib_module_names = builder.mibSymbols.keys()
+            loaded_mib_module_names = list(builder.mibSymbols.keys())
             logger.info('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
             logger.log(VERBOSE, 'Found modules: %s', ', '.join(loaded_mib_module_names))
 

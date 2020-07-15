@@ -72,7 +72,7 @@ class APICallBulkDiscovery(APICallCollection):
         because the API call currently only operates on a list of given hostnames where
         a lot of the GUI options are not relevant for. For a consistent parameter handling
         we use the valuespec here."""
-        params = copy.deepcopy(config.bulk_discovery_default_settings)  # type: Dict[str, Any]
+        params: Dict[str, Any] = copy.deepcopy(config.bulk_discovery_default_settings)
 
         params["mode"] = request.get("mode", params["mode"])
 
@@ -94,8 +94,7 @@ class APICallBulkDiscovery(APICallCollection):
             params["error_handling"],
         )
 
-    def _get_hosts_from_request(self, request):
-        # type: (Dict) -> List[DiscoveryHost]
+    def _get_hosts_from_request(self, request: Dict) -> List[DiscoveryHost]:
         if not request["hostnames"]:
             raise MKUserError(None, _("You have to specify some hosts"))
 

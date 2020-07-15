@@ -73,7 +73,7 @@ class DashletStats(Dashlet, metaclass=abc.ABCMeta):
         if only_sites:
             try:
                 sites.live().set_only_sites(only_sites)
-                result = sites.live().query_row(query)  # type: List[int]
+                result: List[int] = sites.live().query_row(query)
             finally:
                 sites.live().set_only_sites()
         else:
@@ -97,7 +97,7 @@ class DashletStats(Dashlet, metaclass=abc.ABCMeta):
         html.open_table(class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []),
                         style="float:left")
 
-        table_entries = []  # type: List[Tuple]
+        table_entries: List[Tuple] = []
         table_entries += pies
         while len(table_entries) < 6:
             table_entries = table_entries + [(("", None, [], ""), HTML("&nbsp;"))]
@@ -213,8 +213,7 @@ class HostStatsDashlet(DashletStats):
         return 45
 
     @classmethod
-    def infos(cls):
-        # type: () -> List[str]
+    def infos(cls) -> List[str]:
         return ["host"]
 
     def _livestatus_table(self):
@@ -277,8 +276,7 @@ class ServiceStatsDashlet(DashletStats):
         return 50
 
     @classmethod
-    def infos(cls):
-        # type: () -> List[str]
+    def infos(cls) -> List[str]:
         return ['host', 'service']
 
     def _livestatus_table(self):

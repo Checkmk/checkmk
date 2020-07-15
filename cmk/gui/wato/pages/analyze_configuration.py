@@ -245,8 +245,7 @@ class ModeAnalyzeConfig(WatoMode):
         results_by_site = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue = multiprocessing.JoinableQueue(
-        )  # type: multiprocessing.Queue[Tuple[SiteId, str]]
+        result_queue: multiprocessing.Queue[Tuple[SiteId, str]] = multiprocessing.JoinableQueue()
 
         processes = []
         site_id = SiteId("unknown_site")
@@ -297,7 +296,7 @@ class ModeAnalyzeConfig(WatoMode):
         self._logger.debug("Got test results")
 
         # Group results by category in first instance and then then by test
-        results_by_category = {}  # type: Dict[str, Dict[str, Dict[str, Any]]]
+        results_by_category: Dict[str, Dict[str, Dict[str, Any]]] = {}
         for site_id, results in results_by_site.items():
             for result in results:
                 category_results = results_by_category.setdefault(result.category, {})
@@ -318,8 +317,8 @@ class ModeAnalyzeConfig(WatoMode):
 
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
-    def _perform_tests_for_site(self, site_id, result_queue):
-        # type: (SiteId, multiprocessing.Queue[Tuple[SiteId, str]]) -> None
+    def _perform_tests_for_site(self, site_id: SiteId,
+                                result_queue: 'multiprocessing.Queue[Tuple[SiteId, str]]') -> None:
         self._logger.debug("[%s] Starting" % site_id)
         try:
             # Would be better to clean all open fds that are not needed, but we don't

@@ -18,7 +18,7 @@ import cmk.utils.store as store
 import cmk.gui.sites
 from cmk.gui.sites import SiteConfigurations
 import cmk.gui.config as config
-import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.hooks as hooks
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -56,18 +56,6 @@ from cmk.gui.watolib.utils import (
     default_site,
     multisite_dir,
 )
-
-
-class SiteManagementFactory:
-    @staticmethod
-    def factory():
-        # type: () -> SiteManagement
-        if cmk_version.is_raw_edition():
-            cls = CRESiteManagement  # type: Type[SiteManagement]
-        else:
-            cls = CEESiteManagement
-
-        return cls()
 
 
 class SiteManagement:
@@ -193,7 +181,7 @@ class SiteManagement:
                 ("all", _("Sync users with all connections")),
                 ("list", _("Sync with the following LDAP connections"),
                  ListChoice(
-                     choices=userdb.connection_choices,
+                     choices=userdb_utils.connection_choices,
                      allow_empty=False,
                  )),
             ],
@@ -277,8 +265,7 @@ class SiteManagement:
         user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
 
     @classmethod
-    def load_sites(cls):
-        # type: () -> SiteConfigurations
+    def load_sites(cls) -> SiteConfigurations:
         if not os.path.exists(cls._sites_mk()):
             return config.default_single_site_configuration()
 
@@ -359,6 +346,17 @@ class SiteManagement:
     @classmethod
     def transform_old_connection_params(cls, value):
         return value
+
+
+class SiteManagementFactory:
+    @staticmethod
+    def factory() -> SiteManagement:
+        if cmk_version.is_raw_edition():
+            cls: Type[SiteManagement] = CRESiteManagement
+        else:
+            cls = CEESiteManagement
+
+        return cls()
 
 
 class CRESiteManagement(SiteManagement):
@@ -696,8 +694,7 @@ class AutomationPushSnapshot(AutomationCommand):
     def command_name(self):
         return "push-snapshot"
 
-    def get_request(self):
-        # type: () -> PushSnapshotRequest
+    def get_request(self) -> PushSnapshotRequest:
         site_id = html.request.get_ascii_input_mandatory("siteid")
         cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
 
@@ -707,8 +704,7 @@ class AutomationPushSnapshot(AutomationCommand):
 
         return PushSnapshotRequest(site_id=site_id, tar_content=ensure_binary(snapshot[2]))
 
-    def execute(self, request):
-        # type: (PushSnapshotRequest) -> bool
+    def execute(self, request: PushSnapshotRequest) -> bool:
         with store.lock_checkmk_configuration():
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
                 request.site_id, request.tar_content, Path(cmk.utils.paths.omd_root),

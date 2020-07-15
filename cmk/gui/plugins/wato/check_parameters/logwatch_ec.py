@@ -43,7 +43,7 @@ def _item_help_logwatch_rules():
 def _valuespec_logwatch_rules():
     return Transform(
         Dictionary(
-            title=_('Logwatch Patterns'),
+            title=_('Logfile patterns'),
             elements=[
                 ("reclassify_patterns",
                  ListOf(

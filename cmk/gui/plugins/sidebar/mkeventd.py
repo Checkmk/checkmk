@@ -24,32 +24,26 @@ from cmk.gui.plugins.sidebar import (
 @snapin_registry.register
 class SidebarSnapinCustomers(SidebarSnapin):
     @staticmethod
-    def type_name():
-        # type: () -> str
+    def type_name() -> str:
         return "mkeventd_performance"
 
     @classmethod
-    def title(cls):
-        # type: () -> str
+    def title(cls) -> str:
         return _("Event Console Performance")
 
     @classmethod
-    def description(cls):
-        # type: () -> str
+    def description(cls) -> str:
         return _("Monitor the performance of the Event Console")
 
     @classmethod
-    def allowed_roles(cls):
-        # type: () -> List[PermissionName]
+    def allowed_roles(cls) -> List[PermissionName]:
         return ["admin"]
 
     @classmethod
-    def refresh_regularly(cls):
-        # type: () -> bool
+    def refresh_regularly(cls) -> bool:
         return True
 
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         only_sites = snapin_site_choice("mkeventd_performance",
                                         config.get_event_console_site_choices())
 
@@ -64,10 +58,11 @@ class SidebarSnapinCustomers(SidebarSnapin):
             html.tr(html.render_td("%s:" % left) + html.render_td(right))
         html.close_table()
 
-    def _mkeventd_performance_entries(self, only_sites):
-        # type: (Optional[List[SiteId]]) -> List[Tuple[float, HTMLContent, HTMLContent]]
+    def _mkeventd_performance_entries(
+            self,
+            only_sites: Optional[List[SiteId]]) -> List[Tuple[float, HTMLContent, HTMLContent]]:
         status = mkeventd.get_total_stats(only_sites)  # combination of several sites
-        entries = []  # type: List[Tuple[float, HTMLContent, HTMLContent]]
+        entries: List[Tuple[float, HTMLContent, HTMLContent]] = []
 
         # TODO: Reorder these values and create a useful order.
         # e.g. Client connects and Time per client request after

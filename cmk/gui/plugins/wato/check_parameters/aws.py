@@ -138,12 +138,11 @@ def _item_spec_aws_limits_generic():
     return TextAscii(title=_("Region name"), help=_("An AWS region name such as 'eu-central-1'"))
 
 
-def _vs_limits(resource,
-               default_limit,
-               vs_limit_cls=None,
-               unit=None,
-               title_default="Limit from AWS API"):
-    # type: (str, int, Optional[Type[Filesize]], Optional[str], str) -> Alternative
+def _vs_limits(resource: str,
+               default_limit: int,
+               vs_limit_cls: Optional[Type[Filesize]] = None,
+               unit: Optional[str] = None,
+               title_default: str = "Limit from AWS API") -> Alternative:
 
     if unit is None:
         unit = resource
@@ -161,7 +160,7 @@ def _vs_limits(resource,
         )
 
     if resource:
-        title = _("Set limit and levels for %s" % resource)  # type: Optional[str]
+        title: Optional[str] = _("Set limit and levels for %s" % resource)
     else:
         title = None
 
@@ -1099,13 +1098,13 @@ rulespec_registry.register(
 
 def _vs_aws_dynamodb_capacity(title, unit):
 
-    elements_extr = [
+    elements_extr: List[ValueSpec] = [
         Float(title=_("Warning at"), unit=unit),
         Float(title=_("Critical at"), unit=unit),
-    ]  # type: List[ValueSpec]
+    ]
 
     # mypy is unhappy without splitting into elements_avg and elements_single_minmmax
-    elements_avg = [
+    elements_avg: List[DictionaryEntry] = [
         ('levels_average',
          Dictionary(
              title=_("Levels on average usage"),
@@ -1136,16 +1135,16 @@ def _vs_aws_dynamodb_capacity(title, unit):
                             Percentage(title=_("Critical at")),
                         ])),
              ])),
-    ]  # type: List[DictionaryEntry]
+    ]
 
-    elements_single_minmmax = [
+    elements_single_minmmax: List[DictionaryEntry] = [
         ('levels_%s' % extr,
          Dictionary(title=_("Levels on %s single-request consumption" % extr),
                     elements=[
                         ("levels_upper", Tuple(title=_("Upper levels"), elements=elements_extr)),
                         ("levels_lower", Tuple(title=_("Lower levels"), elements=elements_extr)),
                     ])) for extr in ['minimum', 'maximum']
-    ]  # type: List[DictionaryEntry]
+    ]
 
     return Dictionary(title=_(title), elements=elements_avg + elements_single_minmmax)
 

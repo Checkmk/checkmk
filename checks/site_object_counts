@@ -28,7 +28,8 @@ def parse_site_object_counts(info):
 
         _, type_, header, data = line
         if site_objects is not None and data:
-            site_objects.setdefault(type_, dict(zip(header.split(), map(int, data.split(";")))))
+            site_objects.setdefault(type_,
+                                    {k: int(v) for k, v in zip(header.split(), data.split(";"))})
     return parsed
 
 

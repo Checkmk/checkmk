@@ -28,32 +28,27 @@ from cmk.gui.htmllib import Choices
 class VisualInfo(metaclass=abc.ABCMeta):
     """Base class for all visual info classes"""
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         """The identity of a visual type. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         """The human readable GUI title"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title_plural(self):
-        # type: () -> str
+    def title_plural(self) -> str:
         """The human readable GUI title for multiple items"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def single_spec(self):
-        # type: () -> Optional[Tuple[str, ValueSpec]]
+    def single_spec(self) -> Optional[Tuple[str, ValueSpec]]:
         """The key / valuespec pairs (choices) to identify a single row"""
         raise NotImplementedError()
 
     @property
-    def multiple_site_filters(self):
-        # type: () -> List[str]
+    def multiple_site_filters(self) -> List[str]:
         """Returns a list of filter identifiers.
 
         When these filters are set, the site hint will not be added to urls
@@ -62,15 +57,13 @@ class VisualInfo(metaclass=abc.ABCMeta):
         return []
 
     @property
-    def single_site(self):
-        # type: () -> bool
+    def single_site(self) -> bool:
         """When there is one non single site info used by a visual
         don't add the site hint"""
         return True
 
     @property
-    def sort_index(self):
-        # type: () -> int
+    def sort_index(self) -> int:
         """Used for sorting when listing multiple infos. Lower is displayed first"""
         return 30
 
@@ -99,62 +92,53 @@ visual_info_registry = VisualInfoRegistry()
 class VisualType(metaclass=abc.ABCMeta):
     """Base class for all filters"""
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         """The identity of a visual type. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         """The human readable GUI title"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def ident_attr(self):
-        # type: () -> str
+    def ident_attr(self) -> str:
         """The name of the attribute that is used to identify a visual of this type"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def multicontext_links(self):
-        # type: () -> bool
+    def multicontext_links(self) -> bool:
         """Whether or not to show context buttons even if not single infos present"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def plural_title(self):
-        # type: () -> str
+    def plural_title(self) -> str:
         """The plural title to use in the GUI"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def show_url(self):
-        # type: () -> str
+    def show_url(self) -> str:
         """The URL filename that can be used to show visuals of this type"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def add_visual_handler(self, target_visual_name, add_type, context, parameters):
-        # type: (str, str, Dict, Dict) -> None
+    def add_visual_handler(self, target_visual_name: str, add_type: str, context: Dict,
+                           parameters: Dict) -> None:
         """The function to handle adding the given visual to the given visual of this type"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def popup_add_handler(self, add_type):
-        # type: (str) -> List[Tuple[str, str]]
+    def popup_add_handler(self, add_type: str) -> List[Tuple[str, str]]:
         """List of visual choices another visual of the given type can be added to"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def load_handler(self):
-        # type: () -> None
+    def load_handler(self) -> None:
         """Load all visuals of this type"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def permitted_visuals(self):
-        # type: () -> Dict
+    def permitted_visuals(self) -> Dict:
         """Get the permitted visuals of this type"""
         raise NotImplementedError()
 
@@ -225,25 +209,21 @@ visual_type_registry = VisualTypeRegistry()
 class Filter(metaclass=abc.ABCMeta):
     """Base class for all filters"""
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         """The identity of a filter. One word, may contain alpha numeric characters
         This id is e.g. used in the persisted view configuration"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         """Used as display string for the filter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def sort_index(self):
-        # type: () -> int
+    def sort_index(self) -> int:
         raise NotImplementedError()
 
-    def __init__(self, info, htmlvars, link_columns):
-        # type: (str, List[str], List[ColumnName]) -> None
+    def __init__(self, info: str, htmlvars: List[str], link_columns: List[ColumnName]) -> None:
         """
         info:          The datasource info this filter needs to work. If this
                        is "service", the filter will also be available in tables
@@ -264,18 +244,15 @@ class Filter(metaclass=abc.ABCMeta):
         self.link_columns = link_columns
 
     @property
-    def description(self):
-        # type: () -> Optional[str]
+    def description(self) -> Optional[str]:
         return None
 
-    def available(self):
-        # type: () -> bool
+    def available(self) -> bool:
         """Some filters can be unavailable due to the configuration
         (e.g. the WATO Folder filter is only available if WATO is enabled."""
         return True
 
-    def visible(self):
-        # type: () -> bool
+    def visible(self) -> bool:
         """Some filters can be invisible. This is useful to hide filters which have always
         the same value but can not be removed using available() because the value needs
         to be set during runtime.
@@ -283,47 +260,38 @@ class Filter(metaclass=abc.ABCMeta):
         user in single site setups."""
         return True
 
-    def double_height(self):
-        # type: () -> bool
+    def double_height(self) -> bool:
         """More complex filters need more height in the HTML layout"""
         return False
 
     @abc.abstractmethod
-    def display(self):
-        # type: () -> None
+    def display(self) -> None:
         raise NotImplementedError()
 
-    def filter(self, infoname):
-        # type: (str) -> str
+    def filter(self, infoname: str) -> str:
         return ""
 
-    def need_inventory(self):
-        # type: () -> bool
+    def need_inventory(self) -> bool:
         """Whether this filter needs to load host inventory data"""
         return False
 
-    def validate_value(self, value):
-        # type: (Dict) -> None
+    def validate_value(self, value: Dict) -> None:
         return
 
-    def filter_table(self, rows):
-        # type: (List[dict]) -> List[dict]
+    def filter_table(self, rows: List[dict]) -> List[dict]:
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return rows
 
-    def variable_settings(self, row):
-        # type: (dict) -> HTTPVariables
+    def variable_settings(self, row: dict) -> HTTPVariables:
         """return pairs of htmlvar and name according to dataset in row"""
         return []
 
-    def infoprefix(self, infoname):
-        # type: (str) -> str
+    def infoprefix(self, infoname: str) -> str:
         if self.info == infoname:
             return ""
         return self.info[:-1] + "_"
 
-    def heading_info(self):
-        # type: () -> Optional[str]
+    def heading_info(self) -> Optional[str]:
         """Hidden filters may contribute to the pages headers of the views"""
         return None
 
@@ -404,8 +372,7 @@ class FilterTime(Filter):
         return True
 
     def display(self):
-        choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges
-                  ]  # type: Choices
+        choices: Choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges]
         choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
 
         html.open_table(class_="filtertime")
@@ -438,8 +405,7 @@ class FilterTime(Filter):
         return self._get_time_range_of("from"), \
                self._get_time_range_of("until")
 
-    def _get_time_range_of(self, what):
-        # type: (str) -> Union[None, int, float]
+    def _get_time_range_of(self, what: str) -> Union[None, int, float]:
         varprefix = self.ident + "_" + what
 
         rangename = html.request.var(varprefix + "_range")

@@ -242,8 +242,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             ]
 
     def _update_trusted_cas(self, current_config):
-        trusted_cas = []  # type: List[bytes]
-        errors = []  # type: List[str]
+        trusted_cas: List[bytes] = []
+        errors: List[str] = []
 
         if current_config["use_system_wide_cas"]:
             trusted, errors = self._get_system_wide_trusted_ca_certificates()
@@ -254,10 +254,9 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         store.save_bytes_to_file(self.trusted_cas_file, b"\n".join(trusted_cas))
         return errors
 
-    def _get_system_wide_trusted_ca_certificates(self):
-        # type: () -> Tuple[List[bytes], List[str]]
-        trusted_cas = set()  # type: Set[bytes]
-        errors = []  # type: List[str]
+    def _get_system_wide_trusted_ca_certificates(self) -> Tuple[List[bytes], List[str]]:
+        trusted_cas: Set[bytes] = set()
+        errors: List[str] = []
         for p in self.system_wide_trusted_ca_search_paths:
             cert_path = Path(p)
 
@@ -292,8 +291,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
         return list(trusted_cas), errors
 
-    def _get_certificates_from_file(self, path):
-        # type: (Path) -> List[bytes]
+    def _get_certificates_from_file(self, path: Path) -> List[bytes]:
         try:
             # This IO is done as binary IO, even if the files are text files. Since we work with
             # arbitrary files here, we can not be sure about the encoding of these files. Since we
@@ -415,7 +413,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     # Sadly we can not use the Transform() valuespecs, because each configvar
     # only get's the value associated with it's config key.
     def _from_omd_config(self, omd_config):
-        settings = {}  # type: Dict[str, Any]
+        settings: Dict[str, Any] = {}
 
         for key, value in omd_config.items():
             if value == "on":

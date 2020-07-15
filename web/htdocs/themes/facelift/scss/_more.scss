@@ -1,0 +1,139 @@
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.advanced {
+  display: none;
+  opacity: 0;
+}
+
+.more {
+  .advanced {
+    display: block;
+    animation: fadein 0s both;
+  }
+
+  td.advanced {
+    display: table-cell;
+  }
+
+  tr.advanced {
+    display: table-row;
+  }
+}
+
+.more.withanimation .advanced {
+  animation: fadein 1s both;
+}
+
+a.more {
+  display: inline-block;
+  width: 26px;
+
+  img {
+    position: absolute;
+    top: 5px;
+    width: auto;
+    padding: 0;
+    margin: 0;
+    filter: brightness(65%);
+    animation-duration: 0.1s;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+  }
+}
+
+div.more_container {
+  position: relative;
+  width: 100%;
+
+  a.more {
+    position: absolute;
+    top: -7px;
+    right: -5px;
+  }
+}
+
+@keyframes more_0_0_0_1 {
+  0% { filter: opacity(0%); }
+  25% { filter: opacity(0%); }
+  75% { filter: opacity(0%); }
+
+  100% {
+    z-index: 2;
+    filter: opacity(100%);
+  }
+}
+@keyframes more_0_0_1_0 {
+  0% { filter: opacity(0%); }
+  25% { filter: opacity(0%); }
+  75% { filter: opacity(100%); }
+  100% { filter: opacity(0%); }
+}
+@keyframes more_0_1_0_0 {
+  0% { filter: opacity(0%); }
+  25% { filter: opacity(100%); }
+  75% { filter: opacity(0%); }
+  100% { filter: opacity(0%); }
+}
+@keyframes more_1_0_0_0 {
+  0% {
+    z-index: 2;
+    filter: opacity(100%);
+  }
+  25% { filter: opacity(0%); }
+  75% { filter: opacity(0%); }
+  100% { filter: opacity(0%); }
+}
+
+.more a.more {
+  img.more_0 { animation-name: more_1_0_0_0; }
+  img.more_1 { animation-name: more_0_1_0_0; }
+  img.more_2 { animation-name: more_0_0_1_0; }
+  img.more_3 { animation-name: more_0_0_0_1; }
+}
+
+a.more {
+  img.more_0 { animation-name: more_0_0_0_1; }
+  img.more_1 { animation-name: more_0_0_1_0; }
+  img.more_2 { animation-name: more_0_1_0_0; }
+  img.more_3 { animation-name: more_1_0_0_0; }
+}
+
+/* TODO: more this to nform styles */
+table.nform {
+  tbody tr:nth-child(1) td {
+    padding-top: 4px;
+  }
+
+  tr.heading {
+    background: $ux-sidebar-snapin;
+
+    td {
+      position: relative;
+      padding: 4px 10px 3px 9px;
+
+      /* Just some experimental styling */
+      color: #c9c9c9;
+    }
+  }
+
+  tr {
+    td.legend {
+      width: 280px;
+      min-width: 280px;
+      line-height: 22px;
+
+      div.title {
+        max-width: 270px;
+
+        &.withcheckbox {
+          max-width: 241px;
+        }
+      }
+    }
+  }
+
+  border-spacing: 0 0;
+}

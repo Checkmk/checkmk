@@ -25,8 +25,7 @@ export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := $(realpath scripts/iwyu_tool)
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
-PIPENV2            := scripts/run-pipenv 2
-PIPENV3            := scripts/run-pipenv 3
+PIPENV             := scripts/run-pipenv
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
@@ -62,7 +61,7 @@ PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs
 RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
 
 WEBPACK_MODE       ?= production
-THEMES             := classic facelift modern-dark
+THEMES             := facelift modern-dark
 THEME_CSS_FILES    := $(addprefix web/htdocs/themes/,$(addsuffix /theme.css,$(THEMES)))
 THEME_JSON_FILES   := $(addprefix web/htdocs/themes/,$(addsuffix /theme.json,$(THEMES)))
 THEME_IMAGE_DIRS   := $(addprefix web/htdocs/themes/,$(addsuffix /images,$(THEMES)))
@@ -71,12 +70,15 @@ THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 OPENAPI_DOC        := web/htdocs/openapi/api-documentation.html
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
+LOCK_FD := 200
+LOCK_PATH := .venv.lock
+
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-linux format-python format-python2 format-python3 \
+        format-linux format-python \
 	format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel .venv .venv-3.8 openapi openapi-doc
+        am--refresh skel openapi openapi-doc
 
 
 help:
@@ -248,10 +250,10 @@ omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
 
 .werks/werks: $(WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV3) run scripts/precompile-werks.py .werks .werks/werks cre
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
 
 ChangeLog: .werks/werks
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV3) run scripts/create-changelog.py ChangeLog .werks/werks
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-changelog.py ChangeLog .werks/werks
 
 packages:
 	$(MAKE) -C agents packages
@@ -296,7 +298,7 @@ headers:
 $(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py") $(shell find cmk/gui/cee/plugins/openapi -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
 	export TMPFILE=$$(mktemp);  \
-	$(PIPENV3) run python -m cmk.gui.openapi > $$TMPFILE && \
+	$(PIPENV) run python -m cmk.gui.openapi > $$TMPFILE && \
 	mv $$TMPFILE $@
 
 
@@ -389,14 +391,12 @@ mrproper:
 
 mrclean:
 	git clean -d --force -x \
+	    --exclude="**/.vscode"\
+	    --exclude="**/.idea" \
 	    --exclude='\.werks/.last' \
 	    --exclude='\.werks/.my_ids' \
-	    --exclude="Pipfile" \
-	    --exclude="Pipfile.lock" \
-	    --exclude=".venv*" \
-	    --exclude="**/.vscode"\
-	    --exclude="**/.idea"\
-	    --exclude="virtual-envs/*/.venv/"
+	    --exclude=".venv" \
+	    --exclude=".venv.lock"
 
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
@@ -413,6 +413,7 @@ setup:
 	    libclang-10-dev \
 	    libclang-common-10-dev \
 	    libclang1-10 \
+	    libjpeg-dev \
 	    doxygen \
 	    figlet \
 	    g++ \
@@ -434,7 +435,8 @@ setup:
 	    chrpath \
 	    enchant \
 	    ksh \
-	    p7zip-full
+	    p7zip-full \
+	    zlib1g-dev
 	sudo -H pip install -U pipenv wheel
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
@@ -552,12 +554,12 @@ format-python:
 #
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
-	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files 3; else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i
+	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(PIPENV) run yapf --parallel --style .style.yapf --verbose -i
 
 
 format-shell:
-	$(MAKE)	-C tests-py3 format-shell
+	$(MAKE)	-C tests format-shell
 
 
 # Note: You need the doxygen and graphviz packages.
@@ -567,13 +569,40 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
-.venv-3.8:
-	$(MAKE) -C virtual-envs/3.8 .venv
-	rm -rf {Pipfile,Pipfile.lock,.venv*}
-	ln -s virtual-envs/3.8/{Pipfile,Pipfile.lock,.venv} .
+# TODO: The line: sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
+# can be removed if pipenv fixes this issue.
+# See: https://github.com/pypa/pipenv/issues/3140
+#      https://github.com/pypa/pipenv/issues/3026
+# The recent pipenv version 2018.10.13 has a bug that places wrong markers in the
+# Pipfile.lock. This leads to an error when installing packages with this
+# markers and prints an error message. Example:
+# Ignoring pyopenssl: markers 'extra == "security"' don't match your environment
+# TODO: pipenv and make don't really cooperate nicely: Locking alone already
+# creates a virtual environment with setuptools/pip/wheel. This could lead to a
+# wrong up-to-date status of it later, so let's remove it here. What we really
+# want is a check if the contents of .venv match the contents of Pipfile.lock.
+# We should do this via some move-if-change Kung Fu, but for now rm suffices.
+Pipfile.lock: Pipfile
+	@( \
+	    echo "Locking Python requirements..." ; \
+	    flock $(LOCK_FD); \
+	    $(PIPENV) lock; \
+	    sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
+	    rm -rf .venv \
+	) $(LOCK_FD)>$(LOCK_PATH)
 
-# This alias is for compatibility: The target .venv should refer to 3.8 for the moment
-.venv: .venv-3.8
+# Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
+# mode installs the dependencies exactly as speciefied in the Pipfile.lock.
+# This is extremely fast since the dependencies do not have to be resolved.
+# Cleanup partially created pipenv. This makes us able to automatically repair
+# broken virtual environments which may have been caused by network issues.
+.venv: Pipfile.lock
+	@( \
+	    echo "Creating .venv..." ; \
+	    flock $(LOCK_FD); \
+	    $(RM) -r .venv; \
+	    ( SKIP_MAKEFILE_CALL=1 $(PIPENV) sync --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	) $(LOCK_FD)>$(LOCK_PATH)
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

@@ -111,6 +111,7 @@ from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -1638,6 +1639,7 @@ class html(ABCHTMLGenerator):
 
     def header(self,
                title: str = u'',
+               breadcrumb: Breadcrumb = None,
                javascripts: Optional[List[str]] = None,
                force: bool = False,
                show_body_start: bool = True,
@@ -1650,7 +1652,7 @@ class html(ABCHTMLGenerator):
                 self._header_sent = True
 
                 if self.render_headfoot and show_top_heading:
-                    self.top_heading(title)
+                    self.top_heading(title, breadcrumb)
 
     def body_start(self,
                    title: str = u'',
@@ -1667,7 +1669,7 @@ class html(ABCHTMLGenerator):
     def html_foot(self) -> None:
         self.close_html()
 
-    def top_heading(self, title: str) -> None:
+    def top_heading(self, title: str, breadcrumb: Breadcrumb = None) -> None:
         if not isinstance(config.user, config.LoggedInNobody):
             login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
             if self.enable_debug:
@@ -1676,7 +1678,8 @@ class html(ABCHTMLGenerator):
             login_text += ')'
         else:
             login_text = _("not logged in")
-        self.top_heading_left(title)
+
+        self.top_heading_left(title, breadcrumb)
 
         self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; ' %
                    login_text)
@@ -1685,7 +1688,7 @@ class html(ABCHTMLGenerator):
         self.write(' <b id=headertime></b>')
         self.top_heading_right()
 
-    def top_heading_left(self, title: str) -> None:
+    def top_heading_left(self, title: str, breadcrumb: Breadcrumb = None) -> None:
         self.open_table(class_="header")
         self.open_tr()
         self.open_td(width="*", class_="heading")
@@ -1697,6 +1700,10 @@ class html(ABCHTMLGenerator):
                href="#",
                onfocus="if (this.blur) this.blur();",
                onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
+
+        if breadcrumb:
+            BreadcrumbRenderer().show(breadcrumb)
+
         self.close_td()
 
     def top_heading_right(self) -> None:
@@ -2735,18 +2742,20 @@ class html(ABCHTMLGenerator):
  htdocs/
 
         Priority:
-        1. In case a theme is active: themes/images/icon_[name].png in site local hierarchy
-        2. In case a theme is active: themes/images/icon_[name].png in standard hierarchy
-        3. images/icons/[name].png in site local hierarchy
-        4. images/icons/[name].png in standard hierarchy
+        1. In case a theme is active: themes/images/icon_[name].svg in site local hierarchy
+        2. In case a theme is active: themes/images/icon_[name].svg in standard hierarchy
+        3. In case a theme is active: themes/images/icon_[name].png in site local hierarchy
+        4. In case a theme is active: themes/images/icon_[name].png in standard hierarchy
+        5. images/icons/[name].png in site local hierarchy
+        6. images/icons/[name].png in standard hierarchy
         """
 
-        rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s.png" % (self._theme,
-                                                                               icon_name)
-        if os.path.exists(cmk.utils.paths.omd_root + "/" +
-                          rel_path) or os.path.exists(cmk.utils.paths.omd_root + "/local/" +
-                                                      rel_path):
-            return "themes/%s/images/icon_%s.png" % (self._theme, icon_name)
+        rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s" % (self._theme, icon_name)
+
+        for file_type in ["svg", "png"]:
+            for base_dir in [cmk.utils.paths.omd_root, cmk.utils.paths.omd_root + "/local"]:
+                if os.path.exists(base_dir + "/" + rel_path + "." + file_type):
+                    return "themes/%s/images/icon_%s.%s" % (self._theme, icon_name, file_type)
 
         # TODO: This fallback is odd. Find use cases and clean this up
         return "images/icons/%s.png" % icon_name
@@ -2797,6 +2806,22 @@ class html(ABCHTMLGenerator):
         self.write_html(
             self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
                                     class_))
+
+    def more_button(self, id_, dom_levels_up):
+        if config.user.get_attribute("ui_basic_advanced_mode") in ("enforce_basic",
+                                                                   "enforce_advanced"):
+            return
+
+        self.open_a(href="javascript:void(0)",
+                    class_="more",
+                    onfocus="if (this.blur) this.blur();",
+                    onclick="cmk.utils.toggle_more(this, %s, %d)" %
+                    (json.dumps(id_), dom_levels_up))
+        self.icon(title=_("Show more items"), icon="more_0", class_="more_0")
+        self.icon(title=_(""), icon="more_1", class_="more_1")
+        self.icon(title=_(""), icon="more_2", class_="more_2")
+        self.icon(title=_("Show less items"), icon="more_3", class_="more_3")
+        self.close_a()
 
     def popup_trigger(self,
                       content: HTML,

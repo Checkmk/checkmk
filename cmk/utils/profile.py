@@ -67,7 +67,7 @@ class Profile:
 
         script_path = self._profile_file.with_suffix(".py")
         with script_path.open("w", encoding="utf-8") as f:
-            f.write(u"#!/usr/bin/env python\n"
+            f.write(u"#!/usr/bin/env python3\n"
                     "import pstats\n"
                     "stats = pstats.Stats(\"%s\")\n"
                     "stats.sort_stats('time').print_stats()\n" % self._profile_file)

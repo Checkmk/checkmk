@@ -78,7 +78,7 @@ def parse_security_master(info):
 
         for oid_second, sensor_second in info[0]:
             if num + ".1.0" == oid_second:
-                sensor_id = saveint(sensor_second[0].encode('hex'))
+                sensor_id = saveint(sensor_second[0].encode('utf-8').hex())
             elif num + ".2.0" == oid_second:
                 try:
                     value = float(sensor_second)

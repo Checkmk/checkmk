@@ -697,7 +697,8 @@ class Topology:
             growth_continue_nodes -= growth_nodes
 
     def _compute_meshes(self, hostnames: Set[HostName]) -> Meshes:
-        hostnames.update(self._known_hosts.keys())
+        hostnames.update(self._known_hosts.keys())  # pylint: disable=dict-keys-not-iterating
+
         new_hosts = []
         mandatory_keys = {"name", "outgoing", "incoming"}
         for host_data in self._fetch_data_for_hosts(hostnames):

@@ -561,7 +561,7 @@ def check_mssql_file_sizes(item, params, parsed):
             log_files_used_value = log_files_used
             readable_f = get_bytes_human_readable
         else:
-            yield 0, infotext
+            yield 0, infotext, [("log_files_used", log_files_used, warn, crit)]
             continue
 
         state = 0
@@ -571,7 +571,7 @@ def check_mssql_file_sizes(item, params, parsed):
             state = 1
         if state:
             infotext += " (warn/crit at %s/%s)" % (readable_f(warn), readable_f(crit))
-        yield state, infotext
+        yield state, infotext, [("log_files_used", log_files_used, warn, crit)]
 
 
 check_info['mssql_counters.file_sizes'] = {

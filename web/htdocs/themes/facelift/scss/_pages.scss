@@ -132,6 +132,28 @@ body {
 	  a, .popup_menu span, .popup_menu & span {
 	    color: $color-text;
 	  }
+
+          div.breadcrumb {
+            font-size: 11px;
+            white-space: nowrap;
+
+            span, a {
+              &:last-child:after {
+                content: "";
+              }
+              color: #ccc;
+              text-decoration: none;
+            }
+
+            a:hover {
+              color: #fff;
+            }
+
+            :after {
+              text-decoration: none;
+              content: " > ";
+            }
+          }
 	}
 
 	&.right {

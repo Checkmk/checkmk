@@ -4,90 +4,85 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, cast
+from typing import cast, Dict, Optional
 
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
-    PluginName,
     RawAgentData,
+    SectionName,
     ServiceCheckResult,
     ServiceDetails,
     SourceType,
 )
 
+from cmk.fetchers import IPMIDataFetcher
+
 from cmk.base.config import IPMICredentials, SectionPlugin
 from cmk.base.exceptions import MKAgentError
 
-from cmk.fetchers import IPMIDataFetcher
-
-from .abstract import CheckMKAgentDataSource
+from .agent import AgentDataSource
 
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
-class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
+class IPMIManagementBoardDataSource(AgentDataSource):
     source_type = SourceType.MANAGEMENT
 
-    _raw_sections = {PluginName("mgmt_ipmi_sensors")}
+    _raw_sections = {SectionName("mgmt_ipmi_sensors")}
 
     def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, SectionPlugin]]
-    ):
-        # type: (...) -> None
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        selected_raw_sections: Optional[Dict[SectionName, SectionPlugin]] = None,
+        main_data_source: bool = False,
+    ) -> None:
         super(IPMIManagementBoardDataSource, self).__init__(
             hostname,
             ipaddress,
-            None if selected_raw_sections is None else self._raw_sections,
+            selected_raw_section_names=None
+            if selected_raw_sections is None else self._raw_sections,
+            main_data_source=main_data_source,
         )
         self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
 
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         return "mgmt_ipmi"
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return "Management board - IPMI"
 
-    def describe(self):
-        # type: () -> str
+    def describe(self) -> str:
         items = []
-        if self._ipaddress:
-            items.append("Address: %s" % self._ipaddress)
+        if self.ipaddress:
+            items.append("Address: %s" % self.ipaddress)
         if self._credentials:
             items.append("User: %s" % self._credentials["username"])
         return "%s (%s)" % (self.title(), ", ".join(items))
 
-    def _cpu_tracking_id(self):
-        # type: () -> str
+    def _cpu_tracking_id(self) -> str:
         return self.id()
 
-    def _execute(self):
-        # type: () -> RawAgentData
+    def _execute(self) -> RawAgentData:
         if not self._credentials:
             raise MKAgentError("Missing credentials")
 
-        if self._ipaddress is None:
+        if self.ipaddress is None:
             raise MKAgentError("Missing IP address")
 
-        with IPMIDataFetcher(self._ipaddress, self._credentials["username"],
+        with IPMIDataFetcher(self.ipaddress, self._credentials["username"],
                              self._credentials["password"]) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 
-    def _summary_result(self, for_checking):
-        # type: (bool) -> ServiceCheckResult
+    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         return 0, "Version: %s" % self._get_ipmi_version(), []
 
-    def _get_ipmi_version(self):
-        # type: () -> ServiceDetails
+    def _get_ipmi_version(self) -> ServiceDetails:
         if self._host_sections is None:
             return "unknown"
 
-        section = self._host_sections.sections.get("mgmt_ipmi_firmware")
+        section = self._host_sections.sections.get(SectionName("mgmt_ipmi_firmware"))
         if not section:
             return "unknown"
 

@@ -786,7 +786,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      title=_("Domain (only used for european accounts)"),
                      help=_("If you have an european account, please set the "
                             "domain of your opsgenie. Specify an absolute URL like "
-                            "https://my.app.eu.opsgenie.com "),
+                            "https://api.eu.opsgenie.com."),
                      regex="^https://.*",
                      regex_error=_("The URL must begin with <tt>https</tt>."),
                      size=64,

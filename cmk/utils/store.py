@@ -330,8 +330,8 @@ def _save_data_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
         try:
             if tmp_path:
                 os.unlink(tmp_path)
-        except IOError as e:
-            if e.errno != errno.ENOENT:  # No such file or directory
+        except IOError as e2:
+            if e2.errno != errno.ENOENT:  # No such file or directory
                 raise
 
         # TODO: How to handle debug mode or logging?

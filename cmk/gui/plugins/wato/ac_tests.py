@@ -25,6 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 
 from cmk.gui.plugins.wato import (
@@ -46,16 +47,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @ac_test_registry.register
 class ACTestPersistentConnections(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Persistent connections")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _(
             "Persistent connections may be a configuration to improve the performance of the GUI, "
             "but be aware that you really need to tune your system to make it work properly. "
@@ -67,13 +65,11 @@ class ACTestPersistentConnections(ACTest):
             "processes with the maximum parallel livestatus connections. Otherwise livestatus "
             "requests will be blocked by existing and possibly idle connections.")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         # This check is only executed on the central instance of multisite setups
         return len(config.sitenames()) > 1
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         for site_id in config.sitenames():
             site_config = config.site(site_id)
             for result in self._check_site(site_id, site_config):
@@ -102,29 +98,24 @@ class ACTestPersistentConnections(ACTest):
 
 @ac_test_registry.register
 class ACTestLiveproxyd(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Use Livestatus Proxy Daemon")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _(
             "The Livestatus Proxy Daemon is available with the Check_MK Enterprise Edition "
             "and improves the management of the inter site connections using livestatus. Using "
             "the Livestatus Proxy Daemon improves the responsiveness and performance of your "
             "GUI and will decrease resource usage.")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         # This check is only executed on the central instance of multisite setups
         return len(config.sitenames()) > 1
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         for site_id in config.sitenames():
             for result in self._check_site(site_id):
                 result.site_id = site_id
@@ -145,16 +136,13 @@ class ACTestLiveproxyd(ACTest):
 
 @ac_test_registry.register
 class ACTestLivestatusUsage(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Livestatus usage")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _("<p>Livestatus is used by several components, for example the GUI, to gather "
                  "information about the monitored objects from the monitoring core. It is "
                  "very important for the overall performance of the monitoring system that "
@@ -165,12 +153,10 @@ class ACTestLivestatusUsage(ACTest):
                  "Consider increasing number of parallel livestatus connections or track down "
                  "the clients to check whether or not you can reduce the usage somehow.</p>")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return True
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         local_connection = LocalConnection()
         site_status = local_connection.query_row(
             "GET status\n"
@@ -188,7 +174,7 @@ class ACTestLivestatusUsage(ACTest):
 
         usage_warn, usage_crit = 80, 95
         if usage_perc >= usage_crit:
-            cls = ACResultCRIT  # type: Type[ACResult]
+            cls: Type[ACResult] = ACResultCRIT
         elif usage_perc >= usage_warn:
             cls = ACResultWARN
         else:
@@ -204,28 +190,23 @@ class ACTestLivestatusUsage(ACTest):
 
 @ac_test_registry.register
 class ACTestTmpfs(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Temporary filesystem mounted")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _("<p>By default each Check_MK site has it's own temporary filesystem "
                  "(a ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not "
                  "possible Check_MK starts without this temporary filesystem.</p>"
                  "<p>Even if this is possible, it is not recommended to use Check_MK this "
                  "way because it may reduce the overall performance of Check_MK.</p>")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return True
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         if self._tmpfs_mounted(config.omd_site()):
             yield ACResultOK(_("The temporary filesystem is mounted"))
         else:
@@ -252,28 +233,23 @@ class ACTestTmpfs(ACTest):
 
 @ac_test_registry.register
 class ACTestLDAPSecured(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.security
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Secure LDAP")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _("When using the regular LDAP protocol all data transfered between the Check_MK "
                  "and LDAP servers is sent over the network in plain text (unencrypted). This also "
                  "includes the passwords users enter to authenticate with the LDAP Server. It is "
                  "highly recommended to enable SSL for securing the transported data.")
 
     # TODO: Only test master site?
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return bool([c for _cid, c in userdb.active_connections() if c.type() == "ldap"])
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         for connection_id, connection in userdb.active_connections():
             if connection.type() != "ldap":
                 continue
@@ -291,16 +267,13 @@ class ACTestLDAPSecured(ACTest):
 
 @ac_test_registry.register
 class ACTestLivestatusSecured(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.security
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Livestatus encryption")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _(
             "<p>In distributed setups Livestatus is used to transport the status information "
             "gathered in one site to the central site. Since Check_MK 1.6 it is natively "
@@ -310,13 +283,11 @@ class ACTestLivestatusSecured(ACTest):
             "are able to handle the SSL encrypted Livestatus communication. Have a look at "
             "<a href=\"werk.py?werk=7017\">werk #7017</a> for further information.</p>")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         cfg = ConfigDomainOMD().default_globals()
         return bool(cfg["site_livestatus_tcp"])
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         cfg = ConfigDomainOMD().default_globals()
         if not cfg["site_livestatus_tcp"]:
             yield ACResultOK(_("Livestatus network traffic is encrypted"))
@@ -328,28 +299,23 @@ class ACTestLivestatusSecured(ACTest):
 
 @ac_test_registry.register
 class ACTestNumberOfUsers(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Number of users")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _("<p>Having a large number of users configured in Check_MK may decrease the "
                  "performance of the Web GUI.</p>"
                  "<p>It may be possible that you are using the LDAP sync to create the users. "
                  "Please review the filter configuration of the LDAP sync. Maybe you can "
                  "decrease the sync scope to get a smaller number of users.</p>")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return True
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         users = userdb.load_users()
         num_users = len(users)
         user_warn_threshold = 500
@@ -364,16 +330,13 @@ class ACTestNumberOfUsers(ACTest):
 
 @ac_test_registry.register
 class ACTestHTTPSecured(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.security
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Secure GUI (HTTP)")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return \
             _("When using the regular HTTP protocol all data transfered between the Check_MK "
               "and the clients using the GUI is sent over the network in plain text (unencrypted). "
@@ -384,12 +347,10 @@ class ACTestHTTPSecured(ACTest):
             + _("Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt> in "
                 "your system apache configuration to tell the Checkmk GUI about the SSL setup.")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return True
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         if html.request.is_ssl_request:
             yield ACResultOK(_("Site is using HTTPS"))
         else:
@@ -398,27 +359,22 @@ class ACTestHTTPSecured(ACTest):
 
 @ac_test_registry.register
 class ACTestOldDefaultCredentials(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.security
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Default credentials")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _("In versions prior to version 1.4.0 the first administrative user of the "
                  "site was named <tt>omdadmin</tt> with the standard password <tt>omd</tt>. "
                  "This test warns you in case the site uses these standard credentials. "
                  "It is highly recommended to change this password.")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return userdb.user_exists(UserId("omdadmin"))
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         if cmk.gui.plugins.userdb.htpasswd.HtpasswdUserConnector({}).check_credentials(
                 "omdadmin", "omd") == "omdadmin":
             yield ACResultCRIT(
@@ -430,16 +386,13 @@ class ACTestOldDefaultCredentials(ACTest):
 
 @ac_test_registry.register
 class ACTestBackupConfigured(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.reliability
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Backup configured")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _(
             "<p>You should have a backup configured for being able to restore your "
             "monitoring environment in case of a data loss.<br>"
@@ -451,12 +404,10 @@ class ACTestBackupConfigured(ACTest):
             "site to be sure that the data is consistent. If you need to, you can then use "
             "the 3rd party tool to archive the Check_MK backups.</p>")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return True
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         jobs = SiteBackupJobs()
         if jobs.choices():
             yield ACResultOK(_("You have configured %d backup jobs") % len(jobs.choices()))
@@ -466,27 +417,22 @@ class ACTestBackupConfigured(ACTest):
 
 @ac_test_registry.register
 class ACTestBackupNotEncryptedConfigured(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.security
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Encrypt backups")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _("Please check whether or not your backups are stored securely. In "
                  "case you are storing your backup on a storage system the storage may "
                  "already be secure enough without extra backup encryption. But in "
                  "some cases it may be a good idea to store the backup encrypted.")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return True
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         jobs = SiteBackupJobs()
         for job in jobs.objects.values():
             if job.is_encrypted():
@@ -534,16 +480,13 @@ class ABCACApacheTest(ACTest, metaclass=abc.ABCMeta):
 
 @ac_test_registry.register
 class ACTestApacheNumberOfProcesses(ABCACApacheTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Apache number of processes")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _(
             "<p>The apache has a number maximum processes it can start in case of high "
             "load situations. These apache processes may use a decent amount of memory, so "
@@ -560,12 +503,10 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             "the required memory needed by the apache processes."
             "</p>")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return True
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         process_limit = self._get_maximum_number_of_processes()
         average_process_size = self._get_average_process_size()
 
@@ -621,28 +562,23 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
 
 @ac_test_registry.register
 class ACTestApacheProcessUsage(ABCACApacheTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Apache process usage")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _("The apache has a number maximum processes it can start in case of high "
                  "load situations. The usage of these processes should not be too high "
                  "in normal situations. Otherwise, if all processes are in use, the "
                  "users of the GUI might have to wait too long for a free process, which "
                  "would result in a slow GUI.")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return True
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         total_slots = self._get_maximum_number_of_processes()
         open_slots = self._get_number_of_idle_processes()
         used_slots = total_slots - open_slots
@@ -651,7 +587,7 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
 
         usage_warn, usage_crit = 60, 90
         if usage >= usage_crit:
-            cls = ACResultCRIT  # type: Type[ACResult]
+            cls: Type[ACResult] = ACResultCRIT
         elif usage >= usage_warn:
             cls = ACResultWARN
         else:
@@ -664,16 +600,13 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
 
 @ac_test_registry.register
 class ACTestCheckMKHelperUsage(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Check_MK helper usage")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _(
             "<p>The Check_MK Microcore uses Check_MK helper processes to execute "
             "the Check_MK and Check_MK Discovery services of the hosts monitored "
@@ -694,12 +627,10 @@ class ACTestCheckMKHelperUsage(ACTest):
             "of the Microcore, which may cause load peaks when having "
             "a lot of Check_MK helper processes configured.</p>")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return self._uses_microcore()
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_cmk average_latency_cmk\n")
@@ -709,7 +640,7 @@ class ACTestCheckMKHelperUsage(ACTest):
 
         usage_warn, usage_crit = 85, 95
         if helper_usage_perc >= usage_crit:
-            cls = ACResultCRIT  # type: Type[ACResult]
+            cls: Type[ACResult] = ACResultCRIT
         elif helper_usage_perc >= usage_warn:
             cls = ACResultWARN
         else:
@@ -730,28 +661,23 @@ class ACTestCheckMKHelperUsage(ACTest):
 
 @ac_test_registry.register
 class ACTestAlertHandlerEventTypes(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Alert handler: Don't handle all check executions")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _(
             "In general it will result in a significantly increased load when alert handlers are "
             "configured to handle all check executions. It is highly recommended to "
             "<a href=\"wato.py?mode=edit_configvar&varname=alert_handler_event_types\">disable "
             "this</a> in most cases.")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return self._uses_microcore()
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         if "checkresult" in self._get_effective_global_setting("alert_handler_event_types"):
             yield ACResultCRIT(_("Alert handler are configured to handle all check execution."))
         else:
@@ -760,16 +686,13 @@ class ACTestAlertHandlerEventTypes(ACTest):
 
 @ac_test_registry.register
 class ACTestGenericCheckHelperUsage(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Check helper usage")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _(
             "<p>The Check_MK Microcore uses generic check helper processes to execute "
             "the active check based services (e.g. check_http, check_...). There should "
@@ -783,12 +706,10 @@ class ACTestGenericCheckHelperUsage(ACTest):
             "</ul>"
             "</p>")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return self._uses_microcore()
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_generic average_latency_generic\n")
@@ -798,7 +719,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
 
         usage_warn, usage_crit = 85, 95
         if helper_usage_perc >= usage_crit:
-            cls = ACResultCRIT  # type: Type[ACResult]
+            cls: Type[ACResult] = ACResultCRIT
         elif helper_usage_perc >= usage_warn:
             cls = ACResultWARN
         else:
@@ -816,16 +737,13 @@ class ACTestGenericCheckHelperUsage(ACTest):
 
 @ac_test_registry.register
 class ACTestSizeOfExtensions(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.performance
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Size of extensions")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _("<p>In distributed WATO setups it is possible to synchronize the "
                  "extensions (MKPs and files in <tt>~/local/</tt>) to the slave sites. "
                  "These files are synchronized on every replication with a slave site and "
@@ -833,8 +751,7 @@ class ACTestSizeOfExtensions(ACTest):
                  "You could either disable the MKP sync or check whether or not you need "
                  "all the extensions.</p>")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return config.has_wato_slave_sites() and self._replicates_mkps()
 
     def _replicates_mkps(self):
@@ -847,11 +764,10 @@ class ACTestSizeOfExtensions(ACTest):
         if not replicates_mkps:
             return
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         size = self._size_of_extensions()
         if size > 100 * 1024 * 1024:
-            cls = ACResultCRIT  # type: Type[ACResult]
+            cls: Type[ACResult] = ACResultCRIT
         else:
             cls = ACResultOK
 
@@ -865,27 +781,22 @@ class ACTestSizeOfExtensions(ACTest):
 
 @ac_test_registry.register
 class ACTestBrokenGUIExtension(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.deprecations
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Broken GUI extensions")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _(
             "Since 1.6.0i1 broken GUI extensions don't block the whole GUI initialization anymore. "
             "Instead of this, the errors are logged in <tt>var/log/web.log</tt>. In addition to this, "
             "the errors are displayed here.")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return True
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         errors = cmk.gui.utils.get_failed_plugins()
         if not errors:
             yield ACResultOK(_("No broken extensions were found."))
@@ -896,16 +807,13 @@ class ACTestBrokenGUIExtension(ACTest):
 
 @ac_test_registry.register
 class ACTestESXDatasources(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.deprecations
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("The Check_MK agent is queried via the ESX datasource program")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _("The Check_MK agent is queried via the datasource program for ESX systems. "
                  "This is option will be deleted in a future release. Please configure the "
                  "host to contact the Check_MK agent and the configured datasource programs "
@@ -918,12 +826,10 @@ class ACTestESXDatasources(ACTest):
         ruleset = collection.get('special_agents:vsphere')
         return ruleset.get_rules()
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return self._get_rules()
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
+    def execute(self) -> Iterator[ACResult]:
         all_rules_ok = True
         for folder, rule_index, rule in self._get_rules():
             vsphere_queries_agent = (rule.value.get('direct') in ['agent', 'hostsystem_agent'])
@@ -938,29 +844,23 @@ class ACTestESXDatasources(ACTest):
 
 @ac_test_registry.register
 class ACTestRulebasedNotifications(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.deprecations
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Flexible and plain email notifications")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _(
             "Flexible and plain email notifications are considered deprecated in version 1.5.0 and "
             " will be removed in Check_MK version 1.6.0. Please consider to switch to rulebased "
             "notifications.")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         return True
 
-    def execute(self):
-        # type: () -> Iterator[ACResult]
-        settings = watolib.load_configuration_settings()
-        if settings['enable_rulebased_notifications'] is not True:
+    def execute(self) -> Iterator[ACResult]:
+        if not rulebased_notifications_enabled():
             yield ACResultCRIT('Rulebased notifications are deactivated in the global settings')
         else:
             yield ACResultOK(_("Rulebased notifications are activated"))
@@ -973,19 +873,15 @@ def _site_is_using_livestatus_proxy(site_id):
 
 @ac_test_registry.register
 class ACTestConnectivity(ACTest):
-    def category(self):
-        # type: () -> str
+    def category(self) -> str:
         return ACTestCategories.connectivity
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Site connectivity")
 
-    def help(self):
-        # type: () -> str
+    def help(self) -> str:
         return _("This check returns CRIT if the connection to the remote site failed.")
 
-    def is_relevant(self):
-        # type: () -> bool
+    def is_relevant(self) -> bool:
         # This test is always irrelevant :)
         return False

@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, List, Tuple
 
-from cmk.snmplib.type_defs import SNMPTree
-
-from .agent_based_api.v0 import register
+from .agent_based_api.v0 import register, SNMPTree
 from .utils import ucd_hr_detection
 
 
@@ -27,15 +25,14 @@ def parse_hr_mem(string_table):
         '.1.3.6.1.2.1.25.2.1.10': 'network disk',
     }
 
-    def to_bytes(units):
-        # type: (str) -> int
+    def to_bytes(units: str) -> int:
         """In some cases instead of a plain byte-count an extra quantifier is appended
         e.g. '4096 Bytes' instead of just '4096'"""
         components = units.split(" ", 1)
         factor = 1 if len(components) == 1 or components[1] != "KBytes" else 1024
         return int(components[0]) * factor
 
-    parsed = {}  # type: Dict[str, List[Tuple[str, int, int]]]
+    parsed: Dict[str, List[Tuple[str, int, int]]] = {}
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         units = to_bytes(hrunits)
         size = int(hrsize) * units

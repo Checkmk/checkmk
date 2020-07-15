@@ -2656,8 +2656,8 @@ mk_ora_sqlplus () {
         logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Found '^ERROR at line'"
 
         if $MK_ORA_DEBUG_CONNECT; then
-            echo "Logindetails: ${DBCONNECT}" >&2
-            echo -e "$output"
+            echo "    Logindetails:           ${MK_DB_CONNECT}" >&2
+            echo -e "    Error Message:          ${output:0:100}"
         else
             echo '<<<oracle_instance:sep(124)>>>'
             echo -e "$output"

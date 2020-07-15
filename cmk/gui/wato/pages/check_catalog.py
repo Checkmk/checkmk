@@ -11,7 +11,7 @@ from six import ensure_str
 
 import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginNameStr
 
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -139,8 +139,8 @@ class ModeCheckPlugins(WatoMode):
             menu.show()
 
     def _get_manpages_after_search(self):
-        collection = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
-        handled_check_names = set()  # type: Set[CheckPluginName]
+        collection: Dict[ManPageCatalogPath, List[Dict]] = {}
+        handled_check_names: Set[CheckPluginNameStr] = set()
 
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
@@ -179,7 +179,7 @@ class ModeCheckPlugins(WatoMode):
         for key, entries in self._manpages.items():
             check_entries(key, entries)
 
-        return collection.items()
+        return list(collection.items())
 
     def _get_check_catalog(self):
         def path_prefix_matches(p, op):
@@ -192,7 +192,7 @@ class ModeCheckPlugins(WatoMode):
         def strip_manpage_entry(entry):
             return {k: v for k, v in entry.items() if k in ["name", "agents", "title"]}
 
-        tree = {}  # type: Dict[str, Any]
+        tree: Dict[str, Any] = {}
         if len(self._path) > 0:
             only_path = tuple(self._path)
         else:

@@ -32,7 +32,7 @@ from cmk.gui.plugins.views.icons.utils import (  # noqa: F401
 
 # Use this structure for new icons
 # TODO: Move this to cmk.gui.views once this is only used by legacy view/icon plugins
-multisite_icons_and_actions = {}  # type: _Dict[str, _Dict[str, _Any]]
+multisite_icons_and_actions: _Dict[str, _Dict[str, _Any]] = {}
 
 
 def get_multisite_icons():

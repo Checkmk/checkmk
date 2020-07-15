@@ -3,23 +3,27 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, Any, Text, Union, List, Literal, TypedDict
+from typing import Dict, Any, Union, List, Literal, TypedDict
 
-# We don't differentiate between raw and cee versions here. It's a unified list of types.
+
 DomainType = Literal[
     'agent',
     'activation_run',
-    'contact_group',
-    'folder',
+    'contact_group_config',
+    'folder_config',
+    'downtime',
     'host',
-    'host_group',
-    'service_group',
+    'host_config',
+    'host_group_config',
+    'service',
+    'service_discovery',
+    'service_group_config',
     'user',
 ]  # yapf: disable
 
 DomainObject = Dict[str, Any]
 
-EndpointName = Literal[
+CmkEndpointName = Literal[
     'cmk/run',
     'cmk/activate',
     'cmk/bake',
@@ -34,6 +38,9 @@ EndpointName = Literal[
     'cmk/wait-for-completion',
     'cmk/baking-status',
     'cmk/bakery-status',
+    'cmk/service.move-monitored',
+    'cmk/service.move-undecided',
+    'cmk/service.move-ignored'
 ]  # yapf: disable
 
 RestfulEndpointName = Literal[
@@ -72,7 +79,9 @@ RestfulEndpointName = Literal[
     ".../version",
 ]  # yapf: disable
 
-HTTPMethod = Literal["GET", "PUT", "POST", "DELETE"]
+EndpointName = Union[CmkEndpointName, RestfulEndpointName]
+
+HTTPMethod = Literal["get", "put", "post", "delete"]
 
 PropertyFormat = Literal[
     # String values
@@ -94,7 +103,7 @@ PropertyFormat = Literal[
     'decimal',  # the number should be interpreted as a float-point decimal.
     'int',  # the number should be interpreted as an integer.
 ]  # yapf: disable
-CollectionItem = Dict[str, Text]
+CollectionItem = Dict[str, str]
 LocationType = Literal['path', 'query', 'header', 'cookie']
 ResultType = Literal["object", "list", "scalar", "void"]
 LinkType = Dict[str, str]
@@ -106,3 +115,4 @@ CollectionObject = TypedDict('CollectionObject', {
     'extensions': Dict[str, str]
 })
 Serializable = Union[Dict[str, Any], CollectionObject]  # because TypedDict is stricter
+ETagBehaviour = Literal["input", "output", "both"]

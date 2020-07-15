@@ -12,6 +12,8 @@ import json
 from contextlib import contextmanager
 from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
+from livestatus import SiteId
+
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
@@ -44,6 +46,8 @@ from cmk.gui.valuespec import (
     TextUnicode,
     TextAscii,
     TextAreaUnicode,
+    DropdownChoice,
+    Integer,
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
@@ -53,6 +57,11 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.plugins.main_menu.mega_menus import (
+    make_main_menu_breadcrumb,
+    MegaMenuConfigure,
+)
 
 from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
@@ -234,9 +243,15 @@ def transform_old_visual(visual):
     visual.setdefault('single_infos', [])
     visual.setdefault('context', {})
     visual.setdefault('link_from', {})
+    visual.setdefault('topic', '')
+    visual.setdefault("icon", None)
 
     # 1.6 introduced this setting: Ensure all visuals have it set
     visual.setdefault("add_context_to_title", True)
+
+    # 1.7 introduced these settings for the new mega menus
+    visual.setdefault("sort_index", 99)
+    visual.setdefault("is_advanced", False)
 
 
 def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
@@ -425,7 +440,7 @@ def page_list(what,
     if not config.user.may("general.edit_" + what):
         raise MKAuthException(_("Sorry, you lack the permission for editing this type of visuals."))
 
-    html.header(title)
+    html.header(title, visual_page_breadcrumb(what, title, "list"))
 
     html.begin_context_buttons()
     html.context_button(_('New'), 'create_%s.py' % what_s, "new")
@@ -452,6 +467,7 @@ def page_list(what,
     if pagetypes.has_page_type("custom_snapin"):
         html.context_button(_("Custom snapins"), "custom_snapins.py", "custom_snapin")
     html.context_button(_("Bookmark lists"), "bookmark_lists.py", "bookmark_list")
+    html.context_button(_("Topics"), "pagetype_topics.py", "pagetype_topics")
 
     html.end_context_buttons()
 
@@ -605,12 +621,12 @@ def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
 
 
 def page_create_visual(what, info_keys, next_url=None):
-    title = visual_type_registry[what]().title
+    title = _('Create %s') % visual_type_registry[what]().title
     what_s = what[:-1]
 
     vs_infos = SingleInfoSelection(info_keys)
 
-    html.header(_('Create %s') % title)
+    html.header(title, visual_page_breadcrumb(what, title, "create"))
     html.begin_context_buttons()
     html.context_button(_("Back"), html.get_url_input("back", "edit_%s.py" % what), "back")
     html.end_context_buttons()
@@ -670,12 +686,11 @@ def page_create_visual(what, info_keys, next_url=None):
 
 
 def get_context_specs(visual, info_handler):
-    info_keys = []
+    info_keys = list(visual_info_registry.keys())
     if info_handler:
-        info_keys = info_handler(visual)
-
-    if info_keys is None:
-        info_keys = visual_info_registry.keys()
+        handler_keys = info_handler(visual)
+        if handler_keys is not None:
+            info_keys = handler_keys
 
     single_info_keys = [key for key in info_keys if key in visual['single_infos']]
     multi_info_keys = [key for key in info_keys if key not in single_info_keys]
@@ -755,7 +770,7 @@ def page_edit_visual(what,
     # Load existing visual from disk - and create a copy if 'load_user' is set
     visualname = html.request.var("load_name")
     oldname = visualname
-    mode = html.request.var('mode', 'edit')
+    mode = html.request.get_ascii_input_mandatory('mode', 'edit')
     owner_user_id = config.user.id
     if visualname:
         cloneuser = html.request.var("load_user")
@@ -816,7 +831,7 @@ def page_edit_visual(what,
     else:
         title = _('Edit %s') % visual_type.title
 
-    html.header(title)
+    html.header(title, visual_page_breadcrumb(what, title, mode))
     html.begin_context_buttons()
     back_url = html.get_url_input("back", "edit_%s.py" % what)
     html.context_button(_("Back"), back_url, "back")
@@ -882,7 +897,28 @@ def page_edit_visual(what,
                  help=_("Whether or not additional information from the page context "
                         "(filters) should be added to the title given above."),
              )),
-            ('topic', TextUnicode(title=_('Topic') + '<sup>*</sup>', size=50)),
+            ('topic', DropdownChoice(
+                title=_('Topic'),
+                choices=pagetypes.PagetypeTopics.choices(),
+            )),
+            ("sort_index",
+             Integer(
+                 title=_("Sort index"),
+                 default_value=99,
+                 help=_("You can customize the order of the %s by changing "
+                        "this number. Lower numbers will be sorted first. "
+                        "Topics with the same number will be sorted alphabetically.") %
+                 visual_type.title,
+             )),
+            ("is_advanced",
+             Checkbox(
+                 title=_("Is advanced"),
+                 default_value=99,
+                 help=_("The navigation allows to hide items based on a basic / advanced "
+                        "toggle. You can specify here whether or not this %s should be "
+                        "treated as basic or advanced %s.") %
+                 (visual_type.title, visual_type.title),
+             )),
             ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
                                             rows=4,
                                             cols=50)),
@@ -916,7 +952,7 @@ def page_edit_visual(what,
             if not general_properties['linktitle']:
                 general_properties['linktitle'] = general_properties['title']
             if not general_properties['topic']:
-                general_properties['topic'] = _("Other")
+                general_properties['topic'] = "other"
 
             old_visual = visual
             # TODO: Currently not editable, but keep settings
@@ -929,6 +965,8 @@ def page_edit_visual(what,
                     'name',
                     'title',
                     'topic',
+                    'sort_index',
+                    'is_advanced',
                     'description',
                     'linktitle',
                     'icon',
@@ -1214,19 +1252,29 @@ def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
     if single_infos is None:
         single_infos = []
 
+    single_info_keys = set(get_single_info_keys(single_infos))
+
     context: VisualContext = {}
     for filter_name, filter_class in filter_registry.items():
         filter_object = filter_class()
-        if only_infos is None or filter_object.info in only_infos:
-            this_filter_vars: FilterHTTPVariables = {}
-            for varname in filter_object.htmlvars:
-                if html.request.has_var(varname):
-                    if filter_object.info in single_infos:
-                        context[filter_name] = html.request.get_unicode_input_mandatory(varname)
-                        break
-                    this_filter_vars[varname] = html.request.get_str_input_mandatory(varname)
-            if this_filter_vars:
-                context[filter_name] = this_filter_vars
+
+        if only_infos is not None and filter_object.info not in only_infos:
+            continue  # Skip filters related to not relevant infos
+
+        this_filter_vars: FilterHTTPVariables = {}
+        for varname in filter_object.htmlvars:
+            if not html.request.has_var(varname):
+                continue  # Variable to set in environment
+
+            if varname in single_info_keys:
+                context[filter_name] = html.request.get_unicode_input_mandatory(varname)
+                break
+
+            this_filter_vars[varname] = html.request.get_str_input_mandatory(varname)
+
+        if this_filter_vars:
+            context[filter_name] = this_filter_vars
+
     return context
 
 
@@ -1251,8 +1299,6 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
 # TODO: Untangle only_sites and filter headers
 # TODO: Reduce redundancies with filters_of_visual()
 def get_filter_headers(table, infos, context):
-    # Prepare Filter headers for Livestatus
-    filter_headers = ""
     with html.stashed_vars():
         for filter_name, filter_vars in context.items():
             # first set the HTML variables. Sorry - the filters need this
@@ -1262,17 +1308,24 @@ def get_filter_headers(table, infos, context):
             else:
                 html.request.set_var(filter_name, filter_vars)
 
-        # Apply the site hint / filter (Same logic as in views.py)
-        site_str = html.request.var("site")
-        only_sites = [site_str] if site_str else None
+        filter_headers = "".join(collect_filter_headers(infos, table))
+    return filter_headers, get_only_sites()
 
-        # Now compute filter headers for all infos of the used datasource
-        for filter_name, filter_class in filter_registry.items():
-            filter_object = filter_class()
-            if filter_object.info in infos:
-                header = filter_object.filter(table)
-                filter_headers += header
-    return filter_headers, only_sites
+
+def get_only_sites() -> Optional[List[SiteId]]:
+    """Is the view limited to specific sites by request?"""
+    site_arg = html.request.var("site")
+    if site_arg:
+        return [SiteId(site_arg)]
+    return None
+
+
+def collect_filter_headers(info_keys, table):
+    # Collect all available filters for these infos
+    for filter_class in filter_registry.values():
+        filter_obj = filter_class()
+        if filter_obj.info in info_keys and filter_obj.available():
+            yield filter_obj.filter(table)
 
 
 #.
@@ -1286,6 +1339,15 @@ def get_filter_headers(table, infos, context):
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+def FilterChoices(infos: List[InfoName], title: str, help: str):  # pylint: disable=redefined-builtin
+    """Select names of filters for the given infos"""
+    return DualListChoice(
+        choices=[(x[0], x[1].title()) for x in VisualFilterList.get_choices(infos, ignore=set())],
+        title=title,
+        help=help,
+    )
 
 
 class VisualFilterList(ListOfMultiple):
@@ -1426,6 +1488,19 @@ def unpack_context_after_editing(packed_context: Dict) -> VisualContext:
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+def visual_page_breadcrumb(what: str, title: str, page_name: str) -> Breadcrumb:
+    breadcrumb = make_main_menu_breadcrumb(MegaMenuConfigure)
+
+    list_title = visual_type_registry[what]().plural_title
+    breadcrumb.append(BreadcrumbItem(title=list_title, url="edit_%s.py" % what))
+
+    if page_name == "list":  # The list is the parent of all others
+        return breadcrumb
+
+    breadcrumb.append(BreadcrumbItem(title=title, url=html.makeuri([])))
+    return breadcrumb
 
 
 def is_single_site_info(info_key: InfoName) -> bool:

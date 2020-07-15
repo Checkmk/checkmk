@@ -6,18 +6,10 @@
 
 import time
 
-from livestatus import lqencode
-import cmk.gui.sites as sites
-from cmk.gui.utils.url_encoder import HTTPVariables
-
-from cmk.utils.render import date_and_time
-from cmk.gui.exceptions import MKTimeout, MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.visuals import get_filter_headers
 from cmk.gui.valuespec import (
     CascadingDropdown,
-    Dictionary,
     DropdownChoice,
     TextUnicode,
     Timerange,
@@ -31,12 +23,12 @@ class BarChartDataGenerator(ABCDataGenerator):
     """
     @classmethod
     def generate_response_data(cls, properties, context):
-        data_rows, _column_headers = cls._get_data(properties, context)
+        data_rows = cls._get_data(properties, context)
         bar_elements = cls._create_bar_elements(data_rows, properties, context)
         return cls._create_bar_chart_config(bar_elements, properties, context)
 
     @classmethod
-    def _get_data(cls, properties, context, return_column_headers=True):
+    def _get_data(cls, properties, context):
         raise NotImplementedError()
 
     @classmethod
@@ -104,9 +96,10 @@ class BarChartDataGenerator(ABCDataGenerator):
     def _create_bar_elements(cls, data_rows, properties, context):
         """Return a list of dicts specified as follows:
         bar_elements = [{
-            "start_time": 1234567891,
-            "end_time": 1234567892,
+            "timestamp": 1234567891,
+            "ending_timestamp": 1234567892,
             "value": 15,
+            "tag": "bar",
             "tooltip": "time frame information text",
             "url": "https://url/to/specific/data/view",
             <optional_detail>
@@ -125,13 +118,14 @@ class BarChartDataGenerator(ABCDataGenerator):
         bar_elements = []
         for i, timestamp in enumerate(timestamps):
             if i == len(timestamps) - 1:
-                end_time = time_range[1]
+                ending_timestamp = time_range[1]
             else:
-                end_time = timestamps[i + 1] - 1
+                ending_timestamp = timestamps[i + 1] - 1
             bar_elements.append({
-                "start_time": timestamp,
-                "end_time": end_time,
+                "timestamp": timestamp,
+                "ending_timestamp": ending_timestamp,
                 "value": 0,
+                "tag": "bar",
             })
         return bar_elements
 
@@ -157,7 +151,7 @@ class BarChartDataGenerator(ABCDataGenerator):
         row_offset = 0
         for time_frame in bar_elements:
             for row in data_rows[row_offset:]:
-                if row[4] >= time_frame["end_time"]:
+                if row[4] >= time_frame["ending_timestamp"]:
                     break
                 row_offset += 1
                 time_frame["value"] += 1
@@ -183,18 +177,19 @@ class BarBarChartDataGenerator(BarChartDataGenerator):
         bar_elements = bar_chart_config["elements"]
 
         grouping_indices = cls._get_grouping_indices(bar_elements, properties)
-        grouped_elements = []
+        barbar_elements = []
         for start, end in grouping_indices:
-            grouped_elements.append({
-                "start_time": bar_elements[start]["start_time"],
-                "end_time": bar_elements[end]["end_time"],
+            barbar_elements.append({
+                "timestamp": bar_elements[start]["timestamp"],
+                "ending_timestamp": bar_elements[end]["ending_timestamp"],
                 "value": sum([e["value"] for e in bar_elements[start:end + 1]]),
+                "tag": "barbar",
             })
-        for time_frame in grouped_elements:
+        for time_frame in barbar_elements:
             tooltip, url = cls._forge_tooltip_and_url(time_frame, properties, context)
             cls._update_tooltip_and_url(time_frame, tooltip, url)
 
-        bar_chart_config["grouped_elements"] = grouped_elements
+        bar_chart_config["elements"].extend(barbar_elements)
         return bar_chart_config
 
     @classmethod
@@ -204,7 +199,7 @@ class BarBarChartDataGenerator(BarChartDataGenerator):
         grouping_indices = []
         tmp_start_index = 0
         for i, elem in enumerate(bar_elements):
-            if i > 0 and start_new_group(elem["start_time"]):
+            if i > 0 and start_new_group(elem["timestamp"]):
                 grouping_indices.append([tmp_start_index, i - 1])
                 tmp_start_index = i
         if not grouping_indices or grouping_indices[-1][0] != tmp_start_index:
@@ -223,22 +218,8 @@ class BarBarChartDataGenerator(BarChartDataGenerator):
     def generate_response_data(cls, properties, context):
         bar_chart_config = super(BarBarChartDataGenerator,
                                  cls).generate_response_data(properties, context)
-        # Add grouped_elements
+        # Add barbar elements
         response = cls._create_barbar_chart_config(bar_chart_config, properties, context)
-
-        # TODO KO: remove legacy grouped_elements and generate data in "new_response" style
-
-        # This converts the barbar data to the new format
-        elements = []
-        for element in response["elements"]:
-            element["timestamp"] = element["start_time"]
-            element["tag"] = "bar"
-            elements.append(element)
-
-        for element in response["grouped_elements"]:
-            element["timestamp"] = element["start_time"]
-            element["tag"] = "barbar"
-            elements.append(element)
 
         if properties["time_resolution"] == "h":
             per_string = {"bar": "hour", "barbar": "12 hours"}
@@ -250,123 +231,16 @@ class BarBarChartDataGenerator(BarChartDataGenerator):
             "plot_definitions": [{
                 "plot_type": "bar",
                 "css_classes": ["bar_chart", "barbar_chart"],
-                "color": "blue",
                 "id": "id_barbar",
                 "label": _("%s per %s") % (response["title"], per_string["barbar"]),
                 "use_tags": ["barbar"]
             }, {
                 "plot_type": "bar",
                 "css_classes": ["bar_chart"],
-                "color": "green",
                 "id": "id_bar",
                 "label": _("%s per %s") % (response["title"], per_string["bar"]),
                 "use_tags": ["bar"]
             }],
-            "data": elements
+            "data": response["elements"]
         }
         return new_response
-
-
-class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
-    """ Generates the data for host/service alert/notifications bar charts """
-    @classmethod
-    def log_type(cls):
-        raise NotImplementedError()
-
-    @classmethod
-    def log_class(cls):
-        raise NotImplementedError()
-
-    @classmethod
-    def filter_infos(cls):
-        return ["host", "service"]
-
-    @classmethod
-    def vs_parameters(cls):
-        # Specifies the properties for this data generator
-        return Dictionary(
-            title=_("Properties"),
-            render="form",
-            optional_keys=[],
-            elements=super(ABCEventBarChartDataGenerator, cls).bar_chart_vs_components() +
-            [("log_target",
-              DropdownChoice(
-                  title=_("Host or service %ss" % cls.log_type()),
-                  choices=[("host", _("Show %ss for hosts" % cls.log_type())),
-                           ("service", _("Show %ss for services" % cls.log_type()))],
-                  default_value="service",
-              ))])
-
-    @classmethod
-    def _get_data(cls, properties, context, return_column_headers=True):
-        time_range = cls._int_time_range_from_rangespec(properties["time_range"])
-        # TODO KO: check typing
-        c_headers = "ColumnHeaders: on\n" if return_column_headers else ""
-        filter_headers, only_sites = get_filter_headers("log", cls.filter_infos(), context)
-
-        query = ("GET log\n"
-                 "Columns: log_state host_name service_description log_type log_time\n"
-                 "%s"
-                 "Filter: class = %d\n"
-                 "Filter: log_time >= %f\n"
-                 "Filter: log_time <= %f\n"
-                 "Filter: log_type ~ %s .*\n"
-                 "%s" % (c_headers, cls.log_class(), time_range[0], time_range[1],
-                         lqencode(properties["log_target"].upper()), lqencode(filter_headers)))
-
-        try:
-            if only_sites:
-                sites.live().set_only_sites(only_sites)
-            rows = sites.live().query(query)
-        except MKTimeout:
-            raise
-        except Exception:
-            raise MKGeneralException(_("The query returned no data."))
-        finally:
-            sites.live().set_only_sites(None)
-
-        # TODO: hdrs has the funny type Union[str, LivestatusRow], is this really what we want?
-        hdrs = rows.pop(0) if return_column_headers else ""
-        return rows, hdrs
-
-    @classmethod
-    def _forge_tooltip_and_url(cls, time_frame, properties, context):
-        time_range = cls._int_time_range_from_rangespec(properties["time_range"])
-        end_time = min(time_frame["end_time"], time_range[1])
-        from_time_str = date_and_time(time_frame["start_time"])
-        to_time_str = date_and_time(end_time)
-        # TODO: Can this be simplified by passing a list as argument to html.render_table()?
-        tooltip = html.render_table(
-            html.render_tr(html.render_td(_("From:")) + html.render_td(from_time_str)) +
-            html.render_tr(html.render_td(_("To:")) + html.render_td(to_time_str)) +  #
-            html.render_tr(
-                html.render_td("%ss:" % properties["log_target"].capitalize()) +
-                html.render_td(time_frame["value"])))
-
-        args = []  # type: HTTPVariables
-        # Generic filters
-        args.append(("filled_in", "filter"))
-        args.append(("view_name", "events"))
-        args.append(("logtime_from", str(time_frame["start_time"])))
-        args.append(("logtime_from_range", "unix"))
-        args.append(("logtime_until", str(end_time)))
-        args.append(("logtime_until_range", "unix"))
-        args.append(("logclass%d" % cls.log_class(), "on"))
-
-        # Target filters
-        if properties["log_target"] == "host":
-            args.append(("logst_h0", "on"))
-            args.append(("logst_h1", "on"))
-            args.append(("logst_h2", "on"))
-        else:
-            args.append(("logst_s0", "on"))
-            args.append(("logst_s1", "on"))
-            args.append(("logst_s2", "on"))
-            args.append(("logst_s3", "on"))
-
-        # Context
-        for fil in context.values():
-            for k, f in fil.items():
-                args.append((k, f))
-
-        return tooltip, html.makeuri_contextless(args, filename="view.py")

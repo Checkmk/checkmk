@@ -145,13 +145,13 @@ def output_alerts(opener, headers):
         # The message is stored as a pattern with placeholders, the
         # actual values are stored in context_values, the keys in
         # context_types
-        context = zip(entity['contextTypes'], entity['contextValues'])
+        context = dict(zip(entity['contextTypes'], entity['contextValues']))
         # We have seen informational messages in format:
         # {dev_type} drive {dev_name} on host {ip_address} has the following problems: {err_msg}
         # In this case the keys have no values so we can not assign it to the message
         # To handle this, we output a message without assigning the keys
         try:
-            message = entity['message'].format(**dict(context))
+            message = entity['message'].format(**context)
         except KeyError:
             message = entity['message']
         writer.writerow([entity['createdTimeStampInUsecs'], message, entity['severity']])

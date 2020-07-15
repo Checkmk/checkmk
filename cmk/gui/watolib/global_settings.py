@@ -23,8 +23,12 @@ def load_configuration_settings(site_specific=False, custom_site_path=None):
     return settings
 
 
+def rulebased_notifications_enabled() -> bool:
+    return load_configuration_settings().get("enable_rulebased_notifications", False)
+
+
 def save_global_settings(vars_, site_specific=False, custom_site_path=None):
-    per_domain = {}  # type: Dict[str, Dict[Any, Any]]
+    per_domain: Dict[str, Dict[Any, Any]] = {}
     # TODO: Uee _get_global_config_var_names() from domain class?
     for config_variable_class in config_variable_registry.values():
         config_variable = config_variable_class()

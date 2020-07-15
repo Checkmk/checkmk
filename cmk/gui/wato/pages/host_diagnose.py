@@ -82,8 +82,7 @@ class ModeDiagHost(WatoMode):
             html.context_button(_("Parameters"), self._host.params_url(), "rulesets")
         html.context_button(_("Services"), self._host.services_url(), "services")
 
-    def action(self):
-        # type: () -> ActionResult
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return None
 
@@ -255,10 +254,10 @@ class ModeDiagHost(WatoMode):
 
     def _vs_rules(self):
         if config.user.may('wato.add_or_modify_executables'):
-            ds_option = [(
+            ds_option: List[DictionaryEntry] = [(
                 'datasource_program',
                 TextAscii(
-                    title=_("Datasource Program (<a href=\"%s\">Rules</a>)") %
+                    title=_("Individual program call (<a href=\"%s\">Rules</a>)") %
                     watolib.folder_preserving_link([('mode', 'edit_ruleset'),
                                                     ('varname', 'datasource_programs')]),
                     help=
@@ -269,7 +268,7 @@ class ModeDiagHost(WatoMode):
                       "via SSH.") + monitoring_macro_help() + " " +
                     _("This option can only be used with the permission \"Can add or modify executables\"."
                      ),
-                ))]  # type: List[DictionaryEntry]
+                ))]
         else:
             ds_option = []
 
@@ -353,7 +352,7 @@ class ModeAjaxDiagHost(AjaxPage):
             raise MKGeneralException(_('Invalid test.'))
 
         # TODO: Use ModeDiagHost._vs_rules() for processing/validation?
-        args = [u""] * 13  # type: List[str]
+        args: List[str] = [u""] * 13
         for idx, what in enumerate([
                 'ipaddress',
                 'snmp_community',

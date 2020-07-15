@@ -1,7 +1,10 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
@@ -22,7 +25,11 @@ sudo mkdir -p $ROOT/lib/omd/scripts/post-create
 sudo mkdir -p $ROOT/lib/omd/scripts/post-update
 sudo cp -v omd.service $ROOT/share/omd
 sudo cp -v omd.bin $ROOT/bin/omd
-sudo cp -rv omdlib $ROOT/lib/python3
+sudo rsync \
+    --exclude=__pycache__ \
+    -aR \
+    omdlib \
+    $ROOT/lib/python3
 
 OLD_VERSION=$(readlink $ROOT/version)
 OLD_VERSION=${OLD_VERSION##*/}

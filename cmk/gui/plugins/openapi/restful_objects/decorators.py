@@ -13,7 +13,8 @@ connexion is disabled.
 
 """
 import functools
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union, Sequence, Literal
+from types import FunctionType
+from typing import Any, Dict, List, Optional, Set, Union, Sequence, Type
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -22,56 +23,54 @@ from marshmallow import Schema  # type: ignore[import]
 from werkzeug.utils import import_string
 
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
-from cmk.gui.plugins.openapi.restful_objects.utils import ENDPOINT_REGISTRY, PARAM_RE, ParamDict
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
-from cmk.gui.plugins.openapi.restful_objects.specification import (
-    add_operation,
-    SPEC,
+from cmk.gui.plugins.openapi.restful_objects.specification import SPEC, find_all_parameters
+from cmk.gui.plugins.openapi.restful_objects.parameters import (
+    ETAG_HEADER_PARAM,
+    ETAG_IF_MATCH_HEADER,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import ETAG_IF_MATCH_HEADER, \
-    ETAG_HEADER_PARAM
-from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointName, RestfulEndpointName
+from cmk.gui.plugins.openapi.restful_objects.type_defs import (
+    EndpointName,
+    ETagBehaviour,
+    HTTPMethod,
+)
+from cmk.gui.plugins.openapi.restful_objects.utils import (
+    ENDPOINT_REGISTRY,
+    ParamDict,
+    Parameter,
+    PARAM_RE,
+    PrimitiveParameter,
+)
 
 
 def _constantly(arg):
     return lambda *args, **kw: arg
 
 
-_SEEN_PATHS = set()  # type: Set[Tuple[str, str, str]]
-
-ETagBehaviour = Literal["input", "output", "both"]
-
-# We only support these methods.
-HTTPMethod = Literal["get", "post", "put", "delete"]
-Parameter = Union[ParamDict, str]
-PrimitiveParameter = Union[Dict[str, Any], str]
-
+_SEEN_ENDPOINTS: Set[FunctionType] = set()
 ResponseSchema = Optional[Schema]
 RequestSchema = Optional[Schema]
 
 # FIXME: Group of endpoints is currently derived from module-name. This prevents sub-packages.
 
 
-def reduce_to_primitives(parameters):
-    # type: (Optional[List[Parameter]]) -> List[PrimitiveParameter]
+def reduce_to_primitives(parameters: Optional[List[Parameter]]) -> List[PrimitiveParameter]:
     return [p.to_dict() if isinstance(p, ParamDict) else p for p in (parameters or [])]
 
 
-def endpoint_schema(
-        path,  # type: str
-        name,  # type: Union[EndpointName, RestfulEndpointName]
-        method='get',  # type: HTTPMethod
-        parameters=None,  # type: List[Parameter]
-        content_type='application/json',  # type: str
-        output_empty=False,  # type: bool
-        response_schema=None,  # type: ResponseSchema
-        request_schema=None,  # type: RequestSchema
-        request_body_required=True,  # type: bool
-        error_schema=ApiError,  # type: Schema
-        etag=None,  # type: ETagBehaviour
-        will_do_redirects=False,  # type: bool
-        **options  # type: dict
-):
+def endpoint_schema(path: str,
+                    name: EndpointName,
+                    method: HTTPMethod = 'get',
+                    parameters: List[Parameter] = None,
+                    content_type: str = 'application/json',
+                    output_empty: bool = False,
+                    response_schema: ResponseSchema = None,
+                    request_schema: RequestSchema = None,
+                    request_body_required: bool = True,
+                    error_schema: Schema = ApiError,
+                    etag: ETagBehaviour = None,
+                    will_do_redirects: bool = False,
+                    **options: dict):
     """Mark the function as a REST-API endpoint.
 
     Notes:
@@ -147,11 +146,6 @@ def endpoint_schema(
     # Everything inside of it needs the decorated function for filling out the spec.
     #
 
-    endpoint_identifier = (path, method, content_type)
-    if endpoint_identifier in _SEEN_PATHS:
-        raise ValueError("%s [%s, %s] must be unique. Already defined." % endpoint_identifier)
-    _SEEN_PATHS.add(endpoint_identifier)
-
     if etag is not None and etag not in ('input', 'output', 'both'):
         raise ValueError("etag must be one of 'input', 'output', 'both'.")
 
@@ -164,17 +158,14 @@ def endpoint_schema(
         module_obj = import_string(func.__module__)
         module_name = module_obj.__name__
         operation_id = func.__module__ + "." + func.__name__
-        endpoint_key = (module_name, name)
 
-        try:
-            ENDPOINT_REGISTRY[endpoint_key] = {
-                'path': path,
-                'method': method,
-                'parameters': primitive_parameters,
-            }
-        except ValueError:
-            raise RuntimeError("The endpoint %r has already been set to %r" %
-                               (endpoint_key, ENDPOINT_REGISTRY[endpoint_key]))
+        ENDPOINT_REGISTRY.add_endpoint(
+            module_name,
+            name,
+            method,
+            path,
+            primitive_parameters,
+        )
 
         if not output_empty and response_schema is None:
             raise ValueError("%s: 'response_schema' required when output is to be sent!" %
@@ -266,10 +257,16 @@ def endpoint_schema(
         operation_spec.update(_docstring_keys(func.__doc__, 'summary', 'description'))
         apispec.utils.deepupdate(operation_spec, options)
 
-        add_operation(path, method, operation_spec)
+        apispec.utils.deepupdate(operation_spec, options)
 
-        if response_schema is None and request_schema is None:
-            return func
+        if func not in _SEEN_ENDPOINTS:
+            # NOTE:
+            # Only add the endpoint to the spec if not already done. We don't want
+            # to add it multiple times. While this shouldn't be happening, doctest
+            # sometimes complains that it would be happening. Not sure why. Anyways,
+            # it's not a big deal as long as the SPEC is written correctly.
+            SPEC.path(path=path, operations={method.lower(): operation_spec})
+            _SEEN_ENDPOINTS.add(func)
 
         return wrap_with_validation(func, request_schema, response_schema)
 
@@ -333,14 +330,10 @@ def _verify_parameters(path: str, parameters: List[PrimitiveParameter]):
             raise ValueError("Param %r, which is specified as 'path', not used in path. Found "
                              "params: %r" % (param['name'], path_params))
 
-    global_param_names = SPEC.components.to_dict().get('parameters', {}).keys()
-    for param in parameters:
-        if isinstance(param, str) and param not in global_param_names:
-            raise ValueError("Param %r, assumed globally defined, was not found." % (param,))
+    find_all_parameters(parameters, errors='raise')
 
 
-def _assign_to_tag_group(tag_group, name):
-    # type: (str, str) -> None
+def _assign_to_tag_group(tag_group: str, name: str) -> None:
     for group in SPEC.options.setdefault('x-tagGroups', []):
         if group['name'] == tag_group:
             group['tags'].append(name)
@@ -350,8 +343,7 @@ def _assign_to_tag_group(tag_group, name):
                          (tag_group,))
 
 
-def _add_tag(tag, tag_group=None):
-    # type: (dict, Optional[str]) -> None
+def _add_tag(tag: dict, tag_group: Optional[str] = None) -> None:
     name = tag['name']
     if name in [t['name'] for t in SPEC._tags]:
         return
@@ -363,6 +355,9 @@ def _add_tag(tag, tag_group=None):
 
 def wrap_with_validation(func, _request_schema, response_schema):
     """Wrap a function """
+    if _request_schema is None and response_schema is None:
+        return func
+
     if response_schema:
         validate_response = response_schema().validate
     else:
@@ -394,7 +389,21 @@ def wrap_with_validation(func, _request_schema, response_schema):
 
 
 def _schema_name(schema):
-    return schema.__name__.rstrip("Schema")
+    """Strip the suffix 'Schema' from a schema.
+
+    Examples:
+
+        >>> class SchemaSchema:
+        ...     pass
+
+        >>> _schema_name(SchemaSchema)
+        'Schema'
+
+    Returns:
+        The name of the schema, without the suffix.
+
+    """
+    return schema.__name__[:-6] if schema.__name__.endswith("Schema") else schema.__name__
 
 
 def _schema_definition(schema):
@@ -404,8 +413,7 @@ def _schema_definition(schema):
     return definition
 
 
-def _tag_from_schema(schema):
-    # type: (Union[Schema, Type[Schema]]) -> dict
+def _tag_from_schema(schema: Union[Schema, Type[Schema]]) -> dict:
     """Construct a Tag-Dict from a Schema instance or class
 
     Examples:
@@ -452,8 +460,8 @@ def _tag_from_schema(schema):
     return tag
 
 
-def _docstring_keys(docstring, title, description):
-    # type: (Union[Any, str, None], str, str) -> Dict[str, str]
+def _docstring_keys(docstring: Union[Any, str, None], title: str,
+                    description: str) -> Dict[str, str]:
     """Split the docstring by title and rest.
 
     This is part of the rest.
@@ -488,8 +496,7 @@ def _docstring_keys(docstring, title, description):
     return {}
 
 
-def _names_of(params):
-    # type: (List[PrimitiveParameter]) -> Sequence[PrimitiveParameter]
+def _names_of(params: List[PrimitiveParameter]) -> Sequence[PrimitiveParameter]:
     """Give a list of parameter names
 
     Both dictionary and string form are supported. See examples.

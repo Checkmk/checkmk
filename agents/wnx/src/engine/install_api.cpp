@@ -216,12 +216,20 @@ bool NeedInstall(const std::filesystem::path& IncomingFile,
 
 std::pair<std::wstring, std::wstring> MakeCommandLine(
     const std::filesystem::path& msi, UpdateType update_type) {
+    namespace fs = std::filesystem;
     // msiexecs' parameters below are not fixed unfortunately
     // documentation is scarce and method of installation in MK
     // is not a special standard
     std::wstring command = L" /i " + msi.wstring();
 
     std::filesystem::path log_file_name = cma::cfg::GetLogDir();
+    std::error_code ec;
+    if (!fs::exists(log_file_name, ec)) {
+        XLOG::d("Log file path doesn't '{}' exist. Fallback to install.",
+                log_file_name.u8string());
+        log_file_name = cma::cfg::GetUserInstallDir();
+    }
+
     log_file_name /= kMsiLogFileName;
 
     if (update_type == UpdateType::exec_quiet)  // this is only normal method
@@ -234,8 +242,9 @@ std::pair<std::wstring, std::wstring> MakeCommandLine(
             command += L" REINSTALL = ALL REINSTALLMODE = amus";
         }
 
-        command += L" /L*V ";
+        command += L" /L*V \"";  // quoting too!
         command += log_file_name;
+        command += L"\"";
     }
 
     return {command, log_file_name.wstring()};

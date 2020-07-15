@@ -56,6 +56,7 @@
     "element-closest-polyfill": "^1.0.0",
     "jquery": "^3.5.0",
     "select2": "^4.0.13",
+    "simplebar": "^5.2.0",
     "sweetalert2": "^9.10.7",
     "whatwg-fetch": "^3.0.0"
   }

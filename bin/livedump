@@ -69,8 +69,8 @@ def encode_row(row):
 #   | The actual livedump                                                  |
 #   '----------------------------------------------------------------------'
 
-g_connection = None  # type: Optional[livestatus.SingleSiteConnection]
-opt_socket = None  # type: Optional[str]
+g_connection: Optional[livestatus.SingleSiteConnection] = None
+opt_socket: Optional[str] = None
 
 
 def connect():
@@ -84,8 +84,7 @@ def connect():
     g_connection = livestatus.SingleSiteConnection(opt_socket)
 
 
-def run_query(query):
-    # type: (livestatus.QueryTypes) -> List[Dict[str, Any]]
+def run_query(query: livestatus.QueryTypes) -> List[Dict[str, Any]]:
     if g_connection is None:
         bail_out("No connection")
     return g_connection.query_table_assoc(query)
@@ -252,8 +251,7 @@ def verbose(x):
         sys.stderr.write("%s\n" % x)
 
 
-def bail_out(x):
-    # type: (str) -> NoReturn
+def bail_out(x: str) -> NoReturn:
     sys.stderr.write("%s\n" % x)
     sys.exit(1)
 

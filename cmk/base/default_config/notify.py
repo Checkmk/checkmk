@@ -19,7 +19,7 @@ notification_backlog = 10  # keep the last 10 notification contexts for referenc
 # Settings for new rule based notifications
 enable_rulebased_notifications = False
 notification_fallback_email = ""
-notification_rules = []  # type: _List[_Dict[str, _Any]]
+notification_rules: _List[_Dict[str, _Any]] = []
 # Check every 10 seconds for ripe bulks
 notification_bulk_interval = 10
 notification_plugin_timeout = 60
@@ -34,7 +34,7 @@ notification_plugin_timeout = 60
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
 if cmk_version.is_raw_edition():
-    notification_spooling = "off"  # type: _Union[bool, str]
+    notification_spooling: _Union[bool, str] = "off"
 else:
     notification_spooling = "local"
 

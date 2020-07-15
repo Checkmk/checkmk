@@ -27,7 +27,24 @@ from cmk.gui.plugins.metrics import (
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 
+def _fix_title(title):
+    return title.replace('read data', 'data read').replace('write data', 'data written')
+
+
 def register_netapp_api_vs_traffic_metrics():
+
+    metric_info["read_data"] = {
+        "title": _("Data read"),
+        "unit": "bytes",
+        "color": "31/a",
+    }
+
+    metric_info["write_data"] = {
+        "title": _("Data written"),
+        "unit": "bytes",
+        "color": "44/a",
+    }
+
     for volume_info in ["NFS", "NFSv4", "NFSv4.1", "CIFS", "SAN", "FCP", "ISCSI"]:
         for what, unit in [
             ("data", "bytes"),
@@ -39,13 +56,13 @@ def register_netapp_api_vs_traffic_metrics():
             volume = volume_info.lower().replace(".", "_")
 
             metric_info["%s_read_%s" % (volume, what)] = {
-                "title": _("%s read %s") % (volume_info, what),
+                "title": _fix_title(_("%s read %s") % (volume_info, what)),
                 "unit": unit,
                 "color": "31/a",
             }
 
             metric_info["%s_write_%s" % (volume, what)] = {
-                "title": _("%s write %s") % (volume_info, what),
+                "title": _fix_title(_("%s write %s") % (volume_info, what)),
                 "unit": unit,
                 "color": "44/a",
             }
@@ -74,6 +91,15 @@ register_netapp_api_vs_traffic_metrics()
 
 
 def register_netapp_api_vs_traffic_graphs():
+
+    graph_info["read_write_data"] = {
+        "title": _("Traffic"),
+        "metrics": [
+            ("read_data", "-area"),
+            ("write_data", "area"),
+        ],
+    }
+
     for what, text in [
         ("nfs", "NFS"),
         ("cifs", "CIFS"),

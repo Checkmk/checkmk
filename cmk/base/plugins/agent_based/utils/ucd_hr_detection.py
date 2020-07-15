@@ -3,7 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List, Tuple
 
 from ..agent_based_api.v0 import (
     all_of,
@@ -44,6 +43,7 @@ UCD = any_of(
     contains(".1.3.6.1.2.1.1.1.0", "genugate"),
     contains(".1.3.6.1.2.1.1.1.0", "bomgar"),
     contains(".1.3.6.1.2.1.1.1.0", "pulse secure"),
+    contains(".1.3.6.1.2.1.1.1.0", "microsens"),
     all_of(  # Artec email archive appliances
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         contains(".1.3.6.1.2.1.1.1.0", "version"),
@@ -68,6 +68,7 @@ _NOT_UCD = all_of(
     not_contains(".1.3.6.1.2.1.1.1.0", "genugate"),
     not_contains(".1.3.6.1.2.1.1.1.0", "bomgar"),
     not_contains(".1.3.6.1.2.1.1.1.0", "pulse secure"),
+    not_contains(".1.3.6.1.2.1.1.1.0", "microsens"),
     any_of(  # Artec email archive appliances
         not_equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         not_contains(".1.3.6.1.2.1.1.1.0", "version"),

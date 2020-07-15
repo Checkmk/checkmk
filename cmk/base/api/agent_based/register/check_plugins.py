@@ -5,16 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a check plugin
 """
-from typing import Any, Callable, Dict, Generator, List, Optional, Union
 import functools
 import inspect
 import itertools
 from inspect import signature
+from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
-from cmk.utils.type_defs import PluginName
+from cmk.utils.check_utils import ensure_management_name, MANAGEMENT_NAME_PREFIX
+from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
 from cmk.base.api.agent_based.checking_types import (
     CheckPlugin,
+    DISCOVERY_RULESET_TYPE_CHOICES,
+    DiscoveryRuleSetType,
     IgnoreResults,
     Metric,
     Result,
@@ -24,13 +27,10 @@ from cmk.base.api.agent_based.checking_types import (
 
 ITEM_VARIABLE = "%s"
 
-MANAGEMENT_NAME_PREFIX = "mgmt_"
-
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
 
-def _validate_service_name(plugin_name, service_name):
-    # type: (str, str) -> None
+def _validate_service_name(plugin_name: str, service_name: str) -> None:
     if not isinstance(service_name, str):
         raise TypeError("[%s]: service_name must be str, got %r" % (plugin_name, service_name))
     if not service_name:
@@ -49,25 +49,24 @@ def _validate_service_name(plugin_name, service_name):
             (plugin_name, MANAGEMENT_NAME_PREFIX, MANAGEMENT_DESCR_PREFIX))
 
 
-def _requires_item(service_name):
-    # type: (str) -> bool
+def _requires_item(service_name: str) -> bool:
     """See if this check requires an item"""
     return ITEM_VARIABLE in service_name
 
 
-def _create_sections(sections, plugin_name):
-    # type: (Optional[List[str]], PluginName) -> List[PluginName]
+def _create_sections(sections: Optional[List[str]],
+                     plugin_name: CheckPluginName) -> List[ParsedSectionName]:
     if sections is None:
-        return [plugin_name]
+        return [ParsedSectionName(str(plugin_name))]
     if not isinstance(sections, list):
         raise TypeError("[%s]: 'sections' must be a list of str, got %r" % (plugin_name, sections))
     if not sections:
         raise ValueError("[%s]: 'sections' must not be empty" % plugin_name)
-    return [PluginName(n) for n in sections]
+    return [ParsedSectionName(n) for n in sections]
 
 
-def _validate_function_args(plugin_name, func_type, function, has_item, has_params, sections):
-    # type: (str, str, Callable, bool, bool, List[PluginName]) -> None
+def _validate_function_args(plugin_name: str, func_type: str, function: Callable, has_item: bool,
+                            has_params: bool, sections: List[ParsedSectionName]) -> None:
     """Validate the functions signature and type"""
 
     if not inspect.isgeneratorfunction(function):
@@ -118,9 +117,8 @@ def _filter_discovery(
 
 
 def _filter_check(
-        generator,  # type: Callable[..., Generator[Any, None, None]]
-):
-    # type: (...) -> Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]
+    generator: Callable[..., Generator[Any, None, None]],
+) -> Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]:
     """Only let Result, Metric and IgnoreResults through
 
     This allows for better typing in base code.
@@ -135,24 +133,23 @@ def _filter_check(
     return filtered_generator
 
 
-def _validate_default_parameters(plugin_name, params_type, ruleset_name, default_parameters):
-    # type: (str, str, Optional[str], Optional[Dict]) -> None
+def _validate_default_parameters(params_type: str, ruleset_name: Optional[str],
+                                 default_parameters: Optional[Dict]) -> None:
     if default_parameters is None:
         if ruleset_name is None:
             return
-        raise TypeError("[%s]: missing default %s parameters for ruleset %s" %
-                        (plugin_name, params_type, ruleset_name))
+        raise TypeError("missing default %s parameters for ruleset %s" %
+                        (params_type, ruleset_name))
 
     if not isinstance(default_parameters, dict):
-        raise TypeError("[%s]: default %s parameters must be dict" % (plugin_name, params_type))
+        raise TypeError("default %s parameters must be dict" % (params_type,))
 
     if ruleset_name is None:
-        raise TypeError("[%s]: missing ruleset name for default %s parameters" %
-                        (plugin_name, params_type))
+        raise TypeError("missing ruleset name for default %s parameters" % (params_type))
 
 
-def _validate_discovery_ruleset(ruleset_name, default_parameters):
-    # type: (Optional[str], Optional[dict]) -> None
+def _validate_discovery_ruleset(ruleset_name: Optional[str],
+                                default_parameters: Optional[dict]) -> None:
     if ruleset_name is None:
         return
 
@@ -163,8 +160,14 @@ def _validate_discovery_ruleset(ruleset_name, default_parameters):
     return
 
 
-def _validate_check_ruleset(ruleset_name, default_parameters):
-    # type: (Optional[str], Optional[dict]) -> None
+def _validate_discovery_ruleset_type(ruleset_type: DiscoveryRuleSetType) -> None:
+    if ruleset_type not in DISCOVERY_RULESET_TYPE_CHOICES:
+        raise ValueError("invalid discovery ruleset type %r. Allowed are %s" %
+                         (ruleset_type, ",".join(repr(c) for c in DISCOVERY_RULESET_TYPE_CHOICES)))
+
+
+def _validate_check_ruleset(ruleset_name: Optional[str],
+                            default_parameters: Optional[dict]) -> None:
     if ruleset_name is None:
         return
 
@@ -189,26 +192,26 @@ def unfit_for_clustering_wrapper(check_function):
 
 
 def create_check_plugin(
-        *,
-        name,  # type: str
-        sections=None,  # type: Optional[List[str]]
-        service_name,  # type: str
-        discovery_function,  # type: Callable
-        discovery_default_parameters=None,  # type: Optional[Dict]
-        discovery_ruleset_name=None,  # type: Optional[str]
-        check_function,  # type: Callable
-        check_default_parameters=None,  # type: Optional[Dict]
-        check_ruleset_name=None,  # type: Optional[str]
-        cluster_check_function=None,  # type:  Optional[Callable]
-        forbidden_names,  # type: List[PluginName]
-):
-    # type: (...) -> CheckPlugin
+    *,
+    name: str,
+    sections: Optional[List[str]] = None,
+    service_name: str,
+    discovery_function: Callable,
+    discovery_default_parameters: Optional[Dict] = None,
+    discovery_ruleset_name: Optional[str] = None,
+    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
+    check_function: Callable,
+    check_default_parameters: Optional[Dict] = None,
+    check_ruleset_name: Optional[str] = None,
+    cluster_check_function: Optional[Callable] = None,
+    module: Optional[str] = None,
+) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one
 
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    plugin_name = PluginName(name, forbidden_names)
+    plugin_name = CheckPluginName(name)
 
     subscribed_sections = _create_sections(sections, plugin_name)
 
@@ -217,7 +220,6 @@ def create_check_plugin(
 
     # validate discovery arguments
     _validate_default_parameters(
-        name,
         "discovery",
         discovery_ruleset_name,
         discovery_default_parameters,
@@ -226,6 +228,7 @@ def create_check_plugin(
         discovery_ruleset_name,
         discovery_default_parameters,
     )
+    _validate_discovery_ruleset_type(discovery_ruleset_type,)
     _validate_function_args(
         name,
         "discovery",
@@ -234,10 +237,12 @@ def create_check_plugin(
         discovery_ruleset_name is not None,
         subscribed_sections,
     )
+    disco_func = _filter_discovery(discovery_function, requires_item)
+    disco_params = discovery_default_parameters or {}
+    disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 
     # validate check arguments
     _validate_default_parameters(
-        name,
         "check",
         check_ruleset_name,
         check_default_parameters,
@@ -269,33 +274,33 @@ def create_check_plugin(
         cluster_check_function = _filter_check(cluster_check_function)
 
     return CheckPlugin(
-        plugin_name,
-        subscribed_sections,
-        service_name,
-        _filter_discovery(discovery_function, requires_item),
-        discovery_default_parameters,
-        None if discovery_ruleset_name is None else PluginName(discovery_ruleset_name),
-        _filter_check(check_function),
-        check_default_parameters,
-        None if check_ruleset_name is None else PluginName(check_ruleset_name),
-        cluster_check_function,
+        name=plugin_name,
+        sections=subscribed_sections,
+        service_name=service_name,
+        discovery_function=disco_func,
+        discovery_default_parameters=disco_params,
+        discovery_ruleset_name=disco_ruleset_name,
+        discovery_ruleset_type=discovery_ruleset_type,
+        check_function=_filter_check(check_function),
+        check_default_parameters=check_default_parameters or {},
+        check_ruleset_name=RuleSetName(check_ruleset_name) if check_ruleset_name else None,
+        cluster_check_function=cluster_check_function,
+        module=module,
     )
 
 
 def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
     return CheckPlugin(
-        PluginName("%s%s" % (MANAGEMENT_NAME_PREFIX, original_plugin.name)),
+        ensure_management_name(original_plugin.name),
         original_plugin.sections,
         "%s%s" % (MANAGEMENT_DESCR_PREFIX, original_plugin.service_name),
         original_plugin.discovery_function,
         original_plugin.discovery_default_parameters,
         original_plugin.discovery_ruleset_name,
+        original_plugin.discovery_ruleset_type,
         original_plugin.check_function,
         original_plugin.check_default_parameters,
         original_plugin.check_ruleset_name,
         original_plugin.cluster_check_function,
+        original_plugin.module,
     )
-
-
-def is_management_name(plugin_name: Union[PluginName, str]) -> bool:
-    return str(plugin_name).startswith(MANAGEMENT_NAME_PREFIX)

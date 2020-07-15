@@ -32,10 +32,12 @@ class RulesetMatchObject:
     """Wrapper around dict to ensure the ruleset match objects are correctly created"""
     __slots__ = ["host_name", "service_description", "service_labels", "service_cache_id"]
 
-    def __init__(self,
-                 host_name: Optional[HostName] = None,
-                 service_description: Optional[ServiceName] = None,
-                 service_labels: Optional[Dict[str, str]] = None) -> None:
+    def __init__(
+        self,
+        host_name: Optional[HostName] = None,
+        service_description: Optional[ServiceName] = None,
+        service_labels: Optional[Dict[str, str]] = None,
+    ) -> None:
         super(RulesetMatchObject, self).__init__()
         self.host_name = host_name
         self.service_description = service_description
@@ -65,10 +67,16 @@ class RulesetMatcher:
     kept for performance reasons. Especially the service rulset matching is
     done very often in large setups. Be careful when working here.
     """
-    def __init__(self, tag_to_group_map: TagGroups, host_tag_lists: Dict[HostName, TagList],
-                 host_paths: Dict[HostName, str], labels: 'LabelManager',
-                 all_configured_hosts: Set[HostName], clusters_of: Dict[HostName, List[HostName]],
-                 nodes_of: Dict[HostName, List[HostName]]) -> None:
+    def __init__(
+        self,
+        tag_to_group_map: TagGroups,
+        host_tag_lists: Dict[HostName, TagList],
+        host_paths: Dict[HostName, str],
+        labels: 'LabelManager',
+        all_configured_hosts: Set[HostName],
+        clusters_of: Dict[HostName, List[HostName]],
+        nodes_of: Dict[HostName, List[HostName]],
+    ) -> None:
         super(RulesetMatcher, self).__init__()
 
         self.tuple_transformer = RulesetToDictTransformer(tag_to_group_map=tag_to_group_map)

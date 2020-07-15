@@ -18,8 +18,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_read_hits():
-    # type: () -> Tuple
+def _parameter_valuespec_read_hits() -> Tuple:
     return Tuple(
         title=_("Prefetch hits"),
         elements=[

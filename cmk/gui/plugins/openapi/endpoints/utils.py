@@ -4,12 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, Dict, Union, Literal
+from typing import Any, Dict, Literal, Sequence
 
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors
 
-GroupName = Union[Literal['host_group'], Literal['contact_group'], Literal['service_group'],]
+GroupName = Literal[
+    'host_group_config',
+    'contact_group_config',
+    'service_group_config',
+]  # yapf: disable
 
 
 def serve_group(group, serializer):
@@ -21,15 +25,29 @@ def serve_group(group, serializer):
     return response
 
 
-def serialize_group(name):
-    # type: (GroupName) -> Any
+def serialize_group_list(
+    domain_type: GroupName,
+    collection: Sequence[Dict[str, Any]],
+) -> constructors.CollectionObject:
+    return constructors.collection_object(
+        domain_type=domain_type,
+        value=[
+            constructors.collection_item(
+                domain_type=domain_type,
+                obj={
+                    'title': group['alias'],
+                    'id': group['id'],
+                },
+            ) for group in collection
+        ],
+        links=[constructors.link_rel('self', constructors.collection_href(domain_type))],
+    )
+
+
+def serialize_group(name: GroupName) -> Any:
     def _serializer(group):
         # type: (Dict[str, str]) -> Any
         ident = group['id']
-        uri = '/object/%s/%s' % (
-            name,
-            ident,
-        )
         return constructors.domain_object(
             domain_type=name,
             identifier=ident,
@@ -39,7 +57,7 @@ def serialize_group(name):
                     name='title',
                     value=group['alias'],
                     prop_format='string',
-                    base=uri,
+                    base=constructors.object_href(name, ident),
                 ),
             },
             extensions={},

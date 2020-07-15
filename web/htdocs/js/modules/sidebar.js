@@ -2,12 +2,15 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import SimpleBar from "simplebar";
+
 import * as utils from "utils";
 import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
 
 var g_content_loc   = null;
 var g_sidebar_folded = false;
+var g_scrollbar = null;
 
 
 export function initialize_sidebar(update_interval, refresh, restart, static_) {
@@ -18,13 +21,13 @@ export function initialize_sidebar(update_interval, refresh, restart, static_) {
     sidebar_update_interval = update_interval;
 
     register_edge_listeners();
-    set_sidebar_size();
 
     refresh_snapins = refresh;
     restart_snapins = restart;
     static_snapins = static_;
 
     execute_sidebar_scheduler();
+    g_scrollbar = new SimpleBar(document.getElementById("side_content"));
     register_event_handlers();
     if (is_content_frame_accessible()) {
         update_content_location();
@@ -40,10 +43,6 @@ export function register_event_handlers() {
     }, false);
     window.addEventListener("mousedown", startDragScroll, false);
     window.addEventListener("mouseup", stopDragScroll,  false);
-    window.addEventListener("wheel", scrollWheel, false);
-    window.onresize = function() {
-        set_sidebar_size();
-    };
 }
 
 // This ends drag scrolling when moving the mouse out of the sidebar
@@ -51,23 +50,16 @@ export function register_event_handlers() {
 // This is no 100% solution. When moving the mouse out of browser window
 // without moving the mouse over the edge elements the dragging is not ended.
 export function register_edge_listeners(obj) {
-    let edges;
-    if (!obj)
-        edges = [ parent.frames[0], document.getElementById("side_header"), document.getElementById("side_footer") ];
+    // It is possible to open other domains in the content frame - don't register
+    // the event in that case. It is not permitted by most browsers!
+    if(!is_content_frame_accessible())
+        return;
+
+    const edge = obj ? obj : parent.frames[0];
+    if (window.addEventListener)
+        edge.addEventListener("mousemove", on_mouse_leave, false);
     else
-        edges = [ obj ];
-
-    for(let i = 0; i < edges.length; i++) {
-        // It is possible to open other domains in the content frame - don't register
-        // the event in that case. It is not permitted by most browsers!
-        if(!is_content_frame_accessible())
-            continue;
-
-        if (window.addEventListener)
-            edges[i].addEventListener("mousemove", on_mouse_leave, false);
-        else
-            edges[i].onmousemove = on_mouse_leave;
-    }
+        edge.onmousemove = on_mouse_leave;
 }
 
 function on_mouse_leave(e) {
@@ -356,23 +348,6 @@ export function update_content_location() {
     }
 }
 
-// Set the size of the sidebar_content div to fit the whole screen
-// but without scrolling. The height of the header and footer divs need
-// to be treated here.
-export function set_sidebar_size() {
-    const oHeader  = document.getElementById("side_header");
-    const oContent = document.getElementById("side_content");
-    const oFooter  = document.getElementById("side_footer");
-    const height   = utils.page_height();
-
-    // Don't handle zero heights
-    if (height == 0)
-        return;
-
-    // -2 -> take outer border of oHeader and oFooter into account
-    oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 2) + "px";
-}
-
 var g_scrolling = true;
 
 export function scroll_window(speed){
@@ -401,15 +376,15 @@ function startDragScroll(event) {
     if (button != "LEFT")
         return true; // only care about left clicks!
 
-    if (g_sidebar_folded) {
-        unfold_sidebar();
-        return utils.prevent_default_events(event);
-    }
-    else if (!g_sidebar_folded && event.clientX < 10 && target.tagName != "OPTION") {
+    if (target.id === "side_fold" && target.tagName != "OPTION") {
         // When clicking on an <option> of the "core performance" snapins, an event
         // with event.clientX equal 0 is triggered, don"t know why. Filter out clicks
         // on OPTION tags.
-        fold_sidebar();
+        if (g_sidebar_folded) {
+            unfold_sidebar();
+        } else {
+            fold_sidebar();
+        }
         return utils.prevent_default_events(event);
     }
 
@@ -461,9 +436,10 @@ function dragScroll(event) {
 export function fold_sidebar()
 {
     g_sidebar_folded = true;
-    const sidebar = document.getElementById("check_mk_sidebar");
-    sidebar.style.visibility = "hidden";
-    sidebar.style.width = "10px";
+    const sidebar = document.getElementById("check_mk_snapinbar");
+    utils.add_class(sidebar, "folded");
+    const button = document.getElementById("side_fold");
+    utils.add_class(button, "folded");
 
     ajax.get_url("sidebar_fold.py?fold=yes");
 }
@@ -472,36 +448,12 @@ export function fold_sidebar()
 function unfold_sidebar()
 {
     g_sidebar_folded = false;
-    const sidebar = document.getElementById("check_mk_sidebar");
-    sidebar.style.removeProperty("visibility");
-    sidebar.style.removeProperty("width");
+    const sidebar = document.getElementById("check_mk_snapinbar");
+    utils.remove_class(sidebar, "folded");
+    const button = document.getElementById("side_fold");
+    utils.remove_class(button, "folded");
 
     ajax.get_url("sidebar_fold.py?fold=");
-}
-
-
-
-/************************************************
- * Mausrad scrollen
- *************************************************/
-
-function handle_scroll(delta) {
-    g_scrolling = true;
-    scroll_window(-delta*20);
-    g_scrolling = false;
-}
-
-/** Event handler for mouse wheel event.
- */
-function scrollWheel(event){
-    // TODO: It's not reliable to detect the scrolling direction with wheel events:
-    // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
-    handle_scroll(event.deltaY < 0 ? 1: -1);
-
-    // Opera does not fire onunload event which is used to store the scroll
-    // position. So call the store function manually here.
-    if (utils.browser.is_opera())
-        store_scroll_position();
 }
 
 
@@ -552,14 +504,15 @@ export function add_snapin(name) {
                 }
             }
 
-            const sidebar_content = document.getElementById("side_content");
+            const sidebar_content = g_scrollbar.getContentElement();
             if (sidebar_content) {
                 var tmp = document.createElement("div");
                 tmp.innerHTML = result.content;
                 utils.execute_javascript_by_object(tmp);
 
+                const add_button = sidebar_content.lastChild;
                 while (tmp.childNodes.length) {
-                    sidebar_content.appendChild(tmp.childNodes[0]);
+                    add_button.insertAdjacentElement("beforebegin", tmp.childNodes[0]);
                 }
             }
 
@@ -576,7 +529,7 @@ export function add_snapin(name) {
 // Removes the snapin from the current sidebar and informs the server for persistance
 export function remove_sidebar_snapin(oLink, url)
 {
-    const container = oLink.parentNode.parentNode.parentNode;
+    const container = oLink.parentNode.parentNode.parentNode.parentNode;
     const id = container.id.replace("snapin_container_", "");
 
     ajax.call_ajax(url, {
@@ -627,10 +580,7 @@ export function toggle_sidebar_snapin(oH2, url) {
     // image itself
 
     let childs;
-    if (oH2.tagName == "A")
-        childs = oH2.parentNode.parentNode.parentNode.childNodes;
-    else
-        childs = oH2.parentNode.parentNode.childNodes;
+    childs = oH2.parentNode.parentNode.parentNode.childNodes;
 
     let oContent, oHead;
     for (const i in childs) {

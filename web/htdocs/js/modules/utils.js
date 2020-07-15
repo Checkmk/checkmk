@@ -303,16 +303,12 @@ var g_reload_interval = 0; // seconds
 // The error message is only being added on the first error.
 var g_reload_error = false;
 
-// When called with one or more parameters parameters it reschedules the
-// timer to the given interval. If the parameter is 0 the reload is stopped.
-// When called with two parmeters the 2nd one is used as new url.
+// Reschedule the global timer to the given interval.
 export function set_reload(secs, url)
 {
     stop_reload_timer();
     set_reload_interval(secs);
-    if (secs !== 0) {
-        schedule_reload(url);
-    }
+    schedule_reload(url);
 }
 
 
@@ -323,8 +319,12 @@ export function schedule_reload(url, milisecs)
     if (typeof url === "undefined")
         url = ""; // reload current page (or just the content)
 
-    if (typeof milisecs === "undefined")
+    if (typeof milisecs === "undefined") {
+        if (g_reload_interval === 0) {
+            return;  // the reload interval is set to "off"
+        }
         milisecs = parseFloat(g_reload_interval) * 1000; // use default reload interval
+    }
 
     stop_reload_timer();
 
@@ -533,4 +533,31 @@ export function tag_update_value(object_type, prefix, grp) {
         opt.text  = g_tag_groups[object_type][grp][i][1];
         value_select.appendChild(opt);
     }
+}
+
+export function toggle_more(trigger, toggle_id, dom_levels_up) {
+    event.stopPropagation();
+    let container = trigger;
+    let state;
+    for (var i=0; i < dom_levels_up; i++) {
+        container = container.parentNode;
+        while (container.className.includes("simplebar-"))
+            container = container.parentNode;
+    }
+
+    if (has_class(container, "more")) {
+        change_class(container, "more", "less");
+        state = "off";
+    } else {
+        change_class(container, "less", "more");
+        // The class withanimation is used to fade in the formlery
+        // hidden items - which must not be done when they are already
+        // visible when rendering the page.
+        add_class(container, "withanimation");
+        state = "on";
+    }
+
+    ajax.get_url("tree_openclose.py?tree=more_buttons"
+            + "&name=" + encodeURIComponent(toggle_id)
+            + "&state=" + encodeURIComponent (state));
 }

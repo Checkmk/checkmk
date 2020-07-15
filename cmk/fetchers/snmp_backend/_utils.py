@@ -12,8 +12,7 @@ from cmk.snmplib.type_defs import SNMPRawValue
 __all__ = ["strip_snmp_value"]
 
 
-def strip_snmp_value(value):
-    # type: (str) -> SNMPRawValue
+def strip_snmp_value(value: str) -> SNMPRawValue:
     v = value.strip()
     if v.startswith('"'):
         v = v[1:-1]
@@ -27,8 +26,7 @@ def strip_snmp_value(value):
     return ensure_binary(v)
 
 
-def _is_hex_string(value):
-    # type: (str) -> bool
+def _is_hex_string(value: str) -> bool:
     # as far as I remember, snmpwalk puts a trailing space within
     # the quotes in case of hex strings. So we require that space
     # to be present in order make sure, we really deal with a hex string.
@@ -47,8 +45,7 @@ def _is_hex_string(value):
     return True
 
 
-def _convert_from_hex(value):
-    # type: (str) -> bytes
+def _convert_from_hex(value: str) -> bytes:
     """Convert string containing a Hex-String to bytes
 
     e.g. "B2 E0 7D 2C 4D 15" -> b'\xb2\xe0},M\x15'

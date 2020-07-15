@@ -125,7 +125,7 @@ def _current_monitoring_core() -> str:
             stderr=open(os.devnull, "w"),
             encoding="utf-8",
         )
-        return p.communicate()[0]
+        return p.communicate()[0].rstrip()
     except OSError as e:
         # Allow running unit tests on systems without omd installed (e.g. on travis)
         if e.errno != errno.ENOENT:

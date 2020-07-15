@@ -4,13 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.snmplib.type_defs import SNMPTree
-
-from .agent_based_api.v0 import exists, parse_string_table, register
+from .agent_based_api.v0 import (
+    exists,
+    parse_to_string_table,
+    register,
+    SNMPTree,
+)
 
 register.snmp_section(
     name="snmp_os",
-    parse_function=parse_string_table,
+    parse_function=parse_to_string_table,
     trees=[
         SNMPTree(
             base=".1.3.6.1.2.1.1",

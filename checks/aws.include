@@ -25,7 +25,7 @@ def parse_aws(info):
 def _extract_aws_metrics_by_labels(expected_metric_names, parsed, extra_keys=None):
     if extra_keys is None:
         extra_keys = []
-    values_by_labels = {}  # type: Dict[str, Dict]
+    values_by_labels: Dict[str, Dict] = {}
     for row in parsed:
         row_id = row['Id'].lower()
         row_label = row['Label']
@@ -74,7 +74,7 @@ def inventory_aws_generic_single(parsed, required_metrics, requirement=all):
 def check_aws_elb_summary_generic(item, params, load_balancers):
     yield 0, "Balancers: %s" % len(load_balancers)
 
-    balancers_by_avail_zone = {}  # type: Dict[str, List]
+    balancers_by_avail_zone: Dict[str, List] = {}
     long_output = []
     for row in load_balancers:
         balancer_name = row['LoadBalancerName']
@@ -124,7 +124,7 @@ def _is_valid_aws_limits_perf_data(perfvar):
 
 
 def parse_aws_limits_generic(info):
-    limits_by_region = {}  # type: AWSLimitsByRegion
+    limits_by_region: AWSLimitsByRegion = {}
     for line in parse_aws(info):
         limits_by_region.setdefault(line[-1], []).append(line[:-1] + [lambda x: "%s" % x])
     return limits_by_region
@@ -240,8 +240,9 @@ def check_aws_http_errors(params,
             yield result
 
 
-def check_aws_metrics(metric_infos):
-    # type: (List[Dict[str, Union[float, Optional[str], Optional[Tuple], Optional[Callable]]]]) -> Iterable[ServiceCheckResult]
+def check_aws_metrics(
+    metric_infos: List[Dict[str, Union[float, Optional[str], Optional[Tuple], Optional[Callable]]]]
+) -> Iterable[ServiceCheckResult]:
 
     go_stale = True
 
@@ -266,8 +267,7 @@ def aws_rds_service_item(instance_id, region):
     return '%s [%s]' % (instance_id, region)
 
 
-def aws_get_parsed_item_data(check_function):
-    # type: (Callable) -> Callable
+def aws_get_parsed_item_data(check_function: Callable) -> Callable:
     """
     Modified version of get_parsed_item_data which lets services go stale instead of UNKN if the
     item is not found.

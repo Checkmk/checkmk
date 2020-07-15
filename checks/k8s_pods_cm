@@ -5,15 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def parse_frac_prefix(value):
-    # type: (str) -> float
+def parse_frac_prefix(value: str) -> float:
     if value.endswith('m'):
         return 0.001 * float(value[:-1])
     return float(value)
 
 
-def parse_mul_prefix(value):
-    # type: (str) -> int
+def parse_mul_prefix(value: str) -> int:
     if value.endswith('k'):
         return 1000 * int(value[:-1])
     return int(value)

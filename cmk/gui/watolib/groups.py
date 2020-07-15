@@ -6,7 +6,7 @@
 
 import re
 import copy
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union, Literal
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -15,11 +15,8 @@ from cmk.utils.type_defs import timeperiod_spec_alias
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
-# TODO: Cleanup call sites
-from cmk.gui.groups import (  # noqa: F401  # pylint: disable=unused-import
-    load_group_information, load_host_group_information, load_service_group_information,
-    load_contact_group_information,
-)
+import cmk.gui.plugins.userdb.utils as userdb_utils
+from cmk.gui.groups import load_group_information, load_contact_group_information
 import cmk.gui.hooks as hooks
 from cmk.gui.globals import html, g
 from cmk.gui.exceptions import MKUserError
@@ -56,7 +53,10 @@ def _clear_group_information_request_cache():
     g.pop("group_information", None)
 
 
-def add_group(name, group_type, extra_info):
+GroupType = Literal['service', 'host', 'contact']
+
+
+def add_group(name, group_type: GroupType, extra_info):
     _check_modify_group_permissions(group_type)
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
@@ -78,7 +78,7 @@ def add_group(name, group_type, extra_info):
                       _("Create new %s group %s") % (group_type, name))
 
 
-def edit_group(name, group_type, extra_info):
+def edit_group(name, group_type: GroupType, extra_info):
     _check_modify_group_permissions(group_type)
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
@@ -109,7 +109,7 @@ def edit_group(name, group_type, extra_info):
                           _("Updated properties of %s group %s") % (group_type, name))
 
 
-def delete_group(name, group_type):
+def delete_group(name, group_type: GroupType):
     _check_modify_group_permissions(group_type)
 
     # Check if group exists
@@ -146,7 +146,7 @@ def _add_group_change(group, action_name, text):
     add_change(action_name, text, sites=group_sites)
 
 
-def _check_modify_group_permissions(group_type):
+def _check_modify_group_permissions(group_type: GroupType) -> None:
     required_permissions = {
         "contact": ["wato.users"],
         "host": ["wato.groups"],
@@ -161,7 +161,7 @@ def _check_modify_group_permissions(group_type):
         config.user.need_permission(permission)
 
 
-def _set_group(all_groups, group_type, name, extra_info):
+def _set_group(all_groups, group_type: GroupType, name, extra_info):
     # Check if this alias is used elsewhere
     alias = extra_info.get("alias")
     if not alias:
@@ -182,8 +182,8 @@ def _set_group(all_groups, group_type, name, extra_info):
 
 def save_group_information(all_groups, custom_default_config_dir=None):
     # Split groups data into Check_MK/Multisite parts
-    check_mk_groups = {}  # type: Dict[str, Dict[Any, Any]]
-    multisite_groups = {}  # type: Dict[str, Dict[Any, Any]]
+    check_mk_groups: Dict[str, Dict[Any, Any]] = {}
+    multisite_groups: Dict[str, Dict[Any, Any]] = {}
 
     if custom_default_config_dir:
         check_mk_config_dir = "%s/conf.d/wato" % custom_default_config_dir
@@ -225,7 +225,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
     _clear_group_information_request_cache()
 
 
-def find_usages_of_group(name, group_type):
+def find_usages_of_group(name, group_type: GroupType):
     usages = []
     if group_type == 'contact':
         usages = find_usages_of_contact_group(name)
@@ -256,8 +256,7 @@ def _find_usages_of_contact_group_in_users(name):
     """Is the contactgroup assigned to a user?"""
     used_in = []
     users = userdb.load_users()
-    entries = users.items()
-    for userid, user in sorted(entries, key=lambda x: x[1].get("alias", x[0])):
+    for userid, user in sorted(users.items(), key=lambda x: x[1].get("alias", x[0])):
         cgs = user.get("contactgroups", [])
         if name in cgs:
             used_in.append(('%s: %s' % (_('User'), user.get('alias', userid)),
@@ -313,9 +312,8 @@ def _find_usages_of_contact_group_in_hosts_and_folders(name, folder):
     return used_in
 
 
-def _find_usages_of_contact_group_in_notification_rules(name):
-    # type: (str) -> List[Tuple[str, str]]
-    used_in = []  # type: List[Tuple[str, str]]
+def _find_usages_of_contact_group_in_notification_rules(name: str) -> List[Tuple[str, str]]:
+    used_in: List[Tuple[str, str]] = []
     for rule in load_notification_rules():
         if _used_in_notification_rule(name, rule):
             title = "%s: %s" % (_("Notification rule"), rule.get("description", ""))
@@ -331,8 +329,7 @@ def _find_usages_of_contact_group_in_notification_rules(name):
     return used_in
 
 
-def _used_in_notification_rule(name, rule):
-    # type: (str, Dict) -> bool
+def _used_in_notification_rule(name: str, rule: Dict) -> bool:
     return name in rule.get('contact_groups', []) or name in rule.get("match_contactgroups", [])
 
 
@@ -374,7 +371,7 @@ def is_alias_used(my_what, my_name, my_alias):
             return False, _("This alias is already used in timeperiod %s.") % key
 
     # Roles
-    roles = userdb.load_roles()
+    roles = userdb_utils.load_roles()
     for key, value in roles.items():
         if value.get("alias") == my_alias and (my_what != "roles" or my_name != key):
             return False, _("This alias is already used in the role %s.") % key
@@ -422,7 +419,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def paint(self, value, hostname):
         value = convert_cgroups_from_tuple(value)
-        texts = []  # type: List[str]
+        texts: List[str] = []
         self.load_data()
         if self._contactgroups is None:  # conditional caused by horrible API
             raise Exception("invalid contact groups")
@@ -432,7 +429,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
                 display_name = cgroup.get("alias", name)
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' %
                              (name, display_name))
-        result = ", ".join(texts)  # type: Union[str, HTML]
+        result: Union[str, HTML] = ", ".join(texts)
         if texts and value["use"]:
             result += html.render_span(
                 html.render_b("*"),

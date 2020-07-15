@@ -311,7 +311,7 @@ class NetAppConnection:
         return netapp_response
 
     def invoke(self, *args_):
-        invoke_list = [args_[0], map(list, zip(args_[1::2], args_[2::2]))]
+        invoke_list = [args_[0], [list(a) for a in zip(args_[1::2], args_[2::2])]]
         response = self.get_response(invoke_list)
         if response:
             return response.get_results()
@@ -349,7 +349,7 @@ class NetAppNode:
         return None
 
     def children_get(self):
-        return map(NetAppNode, self.node)
+        return [NetAppNode(n) for n in self.node]
 
     def append(self, what):
         self.node.append(what)
@@ -764,8 +764,9 @@ def query_counters(args, server, netapp_mode, what):
                     if idx >= max_instances_per_request:
                         break
                     instances_to_query[1].append(["instance-uuid", uuid])
-                    perfobject_node = ["perf-object-get-instances", [["objectname",
-                                                                      what]]]  # type: List[Any]
+                    perfobject_node: List[Any] = [
+                        "perf-object-get-instances", [["objectname", what]]
+                    ]
                     perfobject_node[1].append(instances_to_query)
                 response = server.get_response(perfobject_node)
 
@@ -841,12 +842,12 @@ def fetch_license_information(args, server):
     # Some sections are not queried when a license is missing
     try:
         server.suppress_errors = True
-        licenses = {
+        licenses: Dict[str, Dict[str, Dict[str, str]]] = {
             "v1": {},
             "v1_disabled": {},
             "v2": {},
             "v2_disabled": {}
-        }  # type: Dict[str, Dict[str, Dict[str, str]]]
+        }
         license_info = query(args, server, "license-list-info")
         if license_info:
             licenses["v1"] = create_dict(license_info, custom_key=["service"], is_counter=False)
@@ -1556,7 +1557,7 @@ def connect(args):
 
 SectionType = List[str]
 
-section_errors = []  # type: SectionType
+section_errors: SectionType = []
 
 
 def main(argv=None):

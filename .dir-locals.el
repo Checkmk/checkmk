@@ -16,7 +16,6 @@ format."
                                   (concat (projectile-locate-dominating-file default-directory dir-locals-file)
                                       "scripts/run-pipenv")
                                   nil output-buffer nil
-                                  (if (string-suffix-p "python3\n" (save-excursion (goto-char (point-min)) (thing-at-point 'line t))) "3" "2")
                                   "run" "yapf"
                                   "-l" (concat (number-to-string start-line) "-" (number-to-string end-line))))))))
  (scss-mode . ((eval setq flycheck-sass/scss-sass-lint-executable

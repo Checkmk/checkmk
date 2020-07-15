@@ -40,7 +40,7 @@ import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
 
 import * as cmk_figures from "cmk_figures";
-import "cmk_figure_plugins";
+import "cmk_figures_plugins";
 
 import * as cmk_tabs from "cmk_tabs";
 
@@ -80,6 +80,7 @@ try {
 } catch(e) {
     ntop_flows = null;
 }
+
 
 $(() => {
     utils.update_header_timer();
@@ -137,5 +138,6 @@ export const cmk_export = {
             alerts: ntop_alerts,
             flows: ntop_flows
         },
+
     }
 };

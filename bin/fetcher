@@ -9,6 +9,9 @@ import logging
 import sys
 from typing import NoReturn
 
+from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
+from cmk.utils.type_defs import HostName
+
 try:
     import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
     import cmk.fetchers.controller as controller  # pylint: disable=cmk-module-layer-violation
@@ -23,8 +26,7 @@ cmk.base.utils.register_sigint_handler()
 
 
 class ArgumentParser(argparse.ArgumentParser):
-    def error(self, message):
-        # type: (str) -> NoReturn
+    def error(self, message: str) -> NoReturn:
         """fetcher output is always protocol compatible, even when arguments are bad"""
 
         sys.stdout.write(
@@ -32,8 +34,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self.exit(21)
 
 
-def parse_arguments():
-    # type: () -> argparse.Namespace
+def parse_arguments() -> argparse.Namespace:
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -41,23 +42,35 @@ def parse_arguments():
         action="store_true",
         help="Enable debug mode",
     )
-    parser.add_argument("serial", type=str)
-    parser.add_argument("host", type=str)
-    parser.add_argument("timeout", type=int)
 
     return parser.parse_args()
 
 
-def main():
-    # type: () -> int
-
+def main() -> int:
+    serial = ""
+    host_name: HostName = ""
     try:
         args = parse_arguments()
-        return controller.run(serial=args.serial, host=args.host, timeout=args.timeout)
+        if args.debug:
+            sys.stdout.write(
+                "Debug mode is enabled")  # reserved for the future testing(out of Core)
+
+        for line in sys.stdin:
+            command = line.rstrip("\n")
+            if command == "*":
+                break
+            serial, host, timeout = command.split(sep=";", maxsplit=2)
+            controller.run(serial=serial, host_name=host_name, timeout=int(timeout))
+
+        return 0
 
     # NOTE: Yes, this is too common. But at this moment we have no chance to provide better method.
-    except Exception as e:
-        sys.stdout.write(controller.make_failure_answer(str(e), "main"))
+    except Exception:
+        # reporting to site
+        result = create_fetcher_crash_dump(serial=serial, host=host)
+
+        # reporting to check
+        sys.stdout.write(controller.make_failure_answer(result, "main"))
         return 15
 
 

@@ -12,8 +12,8 @@ def inventory_bluecat_dns_queries(info):
 def check_bluecat_dns_queries(item, _no_params, info):
     value_names = ['Success', 'Referral', 'NXRSet', 'NXDomain', 'Recursion', 'Failure']
     now = time.time()
-    for value, name in zip(map(int, info[0]), value_names):
-        rate = get_rate("bluecat_dns_queries." + name, now, value)
+    for value, name in zip(info[0], value_names):
+        rate = get_rate("bluecat_dns_queries." + name, now, int(value))
         yield 0, "%s: %s" % (name, rate), [(name, rate)]
 
 

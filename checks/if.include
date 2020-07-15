@@ -41,6 +41,7 @@ Interface = collections.namedtuple("Interface", [
     "ifDescr",
     "ifType",
     "ifSpeed",
+    "ifSpeed_as_text",
     "ifOperStatus",
     "ifOperStatusName",
     "ifInOctets",
@@ -77,6 +78,12 @@ def interface_from(line):
     if isinstance(ifIndex, tuple):
         ifGroup, ifIndex = ifIndex
 
+    # Some devices (e.g. NetApp ONTAP) can report "auto" as speed
+    if ifSpeed == "auto":
+        ifSpeed_as_text = ifSpeed
+    else:
+        ifSpeed_as_text = None
+
     # Fix bug in TP Link switches
     ifSpeed = saveint(ifSpeed)
     if ifSpeed > 9 * 1000 * 1000 * 1000 * 1000:
@@ -84,10 +91,10 @@ def interface_from(line):
 
     ifDescr = cleanup_if_strings(ifDescr)
     ifAlias = cleanup_if_strings(ifAlias)
-    return Interface(ifIndex, ifGroup, ifDescr, ifType, ifSpeed, ifOperStatus, ifOperStatusName,
-                     ifInOctets, inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets,
-                     outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias,
-                     ifPhysAddress)
+    return Interface(ifIndex, ifGroup, ifDescr, ifType, ifSpeed, ifSpeed_as_text, ifOperStatus,
+                     ifOperStatusName, ifInOctets, inucast, inmcast, inbcast, ifInDiscards,
+                     ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards,
+                     ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress)
 
 
 #
@@ -169,7 +176,7 @@ def if_extract_node(line, has_nodeinfo):
 
 def if_render_mac_address(ifPhysAddress):
     if not isinstance(ifPhysAddress, list):
-        mac_bytes = map(ord, ifPhysAddress)
+        mac_bytes = [ord(x) for x in ifPhysAddress]
     else:
         mac_bytes = ifPhysAddress
     return (":".join(["%02s" % hex(m)[2:] for m in mac_bytes]).replace(' ', '0')).upper()
@@ -929,6 +936,8 @@ def check_if_common_single(item,
                 state = max(state, 1)
         elif targetspeed:
             infotext += "assuming %s" % get_nic_speed_human_readable(targetspeed)
+        elif interface.ifSpeed_as_text:
+            infotext += "speed %s" % interface.ifSpeed_as_text
         else:
             infotext += "speed unknown"
 

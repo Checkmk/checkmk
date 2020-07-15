@@ -34,6 +34,7 @@ from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.plugins.wato.utils.context_buttons import folder_status_button, global_buttons
 
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -63,6 +64,14 @@ class ModeFolder(WatoMode):
 
     def title(self):
         return self._folder.title()
+
+    def breadcrumb(self):
+        return Breadcrumb([
+            BreadcrumbItem(
+                title="Hosts",
+                url=watolib.Folder.root_folder().url(),
+            ),
+        ]) + self._folder.breadcrumb()
 
     def buttons(self):
         global_buttons()
@@ -446,10 +455,14 @@ class ModeFolder(WatoMode):
             contact_group_names = load_contact_group_information()
 
             host_errors = self._folder.host_validation_errors()
-            rendered_hosts = []  # type: List[HostName]
+            rendered_hosts: List[HostName] = []
 
             # Now loop again over all hosts and display them
+            max_hosts = len(hostnames)
             for hostname in hostnames:
+                if table.limit_reached:
+                    table.limit_hint = max_hosts
+                    continue
                 self._show_host_row(rendered_hosts, table, hostname, search_text, show_checkboxes,
                                     colspan, host_errors, contact_group_names)
 
@@ -463,7 +476,7 @@ class ModeFolder(WatoMode):
         selected = config.user.get_rowselection(weblib.selection_id(),
                                                 'wato-folder-/' + self._folder.path())
 
-        row_count = len(rendered_hosts)
+        row_count = len(hostnames)
         headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
         html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
@@ -714,7 +727,7 @@ class ModeFolder(WatoMode):
             return None  # browser reload
 
         # Create groups of hosts with the same target folder
-        target_folder_names = {}  # type: Dict[str, List[HostName]]
+        target_folder_names: Dict[str, List[HostName]] = {}
         for host_name in host_names_to_move:
             host = self._folder.host(host_name)
             imported_folder_name = host.attribute('imported_folder')
@@ -883,9 +896,9 @@ class FolderMode(WatoMode, metaclass=abc.ABCMeta):
         html.begin_form("edit_host", method="POST")
 
         # title
-        basic_attributes = [
-            ("title", TextUnicode(title=_("Title")), self._folder.title()),
-        ]  # type: List[Tuple[str, ValueSpec, str]]
+        basic_attributes: List[Tuple[str, ValueSpec, str]] = [
+            ("title", TextUnicode(title=_("Title")), "" if new else self._folder.title()),
+        ]
         html.set_focus("title")
 
         # folder name (omit this for root folder)

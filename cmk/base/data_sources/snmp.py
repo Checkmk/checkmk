@@ -9,17 +9,9 @@ import ast
 import time
 from typing import cast, Dict, Iterable, List, Optional, Set
 
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostAddress,
-    HostName,
-    PluginName,
-    SectionName,
-    SourceType,
-)
+from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
-from cmk.snmplib.snmp_scan import PluginNameFilterFunction, SNMPScanSection
+from cmk.snmplib.snmp_scan import gather_available_raw_section_names, SNMPScanSection
 from cmk.snmplib.type_defs import (
     SNMPCredentials,
     SNMPHostConfig,
@@ -32,38 +24,22 @@ from cmk.snmplib.type_defs import (
 
 from cmk.fetchers import factory, SNMPDataFetcher
 
-import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
-import cmk.base.inventory_plugins as inventory_plugins
-from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
+import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
 
-from .abstract import DataSource, verify_ipaddress
-from .host_sections import AbstractHostSections
-
-#.
-#   .--SNMP----------------------------------------------------------------.
-#   |                      ____  _   _ __  __ ____                         |
-#   |                     / ___|| \ | |  \/  |  _ \                        |
-#   |                     \___ \|  \| | |\/| | |_) |                       |
-#   |                      ___) | |\  | |  | |  __/                        |
-#   |                     |____/|_| \_|_|  |_|_|                           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Realize the data source for dealing with SNMP data                   |
-#   '----------------------------------------------------------------------'
+from ._abstract import ABCDataSource, ABCHostSections
 
 
-class SNMPHostSections(AbstractHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
-                                            SNMPSectionContent]):
+class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
+                                       SNMPSectionContent]):
     def __init__(self,
-                 sections=None,
-                 cache_info=None,
-                 piggybacked_raw_data=None,
-                 persisted_sections=None):
-        # type: (Optional[SNMPSections], Optional[SectionCacheInfo], Optional[PiggybackRawData], Optional[SNMPPersistedSections]) -> None
+                 sections: Optional[SNMPSections] = None,
+                 cache_info: Optional[SectionCacheInfo] = None,
+                 piggybacked_raw_data: Optional[PiggybackRawData] = None,
+                 persisted_sections: Optional[SNMPPersistedSections] = None) -> None:
         super(SNMPHostSections, self).__init__(
             sections=sections if sections is not None else {},
             cache_info=cache_info if cache_info is not None else {},
@@ -71,61 +47,39 @@ class SNMPHostSections(AbstractHostSections[SNMPRawData, SNMPSections, SNMPPersi
             persisted_sections=persisted_sections if persisted_sections is not None else {},
         )
 
-    def _extend_section(self, section_name, section_content):
-        # type: (SectionName, SNMPSectionContent) -> None
-        raise NotImplementedError()
+    def _extend_section(self, section_name: SectionName,
+                        section_content: SNMPSectionContent) -> None:
+        self.sections.setdefault(section_name, []).extend(section_content)  # type: ignore
 
 
 class CachedSNMPDetector:
     """Object to run/cache SNMP detection"""
     def __init__(self):
         super(CachedSNMPDetector, self).__init__()
-        # TODO (mo): With the new API we may be able to set this here.
-        #            For now, it is set later :-(
-        self._filter_function = None  # type: Optional[PluginNameFilterFunction]
-        self._for_inventory = False
         # Optional set: None: we never tried, empty: we tried, but found nothing
-        self._cached_result = None  # type: Optional[Set[CheckPluginName]]
+        self._cached_result: Optional[Set[SectionName]] = None
 
-    def set_filter_function(self, filter_function):
-        # type: (PluginNameFilterFunction) -> None
-        self._filter_function = filter_function
-
-    def set_for_inventory(self, for_inventory):
-        # type: (bool) -> None
-        self._for_inventory = for_inventory
-
-    def sections(self):
-        # type: () -> Iterable[SNMPScanSection]
-        sections = []
-        for name, section in config.registered_snmp_sections.items():
-            if self._for_inventory and not inventory_plugins.is_snmp_plugin(str(name)):
-                continue
-            sections.append(SNMPScanSection(section.name, section.detect_spec))
-        return sections
+    def sections(self) -> Iterable[SNMPScanSection]:
+        return [
+            SNMPScanSection(section.name, section.detect_spec)
+            for section in config.registered_snmp_sections.values()
+        ]
 
     def __call__(
-            self,
-            snmp_config,  # type: SNMPHostConfig
-            on_error,  # type: str
-            do_snmp_scan,  # type: bool
-            for_mgmt_board,  # type: bool
-    ):
+        self,
+        snmp_config: SNMPHostConfig,
+        on_error: str,
+        do_snmp_scan: bool,
+        for_mgmt_board: bool,
+    ) -> Set[SectionName]:
         """Returns a list of raw sections that shall be processed by this source.
 
         The logic is only processed once. Once processed, the answer is cached.
         """
-        if self._filter_function is None:
-            raise MKGeneralException("The check type filter function has not been set")
-
         if self._cached_result is not None:
             return self._cached_result
 
-        # Make hostname globally available for scan functions.
-        # This is rarely used, but e.g. the scan for if/if64 needs
-        # this to evaluate if_disabled_if64_checks.
-        check_api_utils.set_hostname(snmp_config.hostname)
-        found_plugins = self._filter_function(
+        self._cached_result = gather_available_raw_section_names(
             self.sections(),
             on_error=on_error,
             do_snmp_scan=do_snmp_scan,
@@ -135,24 +89,17 @@ class CachedSNMPDetector:
             ),
             backend=factory.backend(snmp_config),
         )
-        self._cached_result = config.filter_by_management_board(
-            snmp_config.hostname,
-            found_plugins,
-            for_mgmt_board=for_mgmt_board,
-            for_discovery=True,
-        )
         return self._cached_result
 
 
 # TODO: Move common functionality of SNMPManagementBoardDataSource and
 # SNMPDataSource to ABCSNMPDataSource and make SNMPManagementBoardDataSource
 # inherit from ABCSNMPDataSource instead of SNMPDataSource
-class ABCSNMPDataSource(DataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
-                                   SNMPHostSections],
+class ABCSNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
+                                      SNMPHostSections],
                         metaclass=abc.ABCMeta):
     @abc.abstractproperty
-    def _snmp_config(self):
-        # type: () -> SNMPHostConfig
+    def _snmp_config(self) -> SNMPHostConfig:
         raise NotImplementedError()
 
 
@@ -160,12 +107,11 @@ class SNMPDataSource(ABCSNMPDataSource):
     source_type = SourceType.HOST
 
     def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
-    ):
-        # type: (...) -> None
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
+    ) -> None:
         super(SNMPDataSource, self).__init__(
             hostname,
             ipaddress,
@@ -177,33 +123,28 @@ class SNMPDataSource(ABCSNMPDataSource):
         self._on_error = "raise"
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
-        self._fetched_raw_section_names = set()  # type: Set[PluginName]
+        self._fetched_raw_section_names: Set[SectionName] = set()
 
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         return "snmp"
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return "SNMP"
 
-    def _cpu_tracking_id(self):
-        # type: () -> str
+    def _cpu_tracking_id(self) -> str:
         return "snmp"
 
     @property
-    def _snmp_config(self):
-        # type: () -> SNMPHostConfig
+    def _snmp_config(self) -> SNMPHostConfig:
         # TODO: snmp_config.ipaddress is not Optional. At least classic SNMP enforces that there
         # is an address set, Inline-SNMP has some lookup logic for some reason. We need to find
         # out whether or not we can really have None here. Looks like it could be the case for
         # cluster hosts which don't have an IP address set.
-        if self._ipaddress is None:
-            raise NotImplementedError("Invalid SNMP host configuration: self._ipaddress is None")
-        return self._host_config.snmp_config(self._ipaddress)
+        if self.ipaddress is None:
+            raise NotImplementedError("Invalid SNMP host configuration: self.ipaddress is None")
+        return self._host_config.snmp_config(self.ipaddress)
 
-    def describe(self):
-        # type: () -> str
+    def describe(self) -> str:
         snmp_config = self._snmp_config
         if snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"
@@ -226,51 +167,39 @@ class SNMPDataSource(ABCSNMPDataSource):
         return "%s (%s, Bulk walk: %s, Port: %d, Inline: %s)" % \
                (self.title(), credentials_text, bulk, snmp_config.port, inline)
 
-    def _empty_raw_data(self):
-        # type: () -> SNMPRawData
+    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
+        return 0, "Success", []
+
+    def _empty_raw_data(self) -> SNMPRawData:
         return {}
 
-    def _empty_host_sections(self):
-        # type: () -> SNMPHostSections
+    def _empty_host_sections(self) -> SNMPHostSections:
         return SNMPHostSections()
 
-    def _from_cache_file(self, raw_data):
-        # type: (bytes) -> SNMPRawData
-        return ast.literal_eval(raw_data.decode("utf-8"))
+    def _from_cache_file(self, raw_data: bytes) -> SNMPRawData:
+        return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
 
-    def _to_cache_file(self, raw_data):
-        # type: (SNMPRawData) -> bytes
-        return (repr(raw_data) + "\n").encode("utf-8")
+    def _to_cache_file(self, raw_data: SNMPRawData) -> bytes:
+        return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
-    def set_ignore_check_interval(self, ignore_check_interval):
-        # type: (bool) -> None
+    def set_ignore_check_interval(self, ignore_check_interval: bool) -> None:
         self._ignore_check_interval = ignore_check_interval
 
-    def set_use_snmpwalk_cache(self, use_snmpwalk_cache):
-        # type: (bool) -> None
+    def set_use_snmpwalk_cache(self, use_snmpwalk_cache: bool) -> None:
         self._use_snmpwalk_cache = use_snmpwalk_cache
 
     # TODO: Check if this can be dropped
-    def set_on_error(self, on_error):
-        # type: (str) -> None
+    def set_on_error(self, on_error: str) -> None:
         self._on_error = on_error
 
     # TODO: Check if this can be dropped
-    def set_do_snmp_scan(self, do_snmp_scan):
-        # type: (bool) -> None
+    def set_do_snmp_scan(self, do_snmp_scan: bool) -> None:
         self._do_snmp_scan = do_snmp_scan
 
-    def get_do_snmp_scan(self):
-        # type: () -> bool
+    def get_do_snmp_scan(self) -> bool:
         return self._do_snmp_scan
 
-    def set_check_plugin_name_filter(self, filter_func, *, inventory):
-        # type: (PluginNameFilterFunction, bool) -> None
-        self._detector.set_filter_function(filter_func)
-        self._detector.set_for_inventory(inventory)
-
-    def set_fetched_raw_section_names(self, raw_section_names):
-        # type: (Set[PluginName]) -> None
+    def set_fetched_raw_section_names(self, raw_section_names: Set[SectionName]) -> None:
         """Sets a list of already fetched host sections/check plugin names.
 
         Especially for SNMP data sources there are already fetched
@@ -280,9 +209,8 @@ class SNMPDataSource(ABCSNMPDataSource):
         """
         self._fetched_raw_section_names = raw_section_names
 
-    def _execute(self):
-        # type: () -> SNMPRawData
-        verify_ipaddress(self._ipaddress)
+    def _execute(self) -> SNMPRawData:
+        ip_lookup.verify_ipaddress(self.ipaddress)
         with SNMPDataFetcher(
                 self._make_oid_infos(),
                 self._use_snmpwalk_cache,
@@ -291,39 +219,32 @@ class SNMPDataSource(ABCSNMPDataSource):
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 
-    def _make_oid_infos(self):
-        # type: () -> Dict[str, List[SNMPTree]]
-        oid_infos = {}  # Dict[str, List[SNMPTree]]
-        raw_sections_to_process = {PluginName(n) for n in self._get_raw_section_names_to_process()}
+    def _make_oid_infos(self) -> Dict[SectionName, List[SNMPTree]]:
+        oid_infos = {}  # Dict[SectionName, List[SNMPTree]]
+        raw_sections_to_process = self._get_raw_section_names_to_process()
         for section_name in self._sort_section_names(raw_sections_to_process):
             plugin = config.registered_snmp_sections.get(section_name)
             if plugin is None:
-                self._logger.debug("%s: No such section definiton", section_name)
+                self._logger.debug("%s: No such section definition", section_name)
                 continue
 
             if section_name in self._fetched_raw_section_names:
                 continue
 
-            # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
+            # This checks data is configured to be persisted (snmp_fetch_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added later
-            if self._persisted_sections and str(section_name) in self._persisted_sections:
+            if self._persisted_sections and section_name in self._persisted_sections:
                 self._logger.debug("%s: Skip fetching data (persisted info exists)", section_name)
                 continue
 
-            oid_infos[str(section_name)] = plugin.trees
+            oid_infos[section_name] = plugin.trees
         return oid_infos
 
-    def _get_raw_section_names_to_process(self):
-        # type: () -> Set[CheckPluginName]
+    def _get_raw_section_names_to_process(self) -> Set[SectionName]:
         """Return a set of raw section names that shall be processed"""
         # TODO (mo): Make this (and the called) function(s) return the sections directly!
         if self._selected_raw_section_names is not None:
-            return {str(n) for n in self._selected_raw_section_names}
-
-        # TODO (mo): At the moment, we must also consider the legacy version:
-        if self._enforced_check_plugin_names is not None:
-            # TODO (mo): centralize maincheckify: CMK-4295
-            return {maincheckify(n) for n in self._enforced_check_plugin_names}
+            return self._selected_raw_section_names
 
         return self._detector(
             self._snmp_config,
@@ -333,8 +254,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         )
 
     @staticmethod
-    def _sort_section_names(section_names):
-        # type: (Set[PluginName]) -> List[PluginName]
+    def _sort_section_names(section_names: Set[SectionName]) -> List[SectionName]:
         # In former Check_MK versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
         # In Check_MK versions >= 1.5.0 the order is random and
@@ -345,52 +265,38 @@ class SNMPDataSource(ABCSNMPDataSource):
         #   for f in $(grep "service_description.*CPU [^lL]" -m1 * | cut -d":" -f1); do
         #   if grep -q "snmp_info" $f; then echo $f; fi done
         cpu_sections_without_cpu_in_name = {
-            PluginName("brocade_sys"),
-            PluginName("bvip_util"),
+            SectionName("brocade_sys"),
+            SectionName("bvip_util"),
         }
         return sorted(section_names,
                       key=lambda x:
                       (not ('cpu' in str(x) or x in cpu_sections_without_cpu_in_name), x))
 
-    def _convert_to_sections(self, raw_data):
-        # type: (SNMPRawData) -> SNMPHostSections
+    def _convert_to_sections(self, raw_data: SNMPRawData) -> SNMPHostSections:
         raw_data = cast(SNMPRawData, raw_data)
         sections_to_persist = self._extract_persisted_sections(raw_data)
         return SNMPHostSections(raw_data, persisted_sections=sections_to_persist)
 
-    def _extract_persisted_sections(self, raw_data):
-        # type: (SNMPRawData) -> SNMPPersistedSections
+    def _extract_persisted_sections(self, raw_data: SNMPRawData) -> SNMPPersistedSections:
         """Extract the sections to be persisted from the raw_data and return it
 
         Gather the check types to be persisted, extract the related data from
         the raw data, calculate the times and store the persisted info for
         later use.
         """
-        persisted_sections = {}  # type: SNMPPersistedSections
+        persisted_sections: SNMPPersistedSections = {}
 
         for section_name, section_content in raw_data.items():
-            check_interval = self._host_config.snmp_check_interval(section_name)
-            if check_interval is None:
+            fetch_interval = self._host_config.snmp_fetch_interval(section_name)
+            if fetch_interval is None:
                 continue
 
             cached_at = int(time.time())
-            until = cached_at + (check_interval * 60)
+            until = cached_at + (fetch_interval * 60)
             persisted_sections[section_name] = (cached_at, until, section_content)
 
         return persisted_sections
 
-
-#.
-#   .--SNMP Mgmt.----------------------------------------------------------.
-#   |       ____  _   _ __  __ ____    __  __                 _            |
-#   |      / ___|| \ | |  \/  |  _ \  |  \/  | __ _ _ __ ___ | |_          |
-#   |      \___ \|  \| | |\/| | |_) | | |\/| |/ _` | '_ ` _ \| __|         |
-#   |       ___) | |\  | |  | |  __/  | |  | | (_| | | | | | | |_ _        |
-#   |      |____/|_| \_|_|  |_|_|     |_|  |_|\__, |_| |_| |_|\__(_)       |
-#   |                                         |___/                        |
-#   +----------------------------------------------------------------------+
-#   | Special case for managing the Management Board SNMP data             |
-#   '----------------------------------------------------------------------'
 
 #TODO
 # 1. TCP host + SNMP MGMT Board: standard SNMP beibehalten
@@ -401,25 +307,21 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
     source_type = SourceType.MANAGEMENT
 
     def __init__(
-            self,
-            hostname,  # type: HostName
-            ipaddress,  # type: Optional[HostAddress]
-            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
-    ):
-        # type: (...) -> None
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
+    ) -> None:
         super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress,
                                                             selected_raw_sections)
         self._credentials = cast(SNMPCredentials, self._host_config.management_credentials)
 
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         return "mgmt_snmp"
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return "Management board - SNMP"
 
     @property
-    def _snmp_config(self):
-        # type: () -> SNMPHostConfig
+    def _snmp_config(self) -> SNMPHostConfig:
         return self._host_config.management_snmp_config

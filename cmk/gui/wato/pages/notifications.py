@@ -55,11 +55,13 @@ from cmk.gui.plugins.wato import (
     add_change,
     notification_parameter_registry,
 )
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.notifications import (
     save_notification_rules,
     load_notification_rules,
     load_user_notification_rules,
 )
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuUser
 
 
 class NotificationsMode(EventsMode):
@@ -496,8 +498,7 @@ class ModeNotifications(NotificationsMode):
         # Check setting of global notifications. Are they enabled? If not, display
         # a warning here. Note: this is a main.mk setting, so we cannot access this
         # directly.
-        current_settings = watolib.load_configuration_settings()
-        if not current_settings.get("enable_rulebased_notifications"):
+        if not rulebased_notifications_enabled():
             url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
             html.show_warning(
                 _("<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
@@ -606,9 +607,8 @@ class ModeNotifications(NotificationsMode):
 
                 table.cell(_("Nr."), nr + 1, css="number")
                 if "MICROTIME" in context:
-                    date = time.strftime("%Y-%m-%d %H:%M:%S",
-                                         time.localtime(int(context["MICROTIME"]) /
-                                                        1000000.0))  # type: str
+                    date: str = time.strftime("%Y-%m-%d %H:%M:%S",
+                                              time.localtime(int(context["MICROTIME"]) / 1000000.0))
                 else:
                     date = (context.get("SHORTDATETIME") or context.get("LONGDATETIME") or
                             context.get("DATE") or _("Unknown date"))
@@ -830,6 +830,9 @@ class ModePersonalUserNotifications(UserNotificationsMode):
         super(ModePersonalUserNotifications, self).__init__()
         config.user.need_permission("general.edit_notifications")
 
+    def main_menu(self):
+        return MegaMenuUser
+
     def _user_id(self):
         return config.user.id
 
@@ -896,10 +899,9 @@ class EditNotificationRuleMode(NotificationsMode):
     # TODO: Refactor this mess
     def _vs_notification_rule(self, userid=None):
         if userid:
-            contact_headers = [
-            ]  # type: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]
+            contact_headers: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = []
             section_contacts = []
-            section_override = []  # type: List[DictionaryEntry]
+            section_override: List[DictionaryEntry] = []
         else:
             contact_headers = [
                 (_("Contact Selection"), [
@@ -1003,7 +1005,7 @@ class EditNotificationRuleMode(NotificationsMode):
                  )),
             ]
 
-        bulk_options = [
+        bulk_options: List[DictionaryEntry] = [
             ("count",
              Integer(
                  title=_("Maximum bulk size"),
@@ -1049,10 +1051,9 @@ class EditNotificationRuleMode(NotificationsMode):
                  size=80,
                  default_value=
                  "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts")),
-        ]  # type: List[DictionaryEntry]
+        ]
 
-        def make_interval_entry():
-            # type: () -> List[DictionaryEntry]
+        def make_interval_entry() -> List[DictionaryEntry]:
             return [
                 ("interval",
                  Age(
@@ -1063,13 +1064,13 @@ class EditNotificationRuleMode(NotificationsMode):
                  )),
             ]
 
-        timeperiod_entry = [
+        timeperiod_entry: List[DictionaryEntry] = [
             ("timeperiod",
              watolib.timeperiods.TimeperiodSelection(
                  title=_("Only bulk notifications during the following timeperiod"),)),
-        ]  # type: List[DictionaryEntry]
+        ]
 
-        bulk_outside_entry = [
+        bulk_outside_entry: List[DictionaryEntry] = [
             ("bulk_outside",
              Dictionary(
                  title=_("Also bulk outside of timeperiod"),
@@ -1079,15 +1080,15 @@ class EditNotificationRuleMode(NotificationsMode):
                  columns=1,
                  optional_keys=["bulk_subject"],
              )),
-        ]  # type: List[DictionaryEntry]
+        ]
 
-        headers_part1 = [
+        headers_part1: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
             (_("Rule Properties"),
              ["description", "comment", "disabled", "docu_url", "allow_disable"]),
             (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
-        ]  # type: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]
+        ]
 
-        headers_part2 = [
+        headers_part2: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
             (_("Conditions"), [
                 "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts",
                 "match_exclude_hosts", "match_servicegroups", "match_exclude_servicegroups",
@@ -1097,7 +1098,7 @@ class EditNotificationRuleMode(NotificationsMode):
                 "match_escalation", "match_escalation_throttle", "match_sl", "match_host_event",
                 "match_service_event", "match_ec", "match_notification_comment"
             ]),
-        ]  # type: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]
+        ]
 
         return Dictionary(
             title=_("Rule Properties"),
@@ -1319,6 +1320,10 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
     @classmethod
     def name(cls):
         return "notification_rule_p"
+
+    @classmethod
+    def parent_mode(cls):
+        return ModePersonalUserNotifications
 
     @classmethod
     def permissions(cls):

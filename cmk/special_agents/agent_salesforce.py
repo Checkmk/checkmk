@@ -14,5 +14,5 @@ def main():
     for section, section_content in content.items():
         sys.stdout.write("<<<%s>>>\n" % section)
         for entry in section_content:
-            sys.stdout.write("%s\n" % "".join(entry))
+            sys.stdout.write("%s\n" % entry)
     sys.stdout.write("\n")

@@ -44,19 +44,22 @@ from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: di
     SimpleEditMode, SimpleListMode, SimpleModeType,
 )
 from cmk.gui.plugins.wato.utils.context_buttons import (  # noqa: F401 # pylint: disable=unused-import
-    changelog_button, global_buttons, home_button, host_status_button,
+    changelog_button, global_buttons, host_status_button,
 )
 from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import
     search_form, wato_confirm,
 )
 from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import
     MainMenu, MainModule, MenuItem, WatoModule, main_module_registry, register_modules,
+    MainModuleTopic, MainModuleTopicHosts, MainModuleTopicServices, MainModuleTopicAgents,
+    MainModuleTopicEvents, MainModuleTopicUsers, MainModuleTopicGeneral, MainModuleTopicMaintenance,
+    MainModuleTopicCustom,
 )
 import cmk.gui.watolib as watolib
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.timeperiods import TimeperiodSelection  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.watolib.users import notification_script_title
-from cmk.gui.watolib.groups import (
+from cmk.gui.groups import (
     load_contact_group_information,
     load_host_group_information,
     load_service_group_information,
@@ -148,8 +151,7 @@ def monitoring_macro_help():
         "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
 
 
-def UserIconOrAction(title, help):  # pylint: disable=redefined-builtin
-    # type: (str, str) -> DropdownChoice
+def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # pylint: disable=redefined-builtin
     empty_text = _("In order to be able to choose actions here, you need to "
                    "<a href=\"%s\">define your own actions</a>.") % \
                       "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
@@ -176,12 +178,11 @@ def _list_user_icons_and_actions():
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-        title=None,  # type: _Optional[str]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        only_v3=False,  # type: bool
-        default_value="public",  # type: _Optional[str]
-        allow_none=False  # type: bool
-):  # type: (...) -> Alternative
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        only_v3: bool = False,
+        default_value: _Optional[str] = "public",
+        allow_none: bool = False) -> Alternative:
     def alternative_match(x):
         if only_v3:
             # NOTE: Indices are shifted by 1 due to a only_v3 hack below!!
@@ -227,9 +228,8 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
     )
 
 
-def _snmp_credentials_elements(allow_none):
-    # type: (bool) -> List[ValueSpec]
-    none_elements = []  # type: List[ValueSpec]
+def _snmp_credentials_elements(allow_none: bool) -> List[ValueSpec]:
+    none_elements: List[ValueSpec] = []
     if allow_none:
         none_elements = [FixedValue(
             None,
@@ -303,8 +303,7 @@ def _snmpv3_auth_elements():
     ]
 
 
-def IPMIParameters():
-    # type: () -> Dictionary
+def IPMIParameters() -> Dictionary:
     return Dictionary(
         title=_("IPMI credentials"),
         elements=[
@@ -523,10 +522,10 @@ def passwordstore_choices():
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
-        title=None,  # type: _Optional[str]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        allow_empty=True,  # type: bool
-        size=25,  # type: int
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    allow_empty: bool = True,
+    size: int = 25,
 ):  # -> CascadingDropdown
     return CascadingDropdown(
         title=title,
@@ -552,10 +551,10 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-        title=None,  # type: _Optional[str]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        allow_empty=True,  # type: bool
-        size=25,  # type: int
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    allow_empty: bool = True,
+    size: int = 25,
 ):
     return Transform(
         PasswordFromStore(
@@ -988,7 +987,14 @@ def Levels(**kwargs):
 def may_edit_ruleset(varname):
     if varname == "ignored_services":
         return config.user.may("wato.services") or config.user.may("wato.rulesets")
-    if varname in ["custom_checks", "datasource_programs"]:
+    if varname in [
+            "custom_checks",
+            "datasource_programs",
+            "agent_config:mrpe",
+            "agent_config:agent_paths",
+            "agent_config:runas",
+            "agent_config:only_from",
+    ]:
         return config.user.may("wato.rulesets") and config.user.may(
             "wato.add_or_modify_executables")
     if varname == "agent_config:custom_files":
@@ -1304,8 +1310,7 @@ class EventsMode(WatoMode, metaclass=abc.ABCMeta):
                                  _("Changed position of %s %d") % (what_title, from_pos))
 
 
-def sort_sites(sites):
-    # type: (SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]
+def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]:
     """Sort given sites argument by local, followed by remote sites"""
     return sorted(sites.items(),
                   key=lambda sid_s:
@@ -1667,13 +1672,11 @@ def register_hook(name, func):
 
 class NotificationParameter(metaclass=abc.ABCMeta):
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def spec(self):
-        # type: () -> Dictionary
+    def spec(self) -> Dictionary:
         raise NotImplementedError()
 
 
@@ -2030,11 +2033,11 @@ class HostTagCondition(ValueSpec):
         html.open_td()
         dropdown_id = varprefix + tagtype + "_" + id_
         onchange = "cmk.valuespecs.toggle_tag_dropdown(this, '%stag_sel_%s');" % (varprefix, id_)
-        choices = [
+        choices: Choices = [
             ("ignore", _("ignore")),
             ("is", _("is")),
             ("isnot", _("isnot")),
-        ]  # type: Choices
+        ]
         html.dropdown(dropdown_id, choices, deflt=deflt, onchange=onchange)
         html.close_td()
 
@@ -2146,8 +2149,7 @@ def get_search_expression():
     return search
 
 
-def get_hostnames_from_checkboxes(filterfunc=None):
-    # type: (_Optional[Callable]) -> List[str]
+def get_hostnames_from_checkboxes(filterfunc: _Optional[Callable] = None) -> List[str]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
     show_checkboxes = html.request.var("show_checkboxes") == "1"
@@ -2193,3 +2195,11 @@ def get_check_information():
             "get-check-information")
 
     return g.automation_get_check_information
+
+
+def get_section_information():
+    if 'automation_get_section_information' not in g:
+        g.automation_get_section_information = watolib.check_mk_local_automation(
+            "get-section-information")
+
+    return g.automation_get_section_information

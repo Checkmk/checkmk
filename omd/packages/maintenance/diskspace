@@ -32,7 +32,7 @@ default_config = {
     "cleanup_abandoned_host_files": 2592000,
 }
 
-plugins = {}  # type: dict
+plugins: dict = {}
 
 
 def error(s):
@@ -322,7 +322,7 @@ def get_configured_hosts():
     host_names = set([])
 
     distr_wato_filepath = os.path.expanduser("~/etc/check_mk/conf.d/distributed_wato.mk")
-    file_vars = {}  # type: dict
+    file_vars: dict = {}
     if os.path.exists(distr_wato_filepath):
         exec(open(distr_wato_filepath).read(), file_vars, file_vars)
 

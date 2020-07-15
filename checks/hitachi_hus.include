@@ -56,7 +56,7 @@ def check_hitachi_hus(item, _no_params, info):
     # We need to take care that the right map type is checked
     if len(info[0]) == 5:
         component = [
-            "Processor",
+            "Power Supply",
             "Fan",
             "Environment",
             "Drive",

@@ -50,5 +50,5 @@ check_info['cmciii_lcp_waterflow'] = {
     "has_perfdata": True,
     "service_description": "LCP Fanunit WATER FLOW",
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal LCP"),
-    "snmp_info": ('.1.3.6.1.4.1.2606.7.4.2.2.1.10.2', range(74, 87)),
+    "snmp_info": ('.1.3.6.1.4.1.2606.7.4.2.2.1.10.2', list(range(74, 87))),
 }

@@ -9,7 +9,7 @@ set -e -o pipefail
 
 source "$(dirname $0)/lib-precommit"
 
-# Filter out all tests/* and tests-py3/* files.
+# Filter out all tests/* files.
 declare -a FILES
 
 for param in "$@"; do
@@ -29,24 +29,13 @@ fi
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
 
-export MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed"
+export MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests:$REPO_PATH/tests/typeshed"
 
 printf -v files " %s" ${FILES[@]}
-PYTHON2_FILES=$(python_files 2 "$files")
 PYTHON3_FILES=$(python_files 3 "$files")
 
-if [ ! -z "$PYTHON2_FILES" ]; then
-    $PIPENV 3 run mypy \
-        --config-file "$REPO_PATH/mypy-raw.ini" \
-        --check-untyped-defs \
-        --python-version 2.7 \
-        --scripts-are-modules \
-        --show-error-codes \
-        $PYTHON2_FILES
-fi
-
 if [ ! -z "$PYTHON3_FILES" ]; then
-    $PIPENV 3 run mypy \
+    $PIPENV run mypy \
         --config-file "$REPO_PATH/mypy-raw.ini" \
         --python-version 3.8 \
         --scripts-are-modules \

@@ -317,7 +317,21 @@ public:
     explicit generic_error(const std::string &what_arg)
         : std::system_error(errno, std::generic_category(), what_arg) {}
 };
-
 std::ostream &operator<<(std::ostream &os, const generic_error &ge);
+
+namespace cmc {
+class core_error : public std::system_error {
+public:
+    explicit core_error(int err)
+        : std::system_error(err, std::generic_category()) {}
+
+    core_error(int err, const char *what_arg)
+        : std::system_error(err, std::generic_category(), what_arg) {}
+
+    core_error(int err, const std::string &what_arg)
+        : std::system_error(err, std::generic_category(), what_arg) {}
+};
+std::ostream &operator<<(std::ostream &os, const cmc::core_error &ce);
+}  // namespace cmc
 
 #endif  // Logger_h

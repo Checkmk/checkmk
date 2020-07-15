@@ -4,11 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, NoReturn, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, RawAgentData, SectionName
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, RawAgentData, SectionName
 
 from cmk.snmplib.type_defs import (
     SNMPPersistedSections,
@@ -20,7 +19,7 @@ from cmk.snmplib.type_defs import (
 from cmk.base.caching import runtime_cache as _runtime_cache
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
-CheckParameters = Union[None, Dict, Tuple, List, str]
+LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
 RulesetName = str
 
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
@@ -46,114 +45,77 @@ BoundedAbstractSections = TypeVar("BoundedAbstractSections", bound=AbstractSecti
 BoundedAbstractPersistedSections = TypeVar("BoundedAbstractPersistedSections",
                                            bound=AbstractPersistedSections)
 
+ServiceID = Tuple[CheckPluginNameStr, Item]
+CheckTable = Dict[ServiceID, 'Service']
+
 
 class Service:
     __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
 
-    def __init__(self, check_plugin_name, item, description, parameters, service_labels=None):
-        # type: (CheckPluginName, Item, str, CheckParameters, DiscoveredServiceLabels) -> None
+    def __init__(
+        self,
+        check_plugin_name: CheckPluginNameStr,
+        item: Item,
+        description: str,
+        parameters: LegacyCheckParameters,
+        service_labels: DiscoveredServiceLabels = None,
+    ) -> None:
         self._check_plugin_name = check_plugin_name
         self._item = item
         self._description = description
-        self._parameters = parameters
         self._service_labels = service_labels or DiscoveredServiceLabels()
+        self._parameters = parameters
 
     @property
-    def check_plugin_name(self):
-        # type: () -> CheckPluginName
+    def check_plugin_name(self) -> CheckPluginNameStr:
         return self._check_plugin_name
 
     @property
-    def item(self):
-        # type: () -> Item
+    def item(self) -> Item:
         return self._item
 
     @property
-    def description(self):
-        # type: () -> str
+    def description(self) -> str:
         return self._description
 
     @property
-    def parameters(self):
-        # type: () -> CheckParameters
+    def parameters(self) -> LegacyCheckParameters:
         return self._parameters
 
     @property
-    def service_labels(self):
-        # type: () -> DiscoveredServiceLabels
+    def service_labels(self) -> DiscoveredServiceLabels:
         return self._service_labels
 
-    def __eq__(self, other):
-        # type: (Any) -> bool
+    def id(self) -> ServiceID:
+        return self.check_plugin_name, self.item
+
+    def __eq__(self, other: Any) -> bool:
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""
         if not isinstance(other, Service):
             raise TypeError("Can only be compared with other Service objects")
-        return self.check_plugin_name == other.check_plugin_name and self.item == other.item
+        return self.id() == other.id()
 
-    def __hash__(self):
-        # type: () -> int
+    def __hash__(self) -> int:
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""
-        return hash((self.check_plugin_name, self.item))
+        return hash(self.id())
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_lables=%r)" % (
             self._check_plugin_name, self._item, self._description, self._parameters,
             self._service_labels)
 
-
-CheckTable = Dict[Tuple[CheckPluginName, Item], Service]
-
-
-class DiscoveredService(Service):
-    __slots__ = []  # type: List[str]
-    """Special form of Service() which holds the unresolved textual representation of the check parameters"""
-    def __init__(self,
-                 check_plugin_name,
-                 item,
-                 description,
-                 parameters_unresolved,
-                 service_labels=None):
-        # type: (CheckPluginName, Item, str, CheckParameters, DiscoveredServiceLabels) -> None
-        super(DiscoveredService, self).__init__(check_plugin_name=check_plugin_name,
-                                                item=item,
-                                                description=description,
-                                                parameters=parameters_unresolved,
-                                                service_labels=service_labels)
-
-    @property
-    def parameters(self):
-        # type: () -> NoReturn
-        raise MKGeneralException(
-            "Can not get the resolved parameters from a DiscoveredService object")
-
-    @property
-    def parameters_unresolved(self):
-        # type: () -> CheckParameters
-        """Returns the unresolved check parameters discovered for this service
-
-        The reason for this hack is some old check API behaviour: A check may return the name of
-        a default levels variable (as string), for example "cpu_utilization_default_levels".
-        The user is allowed to override the value of this variable in his configuration and
-        the check needs to evaluate this variable after config loading or during check
-        execution. The parameter must not be resolved during discovery.
-        """
-        return self._parameters
-
-    def __repr__(self):
-        # type: () -> str
-        return "DiscoveredService(check_plugin_name=%r, item=%r, description=%r, parameters_unresolved=%r, service_lables=%r)" % (
-            self._check_plugin_name, self._item, self._description, self._parameters,
-            self._service_labels)
+    def dump_autocheck(self) -> str:
+        return "{'check_plugin_name': %r, 'item': %r, 'parameters': %r, 'service_labels': %r}" % (
+            self.check_plugin_name,
+            self.item,
+            self.parameters,
+            self.service_labels.to_dict(),
+        )
 
 
-DiscoveredCheckTable = Dict[Tuple[CheckPluginName, Item], DiscoveredService]
-
-
-def is_snmp_check(check_plugin_name):
-    # type: (str) -> bool
+def is_snmp_check(check_plugin_name: str) -> bool:
     cache = _runtime_cache.get_dict("is_snmp_check")
     try:
         return cache[check_plugin_name]
@@ -162,3 +124,26 @@ def is_snmp_check(check_plugin_name):
         result = section_name_of(check_plugin_name) in snmp_checks
         cache[check_plugin_name] = result
         return result
+
+
+# TODO (mo): *consider* using the type aliases.
+def get_default_parameters(
+    check_info_dict: Dict[str, Any],
+    factory_settings: Dict[str, Dict[str, Any]],
+    check_context: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    """compute default parameters"""
+    params_variable_name = check_info_dict.get("default_levels_variable")
+    if not params_variable_name:
+        return None
+
+    # factory_settings
+    fs_parameters = factory_settings.get(params_variable_name, {})
+
+    # global scope of check context
+    gs_parameters = check_context.get(params_variable_name)
+
+    return {
+        **fs_parameters,
+        **gs_parameters,
+    } if isinstance(gs_parameters, dict) else fs_parameters

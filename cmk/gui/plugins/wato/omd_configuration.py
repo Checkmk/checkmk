@@ -277,7 +277,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         store.save_file(self.diskspace_config, output)
 
     def default_globals(self):
-        diskspace_context = {}  # type: Dict[str, Any]
+        diskspace_context: Dict[str, Any] = {}
         filename = Path(cmk.utils.paths.omd_root, 'bin', 'diskspace')
         with filename.open(encoding="utf-8") as f:
             code = compile(f.read(), str(filename), 'exec')

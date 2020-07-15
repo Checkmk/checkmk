@@ -49,9 +49,7 @@ from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
-from cmk.gui.view_utils import (  # noqa: F401 # pylint: disable=unused-import
-    CellSpec, CSSClass, CellContent, render_tag_groups, render_labels, get_labels,
-)
+from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
 
 from cmk.gui.type_defs import (
     ColumnName,
@@ -91,29 +89,25 @@ class PainterOptions:
     # TODO: We should have some View instance that uses an object of this class as helper instead,
     #       but this would be a bigger change involving a lot of view rendering code.
     @classmethod
-    def get_instance(cls):
-        # type: () -> PainterOptions
+    def get_instance(cls) -> 'PainterOptions':
         """Use the request globals to prevent multiple instances during a request"""
         if 'painter_options' not in g:
             g.painter_options = cls()
         return g.painter_options
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(PainterOptions, self).__init__()
         # The names of the painter options used by the current view
-        self._used_option_names = []  # type: List[str]
+        self._used_option_names: List[str] = []
         # The effective options for this view
-        self._options = {}  # type: Dict[str, Any]
+        self._options: Dict[str, Any] = {}
 
-    def load(self, view_name=None):
-        # type: (Optional[str]) -> None
+    def load(self, view_name: Optional[str] = None) -> None:
         self._load_from_config(view_name)
 
     # Load the options to be used for this view
-    def _load_used_options(self, view):
-        # type: (View) -> None
-        options = set()  # type: Set[str]
+    def _load_used_options(self, view: 'View') -> None:
+        options: Set[str] = set()
 
         for cell in view.group_cells + view.row_cells:
             options.update(cell.painter_options())
@@ -128,8 +122,7 @@ class PainterOptions:
         # TODO: Improve sorting. Add a sort index?
         self._used_option_names = sorted(options)
 
-    def _load_from_config(self, view_name):
-        # type: (Optional[str]) -> None
+    def _load_from_config(self, view_name: Optional[str]) -> None:
         if self._is_anonymous_view(view_name):
             return  # never has options
 
@@ -140,18 +133,15 @@ class PainterOptions:
         vo = config.user.load_file("viewoptions", {})
         self._options = vo.get(view_name, {})
 
-    def _is_anonymous_view(self, view_name):
-        # type: (Optional[str]) -> bool
+    def _is_anonymous_view(self, view_name: Optional[str]) -> bool:
         return view_name is None
 
-    def save_to_config(self, view_name):
-        # type: (str) -> None
+    def save_to_config(self, view_name: str) -> None:
         vo = config.user.load_file("viewoptions", {}, lock=True)
         vo[view_name] = self._options
         config.user.save_file("viewoptions", vo)
 
-    def update_from_url(self, view):
-        # type: (View) -> None
+    def update_from_url(self, view: 'View') -> None:
         self._load_used_options(view)
 
         if not self.painter_option_form_enabled():
@@ -164,8 +154,7 @@ class PainterOptions:
         if html.request.has_var("_update_painter_options"):
             self._set_from_submitted_form(view.name)
 
-    def _set_from_submitted_form(self, view_name):
-        # type: (str) -> None
+    def _set_from_submitted_form(self, view_name: str) -> None:
         # TODO: Remove all keys that are in painter_option_registry
         # but not in self._used_option_names
 
@@ -183,8 +172,7 @@ class PainterOptions:
         if modified:
             self.save_to_config(view_name)
 
-    def _clear_painter_options(self, view_name):
-        # type: (str) -> None
+    def _clear_painter_options(self, view_name: str) -> None:
         # TODO: This never removes options that are not existant anymore
         modified = False
         for name in painter_option_registry.keys():
@@ -203,23 +191,19 @@ class PainterOptions:
         for varname, _value in list(html.request.itervars(prefix="po_")):
             html.request.del_var(varname)
 
-    def get_valuespec_of(self, name):
-        # type: (str) -> ValueSpec
+    def get_valuespec_of(self, name: str) -> ValueSpec:
         return painter_option_registry[name]().valuespec
 
-    def _is_set(self, name):
-        # type: (str) -> bool
+    def _is_set(self, name: str) -> bool:
         return name in self._options
 
     # Sets a painter option value (only for this request). Is not persisted!
-    def set(self, name, value):
-        # type: (str, Any) -> None
+    def set(self, name: str, value: Any) -> None:
         self._options[name] = value
 
     # Returns either the set value, the provided default value or if none
     # provided, it returns the default value of the valuespec.
-    def get(self, name, dflt=None):
-        # type: (str, Any) -> Any
+    def get(self, name: str, dflt: Any = None) -> Any:
         if dflt is None:
             try:
                 dflt = self.get_valuespec_of(name).default_value()
@@ -234,24 +218,19 @@ class PainterOptions:
 
     # Not falling back to a default value, simply returning None in case
     # the option is not set.
-    def get_without_default(self, name):
-        # type: (str) -> Any
+    def get_without_default(self, name: str) -> Any:
         return self._options.get(name)
 
-    def get_all(self):
-        # type: () -> Dict[str, Any]
+    def get_all(self) -> Dict[str, Any]:
         return self._options
 
-    def painter_options_permitted(self):
-        # type: () -> bool
+    def painter_options_permitted(self) -> bool:
         return config.user.may("general.painter_options")
 
-    def painter_option_form_enabled(self):
-        # type: () -> bool
+    def painter_option_form_enabled(self) -> bool:
         return bool(self._used_option_names) and self.painter_options_permitted()
 
-    def show_form(self, view):
-        # type: (View) -> None
+    def show_form(self, view: 'View') -> None:
         self._load_used_options(view)
 
         if not display_options.enabled(display_options.D) or not self.painter_option_form_enabled():
@@ -278,8 +257,7 @@ class PainterOptions:
         html.close_div()
 
 
-def row_id(view_spec, row):
-    # type: (Dict[str, Any], LivestatusRow) -> str
+def row_id(view_spec: Dict[str, Any], row: LivestatusRow) -> str:
     """Calculates a uniq id for each data row which identifies the current
     row accross different page loadings."""
     key = u''
@@ -288,8 +266,7 @@ def row_id(view_spec, row):
     return ensure_str(hashlib.sha256(key.encode('utf-8')).hexdigest())
 
 
-def group_value(row, group_cells):
-    # type: (Row, List[Cell]) -> Hashable
+def group_value(row: Row, group_cells: 'List[Cell]') -> Hashable:
     """The Group-value of a row is used for deciding whether
     two rows are in the same group or not"""
     group = []
@@ -308,8 +285,7 @@ def group_value(row, group_cells):
     return _create_dict_key(group)
 
 
-def _create_dict_key(value):
-    # type: (Any) -> Hashable
+def _create_dict_key(value: Any) -> Hashable:
     if isinstance(value, (list, tuple)):
         return tuple(map(_create_dict_key, value))
     if isinstance(value, dict):
@@ -319,24 +295,20 @@ def _create_dict_key(value):
 
 class PainterOption(metaclass=abc.ABCMeta):
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         """The identity of a painter option. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def valuespec(self):
-        # type: () -> ValueSpec
+    def valuespec(self) -> ValueSpec:
         raise NotImplementedError()
 
 
 class ViewPainterOptionRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[PainterOption]
+    def plugin_base_class(self) -> Type[PainterOption]:
         return PainterOption
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[PainterOption]) -> str
+    def plugin_name(self, plugin_class: Type[PainterOption]) -> str:
         return plugin_class().ident
 
 
@@ -345,63 +317,54 @@ painter_option_registry = ViewPainterOptionRegistry()
 
 class Layout(metaclass=abc.ABCMeta):
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         """The identity of a layout. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         """Short human readable title of the layout"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
-        # type: (Rows, Dict, List[Cell], List[Cell], int, bool) -> None
+    def render(self, rows: Rows, view: Dict, group_cells: 'List[Cell]', cells: 'List[Cell]',
+               num_columns: int, show_checkboxes: bool) -> None:
         """Render the given data in this layout"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def can_display_checkboxes(self):
-        # type: () -> bool
+    def can_display_checkboxes(self) -> bool:
         """Whether this layout can display checkboxes for selecting rows"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def is_hidden(self):
-        # type: () -> bool
+    def is_hidden(self) -> bool:
         """Whether this should be hidden from the user (e.g. in the view editor layout choice)"""
         raise NotImplementedError()
 
     @property
-    def painter_options(self):
-        # type: () -> List[str]
+    def painter_options(self) -> List[str]:
         """Returns the painter option identities used by this layout"""
         return []
 
     @property
-    def has_individual_csv_export(self):
-        # type: () -> bool
+    def has_individual_csv_export(self) -> bool:
         """Whether this layout has an individual CSV export implementation"""
         return False
 
-    def csv_export(self, rows, view, group_cells, cells):
-        # type: (Rows, Dict, List[Cell], List[Cell]) -> None
+    def csv_export(self, rows: Rows, view: Dict, group_cells: 'List[Cell]',
+                   cells: 'List[Cell]') -> None:
         """Render the given data using this layout for CSV"""
 
 
 class ViewLayoutRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[Layout]
+    def plugin_base_class(self) -> Type[Layout]:
         return Layout
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[Layout]) -> str
+    def plugin_name(self, plugin_class: Type[Layout]) -> str:
         return plugin_class().ident
 
-    def get_choices(self):
-        # type: () -> List[Tuple[str, str]]
+    def get_choices(self) -> List[Tuple[str, str]]:
         choices = []
         for plugin_class in self.values():
             layout = plugin_class()
@@ -418,29 +381,24 @@ layout_registry = ViewLayoutRegistry()
 
 class CommandGroup(metaclass=abc.ABCMeta):
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         """The identity of a command group. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def sort_index(self):
-        # type: () -> int
+    def sort_index(self) -> int:
         raise NotImplementedError()
 
 
 class CommandGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[CommandGroup]
+    def plugin_base_class(self) -> Type[CommandGroup]:
         return CommandGroup
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[CommandGroup]) -> str
+    def plugin_name(self, plugin_class: Type[CommandGroup]) -> str:
         return plugin_class().ident
 
 
@@ -448,8 +406,7 @@ command_group_registry = CommandGroupRegistry()
 
 
 # TODO: Kept for pre 1.6 compatibility
-def register_command_group(ident, title, sort_index):
-    # type: (str, str, int) -> None
+def register_command_group(ident: str, title: str, sort_index: int) -> None:
     cls = type(
         "LegacyCommandGroup%s" % ident.title(), (CommandGroup,), {
             "_ident": ident,
@@ -464,61 +421,51 @@ def register_command_group(ident, title, sort_index):
 
 class Command(metaclass=abc.ABCMeta):
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         """The identity of a command. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def permission(self):
-        # type: () -> Type[Permission]
+    def permission(self) -> Type[Permission]:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def tables(self):
-        # type: () -> List[str]
+    def tables(self) -> List[str]:
         """List of livestatus table identities the action may be used with"""
         raise NotImplementedError()
 
-    def render(self, what):
-        # type: (str) -> None
+    def render(self, what: str) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def action(self, cmdtag, spec, row, row_index, num_rows):
-        # type: (str, str, dict, int, int) -> Optional[Tuple[List[str], str]]
+    def action(self, cmdtag: str, spec: str, row: dict, row_index: int,
+               num_rows: int) -> Optional[Tuple[List[str], str]]:
         raise NotImplementedError()
 
     @property
-    def group(self):
-        # type: () -> Type[CommandGroup]
+    def group(self) -> Type[CommandGroup]:
         """The command group the commmand belongs to"""
         return command_group_registry["various"]
 
     @property
-    def only_view(self):
-        # type: () -> Optional[str]
+    def only_view(self) -> Optional[str]:
         """View name to show a view exclusive command for"""
         return None
 
-    def executor(self, command, site):
-        # type: (str, str) -> None
+    def executor(self, command: str, site: str) -> None:
         """Function that is called to execute this action"""
         sites.live().command("[%d] %s" % (int(time.time()), command), SiteId(site))
 
 
 class CommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[Command]
+    def plugin_base_class(self) -> Type[Command]:
         return Command
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[Command]) -> str
+    def plugin_name(self, plugin_class: Type[Command]) -> str:
         return plugin_class().ident
 
 
@@ -526,8 +473,7 @@ command_registry = CommandRegistry()
 
 
 # TODO: Kept for pre 1.6 compatibility
-def register_legacy_command(spec):
-    # type: (Dict[str, Any]) -> None
+def register_legacy_command(spec: Dict[str, Any]) -> None:
     ident = re.sub("[^a-zA-Z]", "", spec["title"]).lower()
     cls = type(
         "LegacyCommand%s" % str(ident).title(), (Command,), {
@@ -546,30 +492,26 @@ def register_legacy_command(spec):
     command_registry.register(cls)
 
 
-class DataSource(metaclass=abc.ABCMeta):
+class ABCDataSource(metaclass=abc.ABCMeta):
     """Provider of rows for the views (basically tables of data) in the GUI"""
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         """The identity of a data source. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         """Used as display-string for the datasource in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def table(self):
-        # type: () -> RowTable
+    def table(self) -> 'RowTable':
         """Returns a table object that can provide a list of rows for the provided
         query using the query() method."""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def infos(self):
-        # type: () -> List[str]
+    def infos(self) -> List[str]:
         """Infos that are available with this data sources
 
         A info is used to create groups out of single painters and filters.
@@ -579,8 +521,7 @@ class DataSource(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @property
-    def merge_by(self):
-        # type: () -> Optional[str]
+    def merge_by(self) -> Optional[str]:
         """
         1. Results in fetching these columns from the datasource.
         2. Rows from different sites are merged together. For example members
@@ -590,21 +531,18 @@ class DataSource(metaclass=abc.ABCMeta):
         return None
 
     @property
-    def add_columns(self):
-        # type: () -> List[ColumnName]
+    def add_columns(self) -> List[ColumnName]:
         """These columns are requested automatically in addition to the
         other needed columns."""
         return []
 
     @property
-    def add_headers(self):
-        # type: () -> str
+    def add_headers(self) -> str:
         """additional livestatus headers to add to each call"""
         return ""
 
     @abc.abstractproperty
-    def keys(self):
-        # type: () -> List[ColumnName]
+    def keys(self) -> List[ColumnName]:
         """columns which must be fetched in order to execute commands on
         the items (= in order to identify the items and gather all information
         needed for constructing Nagios commands)
@@ -612,15 +550,13 @@ class DataSource(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def id_keys(self):
-        # type: () -> List[ColumnName]
+    def id_keys(self) -> List[ColumnName]:
         """These are used to generate a key which is unique for each data row
         is used to identify an item between http requests"""
         raise NotImplementedError()
 
     @property
-    def join(self):
-        # type: () -> Optional[Tuple]
+    def join(self) -> Optional[Tuple]:
         """A view can display e.g. host-rows and include information from e.g.
         the service table to create a column which shows e.g. the state of one
         service.
@@ -632,23 +568,20 @@ class DataSource(metaclass=abc.ABCMeta):
         return None
 
     @property
-    def join_key(self):
-        # type: () -> Optional[str]
+    def join_key(self) -> Optional[str]:
         """Each joined column in the view can have a 4th attribute which is
         used as value for this column to filter the datasource query
         to get the matching row of the slave table."""
         return None
 
     @property
-    def ignore_limit(self):
-        # type: () -> bool
+    def ignore_limit(self) -> bool:
         """Ignore the soft/hard query limits in view.py/query_data(). This
         fixes stats queries on e.g. the log table."""
         return False
 
     @property
-    def auth_domain(self):
-        # type: () -> str
+    def auth_domain(self) -> str:
         """Querying a table might require to use another auth domain than
         the default one (read). When this is set, the given auth domain
         will be used while fetching the data for this datasource from
@@ -656,46 +589,39 @@ class DataSource(metaclass=abc.ABCMeta):
         return "read"
 
     @property
-    def time_filters(self):
-        # type: () -> List[str]
+    def time_filters(self) -> List[str]:
         return []
 
     @property
-    def link_filters(self):
-        # type: () -> Dict[str, str]
+    def link_filters(self) -> Dict[str, str]:
         """When the single info "hostgroup" is used, use the "opthostgroup" filter
         to handle the data provided by the single_spec value of the "hostgroup"
         info, which is in fact the name of the wanted hostgroup"""
         return {}
 
     # TODO: This can be cleaned up later
-    def post_process(self, rows):
-        # type: (Rows) -> Rows
+    def post_process(self, rows: Rows) -> Rows:
         """Optional function to postprocess the resulting data after executing
         the regular data fetching"""
         return rows
 
 
-class DataSourceLivestatus(DataSource):
+class DataSourceLivestatus(ABCDataSource):
     """Base class for all simple data sources which 1:1 base on a livestatus table"""
     @property
-    def table(self):
-        # type: () -> RowTableLivestatus
+    def table(self) -> 'RowTableLivestatus':
         return RowTableLivestatus(self.ident)
 
 
 class DataSourceRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[DataSource]
-        return DataSource
+    def plugin_base_class(self) -> Type[ABCDataSource]:
+        return ABCDataSource
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[DataSource]) -> str
+    def plugin_name(self, plugin_class: Type[ABCDataSource]) -> str:
         return plugin_class().ident
 
     # TODO: Sort the datasources by (assumed) common usage
-    def data_source_choices(self):
-        # type: () -> List[Tuple[str, str]]
+    def data_source_choices(self) -> List[Tuple[str, str]]:
         datasources = []
         for ident, ds_class in self.items():
             datasources.append((ident, ds_class().title))
@@ -707,25 +633,23 @@ data_source_registry = DataSourceRegistry()
 
 class RowTable(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        # type: (View, List[ColumnName], str, OnlySites, Optional[int], List[Filter]) -> Rows
+    def query(self, view: 'View', columns: List[ColumnName], headers: str, only_sites: OnlySites,
+              limit: Optional[int], all_active_filters: 'List[Filter]') -> Rows:
         raise NotImplementedError()
 
 
 class RowTableLivestatus(RowTable):
-    def __init__(self, table_name):
-        # type: (str) -> None
+    def __init__(self, table_name: str) -> None:
         super(RowTableLivestatus, self).__init__()
         self._table_name = table_name
 
     @property
-    def table_name(self):
-        # type: () -> str
+    def table_name(self) -> str:
         return self._table_name
 
     @staticmethod
-    def _prepare_columns(columns, view):
-        # type: (List[ColumnName], View) -> Tuple[List[ColumnName], Dict[int, List[ColumnName]]]
+    def _prepare_columns(columns: List[ColumnName],
+                         view: 'View') -> Tuple[List[ColumnName], Dict[int, List[ColumnName]]]:
         dynamic_columns = {}
         for index, cell in enumerate(view.row_cells):
             dyn_col = cell.painter().dynamic_columns(cell)
@@ -747,7 +671,7 @@ class RowTableLivestatus(RowTable):
         # must not be done for the table 'log' as it cannot correctly
         # distinguish between service_state and host_state
         if "log" not in datasource.infos:
-            state_columns = []  # type: List[ColumnName]
+            state_columns: List[ColumnName] = []
             if "service" in datasource.infos:
                 state_columns += ["service_has_been_checked", "service_state"]
             if "host" in datasource.infos:
@@ -759,15 +683,14 @@ class RowTableLivestatus(RowTable):
         # Remove columns which are implicitely added by the datasource
         return [c for c in columns if c not in datasource.add_columns], dynamic_columns
 
-    def prepare_lql(self, columns, headers):
-        # type: (List[ColumnName], str) -> LivestatusQuery
+    def prepare_lql(self, columns: List[ColumnName], headers: str) -> LivestatusQuery:
         query = "GET %s\n" % self.table_name
         query += "Columns: %s\n" % " ".join(columns)
         query += headers
         return query
 
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        # type: (View, List[ColumnName], str, OnlySites, Optional[int], List[Filter]) -> Rows
+    def query(self, view: 'View', columns: List[ColumnName], headers: str, only_sites: OnlySites,
+              limit: Optional[int], all_active_filters: 'List[Filter]') -> Rows:
         """Retrieve data via livestatus, convert into list of dicts,
 
         view: view object
@@ -790,7 +713,7 @@ class RowTableLivestatus(RowTable):
         # convert lists-rows into dictionaries.
         # performance, but makes live much easier later.
         columns = ["site"] + columns + datasource.add_columns
-        rows = datasource.post_process([dict(zip(columns, row)) for row in data])  # type: Rows
+        rows: Rows = datasource.post_process([dict(zip(columns, row)) for row in data])
 
         for index, cell in enumerate(view.row_cells):
             painter = cell.painter()
@@ -799,14 +722,8 @@ class RowTableLivestatus(RowTable):
         return rows
 
 
-def query_livestatus(query, only_sites, limit, auth_domain):
-    # type: (LivestatusQuery, OnlySites, Optional[int], str) -> List[LivestatusRow]
-    sites.live().set_prepend_site(True)
-
-    if limit is not None:
-        sites.live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
-    else:
-        sites.live().set_limit(None)
+def query_livestatus(query: LivestatusQuery, only_sites: OnlySites, limit: Optional[int],
+                     auth_domain: str) -> List[LivestatusRow]:
 
     if all((
             config.debug_livestatus_queries,
@@ -817,18 +734,11 @@ def query_livestatus(query, only_sites, limit, auth_domain):
         html.tt(query.replace('\n', '<br>\n'))
         html.close_div()
 
-    if only_sites is None:
-        only_sites = []
-
-    if only_sites:
-        sites.live().set_only_sites(only_sites)
-
     sites.live().set_auth_domain(auth_domain)
-    data = sites.live().query(query)
+    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(limit):
+        data = sites.live().query(query)
+
     sites.live().set_auth_domain("read")
-    sites.live().set_only_sites(None)
-    sites.live().set_prepend_site(False)
-    sites.live().set_limit()  # removes limit
 
     return data
 
@@ -850,25 +760,21 @@ class Painter(metaclass=abc.ABCMeta):
     service state. It uses the columns "service_state" and "has_been_checked".
     """
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         """The identity of a painter. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def title(self, cell):
-        # type: (Cell) -> str
+    def title(self, cell: 'Cell') -> str:
         """Used as display string for the painter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def columns(self):
-        # type: () -> List[ColumnName]
+    def columns(self) -> List[ColumnName]:
         """Livestatus columns needed for this painter"""
         raise NotImplementedError()
 
-    def dynamic_columns(self, cell):
-        # type: (Cell) -> List[ColumnName]
+    def dynamic_columns(self, cell: 'Cell') -> List[ColumnName]:
         """Return list of dynamically generated column as specified by Cell
 
         Some columns for the Livestatus query need to be generated at
@@ -876,8 +782,7 @@ class Painter(metaclass=abc.ABCMeta):
         generated the required column names."""
         return []
 
-    def derive(self, rows, cell, dynamic_columns):
-        # type: (Rows, Cell, Optional[List[ColumnName]]) -> None
+    def derive(self, rows: Rows, cell: 'Cell', dynamic_columns: Optional[List[ColumnName]]) -> None:
         """Post process query according to cell
 
         This function processes data immediately after it is handled back
@@ -897,8 +802,7 @@ class Painter(metaclass=abc.ABCMeta):
             data."""
 
     @abc.abstractmethod
-    def render(self, row, cell):
-        # type: (Row, Cell) -> CellSpec
+    def render(self, row: Row, cell: 'Cell') -> CellSpec:
         """Renders the painter for the given row
         The paint function gets one argument: A data row, which is a python
         dictionary representing one data object (host, service, ...). Its
@@ -914,32 +818,27 @@ class Painter(metaclass=abc.ABCMeta):
         change in future."""
         raise NotImplementedError()
 
-    def short_title(self, cell):
-        # type: (Cell) -> str
+    def short_title(self, cell: 'Cell') -> str:
         """Used as display string for the painter e.g. as table header
         Falls back to the full title if no short title is given"""
         return self.title(cell)
 
-    def group_by(self, row):
-        # type: (Row) -> Union[None, str, Tuple]
+    def group_by(self, row: Row) -> Union[None, str, Tuple]:
         """When a value is returned, this is used instead of the value produced by self.paint()"""
         return None
 
     @property
-    def parameters(self):
-        # type: () -> Optional[ValueSpec]
+    def parameters(self) -> Optional[ValueSpec]:
         """Returns either the valuespec of the painter parameters or None"""
         return None
 
     @property
-    def painter_options(self):
-        # type: () -> List[str]
+    def painter_options(self) -> List[str]:
         """Returns a list of painter option names that affect this painter"""
         return []
 
     @property
-    def printable(self):
-        # type: () -> Union[bool, str]
+    def printable(self) -> Union[bool, str]:
         """
         True       : Is printable in PDF
         False      : Is not printable at all
@@ -948,26 +847,22 @@ class Painter(metaclass=abc.ABCMeta):
         return True
 
     @property
-    def sorter(self):
-        # type: () -> Optional[SorterName]
+    def sorter(self) -> Optional[SorterName]:
         """Returns the optional name of the sorter for this painter"""
         return None
 
     # TODO: Cleanup this hack
     @property
-    def load_inv(self):
-        # type: () -> bool
+    def load_inv(self) -> bool:
         """Whether or not to load the HW/SW inventory for this column"""
         return False
 
 
 class PainterRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[Painter]
+    def plugin_base_class(self) -> Type[Painter]:
         return Painter
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[Painter]) -> str
+    def plugin_name(self, plugin_class: Type[Painter]) -> str:
         return plugin_class().ident
 
 
@@ -976,8 +871,7 @@ painter_registry = PainterRegistry()
 
 # Kept for pre 1.6 compatibility. But also the inventory.py uses this to
 # register some painters dynamically
-def register_painter(ident, spec):
-    # type: (str, Dict[str, Any]) -> None
+def register_painter(ident: str, spec: Dict[str, Any]) -> None:
     cls = type(
         "LegacyPainter%s" % ident.title(), (Painter,), {
             "_ident": ident,
@@ -1001,26 +895,22 @@ class Sorter(metaclass=abc.ABCMeta):
     """A sorter is used for allowing the user to sort the queried data
     according to a certain logic."""
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         """The identity of a sorter. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         """Used as display string for the sorter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def columns(self):
-        # type: () -> List[str]
+    def columns(self) -> List[str]:
         """Livestatus columns needed for this sorter"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def cmp(self, r1, r2):
-        # type: (Dict, Dict) -> int
+    def cmp(self, r1: Dict, r2: Dict) -> int:
         """The function cmp does the actual sorting. During sorting it
         will be called with two data rows as arguments and must
         return -1, 0 or 1:
@@ -1035,26 +925,22 @@ class Sorter(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @property
-    def _args(self):
-        # type: () -> Optional[List]
+    def _args(self) -> Optional[List]:
         """Optional list of arguments for the cmp function"""
         return None
 
     # TODO: Cleanup this hack
     @property
-    def load_inv(self):
-        # type: () -> bool
+    def load_inv(self) -> bool:
         """Whether or not to load the HW/SW inventory for this column"""
         return False
 
 
 class SorterRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[Sorter]
+    def plugin_base_class(self) -> Type[Sorter]:
         return Sorter
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[Sorter]) -> str
+    def plugin_name(self, plugin_class: Type[Sorter]) -> str:
         return plugin_class().ident
 
 
@@ -1063,8 +949,7 @@ sorter_registry = SorterRegistry()
 
 # Kept for pre 1.6 compatibility. But also the inventory.py uses this to
 # register some painters dynamically
-def register_sorter(ident, spec):
-    # type: (str, Dict[str, Any]) -> None
+def register_sorter(ident: str, spec: Dict[str, Any]) -> None:
     cls = type(
         "LegacySorter%s" % str(ident).title(), (Sorter,), {
             "_ident": ident,
@@ -1079,53 +964,46 @@ def register_sorter(ident, spec):
 
 
 # TODO: Refactor to plugin_registries
-multisite_builtin_views = {}  # type: Dict
-view_hooks = {}  # type: Dict
-inventory_displayhints = {}  # type: Dict
+multisite_builtin_views: Dict = {}
+view_hooks: Dict = {}
+inventory_displayhints: Dict = {}
 # For each view a function can be registered that has to return either True
 # or False to show a view as context link
-view_is_enabled = {}  # type: Dict
+view_is_enabled: Dict = {}
 
 
-def view_title(view_spec):
-    # type: (ViewSpec) -> str
+def view_title(view_spec: ViewSpec) -> str:
     return visuals.visual_title('view', view_spec)
 
 
-def transform_action_url(url_spec):
-    # type: (Union[Tuple[str, str], str]) -> Tuple[str, Optional[str]]
+def transform_action_url(url_spec: Union[Tuple[str, str], str]) -> Tuple[str, Optional[str]]:
     if isinstance(url_spec, tuple):
         return url_spec
     return (url_spec, None)
 
 
-def is_stale(row):
-    # type: (Row) -> bool
+def is_stale(row: Row) -> bool:
     return row.get('service_staleness', row.get('host_staleness', 0)) >= config.staleness_threshold
 
 
-def paint_stalified(row, text):
-    # type: (Row, CellContent) -> CellSpec
+def paint_stalified(row: Row, text: CellContent) -> CellSpec:
     if is_stale(row):
         return "stale", text
     return "", text
 
 
-def paint_host_list(site, hosts):
-    # type: (SiteId, List[HostName]) -> CellSpec
+def paint_host_list(site: SiteId, hosts: List[HostName]) -> CellSpec:
     return "", ", ".join(
         cmk.gui.view_utils.get_host_list_links(site, [ensure_str(h) for h in hosts]))
 
 
-def format_plugin_output(output, row):
-    # type: (CellContent, Row) -> str
+def format_plugin_output(output: CellContent, row: Row) -> str:
     return cmk.gui.view_utils.format_plugin_output(output,
                                                    row,
                                                    shall_escape=config.escape_plugin_output)
 
 
-def link_to_view(content, row, view_name):
-    # type: (CellContent, Row, ViewName) -> CellContent
+def link_to_view(content: CellContent, row: Row, view_name: ViewName) -> CellContent:
     assert not isinstance(content, dict)
     if display_options.disabled(display_options.I):
         return content
@@ -1137,8 +1015,7 @@ def link_to_view(content, row, view_name):
 
 
 # TODO: There is duplicated logic with visuals.collect_context_links_of()
-def url_to_view(row, view_name):
-    # type: (Row, ViewName) -> Optional[str]
+def url_to_view(row: Row, view_name: ViewName) -> Optional[str]:
     if display_options.disabled(display_options.I):
         return None
 
@@ -1148,7 +1025,7 @@ def url_to_view(row, view_name):
 
     # Get the context type of the view to link to, then get the parameters of this
     # context type and try to construct the context from the data of the row
-    url_vars = []  # type: HTTPVariables
+    url_vars: HTTPVariables = []
     datasource = data_source_registry[view['datasource']]()
     for info_key in datasource.infos:
         if info_key in view['single_infos']:
@@ -1190,8 +1067,7 @@ def url_to_view(row, view_name):
     return filename + "?" + html.urlencode_vars(url_vars)
 
 
-def get_tag_groups(row, what):
-    # type: (Row, str) -> TagGroups
+def get_tag_groups(row: Row, what: str) -> TagGroups:
     # Sites with old versions that don't have the tag groups column return
     # None for this field. Convert this to the default value
     groups = row.get("%s_tags" % what, {}) or {}
@@ -1199,8 +1075,7 @@ def get_tag_groups(row, what):
     return groups
 
 
-def get_label_sources(row, what):
-    # type: (Row, str) -> LabelSources
+def get_label_sources(row: Row, what: str) -> LabelSources:
     # Sites with old versions that don't have the label_sources column return
     # None for this field. Convert this to the default value
     sources = row.get("%s_label_sources" % what, {}) or {}
@@ -1208,8 +1083,7 @@ def get_label_sources(row, what):
     return sources
 
 
-def get_graph_timerange_from_painter_options():
-    # type: () -> TimeRange
+def get_graph_timerange_from_painter_options() -> TimeRange:
     painter_options = PainterOptions.get_instance()
     value = painter_options.get("pnp_timerange")
     vs = painter_options.get_valuespec_of("pnp_timerange")
@@ -1218,8 +1092,11 @@ def get_graph_timerange_from_painter_options():
     return int(start_time), int(end_time)
 
 
-def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what='past'):
-    # type: (Timestamp, bool, int, str, str) -> CellSpec
+def paint_age(timestamp: Timestamp,
+              has_been_checked: bool,
+              bold_if_younger_than: int,
+              mode: str = None,
+              what: str = 'past') -> CellSpec:
     if not has_been_checked:
         return "age", "-"
 
@@ -1263,15 +1140,13 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
     return age_class, prefix + (output_format % cmk.utils.render.approx_age(age)) + warn_txt
 
 
-def paint_nagiosflag(row, field, bold_if_nonzero):
-    # type: (Row, ColumnName, bool) -> CellSpec
+def paint_nagiosflag(row: Row, field: ColumnName, bold_if_nonzero: bool) -> CellSpec:
     nonzero = row[field] != 0
     return ("badflag" if nonzero == bold_if_nonzero else "goodflag",
             _("yes") if nonzero else _("no"))
 
 
-def declare_simple_sorter(name, title, column, func):
-    # type: (str, str, ColumnName, SorterFunction) -> None
+def declare_simple_sorter(name: str, title: str, column: ColumnName, func: SorterFunction) -> None:
     register_sorter(name, {
         "title": title,
         "columns": [column],
@@ -1279,8 +1154,10 @@ def declare_simple_sorter(name, title, column, func):
     })
 
 
-def declare_1to1_sorter(painter_name, func, col_num=0, reverse=False):
-    # type: (PainterName,  SorterFunction, int, bool) -> PainterName
+def declare_1to1_sorter(painter_name: PainterName,
+                        func: SorterFunction,
+                        col_num: int = 0,
+                        reverse: bool = False) -> PainterName:
     painter = painter_registry[painter_name]()
 
     if not reverse:
@@ -1296,26 +1173,22 @@ def declare_1to1_sorter(painter_name, func, col_num=0, reverse=False):
     return painter_name
 
 
-def cmp_simple_number(column, r1, r2):
-    # type: (ColumnName, Row, Row) -> int
+def cmp_simple_number(column: ColumnName, r1: Row, r2: Row) -> int:
     v1 = r1[column]
     v2 = r2[column]
     return (v1 > v2) - (v1 < v2)
 
 
-def cmp_num_split(column, r1, r2):
-    # type: (ColumnName, Row, Row) -> int
+def cmp_num_split(column: ColumnName, r1: Row, r2: Row) -> int:
     return cmk.gui.utils.cmp_num_split(r1[column].lower(), r2[column].lower())
 
 
-def cmp_simple_string(column, r1, r2):
-    # type: (ColumnName, Row, Row) -> int
+def cmp_simple_string(column: ColumnName, r1: Row, r2: Row) -> int:
     v1, v2 = r1.get(column, ''), r2.get(column, '')
     return cmp_insensitive_string(v1, v2)
 
 
-def cmp_insensitive_string(v1, v2):
-    # type: (str, str) -> int
+def cmp_insensitive_string(v1: str, v2: str) -> int:
     c = (v1.lower() > v2.lower()) - (v1.lower() < v2.lower())
     # force a strict order in case of equal spelling but different
     # case!
@@ -1324,15 +1197,13 @@ def cmp_insensitive_string(v1, v2):
     return c
 
 
-def cmp_string_list(column, r1, r2):
-    # type: (ColumnName, Row, Row) -> int
+def cmp_string_list(column: ColumnName, r1: Row, r2: Row) -> int:
     v1 = ''.join(r1.get(column, []))
     v2 = ''.join(r2.get(column, []))
     return cmp_insensitive_string(v1, v2)
 
 
-def cmp_service_name_equiv(r):
-    # type: (str) -> int
+def cmp_service_name_equiv(r: str) -> int:
     if r == "Check_MK":
         return -6
     if r == "Check_MK Agent":
@@ -1346,14 +1217,12 @@ def cmp_service_name_equiv(r):
     return 0
 
 
-def cmp_custom_variable(r1, r2, key, cmp_func):
-    # type: (Row, Row, str, SorterFunction) -> int
+def cmp_custom_variable(r1: Row, r2: Row, key: str, cmp_func: SorterFunction) -> int:
     return (get_custom_var(r1, key) > get_custom_var(r2, key)) - (get_custom_var(r1, key) <
                                                                   get_custom_var(r2, key))
 
 
-def cmp_ip_address(column, r1, r2):
-    # type: (ColumnName, Row, Row) -> int
+def cmp_ip_address(column: ColumnName, r1: Row, r2: Row) -> int:
     def split_ip(ip):
         try:
             return tuple(int(part) for part in ip.split('.'))
@@ -1364,13 +1233,11 @@ def cmp_ip_address(column, r1, r2):
     return (v1 > v2) - (v1 < v2)
 
 
-def get_custom_var(row, key):
-    # type: (Row, str) -> str
+def get_custom_var(row: Row, key: str) -> str:
     return row["custom_variables"].get(key, "")
 
 
-def get_perfdata_nth_value(row, n, remove_unit=False):
-    # type: (Row, int, bool) -> str
+def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:
     perfdata = row.get("service_perf_data")
     if not perfdata:
         return ''
@@ -1389,19 +1256,18 @@ def get_perfdata_nth_value(row, n, remove_unit=False):
         return str(e)
 
 
-def _merge_data(data, columns):
-    # type: (List[LivestatusRow], List[ColumnName]) -> List[LivestatusRow]
+def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[LivestatusRow]:
     """Merge all data rows with different sites but the same value in merge_column
 
     We require that all column names are prefixed with the tablename. The column with the merge key
     is required to be the *second* column (right after the site column)"""
-    merged = {}  # type: Dict[ColumnName, LivestatusRow]
+    merged: Dict[ColumnName, LivestatusRow] = {}
 
     # site column is not merged
     site_column_merge_func = lambda a, b: ""
 
-    mergefuncs = [site_column_merge_func
-                 ]  # type: List[Callable[[LivestatusColumn, LivestatusColumn], LivestatusColumn]]
+    mergefuncs: List[Callable[[LivestatusColumn, LivestatusColumn],
+                              LivestatusColumn]] = [site_column_merge_func]
 
     def worst_service_state(a, b):
         if a == 2 or b == 2:
@@ -1438,22 +1304,19 @@ def _merge_data(data, columns):
     return [merged[k] for k in mergekeys]
 
 
-def join_row(row, cell):
-    # type: (Row, Cell) -> Row
+def join_row(row: Row, cell: 'Cell') -> Row:
     if isinstance(cell, JoinCell):
         return row.get("JOIN", {}).get(cell.join_service())
     return row
 
 
-def get_view_infos(view):
-    # type: (ViewSpec) -> List[str]
+def get_view_infos(view: ViewSpec) -> List[str]:
     """Return list of available datasources (used to render filters)"""
     ds_name = view.get('datasource', html.request.var('datasource'))
     return data_source_registry[ds_name]().infos
 
 
-def replace_action_url_macros(url, what, row):
-    # type: (str, str, Row) -> str
+def replace_action_url_macros(url: str, what: str, row: Row) -> str:
     macros = {
         "HOSTNAME": row['host_name'],
         "HOSTADDRESS": row['host_address'],
@@ -1471,8 +1334,7 @@ def replace_action_url_macros(url, what, row):
     return url
 
 
-def render_cache_info(what, row):
-    # type: (str, Row) -> str
+def render_cache_info(what: str, row: Row) -> str:
     cached_at = row["service_cached_at"]
     cache_interval = row["service_cache_interval"]
     cache_age = time.time() - cached_at
@@ -1489,20 +1351,17 @@ def render_cache_info(what, row):
 
 class ViewStore:
     @classmethod
-    def get_instance(cls):
-        # type: () -> ViewStore
+    def get_instance(cls) -> 'ViewStore':
         """Use the request globals to prevent multiple instances during a request"""
         if 'view_store' not in g:
             g.view_store = cls()
         return g.view_store
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         self.all = self._load_all_views()
         self.permitted = self._load_permitted_views(self.all)
 
-    def _load_all_views(self):
-        # type: () -> AllViewSpecs
+    def _load_all_views(self) -> AllViewSpecs:
         """Loads all view definitions from disk and returns them"""
         # Skip views which do not belong to known datasources
         views = visuals.load('views',
@@ -1511,24 +1370,20 @@ class ViewStore:
         views = _transform_old_views(views)
         return {viewname: transform_painter_spec(view) for viewname, view in views.items()}
 
-    def _load_permitted_views(self, all_views):
-        # type: (AllViewSpecs) -> PermittedViewSpecs
+    def _load_permitted_views(self, all_views: AllViewSpecs) -> PermittedViewSpecs:
         """Returns all view defitions that a user is allowed to use"""
         return visuals.available('views', all_views)
 
 
-def get_all_views():
-    # type: () -> AllViewSpecs
+def get_all_views() -> AllViewSpecs:
     return ViewStore.get_instance().all
 
 
-def get_permitted_views():
-    # type: () -> PermittedViewSpecs
+def get_permitted_views() -> PermittedViewSpecs:
     return ViewStore.get_instance().permitted
 
 
-def transform_painter_spec(view):
-    # type: (ViewSpec) -> ViewSpec
+def transform_painter_spec(view: ViewSpec) -> ViewSpec:
     if 'painters' in view:
         view['painters'] = [PainterSpec(*v) for v in view['painters']]
     if 'group_painters' in view:
@@ -1538,8 +1393,7 @@ def transform_painter_spec(view):
 
 # Convert views that are saved in the pre 1.2.6-style
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
-def _transform_old_views(all_views):
-    # type: (AllViewSpecs) -> AllViewSpecs
+def _transform_old_views(all_views: AllViewSpecs) -> AllViewSpecs:
     for view in all_views.values():
         ds_name = view['datasource']
         datasource = data_source_registry[ds_name]()
@@ -1603,7 +1457,7 @@ def _transform_old_views(all_views):
             single_keys = visuals.get_single_info_keys(view["single_infos"])
 
             # First get vars for the classic filters
-            context = {}  # type: VisualContext
+            context: VisualContext = {}
             filtervars = dict(view['hard_filtervars'])
             all_vars = {}
             for filter_name in view['show_filters']:
@@ -1712,8 +1566,7 @@ def _transform_old_views(all_views):
 #   '----------------------------------------------------------------------'
 
 
-def extract_painter_name(painter_spec):
-    # type: (Union[PainterName, PainterSpec]) -> PainterName
+def extract_painter_name(painter_spec: Union[PainterName, PainterSpec]) -> PainterName:
     if isinstance(painter_spec[0], tuple):
         return painter_spec[0][0]
     if isinstance(painter_spec, tuple):
@@ -1722,28 +1575,25 @@ def extract_painter_name(painter_spec):
         return painter_spec
 
 
-def painter_exists(painter_spec):
-    # type: (PainterSpec) -> bool
+def painter_exists(painter_spec: PainterSpec) -> bool:
     painter_name = extract_painter_name(painter_spec)
     return painter_name in painter_registry
 
 
 class Cell:
     """A cell is an instance of a painter in a view (-> a cell or a grouping cell)"""
-    def __init__(self, view, painter_spec=None):
-        # type: (View, Optional[PainterSpec]) -> None
+    def __init__(self, view: 'View', painter_spec: Optional[PainterSpec] = None) -> None:
         self._view = view
-        self._painter_name = None  # type: Optional[PainterName]
-        self._painter_params = None  # type: Optional[PainterParameters]
-        self._link_view_name = None  # type: Optional[ViewName]
-        self._tooltip_painter_name = None  # type: Optional[PainterName]
-        self._custom_title = None  # type: Optional[str]
+        self._painter_name: Optional[PainterName] = None
+        self._painter_params: Optional[PainterParameters] = None
+        self._link_view_name: Optional[ViewName] = None
+        self._tooltip_painter_name: Optional[PainterName] = None
+        self._custom_title: Optional[str] = None
 
         if painter_spec:
             self._from_view(painter_spec)
 
-    def _from_view(self, painter_spec):
-        # type: (PainterSpec) -> None
+    def _from_view(self, painter_spec: PainterSpec) -> None:
         self._painter_name = extract_painter_name(painter_spec)
         if isinstance(painter_spec[0], tuple):
             self._painter_params = painter_spec[0][1]
@@ -1755,8 +1605,7 @@ class Cell:
         if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
             self._tooltip_painter_name = tooltip_painter_name
 
-    def needed_columns(self):
-        # type: () -> Set[ColumnName]
+    def needed_columns(self) -> Set[ColumnName]:
         """Get a list of columns we need to fetch in order to render this cell"""
 
         columns = set(self.painter().columns)
@@ -1777,20 +1626,16 @@ class Cell:
 
         return columns
 
-    def is_joined(self):
-        # type: () -> bool
+    def is_joined(self) -> bool:
         return False
 
-    def join_service(self):
-        # type: () -> Optional[ServiceName]
+    def join_service(self) -> Optional[ServiceName]:
         return None
 
-    def _has_link(self):
-        # type: () -> bool
+    def _has_link(self) -> bool:
         return self._link_view_name is not None
 
-    def _link_view(self):
-        # type: () -> Optional[ViewSpec]
+    def _link_view(self) -> Optional[ViewSpec]:
         if self._link_view_name is None:
             return None
 
@@ -1799,25 +1644,20 @@ class Cell:
         except KeyError:
             return None
 
-    def painter(self):
-        # type: () -> Painter
+    def painter(self) -> Painter:
         return painter_registry[self.painter_name()]()
 
-    def painter_name(self):
-        # type: () -> PainterName
+    def painter_name(self) -> PainterName:
         assert self._painter_name is not None
         return self._painter_name
 
-    def export_title(self):
-        # type: () -> str
+    def export_title(self) -> str:
         return ensure_str(self.painter_name())
 
-    def painter_options(self):
-        # type: () -> List[str]
+    def painter_options(self) -> List[str]:
         return self.painter().painter_options
 
-    def painter_parameters(self):
-        # type: () -> Any
+    def painter_parameters(self) -> Any:
         """The parameters configured in the view for this painter. In case the
         painter has params, it defaults to the valuespec default value and
         in case the painter has no params, it returns None."""
@@ -1830,8 +1670,7 @@ class Cell:
 
         return self._painter_params
 
-    def title(self, use_short=True):
-        # type: (bool) -> str
+    def title(self, use_short: bool = True) -> str:
         if self._custom_title:
             return self._custom_title
 
@@ -1840,52 +1679,45 @@ class Cell:
             return self._get_short_title(painter)
         return self._get_long_title(painter)
 
-    def _get_short_title(self, painter):
-        # type: (Painter) -> str
+    def _get_short_title(self, painter: Painter) -> str:
         return painter.short_title(self)
 
-    def _get_long_title(self, painter):
-        # type: (Painter) -> str
+    def _get_long_title(self, painter: Painter) -> str:
         return painter.title(self)
 
     # Can either be:
     # True       : Is printable in PDF
     # False      : Is not printable at all
     # "<string>" : ID of a painter_printer (Reporting module)
-    def printable(self):
-        # type: () -> Union[bool, str]
+    def printable(self) -> Union[bool, str]:
         return self.painter().printable
 
-    def has_tooltip(self):
-        # type: () -> bool
+    def has_tooltip(self) -> bool:
         return self._tooltip_painter_name is not None
 
-    def tooltip_painter_name(self):
-        # type: () -> str
+    def tooltip_painter_name(self) -> str:
         assert self._tooltip_painter_name is not None
         return self._tooltip_painter_name
 
-    def tooltip_painter(self):
-        # type: () -> Painter
+    def tooltip_painter(self) -> Painter:
         assert self._tooltip_painter_name is not None
         return painter_registry[self._tooltip_painter_name]()
 
-    def paint_as_header(self, is_last_column_header=False):
-        # type: (bool) -> None
+    def paint_as_header(self, is_last_column_header: bool = False) -> None:
         # Optional: Sort link in title cell
         # Use explicit defined sorter or implicit the sorter with the painter name
         # Important for links:
         # - Add the display options (Keeping the same display options as current)
         # - Link to _self (Always link to the current frame)
-        classes = []  # type: List[str]
+        classes: List[str] = []
         onclick = ''
         title = u''
         if display_options.enabled(display_options.L) \
            and self._view.spec.get('user_sortable', False) \
            and _get_sorter_name_of_painter(self.painter_name()) is not None:
-            params = [
+            params: HTTPVariables = [
                 ('sort', self._sort_url()),
-            ]  # type: HTTPVariables
+            ]
             if display_options.title_options:
                 params.append(('display_options', display_options.title_options))
 
@@ -1900,8 +1732,7 @@ class Cell:
         html.write(self.title())
         html.close_th()
 
-    def _sort_url(self):
-        # type: () -> str
+    def _sort_url(self) -> str:
         """
         The following sorters need to be handled in this order:
 
@@ -1956,8 +1787,7 @@ class Cell:
         sorters = [SorterSpec(*s) for s in sorter]
         return _encode_sorter_url(sorters)
 
-    def render(self, row):
-        # type: (Row) -> CellSpec
+    def render(self, row: Row) -> CellSpec:
         row = join_row(row, self)
 
         try:
@@ -1989,8 +1819,7 @@ class Cell:
 
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.
-    def render_for_pdf(self, row, time_range):
-        # type: (Row, TimeRange) -> PDFCellSpec
+    def render_for_pdf(self, row: Row, time_range: TimeRange) -> PDFCellSpec:
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
             for file_path in [
@@ -2007,7 +1836,7 @@ class Cell:
                 return css_classes, ""
             assert not isinstance(rendered_txt, dict)
 
-            txt = rendered_txt.strip()  # type: PDFCellContent
+            txt: PDFCellContent = rendered_txt.strip()
 
             # Handle <img...>. Our PDF writer cannot draw arbitrary
             # images, but all that we need for showing simple icons.
@@ -2047,7 +1876,7 @@ class Cell:
         if isinstance(rendered_txt, dict):
             return rendered_txt
 
-        txt = rendered_txt.strip()  # type: str
+        txt: str = rendered_txt.strip()
 
         # Similar to the PDF rendering hack above, but this time we extract the title from our icons
         # and add them to the CSV export instead of stripping the whole HTML tag.
@@ -2057,8 +1886,7 @@ class Cell:
             txt = re.sub('.*title=["\']([^\'"]*)["\'].*', "\\1", str(txt))
         return txt
 
-    def render_content(self, row):
-        # type: (Row) -> CellSpec
+    def render_content(self, row: Row) -> CellSpec:
         if not row:
             return "", ""  # nothing to paint
 
@@ -2068,8 +1896,7 @@ class Cell:
             raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
         return result
 
-    def paint(self, row, tdattrs="", is_last_cell=False):
-        # type: (Row, str, bool) -> bool
+    def paint(self, row: Row, tdattrs: str = "", is_last_cell: bool = False) -> bool:
         tdclass, content = self.render(row)
         has_content = content != ""
         assert not isinstance(content, dict)
@@ -2109,8 +1936,7 @@ SorterEntry = NamedTuple("SorterEntry", [
 SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
 
 
-def _encode_sorter_url(sorters):
-    # type: (List[SorterSpec]) -> str
+def _encode_sorter_url(sorters: List[SorterSpec]) -> str:
     p = []
     for s in sorters:
         url = (u'-' if s.negate else u'') + s.sorter
@@ -2121,9 +1947,8 @@ def _encode_sorter_url(sorters):
     return ensure_str(','.join(p))
 
 
-def _parse_url_sorters(sort):
-    # type: (Optional[str]) -> List[SorterSpec]
-    sorters = []  # type: List[SorterSpec]
+def _parse_url_sorters(sort: Optional[str]) -> List[SorterSpec]:
+    sorters: List[SorterSpec] = []
     if not sort:
         return sorters
     for s in sort.split(','):
@@ -2142,13 +1967,11 @@ def _parse_url_sorters(sort):
 
 
 class JoinCell(Cell):
-    def __init__(self, view, painter_spec):
-        # type: (View, PainterSpec) -> None
-        self._join_service_descr = None  # type: Optional[ServiceName]
+    def __init__(self, view: 'View', painter_spec: PainterSpec) -> None:
+        self._join_service_descr: Optional[ServiceName] = None
         super(JoinCell, self).__init__(view, painter_spec)
 
-    def _from_view(self, painter_spec):
-        # type: (PainterSpec) -> None
+    def _from_view(self, painter_spec: PainterSpec) -> None:
         super(JoinCell, self)._from_view(painter_spec)
 
         self._join_service_descr = painter_spec.join_index
@@ -2156,26 +1979,21 @@ class JoinCell(Cell):
         if painter_spec.column_title and self._custom_title is None:
             self._custom_title = painter_spec.column_title
 
-    def is_joined(self):
-        # type: () -> bool
+    def is_joined(self) -> bool:
         return True
 
-    def join_service(self):
-        # type: () -> ServiceName
+    def join_service(self) -> ServiceName:
         assert self._join_service_descr is not None
         return self._join_service_descr
 
-    def livestatus_filter(self, join_column_name):
-        # type: (str) -> LivestatusQuery
+    def livestatus_filter(self, join_column_name: str) -> LivestatusQuery:
         return "Filter: %s = %s" % \
             (livestatus.lqencode(join_column_name), livestatus.lqencode(self.join_service()))
 
-    def title(self, use_short=True):
-        # type: (bool) -> str
+    def title(self, use_short: bool = True) -> str:
         return self._custom_title or self.join_service()
 
-    def export_title(self):
-        # type: () -> str
+    def export_title(self) -> str:
         return "%s.%s" % (self._painter_name, self.join_service())
 
 
@@ -2187,16 +2005,15 @@ class EmptyCell(Cell):
         return False
 
 
-def output_csv_headers(view):
-    # type: (ViewSpec) -> None
+def output_csv_headers(view: ViewSpec) -> None:
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
     html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
         filename)
 
 
-def _get_sorter_name_of_painter(painter_name_or_spec):
-    # type: (Union[PainterName, PainterSpec]) -> Optional[SorterName]
+def _get_sorter_name_of_painter(
+        painter_name_or_spec: Union[PainterName, PainterSpec]) -> Optional[SorterName]:
     painter_name = extract_painter_name(painter_name_or_spec)
     painter = painter_registry[painter_name]()
     if painter.sorter:
@@ -2208,8 +2025,8 @@ def _get_sorter_name_of_painter(painter_name_or_spec):
     return None
 
 
-def _get_separated_sorters(view):
-    # type: (View) -> Tuple[List[SorterSpec], List[SorterSpec], List[SorterSpec]]
+def _get_separated_sorters(
+        view: 'View') -> Tuple[List[SorterSpec], List[SorterSpec], List[SorterSpec]]:
     group_sort = _get_group_sorters(view)
     view_sort = [SorterSpec(*s) for s in view.spec['sorters'] if not s[0] in group_sort]
     user_sort = view.user_sorters or []
@@ -2220,9 +2037,8 @@ def _get_separated_sorters(view):
     return group_sort, user_sort, view_sort
 
 
-def _get_group_sorters(view):
-    # type: (View) -> List[SorterSpec]
-    group_sort = []  # type: List[SorterSpec]
+def _get_group_sorters(view: 'View') -> List[SorterSpec]:
+    group_sort: List[SorterSpec] = []
     for p in view.spec['group_painters']:
         if not painter_exists(p):
             continue
@@ -2234,8 +2050,7 @@ def _get_group_sorters(view):
     return group_sort
 
 
-def _substract_sorters(base, remove):
-    # type: (List[SorterSpec], List[SorterSpec]) -> None
+def _substract_sorters(base: List[SorterSpec], remove: List[SorterSpec]) -> None:
     for s in remove:
         negated_sorter = SorterSpec(s[0], not s[1], None)
 

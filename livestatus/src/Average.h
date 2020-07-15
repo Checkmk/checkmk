@@ -10,13 +10,11 @@
 
 #include <chrono>
 
-// NOTE: The suppression below is necessary because cppcheck doesn't seem to
-// understand default member initialization yet. :-/
-
-// cppcheck-suppress noConstructor
 class Average {
 public:
     void update(double value);
+
+    double get() const { return _average; }
 
 private:
     std::chrono::steady_clock::time_point _last_update{};

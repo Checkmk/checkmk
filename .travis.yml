@@ -15,7 +15,7 @@ matrix:
           env: TEST_TARGETS="test-bandit"
         - name: "Python formatting"
           python: "3.8"
-          env: TEST_TARGETS="test-format-python3"
+          env: TEST_TARGETS="test-format-python"
         - name: "Pylint tests"
           python: "3.8"
           env: TEST_TARGETS="test-pylint"
@@ -24,7 +24,7 @@ matrix:
           env: TEST_TARGETS="test-unit"
         - name: "mypy tests"
           python: "3.8"
-          env: TEST_TARGETS="test-mypy3-raw"
+          env: TEST_TARGETS="test-mypy-raw"
 env:
     global:
         # Optimize builds by caching pip and pipenv things
@@ -47,10 +47,10 @@ addons:
             - librrd-dev
 install:
     - pip install pipenv
-    - make -C virtual-envs/$TRAVIS_PYTHON_VERSION .venv
+    - make .venv
 script:
     # TODO: Some tests could be optimized for better execution time. For
     # example test-format-python optionally checks only the files in set in
     # the environment variable PYTHON_FILES. Without it, it always checks
     # all known python files.
-    - travis_wait 30 make -C tests-py3 $TEST_TARGETS;
+    - travis_wait 30 make -C tests $TEST_TARGETS;

@@ -25,27 +25,23 @@ from cmk.gui.plugins.sidebar import (
 @snapin_registry.register
 class MasterControlSnapin(SidebarSnapin):
     @staticmethod
-    def type_name():
-        # type: () -> str
+    def type_name() -> str:
         return "master_control"
 
     @classmethod
-    def title(cls):
-        # type: () -> str
+    def title(cls) -> str:
         return _("Master Control")
 
     @classmethod
-    def description(cls):
-        # type: () -> str
+    def description(cls) -> str:
         return _("Buttons for switching globally states such as enabling "
                  "checks and notifications")
 
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         items = self._core_toggles()
         sites.update_site_states_from_dead_sites()
 
-        site_status_info = {}  # type: Dict[sites.SiteId, List]
+        site_status_info: Dict[sites.SiteId, List] = {}
         try:
             sites.live().set_prepend_site(True)
             for row in sites.live().query("GET status\nColumns: %s" %
@@ -68,8 +64,7 @@ class MasterControlSnapin(SidebarSnapin):
                 if not config.is_single_local_site():
                     html.end_foldable_container()
 
-    def _core_toggles(self):
-        # type: () -> List[Tuple[str, str]]
+    def _core_toggles(self) -> List[Tuple[str, str]]:
         return [
             ("enable_notifications", _("Notifications")),
             ("execute_service_checks", _("Service checks")),
@@ -80,8 +75,9 @@ class MasterControlSnapin(SidebarSnapin):
             ("enable_event_handlers", _("Alert handlers")),
         ]
 
-    def _show_master_control_site(self, site_id, site_status_info, items):
-        # type: (sites.SiteId, Dict[sites.SiteId, List], List[Tuple[str, str]]) -> None
+    def _show_master_control_site(self, site_id: sites.SiteId, site_status_info: Dict[sites.SiteId,
+                                                                                      List],
+                                  items: List[Tuple[str, str]]) -> None:
         site_state = sites.states().get(site_id)
 
         if not site_state:
@@ -143,18 +139,15 @@ class MasterControlSnapin(SidebarSnapin):
         html.close_table()
 
     @classmethod
-    def allowed_roles(cls):
-        # type: () -> List[str]
+    def allowed_roles(cls) -> List[str]:
         return ["admin"]
 
-    def page_handlers(self):
-        # type: () -> PageHandlers
+    def page_handlers(self) -> PageHandlers:
         return {
             "switch_master_state": self._ajax_switch_masterstate,
         }
 
-    def _ajax_switch_masterstate(self):
-        # type: () -> None
+    def _ajax_switch_masterstate(self) -> None:
         html.set_output_format("text")
 
         if not config.user.may("sidesnap.master_control"):

@@ -222,10 +222,10 @@ class Server:
 
     def login(self):
         logging.debug("Server.login: Login")
-        attributes = {
+        attributes: ElementAttributes = {
             'inName': self._username,
             'inPassword': self._password,
-        }  # type: ElementAttributes
+        }
 
         root = self._communicate(ET.Element('aaaLogin', attrib=attributes))
         cookie = root.attrib.get('outCookie')
@@ -235,7 +235,7 @@ class Server:
 
     def logout(self):
         logging.debug("Server.logout: Logout")
-        attributes = {}  # type: ElementAttributes
+        attributes: ElementAttributes = {}
         if self._cookie:
             attributes.update({'inCookie': self._cookie})
         self._communicate(ET.Element('aaaLogout', attrib=attributes))
@@ -251,7 +251,7 @@ class Server:
         from entities (B_SERIES_ENTITIES, C_SERIES_ENTITIES).
         """
         logging.debug("Server.get_data_from_entities: Try to get entities")
-        data = {}  # type: Dict[str, List[Tuple[Any, Any]]]
+        data: Dict[str, List[Tuple[Any, Any]]] = {}
         for header, entries in entities:
             for class_id, attributes in entries:
                 logging.debug(
@@ -298,10 +298,10 @@ class Server:
         """
         Returns list of XML trees for class_id or empty list in case no entries are found.
         """
-        attributes = {
+        attributes: ElementAttributes = {
             'classId': class_id,
             'inHierarchical': 'false',
-        }  # type: ElementAttributes
+        }
         if self._cookie:
             attributes.update({'cookie': self._cookie})
         root = self._communicate(ET.Element('configResolveClass', attrib=attributes))

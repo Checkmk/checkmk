@@ -24,8 +24,7 @@ def translate_states(state):
     return state  # This is WARNING
 
 
-def victorops_msg(context):
-    # type: (Dict) -> Dict
+def victorops_msg(context: Dict) -> Dict:
     """Build the message for VictorOps"""
 
     if context.get('WHAT', None) == "SERVICE":

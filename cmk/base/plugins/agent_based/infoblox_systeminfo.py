@@ -5,14 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from .agent_based_api.v0 import (
     contains,
-    parse_string_table,
+    parse_to_string_table,
     register,
     SNMPTree,
 )
 
 register.snmp_section(
     name="infoblox_systeminfo",
-    parse_function=parse_string_table,
+    parse_function=parse_to_string_table,
     trees=[
         SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1",

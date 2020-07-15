@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 
 from cmk.gui.plugins.views import (
     data_source_registry,
-    DataSource,
+    ABCDataSource,
     DataSourceLivestatus,
     RowTable,
     RowTableLivestatus,
@@ -241,7 +241,7 @@ class DataSourceServiceGroups(DataSourceLivestatus):
 
 
 @data_source_registry.register
-class DataSourceMergedServiceGroups(DataSource):
+class DataSourceMergedServiceGroups(ABCDataSource):
     """Merged groups across sites"""
     @property
     def ident(self):
@@ -427,7 +427,7 @@ class DataSourceLogAlertStatistics(LogDataSource):
 
 
 @data_source_registry.register
-class DataSourceServiceDiscovery(DataSource):
+class DataSourceServiceDiscovery(ABCDataSource):
     @property
     def ident(self):
         return "service_discovery"

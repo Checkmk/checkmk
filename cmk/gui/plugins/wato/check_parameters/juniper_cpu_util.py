@@ -23,13 +23,12 @@ from cmk.gui.plugins.wato import (
 def _parameter_valuespec_juniper_cpu_util():
     return Transform(
         Dictionary(
-            help=_("CPU utilization of routing engine."),
             optional_keys=[],
             elements=[
                 (
                     "levels",
                     Tuple(
-                        title=_("Specify levels in percentage of processor routing engine usage"),
+                        title=_("Upper levels"),
                         elements=[
                             Percentage(title=_("Warning at"), default_value=80.0),
                             Percentage(title=_("Critical at"), default_value=90.0),
@@ -46,8 +45,8 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="juniper_cpu_util",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextAscii(title=_("Routing Engine"),),
+        item_spec=lambda: TextAscii(title=_("Operating CPU"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_juniper_cpu_util,
-        title=lambda: _("Juniper Processor Utilization of Routing Engine"),
+        title=lambda: _("Juniper Processor Utilization of Operating CPU"),
     ))

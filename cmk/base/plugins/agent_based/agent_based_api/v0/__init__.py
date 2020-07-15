@@ -22,10 +22,10 @@ from cmk.base.api.agent_based.checking_types import (
     IgnoreResults,
     IgnoreResultsError,
     Metric,
-    Parameters,
     Result,
     Service,
     ServiceLabel,
+    state,
 )
 from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.api.agent_based.utils import (
@@ -46,55 +46,49 @@ from cmk.base.api.agent_based.utils import (
     not_exists,
     not_matches,
     not_startswith,
-    parse_string_table,
+    parse_to_string_table,
     startswith,
 )
 from cmk.base.api.agent_based.value_store import get_value_store
 from cmk.base.discovered_labels import HostLabel
 
-from . import register, render, state
+from . import register, render, clusterize, type_defs
 
 __all__ = [
-    # register functions
-    "register",
-    # SECTION related
-    "SNMPTree",
-    "OIDEnd",
-    "OIDCached",
-    "OIDBytes",
-    "HostLabel",
-    # utils
-    "render",
-    "parse_string_table",
-    # detect spec helper
     "all_of",
     "any_of",
+    "check_levels",
+    "check_levels_predictive",
+    "clusterize",
     "contains",
-    "startswith",
     "endswith",
-    "matches",
     "equals",
     "exists",
-    "not_contains",
-    "not_startswith",
-    "not_endswith",
-    "not_matches",
-    "not_equals",
-    "not_exists",
-    # CHECKING related
+    "get_average",
+    "get_rate",
+    "get_value_store",
+    "HostLabel",
     "IgnoreResults",
     "IgnoreResultsError",
+    "matches",
     "Metric",
-    "Parameters",  # typing only!
+    "not_contains",
+    "not_endswith",
+    "not_equals",
+    "not_exists",
+    "not_matches",
+    "not_startswith",
+    "OIDBytes",
+    "OIDCached",
+    "OIDEnd",
+    "parse_to_string_table",
+    "register",
+    "render",
     "Result",
     "Service",
     "ServiceLabel",
+    "SNMPTree",
+    "startswith",
     "state",
-    # persising values
-    "get_value_store",
-    # utils
-    "check_levels",
-    "check_levels_predictive",
-    "get_rate",
-    "get_average",
+    "type_defs",
 ]

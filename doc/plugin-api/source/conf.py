@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -12,15 +18,14 @@
 
 import os
 import sys
+from typing import List
 sys.path.insert(0, os.path.abspath('../../../'))
-
 
 # -- Project information -----------------------------------------------------
 
 project = "Checkmk's Plugin API"
-copyright = '2020, tribe29 GmbH'
+copyright = '2020, tribe29 GmbH'  # pylint: disable=redefined-builtin
 author = 'tribe29'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -39,7 +44,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns: List[str] = []
 
 # Instead of absolute module names like "cmk.gui.plugins.dashboard.dashboard_api.v0.IFrameDashlet",
 # that fill the whole page, use the plain module local names of the classes.

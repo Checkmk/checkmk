@@ -21,25 +21,21 @@ class HTML:
     The HTML class is implemented as an immutable type.
     Every instance of the class is a unicode string.
     Only utf-8 compatible encodings are supported."""
-    def __init__(self, value=u''):
-        # type: (HTMLInput) -> None
+    def __init__(self, value: HTMLInput = u'') -> None:
         super(HTML, self).__init__()
         self.value = self._ensure_str(value)
 
-    def _ensure_str(self, value):
-        # type: (HTMLInput) -> str
+    def _ensure_str(self, value: HTMLInput) -> str:
         # value can of of any type: HTML, int, float, None, str, ...
         # TODO cleanup call sites
         return value if isinstance(value, str) else str(value)
 
-    def __html__(self):
-        # type: () -> str
+    def __html__(self) -> str:
         return "%s" % self
 
     # TODO: This is broken! Cleanup once we are using Python 3.
     # NOTE: Return type "unicode" of "__str__" incompatible with return type "str" in supertype "object"
-    def __str__(self):  # type: ignore[override]
-        # type: () -> str
+    def __str__(self) -> str:  # type: ignore[override]
         # Against the sense of the __str__() method, we need to return the value
         # as unicode here. Why? There are many cases where something like
         # "%s" % HTML(...) is done in the GUI code. This calls the __str__ function
@@ -58,48 +54,37 @@ class HTML:
         # Bottom line: We should really cleanup internal unicode/str handling.
         return self.value
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return "HTML(\"%s\")" % self.value
 
-    def to_json(self):
-        # type: () -> str
+    def to_json(self) -> str:
         return self.value
 
-    def __add__(self, other):
-        # type: (HTMLInput) -> HTML
+    def __add__(self, other: HTMLInput) -> 'HTML':
         return HTML(self.value + self._ensure_str(other))
 
-    def __iadd__(self, other):
-        # type: (HTMLInput) -> HTML
+    def __iadd__(self, other: HTMLInput) -> 'HTML':
         return self.__add__(other)
 
-    def __radd__(self, other):
-        # type: (HTMLInput) -> HTML
+    def __radd__(self, other: HTMLInput) -> 'HTML':
         return HTML(self._ensure_str(other) + self.value)
 
-    def join(self, iterable):
-        # type: (Iterable[HTMLInput]) -> HTML
+    def join(self, iterable: Iterable[HTMLInput]) -> 'HTML':
         return HTML(self.value.join(map(self._ensure_str, iterable)))
 
-    def __eq__(self, other):
-        # type: (Any) -> bool
+    def __eq__(self, other: Any) -> bool:
         return self.value == self._ensure_str(other)
 
-    def __ne__(self, other):
-        # type: (Any) -> bool
+    def __ne__(self, other: Any) -> bool:
         return self.value != self._ensure_str(other)
 
-    def __len__(self):
-        # type: () -> int
+    def __len__(self) -> int:
         return len(self.value)
 
-    def __getitem__(self, index):
-        # type: (int) -> HTML
+    def __getitem__(self, index: int) -> 'HTML':
         return HTML(self.value[index])
 
-    def __contains__(self, item):
-        # type: (HTMLInput) -> bool
+    def __contains__(self, item: HTMLInput) -> bool:
         return self._ensure_str(item) in self.value
 
     def count(self, sub, *args):
@@ -120,12 +105,10 @@ class HTML:
         args = tuple(map(self._ensure_str, args[:1])) + args[1:]
         return HTML(self.value.strip(*args))
 
-    def lower(self):
-        # type: () -> HTML
+    def lower(self) -> 'HTML':
         return HTML(self.value.lower())
 
-    def upper(self):
-        # type: () -> HTML
+    def upper(self) -> 'HTML':
         return HTML(self.value.upper())
 
     def startswith(self, prefix, *args):

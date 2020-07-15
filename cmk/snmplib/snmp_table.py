@@ -13,7 +13,7 @@ import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import HostName, SectionName
 
 from .type_defs import (
     ABCSNMPBackend,
@@ -45,14 +45,14 @@ ResultColumnsSanitized = List[Tuple[List[SNMPRawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
 
-def get_snmp_table(check_plugin_name, oid_info, *, backend):
-    # type: (CheckPluginName, Union[OIDInfo, SNMPTree], ABCSNMPBackend) -> SNMPTable
-    return _get_snmp_table(check_plugin_name, oid_info, False, backend=backend)
+def get_snmp_table(section_name: Optional[SectionName], oid_info: Union[OIDInfo, SNMPTree], *,
+                   backend: ABCSNMPBackend) -> SNMPTable:
+    return _get_snmp_table(section_name, oid_info, False, backend=backend)
 
 
-def get_snmp_table_cached(check_plugin_name, oid_info, *, backend):
-    # type: (CheckPluginName, Union[OIDInfo, SNMPTree], ABCSNMPBackend) -> SNMPTable
-    return _get_snmp_table(check_plugin_name, oid_info, True, backend=backend)
+def get_snmp_table_cached(section_name: Optional[SectionName], oid_info: Union[OIDInfo, SNMPTree],
+                          *, backend: ABCSNMPBackend) -> SNMPTable:
+    return _get_snmp_table(section_name, oid_info, True, backend=backend)
 
 
 SPECIAL_COLUMNS = [
@@ -65,15 +65,15 @@ SPECIAL_COLUMNS = [
 
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
-def _get_snmp_table(check_plugin_name, oid_info, use_snmpwalk_cache, *, backend):
-    # type: (CheckPluginName, Union[OIDInfo, SNMPTree], bool, ABCSNMPBackend) -> SNMPTable
+def _get_snmp_table(section_name: Optional[SectionName], oid_info: Union[OIDInfo, SNMPTree],
+                    use_snmpwalk_cache: bool, *, backend: ABCSNMPBackend) -> SNMPTable:
     oid, suboids, targetcolumns = _make_target_columns(oid_info)
 
     index_column = -1
     index_format = None
-    info = []  # type: SNMPTable
+    info: SNMPTable = []
     for suboid in suboids:
-        columns = []  # type: ResultColumnsUnsanitized
+        columns: ResultColumnsUnsanitized = []
         # Detect missing (empty columns)
         max_len = 0
         max_len_col = -1
@@ -94,7 +94,7 @@ def _get_snmp_table(check_plugin_name, oid_info, use_snmpwalk_cache, *, backend)
                     "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN and OID_END_OCTET_STRING."
                 )
 
-            rowinfo = _get_snmpwalk(check_plugin_name,
+            rowinfo = _get_snmpwalk(section_name,
                                     oid,
                                     fetchoid,
                                     column,
@@ -130,13 +130,11 @@ def _get_snmp_table(check_plugin_name, oid_info, use_snmpwalk_cache, *, backend)
     return info
 
 
-def _value_encoding(column):
-    # type: (SNMPColumn) -> SNMPValueEncoding
+def _value_encoding(column: SNMPColumn) -> SNMPValueEncoding:
     return "binary" if isinstance(column, OIDBytes) else "string"
 
 
-def _make_target_columns(oid_info):
-    # type: (Union[OIDInfo, SNMPTree]) -> Tuple[OID, List[Any], SNMPColumns]
+def _make_target_columns(oid_info: Union[OIDInfo, SNMPTree]) -> Tuple[OID, List[Any], SNMPColumns]:
     #
     # OIDInfo is one of:
     #   - OIDWithColumns = Tuple[OID, SNMPColumns]
@@ -150,7 +148,7 @@ def _make_target_columns(oid_info):
     #
     # This allows to merge distinct SNMP subtrees with a similar structure
     # to one virtual new tree (look into cmctc_temp for an example)
-    suboids = [None]  # type: List
+    suboids: List = [None]
     if isinstance(oid_info, SNMPTree):
         # TODO (mo): Via SNMPTree is the way to go. Remove all other cases
         #            once we have the auto-conversion of SNMPTrees in place.
@@ -173,8 +171,8 @@ def _make_target_columns(oid_info):
     return oid, suboids, targetcolumns
 
 
-def _make_index_rows(max_column, index_format, fetchoid):
-    # type: (SNMPRowInfo, Optional[SNMPColumn], OID) -> SNMPRowInfo
+def _make_index_rows(max_column: SNMPRowInfo, index_format: Optional[SNMPColumn],
+                     fetchoid: OID) -> SNMPRowInfo:
     index_rows = []
     for o, _unused_value in max_column:
         if index_format == OID_END:
@@ -193,8 +191,7 @@ def _make_index_rows(max_column, index_format, fetchoid):
     return index_rows
 
 
-def _make_table(columns, snmp_config):
-    # type: (ResultColumnsUnsanitized, SNMPHostConfig) -> SNMPTable
+def _make_table(columns: ResultColumnsUnsanitized, snmp_config: SNMPHostConfig) -> SNMPTable:
     # Here we have to deal with a nasty problem: Some brain-dead devices
     # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
     # in the interfaces MIB with 64 bit counters. So we need to look at
@@ -209,41 +206,35 @@ def _make_table(columns, snmp_config):
     return _construct_snmp_table_of_rows(decoded_columns)
 
 
-def _oid_to_bin(oid):
-    # type: (OID) -> SNMPRawValue
+def _oid_to_bin(oid: OID) -> SNMPRawValue:
     return ensure_binary("".join([chr(int(p)) for p in oid.strip(".").split(".")]))
 
 
-def _extract_end_oid(prefix, complete):
-    # type: (OID, OID) -> OID
+def _extract_end_oid(prefix: OID, complete: OID) -> OID:
     return complete[len(prefix):].lstrip('.')
 
 
 # sort OID strings numerically
-def _oid_to_intlist(oid):
-    # type: (OID) -> List[int]
+def _oid_to_intlist(oid: OID) -> List[int]:
     if oid:
         return list(map(int, oid.split('.')))
     return []
 
 
-def _cmp_oids(o1, o2):
-    # type: (OID, OID) -> int
+def _cmp_oids(o1: OID, o2: OID) -> int:
     return (_oid_to_intlist(o1) > _oid_to_intlist(o2)) - (_oid_to_intlist(o1) < _oid_to_intlist(o2))
 
 
-def _key_oids(o1):
-    # type: (OID) -> List[int]
+def _key_oids(o1: OID) -> List[int]:
     return _oid_to_intlist(o1)
 
 
-def _key_oid_pairs(pair1):
-    # type: (Tuple[OID, SNMPRawValue]) -> List[int]
+def _key_oid_pairs(pair1: Tuple[OID, SNMPRawValue]) -> List[int]:
     return _oid_to_intlist(pair1[0].lstrip('.'))
 
 
-def _get_snmpwalk(check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache, *, backend):
-    # type: (CheckPluginName, OID, OID, SNMPColumn, bool, ABCSNMPBackend) -> SNMPRowInfo
+def _get_snmpwalk(section_name: Optional[SectionName], oid: OID, fetchoid: OID, column: SNMPColumn,
+                  use_snmpwalk_cache: bool, *, backend: ABCSNMPBackend) -> SNMPRowInfo:
     if column in SPECIAL_COLUMNS:
         return []
 
@@ -252,22 +243,26 @@ def _get_snmpwalk(check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache, 
     cached = _get_cached_snmpwalk(backend.hostname, fetchoid) if get_from_cache else None
     if cached is not None:
         return cached
-    rowinfo = _perform_snmpwalk(check_plugin_name, oid, fetchoid, backend=backend)
+    rowinfo = _perform_snmpwalk(section_name, oid, fetchoid, backend=backend)
     if save_to_cache:
         _save_snmpwalk_cache(backend.hostname, fetchoid, rowinfo)
     return rowinfo
 
 
-def _perform_snmpwalk(check_plugin_name, base_oid, fetchoid, *, backend):
-    # type: (CheckPluginName, OID, OID, ABCSNMPBackend) -> SNMPRowInfo
-    added_oids = set([])  # type: Set[OID]
-    rowinfo = []  # type: SNMPRowInfo
+def _perform_snmpwalk(section_name: Optional[SectionName], base_oid: OID, fetchoid: OID, *,
+                      backend: ABCSNMPBackend) -> SNMPRowInfo:
+    added_oids: Set[OID] = set([])
+    rowinfo: SNMPRowInfo = []
 
-    for context_name in backend.config.snmpv3_contexts_of(check_plugin_name):
-        rows = backend.walk(oid=fetchoid,
-                            check_plugin_name=check_plugin_name,
-                            table_base_oid=base_oid,
-                            context_name=context_name)
+    for context_name in backend.config.snmpv3_contexts_of(section_name):
+        rows = backend.walk(
+            oid=fetchoid,
+            # revert back to legacy "possilbly-empty-string"-Type
+            # TODO: pass Optional[SectionName] along!
+            check_plugin_name=str(section_name) if section_name else "",
+            table_base_oid=base_oid,
+            context_name=context_name,
+        )
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when
@@ -288,8 +283,7 @@ def _perform_snmpwalk(check_plugin_name, base_oid, fetchoid, *, backend):
     return rowinfo
 
 
-def _compute_fetch_oid(oid, suboid, column):
-    # type: (Union[OID, OIDSpec], Optional[OID], SNMPColumn) -> OID
+def _compute_fetch_oid(oid: Union[OID, OIDSpec], suboid: Optional[OID], column: SNMPColumn) -> OID:
     if suboid:
         fetchoid = "%s.%s" % (oid, suboid)
     else:
@@ -301,28 +295,27 @@ def _compute_fetch_oid(oid, suboid, column):
     return fetchoid
 
 
-def _sanitize_snmp_encoding(columns, snmp_config):
-    # type: (ResultColumnsSanitized, SNMPHostConfig) -> ResultColumnsDecoded
+def _sanitize_snmp_encoding(columns: ResultColumnsSanitized,
+                            snmp_config: SNMPHostConfig) -> ResultColumnsDecoded:
     return [
         _decode_column(column, value_encoding, snmp_config)  #
         for column, value_encoding in columns
     ]
 
 
-def _decode_column(column, value_encoding, snmp_config):
-    # type: (List[SNMPRawValue], SNMPValueEncoding, SNMPHostConfig) -> List[SNMPDecodedValues]
+def _decode_column(column: List[SNMPRawValue], value_encoding: SNMPValueEncoding,
+                   snmp_config: SNMPHostConfig) -> List[SNMPDecodedValues]:
     if value_encoding == "string":
-        decode = snmp_config.ensure_str  # type: Callable[[bytes], SNMPDecodedValues]
+        decode: Callable[[bytes], SNMPDecodedValues] = snmp_config.ensure_str
     else:
         decode = lambda v: list(bytearray(v))
     return [decode(v) for v in column]
 
 
-def _sanitize_snmp_table_columns(columns):
-    # type: (ResultColumnsUnsanitized) -> ResultColumnsSanitized
+def _sanitize_snmp_table_columns(columns: ResultColumnsUnsanitized) -> ResultColumnsSanitized:
     # First compute the complete list of end-oids appearing in the output
     # by looping all results and putting the endoids to a flat list
-    endoids = []  # type: List[OID]
+    endoids: List[OID] = []
     for fetchoid, row_info, value_encoding in columns:
         for o, value in row_info:
             endoid = _extract_end_oid(fetchoid, o)
@@ -338,7 +331,7 @@ def _sanitize_snmp_table_columns(columns):
         need_sort = False
 
     # Now fill gaps in columns where some endois are missing
-    new_columns = []  # type: ResultColumnsSanitized
+    new_columns: ResultColumnsSanitized = []
     for fetchoid, row_info, value_encoding in columns:
         # It might happen that end OIDs are not ordered. Fix the OID sorting to make
         # it comparable to the already sorted endoids list. Otherwise we would get
@@ -369,16 +362,14 @@ def _sanitize_snmp_table_columns(columns):
     return new_columns
 
 
-def _are_ascending_oids(oid_list):
-    # type: (List[OID]) -> bool
+def _are_ascending_oids(oid_list: List[OID]) -> bool:
     for a in range(len(oid_list) - 1):
         if _cmp_oids(oid_list[a], oid_list[a + 1]) > 0:  # == 0 should never happen
             return False
     return True
 
 
-def _construct_snmp_table_of_rows(columns):
-    # type: (ResultColumnsDecoded) -> SNMPTable
+def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> SNMPTable:
     if not columns:
         return []
 
@@ -390,8 +381,7 @@ def _construct_snmp_table_of_rows(columns):
     return new_info
 
 
-def _get_cached_snmpwalk(hostname, fetchoid):
-    # type: (HostName, OID) -> Optional[SNMPRowInfo]
+def _get_cached_snmpwalk(hostname: HostName, fetchoid: OID) -> Optional[SNMPRowInfo]:
     path = _snmpwalk_cache_path(hostname, fetchoid)
     try:
         console.vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
@@ -403,8 +393,7 @@ def _get_cached_snmpwalk(hostname, fetchoid):
         return None
 
 
-def _save_snmpwalk_cache(hostname, fetchoid, rowinfo):
-    # type: (HostName, OID, SNMPRowInfo) -> None
+def _save_snmpwalk_cache(hostname: HostName, fetchoid: OID, rowinfo: SNMPRowInfo) -> None:
     path = _snmpwalk_cache_path(hostname, fetchoid)
 
     if not os.path.exists(os.path.dirname(path)):
@@ -414,6 +403,5 @@ def _save_snmpwalk_cache(hostname, fetchoid, rowinfo):
     store.save_object_to_file(path, rowinfo, pretty=False)
 
 
-def _snmpwalk_cache_path(hostname, fetchoid):
-    # type: (HostName, OID) -> str
+def _snmpwalk_cache_path(hostname: HostName, fetchoid: OID) -> str:
     return os.path.join(cmk.utils.paths.var_dir, "snmp_cache", hostname, fetchoid)

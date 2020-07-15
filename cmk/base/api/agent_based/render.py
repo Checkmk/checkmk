@@ -34,8 +34,7 @@ _TIME_UNITS = [
 _SIZE_PREFIXES = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
 
 
-def date(epoch):
-    # type: (Optional[float]) -> str
+def date(epoch: Optional[float]) -> str:
     """Render seconds since epoch as date
 
     In case None is given it returns "never".
@@ -45,8 +44,7 @@ def date(epoch):
     return time.strftime(_DATE_FORMAT, time.localtime(float(epoch)))
 
 
-def datetime(epoch):
-    # type: (Optional[float]) -> str
+def datetime(epoch: Optional[float]) -> str:
     """Render seconds since epoch as date and time
 
     In case None is given it returns "never".
@@ -56,8 +54,10 @@ def datetime(epoch):
     return time.strftime("%s %%H:%%M:%%S" % _DATE_FORMAT, time.localtime(float(epoch)))
 
 
-def _gen_timespan_chunks(seconds, nchunks):
-    # type: (float, int) -> Iterable[str]
+def _gen_timespan_chunks(seconds: float, nchunks: int) -> Iterable[str]:
+    if seconds < 0:
+        raise ValueError("Cannot render negative timespan")
+
     try:
         start = next(i for i, (_, v) in enumerate(_TIME_UNITS) if seconds >= v)
     except StopIteration:
@@ -71,31 +71,40 @@ def _gen_timespan_chunks(seconds, nchunks):
         seconds %= scale
 
 
-def timespan(seconds):
-    # type: (float) -> str
+def timespan(seconds: float) -> str:
     """Render a time span in seconds
     """
-    return " ".join(_gen_timespan_chunks(float(seconds), nchunks=2))
+    ts = " ".join(_gen_timespan_chunks(float(seconds), nchunks=2))
+    if ts == "0 %s" % _TIME_UNITS[-1][0]:
+        ts = "0 seconds"
+    return ts
 
 
-def _digits_left(value):
-    # type: (float) -> int
+def _digits_left(value: float) -> int:
     """Return the number of didgits left of the decimal point"""
-    return max(int(math.log(value, 10) + 1), 1)
+    try:
+        return max(int(math.log10(value) + 1), 1)
+    except ValueError:  # value is exactly zero
+        if value < 0:
+            raise
+        return 1
 
 
-def _auto_scale(value, use_si_units):
-    # type: (float, bool) -> Tuple[str, str]
+def _auto_scale(value: float, use_si_units: bool) -> Tuple[str, str]:
     base = 1000 if use_si_units else 1024
-    exponent = min(max(int(math.log(value, base)), 0), len(_SIZE_PREFIXES) - 1)
+    try:
+        exponent = min(max(int(math.log(value, base)), 0), len(_SIZE_PREFIXES) - 1)
+    except ValueError:
+        if value < 0:
+            raise
+        exponent = 0
     unit = (_SIZE_PREFIXES[exponent] + ("B" if use_si_units else "iB")).lstrip('i')
     scaled_value = float(value) / base**exponent
     fmt = "%%.%df" % max(3 - _digits_left(scaled_value), 0)
     return fmt % scaled_value, unit
 
 
-def disksize(bytes_):
-    # type: (float) -> str
+def disksize(bytes_: float) -> str:
     """Render a disk size in bytes using an appropriate SI prefix
 
     Example:
@@ -106,8 +115,7 @@ def disksize(bytes_):
     return "%s %s" % (value_str if unit != "B" else value_str.split('.')[0], unit)
 
 
-def bytes(bytes_):  # pylint: disable=redefined-builtin
-    # type: (float) -> str
+def bytes(bytes_: float) -> str:  # pylint: disable=redefined-builtin
     """Render a number of bytes using an appropriate IEC prefix
 
     Example:
@@ -118,8 +126,7 @@ def bytes(bytes_):  # pylint: disable=redefined-builtin
     return "%s %s" % (value_str if unit != "B" else value_str.split('.')[0], unit)
 
 
-def filesize(bytes_):
-    # type: (float) -> str
+def filesize(bytes_: float) -> str:
     """Render a file size in bytes
 
     Example:
@@ -135,14 +142,12 @@ def filesize(bytes_):
     return "%s B" % ','.join(groups)
 
 
-def networkbandwidth(octets_per_sec):
-    # type: (float) -> str
+def networkbandwidth(octets_per_sec: float) -> str:
     """Render network bandwidth using an appropriate SI prefix"""
     return "%s %sit/s" % _auto_scale(float(octets_per_sec) * 8, use_si_units=True)
 
 
-def nicspeed(octets_per_sec):
-    # type: (float) -> str
+def nicspeed(octets_per_sec: float) -> str:
     """Render NIC speed using an appropriate SI prefix"""
     value_str, unit = _auto_scale(float(octets_per_sec) * 8, use_si_units=True)
     if '.' in value_str:
@@ -150,14 +155,12 @@ def nicspeed(octets_per_sec):
     return "%s %sit/s" % (value_str, unit)
 
 
-def iobandwidth(bytes_):
-    # type: (float) -> str
+def iobandwidth(bytes_: float) -> str:
     """Render IO-bandwith using an appropriate SI prefix"""
     return "%s %s/s" % _auto_scale(float(bytes_), use_si_units=True)
 
 
-def percent(percentage):
-    # type: (float) -> str
+def percent(percentage: float) -> str:
     """Render percentage"""
     # There is another render.percent in cmk.utils. However, that deals extensively with
     # the rendering of small percentages (as is required for graphing applications)

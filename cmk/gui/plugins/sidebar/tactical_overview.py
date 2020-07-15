@@ -15,10 +15,7 @@ import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
-# Things imported here are used by pre legacy (pre 1.6) cron plugins)
-from cmk.gui.plugins.sidebar import (  # noqa: F401 # pylint: disable=unused-import
-    CustomizableSidebarSnapin, snapin_registry, write_snapin_exception, snapin_width, link,
-)
+from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, link
 
 ViewURLParams = namedtuple("ViewURLParams", ["total", "handled", "unhandled", "stale"])
 OverviewRow = namedtuple("OverviewRow", ["what", "title", "context", "stats", "views"])
@@ -44,7 +41,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Tactical Overview")
+        return _("Tactical overview")
+
+    @classmethod
+    def has_advanced_items(cls):
+        return True
 
     @classmethod
     def description(cls):
@@ -156,10 +157,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
             html.open_tr()
             html.th(row.title)
-            html.th(_("Problems"))
+            html.th(_("Problems"), class_="advanced")
             html.th(_("Unhandled"))
             if show_stales and has_stale_objects:
-                html.th(_("Stale"))
+                html.th(_("Stale"), class_="advanced")
             html.close_tr()
 
             td_class = 'col4' if has_stale_objects else 'col3'
@@ -173,7 +174,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             for value, ty in [(problems, "handled"), (unhandled_problems, "unhandled")]:
                 url = html.makeuri_contextless(getattr(row.views, ty) + context_vars,
                                                filename="view.py")
-                html.open_td(class_=[td_class, "states prob" if value != 0 else None])
+                html.open_td(class_=[
+                    td_class, "states prob" if value != 0 else None, "advanced" if ty ==
+                    "handled" else "basic"
+                ])
                 link(str(value), url)
                 html.close_td()
 
@@ -181,11 +185,12 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 if row.views.stale:
                     url = html.makeuri_contextless(row.views.stale + context_vars,
                                                    filename="view.py")
-                    html.open_td(class_=[td_class, "states prob" if stales != 0 else None])
+                    html.open_td(
+                        class_=[td_class, "states prob" if stales != 0 else None, "advanced"])
                     link(str(stales), url)
                     html.close_td()
                 else:
-                    html.td(html.render_span("0"))
+                    html.td(html.render_span("0"), class_="advanced")
 
             html.close_tr()
         html.close_table()

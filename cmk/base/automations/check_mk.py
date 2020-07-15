@@ -19,27 +19,27 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
+from cmk.utils.check_utils import section_name_of, maincheckify
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.check_utils import section_name_of
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
     CheckPluginName,
+    CheckPluginNameStr,
+    HostAddress,
     HostName,
     ServiceDetails,
-    ServiceName,
     ServiceState,
 )
 
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig
+from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig, SNMPTree
 
 from cmk.fetchers import factory
 
@@ -67,8 +67,8 @@ HistoryFilePair = Tuple[HistoryFile, HistoryFile]
 
 
 class DiscoveryAutomation(Automation):
-    def _trigger_discovery_check(self, config_cache, host_config):
-        # type: (config.ConfigCache, config.HostConfig) -> None
+    def _trigger_discovery_check(self, config_cache: config.ConfigCache,
+                                 host_config: config.HostConfig) -> None:
         """if required, schedule the "Check_MK Discovery" check"""
         if not config.inventory_check_autotrigger:
             return
@@ -89,15 +89,14 @@ class AutomationDiscovery(DiscoveryAutomation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    # Does discovery for a list of hosts. Possible values for how:
+    # Does discovery for a list of hosts. Possible values for mode:
     # "new" - find only new services (like -I)
     # "remove" - remove exceeding services
     # "fixall" - find new, remove exceeding
     # "refresh" - drop all services and reinventorize
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
-    def execute(self, args):
-        # type: (List[str]) -> Tuple[Dict[str, List[int]], Dict[HostName, str]]
+    def execute(self, args: List[str]) -> Tuple[Dict[str, List[int]], Dict[HostName, str]]:
         # Error sensivity
         if args[0] == "@raiseerrors":
             args = args[1:]
@@ -124,8 +123,9 @@ class AutomationDiscovery(DiscoveryAutomation):
         if len(args) < 2:
             raise MKAutomationError("Need two arguments: new|remove|fixall|refresh HOSTNAME")
 
-        how = args[0]
+        mode = args[0]
         hostnames = args[1:]
+        service_filters = discovery.get_service_filter_funcs({})
 
         config_cache = config.get_config_cache()
 
@@ -134,8 +134,15 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         for hostname in hostnames:
             host_config = config_cache.get_host_config(hostname)
-            result, error = discovery.discover_on_host(config_cache, host_config, how, do_snmp_scan,
-                                                       use_caches, on_error)
+            result, error = discovery.discover_on_host(
+                config_cache,
+                host_config,
+                mode,
+                do_snmp_scan,
+                use_caches,
+                service_filters,
+                on_error=on_error,
+            )
             counts[hostname] = [
                 result["self_new"],
                 result["self_removed"],
@@ -158,8 +165,7 @@ automations.register(AutomationDiscovery())
 
 # Python 3? use contextlib.redirect_stdout
 @contextlib.contextmanager
-def redirect_output(where):
-    # type: (io.StringIO) -> Iterator[io.StringIO]
+def redirect_output(where: io.StringIO) -> Iterator[io.StringIO]:
     """Redirects stdout/stderr to the given file like object"""
     prev_stdout, prev_stderr = sys.stdout, sys.stderr
     prev_stdout.flush()
@@ -177,8 +183,7 @@ class AutomationTryDiscovery(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args):
-        # type: (List[str]) -> Dict[str, Any]
+    def execute(self, args: List[str]) -> Dict[str, Any]:
         with redirect_output(io.StringIO()) as buf:
             log.setup_console_logging()
             log.logger.setLevel(log.VERBOSE)
@@ -189,15 +194,15 @@ class AutomationTryDiscovery(Automation):
                 "host_labels": host_labels.to_dict(),
             }
 
-    def _execute_discovery(self, args):
-        # type: (List[str]) -> Tuple[discovery.CheckPreviewTable, DiscoveredHostLabels]
+    def _execute_discovery(
+            self, args: List[str]) -> Tuple[discovery.CheckPreviewTable, DiscoveredHostLabels]:
         use_caches = False
         do_snmp_scan = False
         if args[0] == '@noscan':
             args = args[1:]
             do_snmp_scan = False
             use_caches = True
-            data_sources.abstract.DataSource.set_use_outdated_cache_file()
+            data_sources.ABCDataSource.set_use_outdated_cache_file()
             data_sources.tcp.TCPDataSource.use_only_cache()
 
         elif args[0] == '@scan':
@@ -211,7 +216,7 @@ class AutomationTryDiscovery(Automation):
         else:
             on_error = "warn"
 
-        data_sources.abstract.DataSource.set_may_use_cache_file(use_caches)
+        data_sources.ABCDataSource.set_may_use_cache_file(use_caches)
         hostname = args[0]
         return discovery.get_check_preview(hostname,
                                            use_caches=use_caches,
@@ -230,10 +235,8 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     # Set the new list of autochecks. This list is specified by a
     # table of (checktype, item). No parameters are specified. Those
     # are either (1) kept from existing autochecks or (2) computed
-    # from a new inventory. Note: we must never convert check parameters
-    # from python source code to actual values.
-    def execute(self, args):
-        # type: (List[str]) -> None
+    # from a new inventory.
+    def execute(self, args: List[str]) -> None:
         hostname = args[0]
         new_items = ast.literal_eval(sys.stdin.read())
 
@@ -241,7 +244,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         host_config = config_cache.get_host_config(hostname)
 
         new_services = []
-        for (check_plugin_name, item), (paramstr, raw_service_labels) in new_items.items():
+        for (check_plugin_name, item), (params, raw_service_labels) in new_items.items():
             descr = config.service_description(hostname, check_plugin_name, item)
 
             service_labels = DiscoveredServiceLabels()
@@ -249,8 +252,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 service_labels.add_label(ServiceLabel(label_id, label_value))
 
             new_services.append(
-                discovery.DiscoveredService(check_plugin_name, item, descr, paramstr,
-                                            service_labels))
+                discovery.Service(check_plugin_name, item, descr, params, service_labels))
 
         host_config.set_autochecks(new_services)
         self._trigger_discovery_check(config_cache, host_config)
@@ -265,8 +267,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args):
-        # type: (List[str]) -> None
+    def execute(self, args: List[str]) -> None:
         hostname = args[0]
         new_host_labels = ast.literal_eval(sys.stdin.read())
         DiscoveredHostLabelsStore(hostname).save(new_host_labels)
@@ -284,20 +285,18 @@ class AutomationRenameHosts(Automation):
     needs_config = True
     needs_checks = True
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(AutomationRenameHosts, self).__init__()
-        self._finished_history_files = {}  # type: Dict[HistoryFilePair, List[HistoryFile]]
+        self._finished_history_files: Dict[HistoryFilePair, List[HistoryFile]] = {}
 
     # WATO calls this automation when hosts have been renamed. We need to change
     # several file and directory names. This function has no argument but reads
     # Python pair-list from stdin:
     # [("old1", "new1"), ("old2", "new2")])
-    def execute(self, args):
-        # type: (List[str]) -> Dict[str, int]
-        renamings = ast.literal_eval(sys.stdin.read())  # type: List[HistoryFilePair]
+    def execute(self, args: List[str]) -> Dict[str, int]:
+        renamings: List[HistoryFilePair] = ast.literal_eval(sys.stdin.read())
 
-        actions = []  # type: List[str]
+        actions: List[str] = []
 
         # The history archive can be renamed with running core. We need to keep
         # the list of already handled history archive files, because a new history
@@ -332,15 +331,14 @@ class AutomationRenameHosts(Automation):
                     actions.append("dnsfail-" + hostname)
 
         # Convert actions into a dictionary { "what" : count }
-        action_counts = {}  # type: Dict[str, int]
+        action_counts: Dict[str, int] = {}
         for action in actions:
             action_counts.setdefault(action, 0)
             action_counts[action] += 1
 
         return action_counts
 
-    def _core_is_running(self):
-        # type: () -> bool
+    def _core_is_running(self) -> bool:
         if config.monitoring_core == "nagios":
             command = cmk.utils.paths.nagios_startscript + " status >/dev/null 2>&1"
         else:
@@ -348,8 +346,7 @@ class AutomationRenameHosts(Automation):
         code = os.system(command)  # nosec
         return not code
 
-    def _rename_host_files(self, oldname, newname):
-        # type: (HistoryFile, HistoryFile) -> List[str]
+    def _rename_host_files(self, oldname: HistoryFile, newname: HistoryFile) -> List[str]:
         actions = []
 
         if self._rename_host_file(cmk.utils.paths.autochecks_dir, oldname + ".mk", newname + ".mk"):
@@ -406,8 +403,7 @@ class AutomationRenameHosts(Automation):
 
         return actions
 
-    def _rename_host_dir(self, basedir, oldname, newname):
-        # type: (str, str, str) -> int
+    def _rename_host_dir(self, basedir: str, oldname: str, newname: str) -> int:
         if os.path.exists(basedir + "/" + oldname):
             if os.path.exists(basedir + "/" + newname):
                 shutil.rmtree(basedir + "/" + newname)
@@ -415,8 +411,7 @@ class AutomationRenameHosts(Automation):
             return 1
         return 0
 
-    def _rename_host_file(self, basedir, oldname, newname):
-        # type: (str, str, str) -> int
+    def _rename_host_file(self, basedir: str, oldname: str, newname: str) -> int:
         if os.path.exists(basedir + "/" + oldname):
             if os.path.exists(basedir + "/" + newname):
                 os.remove(basedir + "/" + newname)
@@ -425,8 +420,7 @@ class AutomationRenameHosts(Automation):
         return 0
 
     # This functions could be moved out of Check_MK.
-    def _omd_rename_host(self, oldname, newname):
-        # type: (str, str) -> List[str]
+    def _omd_rename_host(self, oldname: str, newname: str) -> List[str]:
         oldregex = self._escape_name_for_regex_matching(oldname)
         actions = []
 
@@ -508,22 +502,19 @@ class AutomationRenameHosts(Automation):
 
         return actions
 
-    def _rename_host_in_remaining_core_history_files(self, oldname, newname):
-        # type: (str, str) -> List[str]
+    def _rename_host_in_remaining_core_history_files(self, oldname: str, newname: str) -> List[str]:
         """Perform the rename operation in all history archive files that have not been handled yet"""
         finished_file_paths = self._finished_history_files[(oldname, newname)]
         all_file_paths = set(self._get_core_history_files(only_archive=False))
         todo_file_paths = list(all_file_paths.difference(finished_file_paths))
         return self._rename_host_in_core_history_files(todo_file_paths, oldname, newname)
 
-    def _rename_host_in_core_history_archive(self, oldname, newname):
-        # type: (str, str) -> List[str]
+    def _rename_host_in_core_history_archive(self, oldname: str, newname: str) -> List[str]:
         """Perform the rename operation in all history archive files"""
         file_paths = self._get_core_history_files(only_archive=True)
         return self._rename_host_in_core_history_files(file_paths, oldname, newname)
 
-    def _get_core_history_files(self, only_archive):
-        # type: (bool) -> List[str]
+    def _get_core_history_files(self, only_archive: bool) -> List[str]:
         path_patterns = [
             "var/check_mk/core/archive/*",
             "var/nagios/archive/*",
@@ -535,13 +526,13 @@ class AutomationRenameHosts(Automation):
                 "var/nagios/nagios.log",
             ]
 
-        file_paths = []  # type: List[str]
+        file_paths: List[str] = []
         for path_pattern in path_patterns:
             file_paths += glob.glob("%s/%s" % (cmk.utils.paths.omd_root, path_pattern))
         return file_paths
 
-    def _rename_host_in_core_history_files(self, file_paths, oldname, newname):
-        # type: (List[str], str, str) -> List[str]
+    def _rename_host_in_core_history_files(self, file_paths: List[str], oldname: str,
+                                           newname: str) -> List[str]:
         oldregex = self._escape_name_for_regex_matching(oldname)
 
         # Logfiles and history files of CMC and Nagios. Problem
@@ -557,7 +548,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
             "new": newname
         }
 
-        handled_files = []  # type: List[str]
+        handled_files: List[str] = []
 
         command = ["sed", "-ri", "--file=/dev/fd/0"]
         p = subprocess.Popen(
@@ -575,8 +566,11 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         return handled_files
 
     # Returns True in case files were found, otherwise False
-    def rename_host_in_files(self, path_pattern, old, new, extended_regex=False):
-        # type: (str, str, str, bool) -> bool
+    def rename_host_in_files(self,
+                             path_pattern: str,
+                             old: str,
+                             new: str,
+                             extended_regex: bool = False) -> bool:
         paths = glob.glob(path_pattern)
         if paths:
             extended = ["-r"] if extended_regex else []
@@ -586,8 +580,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
 
         return False
 
-    def _escape_name_for_regex_matching(self, name):
-        # type: (str) -> str
+    def _escape_name_for_regex_matching(self, name: str) -> str:
         return name.replace(".", "[.]")
 
 
@@ -599,8 +592,7 @@ class AutomationAnalyseServices(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args):
-        # type: (List[str]) -> Dict
+    def execute(self, args: List[str]) -> Dict:
         hostname = args[0]
         servicedesc = args[1]
 
@@ -620,8 +612,8 @@ class AutomationAnalyseServices(Automation):
     # TODO: Refactor this huge function
     # TODO: Was ist mit Clustern???
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
-    def _get_service_info(self, config_cache, host_config, servicedesc):
-        # type: (config.ConfigCache, config.HostConfig, str) -> Dict
+    def _get_service_info(self, config_cache: config.ConfigCache, host_config: config.HostConfig,
+                          servicedesc: str) -> Dict:
         hostname = host_config.hostname
         check_api_utils.set_hostname(hostname)
 
@@ -637,7 +629,9 @@ class AutomationAnalyseServices(Automation):
 
         # 1. Manual checks
         for checkgroup_name, checktype, item, params in host_config.static_checks:
-            descr = config.service_description(hostname, checktype, item)
+            # TODO (mo): centralize maincheckify: CMK-4295
+            check_plugin_name = CheckPluginName(maincheckify(checktype))
+            descr = config.service_description(hostname, check_plugin_name, item)
             if descr == servicedesc:
                 return {
                     "origin": "static",
@@ -650,7 +644,7 @@ class AutomationAnalyseServices(Automation):
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         if host_config.is_cluster:
-            services = []  # type: List[cmk.base.check_utils.Service]
+            services: List[cmk.base.check_utils.Service] = []
             for node in host_config.nodes or []:
                 for service in config_cache.get_autochecks_of(node):
                     if hostname == config_cache.host_of_clustered_service(
@@ -663,7 +657,7 @@ class AutomationAnalyseServices(Automation):
         # our service there
         for service in services:
 
-            if (service.check_plugin_name, service.item) not in table:
+            if service.id() not in table:
                 continue  # this is a removed duplicate or clustered service
 
             if service.description == servicedesc:
@@ -729,8 +723,7 @@ class AutomationAnalyseHost(Automation):
     needs_config = True
     needs_checks = False
 
-    def execute(self, args):
-        # type: (List[str]) -> Dict
+    def execute(self, args: List[str]) -> Dict:
         host_name = args[0]
         config_cache = config.get_config_cache()
         return {
@@ -747,13 +740,11 @@ class AutomationDeleteHosts(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args):
-        # type: (List[str]) -> None
+    def execute(self, args: List[str]) -> None:
         for hostname in args:
             self._delete_host_files(hostname)
 
-    def _delete_host_files(self, hostname):
-        # type: (HostName) -> None
+    def _delete_host_files(self, hostname: HostName) -> None:
 
         # The inventory_archive as well as the performance data is kept
         # we do not want to loose any historic data for accidently deleted hosts.
@@ -805,8 +796,7 @@ class AutomationDeleteHosts(Automation):
                 if e.errno != errno.ENOENT:
                     raise
 
-    def _delete_if_exists(self, path):
-        # type: (str) -> None
+    def _delete_if_exists(self, path: str) -> None:
         """Delete the given file in case it exists"""
         try:
             os.unlink(path)
@@ -823,15 +813,13 @@ class AutomationRestart(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def _mode(self):
-        # type: () -> str
+    def _mode(self) -> str:
         if config.monitoring_core == "cmc" and not self._check_plugins_have_changed():
             return "reload"  # force reload for cmc
         return "restart"
 
     # TODO: Cleanup duplicate code with cmk.base.core.do_restart()
-    def execute(self, args):
-        # type: (List[str]) -> core_config.ConfigurationWarnings
+    def execute(self, args: List[str]) -> core_config.ConfigurationWarnings:
         # make sure, Nagios does not inherit any open
         # filedescriptors. This really happens, e.g. if
         # check_mk is called by WATO via Apache. Nagios inherits
@@ -907,21 +895,18 @@ class AutomationRestart(Automation):
         sys.stdout = old_stdout
         return configuration_warnings
 
-    def _check_plugins_have_changed(self):
-        # type: () -> bool
+    def _check_plugins_have_changed(self) -> bool:
         this_time = self._last_modification_in_dir(str(cmk.utils.paths.local_checks_dir))
         last_time = self._time_of_last_core_restart()
         return this_time > last_time
 
-    def _last_modification_in_dir(self, dir_path):
-        # type: (str) -> float
+    def _last_modification_in_dir(self, dir_path: str) -> float:
         max_time = os.stat(dir_path).st_mtime
         for file_name in os.listdir(dir_path):
             max_time = max(max_time, os.stat(dir_path + "/" + file_name).st_mtime)
         return max_time
 
-    def _time_of_last_core_restart(self):
-        # type: () -> float
+    def _time_of_last_core_restart(self) -> float:
         if config.monitoring_core == "cmc":
             pidfile_path = cmk.utils.paths.omd_root + "/tmp/run/cmc.pid"
         else:
@@ -939,8 +924,7 @@ automations.register(AutomationRestart())
 class AutomationReload(AutomationRestart):
     cmd = "reload"
 
-    def _mode(self):
-        # type: () -> str
+    def _mode(self) -> str:
         if self._check_plugins_have_changed():
             return "restart"
         return "reload"
@@ -953,8 +937,7 @@ class AutomationStart(AutomationRestart):
     """Not an externally registered automation, just supporting the "rename-hosts" automation"""
     cmd = "start"
 
-    def _mode(self):
-        # type: () -> str
+    def _mode(self) -> str:
         return "start"
 
 
@@ -972,8 +955,7 @@ class AutomationGetConfiguration(Automation):
     # this option (like before).
     needs_checks = False
 
-    def execute(self, args):
-        # type: (List[str]) -> Dict[str, Any]
+    def execute(self, args: List[str]) -> Dict[str, Any]:
         config.load(with_conf_d=False)
 
         # We read the list of variable names from stdin since
@@ -1003,11 +985,10 @@ class AutomationGetCheckInformation(Automation):
     needs_config = False
     needs_checks = True
 
-    def execute(self, args):
-        # type: (List[str]) -> Dict[CheckPluginName, Dict[str, Any]]
+    def execute(self, args: List[str]) -> Dict[CheckPluginNameStr, Dict[str, Any]]:
         manuals = man_pages.all_man_pages()
 
-        check_infos = {}  # type: Dict[CheckPluginName, Dict[str, Any]]
+        check_infos: Dict[CheckPluginNameStr, Dict[str, Any]] = {}
         for check_plugin_name, check in config.check_info.items():
             try:
                 manfile = manuals.get(check_plugin_name)
@@ -1023,8 +1004,6 @@ class AutomationGetCheckInformation(Automation):
 
                 check_infos[check_plugin_name]["service_description"] = check.get(
                     "service_description", "%s")
-                check_infos[check_plugin_name]["snmp"] = cmk.base.check_utils.is_snmp_check(
-                    check_plugin_name)
             except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise
@@ -1036,13 +1015,38 @@ class AutomationGetCheckInformation(Automation):
 automations.register(AutomationGetCheckInformation())
 
 
+class AutomationGetSectionInformation(Automation):
+    cmd = "get-section-information"
+    needs_config = False
+    needs_checks = True
+
+    def execute(self, args: List[str]) -> Dict[str, Dict[str, str]]:
+
+        section_infos = {
+            str(section.name): {
+                # for now, we need only these two.
+                "name": str(section.name),
+                "type": "agent",
+            } for section in config.registered_agent_sections.values()
+        }
+        section_infos.update({
+            str(section.name): {
+                "name": str(section.name),
+                "type": "snmp",
+            } for section in config.registered_snmp_sections.values()
+        })
+        return section_infos
+
+
+automations.register(AutomationGetSectionInformation())
+
+
 class AutomationGetRealTimeChecks(Automation):
     cmd = "get-real-time-checks"
     needs_config = False
     needs_checks = True
 
-    def execute(self, args):
-        # type: (List[str]) -> List[Tuple[CheckPluginName, str]]
+    def execute(self, args: List[str]) -> List[Tuple[CheckPluginNameStr, str]]:
         manuals = man_pages.all_man_pages()
 
         rt_checks = []
@@ -1071,12 +1075,11 @@ class AutomationGetCheckManPage(Automation):
     needs_config = False
     needs_checks = True
 
-    def execute(self, args):
-        # type: (List[str]) -> man_pages.ManPage
+    def execute(self, args: List[str]) -> man_pages.ManPage:
         if len(args) != 1:
             raise MKAutomationError("Need exactly one argument.")
 
-        check_plugin_name = args[0]  # type: CheckPluginName
+        check_plugin_name: CheckPluginNameStr = args[0]
         manpage = man_pages.load_man_page(check_plugin_name)
         if manpage is None:
             raise MKAutomationError("Invalid man page: %s" % check_plugin_name)
@@ -1123,8 +1126,7 @@ class AutomationScanParents(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args):
-        # type: (List[str]) -> cmk.base.parent_scan.Gateways
+    def execute(self, args: List[str]) -> cmk.base.parent_scan.Gateways:
         settings = {
             "timeout": int(args[0]),
             "probes": int(args[1]),
@@ -1154,8 +1156,7 @@ class AutomationDiagHost(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args):
-        # type: (List[str]) -> Tuple[int, str]
+    def execute(self, args: List[str]) -> Tuple[int, str]:
         hostname, test, ipaddress, snmp_community = args[:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
@@ -1204,8 +1205,13 @@ class AutomationDiagHost(Automation):
                 return self._execute_ping(host_config, ipaddress)
 
             if test == 'agent':
-                return self._execute_agent(hostname, ipaddress, agent_port, cmd,
-                                           tcp_connect_timeout)
+                return self._execute_agent(
+                    host_config,
+                    ipaddress,
+                    agent_port=agent_port,
+                    cmd=cmd,
+                    tcp_connect_timeout=tcp_connect_timeout,
+                )
 
             if test == 'traceroute':
                 return self._execute_traceroute(host_config, ipaddress)
@@ -1234,8 +1240,7 @@ class AutomationDiagHost(Automation):
                 raise
             return 1, str(e)
 
-    def _execute_ping(self, host_config, ipaddress):
-        # type: (config.HostConfig, str) -> Tuple[int, str]
+    def _execute_ping(self, host_config: config.HostConfig, ipaddress: str) -> Tuple[int, str]:
         base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
         p = subprocess.Popen(
             [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
@@ -1248,16 +1253,24 @@ class AutomationDiagHost(Automation):
         response = p.stdout.read()
         return p.wait(), response
 
-    def _execute_agent(self, hostname, ipaddress, agent_port, cmd, tcp_connect_timeout):
-        # type: (str, str, int, str, Optional[float]) -> Tuple[int, str]
-        sources = data_sources.DataSources(hostname, ipaddress)
-        sources.set_max_cachefile_age(config.check_max_cachefile_age)
-
+    def _execute_agent(
+        self,
+        host_config: config.HostConfig,
+        ipaddress: HostAddress,
+        agent_port: int,
+        cmd: str,
+        tcp_connect_timeout: Optional[float],
+    ) -> Tuple[int, str]:
         state, output = 0, u""
-        for source in sources.get_data_sources():
-            if isinstance(source, data_sources.DSProgramDataSource) and cmd:
-                source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
-            elif isinstance(source, data_sources.TCPDataSource):
+        for source in data_sources.make_sources(host_config, ipaddress):
+            source.set_max_cachefile_age(config.check_max_cachefile_age)
+            if isinstance(source, data_sources.programs.DSProgramDataSource) and cmd:
+                source = data_sources.programs.DSProgramDataSource(
+                    host_config.hostname,
+                    ipaddress,
+                    cmd,
+                )
+            elif isinstance(source, data_sources.tcp.TCPDataSource):
                 source.port = agent_port
                 if tcp_connect_timeout is not None:
                     source.timeout = tcp_connect_timeout
@@ -1268,9 +1281,9 @@ class AutomationDiagHost(Automation):
 
             # We really receive a byte string here. The agent sections
             # may have different encodings and are normally decoded one
-            # by one (CheckMKAgentDataSource._parse_host_section).  For the
+            # by one (AgentDataSource._parse_host_section).  For the
             # moment we use UTF-8 with fallback to latin-1 by default,
-            # similar to the CheckMKAgentDataSource, but we do not
+            # similar to the AgentDataSource, but we do not
             # respect the ecoding options of sections.
             # If this is a problem, we would have to apply parse and
             # decode logic and unparse the decoded output again.
@@ -1282,8 +1295,8 @@ class AutomationDiagHost(Automation):
 
         return state, output
 
-    def _execute_traceroute(self, host_config, ipaddress):
-        # type: (config.HostConfig, str) -> Tuple[int, str]
+    def _execute_traceroute(self, host_config: config.HostConfig,
+                            ipaddress: str) -> Tuple[int, str]:
         family_flag = "-6" if host_config.is_ipv6_primary else "-4"
         try:
             p = subprocess.Popen(
@@ -1323,7 +1336,7 @@ class AutomationDiagHost(Automation):
         # ('authNoPriv', 'md5', '11111111', '22222222')
         # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
 
-        credentials = snmp_config.credentials  # type: SNMPCredentials
+        credentials: SNMPCredentials = snmp_config.credentials
 
         # Insert preconfigured communitiy
         if test == "snmpv3":
@@ -1394,10 +1407,9 @@ class AutomationDiagHost(Automation):
             record_stats=config.record_inline_snmp_stats,
         )
 
-        # TODO: It is unclear why mypy complains about this structure. Investigate!
         data = snmp_table.get_snmp_table_cached(
-            "",
-            ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore[arg-type]
+            None,
+            SNMPTree(base='.1.3.6.1.2.1.1', oids=['1.0', '4.0', '5.0', '6.0']),
             backend=factory.backend(snmp_config),
         )
 
@@ -1416,8 +1428,7 @@ class AutomationActiveCheck(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args):
-        # type: (List[str]) -> Optional[Tuple[ServiceState, ServiceDetails]]
+    def execute(self, args: List[str]) -> Optional[Tuple[ServiceState, ServiceDetails]]:
         hostname, plugin, raw_item = args
         item = raw_item
 
@@ -1458,8 +1469,7 @@ class AutomationActiveCheck(Automation):
 
         return None
 
-    def _load_resource_file(self, macros):
-        # type: (Dict[str, str]) -> None
+    def _load_resource_file(self, macros: Dict[str, str]) -> None:
         try:
             for line in open(cmk.utils.paths.omd_root + "/etc/nagios/resource.cfg"):
                 line = line.strip()
@@ -1476,8 +1486,7 @@ class AutomationActiveCheck(Automation):
     # without OMD, since we do not know the value of $USER1$ and $USER2$
     # here. We could read the Nagios resource.cfg file, but we do not
     # know for sure the place of that either.
-    def _replace_core_macros(self, hostname, commandline):
-        # type: (HostName, str) -> str
+    def _replace_core_macros(self, hostname: HostName, commandline: str) -> str:
         config_cache = config.get_config_cache()
         macros = core_config.get_host_macros_from_attributes(
             hostname, core_config.get_host_attributes(hostname, config_cache))
@@ -1486,8 +1495,7 @@ class AutomationActiveCheck(Automation):
             commandline = commandline.replace(varname, "%s" % value)
         return commandline
 
-    def _execute_check_plugin(self, commandline):
-        # type: (str) -> Tuple[ServiceState, ServiceDetails]
+    def _execute_check_plugin(self, commandline: str) -> Tuple[ServiceState, ServiceDetails]:
         try:
             p = os.popen(commandline + " 2>&1")  # nosec
             output = p.read().strip()
@@ -1518,8 +1526,7 @@ class AutomationUpdateDNSCache(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args):
-        # type: (List[str]) -> ip_lookup.UpdateDNSCacheResult
+    def execute(self, args: List[str]) -> ip_lookup.UpdateDNSCacheResult:
         return ip_lookup.update_dns_cache()
 
 
@@ -1531,9 +1538,9 @@ class AutomationGetAgentOutput(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args):
-        # type: (List[str]) -> Tuple[bool, ServiceDetails, bytes]
+    def execute(self, args: List[str]) -> Tuple[bool, ServiceDetails, bytes]:
         hostname, ty = args
+        host_config = config.HostConfig.make_host_config(hostname)
 
         success = True
         output = u""
@@ -1542,20 +1549,19 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
             if ty == "agent":
-                data_sources.abstract.DataSource.set_may_use_cache_file(
-                    not data_sources.abstract.DataSource.is_agent_cache_disabled())
-
-                sources = data_sources.DataSources(hostname, ipaddress)
-                sources.set_max_cachefile_age(config.check_max_cachefile_age)
+                data_sources.ABCDataSource.set_may_use_cache_file(
+                    not data_sources.ABCDataSource.is_agent_cache_disabled())
 
                 agent_output = b""
-                for source in sources.get_data_sources():
-                    if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
+                sources = data_sources.make_sources(host_config, ipaddress)
+                for source in sources:
+                    source.set_max_cachefile_age(config.check_max_cachefile_age)
+                    if isinstance(source, data_sources.agent.AgentDataSource):
                         agent_output += source.run_raw()
                 info = agent_output
 
                 # Optionally show errors of problematic data sources
-                for source in sources.get_data_sources():
+                for source in sources:
                     source_state, source_output, _source_perfdata = source.get_summary_result_for_checking(
                     )
                     if source_state != 0:
@@ -1564,8 +1570,8 @@ class AutomationGetAgentOutput(Automation):
             else:
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-                host_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
-                backend = factory.backend(host_config, use_cache=False)
+                snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
+                backend = factory.backend(snmp_config, use_cache=False)
 
                 lines = []
                 for walk_oid in snmp_modes.oids_to_walk():
@@ -1597,8 +1603,7 @@ class AutomationNotificationReplay(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args):
-        # type: (List[str]) -> None
+    def execute(self, args: List[str]) -> None:
         nr = args[0]
         return notify.notification_replay_backlog(int(nr))
 
@@ -1611,8 +1616,7 @@ class AutomationNotificationAnalyse(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args):
-        # type: (List[str]) -> Optional[notify.NotifyAnalysisInfo]
+    def execute(self, args: List[str]) -> Optional[notify.NotifyAnalysisInfo]:
         nr = args[0]
         return notify.notification_analyse_backlog(int(nr))
 
@@ -1625,8 +1629,7 @@ class AutomationGetBulks(Automation):
     needs_config = False
     needs_checks = False
 
-    def execute(self, args):
-        # type: (List[str]) -> notify.NotifyBulks
+    def execute(self, args: List[str]) -> notify.NotifyBulks:
         only_ripe = args[0] == "1"
         return notify.find_bulks(only_ripe)
 
@@ -1639,9 +1642,8 @@ class AutomationGetServiceConfigurations(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args):
-        # type: (List[str]) -> Dict
-        result = {"hosts": {}}  # type: Dict
+    def execute(self, args: List[str]) -> Dict:
+        result: Dict = {"hosts": {}}
         config_cache = config.get_config_cache()
         for hostname in config_cache.all_active_hosts():
             host_config = config_cache.get_host_config(hostname)
@@ -1650,8 +1652,8 @@ class AutomationGetServiceConfigurations(Automation):
         result["checkgroup_of_checks"] = self._get_checkgroup_of_checks()
         return result
 
-    def _get_config_for_host(self, host_config):
-        # type: (config.HostConfig) -> Dict[str, List[Tuple[str, str, Any]]]
+    def _get_config_for_host(
+            self, host_config: config.HostConfig) -> Dict[str, List[Tuple[str, str, Any]]]:
         return {
             "checks": [(s.check_plugin_name, s.description, s.parameters)
                        for s in check_table.get_check_table(host_config.hostname,
@@ -1659,8 +1661,7 @@ class AutomationGetServiceConfigurations(Automation):
             "active_checks": self._get_active_checks(host_config)
         }
 
-    def _get_active_checks(self, host_config):
-        # type: (config.HostConfig) -> List[Tuple[str, str, Any]]
+    def _get_active_checks(self, host_config: config.HostConfig) -> List[Tuple[str, str, Any]]:
         actchecks = []
         for plugin_name, entries in host_config.active_checks:
             for params in entries:
@@ -1669,8 +1670,7 @@ class AutomationGetServiceConfigurations(Automation):
                 actchecks.append((plugin_name, description, params))
         return actchecks
 
-    def _get_checkgroup_of_checks(self):
-        # type: () -> Dict[str, Optional[str]]
+    def _get_checkgroup_of_checks(self) -> Dict[str, Optional[str]]:
         checkgroup_of_checks = {}
         for check_plugin_name, check in config.check_info.items():
             checkgroup_of_checks[check_plugin_name] = check.get("group")
@@ -1685,8 +1685,7 @@ class AutomationGetLabelsOf(Automation):
     needs_config = True
     needs_checks = False
 
-    def execute(self, args):
-        # type: (List[str]) -> Dict[str, Any]
+    def execute(self, args: List[str]) -> Dict[str, Any]:
         object_type, host_name = args[:2]
 
         config_cache = config.get_config_cache()
@@ -1711,95 +1710,12 @@ class AutomationGetLabelsOf(Automation):
 automations.register(AutomationGetLabelsOf())
 
 
-# Temporary automation call to support base/GUI Python 3 transition
-class AutomationGetServiceName(Automation):
-    cmd = "get-service-name"
-    needs_config = True
-    needs_checks = True
-
-    def execute(self, args):
-        # type: (List[str]) -> ServiceName
-        hostname, check_plugin_name, item = args
-        return config.service_description(hostname, check_plugin_name, item)
-
-
-automations.register(AutomationGetServiceName())
-
-
-# Temporary automation call to support base/GUI Python 3 transition
-class AutomationGetRuleMismatchReason(Automation):
-    cmd = "get-rule-mismatch-reason"
-    needs_config = True
-    needs_checks = False
-
-    def execute(self, args):
-        # type: (List[str]) -> Optional[str]
-        parsed_args = ast.literal_eval(args[0])  # type: List[Any]
-        return self.get_mismatch_reason(*parsed_args)
-
-    def get_mismatch_reason(self, hostname, svc_desc_or_item, svc_desc, only_host_conditions,
-                            match_service_conditions, rule_dict, item_type, is_binary_ruleset):
-        # type: (HostName, ServiceName, ServiceName, bool, bool, Dict, str, bool) -> Optional[str]
-        """A generator that provides the reasons why a given folder/host/item not matches this rule"""
-
-        config_cache = config.get_config_cache()
-
-        # BE AWARE: Depending on the service ruleset the service_description of
-        # the rules is only a check item or a full service description. For
-        # example the check parameters rulesets only use the item, and other
-        # service rulesets like disabled services ruleset use full service
-        # descriptions.
-        #
-        # The service_description attribute of the match_object must be set to
-        # either the item or the full service description, depending on the
-        # ruleset, but the labels of a service need to be gathered using the
-        # real service description.
-        if only_host_conditions:
-            match_object = ruleset_matcher.RulesetMatchObject(hostname)
-        elif item_type == "service":
-            match_object = config_cache.ruleset_match_object_of_service(hostname, svc_desc_or_item)
-        elif item_type == "item":
-            match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(
-                hostname, svc_desc_or_item, svc_desc)
-        elif not item_type:
-            match_object = ruleset_matcher.RulesetMatchObject(hostname)
-        else:
-            raise NotImplementedError()
-
-        return self._get_mismatch_reason_of_match_object(config_cache, match_object,
-                                                         match_service_conditions, rule_dict,
-                                                         is_binary_ruleset)
-
-    def _get_mismatch_reason_of_match_object(self, config_cache, match_object,
-                                             match_service_conditions, rule_dict,
-                                             is_binary_ruleset):
-        # type: (config.ConfigCache, ruleset_matcher.RulesetMatchObject, bool, Dict, bool) -> Optional[str]
-        matcher = config_cache.ruleset_matcher
-
-        if match_service_conditions:
-            if list(
-                    matcher.get_service_ruleset_values(match_object, [rule_dict],
-                                                       is_binary=is_binary_ruleset)):
-                return None
-        else:
-            if list(
-                    matcher.get_host_ruleset_values(match_object, [rule_dict],
-                                                    is_binary=is_binary_ruleset)):
-                return None
-
-        return u"The rule does not match"
-
-
-automations.register(AutomationGetRuleMismatchReason())
-
-
 class AutomationCreateDiagnosticsDump(Automation):
     cmd = "create-diagnostics-dump"
     needs_config = False
     needs_checks = False
 
-    def execute(self, args):
-        # type: (DiagnosticsCLParameters) -> Dict[str, Any]
+    def execute(self, args: DiagnosticsCLParameters) -> Dict[str, Any]:
         with redirect_output(io.StringIO()) as buf:
             log.setup_console_logging()
             dump = DiagnosticsDump(deserialize_cl_parameters(args))

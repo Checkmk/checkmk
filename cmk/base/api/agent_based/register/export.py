@@ -5,12 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 from cmk.base import config
-from cmk.base.api.agent_based.checking_types import CheckFunction, DiscoveryFunction
+from cmk.base.api.agent_based.checking_types import (
+    CheckFunction,
+    DiscoveryFunction,
+    DiscoveryRuleSetType,
+)
+from cmk.base.api.agent_based.register.utils import get_plugin_module_name
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
@@ -49,16 +54,18 @@ def agent_section(
         parse function. It is expected to yield objects of type 'HostLabel'.
     :params supersedes: not yet implemented.
     """
-    forbidden_names = list(config.registered_agent_sections) + list(config.registered_snmp_sections)
-
     section_plugin = create_agent_section_plugin(
         name=name,
         parsed_section_name=parsed_section_name,
         parse_function=parse_function,
         host_label_function=host_label_function,
         supersedes=supersedes,
-        forbidden_names=forbidden_names,
+        module=get_plugin_module_name(),
     )
+
+    if (section_plugin.name in config.registered_agent_sections or
+            section_plugin.name in config.registered_snmp_sections):
+        raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
     config.registered_agent_sections[section_plugin.name] = section_plugin
 
@@ -97,8 +104,6 @@ def snmp_section(
         one SNMP table per specified Tree, where an SNMP tree is a list of lists of strings.
     :params supersedes: not yet implemented.
     """
-    forbidden_names = list(config.registered_agent_sections) + list(config.registered_snmp_sections)
-
     section_plugin = create_snmp_section_plugin(
         name=name,
         parsed_section_name=parsed_section_name,
@@ -107,8 +112,12 @@ def snmp_section(
         detect_spec=detect,
         trees=trees,
         supersedes=supersedes,
-        forbidden_names=forbidden_names,
+        module=get_plugin_module_name(),
     )
+
+    if (section_plugin.name in config.registered_agent_sections or
+            section_plugin.name in config.registered_snmp_sections):
+        raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
     config.registered_snmp_sections[section_plugin.name] = section_plugin
 
@@ -121,9 +130,11 @@ def check_plugin(
     discovery_function: DiscoveryFunction,
     discovery_default_parameters: Optional[Dict[str, Any]] = None,
     discovery_ruleset_name: Optional[str] = None,
+    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
     check_function: CheckFunction,
     check_default_parameters: Optional[Dict[str, Any]] = None,
     check_ruleset_name: Optional[str] = None,
+    cluster_check_function: Optional[Callable] = None,
 ) -> None:
     """Register a check plugin to checkmk.
 
@@ -156,13 +167,20 @@ def check_plugin(
         discovery_function=discovery_function,
         discovery_default_parameters=discovery_default_parameters,
         discovery_ruleset_name=discovery_ruleset_name,
+        discovery_ruleset_type=discovery_ruleset_type,
         check_function=check_function,
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_ruleset_name,
-        forbidden_names=list(config.registered_check_plugins),
+        cluster_check_function=cluster_check_function,
+        module=get_plugin_module_name(),
     )
 
+    if config.get_registered_check_plugin(plugin.name):
+        raise ValueError("duplicate check plugin definition: %s" % plugin.name)
+
     config.registered_check_plugins[plugin.name] = plugin
+    if plugin.discovery_ruleset_name is not None:
+        config.discovery_parameter_rulesets.setdefault(plugin.discovery_ruleset_name, [])
 
 
 __all__ = [

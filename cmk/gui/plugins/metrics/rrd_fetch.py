@@ -7,14 +7,18 @@
 
 import time
 import collections
-from typing import Any, Callable, Dict, List, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Set, Tuple, Union, Optional, Iterator
 
 import livestatus
 
+from cmk.gui.plugins.metrics.utils import check_metrics
+from cmk.gui.plugins.metrics.timeseries import op_func_wrapper, time_series_operators
 from cmk.utils.prediction import livestatus_lql, TimeSeries
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 import cmk.gui.sites as sites
+
+from cmk.gui.type_defs import ColumnName
 
 
 def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
@@ -22,8 +26,8 @@ def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
 
     by_service = group_needed_rrd_data_by_service(needed_rrd_data)
     # TODO: The Unions below are horrible! Fix this by making this a NewType/class.
-    rrd_data = {
-    }  # type: Dict[Union[str, Tuple[Any, Any, Any, Any, Any, Any]], Union[Tuple[float, float, float], TimeSeries]]
+    rrd_data: Dict[Union[str, Tuple[Any, Any, Any, Any, Any, Any]],
+                   Union[Tuple[float, float, float], TimeSeries]] = {}
     for (site, host_name, service_description), entries in by_service.items():
         try:
             for (perfvar, cf, scale), data in \
@@ -107,8 +111,8 @@ def needed_elements_of_expression(expression):
                 yield result
 
 
-def get_needed_sources(metrics, condition=lambda x: True):
-    # type: (List[Dict[str, Any]], Callable[[Any], bool]) -> Set
+def get_needed_sources(metrics: List[Dict[str, Any]],
+                       condition: Callable[[Any], bool] = lambda x: True) -> Set:
     """Extract all metric data sources definitions
 
     metrics: List
@@ -124,8 +128,7 @@ def get_needed_sources(metrics, condition=lambda x: True):
 
 
 def group_needed_rrd_data_by_service(needed_rrd_data):
-    by_service = collections.defaultdict(
-        set)  # type: Dict[Tuple[str, str, str], Set[Tuple[Any, Any, Any]]]
+    by_service: Dict[Tuple[str, str, str], Set[Tuple[Any, Any, Any]]] = collections.defaultdict(set)
     for site, host_name, service_description, perfvar, cf, scale in needed_rrd_data:
         by_service[(site, host_name, service_description)].add((perfvar, cf, scale))
     return by_service
@@ -134,30 +137,71 @@ def group_needed_rrd_data_by_service(needed_rrd_data):
 def fetch_rrd_data(site, host_name, service_description, entries, graph_recipe, graph_data_range):
     start_time, end_time = graph_data_range["time_range"]
 
-    step = graph_data_range["step"]  # type: Union[int,float,str]
+    step: Union[int, float, str] = graph_data_range["step"]
     # assumes str step is well formatted, colon separated step length & rrd point count
     if not isinstance(step, str):
         step = max(1, step)
 
     point_range = ":".join(map(str, (start_time, end_time, step)))
-    query = livestatus_query_for_rrd_data(host_name, service_description, entries,
-                                          graph_recipe["consolidation_function"], point_range)
+    lql_columns = list(rrd_columns(entries, graph_recipe["consolidation_function"], point_range))
+    query = livestatus_lql([host_name], lql_columns, service_description)
+
     with sites.only_sites(site):
-        return zip(entries, sites.live().query_row(query))
+        return list(zip(entries, sites.live().query_row(query)))
 
 
-def livestatus_query_for_rrd_data(host_name, service_description, metric_cols, default_cf,
-                                  point_range):
-    lql_columns = []
-    for nr, (perfvar, cf, scale) in enumerate(metric_cols):
-        if default_cf:
-            cf = default_cf
-        else:
-            cf = cf or u"max"
+def rrd_columns(metrics: List[Tuple[str, Optional[str], float]], rrd_consolidation: str,
+                data_range: str) -> Iterator[ColumnName]:
+    """RRD data columns for all metrics
 
-        rpn = u"%s.%s" % (perfvar, cf)
+    Include scaling of metric directly in query"""
+
+    for perfvar, cf, scale in metrics:
+        cf = rrd_consolidation or cf or u"max"
+        rpn = "%s.%s" % (perfvar, cf)
         if scale != 1.0:
-            rpn += u",%f,*" % scale
-        lql_columns.append(u"rrddata:m%d:%s:%s" % (nr, rpn, point_range))
+            rpn += ",%f,*" % scale
+        yield "rrddata:%s:%s:%s" % (perfvar, rpn, data_range)
 
-    return livestatus_lql([host_name], lql_columns, service_description)
+
+def merge_multicol(row: Dict, rrdcols: List[ColumnName], params: Dict) -> TimeSeries:
+    """Establish single timeseries for desired metric
+
+    If Livestatus query is performed in bulk, over all possible named
+    metrics that translate to desired one, it results in many empty columns
+    per row. Yet, non-empty values have 3 options:
+
+    1. Correspond to desired metric
+    2. Correspond to old metric that translates into desired metric
+    3. Name collision: Metric of different service translates to desired
+    metric, yet same metric exist too in current service
+
+    Thus filter first case 3, then pick both cases 1 & 2.  Finalize by merging
+    the at most remaining 2 timeseries into a single one.
+    """
+
+    relevant_ts = []
+    desired_metric = params['metric']
+    check_command = row['service_check_command']
+    translations = check_metrics.get(check_command, {})
+
+    for rrdcol in rrdcols:
+        if not rrdcol.startswith('rrddata'):
+            continue
+
+        if row[rrdcol] is None:
+            raise MKGeneralException(_("Cannot retrieve historic data with Nagios core"))
+
+        current_metric = rrdcol.split(':')[1]
+
+        if translations.get(current_metric, {}).get('name', desired_metric) == desired_metric:
+            if len(row[rrdcol]) > 3:
+                relevant_ts.append(row[rrdcol])
+
+    if not relevant_ts:
+        return TimeSeries([0, 0, 0])
+
+    _op_title, op_func = time_series_operators()['MERGE']
+    single_value_series = [op_func_wrapper(op_func, tsp) for tsp in zip(*relevant_ts)]
+
+    return TimeSeries(single_value_series)

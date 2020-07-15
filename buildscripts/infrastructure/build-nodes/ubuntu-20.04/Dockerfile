@@ -5,8 +5,10 @@ ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${
 
 RUN apt-get update \
     && apt-get install -y \
+    dialog \
     gdebi \
     git \
+    graphviz \
     libenchant1c2a \
     libkrb5-dev \
     libldap2-dev \
@@ -14,8 +16,10 @@ RUN apt-get update \
     librrd-dev \
     libsasl2-dev \
     libssl-dev \
+    libxml2 \
     make \
     nullmailer \
+    php7.4-common \
     python-dev \
     python-dev \
     python3-pip \
@@ -35,6 +39,7 @@ RUN apt-get update \
     dnsutils \
     dpatch \
     flex \
+    gawk \
     gettext \
     git-buildpackage \
     curl \
@@ -96,6 +101,12 @@ RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+
+# Exclusively for this distro at the moment, because it is used by several CI
+# jobs for special tasks (checking out git, "make dist", orchestrating other
+# containers, ...). Scripts should be usable with other Ubuntu versions.
+RUN /opt/install-docker.sh
+RUN /opt/install-make-dist-deps.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

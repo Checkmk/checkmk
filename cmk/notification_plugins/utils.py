@@ -21,8 +21,7 @@ import cmk.utils.paths
 import cmk.utils.password_store
 
 
-def collect_context():
-    # type: () -> Dict[str, str]
+def collect_context() -> Dict[str, str]:
     return {
         var[7:]: value  #
         for var, value in os.environ.items()
@@ -30,13 +29,11 @@ def collect_context():
     }
 
 
-def format_link(template, url, text):
-    # type: (str, str, str) -> str
+def format_link(template: str, url: str, text: str) -> str:
     return template % (url, text) if url else text
 
 
-def format_address(display_name, email_address):
-    # type: (str, str) -> str
+def format_address(display_name: str, email_address: str) -> str:
     """
     Returns an email address with an optional display name suitable for an email header like From or Reply-To.
     The function handles the following cases:
@@ -62,8 +59,7 @@ def default_from_address():
     return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
 
 
-def _base_url(context):
-    # type: (Dict[str, str]) -> str
+def _base_url(context: Dict[str, str]) -> str:
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
@@ -78,14 +74,12 @@ def _base_url(context):
     return re.sub('/check_mk/?', '', url_prefix, count=1)
 
 
-def host_url_from_context(context):
-    # type: (Dict[str, str]) -> str
+def host_url_from_context(context: Dict[str, str]) -> str:
     base = _base_url(context)
     return base + context['HOSTURL'] if base else ''
 
 
-def service_url_from_context(context):
-    # type: (Dict[str, str]) -> str
+def service_url_from_context(context: Dict[str, str]) -> str:
     base = _base_url(context)
     return base + context['SERVICEURL'] if base and context['WHAT'] == 'SERVICE' else ''
 
@@ -197,8 +191,7 @@ def send_mail_sendmail(m, target, from_address):
     return 0
 
 
-def _sendmail_path():
-    # type: () -> str
+def _sendmail_path() -> str:
     # We normally don't deliver the sendmail command, but our notification integration tests
     # put some fake sendmail command into the site to prevent actual sending of mails.
     for path in [
@@ -211,8 +204,7 @@ def _sendmail_path():
     raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
-def read_bulk_contexts():
-    # type: () -> Tuple[Dict[str, str], List[Dict[str, str]]]
+def read_bulk_contexts() -> Tuple[Dict[str, str], List[Dict[str, str]]]:
     parameters = {}
     contexts = []
     in_params = True
@@ -222,7 +214,7 @@ def read_bulk_contexts():
         line = line.strip()
         if not line:
             in_params = False
-            context = {}  # type: Dict[str, str]
+            context: Dict[str, str] = {}
             contexts.append(context)
         else:
             try:

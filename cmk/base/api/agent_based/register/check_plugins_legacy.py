@@ -6,10 +6,12 @@
 """Helper to register a new-style section based on config.check_info
 """
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+import copy
 import functools
 import itertools
 
-from cmk.utils.type_defs import PluginName
+from cmk.utils.check_utils import maincheckify, wrap_parameters, unwrap_parameters
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base import item_state
 from cmk.base.api.agent_based.checking_types import (
@@ -23,6 +25,7 @@ from cmk.base.api.agent_based.checking_types import (
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 import cmk.base.config as config
 from cmk.base.check_api_utils import Service as LegacyService
+from cmk.base.check_utils import get_default_parameters
 from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
 
 DUMMY_RULESET_NAME = "non_existent_auto_migration_dummy_rule"
@@ -107,8 +110,8 @@ def _resolve_string_parameters(params_unresolved: Any, check_name: str) -> Any:
                          (params_unresolved, check_name))
 
 
-def _create_check_function(name, check_info_dict, ruleset_name):
-    # type: (str, Dict[str, Any], Optional[str]) -> Callable
+def _create_check_function(name: str, check_info_dict: Dict[str, Any],
+                           ruleset_name: Optional[str]) -> Callable:
     """Create an API compliant check function"""
     service_descr = check_info_dict["service_description"]
     if not isinstance(service_descr, str):
@@ -126,7 +129,13 @@ def _create_check_function(name, check_info_dict, ruleset_name):
     def check_result_generator(*args, **kwargs):
         assert not args, "pass arguments as keywords to check function"
         if "params" in kwargs:
-            kwargs["params"] = unwrap_parameters(kwargs["params"])
+            parameters = kwargs["params"]
+            if isinstance(parameters, Parameters):
+                # In the new API check_functions will be passed an immutable mapping
+                # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
+                # call sites to introduce this into legacy code, so use the plain dict.
+                parameters = copy.deepcopy(parameters._data)
+            kwargs["params"] = unwrap_parameters(parameters)
 
         item_state.reset_wrapped_counters()  # not supported by the new API!
 
@@ -159,18 +168,17 @@ def _create_check_function(name, check_info_dict, ruleset_name):
 
 
 def _create_new_result(
-        is_details,  # type: bool
-        legacy_state,  # type: int
-        legacy_text,  # type: str
-        legacy_metrics=(),  # type: Union[Tuple, List]
-):
-    # type: (...) -> Generator[Union[Metric, Result], None, bool]
+        is_details: bool,
+        legacy_state: int,
+        legacy_text: str,
+        legacy_metrics: Union[Tuple, List] = (),
+) -> Generator[Union[Metric, Result], None, bool]:
     result_state = state(legacy_state)
 
     if legacy_state or legacy_text:  # skip "Null"-Result
         if is_details:
-            summary = None  # type: Optional[str]
-            details = legacy_text  # type: Optional[str]
+            summary: Optional[str] = None
+            details: Optional[str] = legacy_text
         else:
             is_details = "\n" in legacy_text
             summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, None)
@@ -190,11 +198,10 @@ def _create_new_result(
 
 
 def _create_signature_check_function(
-        requires_item,  # type: bool
-        requires_params,  # type: bool
-        original_function,  # type: Callable
-):
-    # type: (...) -> Callable
+    requires_item: bool,
+    requires_params: bool,
+    original_function: Callable,
+) -> Callable:
     """Create the function for a check function with the required signature"""
     if requires_item:
         if requires_params:
@@ -218,33 +225,23 @@ def _create_signature_check_function(
     return check_migration_wrapper
 
 
-def _create_wrapped_parameters(check_plugin_name, check_info_dict):
-    # type: (str, Dict[str, Any]) -> Optional[Dict[str, Any]]
+def _create_wrapped_parameters(check_plugin_name: str,
+                               check_info_dict: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """compute default parameters and wrap them in a dictionary"""
-    var_name = check_info_dict.get("default_levels_variable")
-    if var_name is None:
+    default_parameters = get_default_parameters(
+        check_info_dict,
+        config.factory_settings,
+        config.get_check_context(check_plugin_name),
+    )
+    if default_parameters is None:
         return {} if check_info_dict.get("group") else None
 
-    # look in factory settings
-    parameters = config.factory_settings.get(var_name)
-    if isinstance(parameters, dict):
-        return parameters
-    if parameters is not None:
-        return wrap_parameters(parameters)
-
-    # look in check context
-    parameters = _resolve_string_parameters(var_name, check_plugin_name)
-    if isinstance(parameters, dict):
-        return parameters
-    if parameters is not None:
-        return wrap_parameters(parameters)
-
-    raise ValueError("[%s]: default levels variable %r is undefined" %
-                     (check_plugin_name, var_name))
+    if isinstance(default_parameters, dict):
+        return default_parameters
+    return wrap_parameters(default_parameters)
 
 
-def _create_cluster_legacy_mode_from_hell(check_function):
-    # type: (Callable) -> Callable
+def _create_cluster_legacy_mode_from_hell(check_function: Callable) -> Callable:
     @functools.wraps(check_function)
     def cluster_legacy_mode_from_hell(*args, **kwargs):
         raise NotImplementedError("This just a dummy to pass validation.")
@@ -254,8 +251,10 @@ def _create_cluster_legacy_mode_from_hell(check_function):
     return cluster_legacy_mode_from_hell
 
 
-def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidden_names):
-    # type: (str, Dict[str, Any], List[PluginName]) -> CheckPlugin
+def create_check_plugin_from_legacy(
+    check_plugin_name: str,
+    check_info_dict: Dict[str, Any],
+) -> CheckPlugin:
 
     if check_info_dict.get('extra_sections'):
         raise NotImplementedError("[%s]: cannot auto-migrate plugins with extra sections" %
@@ -299,23 +298,11 @@ def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidde
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_ruleset_name,
         cluster_check_function=_create_cluster_legacy_mode_from_hell(check_function),
-        forbidden_names=forbidden_names,
     )
 
 
-def maincheckify(subcheck_name):
-    # type: (str) -> str
-    """Get new plugin name
-
-    The new API does not know about "subchecks", so drop the dot notation.
-    The validation step will prevent us from having colliding plugins.
-    """
-    return subcheck_name.replace('.', '_')
-
-
 @functools.lru_cache()
-def resolve_legacy_name(plugin_name):
-    # type: (PluginName) -> str
+def resolve_legacy_name(plugin_name: CheckPluginName) -> str:
     """Get legacy plugin name back"""
     # TODO (mo): remove this with CMK-4295. Function is only needed during transition
     for legacy_name in config.check_info:
@@ -323,27 +310,3 @@ def resolve_legacy_name(plugin_name):
             return legacy_name
     # nothing found, it may be a new plugin, which is OK.
     return str(plugin_name)
-
-
-PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"
-
-
-def wrap_parameters(parameters):
-    # type: (Any) -> Dict[str, Any]
-    if isinstance(parameters, dict):
-        return parameters
-    return {PARAMS_WRAPPER_KEY: parameters}
-
-
-def unwrap_parameters(parameters):
-    # type: (Union[Dict[str, Any], Parameters]) -> Any
-    if isinstance(parameters, Parameters):
-        # In the new API check_functions will be passed an immutable mapping
-        # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
-        # call sites to introduce this into legacy code, so use the plain dict.
-        parameters = parameters._data
-
-    if PARAMS_WRAPPER_KEY not in parameters:
-        return parameters
-    assert len(parameters) == 1, "unexpected keys in parameters: %r" % (parameters,)
-    return parameters[PARAMS_WRAPPER_KEY]

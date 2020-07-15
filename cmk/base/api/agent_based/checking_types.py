@@ -5,17 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types and classes used by the API for check plugins
 """
-from collections.abc import Mapping
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 import enum
+from collections.abc import Mapping
+import pprint
+from typing import Any, Callable, Dict, Generator, List, Literal, NamedTuple, Optional, Tuple, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.type_defs import EvalableFloat, PluginName
+from cmk.utils.type_defs import EvalableFloat, ParsedSectionName, CheckPluginName, RuleSetName
 
 from cmk.base.discovered_labels import ServiceLabel
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
+
+DISCOVERY_RULESET_TYPE_CHOICES = ("merged", "all")  # can't we dedup this?
+DiscoveryRuleSetType = Literal["merged", "all"]
 
 
 class Parameters(Mapping):
@@ -35,7 +39,8 @@ class Parameters(Mapping):
         return iter(self._data)
 
     def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__, self._data)
+        # use pformat to be testable.
+        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._data))
 
 
 class Service:
@@ -47,10 +52,13 @@ class Service:
         labels=[ServiceLabel(...)],
     )
     """
-    def __init__(self, *, item=None, parameters=None, labels=None):
-        # type: (Optional[str], Optional[Dict], Optional[List[ServiceLabel]]) -> None
+    def __init__(self,
+                 *,
+                 item: Optional[str] = None,
+                 parameters: Optional[Dict] = None,
+                 labels: Optional[List[ServiceLabel]] = None) -> None:
         self._item = item
-        self._parameters = parameters or {}  # type: Dict[str, Any]
+        self._parameters: Dict[str, Any] = parameters or {}
         self._labels = labels or []
 
         self._validate_item(item)
@@ -106,6 +114,8 @@ class Service:
 
 @enum.unique
 class state(enum.Enum):
+    """States of check results
+    """
     # Don't use IntEnum to prevent "state.CRIT < state.UNKNOWN" from evaluating to True.
     OK = 0
     WARN = 1
@@ -115,20 +125,68 @@ class state(enum.Enum):
     def __int__(self):
         return int(self.value)
 
+    @classmethod
+    def best(cls, *args: Union['state', int]) -> 'state':
+        """Returns the best of all passed states
 
-def state_worst(*args):
-    # type: (*state) -> state
-    """Returns the worst of all passed states
+        You can pass an arbitrary number of arguments, and the return value will be
+        the "best" of them, where
 
-    You can pass an arbitrary number of arguments, and the return value will be
-    the "worst" of them, where
+            `OK -> WARN -> UNKNOWN -> CRIT`
 
-        `OK < WARN < UNKNOWN < CRIT`
-    """
-    # we are nice, and handle ints and None as well (although mypy wouldn't allow it)
-    if state.CRIT in args or 2 in args:  # type: ignore[comparison-overlap]
-        return state.CRIT
-    return state(max(int(s or 0) for s in args))
+        Args:
+            args: Any number of either one of state.OK, state.WARN, state.CRIT, state.UNKNOWN or an
+            integer in [0, 3].
+
+        Returns:
+            The best of the input states, one of state.OK, state.WARN, state.CRIT, state.UNKNOWN.
+
+        Examples:
+            >>> state.best(state.OK, state.WARN, state.CRIT, state.UNKNOWN)
+            <state.OK: 0>
+            >>> state.best(0, 1, state.CRIT)
+            <state.OK: 0>
+        """
+        _sorted = {
+            cls.OK: 0,
+            cls.WARN: 1,
+            cls.UNKNOWN: 2,
+            cls.CRIT: 3,
+        }
+
+        # we are nice and handle ints
+        best = min(
+            (cls(int(s)) for s in args),
+            key=_sorted.get,
+        )
+
+        return best
+
+    @classmethod
+    def worst(cls, *args: Union['state', int]) -> 'state':
+        """Returns the worst of all passed states.
+
+        You can pass an arbitrary number of arguments, and the return value will be
+        the "worst" of them, where
+
+            `OK < WARN < UNKNOWN < CRIT`
+
+        Args:
+            args: Any number of either one of state.OK, state.WARN, state.CRIT, state.UNKNOWN or an
+            integer in [0, 3].
+
+        Returns:
+            The worst of the input states, one of state.OK, state.WARN, state.CRIT, state.UNKNOWN.
+
+        Examples:
+            >>> state.worst(state.OK, state.WARN, state.CRIT, state.UNKNOWN)
+            <state.CRIT: 2>
+            >>> state.worst(0, 1, state.CRIT)
+            <state.CRIT: 2>
+        """
+        if cls.CRIT in args or 2 in args:
+            return cls.CRIT
+        return cls(max(int(s) for s in args))
 
 
 class Metric:
@@ -144,8 +202,7 @@ class Metric:
             raise TypeError("invalid character(s) in metric name: %r" % offenders)
 
     @staticmethod
-    def _sanitize_single_value(field, value):
-        # type: (str, Optional[float]) -> Optional[EvalableFloat]
+    def _sanitize_single_value(field: str, value: Optional[float]) -> Optional[EvalableFloat]:
         if value is None:
             return None
         if isinstance(value, (int, float)):
@@ -153,11 +210,10 @@ class Metric:
         raise TypeError("%s values for metric must be float, int or None" % field)
 
     def _sanitize_optionals(
-            self,
-            field,  # type: str
-            values,  # type: _OptionalPair
-    ):
-        # type: (...) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]
+        self,
+        field: str,
+        values: _OptionalPair,
+    ) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]:
         if values is None:
             return None, None
 
@@ -170,14 +226,13 @@ class Metric:
         )
 
     def __init__(
-            self,
-            name,  # type: str
-            value,  # type: float
-            *,
-            levels=None,  # type: _OptionalPair
-            boundaries=None,  # type: _OptionalPair
-    ):
-        # type: (...) -> None
+        self,
+        name: str,
+        value: float,
+        *,
+        levels: _OptionalPair = None,
+        boundaries: _OptionalPair = None,
+    ) -> None:
         self.validate_name(name)
 
         if not isinstance(value, (int, float)):
@@ -189,13 +244,11 @@ class Metric:
         self._boundaries = self._sanitize_optionals('boundaries', boundaries)
 
     @property
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         return self._name
 
     @property
-    def value(self):
-        # type: () -> EvalableFloat
+    def value(self) -> EvalableFloat:
         return self._value
 
     @property
@@ -233,14 +286,13 @@ class Result(NamedTuple("ResultTuple", [
     _state_class = state  # avoid shadowing by keyword called "state"
 
     def __new__(  # pylint: disable=redefined-outer-name
-            cls,
-            *,
-            state,  # type: state
-            summary=None,  # type: Optional[str]
-            notice=None,  # type: Optional[str]
-            details=None,  # type: Optional[str]
-    ):
-        # type: (...) -> Result
+        cls,
+        *,
+        state: state,
+        summary: Optional[str] = None,
+        notice: Optional[str] = None,
+        details: Optional[str] = None,
+    ) -> 'Result':
         if not isinstance(state, cls._state_class):
             raise TypeError("'state' must be a checkmk state constant, got %r" % (state,))
 
@@ -287,16 +339,13 @@ class IgnoreResultsError(RuntimeError):
 
 
 class IgnoreResults:
-    def __init__(self, value="currently no results"):
-        # type: (str) -> None
+    def __init__(self, value: str = "currently no results") -> None:
         self._value = value
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return "%s(%r)" % (self.__class__.__name__, self._value)
 
-    def __str__(self):
-        # type: () -> str
+    def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
 
 
@@ -304,15 +353,19 @@ DiscoveryFunction = Callable[..., Generator[Service, None, None]]
 
 CheckFunction = Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]
 
-CheckPlugin = NamedTuple("CheckPlugin", [
-    ("name", PluginName),
-    ("sections", List[PluginName]),
-    ("service_name", str),
-    ("discovery_function", DiscoveryFunction),
-    ("discovery_default_parameters", Optional[Dict]),
-    ("discovery_ruleset_name", Optional[PluginName]),
-    ("check_function", CheckFunction),
-    ("check_default_parameters", Optional[Dict]),
-    ("check_ruleset_name", Optional[PluginName]),
-    ("cluster_check_function", CheckFunction),
-])
+CheckPlugin = NamedTuple(
+    "CheckPlugin",
+    [
+        ("name", CheckPluginName),
+        ("sections", List[ParsedSectionName]),
+        ("service_name", str),
+        ("discovery_function", DiscoveryFunction),
+        ("discovery_default_parameters", Dict[str, Any]),
+        ("discovery_ruleset_name", Optional[RuleSetName]),
+        ("discovery_ruleset_type", DiscoveryRuleSetType),
+        ("check_function", CheckFunction),
+        ("check_default_parameters", Dict[str, Any]),
+        ("check_ruleset_name", Optional[RuleSetName]),
+        ("cluster_check_function", CheckFunction),
+        ("module", Optional[str]),  # not available for auto migrated plugins.
+    ])

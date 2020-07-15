@@ -9,11 +9,11 @@
 # But at the current state of affairs we have no choice, otherwise an
 # incremental cleanup is impossible.
 
-from typing import Optional
+from typing import Optional, Union
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels
-from cmk.base.check_utils import CheckParameters
-from cmk.utils.type_defs import CheckPluginName, Item, HostName, ServiceName
+from cmk.base.check_utils import LegacyCheckParameters
+from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, Item, HostName, ServiceName
 
 # Symbolic representations of states in plugin output
 state_markers = ["", "(!)", "(!!)", "(?)"]
@@ -25,59 +25,59 @@ HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. inter
 
 # Is set before check/discovery function execution
 # Host currently being checked
-_hostname = None  # type: Optional[HostName]
-_check_type = None  # type: Optional[CheckPluginName]
-_service_description = None  # type: Optional[ServiceName]
+_hostname: Optional[HostName] = None
+_check_type: Optional[CheckPluginNameStr] = None
+_service_description: Optional[ServiceName] = None
 
 
 # Obsolete! Do not confuse with the Service object exposed by the new API.
 class Service:
     """Can be used to by the discovery function to tell Checkmk about a new service"""
-    def __init__(self, item, parameters=None, service_labels=None, host_labels=None):
-        # type: (Item, CheckParameters, DiscoveredServiceLabels, DiscoveredHostLabels) -> None
+    def __init__(self,
+                 item: Item,
+                 parameters: LegacyCheckParameters = None,
+                 service_labels: DiscoveredServiceLabels = None,
+                 host_labels: DiscoveredHostLabels = None) -> None:
         self.item = item
         self.parameters = parameters
         self.service_labels = service_labels or DiscoveredServiceLabels()
         self.host_labels = host_labels or DiscoveredHostLabels()
 
 
-def set_hostname(hostname):
-    # type: (Optional[HostName]) -> None
+def set_hostname(hostname: Optional[HostName]) -> None:
     global _hostname
     _hostname = hostname
 
 
-def reset_hostname():
-    # type: () -> None
+def reset_hostname() -> None:
     global _hostname
     _hostname = None
 
 
-def host_name():
-    # type: () -> HostName
+def host_name() -> HostName:
     """Returns the name of the host currently being checked or discovered."""
     if _hostname is None:
         raise RuntimeError("host name has not been set")
     return _hostname
 
 
-def set_service(type_name, descr):
-    # type: (Optional[CheckPluginName], Optional[ServiceName]) -> None
+def set_service(
+    type_name: Optional[Union[CheckPluginName, str]],
+    descr: Optional[ServiceName],
+) -> None:
     global _check_type, _service_description
-    _check_type = type_name
+    _check_type = str(type_name)
     _service_description = descr
 
 
-def check_type():
-    # type: () -> CheckPluginName
+def check_type() -> CheckPluginNameStr:
     """Returns the name of the check type currently being checked."""
     if _check_type is None:
         raise RuntimeError("check type has not been set")
     return _check_type
 
 
-def service_description():
-    # type: () -> ServiceName
+def service_description() -> ServiceName:
     """Returns the name of the service currently being checked."""
     if _service_description is None:
         raise RuntimeError("service description has not been set")

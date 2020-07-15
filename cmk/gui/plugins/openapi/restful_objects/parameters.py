@@ -6,13 +6,13 @@
 
 from cmk.gui.plugins.openapi.restful_objects.utils import ParamDict
 
-HOSTNAME_REGEXP = '[-0-9a-zA-Z_.]+'
-HOSTNAME = ParamDict.create(
-    'hostname',
+HOST_NAME_REGEXP = '[-0-9a-zA-Z_.]+'
+HOST_NAME = ParamDict.create(
+    'host_name',
     'path',
     description="A hostname.",
     example='example.com',
-    schema_pattern=HOSTNAME_REGEXP,
+    schema_string_pattern=HOST_NAME_REGEXP,
 )
 
 IDENT = ParamDict.create(
@@ -23,7 +23,7 @@ IDENT = ParamDict.create(
                  "There are no fixed parts or parts derived from the current hardware "
                  "in this number."),
     example='49167bd012b44719a67956cf3ef7b3dd',
-    schema_pattern="[a-fA-F0-9]{32}|root",
+    schema_string_pattern="[a-fA-F0-9]{32}|root",
 )
 
 NAME = ParamDict.create(
@@ -31,7 +31,7 @@ NAME = ParamDict.create(
     'path',
     description="A name used as an identifier. Can be of arbitrary (sensible) length.",
     example='pathname',
-    schema_pattern="[a-zA-Z][a-zA-Z0-9_-]+",
+    schema_string_pattern="[a-zA-Z][a-zA-Z0-9_-]+",
 )
 
 ACCEPT_HEADER = ParamDict.create(
@@ -58,6 +58,6 @@ ETAG_HEADER_PARAM = ParamDict.create(
     description=('The HTTP ETag header for this resource. It identifies the '
                  'current state of the object and needs to be sent along in '
                  'the "If-Match" request-header for subsequent modifications.'),
-    schema_pattern='[0-9a-fA-F]{32}',
+    schema_string_pattern='[0-9a-fA-F]{32}',
     example='a20ceacf346041dc',
 )

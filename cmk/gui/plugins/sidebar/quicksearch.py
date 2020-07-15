@@ -62,15 +62,13 @@ class QuicksearchSnapin(SidebarSnapin):
     def allowed_roles(cls):
         return ["user", "admin", "guest"]
 
-    def page_handlers(self):
-        # type: () -> PageHandlers
+    def page_handlers(self) -> PageHandlers:
         return {
             "ajax_search": self._ajax_search,
             "search_open": self._page_search_open,
         }
 
-    def _ajax_search(self):
-        # type: () -> None
+    def _ajax_search(self) -> None:
         q = _maybe_strip(html.request.get_unicode_input('q'))
         if not q:
             return
@@ -85,8 +83,7 @@ class QuicksearchSnapin(SidebarSnapin):
                 raise
             html.show_error(traceback.format_exc())
 
-    def _page_search_open(self):
-        # type: () -> None
+    def _page_search_open(self) -> None:
         q = _maybe_strip(html.request.var('q'))
         if not q:
             return
@@ -125,7 +122,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         self._livestatus_command = None  # Computed livestatus query
         self._rows = []  # Raw data from livestatus
         self._elements = []  # Postprocessed rows
-        self._queried_livestatus_columns = []  # type: List[str]
+        self._queried_livestatus_columns: List[str] = []
 
     def get_filter_behaviour(self):
         return self._filter_behaviour
@@ -183,11 +180,10 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             self._too_much_rows = True
             self._rows.pop()  # Remove limit+1nth element
 
-    def _generate_livestatus_command(self):
-        # type: () -> None
+    def _generate_livestatus_command(self) -> None:
         self._determine_livestatus_table()
         columns_to_query = set(self._get_livestatus_default_columns())
-        livestatus_filter_domains = {}  # type: Dict[str, List[str]]
+        livestatus_filter_domains: Dict[str, List[str]] = {}
 
         self._used_search_plugins = self._get_used_search_plugins()
 
@@ -255,8 +251,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
         self._livestatus_table = table_to_query
 
-    def _get_livestatus_default_columns(self):
-        # type: () -> List[str]
+    def _get_livestatus_default_columns(self) -> List[str]:
         return {
             "services": ["description", "host_name"],
             "hosts": ["name"],
@@ -291,8 +286,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
         # Feed each row to the filters and let them add additional text/url infos
         for row in self._rows:
-            entry = {"text_tokens": []}  # type: Dict[str, Any]
-            url_params = []  # type: List[Tuple[str, str]]
+            entry: Dict[str, Any] = {"text_tokens": []}
+            url_params: List[Tuple[str, str]] = []
             skip_site = False
             for filter_shortname in self._used_filters:
                 plugin = self._get_plugin_with_shortname(filter_shortname)
@@ -354,7 +349,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         if self._livestatus_table in ["hostgroups", "servicegroups"]:
             # Discard redundant hostgroups
             new_elements = []
-            used_groups = set()  # type: Set[str]
+            used_groups: Set[str] = set()
             for element in self._elements:
                 if element["display_text"] in used_groups:
                     continue
@@ -375,9 +370,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
                 else:
                     element["display_text"] += " <b>%s</b>" % hostname
 
-    def _element_texts_unique(self):
-        # type: () -> bool
-        used_texts = set()  # type: Set[str]
+    def _element_texts_unique(self) -> bool:
+        used_texts: Set[str] = set()
         for entry in self._elements:
             if entry["display_text"] in used_texts:
                 return False
@@ -407,7 +401,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
             pass
 
         # Generate a search page for the topmost search_object with results
-        url_params = []  # type: List[Tuple[str, str]]
+        url_params: List[Tuple[str, str]] = []
         for search_object in self._search_objects:
             if search_object.num_rows() > 0:
                 url_params.extend(search_object.get_search_url_params())
@@ -437,7 +431,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
             found_filters.append((match.group(1), match.start()))
 
         if found_filters:
-            filter_spec = {}  # type: Dict[str, List[str]]
+            filter_spec: Dict[str, List[str]] = {}
             current_string = self._query
             for filter_type, offset in found_filters[-1::-1]:
                 filter_text = _to_regex(current_string[offset + len(filter_type):]).strip()

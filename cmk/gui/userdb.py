@@ -40,24 +40,17 @@ import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
 
-# TODO: Cleanup references and point directly to cmk.gui.plugins.userdb.utils
-from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unused-import
-    user_attribute_registry,  #
-    get_user_attributes,  #
-    UserConnector,  #
-    user_connector_registry,  #
-    user_sync_config,  #
-    load_roles,  #
-    Roles,  #
-    RoleSpec,  #
-    UserSpec,  #
-    new_user_template,  #
-    load_cached_profile,  #
-    get_connection,  #
-    active_connections,  #
-    connection_choices,  #
-    cleanup_connection_id,  #
-    release_users_lock,  #
+from cmk.gui.plugins.userdb.utils import (
+    user_attribute_registry,
+    get_user_attributes,
+    UserConnector,
+    user_sync_config,
+    UserSpec,
+    new_user_template,
+    load_cached_profile,
+    get_connection,
+    active_connections,
+    release_users_lock,
 )
 
 # Datastructures and functions needed before plugins can be loaded

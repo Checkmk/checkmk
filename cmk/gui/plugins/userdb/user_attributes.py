@@ -165,3 +165,46 @@ class UIThemeUserAttribute(UserAttribute):
 
     def domain(self):
         return "multisite"
+
+
+@user_attribute_registry.register
+class UISnapinBarPosition(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "ui_snapinbar_position"
+
+    def topic(self):
+        return "personal"
+
+    def valuespec(self):
+        return Checkbox(
+            title=_("Snapin bar position"),
+            label=_("Show snapin bar on the left instead of the right"),
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
+class UIBasicAdvancedToggle(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "ui_basic_advanced_mode"
+
+    def topic(self):
+        return "personal"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Basic / Advanced mode"),
+            choices=[
+                (None, _("Default to basic mode")),
+                ("default_advanced", _("Default to advanced mode")),
+                ("enforce_basic", _("Enforce basic mode")),
+                ("enforce_advanced", _("Enforce advanced mode")),
+            ],
+        )
+
+    def domain(self):
+        return "multisite"

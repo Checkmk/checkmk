@@ -18,11 +18,10 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 import cmk.base.checking as checking
 from cmk.utils.type_defs import HostName
-from cmk.base.check_utils import CheckParameters
+from cmk.base.check_utils import LegacyCheckParameters
 
 
-def dump_host(hostname):
-    # type: (HostName) -> None
+def dump_host(hostname: HostName) -> None:
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
@@ -40,7 +39,7 @@ def dump_host(hostname):
 
     ipaddress = _ip_address_for_dump_host(host_config)
 
-    addresses = ""  # type: Optional[str]
+    addresses: Optional[str] = ""
     if not host_config.is_ipv4v6_host:
         addresses = ipaddress
     else:
@@ -84,15 +83,14 @@ def dump_host(hostname):
                ", ".join(host_config.contactgroups) + "\n")
 
     agenttypes = []
-    sources = data_sources.DataSources(hostname, ipaddress)
-    for source in sources.get_data_sources():
+    for source in data_sources.make_sources(host_config, ipaddress):
         agenttypes.append(source.describe())
 
     if host_config.is_ping_host:
         agenttypes.append('PING only')
 
     out.output(tty.yellow + "Agent mode:             " + tty.normal)
-    out.output(sources.describe_data_sources() + "\n")
+    out.output(host_config.agent_description + "\n")
 
     out.output(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:
@@ -118,8 +116,7 @@ def dump_host(hostname):
     tty.print_table(headers, colors, table_data, "  ")
 
 
-def _evaluate_params(params):
-    # type: (CheckParameters) -> str
+def _evaluate_params(params: LegacyCheckParameters) -> str:
     if not isinstance(params, cmk.base.config.TimespecificParamList):
         return "%r" % (params,)
 
@@ -128,8 +125,8 @@ def _evaluate_params(params):
         time.time()), current_params)
 
 
-def _ip_address_for_dump_host(host_config, family=None):
-    # type: (config.HostConfig, Optional[int]) -> Optional[str]
+def _ip_address_for_dump_host(host_config: config.HostConfig,
+                              family: Optional[int] = None) -> Optional[str]:
     if host_config.is_cluster:
         try:
             return ip_lookup.lookup_ip_address(host_config.hostname, family)

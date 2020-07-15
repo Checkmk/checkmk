@@ -25,7 +25,6 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
-from cmk.gui.watolib.automations import check_mk_local_automation
 from cmk.gui.watolib.utils import has_agent_bakery
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.rulespecs import (
@@ -44,9 +43,9 @@ from cmk.gui.watolib.utils import (
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
-#import cmk.base.export
+import cmk.base.export
 # Make the GUI config module reset the base config to always get the latest state of the config
-#config.register_post_config_load_hook(cmk.base.export.reset_config)
+config.register_post_config_load_hook(cmk.base.export.reset_config)
 
 # This macro is needed to make the to_config() methods be able to use native
 # pprint/repr for the ruleset data structures. Have a look at
@@ -56,13 +55,13 @@ _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
 
 class RuleConditions:
     def __init__(
-            self,
-            host_folder,  # type: str
-            host_tags=None,  # type: Tags
-            host_labels=None,  # type: Labels
-            host_name=None,  # type: HostNameConditions
-            service_description=None,  # type: ServiceNameConditions
-            service_labels=None,  # type: Labels
+        self,
+        host_folder: str,
+        host_tags: Tags = None,
+        host_labels: Labels = None,
+        host_name: HostNameConditions = None,
+        service_description: ServiceNameConditions = None,
+        service_labels: Labels = None,
     ):
         self.host_folder = host_folder
         self.host_tags = host_tags or {}
@@ -83,8 +82,7 @@ class RuleConditions:
     # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
     # strings.  After reading the config into the GUI ensure we really
     # process the host names as str. TODO: Can be removed with Python 3.
-    def _fixup_unicode_hosts(self, host_conditions):
-        # type: (HostNameConditions) -> HostNameConditions
+    def _fixup_unicode_hosts(self, host_conditions: HostNameConditions) -> HostNameConditions:
         if not host_conditions:
             return host_conditions
 
@@ -128,7 +126,7 @@ class RuleConditions:
         return self._to_config()
 
     def _to_config(self):
-        cfg = {}  # type: RuleSpec
+        cfg: RuleSpec = {}
 
         if self.host_tags:
             cfg["host_tags"] = self.host_tags
@@ -315,7 +313,7 @@ class RulesetCollection:
 
     # Groups the rulesets in 3 layers (main group, sub group, rulesets)
     def get_grouped(self):
-        grouped_dict = {}  # type: Dict[str, Dict[str, List[Ruleset]]]
+        grouped_dict: Dict[str, Dict[str, List[Ruleset]]] = {}
         for ruleset in self._rulesets.values():
             main_group = grouped_dict.setdefault(ruleset.rulespec.main_group_name, {})
             group_rulesets = main_group.setdefault(ruleset.rulespec.group_name, [])
@@ -716,7 +714,7 @@ class Ruleset:
     # of rule_folder and rule_number
     def analyse_ruleset(self, hostname, svc_desc_or_item, svc_desc):
         resultlist = []
-        resultdict = {}  # type: Dict[str, Any]
+        resultdict: Dict[str, Any] = {}
         effectiverules = []
         for folder, rule_index, rule in self.get_rules():
             if rule.is_disabled():
@@ -893,101 +891,71 @@ class Rule:
 
     def get_mismatch_reasons(self, host_folder, hostname, svc_desc_or_item, svc_desc,
                              only_host_conditions):
+        """A generator that provides the reasons why a given folder/host/item not matches this rule"""
+        host = host_folder.host(hostname)
+        if host is None:
+            raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
+
+        # BE AWARE: Depending on the service ruleset the service_description of
+        # the rules is only a check item or a full service description. For
+        # example the check parameters rulesets only use the item, and other
+        # service rulesets like disabled services ruleset use full service
+        # descriptions.
+        #
+        # The service_description attribute of the match_object must be set to
+        # either the item or the full service description, depending on the
+        # ruleset, but the labels of a service need to be gathered using the
+        # real service description.
+        if only_host_conditions:
+            match_object = ruleset_matcher.RulesetMatchObject(hostname)
+        elif self.ruleset.item_type() == "service":
+            match_object = cmk.base.export.ruleset_match_object_of_service(
+                hostname, svc_desc_or_item)
+        elif self.ruleset.item_type() == "item":
+            match_object = cmk.base.export.ruleset_match_object_for_checkgroup_parameters(
+                hostname, svc_desc_or_item, svc_desc)
+        elif not self.ruleset.item_type():
+            match_object = ruleset_matcher.RulesetMatchObject(hostname)
+        else:
+            raise NotImplementedError()
+
         match_service_conditions = self.ruleset.rulespec.is_for_services
         if only_host_conditions:
             match_service_conditions = False
 
+        for reason in self._get_mismatch_reasons_of_match_object(match_object,
+                                                                 match_service_conditions):
+            yield reason
+
+    def _get_mismatch_reasons_of_match_object(self, match_object, match_service_conditions):
+        matcher = cmk.base.export.get_ruleset_matcher()
+
         rule_dict = self.to_config()
         rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
 
-        result = check_mk_local_automation("get-rule-mismatch-reason", [
-            repr([
-                hostname,
-                svc_desc_or_item,
-                svc_desc,
-                only_host_conditions,
-                match_service_conditions,
-                rule_dict,
-                self.ruleset.item_type(),
-                self.ruleset.rulespec.is_binary_ruleset,
-            ])
-        ])
+        # The cache uses some id(ruleset) to build indexes for caches. When we are using
+        # dynamically allocated ruleset list objects, that are quickly invalidated, it
+        # may happen that the address space is reused for other objects, resulting in
+        # duplicate id() results for different rulesets (because ID returns the memory
+        # address the object is located at).
+        # Since we do not work with regular rulesets here, we need to clear the cache
+        # (that is not useful in this situation)
+        matcher.ruleset_optimizer.clear_host_ruleset_cache()
 
-        if result is None:
-            return
+        ruleset = [rule_dict]
 
-        yield result
+        if match_service_conditions:
+            if list(
+                    matcher.get_service_ruleset_values(
+                        match_object, ruleset, is_binary=self.ruleset.rulespec.is_binary_ruleset)):
+                return
+        else:
+            if list(
+                    matcher.get_host_ruleset_values(
+                        match_object, ruleset, is_binary=self.ruleset.rulespec.is_binary_ruleset)):
+                return
 
-    # TODO: re-enable once the GUI is using Python3
-    #def get_mismatch_reasons(self, host_folder, hostname, svc_desc_or_item, svc_desc,
-    #                         only_host_conditions):
-    #    """A generator that provides the reasons why a given folder/host/item not matches this rule"""
-    #    host = host_folder.host(hostname)
-    #    if host is None:
-    #        raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
-
-    #    # BE AWARE: Depending on the service ruleset the service_description of
-    #    # the rules is only a check item or a full service description. For
-    #    # example the check parameters rulesets only use the item, and other
-    #    # service rulesets like disabled services ruleset use full service
-    #    # descriptions.
-    #    #
-    #    # The service_description attribute of the match_object must be set to
-    #    # either the item or the full service description, depending on the
-    #    # ruleset, but the labels of a service need to be gathered using the
-    #    # real service description.
-    #    if only_host_conditions:
-    #        match_object = ruleset_matcher.RulesetMatchObject(hostname)
-    #    elif self.ruleset.item_type() == "service":
-    #        match_object = cmk.base.export.ruleset_match_object_of_service(
-    #            hostname, svc_desc_or_item)
-    #    elif self.ruleset.item_type() == "item":
-    #        match_object = cmk.base.export.ruleset_match_object_for_checkgroup_parameters(
-    #            hostname, svc_desc_or_item, svc_desc)
-    #    elif not self.ruleset.item_type():
-    #        match_object = ruleset_matcher.RulesetMatchObject(hostname)
-    #    else:
-    #        raise NotImplementedError()
-
-    #    match_service_conditions = self.ruleset.rulespec.is_for_services
-    #    if only_host_conditions:
-    #        match_service_conditions = False
-
-    #    for reason in self._get_mismatch_reasons_of_match_object(match_object,
-    #                                                             match_service_conditions):
-    #        yield reason
-
-    #def _get_mismatch_reasons_of_match_object(self, match_object, match_service_conditions):
-    #    matcher = cmk.base.export.get_ruleset_matcher()
-
-    #    rule_dict = self.to_config()
-    #    rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
-
-    #    # The cache uses some id(ruleset) to build indexes for caches. When we are using
-    #    # dynamically allocated ruleset list objects, that are quickly invalidated, it
-    #    # may happen that the address space is reused for other objects, resulting in
-    #    # duplicate id() results for different rulesets (because ID returns the memory
-    #    # address the object is located at).
-    #    # Since we do not work with regular rulesets here, we need to clear the cache
-    #    # (that is not useful in this situation)
-    #    matcher.ruleset_optimizer.clear_host_ruleset_cache()
-
-    #    ruleset = [rule_dict]
-
-    #    if match_service_conditions:
-    #        if list(
-    #                matcher.get_service_ruleset_values(
-    #                    match_object, ruleset,
-    #                    is_binary=self.ruleset.rulespec.is_binary_ruleset)):
-    #            return
-    #    else:
-    #        if list(
-    #                matcher.get_host_ruleset_values(
-    #                    match_object, ruleset,
-    #                    is_binary=self.ruleset.rulespec.is_binary_ruleset)):
-    #            return
-
-    #    yield _("The rule does not match")
+        yield _("The rule does not match")
 
     def matches_search(self, search_options):
         if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(
@@ -1075,8 +1043,7 @@ class Rule:
     def comment(self):
         return self.rule_options.get("comment", "")
 
-    def predefined_condition_id(self):
-        # type: () -> Optional[str]
+    def predefined_condition_id(self) -> Optional[str]:
         """When a rule refers to a predefined condition return the ID
 
         The predefined conditions are a pure WATO feature. These are resolved when writing
@@ -1086,12 +1053,10 @@ class Rule:
         #TODO: Once we switched the rule format to be dict base, we can move this key to the conditions dict
         return self.rule_options.get("predefined_condition_id")
 
-    def update_conditions(self, conditions):
-        # type: (RuleConditions) -> None
+    def update_conditions(self, conditions: RuleConditions) -> None:
         self.conditions = conditions
 
-    def get_rule_conditions(self):
-        # type: () -> RuleConditions
+    def get_rule_conditions(self) -> RuleConditions:
         return self.conditions
 
     def is_discovery_rule_of(self, host):

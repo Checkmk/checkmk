@@ -25,7 +25,7 @@ from cmk.gui.plugins.views import (
     command_registry,
     Command,
     data_source_registry,
-    DataSource,
+    ABCDataSource,
     RowTableLivestatus,
     painter_registry,
     Painter,
@@ -203,7 +203,7 @@ class PermissionECSeeInTacticalOverview(Permission):
 
 
 @data_source_registry.register
-class DataSourceECEvents(DataSource):
+class DataSourceECEvents(ABCDataSource):
     @property
     def ident(self):
         return "mkeventd_events"
@@ -238,7 +238,7 @@ class DataSourceECEvents(DataSource):
 
 
 @data_source_registry.register
-class DataSourceECEventHistory(DataSource):
+class DataSourceECEventHistory(ABCDataSource):
     @property
     def ident(self):
         return "mkeventd_history"
@@ -604,8 +604,7 @@ class PainterEventPid(Painter):
 T = TypeVar('T')
 
 
-def _deref(x):
-    # type: (Union[T, Callable[[], T]]) -> T
+def _deref(x: Union[T, Callable[[], T]]) -> T:
     return x() if callable(x) else x
 
 
@@ -747,7 +746,7 @@ def render_event_phase_icons(row):
 def render_delete_event_icons(row):
     if not config.user.may("mkeventd.delete"):
         return ''
-    urlvars = []  # type: HTTPVariables
+    urlvars: HTTPVariables = []
 
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.
@@ -762,7 +761,7 @@ def render_delete_event_icons(row):
         title_url = view.get("title_url")
         if title_url:
             parsed_url = urllib.parse.urlparse(title_url)
-            filename = parsed_url.path  # type: Optional[str]
+            filename: Optional[str] = parsed_url.path
             urlvars += urllib.parse.parse_qsl(parsed_url.query)
     else:
         # Regular view
@@ -1358,7 +1357,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_archive_events_of_hosts"):
             if cmdtag == "HOST":
-                tag = "host"  # type: Optional[str]
+                tag: Optional[str] = "host"
             elif cmdtag == "SVC":
                 tag = "service"
             else:
@@ -1431,7 +1430,7 @@ declare_1to1_sorter("history_addinfo", cmp_simple_string)
 
 def mkeventd_view(d):
     x = {
-        'topic': _('Event Console'),
+        'topic': "events",
         'browser_reload': 60,
         'column_headers': 'pergroup',
         'icon': 'mkeventd',
@@ -1456,6 +1455,7 @@ def mkeventd_view(d):
 
 # Table of all open events
 multisite_builtin_views['ec_events'] = mkeventd_view({
+    "sort_index": 10,
     'title': _('Events'),
     'description': _('Table of all currently open events (handled and unhandled)'),
     'datasource': 'mkeventd_events',
@@ -1626,6 +1626,7 @@ multisite_builtin_views['ec_event'] = mkeventd_view({
 })
 
 multisite_builtin_views['ec_history_recent'] = mkeventd_view({
+    "sort_index": 20,
     'title': _('Recent Event History'),
     'description': _('Information about events and actions on events during the recent 24 hours.'),
     'datasource': 'mkeventd_history',

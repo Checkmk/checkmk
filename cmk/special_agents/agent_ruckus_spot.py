@@ -13,8 +13,7 @@ import requests
 from six import ensure_str
 
 
-def usage():
-    # type: () -> NoReturn
+def usage() -> NoReturn:
     sys.stderr.write("""Check_MK Ruckus Spot Agent
 
 USAGE: agent_ruckus_spot [OPTIONS] HOST
@@ -29,8 +28,7 @@ OPTIONS:
 
 
 # TODO: put into special_agent lib
-def get_agent_info_tcp(host):
-    # type: (str) -> bytes
+def get_agent_info_tcp(host: str) -> bytes:
     ipaddress = socket.gethostbyname(host)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(10)

@@ -140,8 +140,7 @@ class ModeBulkDiscovery(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-    def _get_hosts_to_discover(self):
-        # type: () -> List[DiscoveryHost]
+    def _get_hosts_to_discover(self) -> List[DiscoveryHost]:
         if self._only_failed_invcheck:
             restrict_to_hosts = self._find_hosts_with_failed_discovery_check()
         else:

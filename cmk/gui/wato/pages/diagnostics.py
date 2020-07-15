@@ -15,6 +15,8 @@ from cmk.utils.diagnostics import (
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
     OPT_CHECKMK_OVERVIEW,
+    OPT_CHECKMK_CONFIG_FILES,
+    get_checkmk_config_files_map,
 )
 import cmk.utils.version as cmk_version
 
@@ -29,6 +31,9 @@ from cmk.gui.valuespec import (
     Filename,
     FixedValue,
     ValueSpec,
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    DualListChoice,
 )
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.background_job import BackgroundProcessInterface
@@ -39,7 +44,6 @@ from cmk.gui.watolib import (
 )
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 from cmk.gui.watolib.automations import check_mk_automation
-from cmk.gui.plugins.wato.utils.context_buttons import home_button
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -50,37 +54,27 @@ from cmk.gui.pages import page_registry, Page
 @mode_registry.register
 class ModeDiagnostics(WatoMode):
     @classmethod
-    def name(cls):
-        # type: () -> str
+    def name(cls) -> str:
         return "diagnostics"
 
     @classmethod
-    def permissions(cls):
-        # type : () -> List[str]
+    def permissions(cls) -> List[str]:
         return ["diagnostics"]
 
-    def _from_vars(self):
-        # type: () -> None
+    def _from_vars(self) -> None:
         self._start = bool(html.request.get_ascii_input("_start"))
         self._diagnostics_parameters = self._get_diagnostics_parameters()
         self._job = DiagnosticsDumpBackgroundJob()
 
-    def _get_diagnostics_parameters(self):
-        # type: () -> Optional[DiagnosticsParameters]
+    def _get_diagnostics_parameters(self) -> Optional[DiagnosticsParameters]:
         if self._start:
             return self._vs_diagnostics().from_html_vars("diagnostics")
         return None
 
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         return _("Diagnostics")
 
-    def buttons(self):
-        # type: () -> None
-        home_button()
-
-    def action(self):
-        # type: () -> None
+    def action(self) -> None:
         if not html.check_transaction():
             return
 
@@ -92,8 +86,7 @@ class ModeDiagnostics(WatoMode):
 
         raise HTTPRedirect(self._job.detail_url())
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():
             raise HTTPRedirect(self._job.detail_url())
@@ -107,8 +100,7 @@ class ModeDiagnostics(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-    def _vs_diagnostics(self):
-        # type: () -> Dictionary
+    def _vs_diagnostics(self) -> Dictionary:
         return Dictionary(
             title=_("Collect diagnostic dump"),
             render="form",
@@ -132,9 +124,8 @@ class ModeDiagnostics(WatoMode):
             optional_keys=False,
         )
 
-    def _get_optional_information_elements(self):
-        # type: () -> List[Tuple[str, ValueSpec]]
-        elements = [
+    def _get_optional_information_elements(self) -> List[Tuple[str, ValueSpec]]:
+        elements: List[Tuple[str, ValueSpec]] = [
             (OPT_LOCAL_FILES,
              FixedValue(
                  True,
@@ -164,7 +155,14 @@ class ModeDiagnostics(WatoMode):
                         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
                         "(Agent plugin mk_inventory needs to be installed)"),
              )),
-        ]  # type: List[Tuple[str, ValueSpec]]
+            (OPT_CHECKMK_CONFIG_FILES,
+             CascadingDropdown(
+                 title=_("Checkmk Configuration Files"),
+                 help=_("Configuration files '*.mk' or '*.conf' from etc/check_mk"),
+                 choices=self._get_checkmk_config_files_choices(),
+                 default_value="global_settings",
+             )),
+        ]
 
         if not cmk_version.is_raw_edition():
             elements.append(
@@ -179,18 +177,66 @@ class ModeDiagnostics(WatoMode):
                  )))
         return elements
 
+    def _get_checkmk_config_files_choices(self) -> List[CascadingDropdownChoice]:
+        sorted_checkmk_config_files = sorted(get_checkmk_config_files_map())
+        checkmk_config_files = []
+        global_settings = []
+        host_and_folders = []
+
+        for rel_config_file in sorted_checkmk_config_files:
+            checkmk_config_files.append(rel_config_file)
+
+            rel_config_file_path = Path(rel_config_file)
+            rel_config_file_name = rel_config_file_path.name
+            rel_config_file_parts = rel_config_file_path.parts
+
+            if (rel_config_file_name == "sites.mk" or
+                (rel_config_file_name == "global.mk" and rel_config_file_parts and
+                 rel_config_file_parts[0] == "conf.d")):
+                global_settings.append(rel_config_file)
+
+            if rel_config_file_name in ["hosts.mk", "tags.mk", "rules.mk", ".wato"]:
+                host_and_folders.append(rel_config_file)
+
+        return [
+            ("all", _("Pack all files"),
+             FixedValue(
+                 checkmk_config_files,
+                 totext=self._list_of_files_to_text(checkmk_config_files),
+             )),
+            ("global_settings", _("Only global settings"),
+             FixedValue(
+                 global_settings,
+                 totext=self._list_of_files_to_text(global_settings),
+             )),
+            ("hosts_and_folders", _("Only hosts and folders"),
+             FixedValue(
+                 host_and_folders,
+                 totext=self._list_of_files_to_text(host_and_folders),
+             )),
+            ("explicit_list_of_files", _("Explicit list of files"),
+             DualListChoice(
+                 choices=[
+                     (rel_filepath, rel_filepath) for rel_filepath in sorted_checkmk_config_files
+                 ],
+                 size=80,
+                 rows=20,
+             )),
+        ]
+
+    def _list_of_files_to_text(self, list_of_files: List[str]) -> str:
+        return "<br>%s" % ",<br>".join(list_of_files)
+
 
 @gui_background_job.job_registry.register
 class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
     job_prefix = "diagnostics_dump"
 
     @classmethod
-    def gui_title(cls):
-        # type: () -> str
+    def gui_title(cls) -> str:
         return _("Diagnostics dump")
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(DiagnosticsDumpBackgroundJob, self).__init__(
             self.job_prefix,
             title=self.gui_title(),
@@ -198,13 +244,15 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
             stoppable=False,
         )
 
-    def _back_url(self):
-        # type: () -> str
+    def _back_url(self) -> str:
         return html.makeuri([])
 
-    def do_execute(self, diagnostics_parameters, job_interface):
-        # type: (DiagnosticsParameters, BackgroundProcessInterface) -> None
+    def do_execute(self, diagnostics_parameters: DiagnosticsParameters,
+                   job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
+
+        job_interface.send_progress_update(repr(diagnostics_parameters))
+        job_interface.send_progress_update(repr(serialize_wato_parameters(diagnostics_parameters)))
 
         site = diagnostics_parameters["site"]
         timeout = html.request.request_timeout - 2
@@ -232,8 +280,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
 @page_registry.register_page("download_diagnostics_dump")
 class PageDownloadDiagnosticsDump(Page):
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         site = html.request.get_ascii_input_mandatory("site")
         tarfile_name = html.request.get_ascii_input_mandatory("tarfile_name")
         Filename().validate_value(tarfile_name, "tarfile_name")
@@ -243,8 +290,7 @@ class PageDownloadDiagnosticsDump(Page):
         html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % tarfile_name
         html.write_binary(file_content)
 
-    def _get_diagnostics_dump_file(self, site, tarfile_name):
-        # type: (str, str) -> bytes
+    def _get_diagnostics_dump_file(self, site: str, tarfile_name: str) -> bytes:
         if config.site_is_local(site):
             return _get_diagnostics_dump_file(tarfile_name)
 
@@ -255,22 +301,18 @@ class PageDownloadDiagnosticsDump(Page):
 
 @automation_command_registry.register
 class AutomationDiagnosticsDumpGetFile(AutomationCommand):
-    def command_name(self):
-        # type: () -> str
+    def command_name(self) -> str:
         return "diagnostics-dump-get-file"
 
-    def execute(self, request):
-        # type: (str) -> bytes
+    def execute(self, request: str) -> bytes:
         return _get_diagnostics_dump_file(request)
 
-    def get_request(self):
-        # type: () -> str
+    def get_request(self) -> str:
         tarfile_name = html.request.get_ascii_input_mandatory("tarfile_name")
         Filename().validate_value(tarfile_name, "tarfile_name")
         return tarfile_name
 
 
-def _get_diagnostics_dump_file(tarfile_name):
-    # type: (str) -> bytes
+def _get_diagnostics_dump_file(tarfile_name: str) -> bytes:
     with cmk.utils.paths.diagnostics_dir.joinpath(tarfile_name).open("rb") as f:
         return f.read()

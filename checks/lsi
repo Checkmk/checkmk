@@ -8,11 +8,9 @@
 def get_discover_lsi(item_type):
     def discover_lsi(info):
         # convert [ 0, 1, 2, 3, 4, 5, ...] into [ (0,1), (2,3), (4,5), ... ]
-        entries = zip(info[::2], info[1::2])
-
         arrays = []
         disks = []
-        for entry in entries:
+        for entry in zip(info[::2], info[1::2]):
             id_ = int(entry[0][1])
             state = entry[1][1].split('(')[-1][:-1]
             if entry[0][0] == 'VolumeID':

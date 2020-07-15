@@ -104,7 +104,6 @@ from cmk.gui.plugins.wato.utils import (
     get_search_expression,
     add_change,
     changelog_button,
-    home_button,
     make_action_link,
     rulespec_group_registry,
     RulespecGroup,
@@ -113,6 +112,7 @@ from cmk.gui.plugins.wato.utils import (
     ServiceRulespec,
     main_module_registry,
     MainModule,
+    MainModuleTopicEvents,
     wato_confirm,
     search_form,
     site_neutral_path,
@@ -121,9 +121,10 @@ from cmk.gui.plugins.wato.utils import (
 )
 
 from cmk.gui.plugins.wato.check_mk_configuration import (
+    RulespecGroupMonitoringConfigurationServiceChecks,
+    RulespecGroupMonitoringConfigurationHostChecks,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
-    RulespecGroupGrouping,
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
@@ -202,7 +203,7 @@ def ActionList(vs, **kwargs):
 
 class RuleState(CascadingDropdown):
     def __init__(self, **kwargs):
-        choices = [
+        choices: List[CascadingDropdownChoice] = [
             (0, _("OK")),
             (1, _("WARN")),
             (2, _("CRIT")),
@@ -242,12 +243,12 @@ class RuleState(CascadingDropdown):
                         'First the CRITICAL pattern is tested, then WARNING and OK at last. '
                         'When none of the patterns matches, the events state is set to UNKNOWN.'),
              )),
-        ]  # type: List[CascadingDropdownChoice]
+        ]
         CascadingDropdown.__init__(self, choices=choices, **kwargs)
 
 
 def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
-    elements = []  # type: List[DictionaryEntry]
+    elements: List[DictionaryEntry] = []
     if fixed_id:
         elements.append(("id",
                          FixedValue(
@@ -718,6 +719,7 @@ def vs_mkeventd_rule(customer=None):
          RegExpUnicode(
              title=_("Match syslog application (tag)"),
              help=_("Regular expression for matching the syslog tag (case insenstive)"),
+             size=64,
              mode=RegExp.infix,
              case_sensitive=False,
          )),
@@ -987,12 +989,11 @@ def load_mkeventd_rules():
     return rule_packs
 
 
-def _get_rule_stats_from_ec():
-    # type: () -> Dict[str, int]
+def _get_rule_stats_from_ec() -> Dict[str, int]:
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
     # statistics directly from that file.
-    rule_stats = {}  # type: Dict[str, int]
+    rule_stats: Dict[str, int] = {}
     for rule_id, count in sites.live().query("GET eventconsolerules\nColumns: rule_id rule_hits\n"):
         rule_stats.setdefault(rule_id, 0)
         rule_stats[rule_id] += count
@@ -1105,7 +1106,13 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
         html.context_button(_("Rule Packs"),
                             html.makeuri_contextless([("mode", "mkeventd_rule_packs")]), "back")
 
-    def _config_button(self):
+    def _config_buttons(self):
+        if config.user.may("mkeventd.config") and config.user.may("wato.rulesets"):
+            html.context_button(
+                _("Rulesets"),
+                html.makeuri_contextless([("mode", "rulesets"), ("group", "eventconsole")]),
+                "rulesets")
+
         if config.user.may("mkeventd.config"):
             html.context_button(_("Settings"),
                                 html.makeuri_contextless([("mode", "mkeventd_config")]),
@@ -1203,7 +1210,6 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
     def buttons(self):
         self._changes_button()
-        home_button()
         if config.user.may("mkeventd.edit"):
             html.context_button(_("New Rule Pack"),
                                 html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack")]),
@@ -1213,7 +1219,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 make_action_link([("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")]),
                 "resetcounters")
         self._status_button()
-        self._config_button()
+        self._config_buttons()
         self._mibs_button()
 
     def action(self):
@@ -1381,7 +1387,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
                 if id_ in found_packs:
-                    css_matches_search = "matches_search"  # type: _Optional[str]
+                    css_matches_search: _Optional[str] = "matches_search"
                 else:
                     css_matches_search = None
 
@@ -1511,7 +1517,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(_("Hits"), hits is not None and hits or '', css="number")
 
     def _filter_mkeventd_rule_packs(self, search_expression, rule_packs):
-        found_packs = {}  # type: Dict[str, List[ec.ECRuleSpec]]
+        found_packs: Dict[str, List[ec.ECRuleSpec]] = {}
         for rule_pack in rule_packs:
             if search_expression in rule_pack["id"].lower() \
                or search_expression in rule_pack["title"].lower():
@@ -1527,8 +1533,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 T = TypeVar('T')
 
 
-def _deref(x):
-    # type: (Union[T, Callable[[], T]]) -> T
+def _deref(x: Union[T, Callable[[], T]]) -> T:
     return x() if callable(x) else x
 
 
@@ -1675,7 +1680,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             have_match = False
             for nr, rule in enumerate(self._rules):
                 if rule in found_rules:
-                    css_matches_search = "matches_search"  # type: _Optional[str]
+                    css_matches_search: _Optional[str] = "matches_search"
                 else:
                     css_matches_search = None
 
@@ -1804,7 +1809,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 # Move rule to other pack
                 if len(self._rule_packs) > 1:
                     table.cell(_("Move to pack..."))
-                    choices = [("", u"")]  # type: Choices
+                    choices: Choices = [("", u"")]
                     choices += [(pack["id"], pack["title"])
                                 for pack in self._rule_packs
                                 if pack is not self._rule_pack]
@@ -1841,7 +1846,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         self._new = self._edit_nr < 0
 
         if self._new:
-            self._rule_pack = {"rules": []}  # type: ec.ECRulePack
+            self._rule_pack: ec.ECRulePack = {"rules": []}
         else:
             try:
                 self._rule_pack = self._rule_packs[self._edit_nr]
@@ -1983,7 +1988,6 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
 
     def buttons(self):
-        home_button()
         self._rules_button()
         self._changes_button()
         if self._clone_nr >= 0:
@@ -2108,9 +2112,8 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         return _("Local server status")
 
     def buttons(self):
-        home_button()
         self._rules_button()
-        self._config_button()
+        self._config_buttons()
         self._mibs_button()
 
     def action(self):
@@ -2215,7 +2218,6 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, GlobalSettingsMode):
         return _('Event Console Configuration')
 
     def buttons(self):
-        home_button()
         self._rules_button()
         self._changes_button()
         html.context_button(_("Server Status"),
@@ -2350,11 +2352,10 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         return _('SNMP MIBs for Trap Translation')
 
     def buttons(self):
-        home_button()
         self._rules_button()
         self._changes_button()
         self._status_button()
-        self._config_button()
+        self._config_buttons()
 
     def action(self):
         if html.request.has_var("_delete"):
@@ -2574,8 +2575,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         for path, title in cmk.gui.mkeventd.mib_dirs():
             self._show_mib_table(path, title)
 
-    def _show_mib_table(self, path, title):
-        # type: (Path, str) -> None
+    def _show_mib_table(self, path: Path, title: str) -> None:
         is_custom_dir = path == cmk.gui.mkeventd.mib_upload_dir()
 
         if is_custom_dir:
@@ -2614,9 +2614,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             html.hidden_fields()
             html.end_form()
 
-    def _load_snmp_mibs(self, path):
-        # type: (Path) -> Dict[str, Dict]
-        found = {}  # type: Dict[str, Dict]
+    def _load_snmp_mibs(self, path: Path) -> Dict[str, Dict]:
+        found: Dict[str, Dict] = {}
 
         if not path.exists():
             return found
@@ -2631,9 +2630,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             found[file_obj.name] = self._parse_snmp_mib_header(file_obj)
         return found
 
-    def _parse_snmp_mib_header(self, path):
-        # type: (Path) -> Dict[str, Union[int, str]]
-        mib = {"size": path.stat().st_size}  # type: Dict[str, Union[int, str]]
+    def _parse_snmp_mib_header(self, path: Path) -> Dict[str, Union[int, str]]:
+        mib: Dict[str, Union[int, str]] = {"size": path.stat().st_size}
 
         # read till first "OBJECT IDENTIFIER" declaration
         head = ''
@@ -2774,6 +2772,10 @@ class MainModuleEventConsole(MainModule):
         return "mkeventd_rule_packs"
 
     @property
+    def topic(self):
+        return MainModuleTopicEvents
+
+    @property
     def title(self):
         return _("Event Console")
 
@@ -2791,11 +2793,15 @@ class MainModuleEventConsole(MainModule):
 
     @property
     def sort_index(self):
-        return 68
+        return 20
 
     @property
     def enabled(self):
         return config.mkeventd_enabled
+
+    @property
+    def is_advanced(self):
+        return True
 
 
 #.
@@ -3951,7 +3957,7 @@ def _valuespec_extra_host_conf__ec_sl():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupMonitoringConfigurationHostChecks,
         name="extra_host_conf:_ec_sl",
         valuespec=_valuespec_extra_host_conf__ec_sl,
     ))
@@ -3968,7 +3974,7 @@ def _valuespec_extra_service_conf__ec_sl():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupMonitoringConfigurationServiceChecks,
         item_type="service",
         name="extra_service_conf:_ec_sl",
         valuespec=_valuespec_extra_service_conf__ec_sl,

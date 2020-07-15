@@ -58,39 +58,67 @@ factory_settings["filesystem_default_levels"] = {
 }
 
 
-def mountpoints_in_group(mplist, patterns):
+def mountpoints_in_group(mplist, patterns_include, patterns_exclude):
     matching_mountpoints = set()
     for mountpoint in mplist:
-        for pattern in patterns:
-            if fnmatch.fnmatch(mountpoint, pattern):
-                matching_mountpoints.add(mountpoint)
-                break
+        if any(
+                fnmatch.fnmatch(mountpoint, pattern_exclude)
+                for pattern_exclude in patterns_exclude):
+            continue
+        if any(
+                fnmatch.fnmatch(mountpoint, pattern_include)
+                for pattern_include in patterns_include):
+            matching_mountpoints.add(mountpoint)
     return matching_mountpoints
 
 
 def ungrouped_mountpoints_and_groups(mplist, group_patterns):
     ungrouped_mountpoints = set(mplist)
     groups = {}
-
-    for group_name, patterns in group_patterns.items():
-        mp_groups = mountpoints_in_group(mplist, patterns)
+    for group_name, (patterns_inlcude, patterns_exclude) in group_patterns.items():
+        mp_groups = mountpoints_in_group(mplist, patterns_inlcude, patterns_exclude)
         if mp_groups:
             groups[group_name] = mp_groups
             ungrouped_mountpoints = ungrouped_mountpoints.difference(mp_groups)
-
     return ungrouped_mountpoints, groups
 
 
+def transform_filesystem_groups(groups):
+    """
+    Old format:
+    [(group_name, include_pattern), (group_name, include_pattern), ...]
+    New format:
+    [{group_name: name,
+      patterns_include: [include_pattern, include_pattern, ...],
+      patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
+     {group_name: name,
+      patterns_include: [include_pattern, include_pattern, ...],
+      patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
+     ...]
+    """
+    if not groups or isinstance(groups[0], dict):
+        yield from groups
+        return
+    for group_name, include_pattern in groups:
+        yield {
+            'group_name': group_name,
+            'patterns_include': [include_pattern],
+            'patterns_exclude': [],
+        }
+
+
 def df_inventory(mplist):
-    group_patterns = {}
-    for line in host_extra_conf(host_name(), filesystem_groups):
-        for group_name, pattern in line:
-            group_patterns.setdefault(group_name, []).append(pattern)
+    group_patterns: Dict[str, Tuple[List[str]]] = {}
+    for groups in host_extra_conf(host_name(), filesystem_groups):
+        for group in transform_filesystem_groups(groups):
+            grouping_entry = group_patterns.setdefault(group['group_name'], ([], []))
+            grouping_entry[0].extend(group['patterns_include'])
+            grouping_entry[1].extend(group['patterns_exclude'])
 
     ungrouped_mountpoints, groups = ungrouped_mountpoints_and_groups(mplist, group_patterns)
 
     return [(mp, {}) for mp in ungrouped_mountpoints] \
-            + [(group, {"patterns" : group_patterns[group]}) for group in groups]
+            + [(group, {"patterns": group_patterns[group]}) for group in groups]
 
 
 # Users might have set filesystem_default_levels to old format like (80, 90)
@@ -289,7 +317,7 @@ def df_check_filesystem_list_coroutine(
         )
         return
 
-    matching_mountpoints = mountpoints_in_group(blocks_info, params["patterns"])
+    matching_mountpoints = mountpoints_in_group(blocks_info, *params["patterns"])
     if not matching_mountpoints:
         yield 3, "No filesystem matching the patterns", []
         return

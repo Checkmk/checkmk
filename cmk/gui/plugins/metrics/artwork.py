@@ -177,7 +177,7 @@ def layout_graph_curves(curves):
     mirrored = False  # True if negative area shows positive values
 
     # Build positive and optional negative stack.
-    stacks = [None, None]  # type: List[Optional[List]]
+    stacks: List[Optional[List]] = [None, None]
 
     # Compute the logical position (i.e. measured in the original unit)
     # of the data points, where stacking and Y-mirroring is being applied.
@@ -425,12 +425,12 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
 
     if stepping == "binary":
         base = 16
-        steps = [
+        steps: List[Tuple[float, float]] = [
             (2, 0.5),
             (4, 1),
             (8, 2),
             (16, 4),
-        ]  # type: List[Tuple[float, float]]
+        ]
 
     elif stepping == "time":
         if max_value > 3600 * 24:
@@ -674,7 +674,7 @@ def render_labels_with_graph_unit(label_specs, unit):
 
 def render_labels(label_specs, render_func=None):
     max_label_length = 0
-    rendered_labels = []  # type: List[Label]
+    rendered_labels: List[Label] = []
 
     for pos, label_value, line_width in label_specs:
         if label_value is not None:
@@ -752,8 +752,8 @@ def compute_graph_t_axis(start_time, end_time, width, step):
 
     # TODO: Monatsname und Wochenname lokalisierbar machen
     if start_date == end_date:
-        labelling = "%H:%M"  # type: Union[str, Callable]
-        label_size = 5  # type: Union[int, float]
+        labelling: Union[str, Callable] = "%H:%M"
+        label_size: Union[int, float] = 5
 
     # Less than one week
     elif time_range_days < 7:
@@ -791,9 +791,11 @@ def compute_graph_t_axis(start_time, end_time, width, step):
                                       (720, 120), (1440, 360), (2880, 480), (4320, 720),
                                       (5760, 720)]:
         if label_distance_at_least <= dist_minutes * 60:
-            dist_function = partial(
-                dist_equal, distance=dist_minutes * 60, subdivision=subdivision *
-                60)  # type: Callable[[int, int], Iterable[Tuple[int, int, bool]]]
+            dist_function: Callable[[int, int],
+                                    Iterable[Tuple[int, int,
+                                                   bool]]] = partial(dist_equal,
+                                                                     distance=dist_minutes * 60,
+                                                                     subdivision=subdivision * 60)
             break
 
     else:
@@ -813,12 +815,12 @@ def compute_graph_t_axis(start_time, end_time, width, step):
 
     # Now iterate over all label points and compute the labels.
     # TODO: could we run into any problems with daylight saving time here?
-    labels = []  # type: List[Label]
+    labels: List[Label] = []
     seconds_per_char = time_range / (width - 7)
     for pos, line_width, has_label in dist_function(start_time, end_time):
         if has_label:
             if isinstance(labelling, str):
-                label = time.strftime(str(labelling), time.localtime(pos))  # type: Optional[str]
+                label: Optional[str] = time.strftime(str(labelling), time.localtime(pos))
             else:
                 label = labelling(pos)
         else:
@@ -980,8 +982,7 @@ def load_graph_pin():
     return config.user.load_file("graph_pin", None)
 
 
-def save_graph_pin():
-    # type: () -> None
+def save_graph_pin() -> None:
     try:
         pin_timestamp = html.request.get_integer_input("pin")
     except ValueError:

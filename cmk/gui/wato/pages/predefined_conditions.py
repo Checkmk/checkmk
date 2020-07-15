@@ -37,8 +37,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def dummy_rulespec():
-    # type: () -> ServiceRulespec
+def dummy_rulespec() -> ServiceRulespec:
     return ServiceRulespec(
         name="dummy",
         group=RulespecGroupUserInterface,
@@ -175,14 +174,14 @@ class ModeEditPredefinedCondition(SimpleEditMode):
 
     def _vs_individual_elements(self):
         if config.user.may("wato.edit_all_predefined_conditions"):
-            admin_element = [
+            admin_element: List[ValueSpec] = [
                 FixedValue(
                     None,
                     title=_("Administrators"),
                     totext=_("Administrators (having the permission "
                              "\"Write access to all predefined conditions\")"),
                 )
-            ]  # type: List[ValueSpec]
+            ]
         else:
             admin_element = []
 
@@ -261,8 +260,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         new_rulesets.save()
         old_rulesets.save()
 
-    def _rewrite_rules_for(self, conditions):
-        # type: (RuleConditions) -> None
+    def _rewrite_rules_for(self, conditions: RuleConditions) -> None:
         """Apply changed predefined condition to rules
 
         After updating a predefined condition it is necessary to rewrite the

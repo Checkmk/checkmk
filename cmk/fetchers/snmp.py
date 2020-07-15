@@ -9,6 +9,8 @@ from functools import partial
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Type
 
+from cmk.utils.type_defs import SectionName
+
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
@@ -17,10 +19,10 @@ from . import factory
 
 class SNMPDataFetcher:
     def __init__(
-            self,
-            oid_infos,  # type: Dict[str, List[SNMPTree]]
-            use_snmpwalk_cache,  # type: bool
-            snmp_config,  # type: SNMPHostConfig
+        self,
+        oid_infos: Dict[SectionName, List[SNMPTree]],
+        use_snmpwalk_cache: bool,
+        snmp_config: SNMPHostConfig,
     ):
         # type (...) -> None
         super(SNMPDataFetcher, self).__init__()
@@ -30,8 +32,7 @@ class SNMPDataFetcher:
         self._logger = logging.getLogger("cmk.fetchers.snmp")
 
     @classmethod
-    def from_json(cls, serialized):
-        # type: (Dict[str, Any]) -> SNMPDataFetcher
+    def from_json(cls, serialized: Dict[str, Any]) -> 'SNMPDataFetcher':
         return cls(
             {
                 name: [SNMPTree.from_json(tree) for tree in trees
@@ -41,17 +42,15 @@ class SNMPDataFetcher:
             SNMPHostConfig(**serialized["snmp_config"]),
         )
 
-    def __enter__(self):
-        # type: () -> SNMPDataFetcher
+    def __enter__(self) -> 'SNMPDataFetcher':
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> None
+    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType]) -> None:
         pass
 
-    def data(self):
-        # type: () -> SNMPRawData
-        info = {}  # type: SNMPRawData
+    def data(self) -> SNMPRawData:
+        info: SNMPRawData = {}
         for section_name, oid_info in self._oid_infos.items():
             self._logger.debug("%s: Fetching data", section_name)
 
@@ -61,7 +60,7 @@ class SNMPDataFetcher:
                                if self._use_snmpwalk_cache else snmp_table.get_snmp_table,
                                backend=factory.backend(self._snmp_config))
             # branch: List[SNMPTree]
-            check_info = []  # type: List[SNMPTable]
+            check_info: List[SNMPTable] = []
             for entry in oid_info:
                 check_info_part = get_snmp(section_name, entry)
                 check_info.append(check_info_part)

@@ -28,7 +28,7 @@ import threading
 import time
 import traceback
 from types import FrameType
-from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
 from six import ensure_binary
 
@@ -408,6 +408,7 @@ class HostConfig:
 
     def get_config_for_host(self, host_name, deflt):
         with self._lock:
+            self._update_cache()
             return self._hosts_by_name.get(host_name, deflt)
 
     def get_canonical_name(self, event_host_name: str) -> str:
@@ -532,7 +533,7 @@ class Perfcounters:
             self._old_counters = self._counters.copy()
 
     @classmethod
-    def status_columns(cls: 'Type[Perfcounters]') -> List[Tuple[str, float]]:
+    def status_columns(cls: Type['Perfcounters']) -> List[Tuple[str, float]]:
         columns: List[Tuple[str, float]] = []
         # Please note: status_columns() and get_status() need to produce lists with exact same column order
         for name in cls._counter_names:
@@ -1717,17 +1718,17 @@ class EventServer(ECServerThread):
 
     def get_hosts_with_active_event_limit(self):
         hosts = []
-        for hostname, num_existing_events in self._event_status.num_existing_events_by_host.items():
-            if num_existing_events >= self._config["event_limit"]["by_host"]["limit"]:
+        for (hostname, core_host), count in self._event_status.num_existing_events_by_host.items():
+            if count >= self._get_host_event_limit(core_host)[0]:
                 hosts.append(hostname)
         return hosts
 
     def get_rules_with_active_event_limit(self):
         rule_ids = []
-        for rule_id, num_existing_events in self._event_status.num_existing_events_by_rule.items():
+        for rule_id, num_events in self._event_status.num_existing_events_by_rule.items():
             if rule_id is None:
                 continue  # Ignore rule unrelated overflow events. They have no rule id associated.
-            if num_existing_events >= self._config["event_limit"]["by_rule"]["limit"]:
+            if num_events >= self._get_rule_event_limit(rule_id)[0]:
                 rule_ids.append(rule_id)
         return rule_ids
 
@@ -1766,6 +1767,7 @@ class EventServer(ECServerThread):
         assert ty in ["overall", "by_rule", "by_host"]
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
+
         limit, action = self._get_event_limit(ty, event)
         self._logger.log(VERBOSE, "  Type: %s, already open events: %d, Limit: %d", ty,
                          num_already_open, limit)
@@ -1813,24 +1815,37 @@ class EventServer(ECServerThread):
 
     # protected by self._event_status.lock
     def _get_event_limit(self, ty, event):
-        # Prefer the rule individual limit for by_rule limit (in case there is some)
+        if ty == "overall":
+            return self._get_overall_event_limit()
         if ty == "by_rule":
-            rule_limit = self._rule_by_id[event["rule_id"]].get("event_limit")
-            if rule_limit:
-                return rule_limit["limit"], rule_limit["action"]
-
-        # Prefer the host individual limit for by_host limit (in case there is some)
+            return self._get_rule_event_limit(event["rule_id"])
         if ty == "by_host":
-            host_config = self.host_config.get_config_for_host(event["core_host"], {})
-            host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
-            if host_limit:
-                limit, action = host_limit.split(":", 1)
-                return int(limit), action
+            return self._get_host_event_limit(event["core_host"])
+        raise NotImplementedError()
 
-        limit = self._config["event_limit"][ty]["limit"]
-        action = self._config["event_limit"][ty]["action"]
+    def _get_overall_event_limit(self):
+        return (self._config["event_limit"]["overall"]["limit"],
+                self._config["event_limit"]["overall"]["action"])
 
-        return limit, action
+    def _get_rule_event_limit(self, rule_id):
+        """Prefer the rule individual limit for by_rule limit (in case there is some)"""
+        rule_limit = self._rule_by_id[rule_id].get("event_limit")
+        if rule_limit:
+            return rule_limit["limit"], rule_limit["action"]
+
+        return (self._config["event_limit"]["by_rule"]["limit"],
+                self._config["event_limit"]["by_rule"]["action"])
+
+    def _get_host_event_limit(self, core_host):
+        """Prefer the host individual limit for by_host limit (in case there is some)"""
+        host_config = self.host_config.get_config_for_host(core_host, {})
+        host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
+        if host_limit:
+            limit, action = host_limit.split(":", 1)
+            return int(limit), action
+
+        return (self._config["event_limit"]["by_host"]["limit"],
+                self._config["event_limit"]["by_host"]["action"])
 
     def _create_overflow_event(self, ty, event, limit):
         now = time.time()
@@ -3238,7 +3253,6 @@ class EventStatus:
                 self._events = status["events"]
                 self._rule_stats = status["rule_stats"]
                 self._interval_starts = status.get("interval_starts", {})
-                self._initialize_event_limit_status()
                 self._logger.info("Loaded event state from %s." % path)
             except Exception as e:
                 self._logger.exception("Error loading event state from %s: %s" % (path, e))
@@ -3252,6 +3266,9 @@ class EventStatus:
                 event_server.add_core_host_to_event(event)
                 event["host_in_downtime"] = False
 
+        # core_host is needed to initialize the status
+        self._initialize_event_limit_status()
+
     # Called on Event Console initialization from status file to initialize
     # the current event limit state -> Sets internal counters which are
     # updated during runtime.
@@ -3264,10 +3281,11 @@ class EventStatus:
             self._count_event_add(event)
 
     def _count_event_add(self, event):
-        if event["host"] not in self.num_existing_events_by_host:
-            self.num_existing_events_by_host[event["host"]] = 1
+        host_key = (event["host"], event["core_host"])
+        if host_key not in self.num_existing_events_by_host:
+            self.num_existing_events_by_host[host_key] = 1
         else:
-            self.num_existing_events_by_host[event["host"]] += 1
+            self.num_existing_events_by_host[host_key] += 1
 
         if event["rule_id"] not in self.num_existing_events_by_rule:
             self.num_existing_events_by_rule[event["rule_id"]] = 1
@@ -3275,8 +3293,10 @@ class EventStatus:
             self.num_existing_events_by_rule[event["rule_id"]] += 1
 
     def _count_event_remove(self, event):
+        host_key = (event["host"], event["core_host"])
+
         self.num_existing_events -= 1
-        self.num_existing_events_by_host[event["host"]] -= 1
+        self.num_existing_events_by_host[host_key] -= 1
         self.num_existing_events_by_rule[event["rule_id"]] -= 1
 
     def new_event(self, event):
@@ -3340,7 +3360,7 @@ class EventStatus:
         if ty == "by_rule":
             return self.num_existing_events_by_rule.get(event["rule_id"], 0)
         if ty == "by_host":
-            return self.num_existing_events_by_host.get(event["host"], 0)
+            return self.num_existing_events_by_host.get((event["host"], event["core_host"]), 0)
         raise NotImplementedError()
 
     # Cancel all events the belong to a certain rule id and are
@@ -3965,6 +3985,9 @@ def main() -> None:
 
         logger.info("Successfully shut down.")
         sys.exit(0)
+
+    except MKSignalException:
+        pass
 
     except Exception:
         if settings.options.debug:

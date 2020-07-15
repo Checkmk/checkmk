@@ -173,3 +173,8 @@ LogManager LogManager::global_log_manager;
 std::ostream &operator<<(std::ostream &os, const generic_error &ge) {
     return os << ge.what();
 }
+namespace cmc {
+std::ostream &operator<<(std::ostream &os, const cmc::core_error &ce) {
+    return os << ce.what();
+}
+}  // namespace cmc

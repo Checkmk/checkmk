@@ -6,9 +6,9 @@
 
 # Basic functions for cmk_figures
 
-from typing import Type  # pylint: disable=unused-import
 import abc
 import json
+from typing import Type
 
 from cmk.gui.plugins.dashboard import Dashlet
 from cmk.gui.globals import html
@@ -18,7 +18,7 @@ def create_figures_response(data, context=None):
     """ Any data for a figure is always wrapped into a dictionary
         This makes future extensions (meta_data, etc.) easier, preventing
         intermingling of dictionary keys """
-    response = {"data": data}
+    response = {"figure_response": data}
     if context:
         response["context"] = context
     return response
@@ -100,7 +100,7 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         return 60
 
     def on_resize(self):
-        return "%s.resize()" % self.instance_name
+        return "%(instance)s.resize() ; %(instance)s.render()" % {"instance": self.instance_name}
 
 
 class TableFigureDataCreator:

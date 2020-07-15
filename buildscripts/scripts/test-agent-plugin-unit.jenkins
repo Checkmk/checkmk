@@ -9,14 +9,13 @@ withFolderProperties{
     DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
-// TODO: Enable supported versions step by step and check which we should really support
-def PYTHON_VERSIONS = [ "2.6", "2.7", "3.3", "3.4", "3.5", "3.6", "3.7" ] //, "3.8" ]
+def PYTHON_VERSIONS = [ "2.6", "2.7", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8" ]
 
 node(NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         // We don't have the "versioning" library here. For this reason we can not use versioning.select_docker_tag.
         // Always use the default docker tag we got from the environment.
-        def CHECKOUT_IMAGE = docker.image('ubuntu-19.04:' + DOCKER_TAG_DEFAULT)
+        def CHECKOUT_IMAGE = docker.image('ubuntu-20.04:' + DOCKER_TAG_DEFAULT)
         CHECKOUT_IMAGE.pull()
         // The commands are executed with the 1001:1000 UID:GID (non-root).
         // This is the UID of the jenkins user on the node which does not exist
@@ -38,7 +37,7 @@ def DOCKER_BUILDS = [:]
 try {
     node(NODE) {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            def TEST_IMAGE = docker.image('ubuntu-19.04:' + versioning.select_docker_tag(versioning.get_branch(scm), "", DOCKER_TAG_DEFAULT))
+            def TEST_IMAGE = docker.image('ubuntu-20.04:' + versioning.select_docker_tag(versioning.get_branch(scm), "", DOCKER_TAG_DEFAULT))
             TEST_IMAGE.pull()
             // The commands are executed with the 1001:1000 UID:GID (non-root).
             // This is the UID of the jenkins user on the node.
@@ -51,7 +50,7 @@ try {
                 PYTHON_VERSIONS.each { PYTHON_VERSION ->
                     DOCKER_BUILDS[PYTHON_VERSION] = {
                         stage('test agent plugin unit ' + PYTHON_VERSION) {
-                            dir('tests-py3') {
+                            dir('tests') {
                                 sh("bash -c \"make test-agent-plugin-unit-py" + PYTHON_VERSION + "-docker\"")
                             }
                         }

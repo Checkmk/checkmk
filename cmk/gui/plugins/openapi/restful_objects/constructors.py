@@ -21,30 +21,22 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     HTTPMethod,
     LinkType,
     PropertyFormat,
-    RestfulEndpointName,
     ResultType,
     Serializable,
 )
 from cmk.gui.plugins.openapi.restful_objects.utils import (
-    fill_out_path_template,
-    ENDPOINT_REGISTRY,
-    param as param_,
-)
-
-# Export this to the endpoint modules. Must be removed after refactoring.
-param = param_
+    ENDPOINT_REGISTRY,)
 
 
 def link_rel(
-        rel,  # type: Union[RestfulEndpointName, EndpointName]
-        href,  # type: str
-        method='GET',  # type: HTTPMethod
-        content_type='application/json',  # type: str
-        profile=None,  # type: Optional[str]
-        title=None,  # type: Optional[str]
-        parameters=None,  # type: Optional[Dict[str, str]]
-):
-    # type: (...) -> LinkType
+    rel: EndpointName,
+    href: str,
+    method: HTTPMethod = 'get',
+    content_type: str = 'application/json',
+    profile: Optional[str] = None,
+    title: Optional[str] = None,
+    parameters: Optional[Dict[str, str]] = None,
+) -> LinkType:
     """Link to a separate entity
 
     Args:
@@ -73,7 +65,7 @@ def link_rel(
     Examples:
 
         >>> link = link_rel('.../update', 'update',
-        ...                 method='GET', profile='.../object', title='Update the object')
+        ...                 method='get', profile='.../object', title='Update the object')
         >>> expected = {
         ...     'domainType': 'link',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
@@ -105,10 +97,9 @@ def link_rel(
 
 
 def expand_rel(
-        rel,  # type: str
-        parameters=None,  # type: Optional[Dict[str, str]]
-):
-    # type: (...) -> str
+    rel: str,
+    parameters: Optional[Dict[str, str]] = None,
+) -> str:
     """Expand abbreviations in the rel field
 
     `.../` and `cmk/` are shorthands for the restful-objects and CheckMK namespaces. The
@@ -127,11 +118,14 @@ def expand_rel(
         >>> expand_rel('cmk/launch', {'payload': 'coffee', 'count': 5})
         'urn:com.checkmk:rels/launch;count="5";payload="coffee"'
 
+        >>> expand_rel('cmk/cmk/foo')
+        'urn:com.checkmk:rels/cmk/foo'
+
     """
     if rel.startswith(".../"):
-        rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
+        rel = rel.replace(".../", "urn:org.restfulobjects:rels/", 1)
     elif rel.startswith("cmk/"):
-        rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
+        rel = rel.replace("cmk/", "urn:com.checkmk:rels/", 1)
 
     if parameters:
         for param_name, value in sorted(parameters.items()):
@@ -140,8 +134,7 @@ def expand_rel(
     return rel
 
 
-def require_etag(etag):
-    # type: (ETags) -> None
+def require_etag(etag: ETags) -> None:
     """Ensure the current request matches the given ETag.
 
     Args:
@@ -158,8 +151,7 @@ def require_etag(etag):
         )
 
 
-def object_action(name, parameters, base):
-    # type: (str, dict, str) -> Dict[str, Any]
+def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
     """A action description to be used as an object member.
 
     Examples:
@@ -187,43 +179,75 @@ def object_action(name, parameters, base):
         'links': [
             link_rel('up', base),
             link_rel('.../details', base + _action(name), parameters={'action': name}),
-            link_rel('.../invoke', base + _invoke(name), method='POST',
+            link_rel('.../invoke', base + _invoke(name), method='post',
                      parameters={'action': name}),
         ],
         'parameters': parameters,
     }
 
 
-def object_collection(name, entries, base):
-    # type: (str, List[Union[LinkType, DomainObject]], str) -> Dict[str, Any]
+def object_collection(
+    name: str,
+    domain_type: DomainType,
+    entries: List[Union[LinkType, DomainObject]],
+    base: str,
+) -> Dict[str, Any]:
     """A collection description to be used as an object member.
 
     Args:
         name:
+            The name of the collection.
+
+        domain_type:
+            The domain-type the collection is a part of.
+
         entries:
+            The entries in that collection.
+
         base:
+            The base-level URI. May be an object's URI for example
+
+    Examples:
+        >>> expected = {
+        ...     'id': 'all',
+        ...     'memberType': 'collection',
+        ...     'value': [],
+        ...     'links': [
+        ...         {
+        ...             'rel': 'self',
+        ...             'href': '/domain-types/host/collections/all',
+        ...             'method': 'GET',
+        ...             'type': 'application/json',
+        ...             'domainType': 'link',
+        ...         }
+        ...     ]
+        ... }
+        >>> result = object_collection('all', 'host', [], '')
+        >>> assert result == expected, result
 
     Returns:
+        The object_collection structure.
 
     """
+    links = [
+        link_rel('self', base + collection_href(domain_type)),
+    ]
+    if base:
+        links.append(link_rel('up', base))
     return {
         'id': name,
         'memberType': "collection",
         'value': entries,
-        'links': [
-            link_rel('self', base + "/collections/%s" % (name,)),
-            link_rel('up', base),
-        ]
+        'links': links,
     }
 
 
 def action_result(
-        action_links,  # type: List[LinkType]
-        result_type,  # type: ResultType
-        result_links,  # type: List[LinkType]
-        result_value,  # type: Optional[Any]
-):
-    # type: (...) -> Dict
+    action_links: List[LinkType],
+    result_type: ResultType,
+    result_links: List[LinkType],
+    result_value: Optional[Any],
+) -> Dict:
     """Construct an Action Result resource
 
     Described in Restful Objects, chapter 19.1-4 """
@@ -237,16 +261,37 @@ def action_result(
     }
 
 
+class DomainObjectMembers:
+    def __init__(self, base):
+        self.base = base
+        self.members = {}
+
+    def object_property(
+        self,
+        name: str,
+        value: Any,
+        prop_format: PropertyFormat,
+        title: Optional[str] = None,
+        linkable=True,
+        links: Optional[List[LinkType]] = None,
+    ):
+        self.members[name] = object_property(name, value, prop_format, self.base, title, linkable,
+                                             links)
+        return self.members[name]
+
+    def to_dict(self):
+        return self.members
+
+
 def object_property(
-        name,  # type: str
-        value,  # type: Any
-        prop_format,  # type: PropertyFormat
-        base,  # type: str
-        title=None,  # type: Optional[str]
-        linkable=True,  # type: bool
-        links=None,  # type: Optional[List[LinkType]]
-):
-    # type: (...) -> Dict[str, Any]
+    name: str,
+    value: Any,
+    prop_format: PropertyFormat,
+    base: str,
+    title: Optional[str] = None,
+    linkable: bool = True,
+    links: Optional[List[LinkType]] = None,
+) -> Dict[str, Any]:
     """Render an object-property
 
     Args:
@@ -286,7 +331,7 @@ def object_property(
     }
     if linkable:
         property_obj['links'] = [
-            link_rel('self', base + '/properties/' + name, profile='.../object_property')
+            link_rel('self', f"{base}/properties/{name}", profile='.../object_property')
         ]
         if links:
             property_obj['links'].extend(links)
@@ -294,45 +339,116 @@ def object_property(
     return property_obj
 
 
-def object_href(domain_type, obj):
-    # type: (str, Any) -> str
-    """
+def domain_type_action_href(domain_type: DomainType, action: str) -> str:
+    """Constructs a href to a domain-type action.
 
     Args:
         domain_type:
-        obj:
+            The domain-type, the action is part of.
+
+        action:
+            The action-name.
+
+    Examples:
+        >>> domain_type_action_href('activation_run', 'activate-changes')
+        '/domain-types/activation_run/actions/activate-changes/invoke'
+
+    Returns:
+        The href.
+
+    """
+    return "/domain-types/{domain_type}/actions/{action}/invoke".format(domain_type=domain_type,
+                                                                        action=action)
+
+
+def collection_href(domain_type: DomainType, name: str = 'all') -> str:
+    """Constructs a href to a collection.
+
+    Please note that domain-types can have multiple collections.
+
+    Args:
+        domain_type:
+            The domain-type of the collection
+
+        name:
+            The name of the collection itself.
 
     Examples:
 
-        >>> object_href('folder', {'title': 'Main', 'id': 0})
-        '/objects/folder/0'
+        >>> collection_href('folder_config', 'all')
+        '/domain-types/folder_config/collections/all'
+
+    Returns:
+        The href as a string
+
+    """
+    return f'/domain-types/{domain_type}/collections/{name}'
+
+
+def object_action_href(domain_type: DomainType, obj_id: Union[int, str], action_name: str) -> str:
+    """Construct a href of a domain-object action.
+
+    Args:
+        domain_type:
+            The domain-type of the object.
+
+        obj_id:
+            The object-id of the domain-object.
+
+        action_name:
+            The action-name to link to.
+
+    Examples:
+
+        Don't try this at home. ;-)
+
+        >>> object_action_href('folder_config', 'root', 'delete')
+        '/objects/folder_config/root/actions/delete/invoke'
+
+    Returns:
+        The href.
+
+    """
+    return object_href(domain_type, obj_id) + f'/actions/{action_name}/invoke'
+
+
+def object_href(
+    domain_type: DomainType,
+    obj_id: Union[int, str],
+) -> str:
+    """Constructs a href to a domain-object.
+
+    Args:
+        domain_type:
+            The domain type of the object.
+
+        obj_id:
+            The identifier of the object
+
+    Examples:
+
+        >>> object_href('folder_config', 5)
+        '/objects/folder_config/5'
+
+        >>> object_href('folder_config', "5")
+        '/objects/folder_config/5'
 
     Returns:
 
     """
-    _id = getattr(obj, 'id', None)
-    if callable(_id):
-        obj_id = _id()
-    else:
-        obj_id = obj['id']
-
-    return '/objects/{domain_type}/{obj_id}'.format(
-        domain_type=domain_type,
-        obj_id=obj_id,
-    )
+    return f'/objects/{domain_type}/{obj_id}'
 
 
 def domain_object(
-        domain_type,  # type: DomainType
-        identifier,  # type: str
-        title,  # type: str
-        members=None,  # type: Optional[Dict[str, Any]]
-        extensions=None,  # type: Optional[Dict[str, Any]]
-        editable=True,  # type: bool
-        deletable=True,  # type: bool
-        links=None,  # type: Optional[List[LinkType]]
-):
-    # type: (...) -> DomainObject
+    domain_type: DomainType,
+    identifier: str,
+    title: str,
+    members: Optional[Dict[str, Any]] = None,
+    extensions: Optional[Dict[str, Any]] = None,
+    editable: bool = True,
+    deletable: bool = True,
+    links: Optional[List[LinkType]] = None,
+) -> DomainObject:
     """Renders a domain-object dict structure.
 
     Most of the parameters are optional, yet without them nothing interesting would happen.
@@ -364,19 +480,19 @@ def domain_object(
         links:
             (optional) A list of `link_rel` dicts.
 
-        """
-    uri = "/objects/%s/%s" % (domain_type, identifier)
+    """
+    uri = object_href(domain_type, identifier)
     if extensions is None:
         extensions = {}
     if members is None:
         members = {}
     _links = [
-        link_rel('self', uri, method='GET'),
+        link_rel('self', uri, method='get'),
     ]
     if editable:
-        _links.append(link_rel('.../update', uri, method='PUT'))
+        _links.append(link_rel('.../update', uri, method='put'))
     if deletable:
-        _links.append(link_rel('.../delete', uri, method='DELETE'))
+        _links.append(link_rel('.../delete', uri, method='delete'))
     if links:
         _links.extend(links)
     return {
@@ -389,25 +505,33 @@ def domain_object(
     }
 
 
-def collection_object(domain_type: str,
+def collection_object(domain_type: DomainType,
                       value: List[Union[CollectionItem, LinkType]],
                       links: Optional[List[LinkType]] = None,
-                      extensions: Any = None) -> CollectionObject:
+                      extensions: Optional[Dict[str, Any]] = None) -> CollectionObject:
     """A collection object as specified in C-115 (Page 121)
 
     Args:
         domain_type:
+            The domain-type of the collection.
+
         value:
+            A list of objects. These may be either links or inlined domain-objects.
+
         links:
+            A list of links specified elsewhere in this file.
+
         extensions:
+            Optionally, arbitrary keys to send to the client.
 
     Returns:
+        A collection object.
 
     """
     if extensions is None:
         extensions = {}
     _links = [
-        link_rel('self', "/collections/%s" % (domain_type,)),
+        link_rel('self', collection_href(domain_type)),
     ]
     if links is not None:
         _links.extend(links)
@@ -420,38 +544,58 @@ def collection_object(domain_type: str,
     }
 
 
-def link_endpoint(module_name, rel, **kw):
-    """Link to a specific endpoint by name."""
-    endpoint = ENDPOINT_REGISTRY[(module_name, rel)]
+def link_endpoint(
+    module_name: str,
+    rel: EndpointName,
+    parameters: Dict[str, str],
+):
+    """Link to a specific endpoint by name.
+
+    Args:
+        module_name:
+            The Python dotted path name, where the endpoint to be linked to, is defined.
+
+        rel:
+            The endpoint's rel-name.
+
+        parameters:
+            A dict, mapping parameter names to their desired values. e.g. if the link should have
+            "/foo/{baz}" rendered to "/foo/bar", this mapping should be {'baz': 'bar'}.
+
+    """
+    endpoint = ENDPOINT_REGISTRY.lookup(module_name, rel, parameters)
     return link_rel(
-        rel=rel,
-        href=fill_out_path_template(endpoint['path'], kw),
+        href=endpoint['href'],
+        rel=endpoint['rel'],
         method=endpoint['method'],
-        # This one needs more work to get the structure right.
-        # parameters=endpoint['parameters']
     )
 
 
-def collection_item(collection_type, domain_type, obj):
-    # type: (str, DomainType, Any) -> CollectionItem
+def collection_item(
+    domain_type: DomainType,
+    obj: Dict[str, str],
+    collection_name: str = 'all',
+) -> CollectionItem:
     """A link for use in a collection object.
 
     Args:
-        collection_type:
         domain_type:
         obj:
+        collection_name:
+            The name of the collection. Domain types can have multiple collections, this enables
+            us to link to the correct one properly.
 
     Examples:
 
         >>> expected = {
         ...     'domainType': 'link',
-        ...     'href': '/objects/folder/3',
+        ...     'href': '/objects/folder_config/3',
         ...     'method': 'GET',
-        ...     'rel': 'urn:org.restfulobjects:rels/value;collection="folder"',
+        ...     'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
         ...     'title': 'Foo',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ... }
-        >>> res = collection_item('folder', 'folder', {'title': 'Foo', 'id': '3'})
+        >>> res = collection_item('folder_config', {'title': 'Foo', 'id': '3'})
         >>> assert res == expected, res
 
     Returns:
@@ -460,23 +604,15 @@ def collection_item(collection_type, domain_type, obj):
     """
     return link_rel(
         rel='.../value',
-        parameters={'collection': collection_type},
-        href=object_href(domain_type, obj),
+        parameters={'collection': collection_name},
+        href=object_href(domain_type, obj['id']),
         profile=".../object",
-        method='GET',
-        title=obj_title(obj),
+        method='get',
+        title=obj['title'],
     )
 
 
-def obj_title(obj):
-    _title = getattr(obj, 'title', None)
-    if callable(_title):
-        return _title()
-    return obj['title']
-
-
-def serve_json(data, profile=None):
-    # type: (Serializable, Dict[str, str]) -> Response
+def serve_json(data: Serializable, profile: Dict[str, str] = None) -> Response:
     content_type = 'application/json'
     if profile is not None:
         content_type += ';profile="%s"' % (profile,)
@@ -498,7 +634,7 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
     })
 
 
-def etag_of_dict(dict_) -> ETags:
+def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
     """Build a sha256 hash over a dictionary's content.
 
     Keys are sorted first to ensure a stable hash.
@@ -507,6 +643,9 @@ def etag_of_dict(dict_) -> ETags:
         >>> etag_of_dict({'a': 'b', 'c': 'd'})
         <ETags '"88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"'>
 
+        >>> etag_of_dict({'a': 'b', 'c': {'d': {'e': 'f'}}})
+        <ETags '"bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721"'>
+
     Args:
         dict_ (dict): A dictionary.
 
@@ -514,10 +653,16 @@ def etag_of_dict(dict_) -> ETags:
         str: The hex-digest of the built hash.
 
     """
+    def _update(_hash_obj, _d):
+        for key, value in sorted(_d.items()):
+            _hash_obj.update(key.encode('utf-8'))
+            if isinstance(value, dict):
+                _update(_hash_obj, value)
+            else:
+                _hash_obj.update(value.encode('utf-8'))
+
     _hash = hashlib.sha256()
-    for key in sorted(dict_.keys()):
-        _hash.update(key.encode('utf-8'))
-        _hash.update(dict_[key].encode('utf-8'))
+    _update(_hash, dict_)
     return ETags(strong_etags=[_hash.hexdigest()])
 
 

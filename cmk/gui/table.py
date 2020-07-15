@@ -7,7 +7,7 @@
 from contextlib import contextmanager
 import re
 import json
-from typing import NamedTuple, Union, cast, Dict, Tuple, List, Optional, Any, Iterator  # pylint: disable=unused-import
+from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union, cast
 
 from six import ensure_str
 
@@ -65,7 +65,7 @@ def table_element(
     empty_text: Optional[str] = None,
     help: Optional[str] = None,  # pylint: disable=redefined-builtin
     css: Optional[str] = None,
-) -> 'Iterator[Table]':
+) -> Iterator['Table']:
     with html.plugged():
         table = Table(table_id=table_id,
                       title=title,
@@ -141,6 +141,8 @@ class Table:
         self.title = title
         self.rows: TableRows = []
         self.limit = limit
+        self.limit_reached = False
+        self.limit_hint: Optional[int] = None
         self.headers: List[TableHeader] = []
         self.options = {
             "collect_headers": False,  # also: True, "finished"
@@ -218,6 +220,8 @@ class Table:
                 self.options["collect_headers"] = "finished"
         elif not collect_headers and self.options["collect_headers"] is True:
             self.options["collect_headers"] = False
+
+        self.limit_reached = False if self.limit is None else len(self.rows) > self.limit
 
     def _add_cell(
         self,
@@ -310,12 +314,16 @@ class Table:
             rows = limited_rows
 
         # Render header
-        self._write_table(rows, self._show_action_row(), actions_visible, search_term)
+        if self.limit_hint is not None:
+            num_rows_unlimited = self.limit_hint
+        self._write_table(rows, num_rows_unlimited, self._show_action_row(), actions_visible,
+                          search_term)
 
         if self.title and self.options["foldable"]:
             html.end_foldable_container()
 
         if limit is not None and num_rows_unlimited > limit:
+
             html.show_message(
                 _('This table is limited to show only %d of %d rows. '
                   'Click <a href="%s">here</a> to disable the limitation.') %
@@ -388,9 +396,9 @@ class Table:
     def _get_sort_column(self, table_opts: Dict[str, Any]) -> Optional[str]:
         return html.request.get_ascii_input('_%s_sort' % self.id, table_opts.get('sort'))
 
-    def _write_table(self, rows: TableRows, actions_enabled: bool, actions_visible: bool,
-                     search_term: Optional[str]) -> None:
-        headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % len(rows)
+    def _write_table(self, rows: TableRows, num_rows_unlimited: int, actions_enabled: bool,
+                     actions_visible: bool, search_term: Optional[str]) -> None:
+        headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
         html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
         table_id = self.id

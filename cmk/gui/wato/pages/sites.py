@@ -749,7 +749,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
 
         site_states = {}
 
-        sites = watolib.SiteManagementFactory().factory().load_sites().items()
+        sites = list(watolib.SiteManagementFactory().factory().load_sites().items())
         replication_sites = [e for e in sites if e[1]["replication"]]
         replication_status = ReplicationStatusFetcher().fetch(replication_sites)
 
@@ -786,7 +786,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
                 html.render_span(msg, style="vertical-align:middle"))
 
     def _render_status_connection_status(self, site_id, site):
-        site_status = cmk.gui.sites.states().get(site_id, SiteStatus({}))  # type: SiteStatus
+        site_status: SiteStatus = cmk.gui.sites.states().get(site_id, SiteStatus({}))
         if site.get("disabled", False) is True:
             status = status_msg = "disabled"
         else:
@@ -820,8 +820,7 @@ class ReplicationStatusFetcher:
         super(ReplicationStatusFetcher, self).__init__()
         self._logger = logger.getChild("replication-status")
 
-    def fetch(self, sites):
-        # type: (List[_Tuple[str, Dict]]) -> Dict[str, PingResult]
+    def fetch(self, sites: List[_Tuple[str, Dict]]) -> Dict[str, PingResult]:
         self._logger.debug("Fetching replication status for %d sites" % len(sites))
         results_by_site = {}
 
@@ -1181,8 +1180,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def _cert_trusted_css_class(self, cert):
         return "state state0" if cert.verify_result.is_valid else "state state2"
 
-    def _fetch_certificate_details(self):
-        # type: () -> List[CertificateDetails]
+    def _fetch_certificate_details(self) -> List[CertificateDetails]:
         """Creates a list of certificate details for the chain certs"""
         verify_chain_results = self._fetch_certificate_chain_verify_results()
         if not verify_chain_results:
@@ -1213,8 +1211,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
         return cert_details
 
-    def _is_ca_certificate(self, crypto_cert):
-        # type: (SSL.Certificate) -> bool
+    def _is_ca_certificate(self, crypto_cert: 'SSL.Certificate') -> bool:
         try:
             key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
             use_key_for_signing = key_usage.value.key_cert_sign is True
@@ -1230,8 +1227,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
         return is_ca and use_key_for_signing
 
-    def _fetch_certificate_chain_verify_results(self):
-        # type: () -> List[ChainVerifyResult]
+    def _fetch_certificate_chain_verify_results(self) -> List[ChainVerifyResult]:
         """Opens a SSL connection and performs a handshake to get the certificate chain"""
 
         ctx = SSL.Context(SSL.SSLv23_METHOD)
@@ -1253,8 +1249,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
             return self._verify_certificate_chain(sock, certificate_chain)
 
-    def _verify_certificate_chain(self, connection, certificate_chain):
-        # type: (SSL.Connection, List[crypto.X509]) -> List[ChainVerifyResult]
+    def _verify_certificate_chain(self, connection: SSL.Connection,
+                                  certificate_chain: List[crypto.X509]) -> List[ChainVerifyResult]:
         verify_chain_results = []
 
         # Used to record all certificates and verification results for later displaying

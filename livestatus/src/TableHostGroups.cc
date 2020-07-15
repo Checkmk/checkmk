@@ -122,6 +122,18 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
                         DANGEROUS_OFFSETOF(hostgroup, members)},
         table->core(), HostListStateColumn::Type::num_svc_pending));
     table->addColumn(std::make_unique<HostListStateColumn>(
+        prefix + "num_services_handled_problems",
+        "The total number of services of hosts in this group with handled problems",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(hostgroup, members)},
+        table->core(), HostListStateColumn::Type::num_svc_handled_problems));
+    table->addColumn(std::make_unique<HostListStateColumn>(
+        prefix + "num_services_unhandled_problems",
+        "The total number of services of hosts in this group with unhandled problems",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(hostgroup, members)},
+        table->core(), HostListStateColumn::Type::num_svc_unhandled_problems));
+    table->addColumn(std::make_unique<HostListStateColumn>(
         prefix + "num_services_ok",
         "The total number of services with the state OK of hosts in this group",
         Column::Offsets{indirect_offset, -1, -1,

@@ -7,7 +7,7 @@
 """
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
 
-from cmk.snmplib.type_defs import SNMPTable, SNMPTree
+from cmk.snmplib.type_defs import SNMPTree
 
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
@@ -17,42 +17,38 @@ from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function impo
     create_detect_spec,)
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
-    AgentSectionContent,
     AgentSectionPlugin,
     HostLabelFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
-from cmk.base.api.agent_based.utils import parse_string_table
+from cmk.base.api.agent_based.type_defs import AgentStringTable
+from cmk.base.api.agent_based.utils import parse_to_string_table
 from cmk.base.check_api_utils import Service
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
 LayoutRecoverSuboids = List[Tuple[str]]
 
 
-def get_section_name(check_plugin_name):
-    # type: (str) -> str
+def get_section_name(check_plugin_name: str) -> str:
     return check_plugin_name.split(".", 1)[0]
 
 
-def _create_agent_parse_function(original_parse_function):
-    # type: (Optional[Callable]) -> AgentParseFunction
+def _create_agent_parse_function(original_parse_function: Optional[Callable]) -> AgentParseFunction:
     """Wrap parse function to comply to signature requirement"""
 
     if original_parse_function is None:
-        return parse_string_table
+        return parse_to_string_table
 
     # do not use functools.wraps, the point is the new argument name!
-    def parse_function(string_table):
-        # type: (AgentSectionContent) -> Any
+    def parse_function(string_table: AgentStringTable) -> Any:
         return original_parse_function(string_table)  # type: ignore
 
     parse_function.__name__ = original_parse_function.__name__
     return parse_function
 
 
-def _create_layout_recover_function(suboids_list):
-    # type: (List[Optional[LayoutRecoverSuboids]]) -> Callable
+def _create_layout_recover_function(suboids_list: List[Optional[LayoutRecoverSuboids]]) -> Callable:
     """Get a function that recovers the legacy data layout
 
     By adding the created elements to one long list,
@@ -78,8 +74,7 @@ def _create_layout_recover_function(suboids_list):
     return layout_recover_function
 
 
-def _extract_conmmon_part(oids):
-    # type: (list) -> Tuple[str, list]
+def _extract_conmmon_part(oids: list) -> Tuple[str, list]:
     common = ''
 
     def _get_head(oids):
@@ -102,8 +97,8 @@ def _extract_conmmon_part(oids):
     return common.strip('.'), oids
 
 
-def _create_snmp_trees_from_tuple(snmp_info_element):
-    # type: (tuple) -> Tuple[List[SNMPTree], Optional[LayoutRecoverSuboids]]
+def _create_snmp_trees_from_tuple(
+        snmp_info_element: tuple) -> Tuple[List[SNMPTree], Optional[LayoutRecoverSuboids]]:
     """Create a SNMPTrees from (part of) a legacy definition
 
     Legacy definition *elements* can be 2-tuple or 3-tuple.
@@ -139,8 +134,7 @@ def _create_snmp_trees_from_tuple(snmp_info_element):
     return [SNMPTree(base=base, oids=oids)], None
 
 
-def _create_snmp_trees(snmp_info):
-    # type: (Any) -> Tuple[List[SNMPTree], Callable]
+def _create_snmp_trees(snmp_info: Any) -> Tuple[List[SNMPTree], Callable]:
     """Create SNMPTrees from legacy definition
 
     Legacy definitions can be 2-tuple, 3-tuple, or a list
@@ -159,7 +153,7 @@ def _create_snmp_trees(snmp_info):
     assert isinstance(snmp_info, list)
 
     trees_and_suboids = [_create_snmp_trees_from_tuple(element) for element in snmp_info]
-    trees = sum((tree for tree, _suboids in trees_and_suboids), [])  # type: List[SNMPTree]
+    trees: List[SNMPTree] = sum((tree for tree, _suboids in trees_and_suboids), [])
     suboids_list = [suboids for _tree, suboids in trees_and_suboids]
 
     layout_recover_function = _create_layout_recover_function(suboids_list)
@@ -167,8 +161,8 @@ def _create_snmp_trees(snmp_info):
     return trees, layout_recover_function
 
 
-def _create_snmp_parse_function(original_parse_function, recover_layout_function):
-    # type: (Optional[Callable], Callable) -> SNMPParseFunction
+def _create_snmp_parse_function(original_parse_function: Optional[Callable],
+                                recover_layout_function: Callable) -> SNMPParseFunction:
     """Wrap parse function to comply to new API
 
     The created parse function will comply to the new signature requirement of
@@ -178,11 +172,10 @@ def _create_snmp_parse_function(original_parse_function, recover_layout_function
     spec for SNMPTrees.
     """
     if original_parse_function is None:
-        original_parse_function = parse_string_table
+        original_parse_function = parse_to_string_table
 
     # do not use functools.wraps, the point is the new argument name!
-    def parse_function(string_table):
-        # type: (List[SNMPTable]) -> Any
+    def parse_function(string_table) -> Any:
         return original_parse_function(  # type: ignore
             recover_layout_function(string_table),)
 
@@ -190,16 +183,15 @@ def _create_snmp_parse_function(original_parse_function, recover_layout_function
     return parse_function
 
 
-def _create_host_label_function(discover_function, extra_sections):
-    # type: (Optional[Callable], List[str]) -> Optional[HostLabelFunction]
+def _create_host_label_function(discover_function: Optional[Callable],
+                                extra_sections: List[str]) -> Optional[HostLabelFunction]:
     """Wrap discover_function to filter for HostLabels"""
     if discover_function is None:
         return None
 
     extra_sections_count = len(extra_sections)
 
-    def host_label_function(section):
-        # type: (Any) -> Generator[HostLabel, None, None]
+    def host_label_function(section: Any) -> Generator[HostLabel, None, None]:
         if not extra_sections_count:
             discover_arg = section
         else:
@@ -222,8 +214,8 @@ def _create_host_label_function(discover_function, extra_sections):
     return host_label_function
 
 
-def create_agent_section_plugin_from_legacy(check_plugin_name, check_info_dict):
-    # type: (str, Dict[str, Any]) -> AgentSectionPlugin
+def create_agent_section_plugin_from_legacy(check_plugin_name: str,
+                                            check_info_dict: Dict[str, Any]) -> AgentSectionPlugin:
     if check_info_dict.get("node_info"):
         # We refuse to tranform these. The requirement of adding the node info
         # makes rewriting of the base code too difficult.
@@ -241,16 +233,15 @@ def create_agent_section_plugin_from_legacy(check_plugin_name, check_info_dict):
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
         host_label_function=host_label_function,
-        forbidden_names=[],
     )
 
 
-def create_snmp_section_plugin_from_legacy(check_plugin_name,
-                                           check_info_dict,
-                                           snmp_scan_function,
-                                           snmp_info,
-                                           scan_function_fallback_files=None):
-    # type: (str, Dict[str, Any], Callable, Any, Optional[List[str]]) -> SNMPSectionPlugin
+def create_snmp_section_plugin_from_legacy(
+        check_plugin_name: str,
+        check_info_dict: Dict[str, Any],
+        snmp_scan_function: Callable,
+        snmp_info: Any,
+        scan_function_fallback_files: Optional[List[str]] = None) -> SNMPSectionPlugin:
     if check_info_dict.get("node_info"):
         # We refuse to tranform these. There's no way we get the data layout recovery right.
         # This would add 19 plugins to list of failures, but some are on the list anyway.
@@ -278,7 +269,6 @@ def create_snmp_section_plugin_from_legacy(check_plugin_name,
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
         host_label_function=host_label_function,
-        forbidden_names=[],
         trees=trees,
         detect_spec=detect_spec,
     )

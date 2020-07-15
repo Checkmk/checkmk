@@ -16,7 +16,12 @@ import time
 # Bandit complains about insecure protocol (B321). THis is the only possible protocol. Allow it.
 from ftplib import FTP  # nosec
 
-import MySQLdb
+try:
+    import MySQLdb
+except ImportError as e:
+    sys.stdout.write(
+        "<<<plesk_backups>>>\n%s. Please install missing module via pip install <module>." % e)
+    sys.exit(0)
 
 
 def connect():

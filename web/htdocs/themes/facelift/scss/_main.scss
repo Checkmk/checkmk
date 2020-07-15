@@ -53,7 +53,7 @@ input, select, textarea {
   font-family: arial, helvetica, sans-serif;
   vertical-align: middle;
   background-color: rgb(255, 255, 255);
-  border: 1px rgb(115, 118, 122) solid;
+  border: none;
   outline-style: none;
   outline-width: medium;
 }
@@ -61,7 +61,10 @@ input, select, textarea {
 /* consistent dropdown field styling for all browsers */
 select:not([multiple]) {
   padding-right: 2.5em;
-  background: $bg-color-default url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
+  background-image: url("images/select_arrow.png");
+  background-position: right 50%;
+  background-repeat: no-repeat;
+  background-size: 20px 11px;
   -webkit-appearance: none;  /* Removes default chrome and safari style */
   -moz-appearance: none;     /* Removes default style Firefox */
 }
@@ -107,17 +110,15 @@ input[type="checkbox"] {
     margin: -2px 4px 0 0;
     font-size: 12px;
     vertical-align: middle;
-    background-color: $bg-color-default;
-    border: 1px $checkbox-border-color solid;
+    background-color: $ux-form-background;
+    border: 1px $ux-form-background solid;
     content: "\00a0";
-    box-shadow: 0.1px 1px 1.2px 0 $checkbox-shadow inset;
   }
 
   &:checked {
     + label:before {
       color: $checkbox-checked-color;
       text-align: center;
-      background-color: $checkbox-checked-bg-color;
       content: "\2716";
     }
 
@@ -429,8 +430,8 @@ div.really {
 }
 
 div.success {
-  background-color: $success-alert-bg-color;
-  border: 1px solid $success-alert-border-color;
+  background-color: $ux-buttons;
+  border: $ux-buttons;
 }
 
 div.message {
@@ -527,6 +528,10 @@ td.dictleft div.dictelement {
 
   * {
     font-size: 11px;
+  }
+
+  &:empty {
+    margin: 0;
   }
 
   &.indent {
@@ -1106,21 +1111,21 @@ table.modifydowntimes > tbody > tr {
   }
 
   .select2-dropdown {
-    background-color: $bg-color-default;
-    border: $primary-border;
+    background-color: $ux-buttons;
+    border: $ux-buttons;
   }
 
   .select2-results__option {
     color: $select2-rendered-color;
-    background-color: $bg-color-default;
+    background-color: $ux-buttons;
   }
 
   .select2-results__option[aria-selected=true] {
-    background-color: $select2-selected-bg-color;
+    background-color: $ux-buttons;
   }
 
   .select2-results__option--highlighted[aria-selected] {
-    background-color: $select2-highlighted-bg-color;
+    background-color: $ux-buttons-dark;
   }
 }
 
@@ -1426,4 +1431,15 @@ img.glass {
 
 tr.hidden {
   display: none;
+}
+
+
+.simplebar-scrollbar::before {
+  left: 5px;
+  background: $success;
+  border-radius: 0;
+}
+
+.simplebar-scrollbar.simplebar-visible::before {
+  opacity: 1;
 }

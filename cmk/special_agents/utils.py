@@ -71,7 +71,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
             self.usage()
             sys.exit(0)
 
-        content = {}  # type: Dict[str, List[str]]
+        content: Dict[str, List[str]] = {}
         for section_name, url in sections:
             content.setdefault(section_name, [])
             content[section_name].append(requests.get(url).text.replace("\n", newline_replacement))
@@ -95,30 +95,26 @@ def datetime_serializer(obj):
 
 
 class DataCache(abc.ABC):
-    def __init__(self, cache_file_dir, cache_file_name, debug=False):
-        # type: (Path, str, bool) -> None
+    def __init__(self, cache_file_dir: Path, cache_file_name: str, debug: bool = False) -> None:
         self._cache_file_dir = cache_file_dir
         self._cache_file = self._cache_file_dir / ("%s.cache" % cache_file_name)
         self.debug = debug
 
     @property
     @abc.abstractmethod
-    def cache_interval(self):
-        # type: () -> int
+    def cache_interval(self) -> int:
         """
         Return the time for how long cached data is valid
         """
 
     @abc.abstractmethod
-    def get_validity_from_args(self, *args):
-        # type: (Any) -> bool
+    def get_validity_from_args(self, *args: Any) -> bool:
         """
         Decide whether we need to update the cache due to new arguments
         """
 
     @abc.abstractmethod
-    def get_live_data(self, *args):
-        # type: (Any) -> Any
+    def get_live_data(self, *args: Any) -> Any:
         """
         This is the function that will be called if no cached data can be found.
         """

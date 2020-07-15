@@ -13,7 +13,7 @@ node (NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         // We don't have the "versioning" library here. For this reason we can not use versioning.select_docker_tag.
         // Always use the default docker tag we got from the environment.
-        def CHECKOUT_IMAGE = docker.image('ubuntu-19.04:' + DOCKER_TAG_DEFAULT)
+        def CHECKOUT_IMAGE = docker.image('ubuntu-20.04:' + DOCKER_TAG_DEFAULT)
         CHECKOUT_IMAGE.pull()
         // The commands are executed with the 1001:1000 UID:GID (non-root).
         // This is the UID of the jenkins user on the node which does not exist
@@ -27,7 +27,7 @@ node (NODE) {
             }
             try {
                 stage('test pipenv dependencies') {
-                    dir ('tests-py3') {
+                    dir ('tests') {
                         def EXIT_CODE = sh(
                             script: "make test-pipenv-deps",
                             returnStatus: true

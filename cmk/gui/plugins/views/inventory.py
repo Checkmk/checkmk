@@ -40,7 +40,7 @@ from cmk.gui.plugins.visuals.inventory import (
 
 from cmk.gui.plugins.views import (
     data_source_registry,
-    DataSource,
+    ABCDataSource,
     RowTable,
     painter_registry,
     Painter,
@@ -66,12 +66,12 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
 
     if column == "host_inventory":
         painter_options = PainterOptions.get_instance()
-        tree_renderer = AttributeRenderer(row["site"],
-                                          row["host_name"],
-                                          "",
-                                          invpath,
-                                          show_internal_tree_paths=painter_options.get(
-                                              'show_internal_tree_paths'))  # type: NodeRenderer
+        tree_renderer: NodeRenderer = AttributeRenderer(
+            row["site"],
+            row["host_name"],
+            "",
+            invpath,
+            show_internal_tree_paths=painter_options.get('show_internal_tree_paths'))
     else:
         tree_id = "/" + str(row["invhist_time"])
         tree_renderer = DeltaNodeRenderer(row["site"], row["host_name"], tree_id, invpath)
@@ -821,7 +821,7 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
 
     # Create the datasource (like a database view)
     ds_class = type(
-        "DataSourceInventory%s" % infoname.title(), (DataSource,), {
+        "DataSourceInventory%s" % infoname.title(), (ABCDataSource,), {
             "_ident": infoname,
             "_inventory_path": invpath,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
@@ -879,7 +879,7 @@ class RowMultiTableInventory(ABCRowTable):
         return multi_inv_data
 
     def _prepare_rows(self, inv_data):
-        joined_rows = {}  # type: Dict[Tuple[str, ...], Dict]
+        joined_rows: Dict[Tuple[str, ...], Dict] = {}
         for this_info_name, this_inv_data in inv_data:
             for entry in this_inv_data:
                 inst = joined_rows.setdefault(tuple(entry[key] for key in self._match_by), {})
@@ -912,9 +912,9 @@ def declare_joined_inventory_table_view(tablename, title_singular, title_plural,
 
     # Create the datasource (like a database view)
     ds_class = type(
-        "DataSourceInventory%s" % tablename.title(), (DataSource,), {
+        "DataSourceInventory%s" % tablename.title(), (ABCDataSource,), {
             "_ident": tablename,
-            "_sources": zip(info_names, invpaths),
+            "_sources": list(zip(info_names, invpaths)),
             "_match_by": match_by,
             "_errors": errors,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
@@ -970,7 +970,8 @@ def _declare_views(infoname, title_plural, painters, filters, invpaths):
     # for the items of one host.
     view_spec = {
         'datasource': infoname,
-        'topic': _('Inventory'),
+        "topic": "inventory",
+        "sort_index": 30,
         'public': True,
         'layout': 'table',
         'num_columns': 1,
@@ -1187,6 +1188,12 @@ declare_invtable_view("invibmmqqueues", ".software.applications.ibm_mq.queues:",
                       _("IBM MQ Queues"))
 declare_invtable_view("invtunnels", ".networking.tunnels:", _("Networking Tunnels"),
                       _("Networking Tunnels"))
+declare_invtable_view(
+    "invkernelconfig",
+    ".software.kernel_config:",
+    _("Kernel configuration (sysctl)"),
+    _("Kernel configurations (sysctl)"),
+)
 
 # This would also be possible. But we muss a couple of display and filter hints.
 # declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))
@@ -1252,7 +1259,8 @@ generic_host_filters = multisite_builtin_views["allhosts"]["show_filters"]
 multisite_builtin_views["inv_hosts_cpu"] = {
     # General options
     'datasource': 'hosts',
-    'topic': _('Inventory'),
+    "topic": "inventory",
+    "sort_index": 10,
     'title': _('CPU Related Inventory of all Hosts'),
     'linktitle': _('CPU Inv. (all Hosts)'),
     'description': _('A list of all hosts with some CPU related inventory data'),
@@ -1298,7 +1306,8 @@ multisite_builtin_views["inv_hosts_cpu"] = {
 multisite_builtin_views["inv_hosts_ports"] = {
     # General options
     'datasource': 'hosts',
-    'topic': _('Inventory'),
+    "topic": "inventory",
+    "sort_index": 20,
     'title': _('Switch port statistics'),
     'linktitle': _('Switch ports (all Hosts)'),
     'description':
@@ -1377,7 +1386,7 @@ class RowTableInventoryHistory(ABCRowTable):
 
 
 @data_source_registry.register
-class DataSourceInventoryHistory(DataSource):
+class DataSourceInventoryHistory(ABCDataSource):
     @property
     def ident(self):
         return "invhist"
@@ -1742,9 +1751,8 @@ class NodeRenderer:
 
         keyorder = hint.get("keyorder")
         if keyorder:
-            sort_func = partial(
-                _sort_by_index,
-                keyorder)  # type: Union[partial[Tuple[str, Any]], Callable[[Tuple[str, Any]], str]]
+            sort_func: Union[partial[Tuple[str, Any]],
+                             Callable[[Tuple[str, Any]], str]] = partial(_sort_by_index, keyorder)
         else:
             # Simply sort by keys
             sort_func = lambda item: item[0]
@@ -1849,7 +1857,7 @@ def ajax_inv_render_tree():
                 _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
                  ) % ", ".join(corrupted_history_files))
             return
-        tree_renderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)  # type: NodeRenderer
+        tree_renderer: NodeRenderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
 
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)

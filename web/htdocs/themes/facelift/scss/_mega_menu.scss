@@ -1,0 +1,255 @@
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+#side_footer {
+  height: auto;
+  padding: 0;
+  border-top: none;
+
+  div.copyright {
+    float: left;
+  }
+
+  div.copyright a {
+    font-weight: normal;
+    color: #808080;
+    text-transform: none;
+  }
+
+  div.username {
+    font-size: 11px;
+    color: #808080;
+    text-align: right;
+  }
+}
+
+
+#main_menu {
+  padding: 12px 0 6px;
+
+  a.more {
+    position: absolute;
+    right: 0;
+  }
+
+  div.global_search {
+    padding: 5px 8px;
+  }
+
+  #mk_side_search_field {
+    width: 220px;
+    background-color: #1e262e;
+  }
+
+  div.popup_trigger {
+    position: initial;
+    width: 100%;
+    height: 100%;
+    padding: $ux-spacing 4px $ux-spacing 0;
+    border-left: 4px solid $ux-sidebar-background;
+    box-sizing: border-box;
+
+    &:hover {
+      border-left-color: $success;
+    }
+
+    &.active {
+      background-color: $ux-buttons;
+
+      a.popup_trigger {
+        font-weight: bold;
+      }
+
+      div.popup_menu {
+        visibility: visible;
+      }
+    }
+
+    img {
+      width: 19px;
+      margin-bottom: 6px;
+    }
+
+    div.popup_menu {
+      position: absolute;
+      top: 58px;
+      bottom: 0;
+      left: 64px;
+      z-index: 1000;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background-color: $ux-buttons;
+      border-right: 4px solid $success;
+      border-left: 1px solid $ux-medium-blue;
+      visibility: hidden;
+
+      #main_menu_user_manual div.content.inner div.topic {
+        width: 350px;
+      }
+
+      a {
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      h1 {
+        padding: 10px 10px 9px;
+        margin: 0;
+        background-color: #383838;
+      }
+
+      div.content.inner {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        padding: 0;
+
+        div.topic {
+          flex-grow: 1;
+          width: 250px;
+          padding: 10px 15px 24px;
+          border-right: 1px solid $ux-medium-blue;
+          box-sizing: border-box;
+
+          &:last-child { flex-grow: 2; }
+
+          h2 {
+            padding: 12px 0 4px;
+            margin: 0;
+            font-size: 14px;
+            font-weight: bold;
+            color: $ux-text-highlight;
+            text-transform: uppercase;
+
+            a.show_all_topics {
+              img {
+                display: none;
+                float: left;
+                filter: grayscale(85%);
+                transform: rotate(270deg);
+              }
+
+              + img {
+                margin-right: 4px;
+                &:hover { opacity: 1; }
+              }
+            }
+          }
+
+          ul {
+            padding-left: 0;
+            font-size: 12px;
+            line-height: 21px;
+          }
+
+          ul a:hover {
+            font-weight: bold;
+            color: #13d288;
+            text-decoration: none;
+          }
+
+          li {
+            padding-left: 5px;
+
+            &.extended { display: none; }
+            &.show_all_items a { font-weight: 700; }
+          }
+
+          hr {
+            width: 50px;
+            margin-bottom: 2px;
+            margin-left: 0;
+            color: transparent;
+            border-bottom: 1px solid rgba($color-text, .6);
+          }
+
+          &.extended {
+            width: 100%;
+            min-height: $mega-menu-min-height;
+            padding-top: 0;
+
+            h2 {
+              position: fixed;
+              z-index: 5;
+              padding-top: 22px;
+              background-color: rgb(53, 63, 74);
+
+              a.show_all_topics img { display: block; }
+            }
+
+            ul {
+              display: flex;
+              align-content: flex-start;
+              flex-flow: column wrap;
+              max-height: calc(100vh - 132px);
+              padding-bottom: 24px;
+              margin-top: 52px;
+              overflow: auto;
+            }
+
+            li {
+              padding: 1px 5px;
+              margin-right: 48px;
+              box-sizing: border-box;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  li {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+
+    a.popup_trigger {
+      display: block;
+      font-size: $font-size-small;
+      color: #fff;
+      text-align: center;
+      text-decoration: none;
+      outline: none;
+    }
+  }
+
+  #popup_shadow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* TODO: Additional styling when a mega menu is used.
+ * Once we decided what menu to use the overall styling
+ * has to be adapted.
+*/
+#main_menu.mega_menu div.popup_trigger {
+  div.popup_menu {
+    right: 60px;
+    bottom: unset;
+    max-width: 1040px;
+    max-height: calc(100vh - 60px);
+    min-height: $mega-menu-min-height;
+
+    > div {
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    div.content.inner {
+      align-content: flex-start;
+      flex-direction: column;
+      width: auto;
+      max-width: 1040px;
+      max-height: calc(100vh - 62px);
+    }
+  }
+}
+

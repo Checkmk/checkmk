@@ -1240,7 +1240,11 @@ export function register_event_handlers() {
     });
 }
 
-export function show_single_infos_dialog() {
-    document.getElementById("single_info_input_container").style.display = "block";
+export function show_dashboard_context_dialog() {
+    document.getElementById("dashboard_context_dialog_container").style.display = "block";
     toggle_dashboard_menu(false);
+}
+
+export function close_dashboard_context_dialog() {
+    document.getElementById("dashboard_context_dialog_container").style.display = "none";
 }

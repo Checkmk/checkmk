@@ -26,8 +26,7 @@ COLORS = {
 }
 
 
-def slack_msg(context):
-    # type: (Dict) -> Dict
+def slack_msg(context: Dict) -> Dict:
     """Build the message for slack"""
 
     if context.get('WHAT', None) == "SERVICE":

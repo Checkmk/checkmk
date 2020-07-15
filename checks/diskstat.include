@@ -61,6 +61,12 @@ def with_unused_counter_removal(plugin_name):
     return decorator
 
 
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def inventory_diskstat_generic(parsed):
     # Skip over on empty data
     if not parsed:
@@ -112,6 +118,12 @@ def inventory_diskstat_generic(parsed):
     return inventory
 
 
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     average_range = params.get("average")
     if average_range == 0:
@@ -255,6 +267,12 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     return (status, ", ".join(infos), perfdata)
 
 
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     # legacy version if item is "read" or "write"
     if item in ['read', 'write']:
@@ -285,6 +303,12 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     return check_diskstat_line(this_time, item, params, [None, ''] + summed_up, mode)
 
 
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 # This is the legacy version of diskstat as used in <= 1.1.10.
 # We keep it here for a while in order to be compatible with
 # old installations.
@@ -326,6 +350,12 @@ def _check_diskstat_old(item, params, this_time, info):
 #   '----------------------------------------------------------------------'
 
 
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def diskstat_select_disk(disks, item):
 
     # In summary mode we add up the throughput values, but
@@ -412,6 +442,12 @@ def diskstat_select_disk(disks, item):
 #       'read_ql'                    : 0.0,
 #       'write_ql'                   : 0.0,
 # }}
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def check_diskstat_dict(item, params, disks):
     # Take care of previously discovered services
     if item in ("read", "write"):

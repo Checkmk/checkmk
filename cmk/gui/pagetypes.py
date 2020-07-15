@@ -41,6 +41,9 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     DualListChoice,
     Optional,
+    IconSelector,
+    Integer,
+    DropdownChoice,
 )
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _u, _
@@ -56,6 +59,11 @@ from cmk.gui.permissions import (
     permission_registry,
     declare_permission_section,
     declare_permission,
+)
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.plugins.main_menu.mega_menus import (
+    make_main_menu_breadcrumb,
+    MegaMenuConfigure,
 )
 
 #   .--Base----------------------------------------------------------------.
@@ -213,12 +221,17 @@ class Base:
 
     @classmethod
     def default_topic(cls) -> str:
-        return _("Other")
+        return "other"
+
+    @classmethod
+    def type_is_advanced(cls) -> bool:
+        """Whether or not this page type should be treated as advanced element in the navigation"""
+        return False
 
     # Store for all instances of this page type. The key into
     # this dictionary????
     # TODO: Brauchen wir hier überhaupt ein dict??
-    __instances: 'Dict[str, Base]' = {}
+    __instances: 'Dict[Tuple[str, str], Base]' = {}
 
     @classmethod
     def clear_instances(cls):
@@ -235,7 +248,7 @@ class Base:
     # Return a list of all instances of this type
     @classmethod
     def instances(cls):
-        return cls.__instances.values()
+        return list(cls.__instances.values())
 
     @classmethod
     def instance(cls, key):
@@ -329,12 +342,28 @@ class PageRenderer(Base):
     def parameters(cls, mode):
         parameters = super(PageRenderer, cls).parameters(mode)
 
-        parameters += [(_("General Properties"), [
-            (1.4, 'topic',
-             TextUnicode(
-                 title=_('Topic') + '<sup>*</sup>',
-                 size=50,
-                 allow_empty=False,
+        parameters += [(_("Navigation"), [
+            (1.4, 'topic', DropdownChoice(
+                title=_('Topic'),
+                choices=PagetypeTopics.choices(),
+            )),
+            (1.5, "sort_index",
+             Integer(
+                 title=_("Sort index"),
+                 default_value=99,
+                 help=_("You can customize the order of the %s by changing "
+                        "this number. Lower numbers will be sorted first. "
+                        "Topics with the same number will be sorted alphabetically.") %
+                 cls.phrase("title_plural"),
+             )),
+            (1.6, "is_advanced",
+             Checkbox(
+                 title=_("Is advanced"),
+                 default_value=False,
+                 help=_("The navigation allows to hide items based on a basic / advanced "
+                        "toggle. You can specify here whether or not this %s should be "
+                        "treated as basic or advanced %s.") %
+                 (cls.phrase("title_plural"), cls.phrase("title_plural")),
              )),
             (2.0, 'hidden',
              Checkbox(
@@ -344,6 +373,12 @@ class PageRenderer(Base):
         ])]
 
         return parameters
+
+    @classmethod
+    def _transform_old_spec(cls, spec):
+        spec.setdefault("sort_index", 99)
+        spec.setdefault("is_advanced", False)
+        return spec
 
     @classmethod
     def page_handlers(cls):
@@ -376,8 +411,14 @@ class PageRenderer(Base):
             if page._show_in_sidebar():
                 yield page.topic(), page.title(), page.page_url()
 
-    def topic(self):
-        return self._.get("topic", _("Other"))
+    def topic(self) -> str:
+        return self._.get("topic", "other")
+
+    def sort_index(self) -> int:
+        return self._.get("sort_index", 99)
+
+    def is_advanced(self) -> bool:
+        return self._.get("is_advanced", False)
 
     # Helper functions for page handlers and render function
     def page_header(self):
@@ -757,6 +798,8 @@ class Overridable(Base):
             page_dict["owner"] = UserId(u'')  # might have been forgotten on copy action
             page_dict["public"] = True
             page_dict["name"] = name
+            page_dict = cls._transform_old_spec(page_dict)
+
             new_page = cls(page_dict)
             cls.add_instance(("", name), new_page)
 
@@ -775,6 +818,8 @@ class Overridable(Base):
                 for name, page_dict in user_pages.items():
                     page_dict["owner"] = user
                     page_dict["name"] = name
+                    page_dict = cls._transform_old_spec(page_dict)
+
                     cls.add_instance((user, name), cls(page_dict))
 
             except SyntaxError as e:
@@ -783,6 +828,11 @@ class Overridable(Base):
 
         cls._load()
         cls._declare_instance_permissions()
+
+    @classmethod
+    def _transform_old_spec(cls, spec: Dict) -> Dict:
+        """May be used to transform old persisted data structures"""
+        return spec
 
     @classmethod
     def _declare_instance_permissions(cls):
@@ -826,6 +876,18 @@ class Overridable(Base):
         pass
 
     @classmethod
+    def breadcrumb(cls, page_name: str) -> Breadcrumb:
+        breadcrumb = make_main_menu_breadcrumb(MegaMenuConfigure)
+
+        breadcrumb.append(BreadcrumbItem(title=cls.phrase("title_plural"), url=cls.list_url()))
+
+        if page_name == "list":  # The list is the parent of all others
+            return breadcrumb
+
+        breadcrumb.append(BreadcrumbItem(title=cls.phrase(page_name), url=html.makeuri([])))
+        return breadcrumb
+
+    @classmethod
     def page_list(cls):
         cls.load()
 
@@ -837,7 +899,7 @@ class Overridable(Base):
 
         cls.need_overriding_permission("edit")
 
-        html.header(cls.phrase("title_plural"))
+        html.header(cls.phrase("title_plural"), cls.breadcrumb("list"))
         html.begin_context_buttons()
         html.context_button(cls.phrase("new"), cls.create_url(), "new_" + cls.type_name())
 
@@ -1061,7 +1123,7 @@ class Overridable(Base):
         # "create" -> create completely new page
         # "clone"  -> like new, but prefill form with values from existing page
         # "edit"   -> edit existing page
-        mode = html.request.var('mode', 'edit')
+        mode = html.request.get_ascii_input_mandatory('mode', 'edit')
         if mode == "create":
             title = cls.phrase("create")
             page_dict = {
@@ -1085,6 +1147,8 @@ class Overridable(Base):
                     raise MKUserError(None,
                                       _("The requested %s does not exist") % cls.phrase("title"))
 
+                if not page.may_edit():
+                    raise MKAuthException(_("You do not have the permissions to edit this graph"))
                 # TODO FIXME: Looks like a hack
                 cls.remove_instance((owner_user_id, page_name))  # will be added later again
             else:  # clone
@@ -1099,7 +1163,7 @@ class Overridable(Base):
                                       _("The requested %s does not exist") % cls.phrase("title"))
             page_dict = page.internal_representation()
 
-        html.header(title)
+        html.header(title, cls.breadcrumb(mode))
         html.begin_context_buttons()
         html.context_button(_("Back"), back_url, "back")
         html.end_context_buttons()
@@ -1371,3 +1435,145 @@ def render_addto_popup(added_type):
     for page_ty in page_types.values():
         if issubclass(page_ty, Container):
             page_ty.render_addto_popup(added_type)
+
+
+#   .--Topics--------------------------------------------------------------.
+#   |                     _____           _                                |
+#   |                    |_   _|__  _ __ (_) ___ ___                       |
+#   |                      | |/ _ \| '_ \| |/ __/ __|                      |
+#   |                      | | (_) | |_) | | (__\__ \                      |
+#   |                      |_|\___/| .__/|_|\___|___/                      |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Each visuals / pagetype can have one topic. These topics are also    |
+#   | managed in form of pagetypes to be customizable.                     |
+#   '----------------------------------------------------------------------'
+
+
+class PagetypeTopics(Overridable):
+    @classmethod
+    def type_name(cls):
+        return "pagetype_topic"
+
+    @classmethod
+    def phrase(cls, phrase):
+        return {
+            "title": _("Topic"),
+            "title_plural": _("Topics"),
+            "clone": _("Clone topic"),
+            "create": _("Create topic"),
+            "edit": _("Edit topic"),
+            "new": _("New topic"),
+        }.get(phrase, Base.phrase(phrase))
+
+    @classmethod
+    def parameters(cls, mode):
+        parameters = super(PagetypeTopics, cls).parameters(mode)
+
+        parameters += [
+            (
+                _("Topic"),
+                [
+                    # sort-index, key, valuespec
+                    (2.5, "icon_name",
+                     IconSelector(
+                         title=_("Icon"),
+                         show_builtin_icons=True,
+                         allow_empty=False,
+                     )),
+                    (2.5, "sort_index",
+                     Integer(
+                         title=_("Sort index"),
+                         help=_("You can customize the order of the topics by changing "
+                                "this number. Lower numbers will be sorted first. "
+                                "Topics with the same number will be sorted alphabetically."),
+                     )),
+                ]),
+        ]
+
+        return parameters
+
+    def render_extra_columns(self, table):
+        """Show some specific useful columns in the list view"""
+        table.cell(_("Icon"), html.render_icon(self._["icon_name"]))
+        table.cell(_("Sort index"), str(self._["sort_index"]))
+
+    @classmethod
+    def builtin_pages(cls):
+        return {
+            "overview": {
+                "title": _("Overview"),
+                "icon_name": "topic_overview",
+                "description": "",
+                "sort_index": 10,
+            },
+            "problems": {
+                "title": _("Problems"),
+                "icon_name": "topic_problems",
+                "description": "",
+                "sort_index": 20,
+            },
+            "history": {
+                "title": _("History"),
+                "icon_name": "topic_history",
+                "description": "",
+                "sort_index": 30,
+            },
+            "analyze": {
+                "title": _('Analyze'),
+                "icon_name": "topic_analyze",
+                "description": "",
+                "sort_index": 40,
+            },
+            "events": {
+                "title": _("Event Console"),
+                "icon_name": "topic_events",
+                "description": "",
+                "sort_index": 50,
+            },
+            "bi": {
+                "title": _("Business Intelligence"),
+                "icon_name": "topic_bi",
+                "description": "",
+                "sort_index": 60,
+            },
+            "applications": {
+                "title": _("Applications"),
+                "icon_name": "topic_applications",
+                "description": "",
+                "sort_index": 70,
+            },
+            "inventory": {
+                "title": _("Inventory"),
+                "icon_name": "topic_inventory",
+                "description": "",
+                "sort_index": 80,
+            },
+            # Only fallback for items without topic
+            "other": {
+                "title": _("Other"),
+                "icon_name": "topic_other",
+                "description": "",
+                "sort_index": 90,
+            },
+        }
+
+    def sort_index(self) -> int:
+        return self._["sort_index"]
+
+    def icon_name(self) -> str:
+        return self._["icon_name"]
+
+    @classmethod
+    def choices(cls):
+        cls.load()
+        return [(p.name(), p.title()) for p in sorted(cls.instances(), key=lambda p: p.sort_index())
+               ]
+
+    @classmethod
+    def get_permitted_instances(cls):
+        cls.load()
+        return {p.name(): p for p in cls.permitted_instances_sorted()}
+
+
+declare(PagetypeTopics)

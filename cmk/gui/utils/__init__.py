@@ -25,14 +25,13 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 
 
-def num_split(s):
-    # type: (str) -> Tuple[Union[int, str], ...]
+def num_split(s: str) -> Tuple[Union[int, str], ...]:
     """Splits a word into sequences of numbers and non-numbers.
 
     Creates a tuple from these where the number are converted into int datatype.
     That way a naturual sort can be implemented.
     """
-    parts = []  # type: List[Union[int, str]]
+    parts: List[Union[int, str]] = []
     for part in re.split(r'(\d+)', s):
         try:
             parts.append(int(part))
@@ -42,20 +41,17 @@ def num_split(s):
     return tuple(parts)
 
 
-def cmp_num_split(a, b):
-    # type: (str, str) -> int
+def cmp_num_split(a: str, b: str) -> int:
     """Compare two strings, separate numbers and non-numbers from before."""
     return (num_split(a) > num_split(b)) - (num_split(a) < num_split(b))
 
 
-def key_num_split(a):
-    # type: (str) -> Tuple[Union[int, str], ...]
+def key_num_split(a: str) -> Tuple[Union[int, str], ...]:
     """Return a key from a string, separate numbers and non-numbers from before."""
     return num_split(a)
 
 
-def is_allowed_url(url):
-    # type: (str) -> bool
+def is_allowed_url(url: str) -> bool:
     """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
     # Also prevent using of "javascript:" URLs which could used to inject code
     parsed = urllib.parse.urlparse(url)
@@ -75,8 +71,7 @@ def is_allowed_url(url):
     return True
 
 
-def validate_start_url(value, varprefix):
-    # type: (str, str) -> None
+def validate_start_url(value: str, varprefix: str) -> None:
     if not is_allowed_url(value):
         raise MKUserError(
             varprefix,
@@ -84,8 +79,7 @@ def validate_start_url(value, varprefix):
               "relative URLs like <tt>dashboard.py?name=my_dashboard</tt>."))
 
 
-def cmp_version(a, b):
-    # type: (Optional[str], Optional[str]) -> int
+def cmp_version(a: Optional[str], b: Optional[str]) -> int:
     """Compare two version numbers with each other
     Allow numeric version numbers, but also characters.
     """
@@ -102,8 +96,7 @@ def cmp_version(a, b):
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion
 # in using code.
-def savefloat(f):
-    # type: (Any) -> float
+def savefloat(f: Any) -> float:
     try:
         return float(f)
     except (TypeError, ValueError):
@@ -112,8 +105,7 @@ def savefloat(f):
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion
 # in using code.
-def saveint(x):
-    # type: (Any) -> int
+def saveint(x: Any) -> int:
     try:
         return int(x)
     except (TypeError, ValueError):
@@ -125,8 +117,7 @@ def saveint(x):
 # because of loss of entropy. So we hope /dev/urandom is enough.
 # Furthermore we filter out non-printable characters. The byte
 # 0x00 for example does not make it through HTTP and the URL.
-def get_random_string(size, from_ascii=48, to_ascii=90):
-    # type: (int, int, int) -> str
+def get_random_string(size: int, from_ascii: int = 48, to_ascii: int = 90) -> str:
     """Generate a random string (no cryptographic safety)"""
     secret = ""
     with Path("/dev/urandom").open("rb") as urandom:
@@ -137,8 +128,7 @@ def get_random_string(size, from_ascii=48, to_ascii=90):
     return secret
 
 
-def gen_id():
-    # type: () -> str
+def gen_id() -> str:
     """Generates a unique id"""
     try:
         with Path("/proc/sys/kernel/random/uuid").open("r", encoding="utf-8") as f:
@@ -151,14 +141,13 @@ def gen_id():
 
 
 # This may not be moved to g, because this needs to be request independent
-_failed_plugins = {}  # type: Dict[str, List[Tuple[str, Exception]]]
+_failed_plugins: Dict[str, List[Tuple[str, Exception]]] = {}
 
 
 # Load all files below share/check_mk/web/plugins/WHAT into a specified context
 # (global variables). Also honors the local-hierarchy for OMD
 # TODO: This is kept for pre 1.6.0i1 plugins
-def load_web_plugins(forwhat, globalvars):
-    # type: (str, Dict) -> None
+def load_web_plugins(forwhat: str, globalvars: Dict) -> None:
     _failed_plugins[forwhat] = []
 
     for plugins_path in [
@@ -185,13 +174,11 @@ def load_web_plugins(forwhat, globalvars):
                 _failed_plugins[forwhat].append((str(file_path), e))
 
 
-def get_failed_plugins():
-    # type: () -> List[Tuple[str, Exception]]
+def get_failed_plugins() -> List[Tuple[str, Exception]]:
     return list(itertools.chain(*list(_failed_plugins.values())))
 
 
-def validate_regex(value, varname):
-    # type: (str, Optional[str]) -> None
+def validate_regex(value: str, varname: Optional[str]) -> None:
     try:
         re.compile(value)
     except re.error:

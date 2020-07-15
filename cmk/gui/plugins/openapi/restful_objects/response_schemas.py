@@ -246,7 +246,7 @@ class FolderMembers(Schema):
 
 class FolderSchema(Linkable):
     domainType = fields.Constant(
-        "folder",
+        "folder_config",
         required=True,
     )
     id = fields.String()
@@ -256,7 +256,7 @@ class FolderSchema(Linkable):
 
 class ConcreteFolder(OneOfSchema):
     type_schemas = {
-        'folder': FolderSchema,
+        'folder_config': FolderSchema,
         'link': LinkSchema,
     }
     type_field = 'domainType'
@@ -307,7 +307,7 @@ class SiteState(Linkable):
 
 
 class HostMembers(Schema):
-    folder = fields.Nested(
+    folder_config = fields.Nested(
         ConcreteFolder,
         description="The folder in which this host resides. It is represented by a hexadecimal "
         "identifier which is it's 'primary key'. The folder can be accessed via the "
@@ -315,7 +315,7 @@ class HostMembers(Schema):
 
 
 class HostSchema(Linkable):
-    domainType = fields.Constant("host", required=True)
+    domainType = fields.Constant("host_config", required=True)
     id = fields.String()
     title = fields.String()
     members = fields.Nested(HostMembers, description="All the members of the host object.")
@@ -323,14 +323,14 @@ class HostSchema(Linkable):
 
 class ConcreteHost(OneOfSchema):
     type_schemas = {
-        'host': HostSchema,
+        'host_config': HostSchema,
         'link': LinkSchema,
     }
     type_field = 'domainType'
 
 
 class HostCollection(Linkable):
-    domainType = fields.Constant("host", required=True)
+    domainType = fields.Constant("host_config", required=True)
     id = fields.String()
     title = fields.String()
     value = fields.List(fields.Nested(ConcreteHost))
@@ -348,7 +348,7 @@ class DomainObjectCollection(Linkable):
 
 
 class FolderCollection(DomainObjectCollection):
-    domainType = fields.Constant("folder")
+    domainType = fields.Constant("folder_config")
     value = fields.List(fields.Nested(ConcreteFolder))
 
 

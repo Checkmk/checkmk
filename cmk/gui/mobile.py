@@ -27,7 +27,7 @@ from cmk.gui.type_defs import (
     Rows,)
 from cmk.gui.plugins.views.utils import (
     Cell,
-    DataSource,
+    ABCDataSource,
 )
 from cmk.gui.plugins.visuals.utils import Filter
 
@@ -222,7 +222,8 @@ def page_index() -> None:
 
             datasource = data_source_registry[view_spec["datasource"]]()
             context = visuals.get_merged_context(
-                visuals.get_context_from_uri_vars(datasource.infos),
+                visuals.get_context_from_uri_vars(datasource.infos,
+                                                  single_infos=view_spec["single_infos"]),
                 view_spec["context"],
             )
 
@@ -282,7 +283,7 @@ def page_view() -> None:
 
     datasource = data_source_registry[view_spec["datasource"]]()
     context = visuals.get_merged_context(
-        visuals.get_context_from_uri_vars(datasource.infos),
+        visuals.get_context_from_uri_vars(datasource.infos, single_infos=view_spec["single_infos"]),
         view_spec["context"],
     )
 
@@ -417,7 +418,7 @@ def show_filter_form(show_filters: List[Filter]) -> None:
     """)
 
 
-def show_command_form(datasource: DataSource, rows: Rows) -> None:
+def show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
     what = datasource.infos[0]
     html.javascript("""
     $(document).ready(function() {

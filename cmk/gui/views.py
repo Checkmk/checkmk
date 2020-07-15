@@ -12,7 +12,7 @@ import pprint
 import traceback
 import json
 import functools
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as _Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as _Tuple, Union
 
 from six import ensure_str
 
@@ -22,6 +22,7 @@ from livestatus import SiteId, LivestatusRow
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.prediction import livestatus_lql
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -29,6 +30,7 @@ import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
 import cmk.gui.inventory as inventory
 import cmk.gui.visuals as visuals
+from cmk.gui.visuals import get_only_sites
 import cmk.gui.sites as sites
 import cmk.gui.i18n
 import cmk.gui.pages
@@ -100,7 +102,7 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
     cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
     get_custom_var, get_perfdata_nth_value, join_row, get_view_infos, replace_action_url_macros,
-    Cell, JoinCell, register_legacy_command, register_painter, register_sorter, DataSource,
+    Cell, JoinCell, register_legacy_command, register_painter, register_sorter, ABCDataSource,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -298,7 +300,7 @@ class View:
         self._user_sorters: 'Optional[List[SorterSpec]]' = None
 
     @property
-    def datasource(self) -> DataSource:
+    def datasource(self) -> ABCDataSource:
         try:
             return data_source_registry[self.spec["datasource"]]()
         except KeyError:
@@ -800,7 +802,8 @@ def show_create_view_dialog(next_url=None):
 
     ds = 'services'  # Default selection
 
-    html.header(_('Create View'))
+    title = _('Create View')
+    html.header(title, visuals.visual_page_breadcrumb("views", title, "create"))
     html.begin_context_buttons()
     html.context_button(_("Back"), html.get_url_input("back", "edit_views.py"), "back")
     html.end_context_buttons()
@@ -1304,7 +1307,7 @@ def page_view():
 
     datasource = data_source_registry[view_spec["datasource"]]()
     context = visuals.get_merged_context(
-        visuals.get_context_from_uri_vars(datasource.infos),
+        visuals.get_context_from_uri_vars(datasource.infos, single_infos=view_spec["single_infos"]),
         view_spec["context"],
     )
 
@@ -1540,7 +1543,7 @@ def _is_ec_unrelated_host_view(view: View) -> bool:
 
 
 def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
-                                datasource: DataSource) -> 'List[ColumnName]':
+                                datasource: ABCDataSource) -> 'List[ColumnName]':
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
     if html.request.var("mode") == "availability" and "aggr" in datasource.infos:
@@ -1742,14 +1745,6 @@ def play_alarm_sounds() -> None:
 def get_user_sorters() -> 'List[SorterSpec]':
     """Returns a list of optionally set sort parameters from HTTP request"""
     return _parse_url_sorters(html.request.var("sort"))
-
-
-def get_only_sites() -> Optional[List[SiteId]]:
-    """Is the view limited to specific sites by request?"""
-    site_arg = html.request.var("site")
-    if site_arg:
-        return [SiteId(site_arg)]
-    return None
 
 
 def get_limit() -> Optional[int]:
@@ -2113,7 +2108,7 @@ def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:
         return
 
     # Handle case where join columns are not present for all rows
-    def safe_compare(compfunc: 'Callable[[Row, Row], int]', row1: 'Row', row2: 'Row') -> int:
+    def safe_compare(compfunc: Callable[['Row', 'Row'], int], row1: 'Row', row2: 'Row') -> int:
         if row1 is None and row2 is None:
             return 0
         if row1 is None:
@@ -2517,8 +2512,9 @@ def ajax_popup_icon_selector():
     varprefix = html.request.var('varprefix')
     value = html.request.var('value')
     allow_empty = html.request.var('allow_empty') == '1'
+    show_builtin_icons = html.request.var('show_builtin_icons') == '1'
 
-    vs = IconSelector(allow_empty=allow_empty)
+    vs = IconSelector(allow_empty=allow_empty, show_builtin_icons=show_builtin_icons)
     vs.render_popup_input(varprefix, value)
 
 
@@ -2543,19 +2539,10 @@ def query_action_data(what, host, site, svcdesc):
     except KeyError:
         pass
 
-    if site:
-        sites.live().set_only_sites([site])
-    sites.live().set_prepend_site(True)
-    query = 'GET %ss\n' \
-            'Columns: %s\n' \
-            'Filter: host_name = %s\n' \
-           % (what, ' '.join(columns), host)
-    if what == 'service':
-        query += 'Filter: service_description = %s\n' % svcdesc
-    row = sites.live().query_row(query)
+    query = livestatus_lql([host], columns, svcdesc)
 
-    sites.live().set_prepend_site(False)
-    sites.live().set_only_sites(None)
+    with sites.prepend_site(), sites.only_sites(site):
+        row = sites.live().query_row(query)
 
     return dict(zip(['site'] + columns, row))
 

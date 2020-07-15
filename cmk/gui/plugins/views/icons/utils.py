@@ -36,73 +36,62 @@ class PermissionSectionIconsAndActions(PermissionSection):
 
 
 class Icon(metaclass=abc.ABCMeta):
-    _custom_toplevel = None  # type: Optional[bool]
-    _custom_sort_index = None  # type: Optional[int]
+    _custom_toplevel: Optional[bool] = None
+    _custom_sort_index: Optional[int] = None
 
     @classmethod
-    def type(cls):
-        # type: () -> str
+    def type(cls) -> str:
         return "icon"
 
     @classmethod
-    def override_toplevel(cls, toplevel):
-        # type: (bool) -> None
+    def override_toplevel(cls, toplevel: bool) -> None:
         cls._custom_toplevel = toplevel
 
     @classmethod
-    def override_sort_index(cls, sort_index):
-        # type: (int) -> None
+    def override_sort_index(cls, sort_index: int) -> None:
         cls._custom_sort_index = sort_index
 
     @classmethod
     @abc.abstractmethod
-    def ident(cls):
-        # type: () -> str
+    def ident(cls) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def render(self, what, row, tags, custom_vars):
-        # type: (str, dict, list, dict) -> Union[None, HTML, Tuple, str]
+    def render(self, what: str, row: dict, tags: list,
+               custom_vars: dict) -> Union[None, 'HTML', Tuple, str]:
         raise NotImplementedError()
 
-    def columns(self):
-        # type: () -> List[str]
+    def columns(self) -> List[str]:
         """List of livestatus columns needed by this icon idependent of
         the queried table. The table prefix will be added to each column
         (e.g. name -> host_name)"""
         return []
 
-    def host_columns(self):
-        # type: () -> List[str]
+    def host_columns(self) -> List[str]:
         """List of livestatus columns needed by this icon when it is
         displayed for a host row. The prefix host_ will be added to each
         column (e.g. name -> host_name)"""
         return []
 
-    def service_columns(self):
-        # type: () -> List[str]
+    def service_columns(self) -> List[str]:
         """List of livestatus columns needed by this icon when it is
         displayed for a service row. The prefix host_ will be added to each
         column (e.g. description -> service_description)"""
         return []
 
-    def default_toplevel(self):
-        # type: () -> bool
+    def default_toplevel(self) -> bool:
         """Whether or not to display the icon in the column or the action menu"""
         return False
 
-    def default_sort_index(self):
-        # type: () -> int
+    def default_sort_index(self) -> int:
         return 30
 
-    def toplevel(self):
-        # type: () -> bool
+    def toplevel(self) -> bool:
         if self._custom_toplevel is not None:
             return self._custom_toplevel
         return self.default_toplevel()
 
-    def sort_index(self):
-        # type: () -> int
+    def sort_index(self) -> int:
         if self._custom_sort_index is not None:
             return self._custom_sort_index
         return self.default_sort_index()

@@ -339,3 +339,30 @@ export function graph_export(page)
     };
     location.href = page + ".py?request=" + encodeURIComponent(JSON.stringify(request));
 }
+
+export function mega_menu_show_all_items(current_topic_id)
+{
+    let current_topic = document.getElementById(current_topic_id);
+    Array.prototype.slice.call(current_topic.parentNode.children).forEach(topic=>{
+        if (topic != current_topic)
+            topic.style.display = "none";
+    });
+    current_topic.className += " extended";
+    Array.prototype.slice.call(current_topic.getElementsByClassName("extended")).forEach(list_item=>{
+        list_item.style.display = "list-item";
+    });
+    current_topic.getElementsByClassName("show_all_items")[0].style.display = "none";
+}
+
+export function mega_menu_show_all_topics(current_topic_id)
+{
+    let current_topic = document.getElementById(current_topic_id);
+    Array.prototype.slice.call(current_topic.parentNode.children).forEach(topic=>{
+        topic.style.display = null;
+    });
+    current_topic.className = current_topic.className.replace(" extended", "");
+    Array.prototype.slice.call(current_topic.getElementsByClassName("extended")).forEach(list_item=>{
+        list_item.style.display = "none";
+    });
+    current_topic.getElementsByClassName("show_all_items")[0].style.display = "list-item";
+}

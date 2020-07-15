@@ -66,7 +66,7 @@ def main(args=None):
     if opt_debug:
         sys.stderr.write("%s\n" % repr(stderr))
 
-    results = {}  # type: Dict[str, Dict[str, Any]]
+    results: Dict[str, Dict[str, Any]] = {}
     for query_type, query in queries.items():
         stdin, stdout, stderr = client.exec_command(query)
         results.setdefault(query_type, {

@@ -34,7 +34,7 @@ DomainSpec = Dict
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 snapshot_dir = var_dir + "snapshots/"
 
-backup_domains = {}  # type: Dict[str, Dict[str, Any]]
+backup_domains: Dict[str, Dict[str, Any]] = {}
 
 
 # TODO: Remove once new changes mechanism has been implemented
@@ -46,7 +46,7 @@ def create_snapshot(comment):
     snapshot_name = "wato-snapshot-%s.tar" % time.strftime("%Y-%m-%d-%H-%M-%S",
                                                            time.localtime(time.time()))
 
-    data = {}  # type: Dict[str, Any]
+    data: Dict[str, Any] = {}
     data["comment"] = _("Activated changes by %s.") % config.user.id
 
     if comment:
@@ -193,7 +193,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
         file_stream = None
 
     # Defaults of available keys
-    status = {
+    status: Dict[str, Any] = {
         "name": "",
         "total_size": 0,
         "type": None,
@@ -202,7 +202,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
         "created_by": "",
         "broken": False,
         "progress_status": "",
-    }  # type: Dict[str, Any]
+    }
 
     def access_snapshot(handler):
         if file_stream:
@@ -376,8 +376,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
     return status
 
 
-def _list_tar_content(the_tarfile):
-    # type: (Union[str, io.BytesIO]) -> Dict[str, Dict[str, int]]
+def _list_tar_content(the_tarfile: Union[str, io.BytesIO]) -> Dict[str, Dict[str, int]]:
     files = {}
     try:
         if not isinstance(the_tarfile, str):
@@ -392,8 +391,7 @@ def _list_tar_content(the_tarfile):
     return files
 
 
-def _get_file_content(the_tarfile, filename):
-    # type: (Union[str, io.BytesIO], str) -> bytes
+def _get_file_content(the_tarfile: Union[str, io.BytesIO], filename: str) -> bytes:
     if not isinstance(the_tarfile, str):
         the_tarfile.seek(0)
         tar = tarfile.open("r", fileobj=the_tarfile)
@@ -415,8 +413,7 @@ def _get_default_backup_domains():
     return domains
 
 
-def _snapshot_secret():
-    # type: () -> bytes
+def _snapshot_secret() -> bytes:
     path = cmk.utils.paths.default_config_dir + '/snapshot.secret'
     try:
         return open(path, "rb").read()
@@ -430,8 +427,7 @@ def _snapshot_secret():
         return s
 
 
-def extract_snapshot(tar, domains):
-    # type: (tarfile.TarFile, Dict[str, DomainSpec]) -> None
+def extract_snapshot(tar: tarfile.TarFile, domains: Dict[str, DomainSpec]) -> None:
     """Used to restore a configuration snapshot for "discard changes"""
     tar_domains = {}
     for member in tar.getmembers():
@@ -446,14 +442,12 @@ def extract_snapshot(tar, domains):
     if not os.path.exists(restore_dir):
         os.makedirs(restore_dir)
 
-    def check_domain(domain, tar_member):
-        # type: (DomainSpec, tarfile.TarInfo) -> List[str]
+    def check_domain(domain: DomainSpec, tar_member: tarfile.TarInfo) -> List[str]:
         errors = []
 
         prefix = domain["prefix"]
 
-        def check_exists_or_writable(path_tokens):
-            # type: (List[str]) -> bool
+        def check_exists_or_writable(path_tokens: List[str]) -> bool:
             if not path_tokens:
                 return False
             if os.path.exists("/".join(path_tokens)):
@@ -491,14 +485,12 @@ def extract_snapshot(tar, domains):
 
         return errors
 
-    def cleanup_domain(domain):
-        # type: (DomainSpec) -> List[str]
+    def cleanup_domain(domain: DomainSpec) -> List[str]:
         # Some domains, e.g. authorization, do not get a cleanup
         if domain.get("cleanup") is False:
             return []
 
-        def path_valid(prefix, path):
-            # type: (str, str) -> bool
+        def path_valid(prefix: str, path: str) -> bool:
             if path.startswith("/") or path.startswith(".."):
                 return False
             return True
@@ -521,8 +513,7 @@ def extract_snapshot(tar, domains):
                     os.remove(full_path)
         return []
 
-    def extract_domain(domain, tar_member):
-        # type: (DomainSpec, tarfile.TarInfo) -> List[str]
+    def extract_domain(domain: DomainSpec, tar_member: tarfile.TarInfo) -> List[str]:
         try:
             target_dir = domain.get("prefix")
             if not target_dir:
@@ -546,8 +537,7 @@ def extract_snapshot(tar, domains):
 
         return []
 
-    def execute_restore(domain, is_pre_restore=True):
-        # type: (DomainSpec, bool) -> List[str]
+    def execute_restore(domain: DomainSpec, is_pre_restore: bool = True) -> List[str]:
         if is_pre_restore:
             if "pre_restore" in domain:
                 return domain["pre_restore"]()
@@ -568,7 +558,7 @@ def extract_snapshot(tar, domains):
         ("Post-Restore", False,
          lambda domain, tar_member: execute_restore(domain, is_pre_restore=False))
     ]:
-        errors = []  # type: List[str]
+        errors: List[str] = []
         for name, tar_member in tar_domains.items():
             if name in domains:
                 try:
@@ -609,8 +599,7 @@ def extract_snapshot(tar, domains):
 
 # Try to cleanup everything starting from the root_path
 # except the specific exclude files
-def _cleanup_dir(root_path, exclude_files=None):
-    # type: (str, Optional[List[str]]) -> None
+def _cleanup_dir(root_path: str, exclude_files: Optional[List[str]] = None) -> None:
     if exclude_files is None:
         exclude_files = []
 
@@ -641,8 +630,7 @@ def _cleanup_dir(root_path, exclude_files=None):
             os.remove(filename)
 
 
-def _wipe_directory(path):
-    # type: (str) -> None
+def _wipe_directory(path: str) -> None:
     for entry in os.listdir(path):
         p = path + "/" + entry
         if os.path.isdir(p):

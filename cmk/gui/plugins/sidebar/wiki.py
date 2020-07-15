@@ -45,8 +45,7 @@ class Wiki(SidebarSnapin):
     def description(cls):
         return _("Shows the Wiki Navigation of the OMD Site")
 
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         filename = Path(cmk.utils.paths.omd_root).joinpath('var/dokuwiki/data/pages/sidebar.txt')
 
         html.open_form(id_="wiki_search",

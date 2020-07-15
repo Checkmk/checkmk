@@ -4,13 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.snmplib.type_defs import OIDEnd, SNMPTree
-
-from .agent_based_api.v0 import contains, parse_string_table, register
+from .agent_based_api.v0 import (
+    contains,
+    OIDEnd,
+    parse_to_string_table,
+    register,
+    SNMPTree,
+)
 
 register.snmp_section(
     name="inv_cisco_vlans",
-    parse_function=parse_string_table,
+    parse_function=parse_to_string_table,
     trees=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.68.1.2.2.1",

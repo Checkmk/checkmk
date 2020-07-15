@@ -776,6 +776,42 @@ div.dashlet.single_metric {
     }
   }
 
+  div.single_metric g {
+    a.single_value {
+      width: 100%;
+
+      text {
+	&.state0, &.state0 > a, &.state0 > a:link {
+	  fill: $black;
+	}
+
+	&.state-fill-font, &.no-state-color {
+	  &, > a {
+	    fill: $color-text !important;
+	  }
+	}
+
+	&.state-fill-font {
+	  &.state0, &.state0 > a, &.state0 > a:link {
+	    fill: $color-state-success-background !important;
+	  }
+
+	  &.state1, &.state1 > a, &.state1 > a:link {
+	    fill: $color-state-1-background !important;
+	  }
+
+	  &.state2, &.state2 > a, &.state2 > a:link {
+	    fill: $color-state-2-background !important;
+	  }
+
+	  &.state3, &.state3 > a, &.state3 > a:link {
+	    fill: $color-state-3-background !important;
+	  }
+	}
+      }
+    }
+  }
+
   div.dashlet_inner div.metric {
     height: inherit;
     padding: 0 4px 4px;
@@ -790,46 +826,46 @@ div.dashlet.single_metric {
 	padding: 0;
 	text-align: center;
 	border-radius: 16px;
-      }
 
-      td.metric_value {
-	position: relative;
-	height: 100%;
-	margin: 0 auto;
-	text-align: center;
-	border-radius: 16px;
+	&.metric_value {
+	  position: relative;
+	  height: 100%;
+	  margin: 0 auto;
+	  text-align: center;
+	  border-radius: 16px;
 
-	a {
-	  text-decoration: none;
-	  white-space: nowrap;
-	}
-
-	&.state0, &.state0 > a, &.state0 > a:link {
-	  color: $black;
-	}
-
-	&.state-color-font, &.no-state-color {
-	  &, > a {
-	    color: $color-text !important;
-	    background-color: transparent !important;
+	  a {
+	    text-decoration: none;
+	    white-space: nowrap;
 	  }
-	}
 
-	&.state-color-font {
 	  &.state0, &.state0 > a, &.state0 > a:link {
-	    color: $color-state-success-background !important;
+	    color: $black;
 	  }
 
-	  &.state1, &.state1 > a, &.state1 > a:link {
-	    color: $color-state-1-background !important;
+	  &.state-color-font, &.no-state-color {
+	    &, > a {
+	      color: $color-text !important;
+	      background-color: transparent !important;
+	    }
 	  }
 
-	  &.state2, &.state2 > a, &.state2 > a:link {
-	    color: $color-state-2-background !important;
-	  }
+	  &.state-color-font {
+	    &.state0, &.state0 > a, &.state0 > a:link {
+	      color: $color-state-success-background !important;
+	    }
 
-	  &.state3, &.state3 > a, &.state3 > a:link {
-	    color: $color-state-3-background !important;
+	    &.state1, &.state1 > a, &.state1 > a:link {
+	      color: $color-state-1-background !important;
+	    }
+
+	    &.state2, &.state2 > a, &.state2 > a:link {
+	      color: $color-state-2-background !important;
+	    }
+
+	    &.state3, &.state3 > a, &.state3 > a:link {
+	      color: $color-state-3-background !important;
+	    }
 	  }
 	}
       }
@@ -849,7 +885,7 @@ div.dashlet.single_metric {
   }
 }
 
-div#single_info_input_container {
+div#dashboard_context_dialog_container {
   position: fixed;
   top: 0;
   right: 0;
@@ -859,13 +895,30 @@ div#single_info_input_container {
   background-color: rgba(0, 0, 0, 0.6);
   transition: background-color .1s;
 
-  div#single_info_input {
+  div#dashboard_context_dialog {
     position: relative;
     display: block;
-    width: 400px;
+    width: min-content;
     margin-top: 100px;
     margin-right: auto;
     margin-left: auto;
+
+    a.close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: block;
+      width: 16px;
+      height: 16px;
+
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+
+      border: 1px solid;
+      border-radius: 2px;
+    }
 
     table.nform tr td.legend {
       width: 300px;
@@ -874,6 +927,44 @@ div#single_info_input_container {
       div.title {
         max-width: 180px;
       }
+    }
+
+    div.floatfilter, div.floatfilter.double {
+      float: none;
+      height: auto;
+      padding: 0;
+      margin: 0;
+
+      background-color: transparent;
+      border-style: none;
+      border-radius: 0;
+      box-shadow: none;
+
+      div.legend {
+        width: 100%;
+        margin: 0;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: normal;
+        color: #999;
+        text-align: left;
+        text-transform: uppercase;
+        background-color: #282828;
+        border-bottom: 1px dotted #555;
+        border-radius: 0;
+      }
+
+      div.content {
+        height: auto;
+      }
+    }
+
+    td.vlof_buttons {
+      background-color: #444;
+    }
+
+    td.vlof_buttons {
+      background-color: #444;
     }
   }
 }

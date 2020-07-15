@@ -75,9 +75,9 @@ repos:
             language: script
             types: [file, python]
             verbose: true
-          - id: unit-tests
-            name: Check affected unit tests
-            entry: scripts/check-pytest-testmon 127
-            language: script
-            types: [file, python]
-            verbose: true
+            #          - id: unit-tests
+            #name: Check affected unit tests
+            #entry: scripts/check-pytest-testmon 127
+            #language: script
+            #types: [file, python]
+            #verbose: true

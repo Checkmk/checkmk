@@ -82,9 +82,9 @@ graph_info["number_of_processes"] = {
 graph_info["size_of_processes"] = {
     "title": _("Size of processes"),
     "metrics": [
-        ("process_resident_size", "area"),
         ("process_virtual_size", "stack"),
         ("process_mapped_size", "stack"),
+        ("process_resident_size", "area"),
     ],
     "optional_metrics": ["process_mapped_size"]
 }

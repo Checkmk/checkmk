@@ -37,8 +37,7 @@ class SiteStatus(SidebarSnapin):
         return _("Connection state of each site and button for enabling "
                  "and disabling the site connection")
 
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         html.open_table(cellspacing="0", class_="sitestate")
 
         sites.update_site_states_from_dead_sites()

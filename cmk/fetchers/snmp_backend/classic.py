@@ -23,8 +23,9 @@ __all__ = ["ClassicSNMPBackend"]
 
 
 class ClassicSNMPBackend(ABCSNMPBackend):
-    def get(self, oid, context_name=None):
-        # type: (OID, Optional[SNMPContextName]) -> Optional[SNMPRawValue]
+    def get(self,
+            oid: OID,
+            context_name: Optional[SNMPContextName] = None) -> Optional[SNMPRawValue]:
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
             commandtype = "getnext"
@@ -82,8 +83,11 @@ class ClassicSNMPBackend(ABCSNMPBackend):
 
         return strip_snmp_value(value)
 
-    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
-        # type: (str, Optional[str], Optional[str], Optional[str]) -> SNMPRowInfo
+    def walk(self,
+             oid: str,
+             check_plugin_name: Optional[str] = None,
+             table_base_oid: Optional[str] = None,
+             context_name: Optional[str] = None) -> SNMPRowInfo:
         protospec = self._snmp_proto_spec()
 
         ipaddress = self.config.ipaddress
@@ -97,7 +101,7 @@ class ClassicSNMPBackend(ABCSNMPBackend):
 
         snmp_process = None
         exitstatus = None
-        rowinfo = []  # type: SNMPRowInfo
+        rowinfo: SNMPRowInfo = []
         try:
             snmp_process = subprocess.Popen(command,
                                             close_fds=True,
@@ -134,8 +138,7 @@ class ClassicSNMPBackend(ABCSNMPBackend):
                               (ipaddress, ensure_str(error).strip(), exitstatus))
         return rowinfo
 
-    def _get_rowinfo_from_snmp_process(self, snmp_process):
-        # type: (subprocess.Popen) -> SNMPRowInfo
+    def _get_rowinfo_from_snmp_process(self, snmp_process: subprocess.Popen) -> SNMPRowInfo:
         if snmp_process.stdout is None:
             raise TypeError()
 
@@ -174,21 +177,18 @@ class ClassicSNMPBackend(ABCSNMPBackend):
             rowinfo.append((oid, strip_snmp_value(value)))
         return rowinfo
 
-    def _snmp_proto_spec(self):
-        # type: () -> str
+    def _snmp_proto_spec(self) -> str:
         if self.config.is_ipv6_primary:
             return "udp6:"
 
         return ""
 
-    def _snmp_port_spec(self):
-        # type: () -> str
+    def _snmp_port_spec(self) -> str:
         if self.config.port == 161:
             return ""
         return ":%d" % self.config.port
 
-    def _snmp_walk_command(self, context_name):
-        # type: (Optional[SNMPContextName]) -> List[str]
+    def _snmp_walk_command(self, context_name: Optional[SNMPContextName]) -> List[str]:
         """Returns command lines for snmpwalk and snmpget
 
         Including options for authentication. This handles communities and
@@ -204,8 +204,7 @@ class ClassicSNMPBackend(ABCSNMPBackend):
     # And if it is a six-tuple, it has the following additional arguments:
     # (5) privacy protocol (DES|AES) (-x)
     # (6) privacy protocol pass phrase (-X)
-    def _snmp_base_command(self, what, context_name):
-        # type: (str, Optional[SNMPContextName]) -> List[str]
+    def _snmp_base_command(self, what: str, context_name: Optional[SNMPContextName]) -> List[str]:
         options = []
 
         if what == 'get':

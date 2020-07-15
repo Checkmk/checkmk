@@ -14,8 +14,7 @@ _profile = None
 _profile_path = Path("profile.out")
 
 
-def enable():
-    # type: () -> None
+def enable() -> None:
     global _profile
     import cProfile  # pylint: disable=import-outside-toplevel
     _profile = cProfile.Profile()
@@ -23,13 +22,11 @@ def enable():
     console.verbose("Enabled profiling.\n")
 
 
-def enabled():
-    # type: () -> bool
+def enabled() -> bool:
     return _profile is not None
 
 
-def output_profile():
-    # type: () -> None
+def output_profile() -> None:
     if not _profile:
         return
 

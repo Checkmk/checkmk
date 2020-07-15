@@ -602,9 +602,9 @@ def rename_host_in_bi(oldname, newname):
     return BIHostRenamer().rename_host(oldname, newname)
 
 
-def rename_hosts_in_check_mk(renamings):
-    # type: (List[_Tuple[watolib.CREFolder, HostName, HostName]]) -> Dict[str, int]
-    action_counts = {}  # type: Dict[str, int]
+def rename_hosts_in_check_mk(
+        renamings: List[_Tuple[watolib.CREFolder, HostName, HostName]]) -> Dict[str, int]:
+    action_counts: Dict[str, int] = {}
     for site_id, name_pairs in group_renamings_by_site(renamings).items():
         message = _("Renamed host %s") % ", ".join(
             [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs])
@@ -626,7 +626,7 @@ def merge_action_counts(action_counts, new_counts):
 
 
 def group_renamings_by_site(renamings):
-    renamings_per_site = {}  # type: Dict[SiteId, List[_Tuple[HostName, HostName]]]
+    renamings_per_site: Dict[SiteId, List[_Tuple[HostName, HostName]]] = {}
     for folder, oldname, newname in renamings:
         host = folder.host(newname)  # already renamed here!
         site_id = host.site_id()

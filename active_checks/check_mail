@@ -106,8 +106,8 @@ class ForwardToECError(Exception):
     pass
 
 
-def connect(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl):
-    # type: (str, int, str, str, str) -> None
+def connect(fetch_server: str, fetch_port: int, fetch_user: str, fetch_pass: str,
+            fetch_ssl: str) -> None:
     global g_M
     try:
         if fetch_proto == 'POP3':
@@ -127,8 +127,7 @@ def connect(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl):
                            (fetch_server, fetch_port, parse_exception(e)))
 
 
-def fetch_mails(match_subject):
-    # type: (Optional[Pattern[str]]) -> Dict[int, Message]
+def fetch_mails(match_subject: Optional[Pattern[str]]) -> Dict[int, Message]:
     mails = {}
     try:
         # Get mails from mailbox
@@ -336,7 +335,7 @@ def forward_to_ec(conn_timeout, messages, forwarded, cleanup_messages, forward_m
 
 
 # TODO: Nuke these global variables, just pass them around...
-g_M = None  # type: Union[None, poplib.POP3, imaplib.IMAP4]
+g_M: Union[None, poplib.POP3, imaplib.IMAP4] = None
 opt_debug = False
 fetch_proto = 'IMAP'
 
@@ -391,7 +390,7 @@ def parse_arguments(sys_args):
     forward_ec = False
     forward_facility = 16  # default to "mail" (2 << 3)
     forward_app = None
-    forward_method = None  # type: Union[None, str, Tuple[str, ...]]
+    forward_method: Union[None, str, Tuple[str, ...]] = None
     forward_host = ''
     match_subject = None
     body_limit = 1000

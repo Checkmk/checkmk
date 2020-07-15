@@ -67,8 +67,7 @@ def save_custom_attrs_to_mk_file(attrs):
     store.save_file(watolib.multisite_dir() + "custom_attrs.mk", output)
 
 
-def custom_attr_types():
-    # type: () -> Choices
+def custom_attr_types() -> Choices:
     return [
         ('TextAscii', _('Simple Text')),
     ]
@@ -93,43 +92,36 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
             matching_attrs = [a for a in self._attrs if a['name'] == self._name]
             if not matching_attrs:
                 raise MKUserError(None, _('The attribute does not exist.'))
-            self._attr = matching_attrs[0]  # type: Dict[str, Any]
+            self._attr: Dict[str, Any] = matching_attrs[0]
         else:
             self._attr = {}
 
     @abc.abstractproperty
-    def _type(self):
-        # type: () -> str
+    def _type(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def _topics(self):
-        # type: () -> Choices
+    def _topics(self) -> Choices:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def _default_topic(self):
-        # type: () -> str
+    def _default_topic(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def _macro_help(self):
-        # type: () -> str
+    def _macro_help(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def _macro_label(self):
-        # type: () -> str
+    def _macro_label(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _update_config(self):
-        # type: () -> None
+    def _update_config(self) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def title(self):
-        # type: () -> str
+    def title(self) -> str:
         raise NotImplementedError()
 
     def _add_extra_attrs_from_html_vars(self):
@@ -283,13 +275,11 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         ]
 
     @property
-    def _default_topic(self):
-        # type: () -> str
+    def _default_topic(self) -> str:
         return 'personal'
 
     @property
-    def _macro_help(self):
-        # type: () -> str
+    def _macro_help(self) -> str:
         return _(
             'The attribute can be added to the contact definiton in order to use it for notifications.'
         )

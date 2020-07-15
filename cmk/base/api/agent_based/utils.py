@@ -9,23 +9,21 @@ These are meant to be exposed in the API
 """
 import itertools
 import re
-from typing import Any, Callable, Generator, List, MutableMapping, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Generator, MutableMapping, Optional, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTable
+from cmk.snmplib.type_defs import SNMPDetectSpec
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.prediction
 from cmk.base.api.agent_based.checking_types import IgnoreResultsError, Metric, Result, state
-from cmk.base.api.agent_based.section_types import AgentSectionContent
-
-RawSection = TypeVar('RawSection', List[SNMPTable], AgentSectionContent)
 
 
-def parse_string_table(string_table):
-    # type: (RawSection) -> RawSection
+# annotating this breaks validation.
+# yet another reason to not use this.
+def parse_to_string_table(string_table):
     """Identity function
 
     Provided for developers who don't want to implement a parse function (which they should).
@@ -41,83 +39,69 @@ def parse_string_table(string_table):
 #                                      |_|
 
 
-def all_of(spec_0, spec_1, *specs):
-    # type: (SNMPDetectSpec, SNMPDetectSpec, SNMPDetectSpec) -> SNMPDetectSpec
+def all_of(spec_0: SNMPDetectSpec, spec_1: SNMPDetectSpec,
+           *specs: SNMPDetectSpec) -> SNMPDetectSpec:
     reduced = [l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1)]
     if not specs:
         return reduced
     return all_of(reduced, *specs)
 
 
-def any_of(*specs):
-    # type: (SNMPDetectSpec) -> SNMPDetectSpec
+def any_of(*specs: SNMPDetectSpec) -> SNMPDetectSpec:
     return sum(specs, [])
 
 
-def _negate(spec):
-    # type: (SNMPDetectSpec) -> SNMPDetectSpec
+def _negate(spec: SNMPDetectSpec) -> SNMPDetectSpec:
     assert len(spec) == 1
     assert len(spec[0]) == 1
     return [[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]]
 
 
-def matches(oidstr, value):
-    # type: (str, str) -> SNMPDetectSpec
+def matches(oidstr: str, value: str) -> SNMPDetectSpec:
     return [[(oidstr, value, True)]]
 
 
-def contains(oidstr, value):
-    # type: (str, str) -> SNMPDetectSpec
+def contains(oidstr: str, value: str) -> SNMPDetectSpec:
     return [[(oidstr, '.*%s.*' % re.escape(value), True)]]
 
 
-def startswith(oidstr, value):
-    # type: (str, str) -> SNMPDetectSpec
+def startswith(oidstr: str, value: str) -> SNMPDetectSpec:
     return [[(oidstr, '%s.*' % re.escape(value), True)]]
 
 
-def endswith(oidstr, value):
-    # type: (str, str) -> SNMPDetectSpec
+def endswith(oidstr: str, value: str) -> SNMPDetectSpec:
     return [[(oidstr, '.*%s' % re.escape(value), True)]]
 
 
-def equals(oidstr, value):
-    # type: (str, str) -> SNMPDetectSpec
+def equals(oidstr: str, value: str) -> SNMPDetectSpec:
     return [[(oidstr, '%s' % re.escape(value), True)]]
 
 
-def exists(oidstr):
-    # type: (str) -> SNMPDetectSpec
+def exists(oidstr: str) -> SNMPDetectSpec:
     return [[(oidstr, '.*', True)]]
 
 
-def not_matches(oidstr, value):
-    # type: (str, str) -> SNMPDetectSpec
+def not_matches(oidstr: str, value: str) -> SNMPDetectSpec:
     return _negate(matches(oidstr, value))
 
 
-def not_contains(oidstr, value):
-    # type: (str, str) -> SNMPDetectSpec
+def not_contains(oidstr: str, value: str) -> SNMPDetectSpec:
     return _negate(contains(oidstr, value))
 
 
-def not_startswith(oidstr, value):
-    # type: (str, str) -> SNMPDetectSpec
+def not_startswith(oidstr: str, value: str) -> SNMPDetectSpec:
     return _negate(startswith(oidstr, value))
 
 
-def not_endswith(oidstr, value):
-    # type: (str, str) -> SNMPDetectSpec
+def not_endswith(oidstr: str, value: str) -> SNMPDetectSpec:
     return _negate(endswith(oidstr, value))
 
 
-def not_equals(oidstr, value):
-    # type: (str, str) -> SNMPDetectSpec
+def not_equals(oidstr: str, value: str) -> SNMPDetectSpec:
     return _negate(equals(oidstr, value))
 
 
-def not_exists(oidstr):
-    # type: (str) -> SNMPDetectSpec
+def not_exists(oidstr: str) -> SNMPDetectSpec:
     return _negate(exists(oidstr))
 
 
@@ -130,12 +114,11 @@ def not_exists(oidstr):
 
 
 def _do_check_levels(
-        value,  # type: float
-        levels_upper,  # type: Optional[Tuple[float, float]]
-        levels_lower,  # type: Optional[Tuple[float, float]]
-        render_func,  # type: Callable[[float], str]
-):
-    # type: (...) -> Tuple[state, str]
+    value: float,
+    levels_upper: Optional[Tuple[float, float]],
+    levels_lower: Optional[Tuple[float, float]],
+    render_func: Callable[[float], str],
+) -> Tuple[state, str]:
     # Typing says that levels are either None, or a Tuple of float.
     # However we also deal with (None, None) to avoid crashes of custom plugins.
     # CRIT ?
@@ -153,8 +136,8 @@ def _do_check_levels(
     return state.OK, ""
 
 
-def _levelsinfo_ty(preposition, levels, render_func):
-    # type: (str, Tuple[float, float], Callable[[float], str]) -> str
+def _levelsinfo_ty(preposition: str, levels: Tuple[float, float],
+                   render_func: Callable[[float], str]) -> str:
     # Again we are forgiving if we get passed 'None' in the levels.
     warn_str = "never" if levels[0] is None else render_func(levels[0])
     crit_str = "never" if levels[1] is None else render_func(levels[1])
@@ -162,16 +145,15 @@ def _levelsinfo_ty(preposition, levels, render_func):
 
 
 def check_levels(
-        value,  # type: float
-        *,
-        levels_upper=None,  # tpye: Optional[Tuple[float, float]]
-        levels_lower=None,  # tpye: Optional[Tuple[float, float]]
-        metric_name=None,  # type: str
-        render_func=None,  # type: Callable[[float], str]
-        label=None,  # type: str
-        boundaries=None,  # type: Optional[Tuple[Optional[float], Optional[float]]]
-):
-    # type: (...) -> Generator[Union[Result, Metric], None, None]
+    value: float,
+    *,
+    levels_upper=None,  # tpye: Optional[Tuple[float, float]]
+    levels_lower=None,  # tpye: Optional[Tuple[float, float]]
+    metric_name: str = None,
+    render_func: Callable[[float], str] = None,
+    label: str = None,
+    boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+) -> Generator[Union[Result, Metric], None, None]:
     """Generic function for checking a value against levels.
 
     :param value:        Currently measured value
@@ -188,7 +170,7 @@ def check_levels(
     :param boundaries:   Minimum and maximum to add to the metric.
     """
     if render_func is None:
-        render_func = "%.2f".format
+        render_func = lambda f: "%.2f" % f
 
     info_text = str(render_func(value))  # forgive wrong output type
     if label:
@@ -202,15 +184,14 @@ def check_levels(
 
 
 def check_levels_predictive(
-        value,  # type: float
-        *,
-        levels,  # tpye: Dict[str, Any]
-        metric_name,  # type: str
-        render_func=None,  # type: Optional[Callable[[float], str]]
-        label=None,  # type: Optional[str]
-        boundaries=None,  # type: Optional[Tuple[Optional[float], Optional[float]]]
-):
-    # type: (...) -> Generator[Union[Result, Metric], None, None]
+    value: float,
+    *,
+    levels,  # tpye: Dict[str, Any]
+    metric_name: str,
+    render_func: Optional[Callable[[float], str]] = None,
+    label: Optional[str] = None,
+    boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+) -> Generator[Union[Result, Metric], None, None]:
     """Generic function for checking a value against levels.
 
     :param value:        Currently measured value
@@ -288,8 +269,12 @@ class GetRateError(IgnoreResultsError):
     pass
 
 
-def get_rate(value_store, key, time, value, *, raise_overflow=False):
-    # type: (MutableMapping[str, Any], str, float, float, bool) -> float
+def get_rate(value_store: MutableMapping[str, Any],
+             key: str,
+             time: float,
+             value: float,
+             *,
+             raise_overflow: bool = False) -> float:
     last_state = value_store.get(key)
     value_store[key] = (time, value)
 
@@ -311,8 +296,8 @@ def get_rate(value_store, key, time, value, *, raise_overflow=False):
     return rate
 
 
-def get_average(value_store, key, time, value, backlog_minutes):
-    # type: (MutableMapping[str, Any], str, float, float, float) -> float
+def get_average(value_store: MutableMapping[str, Any], key: str, time: float, value: float,
+                backlog_minutes: float) -> float:
     """Return new average based on current value and last average
 
     :param value_store:     The Mapping that holds the last value. Usually this will

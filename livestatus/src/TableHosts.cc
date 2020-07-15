@@ -651,6 +651,18 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                         DANGEROUS_OFFSETOF(host, services)},
         table->core(), ServiceListStateColumn::Type::num_pending));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
+        prefix + "num_services_handled_problems",
+        "The number of the host's services which have handled problems",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, services)},
+        table->core(), ServiceListStateColumn::Type::num_handled_problems));
+    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        prefix + "num_services_unhandled_problems",
+        "The number of the host's services which have unhandled problems",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, services)},
+        table->core(), ServiceListStateColumn::Type::num_unhandled_problems));
+    table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "worst_service_hard_state",
         "The worst hard state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
         Column::Offsets{indirect_offset, extra_offset, -1,

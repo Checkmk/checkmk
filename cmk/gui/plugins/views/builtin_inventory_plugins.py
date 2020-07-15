@@ -963,7 +963,13 @@ inventory_displayhints.update({
     ".networking.tunnels:*.peername": { "title" : _("Peer Name")  },
     ".networking.tunnels:*.sourceip": { "title" : _("Source IP Address") },
     ".networking.tunnels:*.tunnel_interface": { "title" : _("Tunnel Interface") },
-
+    ".software.kernel_config:": {
+        "title": _("Kernel Configuration (sysctl)"),
+        "keyorder": ["parameter", "value"],
+        "view": "invkernelconfig_of_host",
+    },
+    ".software.kernel_config:*.parameter": {"title": _("Parameter")},
+    ".software.kernel_config:*.value": {"title": _("Value")},
 }
 )
 

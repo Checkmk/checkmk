@@ -183,10 +183,10 @@ class AggregationRawdataGenerator:
 class AggregationOutputRenderer:
     def render(self, aggregation_data_results):
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
-        connection_info = {
+        connection_info: Dict[str, Set[str]] = {
             field: set()  #
             for field in connection_info_fields
-        }  # type: Dict[str, Set[str]]
+        }
 
         output = []
         for aggregation_result in aggregation_data_results:

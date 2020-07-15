@@ -94,6 +94,8 @@ This is the data we can extract
 
 """
 
+import typing
+
 names = [
     # "Local address type",  #        2.1.2,
     "Local address",  #             2.1.3
@@ -133,11 +135,9 @@ names = [
 ]
 
 
-def parse_arista_bgp(info):
-    # type: (Sequence[Sequence[Any]]) -> Dict[str, Any]
-
-    def convert(name, value):
-        # type: (str, str) -> Any
+def parse_arista_bgp(
+        info: typing.Sequence[typing.Sequence[typing.Any]]) -> typing.Dict[str, typing.Any]:
+    def convert(name: str, value: str) -> typing.Any:
         if name in {"Local address", "Local identifier", "Remote identifier"}:
             return ".".join(str(n) for n in value)
         if name == "Admin state":
@@ -173,8 +173,7 @@ def parse_arista_bgp(info):
             },
         }
 
-    def remote_addr(oid_end):
-        # type: (str) -> str
+    def remote_addr(oid_end: str) -> str:
         """Extracts data from OID_END (currently only RemoteAddr), format is:
         aristaBgp4V2PrefixGaugesEntry:
             aristaBgp4V2PeerInstance:        int - we don't need it now
@@ -199,15 +198,15 @@ def parse_arista_bgp(info):
 
 
 @get_parsed_item_data
-def check_arista_bgp(item, params, data):
-    # type: (str, Dict[str, Any], Dict[str, Any]) -> Generator[Tuple[int, str]]
+def check_arista_bgp(
+        item: str, params: typing.Dict[str, typing.Any],
+        data: typing.Dict[str, typing.Any]) -> typing.Generator[typing.Tuple[int, str], None, None]:
     for key, value in data.items():
         yield 0, "%s: %r" % (key, value)
     yield 0, "Remote address: %r" % item
 
 
-def scan_arista_bgp(oid):
-    # type: (str) -> bool
+def scan_arista_bgp(oid: str) -> bool:
     return oid('.1.3.6.1.2.1.1.1.0').lower().startswith("arista networks")
 
 

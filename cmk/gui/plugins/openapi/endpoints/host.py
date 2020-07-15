@@ -3,150 +3,109 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Hosts
-
-Hosts can only exist in conjunction with Folders. To get a list of hosts
-you need to access the folder API endpoints.
+"""Host status endpoints
 """
-import json
 
-from connexion import problem  # type: ignore[import]
-
-from cmk.gui import watolib
-from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.endpoints.folder import load_folder
+from cmk.gui import sites
+from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
 from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
     endpoint_schema,
-    request_schemas,
+    constructors,
     response_schemas,
+    ParamDict,
 )
-from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 
 
-@endpoint_schema('/collections/host',
-                 'cmk/create',
-                 method='post',
-                 etag='output',
-                 request_body_required=True,
-                 request_schema=request_schemas.CreateHost,
-                 response_schema=response_schemas.ConcreteHost)
-def create_host(params):
-    """Create a host"""
-    body = params['body']
-    hostname = body['hostname']
-    folder_id = body['folder']
-    attributes = body.get('attributes', {})
-    cluster_nodes = body.get('nodes', [])
-
-    check_hostname(hostname, should_exist=False)
-    for node in cluster_nodes:
-        check_hostname(node, should_exist=True)
-
-    validate_host_attributes(attributes, new=True)
-
-    if folder_id == 'root':
-        folder = watolib.Folder.root_folder()
-    else:
-        folder = load_folder(folder_id, status=400)
-
-    folder.create_hosts([(hostname, attributes, cluster_nodes)])
-
-    host = watolib.Host.host(hostname)
-    return _serve_host(host)
-
-
-@endpoint_schema('/domain-types/host/collections/hosts',
+@endpoint_schema(constructors.collection_href('host'),
                  '.../collection',
                  method='get',
-                 response_schema=response_schemas.HostCollection)
+                 parameters=[
+                     HOST_NAME(
+                         location='query',
+                         required=False,
+                         description=Hosts.name.__doc__,
+                     ),
+                     ParamDict.create(
+                         'host_alias',
+                         'query',
+                         required=False,
+                         description=Hosts.alias.__doc__,
+                         schema_type='string',
+                     ),
+                     ParamDict.create(
+                         'acknowledged',
+                         'query',
+                         required=False,
+                         example='1',
+                         description=Hosts.acknowledged.__doc__,
+                         schema_type='boolean',
+                     ),
+                     ParamDict.create(
+                         'in_downtime',
+                         'query',
+                         required=False,
+                         example="0",
+                         description="Whether the host is currently in a downtime (0/1)",
+                         schema_type='boolean',
+                     ),
+                     ParamDict.create(
+                         'status',
+                         'query',
+                         required=False,
+                         description=Hosts.state.__doc__,
+                         schema_type='integer',
+                         schema_num_minimum=0,
+                         schema_num_maximum=3,
+                     ),
+                 ],
+                 response_schema=response_schemas.DomainObjectCollection)
 def list_hosts(param):
-    """List all hosts"""
-    return constructors.serve_json({
-        'id': 'host',
-        'value': [
-            constructors.collection_item('host', 'host', host)
-            for host in watolib.Folder.root_folder().all_hosts_recursively()
-        ],
-        'links': [constructors.link_rel('self', '/collections/host')]
-    })
+    """List currently monitored hosts."""
+    live = sites.live()
 
+    q = Query([
+        Hosts.name,
+        Hosts.address,
+        Hosts.alias,
+        Hosts.downtimes_with_info,
+        Hosts.scheduled_downtime_depth,
+    ])
 
-@endpoint_schema('/objects/host/{hostname}',
-                 '.../update',
-                 method='put',
-                 parameters=['hostname'],
-                 etag='both',
-                 request_body_required=True,
-                 request_schema=request_schemas.UpdateHost,
-                 response_schema=response_schemas.ConcreteHost)
-def update_host(params):
-    """Update a host"""
-    hostname = params['hostname']
-    body = params['body']
-    attributes = body['attributes']
-    host = watolib.Host.host(hostname)  # type: watolib.CREHost
-    constructors.require_etag(constructors.etag_of_obj(host))
-    validate_host_attributes(attributes, new=False)
-    host.update_attributes(attributes)
-    return _serve_host(host)
+    host_name = param.get('host_name')
+    if host_name is not None:
+        q = q.filter(Hosts.name.contains(host_name))
 
+    alias = param.get('host_alias')
+    if alias is not None:
+        q = q.filter(Hosts.alias.contains(alias))
 
-@endpoint_schema('/objects/host/{hostname}',
-                 '.../delete',
-                 method='delete',
-                 parameters=['hostname'],
-                 etag='input',
-                 request_body_required=False,
-                 output_empty=True)
-def delete(params):
-    """Delete a host"""
-    hostname = params['hostname']
-    check_hostname(hostname, should_exist=True)
-    host = watolib.Host.host(hostname)
-    constructors.require_etag(constructors.etag_of_obj(host))
-    host.folder().delete_hosts([host.name()])
-    return Response(status=204)
+    in_downtime = param.get('in_downtime')
+    if in_downtime is not None:
+        q = q.filter(Hosts.scheduled_downtime_depth == int(in_downtime))
 
+    acknowledged = param.get('acknowledged')
+    if acknowledged is not None:
+        q = q.filter(Hosts.acknowledged.equals(acknowledged))
 
-@endpoint_schema('/objects/host/{hostname}',
-                 'cmk/show',
-                 method='get',
-                 parameters=['hostname'],
-                 etag='output',
-                 response_schema=response_schemas.ConcreteHost)
-def show_host(params):
-    """Show a host"""
-    hostname = params['hostname']
-    host = watolib.Host.host(hostname)
-    if host is None:
-        return problem(
-            404, 'Host "%s" is not known.' % (hostname,),
-            'The host you asked for is not known. Please check for eventual misspellings.')
-    return _serve_host(host)
+    status = param.get('status')
+    if status is not None:
+        q = q.filter(Hosts.state.equals(status))
 
+    result = q.iterate(live)
 
-def _serve_host(host):
-    response = Response()
-    response.set_data(json.dumps(serialize_host(host)))
-    response.set_content_type('application/json')
-    response.headers.add('ETag', constructors.etag_of_obj(host).to_header())
-    return response
-
-
-def serialize_host(host):
-    base = '/objects/host/%s' % (host.ident(),)
-    return constructors.domain_object(
+    return constructors.object_collection(
+        name='all',
         domain_type='host',
-        identifier=host.id(),
-        title=host.alias(),
-        members={
-            'folder': constructors.object_property(
-                name='folder',
-                value=constructors.object_href('folder', host.folder()),
-                prop_format='string',
-                base=base,
-            ),
-        },
-        extensions={},
+        entries=[
+            constructors.domain_object(
+                domain_type='host',
+                title=f"{entry['name']} ({entry['address']})",
+                identifier=entry['name'],
+                editable=False,
+                deletable=False,
+            ) for entry in result
+        ],
+        base='',
     )

@@ -6,15 +6,14 @@
 
 import re
 import logging
-from typing import Dict, List
+from typing import Dict, List, Tuple as _Tuple, Any
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
 
 import cmk.gui.sites as sites
 import cmk.gui.config as config
-import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -50,43 +49,44 @@ from cmk.gui.valuespec import (
     LogLevelChoice,
     Labels,
     CascadingDropdownChoice,
+    ValueSpec,
 )
 
 from cmk.gui.plugins.wato import (
-    config_variable_group_registry,
-    ConfigVariableGroup,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigDomainGUI,
-    ConfigDomainCore,
-    ConfigDomainCACertificates,
-    ConfigDomainOMD,
-    site_neutral_path,
-    rulespec_registry,
-    HostRulespec,
-    ServiceRulespec,
     BinaryHostRulespec,
     BinaryServiceRulespec,
-    rulespec_group_registry,
-    RulespecGroup,
-    RulespecSubGroup,
-    PluginCommandLine,
-    UserIconOrAction,
-    SNMPCredentials,
-    IPMIParameters,
-    HostnameTranslation,
-    ServiceDescriptionTranslation,
+    CheckTypeSelection,
+    ConfigDomainCACertificates,
+    ConfigDomainCore,
+    ConfigDomainGUI,
+    ConfigDomainOMD,
+    ConfigVariable,
+    ConfigVariableGroup,
+    config_variable_group_registry,
+    config_variable_registry,
     ContactGroupSelection,
     HostGroupSelection,
-    ServiceGroupSelection,
-    CheckTypeSelection,
-    TimeperiodSelection,
+    HostnameTranslation,
+    HostRulespec,
     HTTPProxyInput,
-    get_check_information,
+    IPMIParameters,
+    PluginCommandLine,
+    RulespecGroup,
+    rulespec_group_registry,
+    rulespec_registry,
+    RulespecSubGroup,
+    ServiceDescriptionTranslation,
+    ServiceGroupSelection,
+    ServiceRulespec,
+    site_neutral_path,
+    SNMPCredentials,
+    TimeperiodSelection,
+    UserIconOrAction,
 )
 
-from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
 from cmk.gui.plugins.views.icons import icon_and_action_registry
+from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
+from cmk.gui.plugins.wato.utils import get_section_information
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
 
@@ -767,7 +767,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         #  - consist only of checkbox tags
         #  - contain at least two entries
         choices = []
-        by_topic = {}  # type: Dict[str, List[TagGroup]]
+        by_topic: Dict[str, List[TagGroup]] = {}
         for tag_group in config.tags.tag_groups:
             choices.append((tag_group.id, tag_group.title))
             by_topic.setdefault(tag_group.topic, []).append(tag_group)
@@ -1275,12 +1275,12 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
 
     @property
     def title(self):
-        return _("Monitoring Configuration")
+        return _("Monitoring settings")
 
     @property
     def help(self):
         return _(
-            "Intervals for checking, retries, clustering, configuration for inventory and similar")
+            "Intervals for checking, retries, clustering, configuration for discovery and similar")
 
 
 @rulespec_group_registry.register
@@ -2010,7 +2010,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
             ),
             title=_("Icon categories"),
             help=_("You can customize the list of icon categories to be able to assign "
-                   "your <a href=\"?mode=icons\">custom icons</a> to these categories. "
+                   "your <a href=\"wato.py?mode=icons\">custom icons</a> to these categories. "
                    "They will then be shown under this category in the icon selector."),
         )
 
@@ -2197,42 +2197,34 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
                 "With this option you can specify the attributes a user which is created during "
                 "its initial login gets added. For example, the default is to add the role \"user\" "
                 "to all automatically created users."),
-            elements=self._default_user_profile_elements,
+            elements=[
+                ('roles',
+                 ListChoice(
+                     title=_('User roles'),
+                     help=_('Specify the initial roles of an automatically created user.'),
+                     default_value=['user'],
+                     choices=self._list_roles,
+                 )),
+                ('contactgroups',
+                 ListChoice(
+                     title=_('Contact groups'),
+                     help=_('Specify the initial contact groups of an automatically created user.'),
+                     default_value=[],
+                     choices=self._list_contactgroups,
+                 )),
+                ("force_authuser",
+                 Checkbox(
+                     title=_("Visibility of Hosts/Services"),
+                     label=_("Only show hosts and services the user is a contact for"),
+                     help=_("Specifiy the initial setting for an automatically created user."),
+                     default_value=False,
+                 )),
+            ],
             optional_keys=[],
         )
 
-    def _default_user_profile_elements(self):
-        if cmk_version.is_managed_edition():
-            import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-            elements = managed.customer_choice_element()
-        else:
-            elements = []
-        return elements + [
-            ('roles',
-             ListChoice(
-                 title=_('User roles'),
-                 help=_('Specify the initial roles of an automatically created user.'),
-                 default_value=['user'],
-                 choices=self._list_roles,
-             )),
-            ('contactgroups',
-             ListChoice(
-                 title=_('Contact groups'),
-                 help=_('Specify the initial contact groups of an automatically created user.'),
-                 default_value=[],
-                 choices=self._list_contactgroups,
-             )),
-            ("force_authuser",
-             Checkbox(
-                 title=_("Visibility of Hosts/Services"),
-                 label=_("Only show hosts and services the user is a contact for"),
-                 help=_("Specifiy the initial setting for an automatically created user."),
-                 default_value=False,
-             ))
-        ]
-
     def _list_roles(self):
-        roles = userdb.load_roles()
+        roles = userdb_utils.load_roles()
         return [(i, r["alias"]) for i, r in roles.items()]
 
     def _list_contactgroups(self):
@@ -2309,17 +2301,17 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
             choices=[
                 ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
                 ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
-                ("brocade_sys.mem", _("Main memory usage for Brocade fibre channel switches")),
+                ("brocade_sys_mem", _("Main memory usage for Brocade fibre channel switches")),
                 ("casa_cpu_temp", _("Casa module: CPU temperature")),
                 ("cisco_mem", _("Cisco Memory Usage (%s)") % "cisco_mem"),
                 ("cisco_mem_asa", _("Cisco Memory Usage (%s)") % "cisco_mem_asa"),
                 ("cisco_mem_asa64", _("Cisco Memory Usage (%s)") % "cisco_mem_asa64"),
-                ("cmciii.psm_current", _("Rittal CMC-III Units: Current")),
-                ("cmciii.temp", _("Rittal CMC-III Units: Temperatures")),
+                ("cmciii_psm_current", _("Rittal CMC-III Units: Current")),
+                ("cmciii_temp", _("Rittal CMC-III Units: Temperatures")),
                 ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
                 ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
                 ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
-                ("cmk-inventory", _("Monitor hosts for unchecked services (Check_MK Discovery)")),
+                ("cmk_inventory", _("Monitor hosts for unchecked services (Check_MK Discovery)")),
                 ("dbd2_mem", _("Memory levels for DB2 memory usage")),
                 ("df", _("Used space in filesystems")),
                 ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
@@ -2327,13 +2319,13 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("docker_container_mem", _("Memory usage of Docker containers")),
                 ("enterasys_temp", _("Enterasys Switch: Temperature")),
                 ("esx_vsphere_datastores", _("VMWare ESX host systems: Used space")),
-                ("esx_vsphere_hostsystem.mem_usage", _("Main memory usage of ESX host system")),
-                ("esx_vsphere_hostsystem.mem_usage_cluster", _("Memory Usage of ESX Clusters")),
-                ("etherbox.temp", _("Etherbox / MessPC: Sensor Temperature")),
+                ("esx_vsphere_hostsystem_mem_usage", _("Main memory usage of ESX host system")),
+                ("esx_vsphere_hostsystem_mem_usage_cluster", _("Memory Usage of ESX Clusters")),
+                ("etherbox_temp", _("Etherbox / MessPC: Sensor Temperature")),
                 ("fortigate_memory", _("Memory usage of Fortigate devices (fortigate_memory)")),
                 ("fortigate_memory_base",
                  _("Memory usage of Fortigate devices (fortigate_memory_base)")),
-                ("fortigate_node.memory", _("Fortigate node memory")),
+                ("fortigate_node_memory", _("Fortigate node memory")),
                 ("hr_fs", _("Used space in filesystems via SNMP")),
                 ("hr_mem", _("HR: Used memory via SNMP")),
                 ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
@@ -2342,12 +2334,12 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("ibm_svc_mdiskgrp",
                  _("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps")),
                 ("ibm_svc_system", _("IBM SVC / V7000: System Info")),
-                ("ibm_svc_systemstats.cache", _("IBM SVC / V7000: Cache Usage in Total")),
-                ("ibm_svc_systemstats.disk_latency",
+                ("ibm_svc_systemstats_cache", _("IBM SVC / V7000: Cache Usage in Total")),
+                ("ibm_svc_systemstats_disk_latency",
                  _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total")),
-                ("ibm_svc_systemstats.diskio",
+                ("ibm_svc_systemstats_diskio",
                  _("IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total")),
-                ("ibm_svc_systemstats.iops",
+                ("ibm_svc_systemstats_iops",
                  _("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total")),
                 ("innovaphone_mem", _("Innovaphone Memory Usage")),
                 ("innovaphone_temp", _("Innovaphone Gateway: Current Temperature")),
@@ -2356,20 +2348,20 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("juniper_trpz_mem", _("Juniper Memory Usage (%s)") % "juniper_trpz_mem"),
                 ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
                 ("logwatch", _("Check logfiles for relevant new messages")),
-                ("logwatch.groups", _("Check logfile groups")),
-                ("mem.used", _("Main memory usage (UNIX / Other Devices)")),
-                ("mem.win", _("Memory usage for %s hosts") % "Windows"),
+                ("logwatch_groups", _("Check logfile groups")),
+                ("mem_used", _("Main memory usage (UNIX / Other Devices)")),
+                ("mem_win", _("Memory usage for %s hosts") % "Windows"),
                 ("mknotifyd", _("Notification Spooler")),
-                ("mknotifyd.connection", _("Notification Spooler Connection")),
+                ("mknotifyd_connection", _("Notification Spooler Connection")),
                 ("mssql_backup", _("MSSQL Backup")),
                 ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
-                ("mssql_counters.cache_hits", _("MSSQL Cache Hits")),
-                ("mssql_counters.file_sizes", _("MSSQL File Sizes")),
-                ("mssql_counters.locks", _("MSSQL Locks")),
-                ("mssql_counters.locks_per_batch", _("MSSQL Locks per Batch")),
-                ("mssql_counters.pageactivity", _("MSSQL Page Activity")),
-                ("mssql_counters.sqlstats", _("MSSQL SQL Stats")),
-                ("mssql_counters.transactions", _("MSSQL Transactions")),
+                ("mssql_counters_cache_hits", _("MSSQL Cache Hits")),
+                ("mssql_counters_file_sizes", _("MSSQL File Sizes")),
+                ("mssql_counters_locks", _("MSSQL Locks")),
+                ("mssql_counters_locks_per_batch", _("MSSQL Locks per Batch")),
+                ("mssql_counters_pageactivity", _("MSSQL Page Activity")),
+                ("mssql_counters_sqlstats", _("MSSQL SQL Stats")),
+                ("mssql_counters_transactions", _("MSSQL Transactions")),
                 ("mssql_databases", _("MSSQL Database")),
                 ("mssql_datafiles", _("MSSQL Datafile")),
                 ("mssql_tablespaces", _("MSSQL Tablespace")),
@@ -2377,10 +2369,10 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("mssql_versions", _("MSSQL Version")),
                 ("netscaler_mem", _("Netscaler Memory Usage")),
                 ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
-                ("nvidia.temp", _("Temperatures of NVIDIA graphics card")),
+                ("nvidia_temp", _("Temperatures of NVIDIA graphics card")),
                 ("postfix_mailq", _("Postfix: Mail Queue")),
                 ("ps", _("State and Count of Processes")),
-                ("ps.perf", _("State and Count of Processes (with additional performance data)")),
+                ("ps_perf", _("State and Count of Processes (with additional performance data)")),
                 ("qmail_stats", _("Qmail: Mail Queue")),
                 ("raritan_emx", _("Raritan EMX Rack: Temperature")),
                 ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
@@ -2390,7 +2382,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("statgrab_mem", _("Statgrab Memory Usage")),
                 ("tplink_mem", _("TP Link: Used memory via SNMP")),
                 ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
-                ("vms_diskstat.df", _("Disk space on OpenVMS")),
+                ("vms_diskstat_df", _("Disk space on OpenVMS")),
                 ("wmic_process", _("Resource consumption of windows processes")),
                 ("zfsget", _("Used space in ZFS pools and filesystems")),
             ],
@@ -3161,7 +3153,7 @@ rulespec_registry.register(
 
 
 def _host_check_commands_host_check_command_choices():
-    choices = [
+    choices: List[CascadingDropdownChoice] = [
         ("ping", _("PING (active check with ICMP echo request)")),
         ("smart", _("Smart PING (only with Check_MK Micro Core)")),
         ("tcp", _("TCP Connect"),
@@ -3176,7 +3168,7 @@ def _host_check_commands_host_check_command_choices():
              help=_("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
                     "with the name of the current host."),
          )),
-    ]  # type: List[CascadingDropdownChoice]
+    ]
     if config.user.may('wato.add_or_modify_executables'):
         return choices + [
             ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
@@ -3605,7 +3597,7 @@ class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
 
     @property
     def title(self):
-        return _("Inventory and Check_MK settings")
+        return _("Discovery and Checkmk settings")
 
 
 def _help_only_hosts():
@@ -3705,8 +3697,7 @@ def _valuespec_periodic_discovery():
     )
 
 
-def _vs_periodic_discovery():
-    # type: () -> Transform
+def _vs_periodic_discovery() -> Transform:
     return Transform(
         Dictionary(
             title=_("Perform periodic service discovery check"),
@@ -3776,75 +3767,160 @@ def _vs_periodic_discovery():
     )
 
 
-def _valuespec_automatic_rediscover_parameters():
-    # type: () -> Dictionary
-    return Dictionary(
-        title=_("Automatically update service configuration"),
-        help=_("If active the check will not only notify about un-monitored services, "
-               "it will also automatically add/remove them as neccessary."),
-        elements=[
-            ("mode",
-             DropdownChoice(
-                 title=_("Mode"),
-                 choices=[
-                     (0, _("Add unmonitored services, new host labels")),
-                     (1, _("Remove vanished services")),
-                     (2, _("Add unmonitored & remove vanished services and host labels")),
-                     (3, _("Refresh all services and host labels (tabula rasa)")),
-                 ],
-                 default_value=0,
-             )),
-            (
-                "group_time",
-                Age(
-                    title=_("Group discovery and activation for up to"),
-                    help=_("A delay can be configured here so that multiple "
-                           "discoveries can be activated in one go. This avoids frequent core "
-                           "restarts in situations with frequent services changes."),
-                    default_value=15 * 60,
-                    # The cronjob (etc/cron.d/cmk_discovery) is executed every 5 minutes
-                    minvalue=5 * 60,
-                    display=["hours", "minutes"],
-                )),
-            ("excluded_time",
-             ListOfTimeRanges(
-                 title=_("Never do discovery or activate changes in the following time ranges"),
-                 help=_("This avoids automatic changes during these times so "
-                        "that the automatic system doesn't interfere with "
-                        "user activity."),
-             )),
-            ("activation",
-             DropdownChoice(
-                 title=_("Automatic activation"),
-                 choices=[
-                     (True, _("Automatically activate changes")),
-                     (False, _("Do not activate changes")),
-                 ],
-                 default_value=True,
-                 help=_("Here you can have the changes activated whenever services "
-                        "have been added or removed."),
-             )),
-            ("service_whitelist",
-             ListOfStrings(
-                 title=_("Activate only services matching"),
-                 allow_empty=False,
-                 help=_("Set service names or regular expression patterns here to "
-                        "allow only matching services to be activated automatically. "
-                        "If you set both this and \'Don't activate services matching\', "
-                        "both rules have to apply for a service to be activated."),
-             )),
-            ("service_blacklist",
-             ListOfStrings(
-                 title=_("Don't activate services matching"),
-                 allow_empty=False,
-                 help=_("Set service names or regular expression patterns here to "
-                        "prevent matching services from being activated automatically. "
-                        "If you set both this and \'Activate only services matching\', "
-                        "both rules have to apply for a service to be activated."),
-             )),
-        ],
-        optional_keys=["service_whitelist", "service_blacklist"],
+def _transform_automatic_rediscover_parameters(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    # Be compatible to pre 1.7.0 versions; There were only two general pattern lists
+    # which were used for new AND vanished services:
+    # {
+    #     "service_whitelist": [PATTERN],
+    #     "service_blacklist": [PATTERN],
+    # }
+    # New since 1.7.0: A white- and blacklist can be configured for both new and vanished
+    # services as "combined" pattern lists.
+    # Or two separate pattern lists for each new and vanished services are configurable:
+    # {
+    #     "service_filters": (
+    #         "combined",
+    #         {
+    #             "service_whitelist": [PATTERN],
+    #             "service_blacklist": [PATTERN],
+    #         },
+    #     )
+    # } resp.
+    # {
+    #     "service_filters": (
+    #         "dedicated",
+    #         {
+    #             "service_whitelist": [PATTERN],
+    #             "service_blacklist": [PATTERN],
+    #             "vanished_service_whitelist": [PATTERN],
+    #             "vanished_service_blacklist": [PATTERN],
+    #         },
+    #     )
+    # }
+    service_filters = {}
+    for key in ("service_whitelist", "service_blacklist"):
+        if key in parameters:
+            service_filters[key] = parameters.pop(key)
+    if service_filters:
+        parameters["service_filters"] = ("combined", service_filters)
+    return parameters
+
+
+def _valuespec_automatic_rediscover_parameters() -> Transform:
+    return Transform(
+        Dictionary(
+            title=_("Automatically update service configuration"),
+            help=_("If active the check will not only notify about un-monitored services, "
+                   "it will also automatically add/remove them as neccessary."),
+            elements=[
+                ("mode",
+                 DropdownChoice(
+                     title=_("Mode"),
+                     choices=[
+                         (0, _("Add unmonitored services, new host labels")),
+                         (1, _("Remove vanished services")),
+                         (2, _("Add unmonitored & remove vanished services and host labels")),
+                         (3, _("Refresh all services and host labels (tabula rasa)")),
+                     ],
+                     default_value=0,
+                 )),
+                (
+                    "group_time",
+                    Age(
+                        title=_("Group discovery and activation for up to"),
+                        help=_("A delay can be configured here so that multiple "
+                               "discoveries can be activated in one go. This avoids frequent core "
+                               "restarts in situations with frequent services changes."),
+                        default_value=15 * 60,
+                        # The cronjob (etc/cron.d/cmk_discovery) is executed every 5 minutes
+                        minvalue=5 * 60,
+                        display=["hours", "minutes"],
+                    )),
+                ("excluded_time",
+                 ListOfTimeRanges(
+                     title=_("Never do discovery or activate changes in the following time ranges"),
+                     help=_("This avoids automatic changes during these times so "
+                            "that the automatic system doesn't interfere with "
+                            "user activity."),
+                 )),
+                ("activation",
+                 DropdownChoice(
+                     title=_("Automatic activation"),
+                     choices=[
+                         (True, _("Automatically activate changes")),
+                         (False, _("Do not activate changes")),
+                     ],
+                     default_value=True,
+                     help=_("Here you can have the changes activated whenever services "
+                            "have been added or removed."),
+                 )),
+                ("service_filters",
+                 CascadingDropdown(
+                     title=_("Service Filters"),
+                     choices=[
+                         (
+                             "combined",
+                             _("Combined white-/blacklist for new and vanished services"),
+                             Dictionary(
+                                 elements=_get_periodic_discovery_dflt_service_filter_lists()),
+                         ),
+                         (
+                             "dedicated",
+                             _("Dedicated white-/blacklists for new and vanished services"),
+                             Dictionary(elements=_get_periodic_discovery_dflt_service_filter_lists(
+                             ) + [
+                                 ("vanished_service_whitelist",
+                                  ListOfStrings(
+                                      title=_("Remove only matching vanished services"),
+                                      allow_empty=False,
+                                      help=
+                                      _("Set service names or regular expression patterns here to "
+                                        "remove matching vanished services automatically. "
+                                        "If you set both this and \'Don't remove matching vanished services\', "
+                                        "both rules have to apply for a service to be removed."),
+                                  )),
+                                 ("vanished_service_blacklist",
+                                  ListOfStrings(
+                                      title=_("Don't remove matching vanished services"),
+                                      allow_empty=False,
+                                      help=
+                                      _("Set service names or regular expression patterns here to "
+                                        "prevent removing of matching vanished services automatically. "
+                                        "If you set both this and \'Remove only matching vanished services\', "
+                                        "both rules have to apply for a service to be removed."),
+                                  )),
+                             ],),
+                         ),
+                     ],
+                 )),
+            ],
+            optional_keys=["service_filters"],
+        ),
+        forth=_transform_automatic_rediscover_parameters,
     )
+
+
+def _get_periodic_discovery_dflt_service_filter_lists() -> List[_Tuple[str, ValueSpec]]:
+    return [
+        ("service_whitelist",
+         ListOfStrings(
+             title=_("Activate only services matching"),
+             allow_empty=False,
+             help=_("Set service names or regular expression patterns here to "
+                    "allow only matching services to be activated automatically. "
+                    "If you set both this and \'Don't activate services matching\', "
+                    "both rules have to apply for a service to be activated."),
+         )),
+        ("service_blacklist",
+         ListOfStrings(
+             title=_("Don't activate services matching"),
+             allow_empty=False,
+             help=_("Set service names or regular expression patterns here to "
+                    "prevent matching services from being activated automatically. "
+                    "If you set both this and \'Activate only services matching\', "
+                    "both rules have to apply for a service to be activated."),
+         )),
+    ]
 
 
 rulespec_registry.register(
@@ -4164,18 +4240,18 @@ rulespec_registry.register(
 
 
 @rulespec_group_registry.register
-class RulespecGroupAgentSNMP(RulespecSubGroup):
+class RulespecGroupAgentSNMP(RulespecGroup):
     @property
-    def main_group(self):
-        return RulespecGroupAgent
-
-    @property
-    def sub_group_name(self):
+    def name(self):
         return "snmp"
 
     @property
     def title(self):
-        return _("SNMP")
+        return _("SNMP settings")
+
+    @property
+    def help(self):
+        return _("Configure SNMP related settings using rulesets")
 
 
 def _valuespec_snmp_communities():
@@ -4652,22 +4728,25 @@ def _valuespec_check_mk_exit_status():
                              "missing_sections",
                              MonitoringState(
                                  default_value=1,
-                                 title=_("State if just <i>some</i> agent sections are missing")),
+                                 title=_("State if just <i>some</i> check plugins received no "
+                                         "monitoring data")),
                          ),
                          (
                              "specific_missing_sections",
                              ListOf(
                                  Tuple(elements=[
                                      RegExpUnicode(help=_(
-                                         'Beside of setting the generic "Missing sections" state above '
-                                         'you can specify a regex pattern to match specific section names and '
-                                         'give them an individual state in case they are missing. '
-                                         'Note that the first match is used.'),
+                                         'Beside of setting the generic "Missing sections" state '
+                                         'above you can specify a regex pattern to match specific '
+                                         'check plugins and give them an individual state in case '
+                                         'they receive no monitoring data. Note that the first '
+                                         'match is used.'),
                                                    mode=RegExpUnicode.prefix),
                                      MonitoringState(),
                                  ],
                                        orientation="horizontal"),
-                                 title=_("State if specific sections are missing"),
+                                 title=_(
+                                     "State if specific check plugins receive no monitoring data."),
                              ),
                          ),
                      ])),
@@ -4877,38 +4956,28 @@ rulespec_registry.register(
     ))
 
 
-def get_snmp_checktypes():
-    checks = get_check_information()
-    types = sorted([(cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
-                    for (cn, c) in checks.items()
-                    if c['snmp']])
-    return [(None, _('All SNMP Checks'))] + types
-
-
 def get_snmp_section_names():
-    checks = get_check_information()
-    snmp_section_names = set(cn.split(".", 1)[0] for (cn, c) in checks.items() if c['snmp'])
-    section_choices = [(sn, sn) for sn in snmp_section_names]
-    return [(None, _('All SNMP Checks'))] + sorted(section_choices)
+    sections = get_section_information()
+    section_choices = {(s['name'], s['name']) for s in sections.values() if s['type'] == 'snmp'}
+    return [(None, _('All SNMP sections'))] + sorted(section_choices)
 
 
-def _valuespec_snmp_check_interval():
+def _valuespec_snmp_fetch_interval():
     return Tuple(
-        title=_('Check intervals for SNMP checks'),
-        help=_('This rule can be used to customize the check interval of each SNMP based check. '
-               'With this option it is possible to configure a longer check interval for specific '
-               'checks, than then normal check interval.'),
+        title=_('Fetch intervals for SNMP sections'),
+        help=_(
+            'This rule can be used to customize the data acquisition interval of each SNMP based '
+            'section. With this option it is possible to configure a longer interval for specific '
+            'sections, than then normal check interval.'),
         elements=[
             Transform(
                 DropdownChoice(
                     title=_("Check"),
-                    help=_("You can only configure \"section names\" here and not choose all "
-                           "individual SNMP based checks here. It is only possible to define "
-                           "SNMP check intervals for main checks and all the related sub "
-                           "checks together. The reason for this is that the data of the "
-                           "main check and it's sub checks is defined for the whole group "
-                           "of checks in the main check and also fetched for all these "
-                           "checks together."),
+                    help=_("You can only configure \"section names\" here and not choose "
+                           "individual checks here. It is only possible to define "
+                           "SNMP fetch intervals for SNMP based sections. "
+                           "The reason for this is that the check plugins themselves are not "
+                           "aware wether or not they are processing SNMP based data."),
                     choices=get_snmp_section_names,
                 ),
                 # Transform check types to section names
@@ -4926,8 +4995,8 @@ def _valuespec_snmp_check_interval():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupAgentSNMP,
-        name="snmp_check_interval",
-        valuespec=_valuespec_snmp_check_interval,
+        name="snmp_check_interval",  # legacy name, kept for compatibility
+        valuespec=_valuespec_snmp_fetch_interval,
     ))
 
 
@@ -4936,12 +5005,17 @@ def _valuespec_snmpv3_contexts():
         title=_('SNMPv3 contexts to use in requests'),
         help=_('By default Check_MK does not use a specific context during SNMPv3 queries, '
                'but some devices are offering their information in different SNMPv3 contexts. '
-               'This rule can be used to configure, based on hosts and check type, which SNMPv3 '
-               'contexts Check_MK should ask for when getting information via SNMPv3.'),
+               'This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 '
+               'contexts Checkmk should ask for when getting information via SNMPv3.'),
         elements=[
-            DropdownChoice(
-                title=_("Checktype"),
-                choices=get_snmp_checktypes,
+            Transform(
+                DropdownChoice(
+                    title=_("Section name"),
+                    choices=get_snmp_section_names,
+                ),
+                # Legacy plugins had dots in their names, but sections have only ever been
+                # associated with the part left of the dot.
+                forth=lambda e: e.split(".")[0] if e is not None else None,
             ),
             ListOfStrings(
                 title=_("SNMP Context IDs"),

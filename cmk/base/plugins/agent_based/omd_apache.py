@@ -8,7 +8,7 @@ from .agent_based_api.v0 import register
 
 
 def parse_omd_apache(string_table):
-    parsed = {}  # type: Dict[str, List[str]]
+    parsed: Dict[str, List[str]] = {}
     site = None
     for line in string_table:
         if line[0][0] == '[':

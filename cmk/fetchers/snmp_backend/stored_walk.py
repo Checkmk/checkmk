@@ -13,7 +13,7 @@ import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginNameStr
 
 import cmk.snmplib.snmp_cache as snmp_cache
 from cmk.snmplib.type_defs import ABCSNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
@@ -24,8 +24,9 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 
 class StoredWalkSNMPBackend(ABCSNMPBackend):
-    def get(self, oid, context_name=None):
-        # type: (OID, Optional[SNMPContextName]) -> Optional[SNMPRawValue]
+    def get(self,
+            oid: OID,
+            context_name: Optional[SNMPContextName] = None) -> Optional[SNMPRawValue]:
         walk = self.walk(oid)
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
@@ -35,8 +36,11 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
             return walk[0][1]
         return None
 
-    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
-        # type: (OID, Optional[CheckPluginName], Optional[OID], Optional[SNMPContextName]) -> SNMPRowInfo
+    def walk(self,
+             oid: OID,
+             check_plugin_name: Optional[CheckPluginNameStr] = None,
+             table_base_oid: Optional[OID] = None,
+             context_name: Optional[SNMPContextName] = None) -> SNMPRowInfo:
         if oid.startswith("."):
             oid = oid[1:]
 
@@ -89,8 +93,7 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
         return rowinfo
 
     @staticmethod
-    def _compare_oids(a, b):
-        # type: (OID, OID) -> int
+    def _compare_oids(a: OID, b: OID) -> int:
         aa = StoredWalkSNMPBackend._to_bin_string(a)
         bb = StoredWalkSNMPBackend._to_bin_string(b)
         if len(aa) <= len(bb) and bb[:len(aa)] == aa:
@@ -100,16 +103,15 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
         return result
 
     @staticmethod
-    def _to_bin_string(oid):
-        # type: (OID) -> Tuple[int, ...]
+    def _to_bin_string(oid: OID) -> Tuple[int, ...]:
         try:
             return tuple(map(int, oid.strip(".").split(".")))
         except Exception:
             raise MKGeneralException("Invalid OID %s" % oid)
 
     @staticmethod
-    def _collect_until(oid, oid_prefix, lines, index, direction):
-        # type: (OID, OID, List[str], int, int) -> SNMPRowInfo
+    def _collect_until(oid: OID, oid_prefix: OID, lines: List[str], index: int,
+                       direction: int) -> SNMPRowInfo:
         rows = []
         # Handle case, where we run after the end of the lines list
         if index >= len(lines):

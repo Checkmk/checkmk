@@ -20,19 +20,16 @@ __all__ = ["backend"]
 _force_stored_walks = False
 
 
-def force_stored_walks():
-    # type: () -> None
+def force_stored_walks() -> None:
     global _force_stored_walks
     _force_stored_walks = True
 
 
-def get_force_stored_walks():
-    # type: () -> bool
+def get_force_stored_walks() -> bool:
     return _force_stored_walks
 
 
-def backend(snmp_config, *, use_cache=None):
-    # type: (SNMPHostConfig, Optional[bool]) -> ABCSNMPBackend
+def backend(snmp_config: SNMPHostConfig, *, use_cache: Optional[bool] = None) -> ABCSNMPBackend:
     if use_cache is None:
         use_cache = get_force_stored_walks()
 

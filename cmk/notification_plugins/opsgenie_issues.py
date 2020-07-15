@@ -22,7 +22,7 @@ from cmk.notification_plugins.utils import retrieve_from_passwordstore
 
 def main():
     context = utils.collect_context()
-    priority = u'P3'  # type: Optional[str]
+    priority: Optional[str] = u'P3'
     teams_list = []
     tags_list = None
     action_list = None

@@ -19,8 +19,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_safenet_hsm_eventstats():
-    # type: () -> Dictionary
+def _parameter_valuespec_safenet_hsm_eventstats() -> Dictionary:
     return Dictionary(elements=[
         ("critical_events",
          Tuple(

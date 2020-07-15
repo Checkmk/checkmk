@@ -76,7 +76,7 @@ TEST(InstallAuto, Mode) {
         auto [ret, log] = MakeCommandLine(L"xx", UpdateType::exec_quiet);
         ASSERT_TRUE(!ret.empty());
         ASSERT_TRUE(!log.empty());
-        EXPECT_EQ(ret, std::wstring(L" /i xx /qn /L*V ") + log);
+        EXPECT_EQ(ret, std::wstring(L" /i xx /qn /L*V ") + L"\"" + log + L"\"");
         std::filesystem::path p(log);
         EXPECT_EQ(p.filename().u8string(), kMsiLogFileName);
     }

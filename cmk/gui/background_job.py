@@ -537,7 +537,8 @@ class JobStatus:
     def get_status_from_file(self) -> JobStatusSpec:
         if not self._jobstatus_path.exists():
             data: JobStatusSpec = {}
-            data["state"] = "initialized"
+            data["state"] = JobStatusStates.INITIALIZED
+            data["started"] = time.time()
         else:
             try:
                 # Read this data with an explicit lock
@@ -546,7 +547,7 @@ class JobStatus:
 
                 # Repair broken/invalid files
                 if "state" not in data:
-                    data["state"] = "initialized"
+                    data["state"] = JobStatusStates.INITIALIZED
                     data["started"] = time.time()
             finally:
                 store.release_lock(str(self._jobstatus_path))

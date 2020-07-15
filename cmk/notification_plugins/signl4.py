@@ -100,9 +100,8 @@ def send_alert(password, message):
     resp = requests.post(api_url + password, params=None, data=json.dumps(message))
 
     if resp.status_code >= 200 and resp.status_code < 300:
-        result = resp.text.split("\t")
-        if result.find('eventId') == -1:
-            sys.stdout.write(result)
+        if resp.text.find('eventId') == -1:
+            sys.stdout.write(resp.text)
             sys.exit(0)
 
     if resp.status_code >= 500 and resp.status_code < 600:

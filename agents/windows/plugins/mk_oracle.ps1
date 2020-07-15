@@ -1136,6 +1136,44 @@ Function sql_rman {
                         , bd2.INCREMENTAL_CHANGE#
                  order by name, bd2.INCREMENTAL_LEVEL);
 
+          select /* check_mk rman2 */ name
+                || '|' || 'COMPLETED'
+                || '|'
+                || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
+                || '|' || 'CONTROLFILE'
+                || '|'
+                || '|' || round((sysdate - CHECKPOINT_TIME) * 24 * 60)
+                || '|' || '0'
+          from (select upper(i.instance_name) name
+                      ,max(bcd.CHECKPOINT_TIME) CHECKPOINT_TIME
+                from v$database d
+                join V$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
+                join v$instance i on 1=1
+                group by upper(i.instance_name)
+               );
+
+          select /* check_mk rman3 */ name
+                 || '|COMPLETED'
+                 || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
+                 || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
+                 || '|ARCHIVELOG||'
+                 || round((sysdate - completed)*24*60,0)
+                 || '|'
+          from (
+                select upper(i.instance_name) name
+                     , max(a.completion_time) completed
+                     , case when a.backup_count > 0 then 1 else 0 end
+                from v$archived_log a, v$database d, v$instance i
+                where a.backup_count > 0
+                      and a.dest_id in
+                      (select b.dest_id
+                       from v$archive_dest b
+                       where b.target = 'PRIMARY'
+                         and b.SCHEDULE = 'ACTIVE'
+                      )
+                group by d.NAME, i.instance_name
+                       , case when a.backup_count > 0 then 1 else 0 end);
+
 '@
           echo $query_rman
      }

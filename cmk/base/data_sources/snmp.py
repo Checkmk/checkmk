@@ -70,7 +70,6 @@ class CachedSNMPDetector:
         snmp_config: SNMPHostConfig,
         on_error: str,
         do_snmp_scan: bool,
-        for_mgmt_board: bool,
     ) -> Set[SectionName]:
         """Returns a list of raw sections that shall be processed by this source.
 
@@ -250,7 +249,6 @@ class SNMPDataSource(ABCSNMPDataSource):
             self._snmp_config,
             on_error=self._on_error,
             do_snmp_scan=self._do_snmp_scan,
-            for_mgmt_board=self.source_type is SourceType.MANAGEMENT,
         )
 
     @staticmethod

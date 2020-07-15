@@ -13,6 +13,7 @@ from types import FrameType
 from typing import (
     Any,
     Callable,
+    Counter,
     Dict,
     Generator,
     Iterable,
@@ -416,11 +417,10 @@ def _do_discovery_for(
         if only_new or (check_plugin_names and service_plugin_name not in check_plugin_names):
             new_services.append(existing_service)
 
-    services_per_plugin: Dict[check_table.CheckPluginNameStr, int] = {}
+    services_per_plugin: Counter[check_table.CheckPluginNameStr] = Counter()
     for discovered_service in discovered_services:
         if discovered_service not in new_services:
             new_services.append(discovered_service)
-            services_per_plugin.setdefault(discovered_service.check_plugin_name, 0)
             services_per_plugin[discovered_service.check_plugin_name] += 1
 
     autochecks.save_autochecks_file(hostname, new_services)
@@ -460,7 +460,7 @@ def _do_discovery_for(
 
 def _perform_host_label_discovery(
         hostname: HostName, discovered_host_labels: DiscoveredHostLabels,
-        only_new: bool) -> Tuple[DiscoveredHostLabels, Dict[check_table.CheckPluginNameStr, int]]:
+        only_new: bool) -> Tuple[DiscoveredHostLabels, Counter[check_table.CheckPluginNameStr]]:
 
     # Take over old items if -I is selected
     if only_new:
@@ -469,12 +469,11 @@ def _perform_host_label_discovery(
     else:
         return_host_labels = DiscoveredHostLabels()
 
-    new_host_labels_per_plugin: Dict[check_table.CheckPluginNameStr, int] = {}
+    new_host_labels_per_plugin: Counter[check_table.CheckPluginNameStr] = Counter()
     for discovered_label in discovered_host_labels.values():
         if discovered_label.name in return_host_labels:
             continue
         return_host_labels.add_label(discovered_label)
-        new_host_labels_per_plugin.setdefault(discovered_label.plugin_name, 0)
         new_host_labels_per_plugin[discovered_label.plugin_name] += 1
 
     return return_host_labels, new_host_labels_per_plugin

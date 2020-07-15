@@ -381,10 +381,10 @@ def _visual_url(visual_type_name: str, name: str) -> str:
         return "report.py?name=%s" % name
 
     # Handle page types
-    if visual_type_name in ["custom_graph", "graph_collection"]:
+    if visual_type_name in ["custom_graph", "graph_collection", "forecast_graph"]:
         return "%s.py?name=%s" % (visual_type_name, name)
 
-    raise NotImplementedError("Unkown visual type: %s" % visual_type_name)
+    raise NotImplementedError("Unknown visual type: %s" % visual_type_name)
 
 
 def show_topic_menu(treename: str,

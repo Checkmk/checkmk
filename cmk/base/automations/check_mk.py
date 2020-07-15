@@ -665,12 +665,13 @@ class AutomationAnalyseServices(Automation):
             if service.description != servicedesc:
                 continue
 
-            default_levels_variable = config.check_info[service.check_plugin_name].get(
-                "default_levels_variable")
-            if default_levels_variable:
-                factory_settings = config.factory_settings.get(default_levels_variable, None)
-            else:
-                factory_settings = None
+            # TODO (mo): centralize maincheckify: CMK-4295
+            service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
+            plugin = config.get_registered_check_plugin(service_check_plugin_name)
+            if plugin is None:
+                # Just to be safe, and to let mypy know.
+                # plugin should never be None for services that are in the check_table.
+                continue
 
             check_parameters = service.parameters
             if isinstance(check_parameters, cmk.base.config.TimespecificParamList):
@@ -684,11 +685,11 @@ class AutomationAnalyseServices(Automation):
 
             return {
                 "origin": "auto",
-                "checktype": service.check_plugin_name,
-                "checkgroup": config.check_info[service.check_plugin_name].get("group"),
+                "checktype": str(plugin.name),
+                "checkgroup": str(plugin.check_ruleset_name),
                 "item": service.item,
                 "inv_parameters": service.parameters,
-                "factory_settings": factory_settings,
+                "factory_settings": plugin.check_default_parameters,
                 "parameters": check_parameters,
             }
 

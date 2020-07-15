@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
 
 # With reference to SQL sample output (see internal ticket SUP-253)
 sap_hana_ess_migration_state_map = {
@@ -26,7 +27,7 @@ sap_hana_ess_migration_state_map = {
 def parse_sap_hana_ess_migration(info):
 
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).items():
+    for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
 
         parsed.setdefault(sid_instance, {"log": " ".join(lines[0]), "timestamp": "not available"})
 
@@ -68,5 +69,4 @@ check_info['sap_hana_ess_migration'] = {
     'inventory_function': inventory_sap_hana_ess_migration,
     'check_function': check_sap_hana_ess_migration,
     'service_description': 'SAP HANA ESS Migration %s',
-    'includes': ['sap_hana.include'],
 }

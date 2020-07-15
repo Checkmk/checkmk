@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
+
 
 def parse_sap_hana_status(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).items():
+    for (sid_instance, node), lines in sap_hana.parse_sap_hana_cluster_aware(info).items():
         for line in lines:
             if line[0].lower() == "all started":
                 item_name = 'Status'
@@ -64,6 +66,5 @@ check_info['sap_hana_status'] = {
     'inventory_function': inventory_sap_hana_status,
     'check_function': check_sap_hana_status,
     'service_description': 'SAP HANA %s',
-    'includes': ['sap_hana.include'],
     "node_info": True,
 }

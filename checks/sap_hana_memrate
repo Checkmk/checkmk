@@ -3,13 +3,14 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
 
 factory_settings["sap_hana_memrate_default_levels"] = {"levels": ('perc_used', (70.0, 80.0))}
 
 
 def parse_sap_hana_memrate(info):
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).items():
+    for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
         inst_data = {}
         for line in lines:
             if len(line) < 3 or line[0] != 'mem_rate':
@@ -46,7 +47,7 @@ check_info['sap_hana_memrate'] = {
     'inventory_function': inventory_sap_hana_memrate,
     'check_function': check_sap_hana_memrate,
     'service_description': 'SAP HANA Memory %s',
-    'includes': ['sap_hana.include', 'mem.include'],
+    'includes': ['mem.include'],
     "has_perfdata": True,
     'group': 'sap_hana_memory',
     'default_levels_variable': 'sap_hana_memrate_default_levels',

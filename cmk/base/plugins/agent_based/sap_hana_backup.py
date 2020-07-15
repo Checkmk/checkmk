@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+import time
+
+from typing import Dict
+
+import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
+from .agent_based_api.v0 import (
+    render,
+    check_levels,
+    register,
+    Service,
+    Result,
+    state,
+)
+
+
+def _get_sap_hana_backup_timestamp(backup_time_readable):
+    try:
+        t_struct = time.strptime(backup_time_readable, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return None
+    return time.mktime(t_struct)
+
+
+def parse_sap_hana_backup(string_table):
+    parsed: Dict[str, Dict] = {}
+    for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
+        for line in lines:
+            if len(line) < 5:
+                continue
+
+            backup_time_readable = line[1].rsplit(".", 1)[0]
+            backup_time_stamp = _get_sap_hana_backup_timestamp(backup_time_readable)
+            parsed.setdefault(
+                "%s - %s" % (sid_instance, line[0]), {
+                    "sys_end_time": backup_time_stamp,
+                    "backup_time_readable": backup_time_readable,
+                    "state_name": line[2],
+                    "comment": line[3],
+                    "message": line[4],
+                })
+    return parsed
+
+
+register.agent_section(
+    name="sap_hana_backup",
+    parse_function=parse_sap_hana_backup,
+)
+
+
+def discovery_sap_hana_backup(section):
+    for sid in section:
+        yield Service(item=sid)
+
+
+def check_sap_hana_backup(item, params, section):
+    now = time.time()
+
+    data = section.get(item)
+    if data is None:
+        return
+
+    state_name = data['state_name']
+    if state_name == 'failed':
+        cur_state = state.CRIT
+    elif state_name in ['cancel pending', 'canceled']:
+        cur_state = state.WARN
+    elif state_name in ['ok', 'successful', 'running']:
+        cur_state = state.OK
+    else:
+        cur_state = state.UNKNOWN
+    yield Result(state=cur_state, summary="Status: %s" % state_name)
+
+    sys_end_time = data.get('sys_end_time')
+    if sys_end_time is not None:
+        yield Result(state=state.OK, summary="Last: %s" % data['backup_time_readable'])
+        yield from check_levels(now - sys_end_time,
+                                metric_name="backup_age",
+                                levels_upper=params['backup_age'],
+                                render_func=render.timespan,
+                                label="Age")
+
+    comment = data["comment"]
+    if comment:
+        yield Result(state=state.OK, summary="Comment: %s" % comment)
+
+    message = data["message"]
+    if message:
+        yield Result(state=state.OK, summary="Message: %s" % message)
+
+
+def cluster_check_sap_hana_backup(
+    item,
+    params,
+    section,
+):
+    # TODO: This is *not* a real cluster check. We do not evaluate the different node results with
+    # each other, but this was the behaviour before the migration to the new Check API.
+    yield Result(state=state.OK, summary='Nodes: %s' % ', '.join(section.keys()))
+    for node_section in section.values():
+        if item in node_section:
+            yield from check_sap_hana_backup(item, params, node_section)
+            return
+
+
+register.check_plugin(
+    name="sap_hana_backup",
+    service_name="SAP HANA Backup %s",
+    discovery_function=discovery_sap_hana_backup,
+    check_default_parameters={"backup_age": (24 * 60 * 60, 2 * 24 * 60 * 60)},
+    check_ruleset_name="sap_hana_backup",
+    check_function=check_sap_hana_backup,
+    cluster_check_function=cluster_check_sap_hana_backup,
+)

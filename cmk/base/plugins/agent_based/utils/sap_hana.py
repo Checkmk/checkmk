@@ -4,9 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, List, Any, Tuple
+from ..agent_based_api.v0.type_defs import AgentStringTable
 
-def parse_sap_hana(info):
-    parsed = {}
+
+def parse_sap_hana(info: AgentStringTable):
+    parsed: Dict[str, List[Any]] = {}
     instance = None
     for line in info:
         joined_line = " ".join(line)
@@ -18,7 +21,7 @@ def parse_sap_hana(info):
 
 
 def parse_sap_hana_cluster_aware(info):
-    parsed = {}
+    parsed: Dict[Tuple, List[Any]] = {}
     instance = None
     for line in info:
         node, line = line[0], line[1:]

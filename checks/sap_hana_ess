@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
+
 
 def parse_sap_hana_ess(info):
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).items():
+    for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
         inst_data = {}
         for line in lines:
             if len(line) < 2:
@@ -55,6 +57,5 @@ check_info['sap_hana_ess'] = {
     'inventory_function': inventory_sap_hana_ess,
     'check_function': check_sap_hana_ess,
     'service_description': 'SAP HANA ESS %s',
-    'includes': ['sap_hana.include'],
     "has_perfdata": True,
 }

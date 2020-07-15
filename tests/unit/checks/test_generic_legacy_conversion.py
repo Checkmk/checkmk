@@ -991,7 +991,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'safenet_hsm_events_default_levels',
         'sansymphony_alerts_default_values',
         'sansymphony_pool_default_values',
-        'sap_hana_backup',
         'sap_hana_connect_state_map',
         'sap_hana_ess_migration_state_map',
         'sap_hana_license_default_levels',

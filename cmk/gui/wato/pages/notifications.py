@@ -1322,6 +1322,10 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
         return "notification_rule_p"
 
     @classmethod
+    def parent_mode(cls):
+        return ModePersonalUserNotifications
+
+    @classmethod
     def permissions(cls):
         return None
 

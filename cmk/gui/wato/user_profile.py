@@ -17,6 +17,11 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.login as login
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.plugins.main_menu.mega_menus import (
+    make_main_menu_breadcrumb,
+    MegaMenuUser,
+)
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
@@ -206,7 +211,9 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
         users = userdb.load_users()
 
-        html.header(self._page_title())
+        breadcrumb = make_main_menu_breadcrumb(MegaMenuUser) + Breadcrumb(
+            [BreadcrumbItem(title=self._page_title(), url=html.makeuri([]))])
+        html.header(self._page_title(), breadcrumb)
 
         change_reason = html.request.get_ascii_input('reason')
 
@@ -314,7 +321,9 @@ class UserProfile(ABCUserProfilePage):
 
         users = userdb.load_users()
 
-        html.header(self._page_title())
+        breadcrumb = make_main_menu_breadcrumb(MegaMenuUser) + Breadcrumb(
+            [BreadcrumbItem(title=self._page_title(), url=html.makeuri([]))])
+        html.header(self._page_title(), breadcrumb)
 
         self._show_context_buttons()
 

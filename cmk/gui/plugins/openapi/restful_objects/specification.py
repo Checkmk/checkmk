@@ -61,7 +61,13 @@ import apispec.utils  # type: ignore
 import apispec_oneofschema  # type: ignore
 
 from cmk.gui.plugins.openapi import plugins
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, IDENT, NAME, ACCEPT_HEADER
+from cmk.gui.plugins.openapi.restful_objects.parameters import (
+    ACCEPT_HEADER,
+    HOST_NAME,
+    IDENT,
+    NAME,
+    SERVICE_DESCRIPTION,
+)
 
 # Path parameters look like {varname} and need to be checked.
 from cmk.gui.plugins.openapi.restful_objects.type_defs import ParameterReference, PrimitiveParameter
@@ -148,6 +154,7 @@ SPEC.components.parameter(*ACCEPT_HEADER.spec_tuple())
 SPEC.components.parameter(*IDENT.spec_tuple())
 SPEC.components.parameter(*HOST_NAME.spec_tuple())
 SPEC.components.parameter(*NAME.spec_tuple())
+SPEC.components.parameter(*SERVICE_DESCRIPTION.spec_tuple())
 
 ErrorType = Literal['ignore', 'raise']
 

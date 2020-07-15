@@ -7,8 +7,12 @@
 from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 
-def test_openapi_livestatus_hosts(wsgi_app, with_automation_user, suppress_automation_calls,
-                                  mock_livestatus):
+def test_openapi_livestatus_downtimes(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    mock_livestatus,
+):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))

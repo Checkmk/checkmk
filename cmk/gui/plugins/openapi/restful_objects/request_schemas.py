@@ -5,7 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from marshmallow import Schema, fields  # type: ignore[import]
 
+from cmk.gui.plugins.openapi.utils import param_description
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME_REGEXP
+from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import \
+    acknowledge_host_problem, acknowledge_service_problem
 
 
 class InputAttribute(Schema):
@@ -157,3 +160,55 @@ class CreateDowntime(Schema):
         "downtime can begin. The concerning duration is specified in seconds.",
         example=3600)
     comment = fields.String(required=False, example="Security updates")
+
+
+class AcknowledgeHostProblem(Schema):
+    sticky = fields.Boolean(
+        required=False,
+        example=False,
+        description=param_description(acknowledge_host_problem.__doc__, 'sticky'),
+    )
+
+    persistent = fields.Boolean(
+        required=False,
+        example=False,
+        description=param_description(acknowledge_host_problem.__doc__, 'persistent'),
+    )
+
+    notify = fields.Boolean(
+        required=False,
+        example=False,
+        description=param_description(acknowledge_host_problem.__doc__, 'notify'),
+    )
+
+    comment = fields.String(
+        required=False,
+        example='This was expected.',
+        description=param_description(acknowledge_host_problem.__doc__, 'comment'),
+    )
+
+
+class AcknowledgeServiceProblem(Schema):
+    sticky = fields.Boolean(
+        required=False,
+        example=False,
+        description=param_description(acknowledge_service_problem.__doc__, 'sticky'),
+    )
+
+    persistent = fields.Boolean(
+        required=False,
+        example=False,
+        description=param_description(acknowledge_service_problem.__doc__, 'persistent'),
+    )
+
+    notify = fields.Boolean(
+        required=False,
+        example=False,
+        description=param_description(acknowledge_service_problem.__doc__, 'notify'),
+    )
+
+    comment = fields.String(
+        required=False,
+        example='This was expected.',
+        description=param_description(acknowledge_service_problem.__doc__, 'comment'),
+    )

@@ -41,7 +41,63 @@ components:
       schema:
         pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
         type: string
+    service_description:
+      allowEmptyValue: false
+      description: The service description.
+      example: Memory
+      in: path
+      name: service_description
+      required: true
+      schema:
+        type: string
   schemas:
+    AcknowledgeHostProblem:
+      properties:
+        comment:
+          description: If set, this comment will be stored alongside the acknowledgement.
+          example: This was expected.
+          type: string
+        notify:
+          description: If set, notifications will be sent out to the configured contacts.
+            Defaults to False.
+          example: false
+          type: boolean
+        persistent:
+          description: If set, the comment will persist a restart. Defaults to False.
+          example: false
+          type: boolean
+        sticky:
+          description: 'If set, only a state-change of the host to an UP state will
+            discard the acknowledgement.
+
+            Otherwise it will be discarded on any state-change. Defaults to False.'
+          example: false
+          type: boolean
+      type: object
+    AcknowledgeServiceProblem:
+      properties:
+        comment:
+          description: If set, this comment will be stored alongside the acknowledgement.
+          example: This was expected.
+          type: string
+        notify:
+          description: If set, notifications will be sent out to the configured contacts.
+            Defaults to False.
+          example: false
+          type: boolean
+        persistent:
+          description: If set, the comment will persist a restart. Defaults to False.
+          example: false
+          type: boolean
+        sticky:
+          description: 'If set, only a state-change of the service to an OK state
+            will discard the
+
+            acknowledgement. Otherwise it will be discarded on any state-change. Defaults
+            to False.'
+          example: false
+          type: boolean
+      type: object
     ActionResult:
       discriminator:
         mapping:
@@ -783,6 +839,103 @@ info:
   version: 0.3.2
 openapi: 3.0.2
 paths:
+  /objects/host/{host_name}/actions/acknowledge/invoke:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_host
+      parameters:
+      - $ref: '#/components/parameters/host_name'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeHostProblem'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Acknowledge problems on a specific host.
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.acknowledgement
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/objects/host/example.com/actions/acknowledge/invoke\"\
+          ,\n    json={\n        \"comment\": \"This was expected.\",\n        \"\
+          notify\": false,\n        \"persistent\": false,\n        \"sticky\": false\n\
+          \    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"comment\": \"This was expected.\"\
+          ,\n          \"notify\": false,\n          \"persistent\": false,\n    \
+          \      \"sticky\": false\n        }' \\\n    \"$API_URL/objects/host/example.com/actions/acknowledge/invoke\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/objects/host/example.com/actions/acknowledge/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    comment='This\
+          \ was expected.' \\\n    notify='False' \\\n    persistent='False' \\\n\
+          \    sticky='False'"
+  /objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_host_service
+      parameters:
+      - $ref: '#/components/parameters/host_name'
+      - $ref: '#/components/parameters/service_description'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeServiceProblem'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Acknowledge problems of a specific service on a specific host
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.acknowledgement
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/objects/host/example.com/objects/service/Memory/actions/acknowledge\"\
+          ,\n    json={\n        \"comment\": \"This was expected.\",\n        \"\
+          notify\": false,\n        \"persistent\": false,\n        \"sticky\": false\n\
+          \    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"comment\": \"This was expected.\"\
+          ,\n          \"notify\": false,\n          \"persistent\": false,\n    \
+          \      \"sticky\": false\n        }' \\\n    \"$API_URL/objects/host/example.com/objects/service/Memory/actions/acknowledge\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/objects/host/example.com/objects/service/Memory/actions/acknowledge\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    comment='This\
+          \ was expected.' \\\n    notify='False' \\\n    persistent='False' \\\n\
+          \    sticky='False'"
   /domain-types/activation_run/actions/activate-changes/invoke:
     post:
       description: ''
@@ -1252,15 +1405,16 @@ paths:
           \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
-          \    API_URL + \"/domain-types/downtime/collections/all\",\n)\nresp.raise_for_status()"
+          \    API_URL + \"/domain-types/downtime/collections/all\",\n    params={\
+          \  # goes into query string\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
-          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    \"$API_URL/domain-types/downtime/collections/all\""
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"\"\n\ncurl \\\n    -X\
+          \ GET \\\n    --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n\
+          \    --header \"Accept: application/json\" \\\n    \"$API_URL/domain-types/downtime/collections/all?$QUERY_STRING\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
-          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/domain-types/downtime/collections/all\"\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nQUERY_STRING=\"\"\n\nhttp GET \"$API_URL/domain-types/downtime/collections/all?$QUERY_STRING\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
     post:
       description: ''
@@ -3242,6 +3396,14 @@ paths:
 security:
 - BearerAuth: []
 tags:
+- name: cmk.gui.plugins.openapi.endpoints.acknowledgement
+  x-displayName: Acknowledge problems
+- description: <SchemaDefinition schemaRef="#/components/schemas/AcknowledgeHostProblem"
+    showReadOnly={true} showWriteOnly={true} />
+  name: AcknowledgeHostProblem
+- description: <SchemaDefinition schemaRef="#/components/schemas/AcknowledgeServiceProblem"
+    showReadOnly={true} showWriteOnly={true} />
+  name: AcknowledgeServiceProblem
 - name: cmk.gui.plugins.openapi.endpoints.activate_changes
   x-displayName: Activate changes
 - name: cmk.gui.plugins.openapi.endpoints.contact_group_config
@@ -3326,6 +3488,7 @@ x-logo:
 x-tagGroups:
 - name: Endpoints
   tags:
+  - cmk.gui.plugins.openapi.endpoints.acknowledgement
   - cmk.gui.plugins.openapi.endpoints.activate_changes
   - cmk.gui.plugins.openapi.endpoints.contact_group_config
   - cmk.gui.plugins.openapi.endpoints.downtime
@@ -3342,6 +3505,8 @@ x-tagGroups:
   tags: []
 - name: Request Schemas
   tags:
+  - AcknowledgeHostProblem
+  - AcknowledgeServiceProblem
   - InputContactGroup
   - CreateDowntime
   - CreateFolder

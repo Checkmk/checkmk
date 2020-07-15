@@ -46,6 +46,7 @@ def acknowledge_service_problem(
 
         user:
         comment:
+            If set, this comment will be stored alongside the acknowledgement.
 
     Examples:
 
@@ -105,6 +106,7 @@ def acknowledge_host_problem(
 
         user:
         comment:
+            If set, this comment will be stored alongside the acknowledgement.
 
     Examples:
 

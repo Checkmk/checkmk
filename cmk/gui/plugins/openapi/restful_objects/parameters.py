@@ -60,3 +60,10 @@ ETAG_HEADER_PARAM = ParamDict.create(
     schema_string_pattern='[0-9a-fA-F]{32}',
     example='a20ceacf346041dc',
 )
+
+SERVICE_DESCRIPTION = ParamDict.create(
+    'service_description',
+    'path',
+    description="The service description.",
+    example="Memory",
+)

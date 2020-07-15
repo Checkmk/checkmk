@@ -273,7 +273,7 @@ def _create_nagios_host_spec(cfg: NagiosConfig, config_cache: ConfigCache, hostn
 
 def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName,
                                host_attrs: ObjectAttributes) -> None:
-    import cmk.base.check_table as check_table  # pylint: disable=import-outside-toplevel
+    from cmk.base.check_table import get_check_table  # pylint: disable=import-outside-toplevel
 
     host_config = config_cache.get_host_config(hostname)
 
@@ -306,30 +306,19 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
 
         return result
 
-    chk_tab = check_table.get_check_table(hostname, remove_duplicates=True)
+    host_check_table = get_check_table(hostname, remove_duplicates=True)
     have_at_least_one_service = False
     used_descriptions: Dict[ServiceName, Tuple[CheckPluginNameStr, Item]] = {}
-    for service in sorted(chk_tab.values(), key=lambda s: (s.check_plugin_name, s.item)):
-        if service.check_plugin_name not in config.check_info:
-            continue  # simply ignore missing checks
+    for service in sorted(host_check_table.values(), key=lambda s: (s.check_plugin_name, s.item)):
 
+        # TODO (mo): This should be done by the service object, much earlier.
         if not service.description:
             core_config.warning(
                 "Skipping invalid service with empty description (plugin: %s) on host %s" %
                 (service.check_plugin_name, hostname))
             continue
+        used_descriptions[service.description] = service.id()
 
-        # Make sure, the service description is unique on this host
-        if service.description in used_descriptions:
-            cn, it = used_descriptions[service.description]
-            core_config.warning(
-                "ERROR: Duplicate service description '%s' for host '%s'!\n"
-                " - 1st occurrance: checktype = %s, item = %r\n"
-                " - 2nd occurrance: checktype = %s, item = %r\n" %
-                (service.description, hostname, cn, it, service.check_plugin_name, service.item))
-            continue
-
-        used_descriptions[service.description] = (service.check_plugin_name, service.item)
         if config.check_info[service.check_plugin_name].get("has_perfdata", False):
             template = config.passive_service_template_perf
         else:
@@ -1113,7 +1102,7 @@ if '-d' in sys.argv:
 
 def _get_needed_check_plugin_names(
     host_config: config.HostConfig,) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName]]:
-    import cmk.base.check_table as check_table  # pylint: disable=import-outside-toplevel
+    from cmk.base.check_table import get_needed_check_names  # pylint: disable=import-outside-toplevel
     needed_legacy_check_plugin_names: Set[CheckPluginNameStr] = set([])
     needed_agent_based_check_plugin_names: Set[CheckPluginName] = set([])
 
@@ -1124,9 +1113,9 @@ def _get_needed_check_plugin_names(
             needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)
 
     # Collect the needed check plugin names using the host check table
-    for check_plugin_name in check_table.get_needed_check_names(host_config.hostname,
-                                                                filter_mode="include_clustered",
-                                                                skip_ignored=False):
+    for check_plugin_name in get_needed_check_names(host_config.hostname,
+                                                    filter_mode="include_clustered",
+                                                    skip_ignored=False):
         if check_plugin_name not in config.check_info:
             # TODO (mo): centralize maincheckify: CMK-4295
             needed_agent_based_check_plugin_names.add(
@@ -1149,7 +1138,7 @@ def _get_needed_check_plugin_names(
         if nodes is None:
             raise MKGeneralException("Invalid cluster configuration")
         for node in nodes:
-            for check_plugin_name in check_table.get_needed_check_names(node, skip_ignored=False):
+            for check_plugin_name in get_needed_check_names(node, skip_ignored=False):
                 if check_plugin_name in config.check_info:
                     needed_legacy_check_plugin_names.add(check_plugin_name)
                 else:

@@ -61,6 +61,7 @@ from cmk.gui.watolib.notifications import (
     load_notification_rules,
     load_user_notification_rules,
 )
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuUser
 
 
 class NotificationsMode(EventsMode):
@@ -828,6 +829,9 @@ class ModePersonalUserNotifications(UserNotificationsMode):
     def __init__(self):
         super(ModePersonalUserNotifications, self).__init__()
         config.user.need_permission("general.edit_notifications")
+
+    def main_menu(self):
+        return MegaMenuUser
 
     def _user_id(self):
         return config.user.id

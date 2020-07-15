@@ -14,12 +14,20 @@ import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.i18n import _, _l
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.plugins.main_menu import (
     mega_menu_registry,
     MegaMenu,
     TopicMenuTopic,
     TopicMenuItem,
 )
+
+
+def make_main_menu_breadcrumb(menu: MegaMenu) -> Breadcrumb:
+    return Breadcrumb([BreadcrumbItem(
+        title=menu.title,
+        url=None,
+    )])
 
 
 def _view_menu_topics() -> List[TopicMenuTopic]:

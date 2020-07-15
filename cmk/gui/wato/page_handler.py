@@ -29,6 +29,7 @@ from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib import init_wato_datastructures
+from cmk.gui.plugins.main_menu.mega_menus import make_main_menu_breadcrumb
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -170,7 +171,9 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
             action_message = reason
             html.add_user_error(None, reason)
 
+    breadcrumb = make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
     wato_html_head(mode.title(),
+                   breadcrumb=breadcrumb,
                    show_body_start=display_options.enabled(display_options.H),
                    show_top_heading=display_options.enabled(display_options.T))
 

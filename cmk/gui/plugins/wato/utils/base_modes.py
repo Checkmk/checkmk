@@ -10,7 +10,10 @@ from typing import Union, Tuple, List
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
+from cmk.gui.plugins.main_menu.utils import MegaMenu
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuSetup
 
 NewMode = Union[None, bool, str]
 ActionResult = Union[NewMode, Tuple[NewMode, str]]
@@ -42,6 +45,20 @@ class WatoMode(metaclass=abc.ABCMeta):
 
     def title(self) -> str:
         return _("(Untitled module)")
+
+    # Currently only needed for a special WATO module "user_notifications_p" that
+    # is not part of the Setup main menu but the user menu.
+    def main_menu(self) -> MegaMenu:
+        """Specify the top-level breadcrumb item of this mode"""
+        return MegaMenuSetup
+
+    def breadcrumb(self) -> Breadcrumb:
+        return Breadcrumb([
+            BreadcrumbItem(
+                self.title(),
+                html.makeuri_contextless([("mode", self.name())], filename="wato.py"),
+            )
+        ])
 
     def buttons(self) -> None:
         global_buttons()

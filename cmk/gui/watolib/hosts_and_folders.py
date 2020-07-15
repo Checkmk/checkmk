@@ -50,6 +50,7 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.plugins.watolib.utils import wato_fileheader
 from cmk.gui.background_job import BackgroundJobAlreadyRunning
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 
 import cmk.utils.version as cmk_version
 
@@ -1120,6 +1121,17 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def rules_file_path(self):
         return self.filesystem_path() + "/rules.mk"
+
+    def breadcrumb(self) -> Breadcrumb:
+        breadcrumb = Breadcrumb()
+
+        for folder in self.parent_folder_chain() + [self]:
+            breadcrumb.append(BreadcrumbItem(
+                title=folder.title(),
+                url=self.url(),
+            ))
+
+        return breadcrumb
 
     def add_to_dictionary(self, dictionary):
         dictionary[self.path()] = self

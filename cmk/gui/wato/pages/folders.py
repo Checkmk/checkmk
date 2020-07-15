@@ -34,6 +34,7 @@ from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.plugins.wato.utils.context_buttons import folder_status_button, global_buttons
 
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -63,6 +64,14 @@ class ModeFolder(WatoMode):
 
     def title(self):
         return self._folder.title()
+
+    def breadcrumb(self):
+        return Breadcrumb([
+            BreadcrumbItem(
+                title="Hosts",
+                url=watolib.Folder.root_folder().url(),
+            ),
+        ]) + self._folder.breadcrumb()
 
     def buttons(self):
         global_buttons()

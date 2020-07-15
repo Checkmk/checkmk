@@ -117,7 +117,7 @@ program_start num_hosts num_services'
         self._expect_status_query = None
 
     def _expect_post_connect_query(self) -> None:
-        # cmk.gui.sites._connect_multiple_sites asks for the some specifics upon initial connection.
+        # cmk.gui.sites._connect_multiple_sites asks for some specifics upon initial connection.
         # We expect this query and give the expected result.
         today = str(dt.date.today())
         program_start_timestamp = int(time.time())

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # Team alerting (using SIGNL4)
 
+import sys
+
 from cmk.notification_plugins import signl4
 
 if __name__ == "__main__":

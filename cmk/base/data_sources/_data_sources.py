@@ -39,15 +39,18 @@ DataSources = Iterable[ABCDataSource]
 
 class SourceBuilder:
     """Build the source list from host config and raw sections."""
-    def __init__(self, host_config: HostConfig, ipaddress: Optional[HostAddress],
-                 selected_raw_sections: Optional[SelectedRawSections]) -> None:
+    def __init__(
+        self,
+        host_config: HostConfig,
+        ipaddress: Optional[HostAddress],
+    ) -> None:
         super(SourceBuilder, self).__init__()
         self._host_config = host_config
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
         self._sources: Dict[str, ABCDataSource] = {}
 
-        self._initialize_data_sources(selected_raw_sections)
+        self._initialize_data_sources()
 
     @property
     def sources(self) -> DataSources:
@@ -55,81 +58,65 @@ class SourceBuilder:
         return sorted(self._sources.values(),
                       key=lambda s: (isinstance(s, PiggyBackDataSource), s.id))
 
-    def _initialize_data_sources(self,
-                                 selected_raw_sections: Optional[SelectedRawSections]) -> None:
+    def _initialize_data_sources(self) -> None:
         if self._host_config.is_cluster:
             # Cluster hosts do not have any actual data sources
             # Instead all data is provided by the nodes
             return
 
-        self._initialize_agent_based_data_sources(selected_raw_sections)
-        self._initialize_snmp_data_sources(selected_raw_sections)
-        self._initialize_management_board_data_sources(selected_raw_sections)
+        self._initialize_agent_based_data_sources()
+        self._initialize_snmp_data_sources()
+        self._initialize_management_board_data_sources()
 
-    def _initialize_agent_based_data_sources(
-            self, selected_raw_sections: Optional[SelectedRawSections]) -> None:
+    def _initialize_agent_based_data_sources(self) -> None:
         if self._host_config.is_all_agents_host:
             self._add_source(
                 self._get_agent_data_source(
                     ignore_special_agents=True,
-                    selected_raw_sections=selected_raw_sections,
                     main_data_source=True,
                 ))
-            self._add_sources(
-                self._get_special_agent_data_sources(selected_raw_sections=selected_raw_sections,))
+            self._add_sources(self._get_special_agent_data_sources())
 
         elif self._host_config.is_all_special_agents_host:
-            self._add_sources(
-                self._get_special_agent_data_sources(selected_raw_sections=selected_raw_sections,))
+            self._add_sources(self._get_special_agent_data_sources())
 
         elif self._host_config.is_tcp_host:
             self._add_source(
                 self._get_agent_data_source(
                     ignore_special_agents=False,
-                    selected_raw_sections=selected_raw_sections,
                     main_data_source=True,
                 ))
 
         if "no-piggyback" not in self._host_config.tags:
-            self._add_source(
-                PiggyBackDataSource(
-                    self._hostname,
-                    self._ipaddress,
-                    selected_raw_sections=selected_raw_sections,
-                ))
-
-    def _initialize_snmp_data_sources(self,
-                                      selected_raw_sections: Optional[SelectedRawSections]) -> None:
-        if not self._host_config.is_snmp_host:
-            return
-        self._add_source(
-            SNMPDataSource(
+            self._add_source(PiggyBackDataSource(
                 self._hostname,
                 self._ipaddress,
-                selected_raw_sections=selected_raw_sections,
             ))
 
-    def _initialize_management_board_data_sources(
-            self, selected_raw_sections: Optional[SelectedRawSections]) -> None:
+    def _initialize_snmp_data_sources(self,) -> None:
+        if not self._host_config.is_snmp_host:
+            return
+        self._add_source(SNMPDataSource(
+            self._hostname,
+            self._ipaddress,
+        ))
+
+    def _initialize_management_board_data_sources(self) -> None:
         protocol = self._host_config.management_protocol
         if protocol is None:
             return
 
         ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._host_config)
         if protocol == "snmp":
-            self._add_source(
-                SNMPManagementBoardDataSource(
-                    self._hostname,
-                    ip_address,
-                    selected_raw_sections=selected_raw_sections,
-                ))
+            self._add_source(SNMPManagementBoardDataSource(
+                self._hostname,
+                ip_address,
+            ))
         elif protocol == "ipmi":
-            self._add_source(
-                IPMIManagementBoardDataSource(
-                    self._hostname,
-                    ip_address,
-                    selected_raw_sections=selected_raw_sections,
-                ))
+            self._add_source(IPMIManagementBoardDataSource(
+                self._hostname,
+                ip_address,
+            ))
         else:
             raise NotImplementedError()
 
@@ -143,12 +130,10 @@ class SourceBuilder:
     def _get_agent_data_source(
         self,
         ignore_special_agents: bool,
-        selected_raw_sections: Optional[SelectedRawSections],
         main_data_source: bool,
     ) -> AgentDataSource:
         if not ignore_special_agents:
-            special_agents = self._get_special_agent_data_sources(
-                selected_raw_sections=selected_raw_sections,)
+            special_agents = self._get_special_agent_data_sources()
             if special_agents:
                 return special_agents[0]
 
@@ -158,28 +143,22 @@ class SourceBuilder:
                 self._hostname,
                 self._ipaddress,
                 datasource_program,
-                selected_raw_sections=selected_raw_sections,
                 main_data_source=main_data_source,
             )
 
         return TCPDataSource(
             self._hostname,
             self._ipaddress,
-            selected_raw_sections=selected_raw_sections,
             main_data_source=main_data_source,
         )
 
-    def _get_special_agent_data_sources(
-        self,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> List[SpecialAgentDataSource]:
+    def _get_special_agent_data_sources(self) -> List[SpecialAgentDataSource]:
         return [
             SpecialAgentDataSource(
                 self._hostname,
                 self._ipaddress,
                 agentname,
                 params,
-                selected_raw_sections=selected_raw_sections,
             ) for agentname, params in self._host_config.special_agents
         ]
 
@@ -187,18 +166,15 @@ class SourceBuilder:
 def make_sources(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
-    *,
-    selected_raw_sections: Optional[SelectedRawSections] = None,
 ) -> DataSources:
     """Return a list of sources for DataSources.
 
     Args:
         host_config: The host configuration.
         ipaddress: The host address.
-        selected_raw_sections: optional set: None -> no selection, empty -> select *nothing*
 
     """
-    return SourceBuilder(host_config, ipaddress, selected_raw_sections).sources
+    return SourceBuilder(host_config, ipaddress).sources
 
 
 def make_host_sections(
@@ -208,18 +184,43 @@ def make_host_sections(
     sources: DataSources,
     *,
     max_cachefile_age: int,
+    selected_raw_sections: Optional[SelectedRawSections],
 ) -> MultiHostSections:
+    if host_config.nodes is None:
+        return _make_host_sections(
+            [(host_config.hostname, ipaddress, sources)],
+            max_cachefile_age=max_cachefile_age,
+            selected_raw_sections=selected_raw_sections,
+        )
+
     return _make_host_sections(
-        [(host_config.hostname, ipaddress, sources)]
-        if host_config.nodes is None else _make_piggyback_nodes(config_cache, host_config),
+        _make_piggyback_nodes(config_cache, host_config),
         max_cachefile_age=max_cachefile_age,
+        selected_raw_sections=_make_piggybacked_sections(host_config),
     )
+
+
+def _make_piggybacked_sections(host_config) -> SelectedRawSections:
+    check_names = check_table.get_needed_check_names(
+        host_config.hostname,
+        remove_duplicates=True,
+        filter_mode="only_clustered",
+    )
+    selected_raw_sections = {}
+    for name in config.get_relevant_raw_sections(
+            # TODO (mo): centralize maincheckify: CMK-4295
+            check_plugin_names=(CheckPluginName(maincheckify(n)) for n in check_names)):
+        section = config.get_registered_section_plugin(name)
+        if section is not None:
+            selected_raw_sections[name] = section
+    return selected_raw_sections
 
 
 def _make_host_sections(
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], DataSources]],
     *,
     max_cachefile_age: int,
+    selected_raw_sections: Optional[SelectedRawSections],
 ) -> MultiHostSections:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
@@ -243,7 +244,9 @@ def _make_host_sections(
                 HostKey(hostname, ipaddress, source.source_type),
                 source._empty_host_sections(),
             )
-            host_sections.update(source.run())
+            host_sections.update(
+                # TODO: Select agent / snmp sources before passing
+                source.run(selected_raw_sections=selected_raw_sections))
 
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
@@ -269,19 +272,9 @@ def _make_piggyback_nodes(
     for hostname in host_config.nodes:
         node_config = config_cache.get_host_config(hostname)
         ipaddress = ip_lookup.lookup_ip_address(node_config)
-        check_names = check_table.get_needed_check_names(
-            hostname,
-            remove_duplicates=True,
-            filter_mode="only_clustered",
-        )
-        selected_raw_sections = config.get_relevant_raw_sections(
-            check_plugin_names=(
-                # TODO (mo): centralize maincheckify: CMK-4295
-                CheckPluginName(maincheckify(n)) for n in check_names),)
         sources = make_sources(
             HostConfig.make_host_config(hostname),
             ipaddress,
-            selected_raw_sections=selected_raw_sections,
         )
         nodes.append((hostname, ipaddress, sources))
     return nodes

@@ -5,13 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from pathlib import Path
 import sys
-from typing import Dict, List, Optional, TypedDict, Set
+from pathlib import Path
+from typing import Dict, List, Optional, Set, TypedDict
 
 from six import ensure_str
 
-from cmk.utils.check_utils import maincheckify
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.paths
@@ -19,23 +18,23 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
+    DiagnosticsModesParameters,
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
-    OPT_CHECKMK_OVERVIEW,
-    OPT_CHECKMK_CONFIG_FILES,
-    DiagnosticsModesParameters,
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostgroupName, HostName, CheckPluginName, TagValue
+from cmk.utils.type_defs import CheckPluginName, HostAddress, HostgroupName, HostName, TagValue
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.fetchers.factory as snmp_factory
 
-from cmk.base.api.agent_based.register.check_plugins import CheckPlugin
 import cmk.base.backup
 import cmk.base.check_api as check_api
 import cmk.base.check_utils
@@ -54,6 +53,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
+from cmk.base.api.agent_based.register.check_plugins import CheckPlugin
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 
@@ -393,7 +393,7 @@ def mode_dump_agent(hostname: HostName) -> None:
         for source in data_sources.make_sources(host_config, ipaddress):
             source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source, data_sources.agent.AgentDataSource):
-                output.append(source.run_raw())
+                output.append(source.run_raw(selected_raw_sections=None))
 
             source_state, source_output, _source_perfdata = source.get_summary_result_for_checking()
             if source_state != 0:

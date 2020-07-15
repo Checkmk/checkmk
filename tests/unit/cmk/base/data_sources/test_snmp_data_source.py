@@ -199,6 +199,13 @@ def test_attribute_defaults(monkeypatch):
     assert source.exception() is None
 
 
+def test_source_requires_ipaddress(monkeypatch):
+    hostname = "testhost"
+    Scenario().add_host(hostname).apply(monkeypatch)
+    with pytest.raises(TypeError):
+        SNMPDataSource(hostname, None)
+
+
 def test_describe_with_ipaddress(monkeypatch):
     hostname = "testhost"
     ipaddress = "127.0.0.1"

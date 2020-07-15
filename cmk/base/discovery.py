@@ -19,19 +19,24 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    NamedTuple,
     NoReturn,
     Optional,
     Pattern,
     Set,
     Tuple,
     Union,
-    NamedTuple,
 )
 
 from six import ensure_binary
 
 import livestatus
 
+import cmk.utils.cleanup
+import cmk.utils.debug
+import cmk.utils.misc
+import cmk.utils.paths
+import cmk.utils.tty as tty
 from cmk.utils.check_utils import (
     ensure_management_name,
     is_management_name,
@@ -39,11 +44,6 @@ from cmk.utils.check_utils import (
     unwrap_parameters,
     wrap_parameters,
 )
-import cmk.utils.cleanup
-import cmk.utils.debug
-import cmk.utils.misc
-import cmk.utils.paths
-import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
@@ -75,15 +75,10 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_types
-from cmk.base.api.agent_based.register.check_plugins_legacy import (
-    resolve_legacy_name,)
+from cmk.base.api.agent_based.register.check_plugins_legacy import resolve_legacy_name
 from cmk.base.caching import config_cache as _config_cache
-from cmk.base.check_utils import (
-    FinalSectionContent,
-    LegacyCheckParameters,
-    Service,
-    ServiceID,
-)
+from cmk.base.check_utils import FinalSectionContent, LegacyCheckParameters, Service, ServiceID
+from cmk.base.config import SelectedRawSections
 from cmk.base.core_config import MonitoringCore
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
@@ -325,9 +320,13 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
 
             # If check plugins are specified via command line,
             # see which raw sections we may need
-            selected_raw_sections = (None if check_plugin_names is None else
-                                     config.get_relevant_raw_sections(
-                                         check_plugin_names=check_plugin_names))
+            selected_raw_sections: Optional[SelectedRawSections] = None
+            if check_plugin_names is not None:
+                selected_raw_sections = {}
+                for name in config.get_relevant_raw_sections(check_plugin_names=check_plugin_names):
+                    section_ = config.get_registered_section_plugin(name)
+                    assert section_ is not None
+                    selected_raw_sections[name] = section_
 
             multi_host_sections = data_sources.make_host_sections(
                 config_cache,
@@ -338,8 +337,8 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                     ipaddress,
                     do_snmp_scan=do_snmp_scan,
                     on_error=on_error,
-                    selected_raw_sections=selected_raw_sections,
                 ),
+                selected_raw_sections=selected_raw_sections,
                 max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
             )
 
@@ -533,6 +532,7 @@ def discover_on_host(
                 for_check_discovery=True,
             ),
             max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
+            selected_raw_sections=None,
         )
 
         # Compute current state of new and existing checks
@@ -671,6 +671,7 @@ def check_discovery(
         ipaddress,
         sources,
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
+        selected_raw_sections=None,
     )
 
     services, discovered_host_labels = _get_host_services(
@@ -1193,12 +1194,10 @@ def _get_sources_for_discovery(
     do_snmp_scan: bool,
     on_error: str,
     for_check_discovery: bool = False,
-    selected_raw_sections: Optional[config.SelectedRawSections] = None,
 ) -> data_sources.DataSources:
     sources = data_sources.make_sources(
         host_config,
         ipaddress,
-        selected_raw_sections=selected_raw_sections,
     )
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
@@ -1519,6 +1518,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
             on_error=on_error,
         ),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
+        selected_raw_sections=None,
     )
 
     services, discovered_host_labels = _get_host_services(

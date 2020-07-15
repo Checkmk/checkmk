@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostName,
-    RawAgentData,
-    SectionName,
-    ServiceCheckResult,
-)
+from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, ServiceCheckResult
 
 from cmk.fetchers import PiggyBackDataFetcher
 
 import cmk.base.config as config
-from cmk.base.api.agent_based.section_types import AgentSectionPlugin
+from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
 from .agent import AgentDataSource
@@ -31,14 +25,11 @@ class PiggyBackDataSource(AgentDataSource):
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
-        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
         main_data_source: bool = False,
     ) -> None:
         super(PiggyBackDataSource, self).__init__(
             hostname,
             ipaddress,
-            None if selected_raw_sections is None else
-            {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
             main_data_source=main_data_source,
             id_="piggyback",
             cpu_tracking_id="agent",
@@ -51,19 +42,27 @@ class PiggyBackDataSource(AgentDataSource):
         path = os.path.join(tmp_dir, "piggyback", self.hostname)
         return "Process piggyback data from %s" % path
 
-    def _execute(self) -> RawAgentData:
+    def _execute(
+        self,
+        *,
+        selected_raw_sections: Optional[SelectedRawSections],
+    ) -> RawAgentData:
         with PiggyBackDataFetcher(self.hostname, self.ipaddress, self._time_settings) as fetcher:
             self._summary = fetcher.summary()
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 
-    def _get_raw_data(self) -> Tuple[RawAgentData, bool]:
+    def _get_raw_data(
+        self,
+        *,
+        selected_raw_sections: Optional[SelectedRawSections],
+    ) -> Tuple[RawAgentData, bool]:
         """Returns the current raw data of this data source
 
         Special for piggyback: No caching of raw data
         """
         self._logger.log(VERBOSE, "Execute data source")
-        return self._execute(), False
+        return self._execute(selected_raw_sections=selected_raw_sections), False
 
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         """Returns useful information about the data source execution

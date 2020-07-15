@@ -19,11 +19,11 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
-from cmk.utils.check_utils import section_name_of, maincheckify
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
+from cmk.utils.check_utils import maincheckify, section_name_of
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
@@ -218,10 +218,12 @@ class AutomationTryDiscovery(Automation):
 
         data_sources.ABCDataSource.set_may_use_cache_file(use_caches)
         hostname = args[0]
-        return discovery.get_check_preview(hostname,
-                                           use_caches=use_caches,
-                                           do_snmp_scan=do_snmp_scan,
-                                           on_error=on_error)
+        return discovery.get_check_preview(
+            hostname,
+            use_caches=use_caches,
+            do_snmp_scan=do_snmp_scan,
+            on_error=on_error,
+        )
 
 
 automations.register(AutomationTryDiscovery())
@@ -1278,7 +1280,7 @@ class AutomationDiagHost(Automation):
             elif isinstance(source, data_sources.snmp.SNMPDataSource):
                 continue
 
-            source_output = source.run_raw()
+            source_output = source.run_raw(selected_raw_sections=None)
 
             # We really receive a byte string here. The agent sections
             # may have different encodings and are normally decoded one
@@ -1558,7 +1560,7 @@ class AutomationGetAgentOutput(Automation):
                 for source in sources:
                     source.set_max_cachefile_age(config.check_max_cachefile_age)
                     if isinstance(source, data_sources.agent.AgentDataSource):
-                        agent_output += source.run_raw()
+                        agent_output += source.run_raw(selected_raw_sections=None)
                 info = agent_output
 
                 # Optionally show errors of problematic data sources

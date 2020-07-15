@@ -29,11 +29,11 @@ from typing import (
 
 from six import ensure_binary, ensure_str
 
-from cmk.utils.check_utils import is_management_name, maincheckify
 import cmk.utils.debug
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import is_management_name, maincheckify
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
@@ -69,8 +69,8 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
     CLUSTER_LEGACY_MODE_FROM_HELL,
     wrap_parameters,
 )
-from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
+from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 
 if not cmk_version.is_raw_edition():
@@ -152,13 +152,13 @@ def do_check(
         sources = data_sources.make_sources(
             host_config,
             ipaddress,
-            selected_raw_sections=selected_raw_sections,
         )
         mhs = data_sources.make_host_sections(
             config_cache,
             host_config,
             ipaddress,
             sources=sources,
+            selected_raw_sections=selected_raw_sections,
             max_cachefile_age=host_config.max_cachefile_age,
         )
         num_success, plugins_missing_data = _do_all_checks_on_host(
@@ -166,7 +166,6 @@ def do_check(
             host_config,
             ipaddress,
             multi_host_sections=mhs,
-            selected_raw_sections=selected_raw_sections,
             services=services,
             only_check_plugins=only_check_plugin_names,
         )
@@ -176,7 +175,6 @@ def do_check(
             ipaddress,
             sources=sources,
             multi_host_sections=mhs,
-            selected_raw_sections=selected_raw_sections,
         )
 
         if _submit_to_core:
@@ -305,7 +303,6 @@ def _do_all_checks_on_host(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     *,
-    selected_raw_sections: config.SelectedRawSections,
     services: List[Service],
     only_check_plugins: Optional[Set[CheckPluginName]] = None,
 ) -> Tuple[int, List[CheckPluginName]]:

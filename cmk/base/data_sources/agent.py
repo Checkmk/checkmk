@@ -8,7 +8,7 @@ import abc
 import logging
 import os
 import time
-from typing import cast, Dict, List, Optional, Set, Tuple
+from typing import cast, Dict, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -402,7 +402,6 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
-        selected_raw_section_names: Optional[Set[SectionName]] = None,
         *,
         id_: str,
         cpu_tracking_id: str,
@@ -411,7 +410,6 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         super(AgentDataSource, self).__init__(
             hostname,
             ipaddress,
-            selected_raw_section_names,
             id_=id_,
             cpu_tracking_id=cpu_tracking_id,
         )

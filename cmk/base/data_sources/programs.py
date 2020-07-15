@@ -12,13 +12,13 @@ from typing import Dict, Optional
 from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, SectionName
+from cmk.utils.type_defs import HostAddress, HostName, RawAgentData
 
 from cmk.fetchers import ProgramDataFetcher
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.api.agent_based.section_types import AgentSectionPlugin
+from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
 from .agent import AgentDataSource
@@ -38,8 +38,13 @@ class ABCProgramDataSource(AgentDataSource):
         """Return the standard in of the source, or None."""
         raise NotImplementedError()
 
-    def _execute(self) -> RawAgentData:
+    def _execute(
+        self,
+        *,
+        selected_raw_sections: Optional[SelectedRawSections],
+    ) -> RawAgentData:
         self._logger.debug("Calling external program %r" % (self.source_cmdline))
+        # TODO(ml): Do something with the selection.
         with ProgramDataFetcher(
                 self.source_cmdline,
                 self.source_stdin,
@@ -62,7 +67,6 @@ class DSProgramDataSource(ABCProgramDataSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         command_template: str,
-        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
         main_data_source: bool = False,
         id_="agent",
         cpu_tracking_id="ds",
@@ -70,8 +74,6 @@ class DSProgramDataSource(ABCProgramDataSource):
         super(DSProgramDataSource, self).__init__(
             hostname,
             ipaddress,
-            selected_raw_section_names=None if selected_raw_sections is None else
-            {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
             main_data_source=main_data_source,
             id_="agent",
             cpu_tracking_id="ds",
@@ -143,14 +145,11 @@ class SpecialAgentDataSource(ABCProgramDataSource):
         ipaddress: Optional[HostAddress],
         special_agent_id: str,
         params: Dict,
-        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
         main_data_source: bool = False,
     ) -> None:
         super(SpecialAgentDataSource, self).__init__(
             hostname,
             ipaddress,
-            selected_raw_section_names=None if selected_raw_sections is None else
-            {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
             main_data_source=main_data_source,
             id_="special_%s" % special_agent_id,
             cpu_tracking_id="ds",

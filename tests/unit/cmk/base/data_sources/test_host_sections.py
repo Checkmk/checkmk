@@ -397,7 +397,7 @@ class TestMakeHostSectionsHosts:
                 pass
 
         monkeypatch.setattr(
-            ABCDataSource, "run", lambda self: DummyHostSection(
+            ABCDataSource, "run", lambda self, *, selected_raw_sections: DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
@@ -428,6 +428,7 @@ class TestMakeHostSectionsHosts:
             ipaddress,
             sources=[],
             max_cachefile_age=0,
+            selected_raw_sections=None,
         )
         # The length is not zero because the function always sets,
         # at least, a piggy back section.
@@ -452,6 +453,7 @@ class TestMakeHostSectionsHosts:
             ipaddress,
             sources=[SNMPDataSource(hostname, ipaddress)],
             max_cachefile_age=0,
+            selected_raw_sections=None,
         )
         assert len(mhs) == 1
 
@@ -480,6 +482,7 @@ class TestMakeHostSectionsHosts:
             ipaddress,
             sources=[source],
             max_cachefile_age=0,
+            selected_raw_sections=None,
         )
         assert len(mhs) == 1
 
@@ -506,6 +509,7 @@ class TestMakeHostSectionsHosts:
             ipaddress,
             sources=sources,
             max_cachefile_age=0,
+            selected_raw_sections=None,
         )
         assert len(mhs) == 1
 
@@ -533,6 +537,7 @@ class TestMakeHostSectionsHosts:
             ipaddress,
             sources=sources,
             max_cachefile_age=0,
+            selected_raw_sections=None,
         )
         assert len(mhs) == 1
 
@@ -563,7 +568,7 @@ class TestMakeHostSectionsClusters:
                 pass
 
         monkeypatch.setattr(
-            ABCDataSource, "run", lambda self: DummyHostSection(
+            ABCDataSource, "run", lambda self, *, selected_raw_sections: DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
@@ -611,6 +616,7 @@ class TestMakeHostSectionsClusters:
             None,
             sources=[],
             max_cachefile_age=0,
+            selected_raw_sections=None,
         )
         assert len(mhs) == len(nodes)
 
@@ -666,6 +672,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
         address,
         make_sources(host_config, address),
         max_cachefile_age=host_config.max_cachefile_age,
+        selected_raw_sections=None,
     )
     assert len(mhs) == len(hosts) == 3
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]

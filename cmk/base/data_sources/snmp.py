@@ -26,8 +26,8 @@ from cmk.fetchers import factory, SNMPDataFetcher
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
+from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import ABCDataSource, ABCHostSections
@@ -75,6 +75,7 @@ class CachedSNMPDetector:
             for section in config.registered_snmp_sections.values()
         ]
 
+    # TODO (mo): Make this (and the called) function(s) return the sections directly!
     def __call__(
         self,
         snmp_config: SNMPHostConfig,
@@ -115,7 +116,6 @@ class SNMPDataSource(ABCSNMPDataSource):
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
-        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
         *,
         id_: Optional[str] = None,
         cpu_tracking_id: Optional[str] = None,
@@ -124,15 +124,10 @@ class SNMPDataSource(ABCSNMPDataSource):
         super(SNMPDataSource, self).__init__(
             hostname,
             ipaddress,
-            None if selected_raw_sections is None else
-            {s.name for s in selected_raw_sections.values() if isinstance(s, SNMPSectionPlugin)},
             id_="snmp" if id_ is None else id_,
             cpu_tracking_id="snmp" if cpu_tracking_id is None else cpu_tracking_id,
         )
         self.title: Final[str] = "SNMP" if title is None else title
-        self._selected_raw_section_names = (None if selected_raw_sections is None else {
-            s.name for s in selected_raw_sections.values() if isinstance(s, SNMPSectionPlugin)
-        })
         if self.ipaddress is None:
             # snmp_config.ipaddress is not Optional.
             #
@@ -205,20 +200,29 @@ class SNMPDataSource(ABCSNMPDataSource):
         """
         self._fetched_raw_section_names = raw_section_names
 
-    def _execute(self) -> SNMPRawData:
+    def _execute(
+        self,
+        *,
+        selected_raw_sections: Optional[SelectedRawSections],
+    ) -> SNMPRawData:
         ip_lookup.verify_ipaddress(self.ipaddress)
         with SNMPDataFetcher(
-                self._make_oid_infos(),
+                self._make_oid_infos(selected_raw_sections=selected_raw_sections),
                 self._use_snmpwalk_cache,
                 self._snmp_config,
         ) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 
-    def _make_oid_infos(self) -> Dict[SectionName, List[SNMPTree]]:
+    def _make_oid_infos(
+        self,
+        *,
+        selected_raw_sections: Optional[SelectedRawSections],
+    ) -> Dict[SectionName, List[SNMPTree]]:
         oid_infos = {}  # Dict[SectionName, List[SNMPTree]]
-        raw_sections_to_process = self._get_raw_section_names_to_process()
-        for section_name in self._sort_section_names(raw_sections_to_process):
+        for section_name in SNMPDataSource._sort_section_names(
+            {s.name for s in selected_raw_sections.values()}
+                if selected_raw_sections is not None else self.detector(self._snmp_config)):
             plugin = config.registered_snmp_sections.get(section_name)
             if plugin is None:
                 self._logger.debug("%s: No such section definition", section_name)
@@ -235,14 +239,6 @@ class SNMPDataSource(ABCSNMPDataSource):
 
             oid_infos[section_name] = plugin.trees
         return oid_infos
-
-    def _get_raw_section_names_to_process(self) -> Set[SectionName]:
-        """Return a set of raw section names that shall be processed"""
-        # TODO (mo): Make this (and the called) function(s) return the sections directly!
-        if self._selected_raw_section_names is not None:
-            return self._selected_raw_section_names
-
-        return self.detector(self._snmp_config)
 
     @staticmethod
     def _sort_section_names(section_names: Set[SectionName]) -> List[SectionName]:
@@ -301,12 +297,10 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
-        selected_raw_sections: Optional[Dict[SectionName, config.SectionPlugin]] = None,
     ) -> None:
         super(SNMPManagementBoardDataSource, self).__init__(
             hostname,
             ipaddress,
-            selected_raw_sections,
             id_="mgmt_snmp",
             cpu_tracking_id="snmp",
             title="Management board - SNMP",

@@ -185,9 +185,10 @@ test-unit:
 	$(PYTEST) \
 		-T unit \
 		--doctest-modules \
-		../cmk/utils \
-		../cmk/special_agents \
+		../cmk/base/plugins \
 		../cmk/gui \
+		../cmk/special_agents \
+		../cmk/utils \
 		unit
 
 test-unit-coverage-html:
@@ -198,9 +199,10 @@ test-unit-coverage-html:
 		--cov-config=.coveragerc_unit \
 		--no-cov-on-fail \
 		--doctest-modules \
-		../cmk/utils \
-		../cmk/special_agents \
+		../cmk/base/plugins \
 		../cmk/gui \
+		../cmk/special_agents \
+		../cmk/utils \
 		unit
 
 test-unit-sh:

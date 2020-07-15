@@ -223,6 +223,11 @@ class Base:
     def default_topic(cls) -> str:
         return "other"
 
+    @classmethod
+    def type_is_advanced(cls) -> bool:
+        """Whether or not this page type should be treated as advanced element in the navigation"""
+        return False
+
     # Store for all instances of this page type. The key into
     # this dictionary????
     # TODO: Brauchen wir hier überhaupt ein dict??

@@ -814,6 +814,10 @@ class CustomSnapins(pagetypes.Overridable):
         return "custom_snapin"
 
     @classmethod
+    def type_is_advanced(cls) -> bool:
+        return True
+
+    @classmethod
     def phrase(cls, phrase):
         return {
             "title": _("Custom snapin"),

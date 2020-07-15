@@ -136,6 +136,14 @@ def _configure_menu_topics() -> List[TopicMenuTopic]:
             is_advanced=False,
             icon_name="dashboard",
         ),
+        TopicMenuItem(
+            name="reports",
+            title=_("Reports"),
+            url="edit_reports.py",
+            sort_index=30,
+            is_advanced=True,
+            icon_name="report",
+        ),
     ]
 
     graph_items = []
@@ -145,8 +153,8 @@ def _configure_menu_topics() -> List[TopicMenuTopic]:
             name=page_type.type_name(),
             title=page_type.phrase("title_plural"),
             url="%ss.py" % page_type.type_name(),
-            sort_index=30 + (index * 10),
-            is_advanced=False,
+            sort_index=40 + (index * 10),
+            is_advanced=page_type.type_is_advanced(),
             icon_name=page_type.type_name(),
         )
 

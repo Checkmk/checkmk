@@ -1059,7 +1059,7 @@ def render_metrics_table(translated_metrics, host_name, service_description):
         if cmk_graphs_possible():
             output += "<td>"
             output += html.render_popup_trigger(
-                html.render_icon("custom_graph",
+                html.render_icon("menu",
                                  title=_("Add this metric to dedicated graph"),
                                  cssclass="iconbutton"),
                 ident="add_metric_to_graph_" + host_name + ";" + service_description,

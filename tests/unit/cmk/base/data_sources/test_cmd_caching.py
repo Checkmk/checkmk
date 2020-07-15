@@ -95,8 +95,8 @@ def _patch_data_source_run(mocker, **kwargs):
         "_max_cachefile_age": 0,  # check_max_cachefile_age
         "_no_cache": False,
         "_use_outdated_persisted_sections": False,
-        "_do_snmp_scan": False,
-        "_on_error": "raise",
+        "do_snmp_scan": False,
+        "on_error": "raise",
         "_use_snmpwalk_cache": True,
         "_ignore_check_interval": True,
     }
@@ -113,8 +113,8 @@ def _patch_data_source_run(mocker, **kwargs):
                     defaults["_use_outdated_persisted_sections"])
 
         elif isinstance(self, SNMPDataSource):
-            assert self._do_snmp_scan == defaults["_do_snmp_scan"]
-            assert self._on_error == defaults["_on_error"]
+            assert self.detector.do_snmp_scan == defaults["do_snmp_scan"]
+            assert self.detector.on_error == defaults["on_error"]
             assert self._use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
             assert self._ignore_check_interval == defaults["_ignore_check_interval"]
 
@@ -347,7 +347,7 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
         (
             "@noscan",
             {
-                "_do_snmp_scan": False,
+                "do_snmp_scan": False,
                 "_may_use_cache_file": True,
                 "_max_cachefile_age": 120,
                 "_use_outdated_cache_file": True,
@@ -356,7 +356,7 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
         (
             "@scan",
             {
-                "_do_snmp_scan": True,
+                "do_snmp_scan": True,
                 "_may_use_cache_file": False,
                 "_max_cachefile_age": 0,
             },
@@ -367,10 +367,10 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
     ("raise_errors"),
     [
         ("@raiseerrors", {
-            "_on_error": "raise"
+            "on_error": "raise"
         }),
         (None, {
-            "_on_error": "ignore"
+            "on_error": "ignore"
         }),
     ],
 )
@@ -395,19 +395,19 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
     ("raise_errors"),
     [
         ("@raiseerrors", {
-            "_on_error": "raise"
+            "on_error": "raise"
         }),
         (None, {
-            "_on_error": "ignore"
+            "on_error": "ignore"
         }),
     ],
 )
 @pytest.mark.parametrize(("scan"), [
     (None, {
-        "_do_snmp_scan": False
+        "do_snmp_scan": False
     }),
     ("@scan", {
-        "_do_snmp_scan": True
+        "do_snmp_scan": True
     }),
 ])
 @pytest.mark.parametrize(

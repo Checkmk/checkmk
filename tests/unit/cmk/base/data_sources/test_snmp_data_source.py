@@ -141,11 +141,15 @@ def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
     def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
         return ipaddress
 
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_option("management_protocol", {hostname: "snmp"})
+    ts.apply(monkeypatch)
+
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config, "host_attributes", {
         hostname: {
-            "management_address": ipaddress
+            "management_address": ipaddress,
         },
     })
 
@@ -175,9 +179,10 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(monkeypatch):
     assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
 
 
-@pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-def test_attribute_defaults(monkeypatch, ipaddress):
+def test_attribute_defaults(monkeypatch):
+    ipaddress = "1.2.3.4"
     hostname = "testhost"
+
     Scenario().add_host(hostname).apply(monkeypatch)
     source = SNMPDataSource(hostname, ipaddress)
 
@@ -186,21 +191,12 @@ def test_attribute_defaults(monkeypatch, ipaddress):
     assert source.id == "snmp"
     assert source.title == "SNMP"
     assert source._cpu_tracking_id == "snmp"
-    assert source.get_do_snmp_scan() is False
+    assert source.detector.do_snmp_scan is False
     # From the base class
     assert source.name() == "snmp:%s:%s" % (hostname, ipaddress if ipaddress else "")
     assert source.is_agent_cache_disabled() is False
     assert source.get_may_use_cache_file() is False
     assert source.exception() is None
-
-
-def test_detector_requires_ipaddress(monkeypatch):
-    hostname = "testhost"
-    Scenario().add_host(hostname).apply(monkeypatch)
-    source = SNMPDataSource(hostname, None)
-
-    with pytest.raises(NotImplementedError):
-        source._get_raw_section_names_to_process()
 
 
 def test_describe_with_ipaddress(monkeypatch):
@@ -211,14 +207,3 @@ def test_describe_with_ipaddress(monkeypatch):
 
     default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)"
     assert source.describe() == default
-
-
-def test_describe_without_ipaddress_raises_exception(monkeypatch):
-    hostname = "testhost"
-    ipaddress = None
-    Scenario().add_host(hostname).apply(monkeypatch)
-    source = SNMPDataSource(hostname, ipaddress)
-
-    # TODO: This does not seem to be the expected exception.
-    with pytest.raises(NotImplementedError):
-        source.describe()

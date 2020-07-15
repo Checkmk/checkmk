@@ -296,8 +296,8 @@ def _do_inv_for_realhost(
 ) -> None:
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
-            source.set_on_error("raise")
-            source.set_do_snmp_scan(True)
+            source.detector.on_error = "raise"  # default
+            source.detector.do_snmp_scan = True
             data_sources.snmp.SNMPDataSource.disable_data_source_cache()
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)

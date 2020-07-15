@@ -35,11 +35,13 @@ from ._abstract import ABCDataSource, ABCHostSections
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                        SNMPSectionContent]):
-    def __init__(self,
-                 sections: Optional[SNMPSections] = None,
-                 cache_info: Optional[SectionCacheInfo] = None,
-                 piggybacked_raw_data: Optional[PiggybackRawData] = None,
-                 persisted_sections: Optional[SNMPPersistedSections] = None) -> None:
+    def __init__(
+        self,
+        sections: Optional[SNMPSections] = None,
+        cache_info: Optional[SectionCacheInfo] = None,
+        piggybacked_raw_data: Optional[PiggybackRawData] = None,
+        persisted_sections: Optional[SNMPPersistedSections] = None,
+    ) -> None:
         super(SNMPHostSections, self).__init__(
             sections=sections if sections is not None else {},
             cache_info=cache_info if cache_info is not None else {},
@@ -54,9 +56,17 @@ class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedS
 
 class CachedSNMPDetector:
     """Object to run/cache SNMP detection"""
-    def __init__(self):
+    def __init__(
+        self,
+        *,
+        on_error: str = "raise",
+        do_snmp_scan: bool = False,
+    ) -> None:
         super(CachedSNMPDetector, self).__init__()
         # Optional set: None: we never tried, empty: we tried, but found nothing
+        # TODO: Check if do_snmp_scan and on_error can be dropped.
+        self.on_error = on_error
+        self.do_snmp_scan = do_snmp_scan
         self._cached_result: Optional[Set[SectionName]] = None
 
     def sections(self) -> Iterable[SNMPScanSection]:
@@ -68,8 +78,6 @@ class CachedSNMPDetector:
     def __call__(
         self,
         snmp_config: SNMPHostConfig,
-        on_error: str,
-        do_snmp_scan: bool,
     ) -> Set[SectionName]:
         """Returns a list of raw sections that shall be processed by this source.
 
@@ -80,8 +88,8 @@ class CachedSNMPDetector:
 
         self._cached_result = gather_available_raw_section_names(
             self.sections(),
-            on_error=on_error,
-            do_snmp_scan=do_snmp_scan,
+            on_error=self.on_error,
+            do_snmp_scan=self.do_snmp_scan,
             binary_host=config.get_config_cache().in_binary_hostlist(
                 snmp_config.hostname,
                 config.snmp_without_sys_descr,
@@ -97,9 +105,7 @@ class CachedSNMPDetector:
 class ABCSNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                       SNMPHostSections],
                         metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _snmp_config(self) -> SNMPHostConfig:
-        raise NotImplementedError()
+    pass
 
 
 class SNMPDataSource(ABCSNMPDataSource):
@@ -123,40 +129,44 @@ class SNMPDataSource(ABCSNMPDataSource):
             id_="snmp" if id_ is None else id_,
             cpu_tracking_id="snmp" if cpu_tracking_id is None else cpu_tracking_id,
         )
-        self._detector = CachedSNMPDetector()
-        self._do_snmp_scan = False
-        self._on_error = "raise"
+        self.title: Final[str] = "SNMP" if title is None else title
+        self._selected_raw_section_names = (None if selected_raw_sections is None else {
+            s.name for s in selected_raw_sections.values() if isinstance(s, SNMPSectionPlugin)
+        })
+        if self.ipaddress is None:
+            # snmp_config.ipaddress is not Optional.
+            #
+            # At least classic SNMP enforces that there is an address set,
+            # Inline-SNMP has some lookup logic for some reason. We need
+            # to find out whether or not we can really have None here.
+            # Looks like it could be the case for cluster hosts which
+            # don't have an IP address set.
+            raise TypeError(self.ipaddress)
+        self._snmp_config = (
+            # Because of crap inheritance.
+            self._host_config.snmp_config(self.ipaddress)
+            if self.source_type is SourceType.HOST else self._host_config.management_snmp_config)
+        self.detector: Final = CachedSNMPDetector()
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
         self._fetched_raw_section_names: Set[SectionName] = set()
-        self.title: Final[str] = "SNMP" if title is None else title
-
-    @property
-    def _snmp_config(self) -> SNMPHostConfig:
-        # TODO: snmp_config.ipaddress is not Optional. At least classic SNMP enforces that there
-        # is an address set, Inline-SNMP has some lookup logic for some reason. We need to find
-        # out whether or not we can really have None here. Looks like it could be the case for
-        # cluster hosts which don't have an IP address set.
-        if self.ipaddress is None:
-            raise NotImplementedError("Invalid SNMP host configuration: self.ipaddress is None")
-        return self._host_config.snmp_config(self.ipaddress)
 
     def describe(self) -> str:
         snmp_config = self._snmp_config
-        if snmp_config.is_usewalk_host:
+        if self._snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"
 
-        if snmp_config.is_inline_snmp_host:
+        if self._snmp_config.is_inline_snmp_host:
             inline = "yes"
         else:
             inline = "no"
 
-        if snmp_config.is_snmpv3_host:
-            credentials_text = "Credentials: '%s'" % ", ".join(snmp_config.credentials)
+        if self._snmp_config.is_snmpv3_host:
+            credentials_text = "Credentials: '%s'" % ", ".join(self._snmp_config.credentials)
         else:
-            credentials_text = "Community: %r" % snmp_config.credentials
+            credentials_text = "Community: %r" % self._snmp_config.credentials
 
-        if snmp_config.is_snmpv3_host or snmp_config.is_bulkwalk_host:
+        if self._snmp_config.is_snmpv3_host or snmp_config.is_bulkwalk_host:
             bulk = "yes"
         else:
             bulk = "no"
@@ -184,17 +194,6 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     def set_use_snmpwalk_cache(self, use_snmpwalk_cache: bool) -> None:
         self._use_snmpwalk_cache = use_snmpwalk_cache
-
-    # TODO: Check if this can be dropped
-    def set_on_error(self, on_error: str) -> None:
-        self._on_error = on_error
-
-    # TODO: Check if this can be dropped
-    def set_do_snmp_scan(self, do_snmp_scan: bool) -> None:
-        self._do_snmp_scan = do_snmp_scan
-
-    def get_do_snmp_scan(self) -> bool:
-        return self._do_snmp_scan
 
     def set_fetched_raw_section_names(self, raw_section_names: Set[SectionName]) -> None:
         """Sets a list of already fetched host sections/check plugin names.
@@ -243,11 +242,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         if self._selected_raw_section_names is not None:
             return self._selected_raw_section_names
 
-        return self._detector(
-            self._snmp_config,
-            on_error=self._on_error,
-            do_snmp_scan=self._do_snmp_scan,
-        )
+        return self.detector(self._snmp_config)
 
     @staticmethod
     def _sort_section_names(section_names: Set[SectionName]) -> List[SectionName]:
@@ -317,7 +312,3 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
             title="Management board - SNMP",
         )
         self._credentials: Final = cast(SNMPCredentials, self._host_config.management_credentials)
-
-    @property
-    def _snmp_config(self) -> SNMPHostConfig:
-        return self._host_config.management_snmp_config

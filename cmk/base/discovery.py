@@ -1201,8 +1201,8 @@ def _get_sources_for_discovery(
     )
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
-            source.set_on_error(on_error)
-            source.set_do_snmp_scan(do_snmp_scan)
+            source.detector.on_error = on_error
+            source.detector.do_snmp_scan = do_snmp_scan
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
 

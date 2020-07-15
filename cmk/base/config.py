@@ -2136,14 +2136,6 @@ def initialize_check_type_caches() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def discoverable_snmp_checks() -> Set[CheckPluginNameStr]:
-    types = set()
-    for check_plugin_name, check in check_info.items():
-        if cmk.base.check_utils.is_snmp_check(check_plugin_name) and check["inventory_function"]:
-            types.add(check_plugin_name)
-    return types
-
-
 def get_discovery_parameters(
     host_name: HostName,
     check_plugin: CheckPlugin,

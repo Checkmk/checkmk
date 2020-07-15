@@ -111,14 +111,11 @@ def list_service_downtimes(param):
                  parameters=['host_name', DOWNTIME_ID],
                  output_empty=True)
 def delete_downtime(params):
-    live = sites.live()
-
-    q = Query([Downtimes.id, Downtimes.is_service])
-
-    q = q.filter(Downtimes.id.contains(params['downtime_id']))
-    gen_downtime = q.iterate(live)
-    downtime_info = next(gen_downtime)
-    downtime_type = "SVC" if downtime_info['is_service'] else "HOST"
+    is_service = Query(
+        [Downtimes.is_service],
+        Downtimes.id.contains(params['downtime_id']),
+    ).value(sites.live())
+    downtime_type = "SVC" if is_service else "HOST"
     command_delete = remove_downtime_command(downtime_type, params['downtime_id'])
     execute_livestatus_command(command_delete, params['host_name'])
     return Response(status=204)

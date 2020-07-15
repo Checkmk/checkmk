@@ -8,7 +8,6 @@
 import abc
 import traceback
 import json
-import re
 from typing import Optional, Any, Dict, List, Tuple, Type
 
 import cmk.utils.plugin_registry

@@ -45,7 +45,9 @@ function install(){
 function uninstall(){
     echo "Removing Forecast Graphs dependencies"
     pip install -U pip-autoremove
-    ~/local/lib/python/bin/pip-autoremove fbprophet  pystan -y
+    pip install pygments==2.5.2 pyrepl==0.9.0
+    ~/local/lib/python/bin/pip-autoremove fbprophet pystan pygments pyrepl -y
+    rm -rv ~/local/lib/python/fbprophet
     pip uninstall -y pip-autoremove
 
     omd restart apache

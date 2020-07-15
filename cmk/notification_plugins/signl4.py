@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # SIGNL4 Alerting
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
@@ -12,14 +12,14 @@ import json
 import os
 import sys
 
+from cmk.notification_plugins import utils
+
 api_url = "https://connect.signl4.com/webhook/"
 
 def main():
-    context = dict([ (var[7:], value.decode("utf-8"))
-                      for (var, value) in os.environ.items()
-                      if var.startswith("NOTIFY_")])
+    context = utils.collect_context()
 
-    message    = get_text(context)
+    message = get_text(context)
 
     password = context["PARAMETER_PASSWORD"]
 

@@ -10,13 +10,18 @@ have any friction during testing with these helpers themselves.
 
 
 """
+import contextlib
 import datetime as dt
+import re
 import time
-from typing import Union, List, Any, Optional
+from typing import Any, List, Literal, Optional, Union
 
 # TODO: Make livestatus.py a well tested package on pypi
 # TODO: Move this code to the livestatus package
 # TODO: Multi-site support. Need to have multiple lists of queries, one per site.
+
+MatchType = Literal["strict", "ellipsis"]
+Response = List[List[Any]]
 
 
 class MockLiveStatusConnection:
@@ -111,7 +116,7 @@ program_start num_hosts num_services'
         self._report_multiple = report_multiple
         self._expect_status_query = None
 
-    def _expect_post_connect_query(self):
+    def _expect_post_connect_query(self) -> None:
         # cmk.gui.sites._connect_multiple_sites asks for the some specifics upon initial connection.
         # We expect this query and give the expected result.
         today = str(dt.date.today())
@@ -126,7 +131,7 @@ program_start num_hosts num_services'
             force_pos=0,  # first query to be expected
         )
 
-    def __call__(self, expect_status_query=True):
+    def __call__(self, expect_status_query=True) -> 'MockLiveStatusConnection':
         self._expect_status_query = expect_status_query
         return self
 
@@ -158,9 +163,12 @@ program_start num_hosts num_services'
         self,
         query: Union[str, List[str]],
         result: List[List[Any]] = None,
+        match_type: MatchType = 'strict',
         force_pos: Optional[int] = None,
-    ):
+    ) -> 'MockLiveStatusConnection':
         """Add a LiveStatus query to be expected by this class.
+
+        This method is chainable, as it returns the instance again.
 
         Args:
             query:
@@ -170,20 +178,29 @@ program_start num_hosts num_services'
             result:
                 What the result of this query should be.
 
+            match_type:
+                Flags with which to decide comparison behavior.
+                Can be either 'strict' or 'ellipsis'. In case of 'ellipsis', the supplied query
+                can have placeholders in the form of '...'. These placeholders are ignored in the
+                comparison.
+
             force_pos:
                 Only used internally. Ignore.
         """
+        if match_type not in ('strict', 'ellipsis'):
+            raise ValueError(f"match_type {match_type!r} not supported.")
+
         if isinstance(query, list):
             query = '\n'.join(query)
 
         if force_pos is not None:
-            self._expected_queries.insert(force_pos, (query, result))
+            self._expected_queries.insert(force_pos, (query, result, match_type))
         else:
-            self._expected_queries.append((query, result))
+            self._expected_queries.append((query, result, match_type))
 
         return self
 
-    def _lookup_next_query(self, query, headers):
+    def _lookup_next_query(self, query, headers) -> Response:
         if self._expect_status_query is None:
             raise RuntimeError("Please use MockLiveStatusConnection as a context manager.")
 
@@ -198,29 +215,94 @@ program_start num_hosts num_services'
         if not self._expected_queries:
             raise RuntimeError(f"Got unexpected query:\n" f" * {repr(query)}")
 
-        if self._expected_queries[0][0] != query:
+        expected_query, response, match_type = self._expected_queries[0]
+
+        if not _compare(expected_query, query, match_type):
             raise RuntimeError(f"Expected query:\n"
-                               f" * {repr(self._expected_queries[0][0])}\n"
+                               f" * {repr(expected_query)}\n"
                                f"Got query:\n"
                                f" * {repr(query)}")
 
-        _, response = self._expected_queries.pop(0)
-
-        def _the_great_prepender():
-            for line in response:
-                yield ['NO_SITE'] + line
+        # Passed, remove this entry.
+        self._expected_queries.pop(0)
 
         if self._prepend_site:
-            return list(_the_great_prepender())
+            return [['NO_SITE'] + line for line in response]
 
         return response
 
     # Mocked livestatus api below
-    def set_prepend_site(self, prepend_site: bool):
+    def get_connection(self, site_id: str) -> 'MockLiveStatusConnection':
+        return self
+
+    def command(self, command: str, site: Optional[str] = 'local') -> None:
+        self.do_command(command)
+
+    def do_command(self, command: str) -> None:
+        self._lookup_next_query(f"COMMAND {command}", [])
+
+    def set_prepend_site(self, prepend_site: bool) -> None:
         self._prepend_site = prepend_site
 
-    def query_parallel(self, query, headers):
+    def query_parallel(self, query, headers) -> Response:
         return self._lookup_next_query(query, headers)
 
-    def query_non_parallel(self, query, headers):
+    def query_non_parallel(self, query, headers) -> Response:
         return self._lookup_next_query(query, headers)
+
+
+def _compare(pattern: str, string: str, match_type: MatchType) -> bool:
+    """Compare two strings on different ways.
+
+    Examples:
+        >>> _compare("asdf", "asdf", "strict")
+        True
+
+        >>> _compare("...", "asdf", "ellipsis")
+        True
+
+        >>> _compare("...b", "abc", "ellipsis")
+        False
+
+        >>> _compare("foo", "asdf", "ellipsis")
+        False
+
+        >>> _compare("Hello ... world!", "Hello cruel world!", "ellipsis")
+        True
+
+        >>> _compare("COMMAND [...] DEL_FOO;", "COMMAND [123] DEL_FOO;", "ellipsis")
+        True
+
+    Args:
+        pattern:
+            The expected string.
+            When `match_type` is set to 'ellipsis', may contain '...' for placeholders.
+
+        string:
+            The string to compare the pattern with.
+
+        match_type:
+            Strict comparisons or with placeholders.
+
+    Returns:
+        A boolean, indicating the match.
+
+    """
+    if match_type == 'strict':
+        result = pattern == string
+    elif match_type == 'ellipsis':
+        final_pattern = pattern.replace("[", "\\[").replace("...", ".*?")  # non-greedy match
+        result = bool(re.match(f"^{final_pattern}$", string))
+    else:
+        raise RuntimeError(f"Unsupported match behaviour: {match_type}")
+
+    return result
+
+
+@contextlib.contextmanager
+def simple_expect(query, match_type: MatchType = "ellipsis", expect_status_query=False):
+    """A simplified testing context manager."""
+    live = MockLiveStatusConnection()
+    live.expect_query(query, match_type=match_type)
+    with live(expect_status_query=expect_status_query):
+        yield live

@@ -9,11 +9,11 @@
 # But at the current state of affairs we have no choice, otherwise an
 # incremental cleanup is impossible.
 
-from typing import Optional
+from typing import Optional, Union
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels
 from cmk.base.check_utils import LegacyCheckParameters
-from cmk.utils.type_defs import CheckPluginNameStr, Item, HostName, ServiceName
+from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, Item, HostName, ServiceName
 
 # Symbolic representations of states in plugin output
 state_markers = ["", "(!)", "(!!)", "(?)"]
@@ -61,9 +61,12 @@ def host_name() -> HostName:
     return _hostname
 
 
-def set_service(type_name: Optional[CheckPluginNameStr], descr: Optional[ServiceName]) -> None:
+def set_service(
+    type_name: Optional[Union[CheckPluginName, str]],
+    descr: Optional[ServiceName],
+) -> None:
     global _check_type, _service_description
-    _check_type = type_name
+    _check_type = str(type_name)
     _service_description = descr
 
 

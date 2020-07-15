@@ -514,7 +514,7 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
         return True
     # Make a bit of context information globally available, so that functions
     # called by checks know this context
-    check_api_utils.set_service(str(service_check_plugin_name), service.description)
+    check_api_utils.set_service(service_check_plugin_name, service.description)
     item_state.set_item_state_prefix(str(service_check_plugin_name), service.item)
 
     section_name = legacy_check_plugin_name.split('.')[0]

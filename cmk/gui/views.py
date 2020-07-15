@@ -35,6 +35,8 @@ import cmk.gui.sites as sites
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
+from cmk.gui.plugins.main_menu.mega_menus import make_main_menu_breadcrumb, MegaMenuMonitoring
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
     Alternative,
@@ -406,6 +408,116 @@ class View:
     def user_sorters(self, user_sorters: 'Optional[List[SorterSpec]]') -> None:
         self._user_sorters = user_sorters
 
+    def breadcrumb(self) -> Breadcrumb:
+        """Render the breadcrumb for the current view
+
+        In case of views we not only have a hierarchy of
+
+        1. main menu
+        2. main menu topic
+
+        We also have a hierarchy between some of the views (see _host_hierarchy_breadcrumb).  But
+        this is not the case for all views. A lot of the views are direct children of the topic
+        level.
+        """
+        # 1. Main menu level
+        breadcrumb = make_main_menu_breadcrumb(MegaMenuMonitoring)
+
+        # TODO: Temporarily(tm) disabled until we have decided whether or not we want this
+        ## 2. Topic level
+        #topic_id = self.spec["topic"]
+        #PagetypeTopics.load()
+        #topic = PagetypeTopics.find_page(topic_id)
+        #if topic is None:
+        #    topic = PagetypeTopics.find_page("other")
+
+        #breadcrumb.append(BreadcrumbItem(
+        #    title=topic.title(),
+        #    url=None,
+        #))
+
+        # View without special hierarchy
+        if "host" not in self.spec['single_infos']:
+            breadcrumb.append(
+                BreadcrumbItem(
+                    title=view_title(self.spec),
+                    url=html.makeuri_contextless([("view_name", self.name)]),
+                ))
+            return breadcrumb
+
+        # Now handle the views within the host view hierarchy
+        return self._host_hierarchy_breadcrumb(breadcrumb)
+
+    def _host_hierarchy_breadcrumb(self, breadcrumb: Breadcrumb) -> Breadcrumb:
+        """Realize the host hierarchy breadcrumb
+
+        All hosts
+         |
+         + host home view
+           |
+           + host views
+           |
+           + service home view
+             |
+             + service views
+        """
+        permitted_views = get_permitted_views()
+        host_name = self.context["host"]
+
+        # 1. level: list of all hosts
+        allhosts_view_spec = permitted_views["allhosts"]
+        breadcrumb.append(
+            BreadcrumbItem(
+                _u(allhosts_view_spec["title"]),
+                html.makeuri_contextless([("view_name", "allhosts")]),
+            ))
+
+        # 2. level: host home page
+        host_view_spec = permitted_views["host"]
+        breadcrumb.append(
+            BreadcrumbItem(title=view_title(host_view_spec),
+                           url=html.makeuri_contextless([("view_name", "host"),
+                                                         ("host", host_name)])))
+
+        if self.name == "host":
+            # In case we are on the host homepage, we have the final breadcrumb
+            return breadcrumb
+
+        # 3a) level: other single host pages
+        if "service" not in self.spec['single_infos']:
+            # All other single host pages are right below the host home page
+            breadcrumb.append(
+                BreadcrumbItem(
+                    title=view_title(self.spec),
+                    url=html.makeuri_contextless([("view_name", self.name), ("host", host_name)]),
+                ))
+            return breadcrumb
+
+        service_name = self.context["service"]
+        service_view_spec = permitted_views["service"]
+
+        # 3b) level: service home page
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=view_title(service_view_spec),
+                url=html.makeuri_contextless([("view_name", "service"), ("host", host_name),
+                                              ("service", service_name)]),
+            ))
+
+        if self.name == "service":
+            # In case we are on the service home page, we have the final breadcrumb
+            return breadcrumb
+
+        # All other single service pages are right below the host home page
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=view_title(self.spec),
+                url=html.makeuri_contextless([("view_name", self.name), ("host", host_name),
+                                              ("service", service_name)]),
+            ))
+
+        return breadcrumb
+
 
 class ViewRenderer(metaclass=abc.ABCMeta):
     def __init__(self, view: View) -> None:
@@ -435,7 +547,7 @@ class GUIViewRenderer(ViewRenderer):
             html.body_start(view_title(view_spec))
 
         if display_options.enabled(display_options.T):
-            html.top_heading(view_title(view_spec))
+            html.top_heading(view_title(view_spec), self.view.breadcrumb())
 
         has_done_actions = False
         row_count = len(rows)

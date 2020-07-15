@@ -802,7 +802,8 @@ def show_create_view_dialog(next_url=None):
 
     ds = 'services'  # Default selection
 
-    html.header(_('Create View'))
+    title = _('Create View')
+    html.header(title, visuals.visual_page_breadcrumb("views", title, "create"))
     html.begin_context_buttons()
     html.context_button(_("Back"), html.get_url_input("back", "edit_views.py"), "back")
     html.end_context_buttons()

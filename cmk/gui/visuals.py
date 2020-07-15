@@ -57,6 +57,11 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.plugins.main_menu.mega_menus import (
+    make_main_menu_breadcrumb,
+    MegaMenuConfigure,
+)
 
 from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
@@ -435,7 +440,7 @@ def page_list(what,
     if not config.user.may("general.edit_" + what):
         raise MKAuthException(_("Sorry, you lack the permission for editing this type of visuals."))
 
-    html.header(title)
+    html.header(title, visual_page_breadcrumb(what, title, "list"))
 
     html.begin_context_buttons()
     html.context_button(_('New'), 'create_%s.py' % what_s, "new")
@@ -616,12 +621,12 @@ def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
 
 
 def page_create_visual(what, info_keys, next_url=None):
-    title = visual_type_registry[what]().title
+    title = _('Create %s') % visual_type_registry[what]().title
     what_s = what[:-1]
 
     vs_infos = SingleInfoSelection(info_keys)
 
-    html.header(_('Create %s') % title)
+    html.header(title, visual_page_breadcrumb(what, title, "create"))
     html.begin_context_buttons()
     html.context_button(_("Back"), html.get_url_input("back", "edit_%s.py" % what), "back")
     html.end_context_buttons()
@@ -765,7 +770,7 @@ def page_edit_visual(what,
     # Load existing visual from disk - and create a copy if 'load_user' is set
     visualname = html.request.var("load_name")
     oldname = visualname
-    mode = html.request.var('mode', 'edit')
+    mode = html.request.get_ascii_input_mandatory('mode', 'edit')
     owner_user_id = config.user.id
     if visualname:
         cloneuser = html.request.var("load_user")
@@ -826,7 +831,7 @@ def page_edit_visual(what,
     else:
         title = _('Edit %s') % visual_type.title
 
-    html.header(title)
+    html.header(title, visual_page_breadcrumb(what, title, mode))
     html.begin_context_buttons()
     back_url = html.get_url_input("back", "edit_%s.py" % what)
     html.context_button(_("Back"), back_url, "back")
@@ -1483,6 +1488,19 @@ def unpack_context_after_editing(packed_context: Dict) -> VisualContext:
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+def visual_page_breadcrumb(what: str, title: str, page_name: str) -> Breadcrumb:
+    breadcrumb = make_main_menu_breadcrumb(MegaMenuConfigure)
+
+    list_title = visual_type_registry[what]().plural_title
+    breadcrumb.append(BreadcrumbItem(title=list_title, url="edit_%s.py" % what))
+
+    if page_name == "list":  # The list is the parent of all others
+        return breadcrumb
+
+    breadcrumb.append(BreadcrumbItem(title=title, url=html.makeuri([])))
+    return breadcrumb
 
 
 def is_single_site_info(info_key: InfoName) -> bool:

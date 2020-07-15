@@ -60,6 +60,11 @@ from cmk.gui.permissions import (
     declare_permission_section,
     declare_permission,
 )
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.plugins.main_menu.mega_menus import (
+    make_main_menu_breadcrumb,
+    MegaMenuConfigure,
+)
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
@@ -866,6 +871,18 @@ class Overridable(Base):
         pass
 
     @classmethod
+    def breadcrumb(cls, page_name: str) -> Breadcrumb:
+        breadcrumb = make_main_menu_breadcrumb(MegaMenuConfigure)
+
+        breadcrumb.append(BreadcrumbItem(title=cls.phrase("title_plural"), url=cls.list_url()))
+
+        if page_name == "list":  # The list is the parent of all others
+            return breadcrumb
+
+        breadcrumb.append(BreadcrumbItem(title=cls.phrase(page_name), url=html.makeuri([])))
+        return breadcrumb
+
+    @classmethod
     def page_list(cls):
         cls.load()
 
@@ -877,7 +894,7 @@ class Overridable(Base):
 
         cls.need_overriding_permission("edit")
 
-        html.header(cls.phrase("title_plural"))
+        html.header(cls.phrase("title_plural"), cls.breadcrumb("list"))
         html.begin_context_buttons()
         html.context_button(cls.phrase("new"), cls.create_url(), "new_" + cls.type_name())
 
@@ -1101,7 +1118,7 @@ class Overridable(Base):
         # "create" -> create completely new page
         # "clone"  -> like new, but prefill form with values from existing page
         # "edit"   -> edit existing page
-        mode = html.request.var('mode', 'edit')
+        mode = html.request.get_ascii_input_mandatory('mode', 'edit')
         if mode == "create":
             title = cls.phrase("create")
             page_dict = {
@@ -1141,7 +1158,7 @@ class Overridable(Base):
                                       _("The requested %s does not exist") % cls.phrase("title"))
             page_dict = page.internal_representation()
 
-        html.header(title)
+        html.header(title, cls.breadcrumb(mode))
         html.begin_context_buttons()
         html.context_button(_("Back"), back_url, "back")
         html.end_context_buttons()

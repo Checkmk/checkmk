@@ -111,6 +111,7 @@ from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -1638,6 +1639,7 @@ class html(ABCHTMLGenerator):
 
     def header(self,
                title: str = u'',
+               breadcrumb: Breadcrumb = None,
                javascripts: Optional[List[str]] = None,
                force: bool = False,
                show_body_start: bool = True,
@@ -1650,7 +1652,7 @@ class html(ABCHTMLGenerator):
                 self._header_sent = True
 
                 if self.render_headfoot and show_top_heading:
-                    self.top_heading(title)
+                    self.top_heading(title, breadcrumb)
 
     def body_start(self,
                    title: str = u'',
@@ -1667,7 +1669,7 @@ class html(ABCHTMLGenerator):
     def html_foot(self) -> None:
         self.close_html()
 
-    def top_heading(self, title: str) -> None:
+    def top_heading(self, title: str, breadcrumb: Breadcrumb = None) -> None:
         if not isinstance(config.user, config.LoggedInNobody):
             login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
             if self.enable_debug:
@@ -1676,7 +1678,8 @@ class html(ABCHTMLGenerator):
             login_text += ')'
         else:
             login_text = _("not logged in")
-        self.top_heading_left(title)
+
+        self.top_heading_left(title, breadcrumb)
 
         self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; ' %
                    login_text)
@@ -1685,7 +1688,7 @@ class html(ABCHTMLGenerator):
         self.write(' <b id=headertime></b>')
         self.top_heading_right()
 
-    def top_heading_left(self, title: str) -> None:
+    def top_heading_left(self, title: str, breadcrumb: Breadcrumb = None) -> None:
         self.open_table(class_="header")
         self.open_tr()
         self.open_td(width="*", class_="heading")
@@ -1697,6 +1700,10 @@ class html(ABCHTMLGenerator):
                href="#",
                onfocus="if (this.blur) this.blur();",
                onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
+
+        if breadcrumb:
+            BreadcrumbRenderer().show(breadcrumb)
+
         self.close_td()
 
     def top_heading_right(self) -> None:

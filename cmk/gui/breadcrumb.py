@@ -8,11 +8,13 @@
 Cares about rendering the breadcrumb which is shown at the top of all pages
 """
 
-from typing import NamedTuple, MutableSequence, List, Iterable
+from typing import NamedTuple, MutableSequence, List, Iterable, Optional
+
+from cmk.gui.globals import html
 
 BreadcrumbItem = NamedTuple("BreadcrumbItem", [
     ("title", str),
-    ("url", str),
+    ("url", Optional[str]),
 ])
 
 
@@ -35,3 +37,16 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
 
     def insert(self, index, value):
         self._items.insert(index, value)
+
+
+class BreadcrumbRenderer:
+    def show(self, breadcrumb: Breadcrumb) -> None:
+        html.open_div(class_="breadcrumb")
+
+        for item in breadcrumb:
+            if item.url:
+                html.a(item.title, href=item.url)
+            else:
+                html.span(item.title)
+
+        html.close_div()

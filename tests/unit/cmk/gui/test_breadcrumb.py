@@ -32,3 +32,16 @@ def test_breadcrumb_creation():
     assert len(b) == 4
     assert b[2].title == "Title3"
     assert b[3].title == "Title4"
+
+
+def test_breadcrumb_add():
+    i1 = BreadcrumbItem("Title1", "index.py")
+    b1 = Breadcrumb([i1])
+
+    i2 = BreadcrumbItem("Title2", "index.py")
+    b2 = Breadcrumb([i2])
+
+    b3 = b1 + b2
+    assert len(b1) == 1
+    assert len(b2) == 1
+    assert len(b3) == 2

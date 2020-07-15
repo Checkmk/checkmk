@@ -38,6 +38,9 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
     def insert(self, index, value):
         self._items.insert(index, value)
 
+    def __add__(self, other):
+        return Breadcrumb(list(self) + list(other))
+
 
 class BreadcrumbRenderer:
     def show(self, breadcrumb: Breadcrumb) -> None:

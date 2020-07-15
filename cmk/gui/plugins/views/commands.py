@@ -177,7 +177,7 @@ class PermissionActionNotifications(Permission):
 
     @property
     def defaults(self):
-        return ["admin"]
+        return []
 
 
 @command_registry.register
@@ -248,7 +248,7 @@ class PermissionActionEnableChecks(Permission):
 
     @property
     def defaults(self):
-        return ["admin"]
+        return []
 
 
 @command_registry.register
@@ -367,7 +367,7 @@ class PermissionActionClearModifiedAttributes(Permission):
 
     @property
     def defaults(self):
-        return ["admin"]
+        return []
 
 
 @command_registry.register

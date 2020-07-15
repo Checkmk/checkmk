@@ -2161,9 +2161,11 @@ def get_discovery_parameters(
                               check_plugin.discovery_ruleset_type)
 
 
-def compute_check_parameters(host: HostName, checktype: Union[CheckPluginNameStr,
-                                                              CheckPluginName], item: Item,
-                             params: LegacyCheckParameters) -> Optional[LegacyCheckParameters]:
+def compute_check_parameters(host: HostName,
+                             checktype: Union[CheckPluginNameStr, CheckPluginName],
+                             item: Item,
+                             params: LegacyCheckParameters,
+                             for_static_checks: bool = False) -> Optional[LegacyCheckParameters]:
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
@@ -2181,7 +2183,8 @@ def compute_check_parameters(host: HostName, checktype: Union[CheckPluginNameStr
         return None
 
     params = _update_with_default_check_parameters(plugin, params)
-    params = _update_with_configured_check_parameters(host, plugin, item, params)
+    if not for_static_checks:
+        params = _update_with_configured_check_parameters(host, plugin, item, params)
 
     return params
 

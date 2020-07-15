@@ -8,14 +8,20 @@
 
 import re
 
+from typing import Dict, List
+
 import pytest  # type: ignore[import]
-from testlib import CheckManager
-from testlib.base import Scenario
+# No stub file
+from testlib import CheckManager  # type: ignore[import]
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.base import config
 import cmk.base.check_table as check_table
 from cmk.base.check_utils import Service
+from cmk.utils.type_defs import CheckPluginName
+from cmk.base.api.agent_based import checking_types
 
 
 # TODO: This misses a lot of cases
@@ -354,3 +360,66 @@ def test_get_sorted_check_table_cyclic(monkeypatch, service_list):
                            " 'description A' (plugin A / item), 'description B' (plugin B / item),"
                            " 'description D' (plugin D / item)")):
         _ = check_table._get_sorted_service_list("MyHost", True, None, True)
+
+
+@pytest.mark.parametrize("check_group_parameters", [
+    {},
+    {
+        'levels': (4, 5, 6, 7),
+    },
+])
+def test_check_table__get_static_check_entries(monkeypatch, check_group_parameters):
+    hostname = "hostname"
+    static_parameters = {
+        'levels': (1, 2, 3, 4),
+    }
+    static_checks: Dict[str, List] = {
+        "ps": [(('ps', 'item', static_parameters), [], [hostname], {})],
+    }
+
+    ts = Scenario().add_host(hostname)
+    ts.set_option("static_checks", static_checks)
+
+    ts.set_ruleset("checkgroup_parameters", {
+        'ps': [(check_group_parameters, [hostname], [], {})],
+    })
+
+    config_cache = ts.apply(monkeypatch)
+
+    monkeypatch.setattr(
+        config,
+        "get_registered_check_plugin",
+        lambda cpn: checking_types.CheckPlugin(
+            CheckPluginName("ps"),
+            [],
+            "Process item",
+            None,  # type: ignore
+            None,  # type: ignore
+            None,  # type: ignore
+            None,  # type: ignore
+            None,  # type: ignore
+            {},
+            "ps",  # type: ignore
+            None,  # type: ignore
+            None,  # type: ignore
+        ))
+
+    host_config = config_cache.get_host_config(hostname)
+    static_check_parameters = [
+        service.parameters for service in check_table.HostCheckTable(
+            config_cache, host_config)._get_static_check_entries(host_config)
+    ]
+
+    entries = config._get_checkgroup_parameters(
+        config_cache,
+        hostname,
+        "ps",
+        "item",
+        "Process item",
+    )
+
+    assert bool(entries)
+    assert len(static_check_parameters) == 1
+
+    static_check_parameter = static_check_parameters[0]
+    assert static_check_parameter == static_parameters

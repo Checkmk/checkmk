@@ -110,6 +110,7 @@ class HostCheckTable:
                 check_plugin_name_str,
                 item,
                 params,
+                for_static_checks=True,
             )
 
             if timespec_params:

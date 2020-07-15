@@ -1675,10 +1675,10 @@ class AutomationGetServiceConfigurations(Automation):
         return actchecks
 
     def _get_checkgroup_of_checks(self) -> Dict[str, Optional[str]]:
-        checkgroup_of_checks = {}
-        for check_plugin_name, check in config.check_info.items():
-            checkgroup_of_checks[check_plugin_name] = check.get("group")
-        return checkgroup_of_checks
+        return {
+            str(plugin.name): str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
+            for plugin in config.registered_check_plugins.values()
+        }
 
 
 automations.register(AutomationGetServiceConfigurations())

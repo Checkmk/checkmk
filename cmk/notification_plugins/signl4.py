@@ -4,7 +4,6 @@
 
 # (c) 2020 Derdack GmbH
 #          SIGNL4 <info@signl4.com>
-
 # Reliable team alerting using SIGNL4.
 
 import requests

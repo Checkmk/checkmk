@@ -384,6 +384,10 @@ class ModeEditServicegroup(ModeEditGroup):
         return "edit_service_group"
 
     @classmethod
+    def parent_mode(cls):
+        return ModeServicegroups
+
+    @classmethod
     def permissions(cls):
         return ["groups"]
 
@@ -407,6 +411,10 @@ class ModeEditHostgroup(ModeEditGroup):
         return "edit_host_group"
 
     @classmethod
+    def parent_mode(cls):
+        return ModeHostgroups
+
+    @classmethod
     def permissions(cls):
         return ["groups"]
 
@@ -428,6 +436,10 @@ class ModeEditContactgroup(ModeEditGroup):
     @classmethod
     def name(cls):
         return "edit_contact_group"
+
+    @classmethod
+    def parent_mode(cls):
+        return ModeContactgroups
 
     @classmethod
     def permissions(cls):

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Optional, Type
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -39,6 +39,12 @@ class WatoMode(metaclass=abc.ABCMeta):
         """Wato wide unique mode name which is used to access this mode"""
         raise NotImplementedError("%s misses name()" % cls.__name__)
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type["WatoMode"]]:
+        """Reference from a mode to it's parent mode to make the breadcrumb be able to render the
+        hierarchy of modes"""
+        return None
+
     def _from_vars(self) -> None:
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
@@ -53,12 +59,25 @@ class WatoMode(metaclass=abc.ABCMeta):
         return MegaMenuSetup
 
     def breadcrumb(self) -> Breadcrumb:
-        return Breadcrumb([
-            BreadcrumbItem(
-                self.title(),
-                html.makeuri_contextless([("mode", self.name())], filename="wato.py"),
-            )
-        ])
+        """Render the breadcrumb to the current mode"""
+        breadcrumb = Breadcrumb()
+
+        mode = self
+        while True:
+            breadcrumb.insert(
+                0,
+                BreadcrumbItem(
+                    mode.title(),
+                    html.makeuri_contextless([("mode", mode.name())], filename="wato.py"),
+                ))
+
+            mode_class = mode.parent_mode()
+            if mode_class is None:
+                break
+            # For some reason pylint does not understand that this is a class type
+            mode = mode_class()  # pylint: disable=not-callable
+
+        return breadcrumb
 
     def buttons(self) -> None:
         global_buttons()

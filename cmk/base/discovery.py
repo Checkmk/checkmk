@@ -82,6 +82,7 @@ from cmk.base.check_utils import (
     FinalSectionContent,
     LegacyCheckParameters,
     Service,
+    ServiceID,
 )
 from cmk.base.core_config import MonitoringCore
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
@@ -90,7 +91,7 @@ from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
 
-ServicesTable = Dict[Tuple[CheckPluginNameStr, check_table.Item], Tuple[str, Service]]
+ServicesTable = Dict[ServiceID, Tuple[str, Service]]
 CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], check_table.Item,
                           LegacyCheckParameters, LegacyCheckParameters, str, Optional[int], str,
                           List[Metric], Dict[str, str]]
@@ -1329,8 +1330,7 @@ def _get_node_services(
             service_check_plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
             if config.service_ignored(clustername, service_check_plugin_name, service.description):
                 check_source = "ignored"
-            services[(service.check_plugin_name, service.item)] = ("clustered_" + check_source,
-                                                                   service)
+            services[service.id()] = ("clustered_" + check_source, service)
 
     return _merge_manual_services(host_config, services, on_error), discovered_host_labels
 
@@ -1354,14 +1354,12 @@ def _get_discovered_services(
         check_plugin_whitelist=None,
     )
     for discovered_service in discovered_services:
-        services.setdefault((discovered_service.check_plugin_name, discovered_service.item),
-                            ("new", discovered_service))
+        services.setdefault(discovered_service.id(), ("new", discovered_service))
 
     # Match with existing items -> "old" and "vanished"
     for existing_service in autochecks.parse_autochecks_file(hostname, config.service_description):
-        table_id = existing_service.check_plugin_name, existing_service.item
-        check_source = "vanished" if table_id not in services else "old"
-        services[table_id] = check_source, existing_service
+        check_source = "vanished" if existing_service.id() not in services else "old"
+        services[existing_service.id()] = check_source, existing_service
 
     section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
@@ -1387,7 +1385,7 @@ def _merge_manual_services(host_config: config.HostConfig, services: ServicesTab
     # Find manual checks. These can override discovered checks -> "manual"
     manual_items = check_table.get_check_table(hostname, skip_autochecks=True)
     for service in manual_items.values():
-        services[(service.check_plugin_name, service.item)] = (
+        services[service.id()] = (
             'manual',
             Service(
                 check_plugin_name=service.check_plugin_name,
@@ -1437,10 +1435,7 @@ def _merge_manual_services(host_config: config.HostConfig, services: ServicesTab
             maincheckify(discovered_service.check_plugin_name))
         if config.service_ignored(hostname, service_check_plugin_name,
                                   discovered_service.description):
-            services[(discovered_service.check_plugin_name, discovered_service.item)] = (
-                "ignored",
-                discovered_service,
-            )
+            services[discovered_service.id()] = ("ignored", discovered_service)
 
     return services
 
@@ -1474,25 +1469,24 @@ def _get_cluster_services(
                     node, discovered_service.description):
                 continue  # not part of this host
 
-            table_id = discovered_service.check_plugin_name, discovered_service.item
-            if table_id not in cluster_items:
-                cluster_items[table_id] = (check_source, discovered_service)
+            if discovered_service.id() not in cluster_items:
+                cluster_items[discovered_service.id()] = (check_source, discovered_service)
                 continue
 
-            first_check_source, first_discovered_service = cluster_items[table_id]
+            first_check_source, first_discovered_service = cluster_items[discovered_service.id()]
             if first_check_source == "old":
                 continue
 
             if check_source == "old":
-                cluster_items[table_id] = (check_source, discovered_service)
+                cluster_items[discovered_service.id()] = (check_source, discovered_service)
                 continue
 
             if first_check_source == "vanished" and check_source == "new":
-                cluster_items[table_id] = ("old", first_discovered_service)
+                cluster_items[discovered_service.id()] = ("old", first_discovered_service)
                 continue
 
             if check_source == "vanished" and first_check_source == "new":
-                cluster_items[table_id] = ("old", discovered_service)
+                cluster_items[discovered_service.id()] = ("old", discovered_service)
                 continue
 
             # In all other cases either both must be "new" or "vanished" -> let it be

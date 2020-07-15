@@ -418,7 +418,7 @@ def _do_discovery_for(
         if only_new or (check_plugin_names and service_plugin_name not in check_plugin_names):
             new_services.append(existing_service)
 
-    services_per_plugin: Counter[check_table.CheckPluginNameStr] = Counter()
+    services_per_plugin: Counter[CheckPluginNameStr] = Counter()
     for discovered_service in discovered_services:
         if discovered_service not in new_services:
             new_services.append(discovered_service)
@@ -461,7 +461,7 @@ def _do_discovery_for(
 
 def _perform_host_label_discovery(
         hostname: HostName, discovered_host_labels: DiscoveredHostLabels,
-        only_new: bool) -> Tuple[DiscoveredHostLabels, Counter[check_table.CheckPluginNameStr]]:
+        only_new: bool) -> Tuple[DiscoveredHostLabels, Counter[CheckPluginNameStr]]:
 
     # Take over old items if -I is selected
     if only_new:
@@ -470,7 +470,7 @@ def _perform_host_label_discovery(
     else:
         return_host_labels = DiscoveredHostLabels()
 
-    new_host_labels_per_plugin: Counter[check_table.CheckPluginNameStr] = Counter()
+    new_host_labels_per_plugin: Counter[CheckPluginNameStr] = Counter()
     for discovered_label in discovered_host_labels.values():
         if discovered_label.name in return_host_labels:
             continue

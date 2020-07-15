@@ -9,7 +9,7 @@ from typing import Iterable, Iterator, List, Optional, Set
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr
+from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.config as config
 from cmk.utils.type_defs import HostName
@@ -206,12 +206,15 @@ def remove_duplicate_checks(check_table: CheckTable) -> CheckTable:
 def get_needed_check_names(hostname: HostName,
                            remove_duplicates: bool = False,
                            filter_mode: Optional[str] = None,
-                           skip_ignored: bool = True) -> Set[CheckPluginNameStr]:
+                           skip_ignored: bool = True) -> Set[CheckPluginName]:
     return {
-        s.check_plugin_name for s in get_check_table(hostname,
-                                                     remove_duplicates=remove_duplicates,
-                                                     filter_mode=filter_mode,
-                                                     skip_ignored=skip_ignored).values()
+        # TODO (mo): centralize maincheckify: CMK-4295
+        CheckPluginName(maincheckify(s.check_plugin_name)) for s in get_check_table(
+            hostname,
+            remove_duplicates=remove_duplicates,
+            filter_mode=filter_mode,
+            skip_ignored=skip_ignored,
+        ).values()
     }
 
 

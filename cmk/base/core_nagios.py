@@ -1110,6 +1110,7 @@ def _get_needed_check_plugin_names(
     from cmk.base.check_table import get_needed_check_names  # pylint: disable=import-outside-toplevel
     needed_legacy_check_plugin_names: Set[CheckPluginNameStr] = set([])
     needed_agent_based_check_plugin_names: Set[CheckPluginName] = set([])
+    legacy_plugin_name_lookup = {maincheckify(k): k for k in config.check_info}
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
     # to be loaded
@@ -1118,21 +1119,22 @@ def _get_needed_check_plugin_names(
             needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)
 
     # Collect the needed check plugin names using the host check table
-    for check_plugin_name in get_needed_check_names(host_config.hostname,
-                                                    filter_mode="include_clustered",
-                                                    skip_ignored=False):
-        if check_plugin_name not in config.check_info:
-            # TODO (mo): centralize maincheckify: CMK-4295
-            needed_agent_based_check_plugin_names.add(
-                CheckPluginName(maincheckify(check_plugin_name)))
+    needed_check_plugins = get_needed_check_names(host_config.hostname,
+                                                  filter_mode="include_clustered",
+                                                  skip_ignored=False)
+
+    for check_plugin_name in needed_check_plugins:
+        if str(check_plugin_name) not in legacy_plugin_name_lookup:
+            needed_agent_based_check_plugin_names.add(check_plugin_name)
             continue
 
-        if config.check_info[check_plugin_name].get("extra_sections"):
-            for section_name in config.check_info[check_plugin_name]["extra_sections"]:
+        legacy_name = legacy_plugin_name_lookup[str(check_plugin_name)]
+        if config.check_info[legacy_name].get("extra_sections"):
+            for section_name in config.check_info[legacy_name]["extra_sections"]:
                 if section_name in config.check_info:
                     needed_legacy_check_plugin_names.add(section_name)
 
-        needed_legacy_check_plugin_names.add(check_plugin_name)
+        needed_legacy_check_plugin_names.add(legacy_name)
 
     # Also include the check plugins of the cluster nodes to be able to load
     # the autochecks of the nodes
@@ -1144,12 +1146,11 @@ def _get_needed_check_plugin_names(
             raise MKGeneralException("Invalid cluster configuration")
         for node in nodes:
             for check_plugin_name in get_needed_check_names(node, skip_ignored=False):
-                if check_plugin_name in config.check_info:
-                    needed_legacy_check_plugin_names.add(check_plugin_name)
+                opt_legacy_name = legacy_plugin_name_lookup.get(str(check_plugin_name))
+                if opt_legacy_name is not None:
+                    needed_legacy_check_plugin_names.add(opt_legacy_name)
                 else:
-                    # TODO (mo): centralize maincheckify: CMK-4295
-                    needed_agent_based_check_plugin_names.add(
-                        CheckPluginName(maincheckify(check_plugin_name)))
+                    needed_agent_based_check_plugin_names.add(check_plugin_name)
 
     return needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names
 

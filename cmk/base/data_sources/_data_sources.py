@@ -14,9 +14,8 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 import cmk.base.check_table as check_table
 import cmk.base.config as config
@@ -201,15 +200,13 @@ def make_host_sections(
 
 
 def _make_piggybacked_sections(host_config) -> SelectedRawSections:
-    check_names = check_table.get_needed_check_names(
+    check_plugin_names = check_table.get_needed_check_names(
         host_config.hostname,
         remove_duplicates=True,
         filter_mode="only_clustered",
     )
     selected_raw_sections = {}
-    for name in config.get_relevant_raw_sections(
-            # TODO (mo): centralize maincheckify: CMK-4295
-            check_plugin_names=(CheckPluginName(maincheckify(n)) for n in check_names)):
+    for name in config.get_relevant_raw_sections(check_plugin_names=check_plugin_names):
         section = config.get_registered_section_plugin(name)
         if section is not None:
             selected_raw_sections[name] = section

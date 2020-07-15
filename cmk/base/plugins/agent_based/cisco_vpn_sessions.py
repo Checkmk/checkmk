@@ -32,28 +32,20 @@
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnCumulateSessions.0 = Counter32: 0 Sessions
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnPeakConcurrentSessions.0 = Gauge32: 0 Sessions
 
-from typing import Dict, List, Union
+from typing import Dict
 from .agent_based_api.v0 import (
     any_of,
     contains,
     register,
     SNMPTree,
+    type_defs,
 )
 
 SESSION_TYPES = ['IPsec RA', 'IPsec L2L', 'AnyConnect SVC', 'WebVPN']
 METRICS_PER_SESSION_TYPE = ['active_sessions', 'cumulative_sessions', 'peak_sessions']
 
 
-def raw_data_to_int(raw_data: Union[str, List[int]]) -> int:
-    """
-    raw_data is only of type List[int] if we use OIDBytes("...") in the SNMP trees, which is not
-    the case here
-    """
-    assert isinstance(raw_data, str)
-    return int(raw_data)
-
-
-def parse_cisco_vpn_sessions(string_table: List[List[List[str]]]) -> Dict[str, Dict[str, int]]:
+def parse_cisco_vpn_sessions(string_table: type_defs.SNMPStringTable) -> Dict[str, Dict[str, int]]:
 
     raw_data = string_table[0][0]
     parsed = {}
@@ -61,7 +53,7 @@ def parse_cisco_vpn_sessions(string_table: List[List[List[str]]]) -> Dict[str, D
 
     max_sessions = None
     try:
-        max_sessions = raw_data_to_int(raw_data[-1])
+        max_sessions = int(raw_data[-1])
         summary['maximum_sessions'] = max_sessions
     except ValueError:
         pass
@@ -70,7 +62,7 @@ def parse_cisco_vpn_sessions(string_table: List[List[List[str]]]) -> Dict[str, D
         try:
             session_metrics = {}
             for idx_metric, metric in enumerate(METRICS_PER_SESSION_TYPE):
-                session_metrics[metric] = raw_data_to_int(
+                session_metrics[metric] = int(
                     raw_data[idx_session_type * len(METRICS_PER_SESSION_TYPE) + idx_metric])
         except ValueError:
             continue

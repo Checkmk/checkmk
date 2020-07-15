@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List
-from .agent_based_api.v0 import register
+from typing import Dict
+from .agent_based_api.v0 import register, type_defs
 
 
-def parse_systemtime(string_table: List[List[str]]) -> Dict[str, float]:
+def parse_systemtime(string_table: type_defs.AgentStringTable) -> Dict[str, float]:
     """
     >>> parse_systemtime([['12345']])
     {'foreign_systemtime': 12345.0}

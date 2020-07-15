@@ -30,13 +30,14 @@
 #                           1/2,    => parsed = device phase + 2 banks
 #                           3/0     => parsed = device phase + 3 phases
 
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Tuple, Union
 from .agent_based_api.v0 import (
     all_of,
     exists,
     register,
     SNMPTree,
     startswith,
+    type_defs,
 )
 
 StatusInfo = Tuple[float, Tuple[int, str]]
@@ -54,14 +55,13 @@ def get_status_info(amperage_str: str, device_state: str) -> StatusInfo:
     return float(amperage_str) / 10, STATE_MAP[device_state]
 
 
-def parse_apc_rackpdu_power(string_table: List[List[List[str]]]) -> Parsed:
+def parse_apc_rackpdu_power(string_table: type_defs.SNMPStringTable) -> Parsed:
 
     parsed: Parsed = {}
     device_info, n_phases, phase_bank_info = string_table
     pdu_ident_name, power_str = device_info[0]
     device_name = "Device %s" % pdu_ident_name
 
-    assert isinstance(power_str, str)  # see comment in get_status_info
     parsed.setdefault(device_name, {"power": float(power_str)})
 
     if n_phases[0][0] == '1':

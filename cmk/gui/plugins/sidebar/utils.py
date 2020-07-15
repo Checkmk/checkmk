@@ -399,9 +399,8 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
     if not topic.items:
         return
 
-    container_id = re.sub('[^a-zA-Z0-9_-]', '', topic.title)
     html.begin_foldable_container(treename=treename,
-                                  id_=container_id,
+                                  id_=topic.name,
                                   isopen=False,
                                   title=topic.title,
                                   indent=True)

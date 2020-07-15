@@ -315,6 +315,6 @@ class WebTestAppForCMK(webtest.TestApp):
 
 @pytest.fixture(scope='function')
 def wsgi_app(monkeypatch, recreate_openapi_spec):
-    wsgi_callable = make_app()
+    wsgi_callable = make_app(debug=True)
     cookies = CookieJar()
     return WebTestAppForCMK(wsgi_callable, cookiejar=cookies)

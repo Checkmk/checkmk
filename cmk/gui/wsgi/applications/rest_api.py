@@ -123,7 +123,8 @@ class CheckmkApiApp(AbstractApp):
         # other errors we might want to know about in a crash-report.
         self.app.register_error_handler(ProblemException, self._make_error_response)
 
-        self.app.register_error_handler(Exception, self.log_error)
+        if not self.debug:
+            self.app.register_error_handler(Exception, self.log_error)
 
     def run(self, port=None, server=None, debug=None, host=None, **options):
         raise NotImplementedError()

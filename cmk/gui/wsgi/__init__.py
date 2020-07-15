@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.wsgi.middleware import apache_env
-from cmk.gui.wsgi.routing import router
+from cmk.gui.wsgi.routing import make_router
 
 
-def make_app():
-    return apache_env(router)
+def make_app(debug=False):
+    return apache_env(make_router(debug=debug))
 
 
 __all__ = ['make_app']

@@ -660,34 +660,35 @@ class AutomationAnalyseServices(Automation):
             if service.id() not in table:
                 continue  # this is a removed duplicate or clustered service
 
-            if service.description == servicedesc:
-                default_levels_variable = config.check_info[service.check_plugin_name].get(
-                    "default_levels_variable")
-                if default_levels_variable:
-                    factory_settings = config.factory_settings.get(default_levels_variable, None)
-                else:
-                    factory_settings = None
+            if service.description != servicedesc:
+                continue
 
-                check_parameters = service.parameters
-                if isinstance(check_parameters, cmk.base.config.TimespecificParamList):
-                    check_parameters = cmk.base.checking.legacy_determine_check_params(
-                        check_parameters)
-                    check_parameters = {
-                        "tp_computed_params": {
-                            "params": check_parameters,
-                            "computed_at": time.time()
-                        }
+            default_levels_variable = config.check_info[service.check_plugin_name].get(
+                "default_levels_variable")
+            if default_levels_variable:
+                factory_settings = config.factory_settings.get(default_levels_variable, None)
+            else:
+                factory_settings = None
+
+            check_parameters = service.parameters
+            if isinstance(check_parameters, cmk.base.config.TimespecificParamList):
+                check_parameters = cmk.base.checking.legacy_determine_check_params(check_parameters)
+                check_parameters = {
+                    "tp_computed_params": {
+                        "params": check_parameters,
+                        "computed_at": time.time()
                     }
-
-                return {
-                    "origin": "auto",
-                    "checktype": service.check_plugin_name,
-                    "checkgroup": config.check_info[service.check_plugin_name].get("group"),
-                    "item": service.item,
-                    "inv_parameters": service.parameters,
-                    "factory_settings": factory_settings,
-                    "parameters": check_parameters,
                 }
+
+            return {
+                "origin": "auto",
+                "checktype": service.check_plugin_name,
+                "checkgroup": config.check_info[service.check_plugin_name].get("group"),
+                "item": service.item,
+                "inv_parameters": service.parameters,
+                "factory_settings": factory_settings,
+                "parameters": check_parameters,
+            }
 
         # 3. Classical checks
         for entry in host_config.custom_checks:

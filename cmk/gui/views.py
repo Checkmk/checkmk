@@ -14,8 +14,6 @@ import json
 import functools
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as _Tuple, Union
 
-from six import ensure_str
-
 import livestatus
 from livestatus import SiteId, LivestatusRow
 
@@ -123,7 +121,7 @@ if not cmk_version.is_raw_edition():
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
-from cmk.gui.type_defs import PainterSpec
+from cmk.gui.type_defs import PainterSpec, HTTPVariables
 if TYPE_CHECKING:
     from cmk.gui.plugins.views.utils import Sorter, SorterSpec
     from cmk.gui.plugins.visuals.utils import Filter
@@ -424,7 +422,7 @@ class View:
         breadcrumb = make_main_menu_breadcrumb(MegaMenuMonitoring)
 
         # TODO: Temporarily(tm) disabled until we have decided whether or not we want this
-        ## 2. Topic level
+        # # 2. Topic level
         #topic_id = self.spec["topic"]
         #PagetypeTopics.load()
         #topic = PagetypeTopics.find_page(topic_id)
@@ -438,10 +436,14 @@ class View:
 
         # View without special hierarchy
         if "host" not in self.spec['single_infos']:
+            request_vars: HTTPVariables = [("view_name", self.name)]
+            request_vars += list(
+                visuals.get_singlecontext_html_vars(self.context,
+                                                    self.spec["single_infos"]).items())
             breadcrumb.append(
                 BreadcrumbItem(
                     title=view_title(self.spec),
-                    url=html.makeuri_contextless([("view_name", self.name)]),
+                    url=html.makeuri_contextless(request_vars),
                 ))
             return breadcrumb
 
@@ -1241,7 +1243,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         value = ast.literal_eval(request["encoded_value"])
 
         with html.plugged():
-            vs.show_sub_valuespec(ensure_str(request["varprefix"]), sub_vs, value)
+            vs.show_sub_valuespec(request["varprefix"], sub_vs, value)
             return {"html_code": html.drain()}
 
     def _get_sub_vs(self, vs, choice_id):
@@ -1580,7 +1582,7 @@ def show_view(view, view_renderer, only_count=False):
         rows = filter_.filter_table(rows)
 
     if html.request.var("mode") == "availability":
-        cmk.gui.plugins.views.availability.render_bi_availability(view_title(view.spec), rows)
+        cmk.gui.plugins.views.availability.render_bi_availability(view, rows)
         return
 
     # TODO: Use livestatus Stats: instead of fetching rows!

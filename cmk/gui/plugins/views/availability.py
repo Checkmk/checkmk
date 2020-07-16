@@ -8,8 +8,6 @@ import time
 import itertools
 from typing import List, TYPE_CHECKING, Set, Tuple
 
-from six import ensure_str
-
 import cmk.utils.version as cmk_version
 import cmk.utils.render
 from cmk.utils.defines import (
@@ -38,6 +36,7 @@ import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+from cmk.gui.breadcrumb import BreadcrumbItem
 
 from cmk.gui.exceptions import MKUserError
 
@@ -257,7 +256,13 @@ def render_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> No
         html.body_start(title, force=True)
 
     if display_options.enabled(display_options.T):
-        html.top_heading(title)
+        breadcrumb = view.breadcrumb()
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=title,
+                url=breadcrumb[-1].url + "&mode=availability",
+            ))
+        html.top_heading(title, breadcrumb)
 
     html.write(confirmation_html_code)
 
@@ -598,11 +603,13 @@ def render_timeline_bar(timeline_layout, style, timeline_nr=0):
 # get the list of BI aggregates from the statehist table but use the views
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
-def render_bi_availability(title: str, aggr_rows: 'Rows') -> None:
+def render_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
     config.user.need_permission("general.see_availability")
 
     av_mode = html.request.get_ascii_input_mandatory("av_mode", "availability")
     avoptions = get_availability_options_from_url("bi")
+
+    title = view_title(view.spec)
     if av_mode == "timeline":
         title = _("Timeline of") + " " + title
     else:
@@ -610,7 +617,15 @@ def render_bi_availability(title: str, aggr_rows: 'Rows') -> None:
 
     if html.output_format != "csv_export":
         html.body_start(title)
-        html.top_heading(title)
+
+        breadcrumb = view.breadcrumb()
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=title,
+                url=breadcrumb[-1].url + "&mode=availability",
+            ))
+
+        html.top_heading(title, breadcrumb)
         html.begin_context_buttons()
         html.toggle_button("avoptions", False, "painteroptions",
                            _("Configure details of the report"))
@@ -1196,5 +1211,4 @@ def _av_output_set_content_disposition(title: str) -> None:
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),
     )
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
-        filename)
+    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename

@@ -254,7 +254,7 @@ class BackupTask:
                             (error_vmid, current_vmid),
                         )
                     LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
-                    # todo: store erroneous backup status
+                    result[current_vmid] = {"error": error_msg}
                     current_vmid = ""
                     continue
 
@@ -372,9 +372,7 @@ def fetch_backup_data(args: Args, session: "ProxmoxAPI",
                                     }
                                 }
                             }
-                        })["nodes"][node["node"]]["tasks"][task["upid"]]["log"],
-                    ),
-                )[1],
+                        })["nodes"][node["node"]]["tasks"][task["upid"]]["log"]))[1],
                 strict=args.debug)
             for node in nodes
             for task in node["tasks"]

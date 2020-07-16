@@ -14,14 +14,13 @@ factory_settings["proxmox_vm_backup_status"] = {
 }
 
 
-def discovery_proxmox_vm_backup_status(parsed):
-    return [(None, {})]
-
-
 def check_proxmox_vm_backup_status(item, params, parsed):
     """If conditions provided calculate and compare age of last backup agains provided
     levels and define result status accordingly"""
     last_backup = parsed.get("last_backup")
+    if "error" in last_backup:
+        yield 2, "Last backup failed with message '%s'" % last_backup["error"]
+        return
     started_time = (datetime.datetime.strptime(last_backup.get("started_time"), "%Y-%m-%d %H:%M:%S")
                     if last_backup is not None else None)
     # Proxmox logs only provide time stamps w/o time zone so we have to hope the Proxmox node
@@ -47,7 +46,7 @@ def check_proxmox_vm_backup_status(item, params, parsed):
 
 check_info["proxmox_vm_backup_status"] = {  # mypy: ignore
     "parse_function": parse_proxmox,
-    "inventory_function": discovery_proxmox_vm_backup_status,
+    "inventory_function": discover_single,
     "check_function": check_proxmox_vm_backup_status,
     "service_description": "Proxmox VM Backup Status",
     "default_levels_variable": "proxmox_vm_backup_status",

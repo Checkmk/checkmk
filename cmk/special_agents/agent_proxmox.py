@@ -123,24 +123,27 @@ class BackupTask:
         def __repr__(self) -> str:
             return "%s(%d, %r)" % (self.__class__.__name__, self.line, super().__str__())
 
-    def __init__(self, task: TaskInfo, logs: LogData) -> None:
+    class LogParseWarning(LogParseError):
+        """Less critical version of LogParseError"""
+
+    def __init__(self, task: TaskInfo, logs: LogData, strict: bool) -> None:
         self.upid, self.type, self.starttime, self.status = "", "", 0, ""
         self.__dict__.update(task)
 
         try:
-            self.backup_data = self._extract_logs(self._to_lines(logs))
+            self.backup_data, errors = self._extract_logs(self._to_lines(logs), strict)
         except self.LogParseError as exc:
-            self.backup_data = {}
+            self.backup_data, errors = {}, [(exc.line, str(exc))]
+
+        if errors:
+            erroneous_log_file = LogCacheFilePath / ("erroneous-%s.log" % task["upid"])
             LOGGER.error(
-                "Parsing the log with UPID=%r resulted in a LogParseError in line %d: %r",
-                task["upid"],
-                exc.line,
-                str(exc),
-            )
-            LOGGER.error(">>>>>> content")
-            for line in logs:
-                LOGGER.error(">> %s", line["t"])
-            LOGGER.error("<<<<<< content")
+                "Parsing the log for UPID=%r resulted in a error(s) - "
+                "write log content to %r", task["upid"], erroneous_log_file)
+            with erroneous_log_file.open("w") as file:
+                file.write("\n".join(line["t"] for line in logs))
+                for linenr, text in errors:
+                    file.write("PARSE-ERROR: %d: %s\n" % (linenr, text))
 
     @staticmethod
     def _to_lines(lines_with_numbers: LogData) -> Sequence[str]:
@@ -160,7 +163,10 @@ class BackupTask:
         )
 
     @staticmethod
-    def _extract_logs(logs: Sequence[str]) -> Dict[str, BackupInfo]:
+    def _extract_logs(
+        logs: Sequence[str],
+        strict: bool,
+    ) -> Tuple[Dict[str, BackupInfo], List[Tuple[int, str]]]:
         log_line_pattern = {
             key: re.compile(pat, flags=re.IGNORECASE) for key, pat in (
                 ("start_job", r"^INFO: starting new backup job: vzdump (.*)"),
@@ -177,6 +183,7 @@ class BackupTask:
         result: Dict[str, BackupInfo] = {}
         current_vmid = ""
         current_dataset: BackupInfo = {}
+        errors = []
 
         def extract_tuple(line: str, pattern_name: str, count: int = 1) -> Optional[Sequence[str]]:
             # TODO: use assignment expressions as soon as YAPF supports them or is dead
@@ -193,109 +200,124 @@ class BackupTask:
             return None
 
         for linenr, line in enumerate(logs):
-            # TODO: use assignment expressions together with elif and w/o continue
-            start_vmid = extract_single_value(line, "start_vm")
-            if start_vmid:
-                if current_vmid:
-                    # this is a consistency problem - we have to abort parsing this log file
-                    raise BackupTask.LogParseError(
-                        linenr,
-                        "Captured start of rocessing VM %r while VM %r is still active" %
-                        (start_vmid, current_vmid),
-                    )
-                current_vmid = start_vmid
-                current_dataset = {}
-                continue
+            try:
+                # TODO: use assignment expressions together with elif and w/o continue
+                start_vmid = extract_single_value(line, "start_vm")
+                if start_vmid:
+                    if current_vmid:
+                        # this is a consistency problem - we have to abort parsing this log file
+                        raise BackupTask.LogParseError(
+                            linenr,
+                            "Captured start of rocessing VM %r while VM %r is still active" %
+                            (start_vmid, current_vmid),
+                        )
+                    current_vmid = start_vmid
+                    current_dataset = {}
+                    continue
 
-            stop_vmid = extract_single_value(line, "finish_vm")
-            if stop_vmid:
-                if stop_vmid != current_vmid:
-                    # this is a consistency problem - we have to abort parsing this log file
-                    raise BackupTask.LogParseError(
-                        linenr,
-                        "Found end of VM %r while another VM %r was active" %
-                        (stop_vmid, current_vmid),
-                    )
-                missing_keys = {
-                    key for key in {
-                        "transfer_size",
-                        "transfer_time",
-                        "archive_name",
-                        "archive_size",
-                        "started_time",
-                    } if key not in current_dataset
-                }
-                if missing_keys:
-                    raise BackupTask.LogParseError(
-                        linenr,
-                        "End of VM %r while still information is missing (missing: %r)" %
-                        (current_vmid, missing_keys),
-                    )
-                result[current_vmid] = current_dataset
-                current_vmid = ""
-                continue
+                stop_vmid = extract_single_value(line, "finish_vm")
+                if stop_vmid:
+                    if stop_vmid != current_vmid:
+                        # this is a consistency problem - we have to abort parsing this log file
+                        raise BackupTask.LogParseError(
+                            linenr,
+                            "Found end of VM %r while another VM %r was active" %
+                            (stop_vmid, current_vmid),
+                        )
+                    missing_keys = {
+                        key for key in {
+                            "transfer_size",
+                            "transfer_time",
+                            "archive_name",
+                            "archive_size",
+                            "started_time",
+                        } if key not in current_dataset
+                    }
+                    if missing_keys:
+                        raise BackupTask.LogParseWarning(
+                            linenr,
+                            "End of VM %r while still information is missing (missing: %r)" %
+                            (current_vmid, missing_keys),
+                        )
+                    result[current_vmid] = current_dataset
+                    current_vmid = ""
+                    continue
 
-            error_vm = extract_tuple(line, "error_vm", 2)
-            if error_vm:
-                error_vmid, error_msg = error_vm
-                if current_vmid and error_vmid != current_vmid:
-                    # this is a consistency problem - we have to abort parsing this log file
-                    raise BackupTask.LogParseError(
-                        linenr,
-                        "Error for VM %r while another VM %r was active" %
-                        (error_vmid, current_vmid),
-                    )
-                LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
-                # todo: store erroneous backup status
-                current_vmid = ""
-                continue
+                error_vm = extract_tuple(line, "error_vm", 2)
+                if error_vm:
+                    error_vmid, error_msg = error_vm
+                    if current_vmid and error_vmid != current_vmid:
+                        # this is a consistency problem - we have to abort parsing this log file
+                        raise BackupTask.LogParseError(
+                            linenr,
+                            "Error for VM %r while another VM %r was active" %
+                            (error_vmid, current_vmid),
+                        )
+                    LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
+                    # todo: store erroneous backup status
+                    current_vmid = ""
+                    continue
 
-            started_time = extract_single_value(line, "started_time")
-            if started_time:
-                if not current_vmid:
-                    raise BackupTask.LogParseError(linenr,
-                                                   "Found start date while no VM was active")
-                current_dataset["started_time"] = started_time
-                continue
+                started_time = extract_single_value(line, "started_time")
+                if started_time:
+                    if not current_vmid:
+                        raise BackupTask.LogParseWarning(
+                            linenr,
+                            "Found start date while no VM was active",
+                        )
+                    current_dataset["started_time"] = started_time
+                    continue
 
-            bytes_written = extract_tuple(line, "bytes_written", 2)
-            if bytes_written:
-                vm_size = int(bytes_written[0])
-                bandw = to_bytes(bytes_written[1])
-                if not current_vmid:
-                    raise BackupTask.LogParseError(
-                        linenr, "Found bandwidth information while no VM was active")
-                current_dataset["transfer_size"] = vm_size
-                current_dataset["transfer_time"] = (round(vm_size / bandw) if bandw > 0 else 0)
-                continue
+                bytes_written = extract_tuple(line, "bytes_written", 2)
+                if bytes_written:
+                    vm_size = int(bytes_written[0])
+                    bandw = to_bytes(bytes_written[1])
+                    if not current_vmid:
+                        raise BackupTask.LogParseWarning(
+                            linenr, "Found bandwidth information while no VM was active")
+                    current_dataset["transfer_size"] = vm_size
+                    current_dataset["transfer_time"] = round(vm_size / bandw) if bandw > 0 else 0
+                    continue
 
-            transferred = extract_tuple(line, "transferred", 2)
-            if transferred:
-                transfer_size_mb, transfer_time = transferred
-                if not current_vmid:
-                    raise BackupTask.LogParseError(
-                        linenr, "Found bandwidth information while no VM was active")
-                current_dataset["transfer_size"] = int(transfer_size_mb) * (1 << 20)
-                current_dataset["transfer_time"] = int(transfer_time)
-                continue
+                transferred = extract_tuple(line, "transferred", 2)
+                if transferred:
+                    transfer_size_mb, transfer_time = transferred
+                    if not current_vmid:
+                        raise BackupTask.LogParseWarning(
+                            linenr, "Found bandwidth information while no VM was active")
+                    current_dataset["transfer_size"] = int(transfer_size_mb) * (1 << 20)
+                    current_dataset["transfer_time"] = int(transfer_time)
+                    continue
 
-            archive_name = extract_single_value(line, "create_archive")
-            if archive_name:
-                if not current_vmid:
-                    raise BackupTask.LogParseError(  #
-                        linenr, "Found archive name without active VM")
-                current_dataset["archive_name"] = archive_name
-                continue
+                archive_name = extract_single_value(line, "create_archive")
+                if archive_name:
+                    if not current_vmid:
+                        raise BackupTask.LogParseWarning(
+                            linenr,
+                            "Found archive name without active VM",
+                        )
+                    current_dataset["archive_name"] = archive_name
+                    continue
 
-            archive_size = extract_single_value(line, "archive_size")
-            if archive_size:
-                if not current_vmid:
-                    raise BackupTask.LogParseError(
-                        linenr, "Found archive size information without active VM")
-                current_dataset["archive_size"] = to_bytes(archive_size)
-                continue
+                archive_size = extract_single_value(line, "archive_size")
+                if archive_size:
+                    if not current_vmid:
+                        raise BackupTask.LogParseWarning(
+                            linenr, "Found archive size information without active VM")
+                    current_dataset["archive_size"] = to_bytes(archive_size)
+                    continue
 
-        return result
+            except BackupTask.LogParseWarning as exc:
+                if strict:
+                    raise
+                logging.error("Error in log at line %d: %r", linenr, exc)
+                current_vmid, current_dataset = "", {}
+                errors.append((linenr, str(exc)))
+
+        if current_vmid:
+            errors.append((0, "Log for VMID=%r not finalized" % current_vmid))
+
+        return result, errors
 
 
 @contextmanager
@@ -353,7 +375,7 @@ def fetch_backup_data(args: Args, session: "ProxmoxAPI",
                         })["nodes"][node["node"]]["tasks"][task["upid"]]["log"],
                     ),
                 )[1],
-            )
+                strict=args.debug)
             for node in nodes
             for task in node["tasks"]
             if (task["type"] == "vzdump" and int(task["starttime"]) >= cutoff_date))

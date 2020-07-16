@@ -29,12 +29,12 @@ checks = {
                 'days_left': (14, 7)
             }, [
                 (0, 'Status: Registered', []),
-                (0, ', Subscription: ACTIVE', []),
+                (0, 'Subscription: ACTIVE', []),
                 (
                     0,
-                    ', Subscription type: full, Registration code: banana001, Starts at: 2015-12-01 00:00:00 UTC, Expires at: 2019-12-31 00:00:00 UTC',
+                    'Subscription type: full, Registration code: banana001, Starts at: 2015-12-01 00:00:00 UTC, Expires at: 2019-12-31 00:00:00 UTC',
                     []
-                ), (2, ', Expired since: 197 d', [])
+                ), (2, 'Expired since: 197 d', [])
             ]
         )
     ]

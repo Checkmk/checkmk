@@ -119,8 +119,11 @@ class HostCheckTable(object):
             else:
                 timespec_params = []
 
-            new_params = config.compute_check_parameters(host_config.hostname, check_plugin_name,
-                                                         item, params)
+            new_params = config.compute_check_parameters(host_config.hostname,
+                                                         check_plugin_name,
+                                                         item,
+                                                         params,
+                                                         for_static_checks=True)
 
             if timespec_params:
                 params = config.set_timespecific_param_list(timespec_params, new_params)

@@ -1,5 +1,6 @@
 import pytest  # type: ignore
-from testlib.base import Scenario
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 import cmk_base.config as config
 import cmk_base.check_api as check_api
 import cmk_base.check_table as check_table
@@ -280,3 +281,48 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
 
     config.load_checks(check_api.get_check_api_context, ["checks/df"])
     assert list(check_table.get_check_table(hostname).keys()) == expected_result
+
+
+@pytest.mark.parametrize("check_group_parameters", [
+    {},
+    {
+        'levels': (4, 5, 6, 7),
+    },
+])
+def test_check_table__get_static_check_entries(monkeypatch, check_group_parameters):
+    hostname = "hostname"
+    static_parameters = {
+        'levels': (1, 2, 3, 4),
+    }
+    static_checks = {
+        "ps": [(('ps', 'item', static_parameters), [], [hostname], {})],
+    }
+
+    ts = Scenario().add_host(hostname)
+    ts.set_option("static_checks", static_checks)
+
+    ts.set_ruleset("checkgroup_parameters", {
+        'ps': [(check_group_parameters, [hostname], [], {})],
+    })
+
+    config_cache = ts.apply(monkeypatch)
+
+    host_config = config_cache.get_host_config(hostname)
+    static_check_parameters = [
+        service.parameters for service in check_table.HostCheckTable(
+            config_cache, host_config)._get_static_check_entries(host_config)
+    ]
+
+    entries = config._get_checkgroup_parameters(
+        config_cache,
+        hostname,
+        "ps",
+        "item",
+        "Process item",
+    )
+
+    assert bool(entries)
+    assert len(static_check_parameters) == 1
+
+    static_check_parameter = static_check_parameters[0]
+    assert static_check_parameter == static_parameters

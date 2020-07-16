@@ -1799,12 +1799,13 @@ def discoverable_snmp_checks():
 # Compute parameters for a check honoring factory settings,
 # default settings of user in main.mk, check_parameters[] and
 # the values code in autochecks (given as parameter params)
-def compute_check_parameters(host, checktype, item, params):
+def compute_check_parameters(host, checktype, item, params, for_static_checks=False):
     if checktype not in check_info:  # handle vanished checktype
         return None
 
     params = _update_with_default_check_parameters(checktype, params)
-    params = _update_with_configured_check_parameters(host, checktype, item, params)
+    if not for_static_checks:
+        params = _update_with_configured_check_parameters(host, checktype, item, params)
 
     return params
 

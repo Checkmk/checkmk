@@ -1652,7 +1652,7 @@ class html(ABCHTMLGenerator):
                 self._header_sent = True
 
                 if self.render_headfoot and show_top_heading:
-                    self.top_heading(title, breadcrumb)
+                    self.top_heading(title, breadcrumb or Breadcrumb())
 
     def body_start(self,
                    title: str = u'',
@@ -1669,7 +1669,7 @@ class html(ABCHTMLGenerator):
     def html_foot(self) -> None:
         self.close_html()
 
-    def top_heading(self, title: str, breadcrumb: Breadcrumb = None) -> None:
+    def top_heading(self, title: str, breadcrumb: Breadcrumb) -> None:
         if not isinstance(config.user, config.LoggedInNobody):
             login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
             if self.enable_debug:

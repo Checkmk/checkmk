@@ -8,7 +8,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -21,7 +21,7 @@ from cmk.utils.type_defs import CheckPluginName, HostAddress, HostName, SourceTy
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.config import HostConfig, SectionPlugin
+from cmk.base.config import HostConfig, SelectedRawSections
 
 from ._abstract import ABCDataSource
 from .agent import AgentDataSource, AgentHostSections
@@ -184,38 +184,43 @@ def make_host_sections(
     sources: DataSources,
     *,
     max_cachefile_age: int,
-    selected_sections: Optional[Set[SectionPlugin]],
+    selected_raw_sections: Optional[SelectedRawSections],
 ) -> MultiHostSections:
     if host_config.nodes is None:
         return _make_host_sections(
             [(host_config.hostname, ipaddress, sources)],
             max_cachefile_age=max_cachefile_age,
-            selected_sections=selected_sections,
+            selected_raw_sections=selected_raw_sections,
         )
 
     return _make_host_sections(
         _make_piggyback_nodes(config_cache, host_config),
         max_cachefile_age=max_cachefile_age,
-        selected_sections=_make_piggybacked_sections(host_config),
+        selected_raw_sections=_make_piggybacked_sections(host_config),
     )
 
 
-def _make_piggybacked_sections(host_config) -> Set[SectionPlugin]:
+def _make_piggybacked_sections(host_config) -> SelectedRawSections:
     check_names = check_table.get_needed_check_names(
         host_config.hostname,
         remove_duplicates=True,
         filter_mode="only_clustered",
     )
-    return config.get_relevant_raw_sections(
-        # TODO (mo): centralize maincheckify: CMK-4295
-        check_plugin_names=(CheckPluginName(maincheckify(n)) for n in check_names))
+    selected_raw_sections = {}
+    for name in config.get_relevant_raw_sections(
+            # TODO (mo): centralize maincheckify: CMK-4295
+            check_plugin_names=(CheckPluginName(maincheckify(n)) for n in check_names)):
+        section = config.get_registered_section_plugin(name)
+        if section is not None:
+            selected_raw_sections[name] = section
+    return selected_raw_sections
 
 
 def _make_host_sections(
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], DataSources]],
     *,
     max_cachefile_age: int,
-    selected_sections: Optional[Set[SectionPlugin]],
+    selected_raw_sections: Optional[SelectedRawSections],
 ) -> MultiHostSections:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
@@ -241,7 +246,7 @@ def _make_host_sections(
             )
             host_sections.update(
                 # TODO: Select agent / snmp sources before passing
-                source.run(selected_sections=selected_sections))
+                source.run(selected_raw_sections=selected_raw_sections))
 
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.

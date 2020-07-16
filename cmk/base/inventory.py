@@ -309,7 +309,7 @@ def _do_inv_for_realhost(
                     SNMPHostSections(),
                 )
                 source.set_fetched_raw_section_names(set(host_sections.sections))
-                host_sections.update(source.run(selected_sections=None))
+                host_sections.update(source.run(selected_raw_sections=None))
 
     if multi_host_sections is None:
         multi_host_sections = data_sources.make_host_sections(
@@ -318,7 +318,7 @@ def _do_inv_for_realhost(
             ipaddress,
             sources,
             max_cachefile_age=host_config.max_cachefile_age,
-            selected_sections=None,
+            selected_raw_sections=None,
         )
 
     section.section_step("Executing inventory plugins")

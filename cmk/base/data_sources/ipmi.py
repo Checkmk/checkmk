@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import cast, Final, Optional, Set
+from typing import cast, Final, Optional
 
 from cmk.utils.type_defs import (
     HostAddress,
@@ -18,8 +18,7 @@ from cmk.utils.type_defs import (
 
 from cmk.fetchers import IPMIDataFetcher
 
-import cmk.base.config as config
-from cmk.base.config import IPMICredentials, SectionPlugin
+from cmk.base.config import IPMICredentials, SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
 from .agent import AgentDataSource
@@ -56,7 +55,7 @@ class IPMIManagementBoardDataSource(AgentDataSource):
     def _execute(
         self,
         *,
-        selected_sections: Optional[Set[SectionPlugin]],
+        selected_raw_sections: Optional[SelectedRawSections],
     ) -> RawAgentData:
         if not self._credentials:
             raise MKAgentError("Missing credentials")
@@ -64,12 +63,10 @@ class IPMIManagementBoardDataSource(AgentDataSource):
         if self.ipaddress is None:
             raise MKAgentError("Missing IP address")
 
-        if selected_sections is None:
+        if selected_raw_sections is None:
             # pylint: disable=unused-variable
             # TODO(ml): Should we pass that to the fetcher?
-            section = config.get_registered_section_plugin(SectionName("mgmt_ipmi_sensors"))
-            assert section is not None
-            selected_sections = {section}
+            selected_raw_section_names = {SectionName("mgmt_ipmi_sensors")}
 
         with IPMIDataFetcher(
                 self.ipaddress,

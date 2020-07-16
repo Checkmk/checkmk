@@ -38,9 +38,14 @@ from typing import (
 from six import ensure_str
 
 import cmk.utils
+from cmk.utils.check_utils import (
+    maincheckify,
+    unwrap_parameters,
+    is_management_name,
+    MANAGEMENT_NAME_PREFIX,
+)
 import cmk.utils.cleanup
 import cmk.utils.debug
-import cmk.utils.migrated_check_variables
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -49,17 +54,12 @@ import cmk.utils.store as store
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
-from cmk.utils.check_utils import (
-    is_management_name,
-    maincheckify,
-    MANAGEMENT_NAME_PREFIX,
-    section_name_of,
-    unwrap_parameters,
-)
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
+import cmk.utils.migrated_check_variables
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -91,6 +91,9 @@ from cmk.utils.type_defs import (
     TimeperiodName,
 )
 
+from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
+    OIDBytes, OIDCached, SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming)
+
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_utils
@@ -103,13 +106,11 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_snmp_section_plugin_from_legacy,
 )
 from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
+
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.caching import runtime_cache as _runtime_cache
 from cmk.base.check_utils import LegacyCheckParameters, Service
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
-    OIDBytes, OIDCached, SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming)
 
 # TODO: Prefix helper functions with "_".
 
@@ -148,6 +149,7 @@ CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
 SectionPlugin = Union[SNMPSectionPlugin, AgentSectionPlugin]
+SelectedRawSections = Dict[SectionName, SectionPlugin]
 
 
 class TimespecificParamList(list):
@@ -1302,7 +1304,7 @@ def get_relevant_raw_sections(
         *,
         check_plugin_names: Iterable[CheckPluginName] = (),
         inventory_plugin_names: Iterable[InventoryPluginName] = (),
-) -> Set[SectionPlugin]:
+) -> SelectedRawSections:
     """return the raw sections potentially relevant for the given check or inventory plugins"""
     parsed_section_names: Set[ParsedSectionName] = set()
 
@@ -1324,7 +1326,8 @@ def get_relevant_raw_sections(
     )
 
     return {
-        section for section in iter_all_sections
+        section.name: section
+        for section in iter_all_sections
         if section.parsed_section_name in parsed_section_names
     }
 

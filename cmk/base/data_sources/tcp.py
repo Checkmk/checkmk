@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import Optional, Set
+from typing import Optional
 
 from cmk.utils.type_defs import HostAddress, HostName
 
@@ -13,7 +13,7 @@ from cmk.fetchers import TCPDataFetcher
 
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.check_utils import RawAgentData
-from cmk.base.config import SectionPlugin
+from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 from .agent import AgentDataSource
@@ -61,7 +61,7 @@ class TCPDataSource(AgentDataSource):
     def _execute(
         self,
         *,
-        selected_sections: Optional[Set[SectionPlugin]],
+        selected_raw_sections: Optional[SelectedRawSections],
     ) -> RawAgentData:
         if self._use_only_cache:
             raise MKAgentError("Got no data: No usable cache file present at %s" %

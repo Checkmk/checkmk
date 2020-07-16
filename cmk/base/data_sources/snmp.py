@@ -27,7 +27,7 @@ from cmk.fetchers import factory, SNMPDataFetcher
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
-from cmk.base.config import SectionPlugin
+from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import ABCDataSource, ABCHostSections
@@ -67,8 +67,7 @@ class CachedSNMPDetector:
         # TODO: Check if do_snmp_scan and on_error can be dropped.
         self.on_error = on_error
         self.do_snmp_scan = do_snmp_scan
-        self._cached_result: Set[SectionPlugin] = set()
-        self._processed = False
+        self._cached_result: Optional[Set[SectionName]] = None
 
     def sections(self) -> Iterable[SNMPScanSection]:
         return [
@@ -76,34 +75,28 @@ class CachedSNMPDetector:
             for section in config.registered_snmp_sections.values()
         ]
 
+    # TODO (mo): Make this (and the called) function(s) return the sections directly!
     def __call__(
         self,
         snmp_config: SNMPHostConfig,
-    ) -> Set[SectionPlugin]:
+    ) -> Set[SectionName]:
         """Returns a list of raw sections that shall be processed by this source.
 
         The logic is only processed once. Once processed, the answer is cached.
         """
-        if self._processed:
+        if self._cached_result is not None:
             return self._cached_result
 
-        self._processed = True
-        # TODO(ml): Just let `gather_avaiable...` return a Set[SectionPlugin]
-        #           instead of their names.
-        for name in gather_available_raw_section_names(
-                self.sections(),
-                on_error=self.on_error,
-                do_snmp_scan=self.do_snmp_scan,
-                binary_host=config.get_config_cache().in_binary_hostlist(
-                    snmp_config.hostname,
-                    config.snmp_without_sys_descr,
-                ),
-                backend=factory.backend(snmp_config),
-        ):
-            section = config.get_registered_section_plugin(name)
-            if section is not None:
-                self._cached_result.add(section)
-
+        self._cached_result = gather_available_raw_section_names(
+            self.sections(),
+            on_error=self.on_error,
+            do_snmp_scan=self.do_snmp_scan,
+            binary_host=config.get_config_cache().in_binary_hostlist(
+                snmp_config.hostname,
+                config.snmp_without_sys_descr,
+            ),
+            backend=factory.backend(snmp_config),
+        )
         return self._cached_result
 
 
@@ -210,11 +203,11 @@ class SNMPDataSource(ABCSNMPDataSource):
     def _execute(
         self,
         *,
-        selected_sections: Optional[Set[SectionPlugin]],
+        selected_raw_sections: Optional[SelectedRawSections],
     ) -> SNMPRawData:
         ip_lookup.verify_ipaddress(self.ipaddress)
         with SNMPDataFetcher(
-                self._make_oid_infos(selected_sections=selected_sections),
+                self._make_oid_infos(selected_raw_sections=selected_raw_sections),
                 self._use_snmpwalk_cache,
                 self._snmp_config,
         ) as fetcher:
@@ -224,31 +217,31 @@ class SNMPDataSource(ABCSNMPDataSource):
     def _make_oid_infos(
         self,
         *,
-        selected_sections: Optional[Set[SectionPlugin]],
+        selected_raw_sections: Optional[SelectedRawSections],
     ) -> Dict[SectionName, List[SNMPTree]]:
-        oid_infos: Dict[SectionName, List[SNMPTree]] = {}
-        for section in SNMPDataSource._sort_sections(
-                selected_sections if selected_sections is not None else self.
-                detector(self._snmp_config)):
-            plugin = config.registered_snmp_sections.get(section.name)
+        oid_infos = {}  # Dict[SectionName, List[SNMPTree]]
+        for section_name in SNMPDataSource._sort_section_names(
+            {s.name for s in selected_raw_sections.values()}
+                if selected_raw_sections is not None else self.detector(self._snmp_config)):
+            plugin = config.registered_snmp_sections.get(section_name)
             if plugin is None:
-                self._logger.debug("%s: No such section definition", section.name)
+                self._logger.debug("%s: No such section definition", section_name)
                 continue
 
-            if section.name in self._fetched_raw_section_names:
+            if section_name in self._fetched_raw_section_names:
                 continue
 
             # This checks data is configured to be persisted (snmp_fetch_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added later
-            if self._persisted_sections and section.name in self._persisted_sections:
-                self._logger.debug("%s: Skip fetching data (persisted info exists)", section.name)
+            if self._persisted_sections and section_name in self._persisted_sections:
+                self._logger.debug("%s: Skip fetching data (persisted info exists)", section_name)
                 continue
 
-            oid_infos[section.name] = plugin.trees
+            oid_infos[section_name] = plugin.trees
         return oid_infos
 
     @staticmethod
-    def _sort_sections(sections: Set[SectionPlugin]) -> List[SectionPlugin]:
+    def _sort_section_names(section_names: Set[SectionName]) -> List[SectionName]:
         # In former Check_MK versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
         # In Check_MK versions >= 1.5.0 the order is random and
@@ -262,10 +255,9 @@ class SNMPDataSource(ABCSNMPDataSource):
             SectionName("brocade_sys"),
             SectionName("bvip_util"),
         }
-        return sorted(
-            sections,
-            key=lambda s: (not ('cpu' in str(s) or s.name in cpu_sections_without_cpu_in_name), s),
-        )
+        return sorted(section_names,
+                      key=lambda x:
+                      (not ('cpu' in str(x) or x in cpu_sections_without_cpu_in_name), x))
 
     def _convert_to_sections(self, raw_data: SNMPRawData) -> SNMPHostSections:
         raw_data = cast(SNMPRawData, raw_data)

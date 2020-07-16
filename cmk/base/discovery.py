@@ -78,6 +78,7 @@ from cmk.base.api.agent_based import checking_types
 from cmk.base.api.agent_based.register.check_plugins_legacy import resolve_legacy_name
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import FinalSectionContent, LegacyCheckParameters, Service, ServiceID
+from cmk.base.config import SelectedRawSections
 from cmk.base.core_config import MonitoringCore
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
@@ -316,6 +317,17 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
             # explicit hosts. But for host that have never been service-discovered
             # yet (do not have autochecks), we enable SNMP scan.
             do_snmp_scan = not use_caches or not autochecks.has_autochecks(hostname)
+
+            # If check plugins are specified via command line,
+            # see which raw sections we may need
+            selected_raw_sections: Optional[SelectedRawSections] = None
+            if check_plugin_names is not None:
+                selected_raw_sections = {}
+                for name in config.get_relevant_raw_sections(check_plugin_names=check_plugin_names):
+                    section_ = config.get_registered_section_plugin(name)
+                    assert section_ is not None
+                    selected_raw_sections[name] = section_
+
             multi_host_sections = data_sources.make_host_sections(
                 config_cache,
                 host_config,
@@ -326,9 +338,7 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                     do_snmp_scan=do_snmp_scan,
                     on_error=on_error,
                 ),
-                selected_sections=(None if check_plugin_names is None else
-                                   config.get_relevant_raw_sections(
-                                       check_plugin_names=check_plugin_names)),
+                selected_raw_sections=selected_raw_sections,
                 max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
             )
 
@@ -522,7 +532,7 @@ def discover_on_host(
                 for_check_discovery=True,
             ),
             max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
-            selected_sections=None,
+            selected_raw_sections=None,
         )
 
         # Compute current state of new and existing checks
@@ -661,7 +671,7 @@ def check_discovery(
         ipaddress,
         sources,
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
-        selected_sections=None,
+        selected_raw_sections=None,
     )
 
     services, discovered_host_labels = _get_host_services(
@@ -1508,7 +1518,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
             on_error=on_error,
         ),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
-        selected_sections=None,
+        selected_raw_sections=None,
     )
 
     services, discovered_host_labels = _get_host_services(

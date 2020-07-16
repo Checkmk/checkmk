@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Optional, Set, Tuple
+from typing import Optional, Tuple
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
@@ -14,7 +14,7 @@ from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, ServiceChec
 from cmk.fetchers import PiggyBackDataFetcher
 
 import cmk.base.config as config
-from cmk.base.config import SectionPlugin
+from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
 from .agent import AgentDataSource
@@ -45,7 +45,7 @@ class PiggyBackDataSource(AgentDataSource):
     def _execute(
         self,
         *,
-        selected_sections: Optional[Set[SectionPlugin]],
+        selected_raw_sections: Optional[SelectedRawSections],
     ) -> RawAgentData:
         with PiggyBackDataFetcher(self.hostname, self.ipaddress, self._time_settings) as fetcher:
             self._summary = fetcher.summary()
@@ -55,14 +55,14 @@ class PiggyBackDataSource(AgentDataSource):
     def _get_raw_data(
         self,
         *,
-        selected_sections: Optional[Set[SectionPlugin]],
+        selected_raw_sections: Optional[SelectedRawSections],
     ) -> Tuple[RawAgentData, bool]:
         """Returns the current raw data of this data source
 
         Special for piggyback: No caching of raw data
         """
         self._logger.log(VERBOSE, "Execute data source")
-        return self._execute(selected_sections=selected_sections), False
+        return self._execute(selected_raw_sections=selected_raw_sections), False
 
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         """Returns useful information about the data source execution

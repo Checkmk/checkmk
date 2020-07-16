@@ -36,6 +36,8 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger
 from cmk.gui.globals import html
+from cmk.gui.plugins.main_menu.mega_menus import make_main_menu_breadcrumb, MegaMenuMonitoring
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 
 from cmk.gui.exceptions import (
     HTTPRedirect,
@@ -473,7 +475,7 @@ def draw_dashboard(name: DashboardName) -> None:
         header_height = 0
 
     html.add_body_css_class("dashboard")
-    html.header(title)
+    html.header(title, breadcrumb=_dashboard_breadcrumb(name, title))
 
     html.open_div(class_=["dashboard_%s" % name], id_="dashboard")  # Container of all dashlets
 
@@ -563,6 +565,17 @@ cmk.dashboard.register_event_handlers();
         html.javascript('cmk.dashboard.toggle_dashboard_edit(true)')
 
     html.body_end()  # omit regular footer with status icons, etc.
+
+
+def _dashboard_breadcrumb(name: str, title: str) -> Breadcrumb:
+    breadcrumb = make_main_menu_breadcrumb(MegaMenuMonitoring)
+
+    breadcrumb.append(BreadcrumbItem(
+        title,
+        html.makeuri_contextless([("name", name)]),
+    ))
+
+    return breadcrumb
 
 
 def dashlet_container_begin(nr: DashletId, dashlet: DashletConfig) -> None:
@@ -1203,7 +1216,7 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         sorted=True,
     )
 
-    html.header(title)
+    html.header(title, breadcrumb=visuals.visual_page_breadcrumb("dashboards", title, "edit"))
     html.begin_context_buttons()
     back_url = html.get_url_input(
         "back", "dashboard.py?edit=1&name=%s" % html.urlencode(html.request.var('name')))
@@ -1311,7 +1324,7 @@ def page_edit_dashlet() -> None:
         dashlet_type = dashlet_registry[ty]
         single_infos = dashlet['single_infos']
 
-    html.header(title)
+    html.header(title, breadcrumb=visuals.visual_page_breadcrumb("dashboards", title, mode))
 
     html.begin_context_buttons()
     back_url = html.get_url_input('back')

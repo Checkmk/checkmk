@@ -167,8 +167,8 @@ def _mock_livestatus(mocker):
 
     """
     live = MockLiveStatusConnection()
-    mocker.patch("cmk.gui.sites.MultiSiteConnection.set_prepend_site", new=live.set_prepend_site)
-    mocker.patch("cmk.gui.sites.MultiSiteConnection.query_non_parallel",
-                 new=live.query_non_parallel)
-    mocker.patch("cmk.gui.sites.MultiSiteConnection.query_parallel", new=live.query_parallel)
+    mocker.patch("livestatus.MultiSiteConnection.set_prepend_site", new=live.set_prepend_site)
+    mocker.patch("livestatus.MultiSiteConnection.query_non_parallel", new=live.query_non_parallel)
+    mocker.patch("livestatus.MultiSiteConnection.query_parallel", new=live.query_parallel)
+    mocker.patch("livestatus.SingleSiteConnection._create_socket")
     return live

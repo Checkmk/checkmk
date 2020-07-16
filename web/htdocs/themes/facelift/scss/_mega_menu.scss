@@ -52,7 +52,6 @@
     box-sizing: border-box;
 
     &:hover {
-      cursor: pointer;
       border-left-color: $success;
 
       > a.popup_trigger > img.icon {
@@ -213,6 +212,25 @@
       height: 58px;
       cursor: pointer;
     }
+
+    #popup_shadow {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 65px;
+      z-index: 100;
+      display: none;
+      cursor: default;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    &.active {
+      #popup_shadow {
+        display: block;
+      }
+    }
+
   }
 
   li {
@@ -230,15 +248,6 @@
     }
   }
 
-  #popup_shadow {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
 }
 
 /* TODO: Additional styling when a mega menu is used.

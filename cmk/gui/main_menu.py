@@ -86,6 +86,7 @@ class MainMenuRenderer:
             html.open_div(class_=["popup_menu", "global_search"])
             QuicksearchSnapin().show()
             html.close_div()
+            html.div("", id_="popup_shadow", onclick="cmk.popup_menu.close_popup()")
             return html.drain()
 
     def _get_mega_menu_content(self, menu_item: MainMenuItem) -> str:
@@ -94,6 +95,7 @@ class MainMenuRenderer:
             html.open_div(class_="popup_menu")
             MegaMenuRenderer().show(menu)
             html.close_div()
+            html.div("", id_="popup_shadow", onclick="cmk.popup_menu.close_popup()")
             return html.drain()
 
 

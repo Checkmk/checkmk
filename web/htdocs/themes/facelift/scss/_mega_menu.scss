@@ -198,6 +198,16 @@
         }
       }
     }
+
+    &.user {
+      position: absolute;
+      bottom: 64px;
+      left: 0;
+      z-index: 15;
+      width: 64px;
+      height: 58px;
+      cursor: pointer;
+    }
   }
 
   li {
@@ -251,5 +261,12 @@
       max-height: calc(100vh - 62px);
     }
   }
-}
 
+  &.user {
+    div.popup_menu {
+      top: auto;
+      right: auto;
+      bottom: 0;
+    }
+  }
+}

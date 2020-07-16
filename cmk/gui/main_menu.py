@@ -65,6 +65,7 @@ class MainMenuRenderer:
                 html.render_icon(menu_item.icon_name) + html.render_div(menu_item.title),
                 ident="mega_menu_" + menu_item.name,
                 method=MethodInline(self._get_mega_menu_content(menu_item)),
+                cssclass=menu_item.name,
             )
             html.close_li()
 

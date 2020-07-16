@@ -52,7 +52,6 @@ VMs []    |                               |
 """
 
 # Todo:
-# - agent: cuttoff-weeks / cert-check / timeout configurable
 # - Replication Status VMs & Container, Gesamtstatus + piggybacked
 
 # Read:
@@ -107,8 +106,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         default=2,
         help="Fetch logs N weeks back in time",
     )
-    # TODO: default should not be True
-    parser.add_argument("--no-cert-check", action="store_true", default=True)
+    parser.add_argument("--no-cert-check", action="store_true")
     parser.add_argument("--debug", action="store_true", help="Keep some exceptions unhandled")
     parser.add_argument("hostname", help="Name of the Proxmox instance to query.")
     return parser.parse_args(argv)

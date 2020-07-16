@@ -185,20 +185,54 @@ def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
 def service_table() -> discovery.ServicesTable:
     return {
         ("check_plugin_name", "New Item 1"): ("new",
-                                              discovery.Service("check_plugin_name", "New Item 1",
-                                                                "Test Description New Item 1", {})),
+                                              discovery.Service(
+                                                  "check_plugin_name",
+                                                  "New Item 1",
+                                                  "Test Description New Item 1",
+                                                  {},
+                                              )),
         ("check_plugin_name", "New Item 2"): ("new",
-                                              discovery.Service("check_plugin_name", "New Item 2",
-                                                                "Test Description New Item 2", {})),
-        ("check_plugin_name", "Vanished Item 1"):
-            ("vanished",
-             discovery.Service("check_plugin_name", "Vanished Item 1",
-                               "Test Description Vanished Item 1", {})),
-        ("check_plugin_name", "Vanished Item 2"):
-            ("vanished",
-             discovery.Service("check_plugin_name", "Vanished Item 2",
-                               "Test Description Vanished Item 2", {})),
+                                              discovery.Service(
+                                                  "check_plugin_name",
+                                                  "New Item 2",
+                                                  "Test Description New Item 2",
+                                                  {},
+                                              )),
+        ("check_plugin_name", "Vanished Item 1"): ("vanished",
+                                                   discovery.Service(
+                                                       "check_plugin_name",
+                                                       "Vanished Item 1",
+                                                       "Test Description Vanished Item 1",
+                                                       {},
+                                                   )),
+        ("check_plugin_name", "Vanished Item 2"): ("vanished",
+                                                   discovery.Service(
+                                                       "check_plugin_name",
+                                                       "Vanished Item 2",
+                                                       "Test Description Vanished Item 2",
+                                                       {},
+                                                   )),
     }
+
+
+@pytest.fixture
+def grouped_services() -> discovery.ServicesByTransition:
+    return {
+        "new": [
+            discovery.Service("check_plugin_name", "New Item 1", "Test Description New Item 1", {}),
+            discovery.Service("check_plugin_name", "New Item 2", "Test Description New Item 2", {}),
+        ],
+        "vanished": [
+            discovery.Service("check_plugin_name", "Vanished Item 1",
+                              "Test Description Vanished Item 1", {}),
+            discovery.Service("check_plugin_name", "Vanished Item 2",
+                              "Test Description Vanished Item 2", {}),
+        ],
+    }
+
+
+def test__group_by_transition(service_table, grouped_services):
+    assert discovery._group_by_transition(service_table.values()) == grouped_services
 
 
 @pytest.mark.parametrize(
@@ -299,7 +333,7 @@ def service_table() -> discovery.ServicesTable:
             "service_blacklist": ["^Test Description Vanished Item 2"],
         }, ["Vanished Item 2"], (0, 1, 1)),
     ])
-def test__get_post_discovery_services(monkeypatch, service_table, mode, parameters_rediscovery,
+def test__get_post_discovery_services(monkeypatch, grouped_services, mode, parameters_rediscovery,
                                       result_new_item_names, result_counts):
     def _get_service_description(_hostname, _check_plugin_name, item):
         return "Test Description %s" % item
@@ -314,7 +348,7 @@ def test__get_post_discovery_services(monkeypatch, service_table, mode, paramete
     new_item_names = [
         entry.item for entry in discovery._get_post_discovery_services(
             "hostname",
-            service_table,
+            grouped_services,
             service_filters,
             counts,
             mode,
@@ -494,14 +528,14 @@ def test__get_post_discovery_services(monkeypatch, service_table, mode, paramete
             },
         }, True),
     ])
-def test__check_service_table(monkeypatch, service_table, parameters, result_need_rediscovery):
+def test__check_service_table(monkeypatch, grouped_services, parameters, result_need_rediscovery):
     def _get_service_description(_hostname, _check_plugin_name, item):
         return "Test Description %s" % item
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
 
-    status, infotexts, long_infotexts, perfdata, need_rediscovery = discovery._check_service_table(
-        "hostname", service_table, parameters)
+    status, infotexts, long_infotexts, perfdata, need_rediscovery = discovery._check_service_lists(
+        "hostname", grouped_services, parameters)
 
     assert status == 1
     assert sorted(infotexts) == sorted([

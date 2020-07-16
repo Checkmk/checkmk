@@ -87,6 +87,8 @@ from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 _marked_host_discovery_timeout = 120
 
 ServicesTable = Dict[ServiceID, Tuple[str, Service]]
+ServicesByTransition = Dict[str, List[Service]]
+
 CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
                           LegacyCheckParameters, LegacyCheckParameters, str, Optional[int], str,
                           List[Metric], Dict[str, str]]
@@ -583,14 +585,24 @@ def _empty_counts() -> Counter[str]:
 
 def _get_post_discovery_services(
     hostname: HostName,
-    services: ServicesTable,
+    services: ServicesByTransition,
     service_filters: ServiceFilters,
     counts: Dict,
     mode: str,
 ) -> List[Service]:
+    """
+    The output contains a selction of services in the states "new", "old", "ignored", "vanished"
+    (depending on the value of `mode`) and "clusterd_".
 
+    Service in with the state "custom", "legacy", "active" and "manual" are currently not checked.
+
+    Note:
+
+        Discovered checks that are shadowed by manual checks will vanish that way.
+
+    """
     post_discovery_services: List[Service] = []
-    for check_source, discovered_service in services.values():
+    for check_source, discovered_services in services.items():
         if check_source in ("custom", "legacy", "active", "manual"):
             # This is not an autocheck or ignored and currently not
             # checked. Note: Discovered checks that are shadowed by manual
@@ -598,33 +610,37 @@ def _get_post_discovery_services(
             continue
 
         if check_source == "new":
-            if mode in ("new", "fixall", "refresh") and service_filters.new(
-                    hostname, discovered_service):
-                counts["self_new"] += 1
-                post_discovery_services.append(discovered_service)
+            if mode in ("new", "fixall", "refresh"):
+                new = [s for s in discovered_services if service_filters.new(hostname, s)]
+                counts["self_new"] += len(new)
+                post_discovery_services.extend(new)
+            continue
 
-        elif check_source in ("old", "ignored"):
+        if check_source in ("old", "ignored"):
             # keep currently existing valid services in any case
-            post_discovery_services.append(discovered_service)
-            counts["self_kept"] += 1
+            post_discovery_services.extend(discovered_services)
+            counts["self_kept"] += len(discovered_services)
+            continue
 
-        elif check_source == "vanished":
+        if check_source == "vanished":
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
-            if mode in ("fixall", "remove") and service_filters.vanished(
-                    hostname, discovered_service):
-                counts["self_removed"] += 1
-            else:
-                post_discovery_services.append(discovered_service)
-                counts["self_kept"] += 1
+            for service in discovered_services:
+                if mode in ("fixall", "remove") and service_filters.vanished(hostname, service):
+                    counts["self_removed"] += 1
+                else:
+                    post_discovery_services.append(service)
+                    counts["self_kept"] += 1
+            continue
 
-        elif check_source.startswith("clustered_"):
+        if check_source.startswith("clustered_"):
             # Silently keep clustered services
-            counts[check_source] += 1
-            post_discovery_services.append(discovered_service)
+            post_discovery_services.extend(discovered_services)
+            counts[check_source] += len(discovered_services)
+            continue
 
-        else:
-            raise MKGeneralException("Unknown check source '%s'" % check_source)
+        raise MKGeneralException("Unknown check source '%s'" % check_source)
+
     return post_discovery_services
 
 
@@ -682,7 +698,7 @@ def check_discovery(
         on_error="raise",
     )
 
-    status, infotexts, long_infotexts, perfdata, need_rediscovery = _check_service_table(
+    status, infotexts, long_infotexts, perfdata, need_rediscovery = _check_service_lists(
         hostname, services, params)
 
     _new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
@@ -720,9 +736,9 @@ def check_discovery(
     return status, infotexts, long_infotexts, perfdata
 
 
-def _check_service_table(
+def _check_service_lists(
     hostname: HostName,
-    services: ServicesTable,
+    services_by_transition: ServicesByTransition,
     params: Dict,
 ) -> Tuple[int, List[str], List[str], List[Tuple], bool]:
 
@@ -735,7 +751,7 @@ def _check_service_table(
     service_filters = get_service_filter_funcs(params)
     rediscovery_mode = _get_rediscovery_mode(params)
 
-    for check_state, title, params_key, default_state, service_filter in [
+    for transition, title, params_key, default_state, service_filter in [
         ("new", "unmonitored", "severity_unmonitored", config.inventory_check_severity,
          service_filters.new),
         ("vanished", "vanished", "severity_vanished", 0, service_filters.vanished),
@@ -744,19 +760,18 @@ def _check_service_table(
         affected_check_plugin_names: Counter[str] = Counter()
         unfiltered = False
 
-        for check_source, discovered_service in services.values():
-            if check_source == check_state:
-                affected_check_plugin_names[discovered_service.check_plugin_name] += 1
+        for discovered_service in services_by_transition.get(transition, []):
+            affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
-                if not unfiltered and service_filter(hostname, discovered_service):
-                    unfiltered = True
+            if not unfiltered and service_filter(hostname, discovered_service):
+                unfiltered = True
 
-                #TODO In service_filter:we use config.service_description(...)
-                # in order to finalize service_description (translation, etc.).
-                # Why do we use discovered_service.description here?
-                long_infotexts.append(
-                    u"%s: %s: %s" %
-                    (title, discovered_service.check_plugin_name, discovered_service.description))
+            #TODO In service_filter:we use config.service_description(...)
+            # in order to finalize service_description (translation, etc.).
+            # Why do we use discovered_service.description here?
+            long_infotexts.append(
+                u"%s: %s: %s" %
+                (title, discovered_service.check_plugin_name, discovered_service.description))
 
         if affected_check_plugin_names:
             info = ", ".join(["%s:%d" % e for e in affected_check_plugin_names.items()])
@@ -770,18 +785,17 @@ def _check_service_table(
             ))
 
             if (unfiltered and
-                ((check_state == "new" and rediscovery_mode in ("new", "fixall", "refresh")) or
-                 (check_state == "vanished" and
+                ((transition == "new" and rediscovery_mode in ("new", "fixall", "refresh")) or
+                 (transition == "vanished" and
                   rediscovery_mode in ("remove", "fixall", "refresh")))):
                 need_rediscovery = True
         else:
             infotexts.append(u"no %s services found" % title)
 
-    for check_source, discovered_service in services.values():
-        if check_source == "ignored":
-            long_infotexts.append(
-                u"ignored: %s: %s" %
-                (discovered_service.check_plugin_name, discovered_service.description))
+    for discovered_service in services_by_transition.get("ignored", []):
+        long_infotexts.append(
+            u"ignored: %s: %s" %
+            (discovered_service.check_plugin_name, discovered_service.description))
 
     return status, infotexts, long_infotexts, perfdata, need_rediscovery
 
@@ -1289,9 +1303,10 @@ def _enriched_discovered_services(
 
 
 # Creates a table of all services that a host has or could have according
-# to service discovery. The result is a dictionary of the form
-# (check_plugin_name, item) -> (check_source, paramstring)
-# check_source is the reason/state/source of the service:
+# to service discovery. The result is a tuple of services / labels, where
+# the services are in a dictionary of the form
+# service_transition -> List[Service]
+# service_transition is the reason/state/source of the service:
 #    "new"           : Check is discovered but currently not yet monitored
 #    "old"           : Check is discovered and already monitored (most common)
 #    "vanished"      : Check had been discovered previously, but item has vanished
@@ -1307,7 +1322,7 @@ def _get_host_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     on_error: str,
-) -> Tuple[ServicesTable, DiscoveredHostLabels]:
+) -> Tuple[ServicesByTransition, DiscoveredHostLabels]:
     if host_config.is_cluster:
         return _get_cluster_services(host_config, ipaddress, multi_host_sections, on_error)
 
@@ -1320,7 +1335,7 @@ def _get_node_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     on_error: str,
-) -> Tuple[ServicesTable, DiscoveredHostLabels]:
+) -> Tuple[ServicesByTransition, DiscoveredHostLabels]:
     hostname = host_config.hostname
     services, discovered_host_labels = _get_discovered_services(hostname, ipaddress,
                                                                 multi_host_sections, on_error)
@@ -1382,7 +1397,7 @@ def _get_discovered_services(
 
 # TODO: Rename or extract disabled services handling
 def _merge_manual_services(host_config: config.HostConfig, services: ServicesTable,
-                           on_error: str) -> ServicesTable:
+                           on_error: str) -> ServicesByTransition:
     """Add/replace manual and active checks and handle ignoration"""
     hostname = host_config.hostname
 
@@ -1433,7 +1448,15 @@ def _merge_manual_services(host_config: config.HostConfig, services: ServicesTab
                                   discovered_service.description):
             services[discovered_service.id()] = ("ignored", discovered_service)
 
-    return services
+    return _group_by_transition(services.values())
+
+
+def _group_by_transition(
+        transition_services: Iterable[Tuple[str, Service]]) -> ServicesByTransition:
+    services_by_transition: ServicesByTransition = {}
+    for transition, service in transition_services:
+        services_by_transition.setdefault(transition, []).append(service)
+    return services_by_transition
 
 
 def _get_cluster_services(
@@ -1441,12 +1464,12 @@ def _get_cluster_services(
     ipaddress: Optional[str],
     multi_host_sections: MultiHostSections,
     on_error: str,
-) -> Tuple[ServicesTable, DiscoveredHostLabels]:
+) -> Tuple[ServicesByTransition, DiscoveredHostLabels]:
+    if not host_config.nodes:
+        return {}, DiscoveredHostLabels()
+
     cluster_items: ServicesTable = {}
     cluster_host_labels = DiscoveredHostLabels()
-    if not host_config.nodes:
-        return cluster_items, cluster_host_labels
-
     config_cache = config.get_config_cache()
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
@@ -1514,7 +1537,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
         selected_raw_sections=None,
     )
 
-    services, discovered_host_labels = _get_host_services(
+    grouped_services, discovered_host_labels = _get_host_services(
         host_config,
         ip_address,
         multi_host_sections,
@@ -1522,47 +1545,48 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
     )
 
     table: CheckPreviewTable = []
-    for check_source, service in services.values():
-        # TODO (mo): centralize maincheckify: CMK-4295
-        plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
-        plugin = config.get_registered_check_plugin(plugin_name)
-        params = _preview_params(host_name, service, plugin, check_source)
+    for check_source, services in grouped_services.items():
+        for service in services:
+            # TODO (mo): centralize maincheckify: CMK-4295
+            plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
+            plugin = config.get_registered_check_plugin(plugin_name)
+            params = _preview_params(host_name, service, plugin, check_source)
 
-        if check_source in ['legacy', 'active', 'custom']:
-            exitcode = None
-            output = u"WAITING - %s check, cannot be done offline" % check_source.title()
-            perfdata: List[Metric] = []
-            ruleset_name: Optional[RulesetName] = None
-        else:
-            if plugin is None:
-                continue  # Skip not existing check silently
+            if check_source in ['legacy', 'active', 'custom']:
+                exitcode = None
+                output = u"WAITING - %s check, cannot be done offline" % check_source.title()
+                perfdata: List[Metric] = []
+                ruleset_name: Optional[RulesetName] = None
+            else:
+                if plugin is None:
+                    continue  # Skip not existing check silently
 
-            ruleset_name = str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
-            wrapped_params = checking_types.Parameters(wrap_parameters(params))
+                ruleset_name = str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
+                wrapped_params = checking_types.Parameters(wrap_parameters(params))
 
-            _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
-                multi_host_sections,
-                host_config,
-                ip_address,
-                service,
-                plugin,
-                lambda p=wrapped_params: p,  # type: ignore[misc]  # can't infer "type of lambda"
-            )
+                _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
+                    multi_host_sections,
+                    host_config,
+                    ip_address,
+                    service,
+                    plugin,
+                    lambda p=wrapped_params: p,  # type: ignore[misc]  # "type of lambda"
+                )
 
-        table.append((
-            _preview_check_source(host_name, service, check_source),
-            service.check_plugin_name,
-            ruleset_name,
-            service.item,
-            # this `repr` is a result of various refactorings, I'm not sure it is needed.
-            repr(service.parameters),
-            params,
-            service.description,
-            exitcode,
-            output,
-            perfdata,
-            service.service_labels.to_dict(),
-        ))
+            table.append((
+                _preview_check_source(host_name, service, check_source),
+                service.check_plugin_name,
+                ruleset_name,
+                service.item,
+                # this `repr` is a result of various refactorings, I'm not sure it is needed.
+                repr(service.parameters),
+                params,
+                service.description,
+                exitcode,
+                output,
+                perfdata,
+                service.service_labels.to_dict(),
+            ))
 
     return table, discovered_host_labels
 

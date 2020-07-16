@@ -32,6 +32,7 @@ CmkEndpointName = Literal[
     'cmk/run',
     'cmk/activate',
     'cmk/bake',
+    'cmk/bake_and_sign',
     'cmk/cancel',
     'cmk/create',
     'cmk/download',

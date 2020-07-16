@@ -97,11 +97,17 @@ components:
     AgentSign:
       properties:
         key_id:
-          example: asdf
-          type: string
+          description: The id under that the desired agent signature key is stored
+          example: 42
+          format: int32
+          type: integer
         passphrase:
+          description: The password to unlock the agent signature key
           example: sw0rdfish
           type: string
+      required:
+      - key_id
+      - passphrase
       type: object
     ApiError:
       properties:
@@ -1237,6 +1243,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
+          headers: {}
       tags:
       - cmk.gui.plugins.openapi.endpoints.downtime
       x-codeSamples:
@@ -1273,6 +1280,7 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       tags:
       - cmk.gui.plugins.openapi.endpoints.downtime
       x-codeSamples:
@@ -1327,6 +1335,7 @@ paths:
           description: Any unsuccessful or unexpected result.
         '204':
           description: Operation done successfully. No further output.
+          headers: {}
       tags:
       - cmk.gui.plugins.openapi.endpoints.downtime
       x-codeSamples:
@@ -2850,18 +2859,18 @@ paths:
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
           \    API_URL + \"/domain-types/agent/actions/sign\",\n    json={\n     \
-          \   \"key_id\": \"asdf\",\n        \"passphrase\": \"sw0rdfish\"\n    },\n\
-          )\nresp.raise_for_status()"
+          \   \"key_id\": 42,\n        \"passphrase\": \"sw0rdfish\"\n    },\n)\n\
+          resp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"key_id\": \"asdf\",\n  \
-          \        \"passphrase\": \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
+          \ application/json\" \\\n    -d '{\n          \"key_id\": 42,\n        \
+          \  \"passphrase\": \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    key_id='asdf'\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    key_id='42'\
           \ \\\n    passphrase='sw0rdfish'"
   /collections/agent:
     get:
@@ -2937,6 +2946,53 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
+  /domain-types/agent/actions/bake_and_sign:
+    post:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.bake_and_sign_all_agents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentSign'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultScalar'
+          description: ''
+          headers: {}
+      summary: Bake and sign all agents
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/domain-types/agent/actions/bake_and_sign\",\n    json={\n\
+          \        \"key_id\": 42,\n        \"passphrase\": \"sw0rdfish\"\n    },\n\
+          )\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"key_id\": 42,\n        \
+          \  \"passphrase\": \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/bake_and_sign\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake_and_sign\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    key_id='42'\
+          \ \\\n    passphrase='sw0rdfish'"
   /domain-types/agent/actions/automatic-deployment:
     get:
       description: ''

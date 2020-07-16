@@ -7,7 +7,7 @@
 import abc
 import os
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Set
 
 from six import ensure_str
 
@@ -18,7 +18,7 @@ from cmk.fetchers import ProgramDataFetcher
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.config import SelectedRawSections
+from cmk.base.config import SectionPlugin
 from cmk.base.exceptions import MKAgentError
 
 from .agent import AgentDataSource
@@ -41,7 +41,7 @@ class ABCProgramDataSource(AgentDataSource):
     def _execute(
         self,
         *,
-        selected_raw_sections: Optional[SelectedRawSections],
+        selected_sections: Optional[Set[SectionPlugin]],
     ) -> RawAgentData:
         self._logger.debug("Calling external program %r" % (self.source_cmdline))
         # TODO(ml): Do something with the selection.

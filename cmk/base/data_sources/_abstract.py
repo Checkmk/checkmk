@@ -8,7 +8,7 @@ import abc
 import logging
 import os
 import sys
-from typing import cast, Final, Generic, Optional, Tuple, TypeVar, Union
+from typing import cast, Final, Generic, Optional, Set, Tuple, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -38,7 +38,7 @@ from cmk.base.check_utils import (
     PiggybackRawData,
     SectionCacheInfo,
 )
-from cmk.base.config import SelectedRawSections
+from cmk.base.config import SectionPlugin
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLookupError
 
 from ._cache import FileCache, SectionStore
@@ -193,14 +193,14 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         del self._logger.handlers[:]  # Remove all previously existing handlers
         self._logger.addHandler(handler)
 
-    def run(self, *, selected_raw_sections: Optional[SelectedRawSections]) -> ABCHostSections:
+    def run(self, *, selected_sections: Optional[Set[SectionPlugin]]) -> ABCHostSections:
         """
-        :param selected_raw_section: A set of raw sections, that we
+        :param selected_section: A set of raw sections, that we
         are interested in.  If set, we assume that these sections should
         be produced if possible, and any raw section that is not listed
         here *may* be omitted.
         """
-        result = self._run(selected_raw_sections=selected_raw_sections, get_raw_data=False)
+        result = self._run(selected_sections=selected_sections, get_raw_data=False)
         if not isinstance(result, ABCHostSections):
             raise TypeError("Got invalid type: %r" % result)
         return result
@@ -208,13 +208,13 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def run_raw(
         self,
         *,
-        selected_raw_sections: Optional[SelectedRawSections],
+        selected_sections: Optional[Set[SectionPlugin]],
     ) -> RawAgentData:
         """Small wrapper for self._run() which always returns raw data source data
 
         Both hostname and ipaddress are optional, used for virtual
         Check_MK clusters."""
-        result = self._run(selected_raw_sections=selected_raw_sections, get_raw_data=True)
+        result = self._run(selected_sections=selected_sections, get_raw_data=True)
         if not isinstance(result, RawAgentData):
             raise TypeError("Got invalid type: %r" % result)
         return result
@@ -223,7 +223,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _run(
         self,
         *,
-        selected_raw_sections: Optional[SelectedRawSections],
+        selected_sections: Optional[Set[SectionPlugin]],
         get_raw_data: bool,
     ) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]:
         """Wrapper for self._execute() that unifies several things:
@@ -247,8 +247,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                 self._use_outdated_persisted_sections)
             self._persisted_sections = persisted_sections_from_disk
 
-            raw_data, is_cached_data = self._get_raw_data(
-                selected_raw_sections=selected_raw_sections)
+            raw_data, is_cached_data = self._get_raw_data(selected_sections=selected_sections)
 
             self._host_sections = host_sections = self._convert_to_sections(raw_data)
             assert isinstance(host_sections, ABCHostSections)
@@ -295,7 +294,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _get_raw_data(
         self,
         *,
-        selected_raw_sections: Optional[SelectedRawSections],
+        selected_sections: Optional[Set[SectionPlugin]],
     ) -> Tuple[BoundedAbstractRawData, bool]:
         """Returns the current raw data of this data source
 
@@ -316,7 +315,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
 
         self._logger.log(VERBOSE, "Execute data source")
-        raw_data = self._execute(selected_raw_sections=selected_raw_sections)
+        raw_data = self._execute(selected_sections=selected_sections)
         file_cache.write(raw_data)
         return raw_data, False
 
@@ -324,7 +323,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _execute(
         self,
         *,
-        selected_raw_sections: Optional[SelectedRawSections],
+        selected_sections: Optional[Set[SectionPlugin]],
     ) -> BoundedAbstractRawData:
         """Fetches the current agent data from the source specified with
         hostname and ipaddress and returns the result as "raw data" that is

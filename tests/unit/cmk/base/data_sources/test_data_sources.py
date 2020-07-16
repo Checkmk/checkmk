@@ -94,7 +94,7 @@ def test_piggyback_storage(monkeypatch, mocker):
     monkeypatch.setattr(
         type(source),
         "run",
-        lambda self, *, selected_raw_sections: mhs,
+        lambda self, *, selected_sections: mhs,
     )
 
     mocker.patch.object(
@@ -108,7 +108,7 @@ def test_piggyback_storage(monkeypatch, mocker):
     _make_host_sections(
         [(hostname, ipaddress, [source])],
         max_cachefile_age=0,
-        selected_raw_sections=None,
+        selected_sections=None,
     )
 
     args = cmk.utils.piggyback.store_piggyback_raw_data.call_args.args  # type: ignore[attr-defined]

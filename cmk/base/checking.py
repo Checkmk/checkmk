@@ -147,7 +147,7 @@ def do_check(
         )
 
         # see which raw sections we may need
-        selected_raw_sections = _get_relevant_raw_sections(services, host_config)
+        selected_sections = _get_relevant_raw_sections(services, host_config)
 
         sources = data_sources.make_sources(
             host_config,
@@ -158,7 +158,7 @@ def do_check(
             host_config,
             ipaddress,
             sources=sources,
-            selected_raw_sections=selected_raw_sections,
+            selected_sections=selected_sections,
             max_cachefile_age=host_config.max_cachefile_age,
         )
         num_success, plugins_missing_data = _do_all_checks_on_host(

@@ -102,7 +102,7 @@ def _patch_data_source_run(mocker, **kwargs):
     }
     defaults.update(kwargs)
 
-    def _run(self, *, get_raw_data, selected_raw_sections, callback):
+    def _run(self, *, get_raw_data, selected_sections, callback):
         assert self._may_use_cache_file == defaults["_may_use_cache_file"]
         assert self._no_cache == defaults["_no_cache"]
         assert self._max_cachefile_age == defaults["_max_cachefile_age"]
@@ -118,7 +118,7 @@ def _patch_data_source_run(mocker, **kwargs):
             assert self._use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
             assert self._ignore_check_interval == defaults["_ignore_check_interval"]
 
-        return callback(self, get_raw_data=get_raw_data, selected_raw_sections=None)
+        return callback(self, get_raw_data=get_raw_data, selected_sections=None)
 
     mocker.patch.object(
         ABCDataSource,

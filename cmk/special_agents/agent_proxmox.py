@@ -215,8 +215,9 @@ class BackupTask:
                     current_dataset = {}
                     continue
 
-                stop_vmid = extract_single_value(line, "finish_vm")
-                if stop_vmid:
+                finish_vm = extract_tuple(line, "finish_vm", 2)
+                if finish_vm:
+                    stop_vmid, duration_str = finish_vm
                     if stop_vmid != current_vmid:
                         # this is a consistency problem - we have to abort parsing this log file
                         raise BackupTask.LogParseError(
@@ -224,14 +225,15 @@ class BackupTask:
                             "Found end of VM %r while another VM %r was active" %
                             (stop_vmid, current_vmid),
                         )
+                    if "transfer_time" not in current_dataset:
+                        duration_dt = datetime.strptime(duration_str, "%H:%M:%S")
+                        current_dataset["transfer_time"] = (duration_dt.hour * 3600 +
+                                                            duration_dt.minute * 60 +
+                                                            duration_dt.second)
                     missing_keys = {
-                        key for key in {
-                            "transfer_size",
-                            "transfer_time",
-                            "archive_name",
-                            "archive_size",
-                            "started_time",
-                        } if key not in current_dataset
+                        key for key in
+                        {"transfer_time", "archive_name", "archive_size", "started_time"}
+                        if key not in current_dataset
                     }
                     if missing_keys:
                         raise BackupTask.LogParseWarning(

@@ -1388,15 +1388,7 @@ def _merge_manual_services(host_config: config.HostConfig, services: ServicesTab
     # Find manual checks. These can override discovered checks -> "manual"
     manual_items = check_table.get_check_table(hostname, skip_autochecks=True)
     for service in manual_items.values():
-        services[service.id()] = (
-            'manual',
-            Service(
-                check_plugin_name=service.check_plugin_name,
-                item=service.item,
-                description=service.description,
-                parameters=service.parameters,
-            ),
-        )
+        services[service.id()] = ('manual', service)
 
     # Add custom checks -> "custom"
     for entry in host_config.custom_checks:

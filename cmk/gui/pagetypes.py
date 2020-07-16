@@ -876,7 +876,7 @@ class Overridable(Base):
         pass
 
     @classmethod
-    def breadcrumb(cls, page_name: str) -> Breadcrumb:
+    def breadcrumb(cls, title: str, page_name: str) -> Breadcrumb:
         breadcrumb = make_main_menu_breadcrumb(MegaMenuConfigure)
 
         breadcrumb.append(BreadcrumbItem(title=cls.phrase("title_plural"), url=cls.list_url()))
@@ -884,7 +884,7 @@ class Overridable(Base):
         if page_name == "list":  # The list is the parent of all others
             return breadcrumb
 
-        breadcrumb.append(BreadcrumbItem(title=cls.phrase(page_name), url=html.makeuri([])))
+        breadcrumb.append(BreadcrumbItem(title=title, url=html.makeuri([])))
         return breadcrumb
 
     @classmethod
@@ -899,7 +899,7 @@ class Overridable(Base):
 
         cls.need_overriding_permission("edit")
 
-        html.header(cls.phrase("title_plural"), cls.breadcrumb("list"))
+        html.header(cls.phrase("title_plural"), cls.breadcrumb(cls.phrase("title_plural"), "list"))
         html.begin_context_buttons()
         html.context_button(cls.phrase("new"), cls.create_url(), "new_" + cls.type_name())
 
@@ -1163,7 +1163,7 @@ class Overridable(Base):
                                       _("The requested %s does not exist") % cls.phrase("title"))
             page_dict = page.internal_representation()
 
-        html.header(title, cls.breadcrumb(mode))
+        html.header(title, cls.breadcrumb(title, mode))
         html.begin_context_buttons()
         html.context_button(_("Back"), back_url, "back")
         html.end_context_buttons()

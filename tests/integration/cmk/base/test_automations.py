@@ -306,7 +306,6 @@ def test_automation_get_check_information(test_cfg, site):
     for _check_type, info in data.items():
         assert isinstance(info["title"], str)
         assert "service_description" in info
-        assert "snmp" in info
 
 
 def test_automation_get_section_information(test_cfg, site):

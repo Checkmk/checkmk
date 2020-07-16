@@ -364,26 +364,96 @@ class CAdvisorExporter:
         }
         return self._retrieve_formatted_cadvisor_info(if_info, group_element)
 
-    def memory_pod_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+    def memory_pod_summary(self, _group_element: str) -> List[Dict[str, Dict[str, Any]]]:
         logging.debug("Parsing cAdvisor pod memory")
-        memory_info = {
-            "memory_usage_pod": 'container_memory_usage_bytes{pod!="", container=""}',
-            "memory_limit": 'sum by(pod)(container_spec_memory_limit_bytes{container!=""})',
-            "memory_rss": 'sum by(pod)(container_memory_rss{container!=""})',
-            "memory_swap": 'sum by(pod)(container_memory_swap{container!=""})',
-            "memory_cache": 'sum by(pod)(container_memory_cache{container!=""})'
-        }
-        result_temp = self._retrieve_cadvisor_info(memory_info, group_element)
 
-        extra_info = self.api_client.perform_multi_result_promql(
+        memory_info = [
+            ("memory_usage_pod", 'container_memory_usage_bytes{pod!="", container=""}'),
+            ("memory_limit",
+             'sum by(pod, instance)(container_spec_memory_limit_bytes{container!=""})'),
+            ("memory_rss", 'sum by(pod, instance)(container_memory_rss{container!=""})'),
+            ("memory_swap", 'sum by(pod, instance)(container_memory_swap{container!=""})'),
+            ("memory_cache", 'sum by(pod, instance)(container_memory_cache{container!=""})'),
+        ]
+
+        pods_raw, pod_machine_associations = self._retrieve_pods_memory_summary(memory_info)
+        required_memory_stats = [
+            stat_name for stat_name, _query in memory_info if stat_name != "memory_limit"
+        ]
+        pods_complete, pods_missing_limit = self._filter_out_incomplete(
+            pods_raw, required_memory_stats)
+        pods_complete.update(
+            self._complement_machine_memory(pods_missing_limit, pod_machine_associations))
+        return self._format_for_service(pods_complete)
+
+    def _format_for_service(self, pods: Dict) -> List[Dict[str, Dict[str, Any]]]:
+        result = []
+        for pod_name, pod_info in pods.items():
+            pod_formatted = {
+                pod_name: {stat_name: [stat_info] for stat_name, stat_info in pod_info.items()}
+            }
+            result.append(pod_formatted)
+        return result
+
+    def _retrieve_pods_memory_summary(
+            self,
+            memory_info: List[Tuple[str, str]]) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, str]]:
+
+        result: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {}
+        associations = {}
+        for memory_stat, promql_query in memory_info:
+            for pod_memory_info in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                pod_name = pod_memory_info['labels']['pod']
+                pod = result.setdefault(pod_name, {})
+                pod[memory_stat] = pod_memory_info
+                if pod_name not in associations:
+                    associations[pod_name] = pod_memory_info['labels']['instance']
+        return result, associations
+
+    def _filter_out_incomplete(
+            self, pods_memory: Dict[str, Dict[str, Any]], required_stats: List[str]
+    ) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]]:
+        """ Filter out the pods which do not have the complete set of required stats memory values
+
+        Separate the remaining pods as having and missing memory limits
+
+        """
+        pods_complete = {}
+        pods_missing_limit = {}
+        for pod_name, pod_info in pods_memory.items():
+            if not all([stat in pod_info for stat in required_stats]):
+                continue
+            if self._verify_valid_memory_limit(pod_info):
+                pods_complete[pod_name] = pod_info
+                continue
+            pods_missing_limit[pod_name] = {stat: pod_info[stat] for stat in required_stats}
+        return pods_complete, pods_missing_limit
+
+    def _verify_valid_memory_limit(self, pod_info):
+        if "memory_limit" not in pod_info:
+            return False
+        if pod_info["memory_limit"]["value"] == '0':
+            return False
+        return True
+
+    def _complement_machine_memory(
+            self, pods: Dict[str, Dict[str, Any]],
+            pod_machine_associations: Dict[str, str]) -> Dict[str, Dict[str, Any]]:
+        """Add the machine memory limit to pods of their hosting machine"""
+        machines_memory = self._retrieve_machines_memory()
+        for pod_name, pod_info in pods.items():
+            pod_info.update({"memory_machine": machines_memory[pod_machine_associations[pod_name]]})
+        return pods
+
+    def _retrieve_machines_memory(self) -> Dict[str, Dict[str, Any]]:
+        machine_memory_info = self.api_client.perform_multi_result_promql(
             'machine_memory_bytes').promql_metrics
-        result_temp.append({
-            piggyback_pod_host: {
-                "memory_machine": extra_info
-            } for piggyback_pod_host in result_temp[0].keys()
-        })
-
-        return result_temp
+        machine = {}
+        for machine_info in machine_memory_info:
+            machine_instance = machine_info["labels"]["instance"]
+            machine[machine_instance] = machine_info
+        return machine
 
     def memory_container_summary(self, _group_element: str) -> List[Dict[str, Dict[str, Any]]]:
         logging.debug("Parsing cAdvisor container memory")

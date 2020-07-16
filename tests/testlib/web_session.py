@@ -200,15 +200,18 @@ class CMKWebSession:
         if lang:
             assert "value=\"" + lang + "\"" in profile_page
 
-        r = self.post("user_profile.py",
-                      data={
-                          "filled_in": "profile",
-                          "ua_start_url_use": "0",
-                          "ua_ui_theme_use": "0",
-                          "language": lang,
-                          "_save": "Save",
-                      },
-                      add_transid=True)
+        r = self.post(
+            "user_profile.py",
+            data={
+                "filled_in": "profile",
+                "ua_start_url_use": "0",
+                "ua_ui_theme_use": "0",
+                # Encoded None using DropdownChoice.option_id
+                "ua_ui_basic_advanced_mode": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
+                "language": lang,
+                "_save": "Save",
+            },
+            add_transid=True)
 
         if lang == "":
             assert "Successfully updated" in r.text, "Body: %s" % r.text

@@ -175,6 +175,19 @@ def find_all_parameters(
     This function de-references these string based parameters and emits a list of all parameters
     that it has been given in their dictionary form.
 
+    Examples:
+
+        >>> find_all_parameters([{'name': 'fizz', 'in': 'query'}, 'foobar'])
+        [{'name': 'fizz', 'in': 'query'}]
+
+        >>> find_all_parameters(['foobar'])
+        []
+
+        >>> find_all_parameters(['foobar'], errors='raise')
+        Traceback (most recent call last):
+           ...
+        ValueError: Param 'foobar', assumed globally defined, was not found.
+
     Args:
         params:
             Either as a dict or ParamDict or as a string. If it is a string it will be replaced

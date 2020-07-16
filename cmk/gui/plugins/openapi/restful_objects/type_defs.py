@@ -195,9 +195,6 @@ class ParamDict(dict):
     def __init__(self, *seq, **kwargs):
         if 'location' in kwargs:
             kwargs['in'] = kwargs.pop('location')
-        for d in seq:
-            if 'location' in kwargs:
-                d['in'] = d.pop('location')
         super(ParamDict, self).__init__(*seq, **kwargs)
 
     def __call__(
@@ -397,7 +394,14 @@ PathItem = TypedDict(
     total=False,
 )
 
-ResponseType = Dict[Literal['default', '200', '204', '301', '302'], PathItem]
+ResponseType = TypedDict("ResponseType", {
+    "default": PathItem,
+    "200": PathItem,
+    "204": PathItem,
+    "301": PathItem,
+    "302": PathItem,
+},
+                         total=False)
 
 OperationSpecType = TypedDict(
     "OperationSpecType",

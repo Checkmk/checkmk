@@ -13,7 +13,6 @@ from cmk.gui.plugins.openapi.utils import BaseSchema
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
-# TODO: websocket verbindung um events/etc. zu streamen.
 
 
 class ApiError(BaseSchema):

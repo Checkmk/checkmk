@@ -17,10 +17,9 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 import abc
 from typing import List, Tuple
 
-# TODO
-#  * statistics operators
-#  * column functions
-#  * more tests
+# TODO: statistics operators
+# TODO: column functions
+# TODO: more tests
 
 RenderIntermediary = List[Tuple[str, str]]
 

@@ -16,12 +16,15 @@ info = [
     ['[WIN-0100-MCC15-M-L000-SSD]'], ['accessible', 'true'],
     ['capacity', '4397778075648'], ['freeSpace', '3310200291328'],
     ['type', 'VMFS'], ['uncommitted', '0'],
-    ['url', '/vmfs/volumes/5bc5b243-c6c57438-bc07-4c52621258cd']
+    ['url', '/vmfs/volumes/5bc5b243-c6c57438-bc07-4c52621258cd'],
+    ['[VeeamBackup_bvk-srv01]'], ['accessible', 'false'], ['capacity', '0'],
+    ['freeSpace', '0'], ['type', 'NFS'], ['uncommitted', '0'],
+    ['url', '/vmfs/volumes/2648fab8-4c508495']
 ]
 
 discovery = {
     '': [
-        ('WIN-0100-MCC15-M-L000-SSD', {}),
+        ('VeeamBackup_bvk-srv01', {}), ('WIN-0100-MCC15-M-L000-SSD', {}),
         ('WIN-0108-MCC35-U-L008-SSD-EXC2', {})
     ]
 }
@@ -130,6 +133,19 @@ checks = {
                     ]
                 )
             ]
+        ),
+        (
+            'VeeamBackup_bvk-srv01', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
+                'trend_range': 24,
+                'trend_perfdata': True,
+                'show_levels': 'onmagic',
+                'inodes_levels': (10.0, 5.0),
+                'show_inodes': 'onlow',
+                'show_reserved': False
+            }, [(2, 'inaccessible', [])]
         )
     ]
 }

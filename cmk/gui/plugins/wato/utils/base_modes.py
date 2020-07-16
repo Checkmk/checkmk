@@ -60,24 +60,31 @@ class WatoMode(metaclass=abc.ABCMeta):
 
     def breadcrumb(self) -> Breadcrumb:
         """Render the breadcrumb to the current mode"""
-        breadcrumb = Breadcrumb()
+        return Breadcrumb(
+            [BreadcrumbItem(
+                title=self.title(),
+                url="javascript:window.location.reload(false)",
+            )])
 
-        mode = self
-        while True:
-            breadcrumb.insert(
-                0,
-                BreadcrumbItem(
-                    mode.title(),
-                    html.makeuri_contextless([("mode", mode.name())], filename="wato.py"),
-                ))
+        # TODO: Temporarily disable hierarchical breadcrumb in WATO
+        #breadcrumb = Breadcrumb()
 
-            mode_class = mode.parent_mode()
-            if mode_class is None:
-                break
-            # For some reason pylint does not understand that this is a class type
-            mode = mode_class()  # pylint: disable=not-callable
+        #mode = self
+        #while True:
+        #    breadcrumb.insert(
+        #        0,
+        #        BreadcrumbItem(
+        #            mode.title(),
+        #            html.makeuri_contextless([("mode", mode.name())], filename="wato.py"),
+        #        ))
 
-        return breadcrumb
+        #    mode_class = mode.parent_mode()
+        #    if mode_class is None:
+        #        break
+        #    # For some reason pylint does not understand that this is a class type
+        #    mode = mode_class()  # pylint: disable=not-callable
+
+        #return breadcrumb
 
     def buttons(self) -> None:
         global_buttons()

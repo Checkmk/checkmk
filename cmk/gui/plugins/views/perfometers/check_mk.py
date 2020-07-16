@@ -46,14 +46,19 @@ def number_human_readable(n, precision=1, unit="B"):
 
 
 def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
-    used_mb = perf_data[0][1]
-    maxx = perf_data[0][-1]
-    # perf data might be incomplete, if trending perfdata is off...
+    maxx = 0
+    used_mb = 0
     uncommitted_mb = 0
     for entry in perf_data:
+        if entry[0] == "fs_used":
+            used_mb = entry[1]
+            maxx = entry[-1]
         if entry[0] == "uncommitted":
             uncommitted_mb = entry[1]
             break
+
+    if maxx is None or maxx == 0:
+        return None, None
 
     perc_used = 100 * (float(used_mb) / float(maxx))
     perc_uncommitted = 100 * (float(uncommitted_mb) / float(maxx))

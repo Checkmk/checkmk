@@ -157,6 +157,10 @@ body.main .popup_menu #side_header > span {
   &.folded {
     transform: rotate(180deg);
   }
+
+  &:hover {
+    opacity: .5;
+  }
 }
 
 #side_version {

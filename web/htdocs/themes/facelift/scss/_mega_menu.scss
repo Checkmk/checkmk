@@ -52,7 +52,12 @@
     box-sizing: border-box;
 
     &:hover {
+      cursor: pointer;
       border-left-color: $success;
+
+      > a.popup_trigger > img.icon {
+        opacity: .5;
+      }
     }
 
     &.active {

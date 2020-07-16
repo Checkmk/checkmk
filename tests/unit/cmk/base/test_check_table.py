@@ -418,8 +418,9 @@ def test_check_table__get_static_check_entries(monkeypatch, check_group_paramete
         "Process item",
     )
 
-    assert bool(entries)
-    assert len(static_check_parameters) == 1
+    assert len(entries) == 1
+    assert entries[0] == check_group_parameters
 
+    assert len(static_check_parameters) == 1
     static_check_parameter = static_check_parameters[0]
     assert static_check_parameter == static_parameters

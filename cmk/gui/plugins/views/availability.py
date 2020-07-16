@@ -36,7 +36,7 @@ import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.breadcrumb import BreadcrumbItem
+from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
 
 from cmk.gui.exceptions import MKUserError
 
@@ -180,9 +180,6 @@ def render_availability_options(what: AVObjectType) -> AVOptions:
 def render_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None:
     config.user.need_permission("general.see_availability")
 
-    if handle_edit_annotations():
-        return
-
     # We make reports about hosts, services or BI aggregates
     if "service" in view.datasource.infos:
         what = "service"
@@ -225,6 +222,17 @@ def render_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> No
     else:
         title += view_title(view.spec)
 
+    title += " - " + range_title
+
+    breadcrumb = view.breadcrumb()
+    breadcrumb.append(BreadcrumbItem(
+        title=title,
+        url=breadcrumb[-1].url + "&mode=availability",
+    ))
+
+    if handle_edit_annotations(breadcrumb):
+        return
+
     # Deletion must take place before computation, since it affects the outcome
     with html.plugged():
         handle_delete_annotations()
@@ -250,18 +258,10 @@ def render_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> No
         _output_csv(what, av_mode, av_data, avoptions)
         return
 
-    title += " - " + range_title
-
     if display_options.enabled(display_options.H):
         html.body_start(title, force=True)
 
     if display_options.enabled(display_options.T):
-        breadcrumb = view.breadcrumb()
-        breadcrumb.append(
-            BreadcrumbItem(
-                title=title,
-                url=breadcrumb[-1].url + "&mode=availability",
-            ))
         html.top_heading(title, breadcrumb)
 
     html.write(confirmation_html_code)
@@ -907,7 +907,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                            _("Yes") if annotation.get("hide_from_report") else _("No"))
 
 
-def edit_annotation():
+def edit_annotation(breadcrumb: Breadcrumb) -> bool:
     site_id, hostname, host_state, service, service_state, fromtime, \
             untiltime, site_host_svc = _handle_anno_request_vars()
 
@@ -955,7 +955,8 @@ def edit_annotation():
         title += "/" + service
 
     html.body_start(title)
-    html.top_heading(title)
+
+    html.top_heading(title, _edit_annotation_breadcrumb(breadcrumb, title))
 
     html.begin_context_buttons()
     html.context_button(_("Abort"), html.makeuri([("anno_host", "")]), "abort")
@@ -972,6 +973,14 @@ def edit_annotation():
     html.bottom_footer()
     html.body_end()
     return True
+
+
+def _edit_annotation_breadcrumb(breadcrumb: Breadcrumb, title: str) -> Breadcrumb:
+    breadcrumb.append(BreadcrumbItem(
+        title=title,
+        url=html.makeuri([]),
+    ))
+    return breadcrumb
 
 
 def _validate_reclassify_of_states(value, varprefix):
@@ -1058,12 +1067,12 @@ def handle_delete_annotations():
         availability.save_annotations(annotations)
 
 
-def handle_edit_annotations():
+def handle_edit_annotations(breadcrumb: Breadcrumb) -> bool:
     # Avoid reshowing edit form after edit and reload
     if html.is_transaction() and not html.transaction_valid():
         return False
     if html.request.var("anno_host") and not html.request.var("_delete_annotation"):
-        finished = edit_annotation()
+        finished = edit_annotation(breadcrumb)
     else:
         finished = False
 

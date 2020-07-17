@@ -18,7 +18,7 @@ from cmk.fetchers import ProgramDataFetcher
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.config import SelectedRawSections
+from cmk.base.config import SelectedRawSections, SpecialAgentConfiguration
 from cmk.base.exceptions import MKAgentError
 
 from .agent import AgentDataSource
@@ -184,6 +184,6 @@ class SpecialAgentDataSource(ABCProgramDataSource):
         """Create command line using the special_agent_info"""
         info_func = config.special_agent_info[self._special_agent_id]
         agent_configuration = info_func(self._params, self.hostname, self.ipaddress)
-        if isinstance(agent_configuration, config.SpecialAgentConfiguration):
+        if isinstance(agent_configuration, SpecialAgentConfiguration):
             return agent_configuration.stdin
         return None

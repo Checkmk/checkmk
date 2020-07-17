@@ -48,18 +48,6 @@ try {
                         }
                     }
                 }
-
-//                stage('publish coverage') {
-//                    publishHTML([
-//                        allowMissing: false,
-//                        alwaysLinkToLastBuild: false,
-//                        keepAll: true,
-//                        reportDir: 'tests/htmlcov',
-//                        reportFiles: 'index.html',
-//                        reportName: 'Unit Test Coverage',
-//                        reportTitles: ''
-//                    ])
-//                }
             }
         }
     }

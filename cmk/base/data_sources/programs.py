@@ -156,34 +156,74 @@ class SpecialAgentDataSource(ABCProgramDataSource):
         )
         self._special_agent_id = special_agent_id
         self._params = params
-
-    @property
-    def special_agent_plugin_file_name(self) -> str:
-        return "agent_%s" % self._special_agent_id
-
-    @property
-    def _source_path(self) -> Path:
-        local_path = cmk.utils.paths.local_agents_dir / "special" / self.special_agent_plugin_file_name
-        if local_path.exists():
-            return local_path
-        return Path(cmk.utils.paths.agents_dir) / "special" / self.special_agent_plugin_file_name
-
-    @property
-    def _source_args(self) -> str:
-        info_func = config.special_agent_info[self._special_agent_id]
-        agent_configuration = info_func(self._params, self.hostname, self.ipaddress)
-        return core_config.active_check_arguments(self.hostname, None, agent_configuration)
+        self._cmdline = SpecialAgentDataSource._make_cmdline(
+            hostname,
+            ipaddress,
+            special_agent_id,
+            params,
+        )
+        self._stdin = SpecialAgentDataSource._make_stdin(
+            hostname,
+            ipaddress,
+            special_agent_id,
+            params,
+        )
+        self.special_agent_plugin_file_name = "agent_%s" % special_agent_id
 
     @property
     def source_cmdline(self) -> str:
         """Create command line using the special_agent_info"""
-        return "%s %s" % (self._source_path, self._source_args)
+        return self._cmdline
 
     @property
     def source_stdin(self) -> Optional[str]:
         """Create command line using the special_agent_info"""
-        info_func = config.special_agent_info[self._special_agent_id]
-        agent_configuration = info_func(self._params, self.hostname, self.ipaddress)
+        return self._stdin
+
+    @staticmethod
+    def _make_cmdline(
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        special_agent_id: str,
+        params: Dict,
+    ) -> str:
+        path = SpecialAgentDataSource._make_source_path(special_agent_id)
+        args = SpecialAgentDataSource._make_source_args(
+            hostname,
+            ipaddress,
+            special_agent_id,
+            params,
+        )
+        return "%s %s" % (path, args)
+
+    @staticmethod
+    def _make_stdin(
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        special_agent_id: str,
+        params: Dict,
+    ) -> Optional[str]:
+        info_func = config.special_agent_info[special_agent_id]
+        agent_configuration = info_func(params, hostname, ipaddress)
         if isinstance(agent_configuration, SpecialAgentConfiguration):
             return agent_configuration.stdin
         return None
+
+    @staticmethod
+    def _make_source_path(special_agent_id: str) -> Path:
+        file_name = "agent_%s" % special_agent_id
+        local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
+        if local_path.exists():
+            return local_path
+        return Path(cmk.utils.paths.agents_dir) / "special" / file_name
+
+    @staticmethod
+    def _make_source_args(
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        special_agent_id: str,
+        params: Dict,
+    ) -> str:
+        info_func = config.special_agent_info[special_agent_id]
+        agent_configuration = info_func(params, hostname, ipaddress)
+        return core_config.active_check_arguments(hostname, None, agent_configuration)

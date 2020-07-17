@@ -469,7 +469,6 @@ class TestMakeHostSectionsHosts:
     @pytest.mark.parametrize("source", [
         PiggyBackDataSource,
         partial(DSProgramDataSource, command_template=""),
-        partial(SpecialAgentDataSource, special_agent_id="said", params={}),
         TCPDataSource,
     ])
     def test_one_nonsnmp_source(self, hostname, ipaddress, config_cache, host_config, source):
@@ -499,7 +498,6 @@ class TestMakeHostSectionsHosts:
                                                  host_config):
         sources = [
             DSProgramDataSource(hostname, ipaddress, command_template=""),
-            SpecialAgentDataSource(hostname, ipaddress, special_agent_id="said", params={}),
             TCPDataSource(hostname, ipaddress),
         ]
 
@@ -522,13 +520,13 @@ class TestMakeHostSectionsHosts:
         assert len(section.sections) == 1
         # yapf: disable
         assert (section.sections[SectionName("section_name_%s" % hostname)]
-                == 3 * [["section_content"]])
+                == len(sources) * [["section_content"]])
 
     def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, config_cache, host_config):
         sources = [
             DSProgramDataSource(hostname + "0", ipaddress, command_template=""),
-            SpecialAgentDataSource(hostname + "1", ipaddress, special_agent_id="said", params={}),
-            TCPDataSource(hostname + "2", ipaddress)
+            TCPDataSource(hostname + "1", ipaddress),
+            TCPDataSource(hostname + "2", ipaddress),
         ]
 
         mhs = make_host_sections(

@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 
@@ -17,42 +18,25 @@ from cmk.base.data_sources.programs import (
 )
 from testlib.base import Scenario
 
-info_func_result_and_expected: List[  #
+fun_args_stdin: Tuple[  #
     Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]  #
-] = [  #
-    ("arg0 arg1", ("arg0 arg1", None)),
-    (["arg0", "arg1"], ("'arg0' 'arg1'", None)),
-    (SpecialAgentConfiguration("arg0", None), ("arg0", None)),
-    (SpecialAgentConfiguration("arg0 arg1", None), ("arg0 arg1", None)),
-    (SpecialAgentConfiguration(["list0", "list1"], None), ("'list0' 'list1'", None)),
+] = (  #
+    ("arg0 arg1", "arg0 arg1", None),
+    (["arg0", "arg1"], "'arg0' 'arg1'", None),
+    (SpecialAgentConfiguration("arg0", None), "arg0", None),
+    (SpecialAgentConfiguration("arg0 arg1", None), "arg0 arg1", None),
+    (SpecialAgentConfiguration(["list0", "list1"], None), "'list0' 'list1'", None),
     (
         SpecialAgentConfiguration("arg0 arg1", "stdin_blob"),
-        ("arg0 arg1", "stdin_blob"),
+        "arg0 arg1",
+        "stdin_blob",
     ),
     (
         SpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
-        ("'list0' 'list1'", "stdin_blob"),
+        "'list0' 'list1'",
+        "stdin_blob",
     ),
-]
-
-
-@pytest.mark.parametrize("info_func_result,expected", info_func_result_and_expected)
-def test_command_line_and_stdin(monkeypatch, info_func_result, expected):
-    Scenario().add_host("testhost").apply(monkeypatch)
-    special_agent_id = "bi"
-    agent_prefix = "%s/special/agent_%s " % (
-        cmk.utils.paths.agents_dir,
-        special_agent_id,
-    )
-    ds = SpecialAgentDataSource("testhost", "127.0.0.1", special_agent_id, {})
-    monkeypatch.setattr(
-        config,
-        "special_agent_info",
-        {special_agent_id: lambda a, b, c: info_func_result},
-    )
-
-    assert ds.source_cmdline == agent_prefix + expected[0]
-    assert ds.source_stdin == expected[1]
+)  # type: ignore[assignment]
 
 
 class TestDSProgramDataSource:
@@ -85,31 +69,56 @@ class TestDSProgramDataSource:
 
 
 class TestSpecialAgentDataSource:
+    @pytest.fixture(autouse=True)
+    def agent_dir(self, monkeypatch):
+        dir_ = Path("/tmp")
+        monkeypatch.setattr(cmk.utils.paths, "local_agents_dir", dir_)
+        monkeypatch.setattr(cmk.utils.paths, "agents_dir", dir_)
+        return dir_
+
+    @pytest.fixture
+    def special_agent_id(self):
+        return "my_id"
+
+    @pytest.fixture(params=fun_args_stdin)
+    def patch_config(self, special_agent_id, monkeypatch, request):
+        fun, args, stdin = request.param
+        monkeypatch.setitem(
+            config.special_agent_info,
+            special_agent_id,
+            lambda a, b, c: fun,
+        )
+        return args, stdin
+
+    @pytest.fixture
+    def expected_args(self, patch_config):
+        return patch_config[0]
+
+    @pytest.fixture
+    def expected_stdin(self, patch_config):
+        return patch_config[1]
+
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_attribute_defaults(self, monkeypatch, ipaddress):
-        the_id = "my_id"
+    def test_attribute_defaults(
+        self,
+        special_agent_id,
+        ipaddress,
+        agent_dir,
+        expected_args,
+        expected_stdin,
+        monkeypatch,
+    ):
         hostname = "testhost"
         params: Dict[Any, Any] = {}
         Scenario().add_host(hostname).apply(monkeypatch)
-        source = SpecialAgentDataSource(hostname, ipaddress, the_id, params)
 
-        assert source.id == "special_%s" % the_id
-        # ProgramDataSource
+        # end of setup
+
+        source = SpecialAgentDataSource(hostname, ipaddress, special_agent_id, params)
+
+        assert source.id == "special_%s" % special_agent_id
+
         assert source._cpu_tracking_id == "ds"
-
-    @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_unconfigured_command_line_raise_KeyError(self, monkeypatch, ipaddress):
-        the_id = "my_id"
-        hostname = "testhost"
-        params: Dict[Any, Any] = {}
-        Scenario().add_host(hostname).apply(monkeypatch)
-        source = SpecialAgentDataSource(hostname, ipaddress, the_id, params)
-
-        # TODO(ml): Does this make sense?
-        with pytest.raises(KeyError):
-            # pyflake people are highly ignorant regarding common practice...
-            # :-P See https://github.com/PyCQA/pyflakes/issues/393
-            _ignore_me = source.source_cmdline  # noqa: F841
-
-        with pytest.raises(KeyError):
-            source.describe()
+        assert source.source_cmdline == (str(agent_dir / "special" /
+                                             ("agent_%s" % special_agent_id)) + " " + expected_args)
+        assert source.source_stdin == expected_stdin

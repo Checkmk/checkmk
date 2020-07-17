@@ -319,7 +319,12 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
             continue
         used_descriptions[service.description] = service.id()
 
-        if config.check_info[service.check_plugin_name].get("has_perfdata", False):
+        # TODO: CMK-1125
+        # For now, for every check plugin developed against the new check API
+        # we just assume that it may have metrics. The careful review of this
+        # mechanism is subject of issue CMK-1125
+        check = config.check_info.get(service.check_plugin_name)
+        if check is not None and check.get("has_perfdata", False):
             template = config.passive_service_template_perf
         else:
             template = config.passive_service_template

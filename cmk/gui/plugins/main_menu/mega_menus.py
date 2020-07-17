@@ -226,6 +226,6 @@ MegaMenuConfigure = mega_menu_registry.register(
         name="configure",
         title=_l("Configure"),
         icon_name="main_configure",
-        sort_index=15,
+        sort_index=10,
         topics=_configure_menu_topics,
     ))

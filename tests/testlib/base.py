@@ -51,7 +51,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'site_object_counts'),
     ('section', 'tsm_stagingpools'),
     ('section', 'veritas_vcs'),
-    ('section', 'winperf_phydisk'),
     ('check', 'bluecat_dhcp'),
     ('check', 'bluecat_dns'),
     ('check', 'chrony'),
@@ -106,7 +105,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'veritas_vcs_resource'),
     ('check', 'veritas_vcs_servicegroup'),
     ('check', 'veritas_vcs_system'),
-    ('check', 'winperf_phydisk'),
 ]
 
 

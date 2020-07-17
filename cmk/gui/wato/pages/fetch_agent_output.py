@@ -22,6 +22,8 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.escaping import escape_attribute
 from cmk.gui.exceptions import MKGeneralException, HTTPRedirect, MKUserError
+from cmk.gui.plugins.views.utils import make_host_breadcrumb
+from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.watolib import (
     automation_command_registry,
     AutomationCommand,
@@ -108,7 +110,14 @@ class AgentOutputPage(Page, metaclass=abc.ABCMeta):
 @page_registry.register_page("fetch_agent_output")
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self) -> None:
-        html.header(_("%s: Download agent output") % self._request.host.name())
+        title = _("%s: Download agent output") % self._request.host.name()
+        breadcrumb = make_host_breadcrumb(self._request.host.name())
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=title,
+                url="javascript:document.location.reload(false)",
+            ))
+        html.header(title, breadcrumb)
 
         html.begin_context_buttons()
         if self._back_url:

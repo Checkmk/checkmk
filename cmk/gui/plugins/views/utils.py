@@ -2073,7 +2073,8 @@ def make_service_breadcrumb(host_name: HostName, service_name: ServiceName) -> B
         BreadcrumbItem(
             title=view_title(service_view_spec),
             url=html.makeuri_contextless([("view_name", "service"), ("host", host_name),
-                                          ("service", service_name)]),
+                                          ("service", service_name)],
+                                         filename="view.py"),
         ))
 
     return breadcrumb
@@ -2089,14 +2090,17 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     # 1. level: list of all hosts
     breadcrumb.append(
         BreadcrumbItem(
-            _u(allhosts_view_spec["title"]),
-            html.makeuri_contextless([("view_name", "allhosts")]),
+            title=_u(allhosts_view_spec["title"]),
+            url=html.makeuri_contextless([("view_name", "allhosts")], filename="view.py"),
         ))
 
     # 2. level: host home page
     host_view_spec = permitted_views["host"]
     breadcrumb.append(
-        BreadcrumbItem(title=view_title(host_view_spec),
-                       url=html.makeuri_contextless([("view_name", "host"), ("host", host_name)])))
+        BreadcrumbItem(
+            title=view_title(host_view_spec),
+            url=html.makeuri_contextless([("view_name", "host"), ("host", host_name)],
+                                         filename="view.py"),
+        ))
 
     return breadcrumb

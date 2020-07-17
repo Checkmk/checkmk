@@ -17,7 +17,6 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     DropdownChoice,
 )
-
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_metric
@@ -25,7 +24,7 @@ from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_n
 from cmk.gui.metrics import translate_perf_data
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
 from cmk.gui.exceptions import MKUserError
-
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 
@@ -183,7 +182,7 @@ class GaugeDashlet(ABCFigureDashlet):
         return ["service"]
 
     def show(self):
-        html.header("")
+        html.header("", Breadcrumb())
         div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
         html.div("", id_=div_id)
 
@@ -245,7 +244,7 @@ class BarplotDashlet(ABCFigureDashlet):
         return ["service"]
 
     def show(self):
-        html.header("")
+        html.header("", Breadcrumb())
         div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
         html.div("", id_=div_id)
 
@@ -503,7 +502,7 @@ class SingleMetricDashlet(ABCFigureDashlet):
         return ["service"]
 
     def show_with_timeseries(self):
-        html.header("")
+        html.header("", Breadcrumb())
         div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
         html.div("", id_=div_id)
 

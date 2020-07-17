@@ -17,9 +17,8 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.login as login
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.plugins.main_menu.mega_menus import (
-    make_main_menu_breadcrumb,
+    make_simple_page_breadcrumb,
     MegaMenuUser,
 )
 from cmk.gui.config import SiteId, SiteConfiguration
@@ -38,7 +37,9 @@ from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional
 
 
 def user_profile_async_replication_page() -> None:
-    html.header(_('Replicate new User Profile'))
+    title = _('Replicate new user profile')
+    breadcrumb = make_simple_page_breadcrumb(MegaMenuUser, title)
+    html.header(title, breadcrumb)
 
     html.begin_context_buttons()
     html.context_button(_('User Profile'), 'user_profile.py', 'back')
@@ -211,8 +212,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
         users = userdb.load_users()
 
-        breadcrumb = make_main_menu_breadcrumb(MegaMenuUser) + Breadcrumb(
-            [BreadcrumbItem(title=self._page_title(), url=html.makeuri([]))])
+        breadcrumb = make_simple_page_breadcrumb(MegaMenuUser, self._page_title())
         html.header(self._page_title(), breadcrumb)
 
         change_reason = html.request.get_ascii_input('reason')
@@ -321,8 +321,7 @@ class UserProfile(ABCUserProfilePage):
 
         users = userdb.load_users()
 
-        breadcrumb = make_main_menu_breadcrumb(MegaMenuUser) + Breadcrumb(
-            [BreadcrumbItem(title=self._page_title(), url=html.makeuri([]))])
+        breadcrumb = make_simple_page_breadcrumb(MegaMenuUser, self._page_title())
         html.header(self._page_title(), breadcrumb)
 
         self._show_context_buttons()

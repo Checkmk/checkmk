@@ -117,6 +117,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             self.confirm_site_changes(site_id)
 
         html.header(self.title(),
+                    breadcrumb=self.breadcrumb(),
                     show_body_start=display_options.enabled(display_options.H),
                     show_top_heading=display_options.enabled(display_options.T))
         html.open_div(class_="wato")

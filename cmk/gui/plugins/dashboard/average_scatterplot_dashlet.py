@@ -7,6 +7,8 @@
 import json
 from typing import Dict, Optional, Tuple, List
 
+from cmk.utils.render import date_and_time
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -21,9 +23,8 @@ from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.utils import site_query
 from cmk.gui.plugins.metrics.stats import percentile
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
-from cmk.utils.render import date_and_time
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns, merge_multicol
-
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 import cmk.gui.metrics as metrics
@@ -244,7 +245,7 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
         return AverageScatterplotDataGenerator
 
     def show(self):
-        html.header("")
+        html.header("", Breadcrumb())
         div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
         html.div("", id_=div_id)
 

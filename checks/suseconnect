@@ -42,7 +42,8 @@ def parse_suseconnect(info):
 
 
 def inventory_suseconnect(parsed):
-    return [(None, {})]
+    if parsed:
+        return [(None, {})]
 
 
 def check_suseconnect(_no_item, params, parsed):

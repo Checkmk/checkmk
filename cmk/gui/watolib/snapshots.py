@@ -243,7 +243,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
                 if entry in status["files"]:
 
                     def handler(x, entry=entry):
-                        return _get_file_content(x, entry)
+                        return _get_file_content(x, entry).decode("utf-8")
 
                     status[entry] = access_snapshot(handler)
                 else:

@@ -103,6 +103,15 @@ node (NODE) {
             COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt",
             TEXT_ON_SKIP: ''
          )
+         
+         gerrit_stages.run(
+            NAME: 'Shell Unit',
+            CONDITION: true,
+            DIR: 'tests',
+            ENV_VARS: [],
+            COMMAND: "bash -c \"make test-unit-sh\" &> ${RESULTS}/shell-unit.txt",
+            TEXT_ON_SKIP: ''
+         )
 
          PYTHON_VERSIONS.each { PYTHON_VERSION ->
             gerrit_stages.run(

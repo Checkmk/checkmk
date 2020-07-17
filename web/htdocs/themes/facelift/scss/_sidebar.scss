@@ -70,15 +70,28 @@ body.side {
 
   div.shortcuts {
     display: flex;
-    padding: $ux-spacing;
     border-bottom: 1px solid $ux-light-grey;
 
     a {
       flex: 1 0 auto;
+      margin-top: $ux-spacing;
+      margin-bottom: $ux-spacing;
       font-size: $font-size-small;
       line-height: 1.7;
       text-align: center;
       text-decoration: none;
+
+      &:first-of-type {
+        margin-left: $ux-spacing;
+      }
+
+      &:last-of-type {
+        margin-right: $ux-spacing;
+      }
+
+      &:hover img {
+        opacity: .5;
+      }
     }
 
     img {

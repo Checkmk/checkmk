@@ -37,6 +37,7 @@ from cmk.gui.valuespec import (
     Optional,
     TextAreaUnicode,
 )
+from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuSetup
 
 
 def get_gui_messages(user_id=None):
@@ -126,7 +127,8 @@ def page_notify():
     if not config.user.may("general.notify"):
         raise MKAuthException(_("You are not allowed to use the notification module."))
 
-    html.header(_('Notify Users'))
+    title = _('Notify users')
+    html.header(title, make_simple_page_breadcrumb(MegaMenuSetup, title))
 
     html.begin_context_buttons()
     html.context_button(_("Users"), "wato.py?mode=users", "back")

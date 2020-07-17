@@ -22,6 +22,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     declare_permission,
 )
+from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuMonitoring
 
 g_acknowledgement_time = {}
 g_modified_time = 0.0
@@ -151,7 +152,8 @@ def render_notification_table(failed_notifications):
 
 # TODO: We should really recode this to use the view and a normal view command / action
 def render_page_confirm(acktime, prev_url, failed_notifications):
-    html.header(_("Confirm failed notifications"))
+    title = _("Confirm failed notifications")
+    html.header(title, make_simple_page_breadcrumb(MegaMenuMonitoring, title))
 
     if failed_notifications:
         html.open_div(class_="really")

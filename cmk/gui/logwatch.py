@@ -18,6 +18,8 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuMonitoring
+from cmk.gui.plugins.views.utils import make_host_breadcrumb
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -69,7 +71,8 @@ def button_all_logfiles():
 
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
-    html.header(_("All Problematic Logfiles"))
+    title = _("All problematic logfiles")
+    html.header(title, make_simple_page_breadcrumb(MegaMenuMonitoring, title))
 
     html.begin_context_buttons()
     html.context_button(_("Analyze Patterns"),
@@ -112,7 +115,8 @@ def analyse_url(site, host_name, file_name='', match=''):
 
 # Shows all problematic logfiles of a host
 def show_host_log_list(site, host_name):
-    html.header(_("Logfiles of host %s") % host_name)
+    title = _("Logfiles of host %s") % host_name
+    html.header(title, make_host_breadcrumb(host_name))
 
     html.begin_context_buttons()
     html.context_button(_("Services"), services_url(site, host_name), 'services')
@@ -165,7 +169,9 @@ def list_logs(site, host_name, logfile_names):
 def show_file(site, host_name, file_name):
     int_filename = form_file_to_int(file_name)
 
-    html.header(_("Logfiles of Host %s: %s") % (host_name, file_name))
+    title = _("Logfiles of Host %s: %s") % (host_name, file_name)
+    html.header(title, make_host_breadcrumb(host_name))
+
     html.begin_context_buttons()
     html.context_button(_("Services"), services_url(site, host_name), 'services')
     html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
@@ -286,7 +292,14 @@ def do_log_ack(site, host_name, file_name):
                 logs_to_ack.append((this_site, this_host, file_name, file_display))
         ack_msg = _('log file %s on all hosts') % file_name
 
-    html.header(_("Acknowledge %s") % html.render_text(ack_msg))
+    title = _("Acknowledge %s") % html.render_text(ack_msg)
+
+    if host_name:
+        breadcrumb = make_host_breadcrumb(host_name)
+    else:
+        breadcrumb = make_simple_page_breadcrumb(MegaMenuMonitoring, title)
+
+    html.header(title, breadcrumb)
 
     html.begin_context_buttons()
     button_all_logfiles()

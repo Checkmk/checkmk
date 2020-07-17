@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Union, Optional, Sequence
+from typing import Iterable, List, Union, Optional
 from cmk.base.api.agent_based.checking_types import (
     IgnoreResults,
     IgnoreResultsError,
@@ -17,7 +17,7 @@ from cmk.base.check_api_utils import state_markers
 
 def aggregate_node_details(
     node_name: str,
-    node_check_returns: Sequence[Union[IgnoreResults, Result, Metric]],
+    node_check_returns: Iterable[Union[IgnoreResults, Result, Metric]],
 ) -> Optional[Result]:
     """Aggregate the results of a node check into a single Result
 

@@ -3,7 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Generator, List
+from typing import Any, Generator, List, Optional
 
 from cmk.gui.plugins.openapi.livestatus_helpers.base import BaseQuery
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
@@ -133,6 +133,21 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
     def __str__(self) -> str:
         return self.compile()
+
+    def first(self, sites) -> Optional[ResultRow]:
+        """Fetch the first row of the result.
+
+        If the result is empty, `None` will be returned.
+
+        Args:
+            sites:
+                A LiveStatus-connection object.
+
+        Returns:
+            Optionally a ResultRow
+
+        """
+        return next(self.iterate(sites), None)
 
     def fetchone(self, sites) -> ResultRow:
         """Fetch one row of the result.

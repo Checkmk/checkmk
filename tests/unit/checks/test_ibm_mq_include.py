@@ -94,6 +94,7 @@ All valid MQSC commands were processed.
         assert attrs['CURDEPTH'] == '1400'
         assert attrs['MAXDEPTH'] == '200000'
         assert attrs['MSGAGE'] == '2201'
+        assert attrs['QTIME'] == '999999999, 999999999'
 
     def test_multiple_queue_managers(self):
         lines = """\
@@ -272,48 +273,60 @@ class TestServiceVanished:
 
 class TestCheckVersion:
     def test_specific(self):
-        params = {'version': ('specific', '2.1.0')}
+        params = {'version': (('specific', '2.1.0'), 2)}
         actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
         expected = (0, 'MyLabel: 2.1.0')
         assert expected == actual
 
-        params = {'version': ('specific', '2.0')}
+        params = {'version': (('specific', '2.0'), 2)}
         actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
         expected = (2, 'MyLabel: 2.1.0 (should be 2.0)')
         assert expected == actual
 
     def test_at_least(self):
-        params = {'version': ('at_least', '2.0')}
+        params = {'version': (('at_least', '2.0'), 2)}
         actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
         expected = (0, 'MyLabel: 2.1.0')
         assert expected == actual
 
+        params = {'version': (('at_least', '2.2'), 2)}
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        expected = (2, 'MyLabel: 2.1.0 (should be at least 2.2)')
+        assert expected == actual
+
+        params = {'version': (('at_least', '0.1.0'), 2)}
+        actual = ibm_mq_check_version('1.0.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        expected = (0, 'MyLabel: 1.0.0')
+        assert expected == actual
+
+        params = {'version': (('at_least', '8.0.0.1'), 2)}
+        actual = ibm_mq_check_version('9.0.0.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        expected = (0, 'MyLabel: 9.0.0.0')
+        assert expected == actual
+
+    def test_wato_warning(self):
+        params = {'version': (('at_least', '2.2'), 1)}
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        expected = (1, 'MyLabel: 2.1.0 (should be at least 2.2)')
+        assert expected == actual
+
+    def test_old_wato_without_state(self):
         params = {'version': ('at_least', '2.2')}
         actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
         expected = (2, 'MyLabel: 2.1.0 (should be at least 2.2)')
         assert expected == actual
 
-        params = {'version': ('at_least', '0.1.0')}
-        actual = ibm_mq_check_version('1.0.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        expected = (0, 'MyLabel: 1.0.0')
-        assert expected == actual
-
-        params = {'version': ('at_least', '8.0.0.1')}
-        actual = ibm_mq_check_version('9.0.0.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        expected = (0, 'MyLabel: 9.0.0.0')
-        assert expected == actual
-
     def test_unparseable(self):
         const_error = "Only characters 0-9 and . are allowed for a version."
 
-        params = {'version': ('specific', '2.a')}
+        params = {'version': (('specific', '2.a'), 2)}
         actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        expected = (3, "Can not compare 2.1.0 and 2.a. " + const_error)
+        expected = (3, "Cannot compare 2.1.0 and 2.a. " + const_error)
         assert expected == actual
 
-        params = {'version': ('specific', '2.2')}
+        params = {'version': (('specific', '2.2'), 2)}
         actual = ibm_mq_check_version('2.x', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        expected = (3, "Can not compare 2.x and 2.2. " + const_error)
+        expected = (3, "Cannot compare 2.x and 2.2. " + const_error)
         assert expected == actual
 
     def test_unparseable_without_wato_rule(self):

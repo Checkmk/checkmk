@@ -7,8 +7,11 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
+    DropdownChoice,
+    ListOf,
     MonitoringState,
     TextAscii,
+    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
@@ -20,24 +23,44 @@ from cmk.gui.plugins.wato import (
 
 def _parameter_valuespec_ibm_mq_channels():
     return Dictionary(elements=[
-        ("status",
-         Dictionary(
-             title=_('Override check state based on channel state'),
-             elements=[
-                 ("INACTIVE", MonitoringState(title=_("When INACTIVE"), default_value=0)),
-                 ("INITIALIZING", MonitoringState(title=_("When INITIALIZING"), default_value=0)),
-                 ("BINDING", MonitoringState(title=_("When BINDING"), default_value=0)),
-                 ("STARTING", MonitoringState(title=_("When STARTING"), default_value=0)),
-                 ("RUNNING", MonitoringState(title=_("When RUNNING"), default_value=0)),
-                 ("RETRYING", MonitoringState(title=_("When RETRYING"), default_value=1)),
-                 ("STOPPING", MonitoringState(title=_("When STOPPING"), default_value=0)),
-                 ("STOPPED", MonitoringState(title=_("When STOPPED"), default_value=2)),
-                 ("other",
-                  MonitoringState(title=_("State when channel status is unknown"),
-                                  default_value=2)),
-             ],
-             optional_keys=[],
+        ("mapped_states",
+         ListOf(
+             Tuple(
+                 orientation="horizontal",
+                 elements=[
+                     DropdownChoice(
+                         title=_("Channel state"),
+                         choices=[
+                             ('inactive', _('INACTIVE')),
+                             ('initializing', _('INITIALIZING')),
+                             ('binding', _('BINDING')),
+                             ('starting', _('STARTING')),
+                             ('running', _('RUNNING')),
+                             ('retrying', _('RETRYING')),
+                             ('stopping', _('STOPPING')),
+                             ('stopped', _('STOPPED')),
+                         ],
+                     ),
+                     MonitoringState(title=_("Service state"),),
+                 ],
+             ),
+             title=_('Map channel state to service state'),
+             help=_("""If you do not use this parameter, the following factory
+             defaults apply:<br>
+                INACTIVE: OK<br>
+                INITIALIZING: OK<br>
+                BINDING: OK<br>
+                STARTING: OK<br>
+                RUNNING: OK<br>
+                RETRYING: WARN<br>
+                STOPPING: OK<br>
+                STOPPED: CRIT<br>
+             """),
          )),
+        (
+            "mapped_states_default",
+            MonitoringState(title=_("Service state if no map rule matches"), default_value=2),
+        ),
     ],)
 
 

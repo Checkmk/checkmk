@@ -101,12 +101,18 @@ def ibm_mq_check_version(actual_version, params, label):
     if "version" not in params:
         return 0, info
 
+    state = 2
     comp_type, expected_version = params["version"]
+    if isinstance(comp_type, tuple):
+        # Latest WATO rule can define a resulting state
+        comp_type = params["version"][0][0]
+        expected_version = params["version"][0][1]
+        state = params["version"][1]
     try:
         parts_actual = tokenize(actual_version)
         parts_expected = tokenize(expected_version)
     except ValueError:
-        error = ("Can not compare %s and %s. "
+        error = ("Cannot compare %s and %s. "
                  "Only characters 0-9 and . are allowed for a version." %
                  (actual_version, expected_version))
         return 3, error
@@ -118,7 +124,7 @@ def ibm_mq_check_version(actual_version, params, label):
     parts_expected.extend(0 for _ in range(m - parts_expected_len))
 
     if comp_type == "at_least" and parts_actual < parts_expected:
-        return 2, info + " (should be at least %s)" % expected_version
+        return state, info + " (should be at least %s)" % expected_version
     if comp_type == "specific" and parts_actual != parts_expected:
-        return 2, info + " (should be %s)" % expected_version
+        return state, info + " (should be %s)" % expected_version
     return 0, info

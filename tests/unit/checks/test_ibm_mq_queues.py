@@ -110,14 +110,18 @@ def test_check():
             'MSGAGE': '2201',
             'IPPROCS': '5',
             'OPPROCS': '0',
+            'QTIME': ',',
         }
     }
     actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
-    expected = [(0, 'Queue depth: 1400 (0.7%)', [('messages_in_queue', 1400, 1500, 2000, 0, 200000)
-                                                ]),
-                (0, 'Oldest message: 36 m', [('age_oldest', 2201, None, None)]),
-                (1, 'Open input count: 5 (warn/crit at 4/8)', [('reading', 5, 4, 8)]),
-                (0, 'Open output count: 0', [('writing', 0, None, None)])]
+    expected = [
+        (0, 'Queue depth: 1400 (0.7%)', [('messages_in_queue', 1400, 1500, 2000, 0, 200000)]),
+        (0, 'Oldest message: 36 m', [('age_oldest', 2201, None, None)]),
+        (1, 'Open input handles: 5 (warn/crit at 4/8)', [('reading', 5, 4, 8)]),
+        (0, 'Open output handles: 0', [('writing', 0, None, None)]),
+        (0, 'Qtime short: n/a', [('qtime_short', 0, None, None)]),
+        (0, 'Qtime long: n/a', [('qtime_long', 0, None, None)]),
+    ]
     assert actual == expected
 
 
@@ -352,7 +356,8 @@ def test_lget_ok_no_params():
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "11.19.05")
     params: Dict[str, Any] = {}
-    expected: Tuple[int, str, List[Tuple]] = (0, 'Last get: 60 m', [])
+    expected: Tuple[int, str,
+                    List[Tuple]] = (0, 'Last get: 60 m', [('lgetage', 3600.0, None, None)])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -370,7 +375,8 @@ def test_lget_ok():
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (0, 'Last get: 10.0 s', [])
+    expected: Tuple[int, str,
+                    List[Tuple]] = (0, 'Last get: 10.0 s', [('lgetage', 10.0, 1800.0, 3600.0)])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -379,7 +385,8 @@ def test_lget_warn():
     lget = ("2018-04-19", "09.49.14")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (1, 'Last get: 30 m (warn/crit at 30 m/60 m)', [])
+    expected: Tuple[int, str, List[Tuple]] = (1, 'Last get: 30 m (warn/crit at 30 m/60 m)',
+                                              [('lgetage', 1801.0, 1800.0, 3600.0)])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -397,7 +404,8 @@ def test_lget_crit():
     lget = ("2018-04-19", "09.19.14")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (2, 'Last get: 60 m (warn/crit at 30 m/60 m)', [])
+    expected: Tuple[int, str, List[Tuple]] = (2, 'Last get: 60 m (warn/crit at 30 m/60 m)',
+                                              [('lgetage', 3601.0, 1800.0, 3600.0)])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -431,7 +439,7 @@ def assert_last_get_age(lget, now, params, expected):
 def test_procs_no_params():
     params: Dict[str, Any] = {}
     opprocs = 3
-    expected = (0, 'Open output count: 3', [('writing', 3, None, None)])
+    expected = (0, 'Open output handles: 3', [('writing', 3, None, None)])
     assert_procs(opprocs, params, expected)
 
 
@@ -440,23 +448,23 @@ def test_procs_upper():
     params = {'opprocs': {'upper': (10, 20)}}
 
     opprocs = 3
-    expected = (0, 'Open output count: 3', [('writing', 3, 10, 20)])
+    expected = (0, 'Open output handles: 3', [('writing', 3, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 10
-    expected = (1, 'Open output count: 10 (warn/crit at 10/20)', [('writing', 10, 10, 20)])
+    expected = (1, 'Open output handles: 10 (warn/crit at 10/20)', [('writing', 10, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 11
-    expected = (1, 'Open output count: 11 (warn/crit at 10/20)', [('writing', 11, 10, 20)])
+    expected = (1, 'Open output handles: 11 (warn/crit at 10/20)', [('writing', 11, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 20
-    expected = (2, 'Open output count: 20 (warn/crit at 10/20)', [('writing', 20, 10, 20)])
+    expected = (2, 'Open output handles: 20 (warn/crit at 10/20)', [('writing', 20, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 21
-    expected = (2, 'Open output count: 21 (warn/crit at 10/20)', [('writing', 21, 10, 20)])
+    expected = (2, 'Open output handles: 21 (warn/crit at 10/20)', [('writing', 21, 10, 20)])
     assert_procs(opprocs, params, expected)
 
 
@@ -465,19 +473,19 @@ def test_procs_lower():
     params = {'opprocs': {'lower': (3, 1)}}
 
     opprocs = 3
-    expected = (0, 'Open output count: 3', [('writing', 3, None, None)])
+    expected = (0, 'Open output handles: 3', [('writing', 3, None, None)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 2
-    expected = (1, 'Open output count: 2 (warn/crit below 3/1)', [('writing', 2, None, None)])
+    expected = (1, 'Open output handles: 2 (warn/crit below 3/1)', [('writing', 2, None, None)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 1
-    expected = (1, 'Open output count: 1 (warn/crit below 3/1)', [('writing', 1, None, None)])
+    expected = (1, 'Open output handles: 1 (warn/crit below 3/1)', [('writing', 1, None, None)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 0
-    expected = (2, 'Open output count: 0 (warn/crit below 3/1)', [('writing', 0, None, None)])
+    expected = (2, 'Open output handles: 0 (warn/crit below 3/1)', [('writing', 0, None, None)])
     assert_procs(opprocs, params, expected)
 
 
@@ -491,15 +499,15 @@ def test_procs_lower_and_upper():
     }
 
     opprocs = 1
-    expected = (1, 'Open output count: 1 (warn/crit below 3/1)', [('writing', 1, 10, 20)])
+    expected = (1, 'Open output handles: 1 (warn/crit below 3/1)', [('writing', 1, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 0
-    expected = (2, 'Open output count: 0 (warn/crit below 3/1)', [('writing', 0, 10, 20)])
+    expected = (2, 'Open output handles: 0 (warn/crit below 3/1)', [('writing', 0, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 21
-    expected = (2, 'Open output count: 21 (warn/crit at 10/20)', [('writing', 21, 10, 20)])
+    expected = (2, 'Open output handles: 21 (warn/crit at 10/20)', [('writing', 21, 10, 20)])
     assert_procs(opprocs, params, expected)
 
 
@@ -517,3 +525,57 @@ def assert_procs(opprocs, params, expected):
     }
     actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
     assert expected == actual[1]
+
+
+#
+# QTIME
+#
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_qtime_no_values():
+    params: Dict[str, Any] = {}
+    qtime = ','
+    expected = [
+        (0, 'Qtime short: n/a', [('qtime_short', 0, None, None)]),
+        (0, 'Qtime long: n/a', [('qtime_long', 0, None, None)]),
+    ]
+    assert_qtime(qtime, params, expected)
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_qtime_only_short():
+    params: Dict[str, Any] = {}
+    qtime = '300000000,'
+    expected = [
+        (0, 'Qtime short: 5 m', [('qtime_short', 300.0, None, None)]),
+        (0, 'Qtime long: n/a', [('qtime_long', 0, None, None)]),
+    ]
+    assert_qtime(qtime, params, expected)
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_qtime_both():
+    params: Dict[str, Any] = {}
+    qtime = '300000000,420000000'
+    expected = [
+        (0, 'Qtime short: 5 m', [('qtime_short', 300.0, None, None)]),
+        (0, 'Qtime long: 7 m', [('qtime_long', 420.0, None, None)]),
+    ]
+    assert_qtime(qtime, params, expected)
+
+
+def assert_qtime(qtime, params, expected):
+    check = Check(CHECK_NAME)
+    parsed = {
+        'QM1': {
+            'STATUS': 'RUNNING'
+        },
+        'QM1:MY.QUEUE': {
+            'CURDEPTH': 0,
+            'MAXDEPTH': 5000,
+            'QTIME': qtime,
+        }
+    }
+    actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
+    assert expected == actual[1:]

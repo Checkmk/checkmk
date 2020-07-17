@@ -2133,3 +2133,17 @@ check_metrics["check_mk-ups_capacity"] = {
         "deprecated": "2.0.0b2",
     },
 }
+check_metrics["check_mk-ibm_mq_queues"] = {
+    "messages_in_queue": {
+        "name": "ibm_mq_curdepth"
+    },
+    "age_oldest": {
+        "name": "ibm_mq_msgage"
+    },
+    "reading": {
+        "name": "ibm_mq_ipprocs"
+    },
+    "writing": {
+        "name": "ibm_mq_opprocs"
+    },
+}

@@ -14,27 +14,6 @@ pytestmark = pytest.mark.checks
 
 CHECK_NAME = "ibm_mq_managers"
 
-factory_settings: Dict[str, Any] = {}
-factory_settings["ibm_mq_managers_default_levels"] = {
-    "status": {
-        "STARTING": 0,
-        "RUNNING": 0,
-        "RUNNING AS STANDBY": 0,
-        "RUNNING ELSEWHERE": 0,
-        "QUIESCING": 0,
-        "ENDING IMMEDIATELY": 0,
-        "ENDING PREEMPTIVELY": 0,  # Older MQ-Versions (e.g. 7.5.0.2) use this status
-        "ENDING PRE-EMPTIVELY": 0,
-        "ENDED NORMALLY": 0,
-        "ENDED IMMEDIATELY": 0,
-        "ENDED UNEXPECTEDLY": 2,
-        "ENDED PREEMPTIVELY": 2,  # Older MQ-Versions (e.g. 7.5.0.2) use this status
-        "ENDED PRE-EMPTIVELY": 2,
-        "NOT AVAILABLE": 1,  # Older MQ-Versions (e.g. 7.5.0.2) use this status
-        "STATUS NOT AVAILABLE": 1,
-    },
-}
-
 
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_parse():
@@ -83,7 +62,7 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
     assert attrs['QMNAME'] == 'THE.LOCAL.ONE'
     assert attrs['STATUS'] == 'RUNNING'
 
-    params = factory_settings['ibm_mq_managers_default_levels']
+    params: Dict[str, Any] = {}
     actual = list(check.run_check('THE.LOCAL.ONE', params, parsed))
     expected = [
         (0, u'Status: RUNNING'),
@@ -95,33 +74,100 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
-def test_ended_preemtively():
+def test_rdqm():
     lines = """\
-QMNAME(MTAVBS0P)                                          STATUS(ENDED PREEMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
+QMNAME(THE.RDQM.ONE)                                      STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT PERMITTED) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(9.1.0.4) HA(REPLICATED) DRROLE()
+    INSTANCE(sb008877) MODE(ACTIVE)
+QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHERE) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(9.2.0.0) HA(REPLICATED) DRROLE()
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
     parsed = check.run_parse(section)
-    params = factory_settings['ibm_mq_managers_default_levels']
-    actual = list(check.run_check('MTAVBS0P', params, parsed))
+
+    attrs = parsed["THE.RDQM.ONE"]
+    assert attrs['QMNAME'] == 'THE.RDQM.ONE'
+    assert attrs['STATUS'] == 'RUNNING'
+
+    params: Dict[str, Any] = {}
+    actual = list(check.run_check('THE.RDQM.ONE', params, parsed))
     expected = [
-        (2, u'Status: ENDED PREEMPTIVELY'),
+        (0, u'Status: RUNNING'),
+        (0, u'Version: 9.1.0.4'),
+        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
+        (0, u'HA: REPLICATED, Instance: sb008877'),
+    ]
+    assert expected == actual
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_ended_preemtively():
+    lines = """\
+QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
+"""
+    section = parse_info(lines, chr(10))
+    check = Check(CHECK_NAME)
+    parsed = check.run_parse(section)
+    params: Dict[str, Any] = {}
+    actual = list(check.run_check('THE.ENDED.ONE', params, parsed))
+    expected = [
+        (1, u'Status: ENDED PREEMPTIVELY'),
         (0, u'Version: 7.5.0.2'),
         (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
     ]
     assert expected == actual
 
     lines = """\
-QMNAME(MTAVBS0P)                                          STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.1)
+QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.1)
+"""
+    section = parse_info(lines, chr(10))
+    parsed = check.run_parse(section)
+    actual = list(check.run_check('THE.ENDED.ONE', params, parsed))
+    expected = [
+        (1, u'Status: ENDED PRE-EMPTIVELY'),
+        (0, u'Version: 8.0.0.1'),
+        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
+    ]
+    assert expected == actual
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_status_wato_override():
+    lines = """\
+QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
     parsed = check.run_parse(section)
-    params = factory_settings['ibm_mq_managers_default_levels']
-    actual = list(check.run_check('MTAVBS0P', params, parsed))
+
+    # Factory defaults
+    params: Dict[str, Any] = {}
+    actual = list(check.run_check('THE.ENDED.ONE', params, parsed))
+    expected = [
+        (1, u'Status: ENDED PRE-EMPTIVELY'),
+        (0, u'Version: 7.5.0.2'),
+        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
+    ]
+    assert expected == actual
+
+    # Override factory defaults
+    params = {'mapped_states': [('ended_pre_emptively', 2)]}
+    actual = list(check.run_check('THE.ENDED.ONE', params, parsed))
     expected = [
         (2, u'Status: ENDED PRE-EMPTIVELY'),
-        (0, u'Version: 8.0.0.1'),
+        (0, u'Version: 7.5.0.2'),
+        (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
+    ]
+    assert expected == actual
+
+    # Override-does-not-match configuration
+    params = {
+        'mapped_states': [('running_as_standby', 2)],
+        'mapped_states_default': 3,
+    }
+    actual = list(check.run_check('THE.ENDED.ONE', params, parsed))
+    expected = [
+        (3, u'Status: ENDED PRE-EMPTIVELY'),
+        (0, u'Version: 7.5.0.2'),
         (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
     ]
     assert expected == actual
@@ -130,14 +176,14 @@ QMNAME(MTAVBS0P)                                          STATUS(ENDED PRE-EMPTI
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_version_mismatch():
     lines = """\
-QMNAME(MTAVBS0P)                                          STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
+QMNAME(THE.RUNNING.ONE)                                   STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
     parsed = check.run_parse(section)
-    params = factory_settings['ibm_mq_managers_default_levels']
-    params.update({'version': ('at_least', '8.0')})
-    actual = list(check.run_check('MTAVBS0P', params, parsed))
+    params: Dict[str, Any] = {}
+    params.update({'version': (('at_least', '8.0'), 2)})
+    actual = list(check.run_check('THE.RUNNING.ONE', params, parsed))
     expected = [
         (0, u'Status: RUNNING'),
         (2, u'Version: 7.5.0.2 (should be at least 8.0)'),

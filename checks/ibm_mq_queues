@@ -38,7 +38,7 @@ from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-
 # No commands have a syntax error.
 # All valid MQSC commands were processed.
 
-import dateutil
+from dateutil import parser
 
 factory_settings["ibm_mq_queues_default_levels"] = {}
 
@@ -83,11 +83,21 @@ def check_ibm_mq_queues(item, params, parsed):
 
     if "IPPROCS" in data:
         cnt = data["IPPROCS"]
-        yield ibm_mq_procs(cnt, 'Open input count', 'ipprocs', 'reading', params)
+        yield ibm_mq_procs(cnt, 'Open input handles', 'ipprocs', 'reading', params)
 
     if "OPPROCS" in data:
         cnt = data["OPPROCS"]
-        yield ibm_mq_procs(cnt, 'Open output count', 'opprocs', 'writing', params)
+        yield ibm_mq_procs(cnt, 'Open output handles', 'opprocs', 'writing', params)
+
+    if "QTIME" in data:
+        qtimes = data["QTIME"]
+        tuple_value = regex(r"^([0-9]*),[\s]*([0-9]*)$")
+        qtimes_match = tuple_value.match(qtimes)
+        if qtimes_match:
+            qtime_short = qtimes_match.group(1)
+            qtime_long = qtimes_match.group(2)
+            yield ibm_mq_get_qtime(qtime_short, 'Qtime short', 'qtime_short')
+            yield ibm_mq_get_qtime(qtime_long, 'Qtime long', 'qtime_long')
 
 
 def ibm_mq_depth(cur_depth, max_depth, params):
@@ -143,7 +153,7 @@ def ibm_mq_msg_age(msg_age, params):
 
 def ibm_mq_agent_timestamp(item, parsed):
     qmgr_name = item.split(':', 1)[0]
-    now = dateutil.parser.isoparse(parsed[qmgr_name]['NOW'])
+    now = parser.isoparse(parsed[qmgr_name]['NOW'])
     return now
 
 
@@ -151,10 +161,10 @@ def ibm_mq_last_age(mq_date, mq_time, agent_timestamp, label, key, params):
     if not (mq_date and mq_time):
         return (0, label + ": n/a", [])
     mq_datetime = "%s %s" % (mq_date, mq_time.replace('.', ':'))
-    input_time = dateutil.parser.parse(mq_datetime, default=agent_timestamp)
+    input_time = parser.parse(mq_datetime, default=agent_timestamp)
     age = (agent_timestamp - input_time).total_seconds()
     return check_levels(age,
-                        None,
+                        key,
                         params.get(key),
                         human_readable_func=get_age_human_readable,
                         infoname=label)
@@ -173,6 +183,18 @@ def ibm_mq_procs(cnt, label, levels_key, metric, params):
                         scale=1,
                         human_readable_func=int,
                         infoname=label)
+
+
+def ibm_mq_get_qtime(qtime, label, key):
+    if not qtime or qtime == '999999999':
+        time_in_seconds = 0
+        info_value = "n/a"
+    else:
+        time_in_seconds = int(qtime)/1000000
+        info_value = get_age_human_readable(time_in_seconds)
+    infotext = "%s: %s" % (label, info_value)
+    perfdata = [(key, time_in_seconds, None, None)]
+    return (0, infotext, perfdata)
 
 
 check_info["ibm_mq_queues"] = {

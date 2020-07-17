@@ -70,7 +70,7 @@ check_tool() {
 load_config
 
 echo "<<<ibm_mq_plugin:sep(58)>>>"
-echo "version: 1.6.0"
+echo "version: 1.7.0"
 check_tool dspmq
 check_tool runmqsc
 
@@ -83,13 +83,13 @@ do
         echo "$dspmqline NOW($now)"
         runmqsc -e "$QM" <<EOF
 display channel(*) xmitq
-display chstatus(*)
+display chstatus(*) monitor
 EOF
         echo '<<<ibm_mq_queues:sep(10)>>>'
         echo "$dspmqline NOW($now)"
         runmqsc -e "$QM" <<EOF
-display qlocal(*) maxdepth maxmsgl
-display qstatus(*) all
+display qlocal(*) maxdepth maxmsgl crdate crtime altdate alttime monq
+display qstatus(*) monitor
 EOF
     fi
 done

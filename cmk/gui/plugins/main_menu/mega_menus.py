@@ -161,6 +161,8 @@ MegaMenuUser = mega_menu_registry.register(
 
 
 def _configure_menu_topics() -> List[TopicMenuTopic]:
+    general_items = []
+
     monitoring_items = [
         TopicMenuItem(
             name="views",
@@ -200,12 +202,20 @@ def _configure_menu_topics() -> List[TopicMenuTopic]:
             icon_name=page_type.type_name(),
         )
 
-        if "graph" in page_type.type_name():
+        if page_type.type_name() in ("pagetype_topic", "bookmark_list", "custom_snapin"):
+            general_items.append(item)
+        elif "graph" in page_type.type_name():
             graph_items.append(item)
         else:
             monitoring_items.append(item)
 
     return [
+        TopicMenuTopic(
+            name="general",
+            title=_("General"),
+            icon_name="topic_general",
+            items=general_items,
+        ),
         TopicMenuTopic(
             name="monitoring",
             title=_("Monitoring"),

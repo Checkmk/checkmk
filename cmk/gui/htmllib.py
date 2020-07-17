@@ -1638,8 +1638,8 @@ class html(ABCHTMLGenerator):
             self._header_sent = True
 
     def header(self,
-               title: str = u'',
-               breadcrumb: Breadcrumb = None,
+               title: str,
+               breadcrumb: Breadcrumb,
                javascripts: Optional[List[str]] = None,
                force: bool = False,
                show_body_start: bool = True,
@@ -2370,7 +2370,8 @@ class html(ABCHTMLGenerator):
 
         if not self.request.has_var("_do_confirm"):
             if add_header:
-                self.header(add_header)
+                # TODO: Find the call sites and enforce them to provide a breadcrumb
+                self.header(add_header, Breadcrumb())
 
             if self.mobile:
                 self.open_center()

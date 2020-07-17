@@ -7,7 +7,7 @@
 
 import json
 import pprint
-from typing import Dict, Any, List, Tuple as _Tuple, Optional as _Optional, Union
+from typing import Dict, Any, List, Tuple as _Tuple, Optional as _Optional, Union, Type
 from pathlib import Path
 
 import cmk.utils.version as cmk_version
@@ -518,11 +518,8 @@ class ModeBI(WatoMode, BIManagement):
         super(ModeBI, self).__init__()
         self._create_valuespecs()
 
-    def title(self):
-        title = _("Business Intelligence")
-        if self._pack:
-            title += " - " + escaping.escape_attribute(self._pack["title"])
-        return title
+    def title(self) -> str:
+        return (self._pack["title"] + ": ") if self._pack else ""
 
     def buttons(self):
         global_buttons()
@@ -1040,6 +1037,9 @@ class ModeBIPacks(ModeBI):
         ModeBI.__init__(self)
         self._contact_group_names = load_contact_group_information()
 
+    def title(self):
+        return _("Business Intelligence")
+
     def buttons(self):
         ModeBI.buttons(self)
         if config.user.may("wato.bi_admin"):
@@ -1125,8 +1125,8 @@ class ModeBIEditPack(ModeBI):
 
     def title(self):
         if self._pack:
-            return ModeBI.title(self) + " - " + _("Edit BI Pack %s") % self._pack["title"]
-        return ModeBI.title(self) + " - " + _("Create New BI Pack")
+            return _("Edit BI pack %s") % self._pack["title"]
+        return _("Create BI pack")
 
     def action(self):
         if html.check_transaction():
@@ -1228,8 +1228,16 @@ class ModeBIAggregations(ModeBI):
     def permissions(cls):
         return ["bi_rules"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIPacks
+
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("pack", self._pack_id)],
+                                        filename="wato.py")
+
     def title(self):
-        return ModeBI.title(self) + " - " + _("Aggregations")
+        return super().title() + _("Aggregations")
 
     def buttons(self):
         ModeBI.buttons(self)
@@ -1443,14 +1451,22 @@ class ModeBIRules(ModeBI):
     def permissions(cls):
         return ["bi_rules"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIPacks
+
     def __init__(self):
         ModeBI.__init__(self)
         self._view_type = html.request.var("view", "list")
 
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("pack", self._pack_id)],
+                                        filename="wato.py")
+
     def title(self):
         if self._view_type == "list":
-            return ModeBI.title(self) + " - " + _("Rules")
-        return ModeBI.title(self) + " - " + _("Unused Rules")
+            return super().title() + _("Rules")
+        return super().title() + _("Unused rules")
 
     def buttons(self):
         ModeBI.buttons(self)
@@ -1707,12 +1723,12 @@ class ModeBIRuleTree(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._ruleid = html.request.get_ascii_input("id")
+        self._ruleid = html.request.get_ascii_input_mandatory("id")
         if not self.pack_containing_rule(self._ruleid):
             raise MKUserError("id", _("This BI rule does not exist"))
 
     def title(self):
-        return ModeBI.title(self) + " - " + _("Rule Tree of") + " " + self._ruleid
+        return super().title() + _("Rule tree of") + " " + self._ruleid
 
     def buttons(self):
         ModeBI.buttons(self)
@@ -1754,6 +1770,10 @@ class ModeBIEditAggregation(ModeBI):
     def permissions(cls):
         return ["bi_rules"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIAggregations
+
     def __init__(self):
         ModeBI.__init__(self)
         self._edited_nr = html.request.get_integer_input_mandatory(
@@ -1771,8 +1791,8 @@ class ModeBIEditAggregation(ModeBI):
 
     def title(self):
         if self._new:
-            return ModeBI.title(self) + " - " + _("Create New Aggregation")
-        return ModeBI.title(self) + " - " + _("Edit Aggregation")
+            return super().title() + _("Create aggregation")
+        return super().title() + _("Edit aggregation")
 
     def buttons(self):
         html.context_button(_("Abort"), html.makeuri([("mode", "bi_aggregations")]), "abort")
@@ -1847,6 +1867,10 @@ class ModeBIEditRule(ModeBI):
     def permissions(cls):
         return ["bi_rules"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIRules
+
     def __init__(self):
         ModeBI.__init__(self)
         self._ruleid = html.request.get_ascii_input("id")  # In case of Aggregations: index in list
@@ -1857,9 +1881,8 @@ class ModeBIEditRule(ModeBI):
 
     def title(self):
         if self._new:
-            return ModeBI.title(self) + " - " + _("Create New Rule")
-        return ModeBI.title(self) + " - " + _("Edit Rule") + " " + escaping.escape_attribute(
-            self._ruleid)
+            return super().title() + _("Create rule")
+        return super().title() + _("Edit rule") + " " + escaping.escape_attribute(self._ruleid)
 
     def buttons(self):
         html.context_button(_("Abort"), html.makeuri([("mode", "bi_rules")]), "abort")

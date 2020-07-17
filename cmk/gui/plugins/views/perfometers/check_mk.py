@@ -45,54 +45,6 @@ def number_human_readable(n, precision=1, unit="B"):
     return (f + "%s") % (n, unit)
 
 
-def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
-    maxx = 0
-    used_mb = 0
-    uncommitted_mb = 0
-    for entry in perf_data:
-        if entry[0] == "fs_used":
-            used_mb = entry[1]
-            maxx = entry[-1]
-        if entry[0] == "uncommitted":
-            uncommitted_mb = entry[1]
-            break
-
-    if maxx is None or maxx == 0:
-        return None, None
-
-    perc_used = 100 * (float(used_mb) / float(maxx))
-    perc_uncommitted = 100 * (float(uncommitted_mb) / float(maxx))
-    perc_totally_free = 100 - perc_used - perc_uncommitted
-
-    if perc_used + perc_uncommitted <= 100:
-        # Regular handling, no overcommitt
-        data = [
-            (perc_used, "#00ffc6"),
-            (perc_uncommitted, "#eeccff"),
-            (perc_totally_free, get_themed_perfometer_bg_color()),
-        ]
-    else:
-        # Visualize overcommitted space by scaling to total overcommittment value
-        # and drawing the capacity as red line in the perfometer
-        total = perc_used + perc_uncommitted
-        perc_used_bar = perc_used * 100.0 / total
-        perc_free = (100 - perc_used) * 100.0 / total
-        data = [
-            (perc_used_bar, "#00ffc6"),
-            (perc_free, "#eeccff"),
-            (1, "red"),  # This line visualizes the capacity
-            (perc_uncommitted - perc_free, "#eeccff"),
-        ]
-
-    legend = "%0.2f%%" % perc_used
-    if uncommitted_mb:
-        legend += " (+%0.2f%%)" % perc_uncommitted
-    return legend, render_perfometer(data)
-
-
-perfometers["check_mk-esx_vsphere_datastores"] = perfometer_esx_vsphere_datastores
-
-
 def perfometer_check_mk_mem_used(row, check_command, perf_data):
     ram_used = None
 

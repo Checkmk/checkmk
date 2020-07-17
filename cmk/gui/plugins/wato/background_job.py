@@ -82,7 +82,7 @@ class ModeBackgroundJobsOverview(WatoMode):
             html.immediate_browser_redirect(0.8, "")
 
     def action(self):
-        action_handler = gui_background_job.ActionHandler()
+        action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
 
 
@@ -128,7 +128,7 @@ class ModeBackgroundJobDetails(WatoMode):
             html.immediate_browser_redirect(1, "")
 
     def action(self):
-        action_handler = gui_background_job.ActionHandler()
+        action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         if action_handler.did_delete_job():
             if self._back_url():

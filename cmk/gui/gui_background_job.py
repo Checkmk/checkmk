@@ -18,6 +18,7 @@ import cmk.gui.background_job as background_job
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
@@ -655,8 +656,9 @@ class ActionHandler:
     delete_job_var = "_delete_job"
     acknowledge_job_var = "_acknowledge_job"
 
-    def __init__(self):
+    def __init__(self, breadcrumb: Breadcrumb):
         super(ActionHandler, self).__init__()
+        self._breadcrumb = breadcrumb
         self._did_acknowledge_job = False
         self._did_stop_job = False
         self._did_delete_job = False
@@ -706,7 +708,8 @@ class ActionHandler:
         if not job.is_available():
             return
 
-        html.header("Interuption of job")
+        title = _("Interuption of job")
+        html.header(title, self._breadcrumb)
         if self.confirm_dialog_opened() and not job.is_active():
             html.show_message(_("No longer able to stop job. Background job just finished."))
             return
@@ -726,7 +729,8 @@ class ActionHandler:
         if not job.is_available():
             return
 
-        html.header("Deletion of job")
+        title = _("Deletion of job")
+        html.header(title, self._breadcrumb)
         c = html.confirm(_("Delete job %s%s?") % (job_id, self._get_extra_info(job)))
         if c and job.may_delete():
             job.delete()

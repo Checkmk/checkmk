@@ -23,7 +23,7 @@ from cmk.gui.pages import page_registry, Page
 from cmk.gui.escaping import escape_attribute
 from cmk.gui.exceptions import MKGeneralException, HTTPRedirect, MKUserError
 from cmk.gui.plugins.views.utils import make_host_breadcrumb
-from cmk.gui.breadcrumb import BreadcrumbItem
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.watolib import (
     automation_command_registry,
     AutomationCommand,
@@ -110,14 +110,8 @@ class AgentOutputPage(Page, metaclass=abc.ABCMeta):
 @page_registry.register_page("fetch_agent_output")
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self) -> None:
-        title = _("%s: Download agent output") % self._request.host.name()
-        breadcrumb = make_host_breadcrumb(self._request.host.name())
-        breadcrumb.append(
-            BreadcrumbItem(
-                title=title,
-                url="javascript:document.location.reload(false)",
-            ))
-        html.header(title, breadcrumb)
+        title = self._title()
+        html.header(title, self._breadcrumb(title))
 
         html.begin_context_buttons()
         if self._back_url:
@@ -132,11 +126,23 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         html.footer()
 
+    def _title(self) -> str:
+        return _("%s: Download agent output") % self._request.host.name()
+
+    def _breadcrumb(self, title: str) -> Breadcrumb:
+        breadcrumb = make_host_breadcrumb(self._request.host.name())
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=title,
+                url="javascript:document.location.reload(false)",
+            ))
+        return breadcrumb
+
     def _action(self) -> None:
         if not html.transaction_valid():
             return
 
-        action_handler = gui_background_job.ActionHandler()
+        action_handler = gui_background_job.ActionHandler(self._breadcrumb(self._title()))
 
         if action_handler.handle_actions() and action_handler.did_delete_job():
             raise HTTPRedirect(

@@ -59,28 +59,38 @@ class WatoMode(metaclass=abc.ABCMeta):
         return MegaMenuSetup
 
     def breadcrumb(self) -> Breadcrumb:
-        """Render the breadcrumb to the current mode"""
-        breadcrumb = Breadcrumb()
+        """Render the breadcrumb to the current mode
 
-        mode = self
-        while True:
-            if mode == self:
-                url = "javascript:window.location.reload(false)"
-            else:
-                url = html.makeuri_contextless([("mode", mode.name())], filename="wato.py")
+        This methods job is to a) gather the breadcrumb from the
+        parent modes, b) append it's own part and then return it
+        """
 
-            breadcrumb.insert(0, BreadcrumbItem(
-                title=mode.title(),
-                url=url,
-            ))
-
-            mode_class = mode.parent_mode()
-            if mode_class is None:
-                break
+        if parent_cls := self.parent_mode():
             # For some reason pylint does not understand that this is a class type
-            mode = mode_class()  # pylint: disable=not-callable
+            breadcrumb = parent_cls().breadcrumb()  # pylint: disable=not-callable
+        else:
+            breadcrumb = Breadcrumb()
+
+        # For the currently active mode use the same link as the "page title click"
+        if html.request.get_ascii_input("mode") == self.name():
+            breadcrumb_url = "javascript:window.location.reload(false)"
+        else:
+            breadcrumb_url = self._breadcrumb_url()
+
+        breadcrumb.append(BreadcrumbItem(
+            title=self.title(),
+            url=breadcrumb_url,
+        ))
 
         return breadcrumb
+
+    def _breadcrumb_url(self) -> str:
+        """Override this method to implement a custom breadcrumb URL
+
+        This can be useful when a mode needs some more contextual information
+        to link to the correct page.
+        """
+        return html.makeuri_contextless([("mode", self.name())], filename="wato.py")
 
     def buttons(self) -> None:
         global_buttons()

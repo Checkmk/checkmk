@@ -44,12 +44,14 @@ from cmk.gui.permissions import Permission
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _u
 from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
 from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.plugins.main_menu.mega_menus import make_topic_breadcrumb, MegaMenuMonitoring
 
 from cmk.gui.type_defs import (
     ColumnName,
@@ -2058,3 +2060,43 @@ def _substract_sorters(base: List[SorterSpec], remove: List[SorterSpec]) -> None
             base.remove(s)
         elif negated_sorter in base:
             base.remove(negated_sorter)
+
+
+def make_service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Breadcrumb:
+    permitted_views = get_permitted_views()
+    service_view_spec = permitted_views["service"]
+
+    breadcrumb = make_host_breadcrumb(host_name)
+
+    # Add service home page
+    breadcrumb.append(
+        BreadcrumbItem(
+            title=view_title(service_view_spec),
+            url=html.makeuri_contextless([("view_name", "service"), ("host", host_name),
+                                          ("service", service_name)]),
+        ))
+
+    return breadcrumb
+
+
+def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
+    """Create the breadcrumb down to the "host home page" level"""
+    permitted_views = get_permitted_views()
+    allhosts_view_spec = permitted_views["allhosts"]
+
+    breadcrumb = make_topic_breadcrumb(MegaMenuMonitoring, allhosts_view_spec["topic"])
+
+    # 1. level: list of all hosts
+    breadcrumb.append(
+        BreadcrumbItem(
+            _u(allhosts_view_spec["title"]),
+            html.makeuri_contextless([("view_name", "allhosts")]),
+        ))
+
+    # 2. level: host home page
+    host_view_spec = permitted_views["host"]
+    breadcrumb.append(
+        BreadcrumbItem(title=view_title(host_view_spec),
+                       url=html.makeuri_contextless([("view_name", "host"), ("host", host_name)])))
+
+    return breadcrumb

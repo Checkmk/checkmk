@@ -91,6 +91,8 @@ from cmk.gui.plugins.views.utils import (
     get_tag_groups,
     _parse_url_sorters,
     SorterEntry,
+    make_host_breadcrumb,
+    make_service_breadcrumb,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -450,25 +452,8 @@ class View:
              |
              + service views
         """
-        breadcrumb = make_topic_breadcrumb(MegaMenuMonitoring, self.spec["topic"])
-
-        permitted_views = get_permitted_views()
         host_name = self.context["host"]
-
-        # 1. level: list of all hosts
-        allhosts_view_spec = permitted_views["allhosts"]
-        breadcrumb.append(
-            BreadcrumbItem(
-                _u(allhosts_view_spec["title"]),
-                html.makeuri_contextless([("view_name", "allhosts")]),
-            ))
-
-        # 2. level: host home page
-        host_view_spec = permitted_views["host"]
-        breadcrumb.append(
-            BreadcrumbItem(title=view_title(host_view_spec),
-                           url=html.makeuri_contextless([("view_name", "host"),
-                                                         ("host", host_name)])))
+        breadcrumb = make_host_breadcrumb(host_name)
 
         if self.name == "host":
             # In case we are on the host homepage, we have the final breadcrumb
@@ -484,16 +469,7 @@ class View:
                 ))
             return breadcrumb
 
-        service_name = self.context["service"]
-        service_view_spec = permitted_views["service"]
-
-        # 3b) level: service home page
-        breadcrumb.append(
-            BreadcrumbItem(
-                title=view_title(service_view_spec),
-                url=html.makeuri_contextless([("view_name", "service"), ("host", host_name),
-                                              ("service", service_name)]),
-            ))
+        breadcrumb = make_service_breadcrumb(host_name, self.context["service"])
 
         if self.name == "service":
             # In case we are on the service home page, we have the final breadcrumb
@@ -504,7 +480,7 @@ class View:
             BreadcrumbItem(
                 title=view_title(self.spec),
                 url=html.makeuri_contextless([("view_name", self.name), ("host", host_name),
-                                              ("service", service_name)]),
+                                              ("service", self.context["service"])]),
             ))
 
         return breadcrumb

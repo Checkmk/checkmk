@@ -26,9 +26,10 @@ from cmk.fetchers import (
     ProgramDataFetcher,
 )
 
+from cmk.base.fetcher_config import FetcherConfig
+
 from cmk.utils.paths import core_fetcher_config_dir
 import cmk.utils.paths
-import cmk.base.cee.core_cmc as core_cmc
 
 import testlib.base as base
 
@@ -107,7 +108,7 @@ class TestControllerApi:
     ])
     @pytest.mark.usefixtures("scenario")
     def test_run_fetchers(self, the_host, capsys):
-        fetcher_config = core_cmc.FetcherConfig()
+        fetcher_config = FetcherConfig()
         fetcher_config.write(hostname=the_host)
         run_fetchers(serial=str(fetcher_config.serial), host_name=the_host, timeout=35)
         captured = capsys.readouterr()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,7 +10,7 @@ import platform
 import re
 import sys
 
-import pytest
+import pytest  # type: ignore
 from local import (actual_output, make_yaml_config, src_exec_dir, local_test, run_subprocess,
                    wait_agent, write_config)
 

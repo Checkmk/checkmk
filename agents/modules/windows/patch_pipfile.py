@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,6 @@
 # simple script to patch linux Pipfile to Windows pipfile
 # Deprecated now
 
-from __future__ import print_function
 import sys
 from colorama import init, Fore, Style  # type: ignore[import]  # pylint: disable=import-error
 
@@ -19,7 +18,7 @@ info_c = Style.BRIGHT + Fore.CYAN
 
 if len(sys.argv) < 2:
     print(error_c + 'Missing arguments')
-    exit(1)
+    sys.exit(1)
 
 try:
     # Read in the file

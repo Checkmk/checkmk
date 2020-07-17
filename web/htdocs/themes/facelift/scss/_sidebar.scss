@@ -46,13 +46,13 @@ body.side {
   }
 }
 
-#check_mk_sidebar {
+#check_mk_navigation {
   float: left;
   width: 64px;
   height: 100%;
 }
 
-#check_mk_snapinbar {
+#check_mk_sidebar {
   float: right;
   width: 280px;
   height: 100%;
@@ -61,8 +61,6 @@ body.side {
     width: 0;
   }
 
-  // TODO: additional styling when the snapinbar positioned on the left
-  // Can be removed once a decision is made.
   &.left {
     float: left;
     border-left: 1px solid $ux-light-grey;

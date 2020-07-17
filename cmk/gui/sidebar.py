@@ -348,18 +348,17 @@ class SidebarRenderer:
 
     def _show_sidebar(self) -> None:
         if not config.user.may("general.see_sidebar"):
-            html.div("", id_="check_mk_sidebar")
+            html.div("", id_="check_mk_navigation")
             return
 
         user_config = UserSidebarConfig(config.user, config.sidebar)
 
-        html.open_div(id_="check_mk_sidebar")
+        html.open_div(id_="check_mk_navigation")
         self._show_sidebar_head()
         html.close_div()
 
-        html.open_div(
-            id_="check_mk_snapinbar",
-            class_=["left" if config.user.get_attribute("ui_snapinbar_position") else None])
+        html.open_div(id_="check_mk_sidebar",
+                      class_=["left" if config.user.get_attribute("ui_sidebar_position") else None])
 
         self._show_shortcut_bar()
         self._show_snapin_bar(user_config)

@@ -41,7 +41,7 @@ def test_sync_plugins(load_config):
         'pager',
         'start_url',
         'ui_theme',
-        'ui_snapinbar_position',
+        'ui_sidebar_position',
         'ui_basic_advanced_mode',
     ])
 

@@ -436,7 +436,7 @@ function dragScroll(event) {
 export function fold_sidebar()
 {
     g_sidebar_folded = true;
-    const sidebar = document.getElementById("check_mk_snapinbar");
+    const sidebar = document.getElementById("check_mk_sidebar");
     utils.add_class(sidebar, "folded");
     const button = document.getElementById("side_fold");
     utils.add_class(button, "folded");
@@ -448,7 +448,7 @@ export function fold_sidebar()
 function unfold_sidebar()
 {
     g_sidebar_folded = false;
-    const sidebar = document.getElementById("check_mk_snapinbar");
+    const sidebar = document.getElementById("check_mk_sidebar");
     utils.remove_class(sidebar, "folded");
     const button = document.getElementById("side_fold");
     utils.remove_class(button, "folded");

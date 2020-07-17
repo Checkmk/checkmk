@@ -168,18 +168,18 @@ class UIThemeUserAttribute(UserAttribute):
 
 
 @user_attribute_registry.register
-class UISnapinBarPosition(UserAttribute):
+class UISidebarPosition(UserAttribute):
     @classmethod
     def name(cls):
-        return "ui_snapinbar_position"
+        return "ui_sidebar_position"
 
     def topic(self):
         return "personal"
 
     def valuespec(self):
         return Checkbox(
-            title=_("Snapin bar position"),
-            label=_("Show snapin bar on the left instead of the right"),
+            title=_("Sidebar position"),
+            label=_("Show sidebar on the left instead of the right"),
         )
 
     def domain(self):

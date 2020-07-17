@@ -387,6 +387,13 @@ def execute_check(multi_host_sections: MultiHostSections, host_config: config.Ho
     # TODO (mo): centralize maincheckify: CMK-4295
     plugin_name = CheckPluginName(maincheckify(service.check_plugin_name))
     plugin = config.get_registered_check_plugin(plugin_name)
+
+    # Make a bit of context information globally available, so that functions
+    # called by checks know this context. set_service is needed for predictive levels!
+    # TODO: This should be a context manager, similar to value_store (f.k.a. item_state)
+    # This is used for both legacy and agent_based API.
+    check_api_utils.set_service(str(plugin_name), service.description)
+
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == CLUSTER_LEGACY_MODE_FROM_HELL):
@@ -513,9 +520,10 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
     if check_function is None:
         _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
         return True
+
     # Make a bit of context information globally available, so that functions
-    # called by checks know this context
-    check_api_utils.set_service(service_check_plugin_name, service.description)
+    # called by checks know this context. check_api_utils.set_service has
+    # already been called.
     item_state.set_item_state_prefix(str(service_check_plugin_name), service.item)
 
     section_name = legacy_check_plugin_name.split('.')[0]

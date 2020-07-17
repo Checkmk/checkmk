@@ -23,7 +23,24 @@ from cmk.gui.plugins.main_menu import (
 )
 
 
+def make_simple_page_breadcrumb(menu: MegaMenu, title: str) -> Breadcrumb:
+    """Helper to create breadcrumbs for simple pages
+
+    This can be used to create breadcrumbs for pages that are on the level
+    right below the main menu
+    """
+    breadcrumb = make_main_menu_breadcrumb(menu)
+
+    breadcrumb.append(BreadcrumbItem(
+        title=title,
+        url="javascript:document.location.reload(false)",
+    ))
+
+    return breadcrumb
+
+
 def make_main_menu_breadcrumb(menu: MegaMenu) -> Breadcrumb:
+    """Create a breadcrumb for the main menu level"""
     return Breadcrumb([BreadcrumbItem(
         title=menu.title,
         url=None,

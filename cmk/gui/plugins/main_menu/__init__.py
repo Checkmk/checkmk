@@ -15,6 +15,7 @@ from cmk.gui.plugins.main_menu.utils import (
     MegaMenu,
     TopicMenuTopic,
     TopicMenuItem,
+    any_advanced_items,
 )
 
 load_plugins(__file__, __package__)

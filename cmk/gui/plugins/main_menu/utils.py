@@ -38,6 +38,10 @@ MegaMenu = NamedTuple("MegaMenu", [
 ])
 
 
+def any_advanced_items(topics: List[TopicMenuTopic]) -> bool:
+    return any(item.is_advanced for topic in topics for item in topic.items)
+
+
 class MegaMenuRegistry(InstanceRegistry):
     def plugin_base_class(self):
         return MegaMenu

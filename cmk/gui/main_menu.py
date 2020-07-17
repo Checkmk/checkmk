@@ -21,6 +21,7 @@ from cmk.gui.plugins.main_menu.utils import (
     MegaMenu,
     TopicMenuTopic,
     TopicMenuItem,
+    any_advanced_items,
 )
 
 MainMenuItem = NamedTuple("MainMenuItem", [
@@ -106,9 +107,12 @@ class MegaMenuRenderer:
 
         show_more = get_show_more_setting(more_id)
         html.open_div(id_="main_menu_" + menu.name, class_=("more" if show_more else "less"))
-        html.more_button(id_=more_id, dom_levels_up=1)
+
+        topics = menu.topics()
+        if any_advanced_items(topics):
+            html.more_button(id_=more_id, dom_levels_up=1)
         html.open_div(class_="content inner")
-        for topic in menu.topics():
+        for topic in topics:
             self._show_topic(topic, menu.name)
         html.close_div()
         html.close_div()

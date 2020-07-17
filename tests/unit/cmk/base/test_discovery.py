@@ -299,8 +299,8 @@ def service_table() -> discovery.ServicesTable:
             "service_blacklist": ["^Test Description Vanished Item 2"],
         }, ["Vanished Item 2"], (0, 1, 1)),
     ])
-def test__get_new_services(monkeypatch, service_table, mode, parameters_rediscovery,
-                           result_new_item_names, result_counts):
+def test__get_post_discovery_services(monkeypatch, service_table, mode, parameters_rediscovery,
+                                      result_new_item_names, result_counts):
     def _get_service_description(_hostname, _check_plugin_name, item):
         return "Test Description %s" % item
 
@@ -312,7 +312,7 @@ def test__get_new_services(monkeypatch, service_table, mode, parameters_rediscov
     service_filters = discovery.get_service_filter_funcs(params)
 
     new_item_names = [
-        entry.item for entry in discovery._get_new_services(
+        entry.item for entry in discovery._get_post_discovery_services(
             "hostname",
             service_table,
             service_filters,

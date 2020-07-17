@@ -544,7 +544,8 @@ def discover_on_host(
         )
 
         # Create new list of checks
-        new_services = _get_new_services(hostname, services, service_filters, counts, mode)
+        new_services = _get_post_discovery_services(hostname, services, service_filters, counts,
+                                                    mode)
         host_config.set_autochecks(new_services)
 
     except MKTimeout:
@@ -580,7 +581,7 @@ def _empty_counts() -> Counter[str]:
     )
 
 
-def _get_new_services(
+def _get_post_discovery_services(
     hostname: HostName,
     services: ServicesTable,
     service_filters: ServiceFilters,
@@ -588,7 +589,7 @@ def _get_new_services(
     mode: str,
 ) -> List[Service]:
 
-    new_services: List[Service] = []
+    post_discovery_services: List[Service] = []
     for check_source, discovered_service in services.values():
         if check_source in ("custom", "legacy", "active", "manual"):
             # This is not an autocheck or ignored and currently not
@@ -600,11 +601,11 @@ def _get_new_services(
             if mode in ("new", "fixall", "refresh") and service_filters.new(
                     hostname, discovered_service):
                 counts["self_new"] += 1
-                new_services.append(discovered_service)
+                post_discovery_services.append(discovered_service)
 
         elif check_source in ("old", "ignored"):
             # keep currently existing valid services in any case
-            new_services.append(discovered_service)
+            post_discovery_services.append(discovered_service)
             counts["self_kept"] += 1
 
         elif check_source == "vanished":
@@ -614,17 +615,17 @@ def _get_new_services(
                     hostname, discovered_service):
                 counts["self_removed"] += 1
             else:
-                new_services.append(discovered_service)
+                post_discovery_services.append(discovered_service)
                 counts["self_kept"] += 1
 
         elif check_source.startswith("clustered_"):
             # Silently keep clustered services
             counts[check_source] += 1
-            new_services.append(discovered_service)
+            post_discovery_services.append(discovered_service)
 
         else:
             raise MKGeneralException("Unknown check source '%s'" % check_source)
-    return new_services
+    return post_discovery_services
 
 
 #.

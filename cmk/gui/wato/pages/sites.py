@@ -592,7 +592,7 @@ class ModeDistributedMonitoring(WatoMode):
                     "\n", "\n<br>")
                 html.add_user_error("_name", error)
 
-        wato_html_head(_("Login into site \"%s\"") % site["alias"])
+        wato_html_head(_("Login into site \"%s\"") % site["alias"], self.breadcrumb())
         if error:
             html.show_error(error)
 

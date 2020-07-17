@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Set, Tuple as _Tuple, Union
 import abc
 from enum import Enum
 
+import cmk.utils.tags
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element, Table
@@ -35,7 +37,7 @@ from cmk.gui.valuespec import (
     Transform,
 )
 
-import cmk.utils.tags
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.rulesets import Ruleset
 from cmk.gui.watolib.hosts_and_folders import CREHost, CREFolder
@@ -135,7 +137,8 @@ class ModeTags(ABCTagMode):
             message: Union[bool,
                            str] = _("Transformed the user tag group \"%s\" to builtin.") % del_id
         else:
-            message = _rename_tags_after_confirmation(OperationRemoveTagGroup(del_id))
+            message = _rename_tags_after_confirmation(self.breadcrumb(),
+                                                      OperationRemoveTagGroup(del_id))
             if message is True:  # no confirmation yet
                 c = wato_confirm(
                     _("Confirm deletion of the tag group '%s'") % del_id,
@@ -193,7 +196,7 @@ class ModeTags(ABCTagMode):
                         _("You cannot delete this auxiliary tag. "
                           "It is being used in the tag group <b>%s</b>.") % group.title)
 
-        message = _rename_tags_after_confirmation(OperationRemoveAuxTag(del_id))
+        message = _rename_tags_after_confirmation(self.breadcrumb(), OperationRemoveAuxTag(del_id))
         if message is True:  # no confirmation yet
             c = wato_confirm(
                 _("Confirm deletion of the auxiliary tag '%s'") % del_id,
@@ -680,7 +683,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         operation = OperationReplaceGroupedTags(tg_id, remove_tag_ids, replace_tag_ids)
 
         # Now check, if any folders, hosts or rules are affected
-        message = _rename_tags_after_confirmation(operation)
+        message = _rename_tags_after_confirmation(self.breadcrumb(), operation)
         if message:
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
@@ -820,7 +823,8 @@ class OperationReplaceGroupedTags(ABCOperation):
         return _("Confirm tag modifications")
 
 
-def _rename_tags_after_confirmation(operation: ABCOperation) -> Union[bool, str]:
+def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
+                                    operation: ABCOperation) -> Union[bool, str]:
     """Handle renaming and deletion of tags
 
     Find affected hosts, folders and rules. Remove or fix those rules according
@@ -871,7 +875,7 @@ def _rename_tags_after_confirmation(operation: ABCOperation) -> Union[bool, str]
             message += html.drain()
 
     if message:
-        wato_html_head(operation.confirm_title())
+        wato_html_head(operation.confirm_title(), breadcrumb)
         html.open_div(class_="really")
         html.h3(_("Your modifications affect some objects"))
         html.write_text(message)

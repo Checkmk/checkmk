@@ -15,7 +15,6 @@ from typing import Any, Dict, Union
 
 from six import ensure_str
 
-import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.paths
 import cmk.utils.werks
@@ -36,6 +35,12 @@ from cmk.gui.valuespec import (
     Integer,
     TextUnicode,
 )
+from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
+from cmk.gui.plugins.main_menu.mega_menus import (
+    make_main_menu_breadcrumb,
+    make_current_page_breadcrumb_item,
+    MegaMenuSetup,
+)
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
@@ -45,7 +50,7 @@ g_werks: Dict[int, Dict[str, Any]] = {}
 
 @cmk.gui.pages.register("version")
 def page_version():
-    html.header(_("Checkmk %s Release Notes") % cmk_version.__version__)
+    html.header(_("Release notes"), _release_notes_breadcrumb())
     load_werks()
     handle_acknowledgement()
     render_werks_table()
@@ -87,7 +92,12 @@ def page_werk():
         raise MKUserError("werk", _("This werk does not exist."))
     werk = g_werks[werk_id]
 
-    html.header(("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"]))
+    title = ("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"])
+
+    breadcrumb = _release_notes_breadcrumb()
+    breadcrumb.append(make_current_page_breadcrumb_item(title))
+    html.header(title, breadcrumb)
+
     html.begin_context_buttons()
     back_url = html.makeuri([], filename="version.py", delvars=["werk"])  # keeps filter settings
     html.context_button(_("Back"), back_url, "back")
@@ -126,6 +136,15 @@ def page_werk():
     html.close_table()
 
     html.footer()
+
+
+def _release_notes_breadcrumb() -> Breadcrumb:
+    breadcrumb = make_main_menu_breadcrumb(MegaMenuSetup)
+    breadcrumb.append(BreadcrumbItem(
+        title=_("Release notes"),
+        url="version.py",
+    ))
+    return breadcrumb
 
 
 def load_werks():

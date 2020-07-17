@@ -57,7 +57,6 @@ import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.mkeventd as mkeventd
-import cmk.gui.werks as werks
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 import cmk.gui.weblib as weblib
@@ -646,6 +645,8 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
         return 40
 
     def generate(self):
+        # Local import has been added to quick-fix an import cycle between cmk.gui.werks and watolib
+        import cmk.gui.werks as werks
         werks.acknowledge_all_werks(check_permission=False)
 
 

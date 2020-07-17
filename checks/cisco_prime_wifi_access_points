@@ -23,14 +23,13 @@ def check_cisco_prime_wifi_access_points(item, params, parsed):
     critical_percent = 100. * count_critical / count_total
     yield check_levels(
         critical_percent,
-        "ap_devices_percent_unhealthy",
+        None,
         params.get("levels", (None, None)),
         human_readable_func=get_percent_human_readable,
         infoname="Percent Critical",
     )
-    yield 0, "%s: %r" % ("Total", count_total)
     for k, v in counts.items():
-        yield 0, "%s: %r" % (k.title(), v)
+        yield 0, "%s: %r" % (k.title(), v), [("ap_devices_%s" % k.lower(), v)]
 
 
 check_info["cisco_prime_wifi_access_points"] = {

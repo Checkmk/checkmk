@@ -170,13 +170,14 @@ checks = {
             None,
             {},
             [
-                (0, 'Total connections: 14638', [('connections', 14638, None, None, None, None)]),
-                (0, '802.11a: 2486', []),
-                (0, '802.11b: 0', []),
-                (0, '802.11g: 4830', []),
-                (0, '802.11ac: 866', []),
-                (0, '802.11n24: 4560', []),
-                (0, '802.11n5: 1896', []),
+                (0, 'Total connections: 7247', []),
+                (0, '802.11a: 1227', [('wifi_connection_dot11a', 1227, None, None, None, None)]),
+                (0, '802.11b: 0', [('wifi_connection_dot11b', 0, None, None, None, None)]),
+                (0, '802.11g: 2400', [('wifi_connection_dot11g', 2400, None, None, None, None)]),
+                (0, '802.11ac: 430', [('wifi_connection_dot11ac', 430, None, None, None, None)]),
+                (0, '802.11n24: 2253', [('wifi_connection_dot11n2_4', 2253, None, None, None, None)
+                                       ]),
+                (0, '802.11n5: 937', [('wifi_connection_dot11n5', 937, None, None, None, None)]),
             ],
         ),
         (
@@ -185,17 +186,14 @@ checks = {
                 'levels_lower': (20000, 10000)
             },
             [
-                (
-                    1,
-                    'Total connections: 14638 (warn/crit below 20000/10000)',
-                    [('connections', 14638, None, None, None, None)],
-                ),
-                (0, '802.11a: 2486', []),
-                (0, '802.11b: 0', []),
-                (0, '802.11g: 4830', []),
-                (0, '802.11ac: 866', []),
-                (0, '802.11n24: 4560', []),
-                (0, '802.11n5: 1896', []),
+                (2, 'Total connections: 7247 (warn/crit below 20000/10000)', []),
+                (0, '802.11a: 1227', [('wifi_connection_dot11a', 1227, None, None, None, None)]),
+                (0, '802.11b: 0', [('wifi_connection_dot11b', 0, None, None, None, None)]),
+                (0, '802.11g: 2400', [('wifi_connection_dot11g', 2400, None, None, None, None)]),
+                (0, '802.11ac: 430', [('wifi_connection_dot11ac', 430, None, None, None, None)]),
+                (0, '802.11n24: 2253', [('wifi_connection_dot11n2_4', 2253, None, None, None, None)
+                                       ]),
+                (0, '802.11n5: 937', [('wifi_connection_dot11n5', 937, None, None, None, None)]),
             ],
         ),
     ],

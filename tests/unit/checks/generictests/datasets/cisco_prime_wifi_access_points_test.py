@@ -122,14 +122,9 @@ checks = {
             None,
             {},
             [
-                (
-                    0,
-                    'Percent Critical: 25.0%',
-                    [('ap_devices_percent_unhealthy', 25.0, None, None, None, None)],
-                ),
-                (0, 'Total: 4', []),
-                (0, 'Cleared: 3', []),
-                (0, 'Critical: 1', []),
+                (0, 'Percent Critical: 25.0%', []),
+                (0, 'Cleared: 3', [('ap_devices_cleared', 3, None, None, None, None)]),
+                (0, 'Critical: 1', [('ap_devices_critical', 1, None, None, None, None)]),
             ],
         ),
         (
@@ -138,14 +133,9 @@ checks = {
                 'levels': (20, 40)
             },
             [
-                (
-                    1,
-                    'Percent Critical: 25.0% (warn/crit at 20.0%/40.0%)',
-                    [('ap_devices_percent_unhealthy', 25.0, 20.0, 40.0, None, None)],
-                ),
-                (0, 'Total: 4', []),
-                (0, 'Cleared: 3', []),
-                (0, 'Critical: 1', []),
+                (1, 'Percent Critical: 25.0% (warn/crit at 20.0%/40.0%)', []),
+                (0, 'Cleared: 3', [('ap_devices_cleared', 3, None, None, None, None)]),
+                (0, 'Critical: 1', [('ap_devices_critical', 1, None, None, None, None)]),
             ],
         ),
     ]

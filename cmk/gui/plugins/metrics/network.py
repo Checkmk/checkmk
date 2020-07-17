@@ -813,11 +813,22 @@ metric_info["ap_devices_not_responding"] = {
     "color": "14/a"
 }
 
-metric_info["ap_devices_percent_unhealthy"] = {
-    "title": _("Percentage of devices with an unhealthy state"),
-    "unit": "%",
-    "color": "14/a"
-}
+for ctype, ccolor in (("critical", "14/a"), ("minor", "23/b"), ("cleared", "32/b")):
+    metric_info["ap_devices_" + ctype] = {"title": ctype.title(), "unit": "count", "color": ccolor}
+
+for ctype, ccolor in (
+    ("11a", "21/a"),
+    ("11b", "21/b"),
+    ("11g", "33/a"),
+    ("11ac", "34/b"),
+    ("11n2_4", "45/a"),
+    ("11n5", "46/b"),
+):
+    metric_info["wifi_connection_dot" + ctype] = {
+        "title": "802." + ctype,
+        "unit": "count",
+        "color": ccolor
+    }
 
 metric_info["request_rate"] = {
     "title": _("Request rate"),
@@ -1712,6 +1723,20 @@ graph_info["access_point_statistics"] = {
         ("ap_devices_drifted", "area"),
         ("ap_devices_not_responding", "stack"),
     ]
+}
+
+graph_info["access_point_statistics2"] = {
+    "title": _("Access Point Statistics"),
+    "metrics": [
+        ("ap_devices_" + ctype, "stack")  #
+        for ctype in ("cleared", "minor", "critical")
+    ]
+}
+
+graph_info["wifi_connections"] = {
+    "title": _("WiFi Statistics"),
+    "metrics": [("wifi_connection_dot%s" % ctype, "stack")
+                for ctype in ("11a", "11b", "11g", "11ac", "11n2_4", "11n5")]
 }
 
 graph_info["round_trip_average"] = {

@@ -39,6 +39,27 @@ def make_simple_page_breadcrumb(menu: MegaMenu, title: str) -> Breadcrumb:
     return breadcrumb
 
 
+def make_topic_breadcrumb(menu: MegaMenu, topic_id: str) -> Breadcrumb:
+    """Helper to create a breadcrumb down to topic level"""
+    # 1. Main menu level
+    breadcrumb = make_main_menu_breadcrumb(menu)
+
+    # TODO: Temporarily(tm) disabled until we have decided whether or not we want this
+    # # 2. Topic level
+    #topic_id = self.spec["topic"]
+    #PagetypeTopics.load()
+    #topic = PagetypeTopics.find_page(topic_id)
+    #if topic is None:
+    #    topic = PagetypeTopics.find_page("other")
+
+    #breadcrumb.append(BreadcrumbItem(
+    #    title=topic.title(),
+    #    url=None,
+    #))
+
+    return breadcrumb
+
+
 def make_main_menu_breadcrumb(menu: MegaMenu) -> Breadcrumb:
     """Create a breadcrumb for the main menu level"""
     return Breadcrumb([BreadcrumbItem(

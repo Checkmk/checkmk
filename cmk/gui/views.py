@@ -33,7 +33,7 @@ import cmk.gui.sites as sites
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
-from cmk.gui.plugins.main_menu.mega_menus import make_main_menu_breadcrumb, MegaMenuMonitoring
+from cmk.gui.plugins.main_menu.mega_menus import make_topic_breadcrumb, MegaMenuMonitoring
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
@@ -418,21 +418,6 @@ class View:
         this is not the case for all views. A lot of the views are direct children of the topic
         level.
         """
-        # 1. Main menu level
-        breadcrumb = make_main_menu_breadcrumb(MegaMenuMonitoring)
-
-        # TODO: Temporarily(tm) disabled until we have decided whether or not we want this
-        # # 2. Topic level
-        #topic_id = self.spec["topic"]
-        #PagetypeTopics.load()
-        #topic = PagetypeTopics.find_page(topic_id)
-        #if topic is None:
-        #    topic = PagetypeTopics.find_page("other")
-
-        #breadcrumb.append(BreadcrumbItem(
-        #    title=topic.title(),
-        #    url=None,
-        #))
 
         # View without special hierarchy
         if "host" not in self.spec['single_infos']:
@@ -440,6 +425,8 @@ class View:
             request_vars += list(
                 visuals.get_singlecontext_html_vars(self.context,
                                                     self.spec["single_infos"]).items())
+
+            breadcrumb = make_topic_breadcrumb(MegaMenuMonitoring, self.spec["topic"])
             breadcrumb.append(
                 BreadcrumbItem(
                     title=view_title(self.spec),
@@ -448,9 +435,9 @@ class View:
             return breadcrumb
 
         # Now handle the views within the host view hierarchy
-        return self._host_hierarchy_breadcrumb(breadcrumb)
+        return self._host_hierarchy_breadcrumb()
 
-    def _host_hierarchy_breadcrumb(self, breadcrumb: Breadcrumb) -> Breadcrumb:
+    def _host_hierarchy_breadcrumb(self) -> Breadcrumb:
         """Realize the host hierarchy breadcrumb
 
         All hosts
@@ -463,6 +450,8 @@ class View:
              |
              + service views
         """
+        breadcrumb = make_topic_breadcrumb(MegaMenuMonitoring, self.spec["topic"])
+
         permitted_views = get_permitted_views()
         host_name = self.context["host"]
 

@@ -58,7 +58,7 @@ body.side {
   height: 100%;
 
   &.folded {
-    width: 0;
+    display: none;
   }
 
   &.left {

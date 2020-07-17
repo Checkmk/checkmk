@@ -29,6 +29,7 @@ from cmk.gui.exceptions import (
 from cmk.gui.globals import html, request, RequestContext, AppContext
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
@@ -136,7 +137,19 @@ def _page_not_found():
     if html.request.has_var("_plain_error"):
         html.write(_("Page not found"))
     else:
-        html.header(_("Page not found"))
+        title = _("Page not found")
+        html.header(
+            title,
+            Breadcrumb([
+                BreadcrumbItem(
+                    title="Nowhere",
+                    url=None,
+                ),
+                BreadcrumbItem(
+                    title=title,
+                    url="javascript:document.location.reload(false)",
+                ),
+            ]))
         html.show_error(_("This page was not found. Sorry."))
     html.footer()
 
@@ -223,7 +236,7 @@ def _render_exception(e, title=""):
         html.write("%s%s\n" % (title, e))
 
     elif not _fail_silently():
-        html.header(title)
+        html.header(title, Breadcrumb())
         html.show_error(e)
         html.footer()
 

@@ -11,6 +11,8 @@ from pathlib import Path
 
 import livestatus
 import cmk.utils.store as store
+from cmk.utils.type_defs import HostName
+
 from cmk.gui import sites
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -34,7 +36,7 @@ from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import FilterHeaders
-from cmk.utils.type_defs import HostName
+from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuMonitoring
 
 TopologyConfig = Dict[str, Any]
 Mesh = Set[str]
@@ -122,7 +124,7 @@ class ParentChildTopologyPage(Page):
                       growth_auto_max_nodes: Optional[int] = None,
                       mesh_depth: int = 0,
                       max_nodes: int = 400) -> None:
-        html.header("")
+        html.header("", breadcrumb=make_simple_page_breadcrumb(MegaMenuMonitoring, ""))
         self.show_topology_content(hostnames,
                                    mode,
                                    growth_auto_max_nodes=growth_auto_max_nodes,
@@ -186,7 +188,8 @@ class ParentChildTopologyPage(Page):
 def _bi_map() -> None:
     aggr_name = html.request.var("aggr_name")
     layout_id = html.request.var("layout_id")
-    html.header("BI visualization")
+    title = _("BI visualization")
+    html.header(title, make_simple_page_breadcrumb(MegaMenuMonitoring, title))
     div_id = "node_visualization"
     html.div("", id=div_id)
     html.javascript("node_instance = new cmk.node_visualization.BIVisualization(%s);" %

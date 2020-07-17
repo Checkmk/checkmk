@@ -30,6 +30,7 @@ from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, local
 from cmk.gui.htmllib import HTML
+from cmk.gui.breadcrumb import Breadcrumb
 
 from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
@@ -470,7 +471,7 @@ class LoginPage(Page):
     def _show_login_page(self) -> None:
         html.set_render_headfoot(False)
         html.add_body_css_class("login")
-        html.header(config.get_page_heading(), javascripts=[])
+        html.header(config.get_page_heading(), Breadcrumb(), javascripts=[])
 
         default_origtarget = "index.py" if html.myfile in ["login", "logout"] else html.makeuri([])
         origtarget = html.get_url_input("_origtarget", default_origtarget)

@@ -38,6 +38,8 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuMonitoring
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 
@@ -85,7 +87,7 @@ def show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_sile
     if fail_silently:
         return
 
-    html.header(title)
+    html.header(title, Breadcrumb())
     html.show_error(message)
     html.footer()
 
@@ -151,14 +153,14 @@ class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
 @cmk.gui.pages.page_registry.register_page("crash")
 class PageCrash(ABCCrashReportPage):
     def page(self):
-        html.header(_("Crash report: %s") % self._crash_id)
+        title = _("Crash report: %s") % self._crash_id
+        html.header(title, make_simple_page_breadcrumb(MegaMenuMonitoring, title))
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
 
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information
         if not config.user.may("general.see_crash_reports"):
-            html.header(_("Internal error"))
             html.show_error("<b>%s:</b> %s" % (_("Internal error"), crash_info["exc_value"]))
             html.p(
                 _("An internal error occurred while processing your request. "

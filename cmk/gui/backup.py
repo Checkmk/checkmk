@@ -49,6 +49,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuSetup
 
 #.
 #   .--Config--------------------------------------------------------------.
@@ -1668,7 +1669,8 @@ class PageBackupRestore:
 
         # Special handling for Check_MK / CMA differences
         if is_site():
-            html.header(_("Insert passphrase"))
+            title = _("Insert passphrase")
+            html.header(title, make_simple_page_breadcrumb(MegaMenuSetup, title))
             html.begin_context_buttons()
             html.context_button(_("Back"), html.makeuri([("mode", "backup_restore")]), "back")
             html.end_context_buttons()

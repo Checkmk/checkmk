@@ -30,13 +30,17 @@ def make_simple_page_breadcrumb(menu: MegaMenu, title: str) -> Breadcrumb:
     right below the main menu
     """
     breadcrumb = make_main_menu_breadcrumb(menu)
-
-    breadcrumb.append(BreadcrumbItem(
-        title=title,
-        url="javascript:document.location.reload(false)",
-    ))
+    breadcrumb.append(make_current_page_breadcrumb_item(title))
 
     return breadcrumb
+
+
+def make_current_page_breadcrumb_item(title: str) -> BreadcrumbItem:
+    """Helper to create a breadcrumb link to the current page"""
+    return BreadcrumbItem(
+        title=title,
+        url="javascript:document.location.reload(false)",
+    )
 
 
 def make_topic_breadcrumb(menu: MegaMenu, topic_id: str) -> Breadcrumb:

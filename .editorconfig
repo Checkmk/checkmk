@@ -32,7 +32,7 @@ max_line_length = 100
 [*.{js,py,pl,pm,t}]
 max_line_length = 100
 
-[{package.json,.envrc}]
+[{*.scss,package.json,.envrc}]
 indent_size = 2
 
 [{Makefile,*.make,*.am}]

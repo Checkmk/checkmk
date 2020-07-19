@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -65,15 +65,8 @@ TTY_COLORS = {
 
 CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plugin
 
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    text_type = str
-    binary_type = bytes
-else:
-    text_type = unicode
-    binary_type = str
+text_type = str
+binary_type = bytes
 
 
 # Borrowed from six
@@ -90,9 +83,7 @@ def ensure_str(s, encoding='utf-8', errors='strict'):
     """
     if not isinstance(s, (text_type, binary_type)):
         raise TypeError("not expecting type '%s'" % type(s))
-    if PY2 and isinstance(s, text_type):
-        s = s.encode(encoding, errors)
-    elif PY3 and isinstance(s, binary_type):
+    if isinstance(s, binary_type):
         s = s.decode(encoding, errors)
     return s
 
@@ -107,7 +98,7 @@ def init_logging(verbosity):
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(lineno)s: %(message)s")
 
 
-class ArgsParser(object):  # pylint: disable=too-few-public-methods
+class ArgsParser():  # pylint: disable=too-few-public-methods
     """
     Custom argument parsing.
     (Neither use optparse which is Python 2.3 to 2.7 only.
@@ -139,7 +130,7 @@ class ArgsParser(object):  # pylint: disable=too-few-public-methods
 # up to prevent eating disk space over time.
 
 
-class MEIFolderCleaner(object):
+class MEIFolderCleaner():
     def pid_running(self, pid):
         import ctypes
         kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
@@ -390,7 +381,7 @@ def read_config(files, debug=False):
     return logfiles_configs, cluster_configs
 
 
-class State(object):
+class State():
     def __init__(self, filename, data=None):
         super(State, self).__init__()
         self.filename = filename
@@ -436,7 +427,7 @@ class State(object):
         return self._data.setdefault(key, {'file': key})
 
 
-class LogLinesIter(object):
+class LogLinesIter():
     # this is supposed to become a proper iterator.
     # for now, we need a persistent buffer to fix things
     BLOCKSIZE = 8192
@@ -671,7 +662,8 @@ def process_logfile(section, filestate, debug):
                             cont_line = log_iter.next_line()
                             if cont_line is None:  # end of file
                                 break
-                            elif cont_pattern.search(cont_line[:-1]):
+
+                            if cont_pattern.search(cont_line[:-1]):
                                 line = line[:-1] + "\1" + cont_line
                             else:
                                 log_iter.push_back_line(cont_line)  # sorry for stealing this line
@@ -717,7 +709,7 @@ def process_logfile(section, filestate, debug):
     return header, []
 
 
-class Options(object):
+class Options():
     """Options w.r.t. logfile patterns (not w.r.t. cluster mapping)."""
     MAP_OVERFLOW = {'C': 2, 'W': 1, 'I': 0, 'O': 0}
     MAP_BOOL = {'true': True, 'false': False, '1': True, '0': False, 'yes': True, 'no': False}
@@ -808,7 +800,7 @@ class Options(object):
                 if value not in Options.MAP_OVERFLOW.keys():
                     raise ValueError("Invalid overflow: %r (choose from %r)" % (
                         value,
-                        Options.MAP_OVERFLOW.keys(),
+                        list(Options.MAP_OVERFLOW.keys()),
                     ))
                 self.values['overflow'] = value
             elif key in ('regex', 'iregex'):
@@ -819,7 +811,7 @@ class Options(object):
                     raise ValueError("Invalid %s: %r (choose from %r)" % (
                         key,
                         value,
-                        Options.MAP_BOOL.keys(),
+                        list(Options.MAP_BOOL.keys()),
                     ))
                 self.values[key] = Options.MAP_BOOL[value.lower()]
             elif key == 'maxcontextlines':
@@ -832,14 +824,14 @@ class Options(object):
             raise
 
 
-class PatternConfigBlock(object):
+class PatternConfigBlock():
     def __init__(self, files, patterns):
         super(PatternConfigBlock, self).__init__()
         self.files = files
         self.patterns = patterns
 
 
-class ClusterConfigBlock(object):
+class ClusterConfigBlock():
     def __init__(self, name, ips_or_subnets):
         super(ClusterConfigBlock, self).__init__()
         self.name = name
@@ -847,13 +839,6 @@ class ClusterConfigBlock(object):
 
 
 def _decode_to_unicode(match):
-    # (Union[bytes, unicode, str]) -> unicode
-    # we can't use 'surrogatereplace' because that a) is py3 only b) would fail upon re-encoding
-    # we can't use 'six': this code may be executed using Python 2.5/2.6
-    if sys.version_info[0] == 2:
-        # Python 2: str @Windows && @Linux
-        return match if isinstance(match, unicode) else match.decode('utf8', 'replace')
-
     # Python 3: bytes @Linux and unicode @Windows
     return match.decode('utf-8', 'replace') if isinstance(match, bytes) else match
 
@@ -917,7 +902,7 @@ def _compile_continuation_pattern(raw_pattern):
         return re.compile(_search_optimize_raw_pattern(raw_pattern), re.UNICODE)
 
 
-class LogfileSection(object):
+class LogfileSection():
     def __init__(self, logfile_ref):
         super(LogfileSection, self).__init__()
         self.name_fs = logfile_ref[0]

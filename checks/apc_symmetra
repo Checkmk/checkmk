@@ -307,9 +307,7 @@ factory_settings["apc_symmetra_temp_default_levels"] = {
 
 
 def inventory_apc_symmetra_temp(parsed):
-    # TODO: remove the condition the moment we take over the services
-    # of apc_symmetra_temp
-    return [(k, {}) for k in parsed.get("temp", {}) if k == "Battery"]
+    return [(k, {}) for k in parsed.get("temp", {})]
 
 
 def check_apc_symmetra_temp(item, params, parsed):

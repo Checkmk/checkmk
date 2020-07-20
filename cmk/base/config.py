@@ -2058,9 +2058,6 @@ def _extract_check_plugins() -> None:
         # skip pure section declarations:
         if check_info_dict.get("service_description") is None:
             continue
-        if check_plugin_name == "apc_symmetra_temp":
-            # this exception will be removed once the plugin is obsolete (per unit-test)
-            continue
         try:
             check_plugin = create_check_plugin_from_legacy(check_plugin_name, check_info_dict)
             registered_check_plugins[check_plugin.name] = check_plugin

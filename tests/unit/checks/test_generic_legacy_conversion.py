@@ -174,12 +174,6 @@ def test_no_subcheck_with_snmp_keywords(snmp_info):
         assert name == section_name_of(name)
 
 
-def test_exception_required(config_check_info):
-    assert "apc_symmetra_temp" in config_check_info, (
-        "In cmk.base.config is an extra condition for 'apc_symmetra_temp'. "
-        "If this test fails, you can remove those two lines along with this test.")
-
-
 def test_module_attribute(migrated_checks):
     # TODO: this really belongs somewhere else, but for now we use the fixture from this module
     local_check = migrated_checks[CheckPluginName("local")]
@@ -315,7 +309,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'apc_symmetra_ext_temp_default_levels',
         'apc_symmetra_output_default_levels',
         'apc_symmetra_temp_default_levels',
-        'apc_temp_default_levels',
         'apt_default_levels',
         'arbor_cpuload_default_levels',
         'arbor_memory_default_levels',

@@ -22,7 +22,6 @@ def test_registered_automations():
         'diag-host',
         'get-agent-output',
         'get-check-information',
-        'get-check-manpage',
         'get-configuration',
         'get-labels-of',
         'get-real-time-checks',

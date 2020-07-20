@@ -23,7 +23,7 @@ import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
-from cmk.utils.check_utils import maincheckify, section_name_of
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
@@ -1070,57 +1070,6 @@ class AutomationGetRealTimeChecks(Automation):
 
 
 automations.register(AutomationGetRealTimeChecks())
-
-
-class AutomationGetCheckManPage(Automation):
-    cmd = "get-check-manpage"
-    needs_config = False
-    needs_checks = True
-
-    def execute(self, args: List[str]) -> man_pages.ManPage:
-        if len(args) != 1:
-            raise MKAutomationError("Need exactly one argument.")
-
-        check_plugin_name: CheckPluginNameStr = args[0]
-        manpage = man_pages.load_man_page(check_plugin_name)
-        if manpage is None:
-            raise MKAutomationError("Invalid man page: %s" % check_plugin_name)
-
-        # Add a few informations from check_info. Note: active checks do not
-        # have an entry in check_info
-
-        if check_plugin_name in config.check_info:
-            manpage["type"] = "check_mk"
-            info = config.check_info[check_plugin_name]
-            for key in ["snmp_info", "has_perfdata", "service_description"]:
-                if key in info:
-                    manpage[key] = info[key]
-            if "." in check_plugin_name:
-                section_name = section_name_of(check_plugin_name)
-                if section_name in config.check_info and "snmp_info" in config.check_info[
-                        section_name]:
-                    manpage["snmp_info"] = config.check_info[section_name]["snmp_info"]
-
-            if "group" in info:
-                manpage["group"] = info["group"]
-
-        # Assume active check
-        elif check_plugin_name.startswith("check_"):
-            manpage["type"] = "active"
-        elif check_plugin_name in ['check-mk', "check-mk-inventory"]:
-            manpage["type"] = "check_mk"
-            if check_plugin_name == "check-mk":
-                manpage["service_description"] = "Check_MK"
-            if check_plugin_name == "check-mk-inventory":
-                manpage["service_description"] = "Check_MK Discovery"
-        else:
-            raise MKAutomationError("Could not detect type of manpage: %s. "
-                                    "Maybe the check is missing." % check_plugin_name)
-
-        return manpage
-
-
-automations.register(AutomationGetCheckManPage())
 
 
 class AutomationScanParents(Automation):

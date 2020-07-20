@@ -324,15 +324,32 @@ class ModeCheckManPage(WatoMode):
         if not re.match("^[a-zA-Z0-9_.]+$", self._check_type):
             raise MKUserError("check_type", _("Invalid check type"))
 
-        # TODO: remove call of automation and then the automation. This can be done once the check_info
-        # data is also available in the "cmk." module because the get-check-manpage automation not only
-        # fetches the man page. It also contains info from check_info. What a hack.
-        self._manpage = watolib.check_mk_local_automation("get-check-manpage", [self._check_type])
-        if self._manpage is None:
+        manpage = man_pages.load_man_page(self._check_type)
+        if manpage is None:
             raise MKUserError(None, _("There is no manpage for this check."))
 
+        checks = watolib.check_mk_local_automation("get-check-information")
+        if self._check_type in checks:
+            self._manpage = {
+                "type": "check_mk",
+                **checks[self._check_type],
+                **manpage,
+            }
+        elif self._check_type.startswith("check_"):  # Assume active check
+            self._manpage = {
+                "type": "active",
+                **manpage,
+            }
+        elif self._check_type in ['check-mk', "check-mk-inventory"]:
+            self._manpage = {
+                "type": "check_mk",
+                "service_description": "Check_MK%s" %
+                                       ("" if self._check_type == "check-mk" else " Discovery"),
+                **manpage,
+            }
+
     def title(self):
-        return _("Check plugin manual page") + " - " + self._manpage["header"]["title"]
+        return _("Check plugin manual page") + " - " + self._manpage["title"]
 
     def buttons(self):
         global_buttons()
@@ -364,7 +381,7 @@ class ModeCheckManPage(WatoMode):
         html.open_tr()
         html.th(_("Title"))
         html.open_td()
-        html.b(self._manpage["header"]["title"])
+        html.b(self._manpage["title"])
         html.close_td()
         html.close_tr()
 
@@ -377,7 +394,7 @@ class ModeCheckManPage(WatoMode):
 
         html.open_tr()
         html.th(_("Description"))
-        html.td(self._manpage_text(self._manpage["header"]["description"]))
+        html.td(self._manpage_text(self._manpage["description"]))
         html.close_tr()
 
         if self._manpage["type"] == "check_mk":

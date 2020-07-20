@@ -607,10 +607,16 @@ def get_graph_templates(translated_metrics):
 
 def _get_explicit_graph_templates(translated_metrics):
     for graph_template in graph_info.values():
-        if _graph_possible(graph_template, translated_metrics):
-            yield graph_template
-        elif _graph_possible_without_optional_metrics(graph_template, translated_metrics):
-            yield _graph_without_missing_optional_metrics(graph_template, translated_metrics)
+        template = graph_template_for_metrics(graph_template, translated_metrics)
+        if template:
+            yield template
+
+
+def graph_template_for_metrics(graph_template, translated_metrics):
+    if _graph_possible(graph_template, translated_metrics):
+        return graph_template
+    if _graph_possible_without_optional_metrics(graph_template, translated_metrics):
+        return _graph_without_missing_optional_metrics(graph_template, translated_metrics)
 
 
 def _get_graphed_metrics(graph_templates: List) -> Set:

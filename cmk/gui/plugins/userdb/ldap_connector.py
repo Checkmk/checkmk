@@ -360,8 +360,8 @@ class LDAPUserConnector(UserConnector):
             self._logger.info('Using cached DC %s' % cached_server)
             return cached_server
 
-        import ad  # type: ignore[import] # pylint: disable=import-error
-        locator = ad.Locator()
+        import activedirectory  # type: ignore[import] # pylint: disable=import-error
+        locator = activedirectory.Locator()
         locator.m_logger = self._logger
         try:
             server = locator.locate(domain)

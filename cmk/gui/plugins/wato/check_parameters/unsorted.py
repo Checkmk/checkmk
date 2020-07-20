@@ -159,7 +159,7 @@ def _valuespec_sap_value_groups():
         title=_('SAP Value Grouping Patterns'),
         help=_(
             'The check <tt>sap.value</tt> normally creates one service for each SAP value. '
-            'By defining grouping patterns, you can switch to the check <tt>sap.value-groups</tt>. '
+            'By defining grouping patterns, you can switch to the check <tt>sap.value_groups</tt>. '
             'That check monitors a list of SAP values at once.'),
     )
 

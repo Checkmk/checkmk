@@ -321,9 +321,7 @@ class ModeCheckManPage(WatoMode):
     def _from_vars(self):
         self._check_type = html.request.get_ascii_input_mandatory("check_type", "")
 
-        # TODO: There is one check "sap.value-groups" which will be renamed to "sap.value_groups".
-        # As long as the old one is available, allow a minus here.
-        if not re.match("^[-a-zA-Z0-9_.]+$", self._check_type):
+        if not re.match("^[a-zA-Z0-9_.]+$", self._check_type):
             raise MKUserError("check_type", _("Invalid check type"))
 
         # TODO: remove call of automation and then the automation. This can be done once the check_info

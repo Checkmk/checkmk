@@ -248,13 +248,6 @@ def check_sap_value_groups(item, params, info):
         yield state, "\n%s" % text
 
 
-# Deprecated with 1.4.0i1. Remove some versions after!
-check_info['sap.value-groups'] = {
-    'check_function': check_sap_value_groups,
-    'inventory_function': lambda info: [],
-    'service_description': "%s",
-}
-
 check_info['sap.value_groups'] = {
     'check_function': check_sap_value_groups,
     'inventory_function': discover_sap_value_groups,

@@ -10,6 +10,7 @@ from typing import Optional, Tuple
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
 from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, ServiceCheckResult
+from cmk.utils.piggyback import get_piggyback_raw_data
 
 from cmk.fetchers import PiggyBackDataFetcher
 
@@ -47,10 +48,19 @@ class PiggyBackDataSource(AgentDataSource):
         *,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> RawAgentData:
+        self._summary = self._summarize()
         with PiggyBackDataFetcher(self.hostname, self.ipaddress, self._time_settings) as fetcher:
-            self._summary = fetcher.summary()
             return fetcher.data()
         raise MKAgentError("Failed to read data")
+
+    def _summarize(self) -> ServiceCheckResult:
+        states = [0]
+        infotexts = set()
+        for origin in (self.hostname, self.ipaddress):
+            for src in get_piggyback_raw_data(origin if origin else "", self._time_settings):
+                states.append(src.reason_status)
+                infotexts.add(src.reason)
+        return max(states), ", ".join(infotexts), []
 
     def _get_raw_data(
         self,

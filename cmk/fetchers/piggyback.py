@@ -14,7 +14,7 @@ from cmk.utils.piggyback import (
     PiggybackRawDataInfo,
     PiggybackTimeSettings,
 )
-from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, ServiceCheckResult
+from cmk.utils.type_defs import HostAddress, HostName, RawAgentData
 
 from ._base import AbstractDataFetcher
 
@@ -44,14 +44,6 @@ class PiggyBackDataFetcher(AbstractDataFetcher):
         raw_data += self._get_source_labels_section()
         return raw_data
 
-    def summary(self) -> ServiceCheckResult:
-        states = [0]
-        infotexts = set()
-        for src in self._sources:
-            states.append(src.reason_status)
-            infotexts.add(src.reason)
-        return max(states), ", ".join(infotexts), []
-
     def _get_main_section(self) -> RawAgentData:
         raw_data = b""
         for src in self._sources:
@@ -76,6 +68,8 @@ class PiggyBackDataFetcher(AbstractDataFetcher):
         return b'<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels).encode("utf-8")
 
     @staticmethod
-    def _raw_data(hostname: Optional[str],
-                  time_settings: PiggybackTimeSettings) -> List[PiggybackRawDataInfo]:
+    def _raw_data(
+        hostname: Optional[str],
+        time_settings: PiggybackTimeSettings,
+    ) -> List[PiggybackRawDataInfo]:
         return get_piggyback_raw_data(hostname if hostname else "", time_settings)

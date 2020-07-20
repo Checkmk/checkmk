@@ -237,7 +237,8 @@ def test_mode_discover_marked_hosts(mocker):
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_default(mocker):
     _patch_data_source_run(mocker, _max_cachefile_age=0)
-    assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
+    with cmk_debug_enabled():
+        assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
     assert ABCDataSource._run.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -251,7 +252,8 @@ def test_mode_check_discovery_cached(mocker):
     )
 
     cmk.base.modes.check_mk.option_cache()
-    assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
+    with cmk_debug_enabled():
+        assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
     assert ABCDataSource._run.call_count == 2  # type: ignore[attr-defined]
 
 

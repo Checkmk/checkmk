@@ -123,6 +123,7 @@ PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
 
 PYTHON3_MODULES_LIST += dnspython-1.16.0.zip  # needed by python-active-directory
 PYTHON3_MODULES_LIST += python-active-directory-1.0.5.tar.gz  # direct dependency
+PYTHON3_MODULES_LIST += docstring_parser-0.7.2.tar.gz  # direct dependency
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target

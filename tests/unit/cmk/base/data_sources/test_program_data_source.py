@@ -4,19 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Optional, Tuple
 from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
 import pytest  # type: ignore[import]
 
+from testlib.base import Scenario
+
+import cmk.utils.paths
+
 import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
-import cmk.utils.paths
 from cmk.base.data_sources.programs import (
+    DSProgramConfigurator,
     DSProgramDataSource,
+    SpecialAgentConfigurator,
     SpecialAgentDataSource,
 )
-from testlib.base import Scenario
 
 fun_args_stdin: Tuple[  #
     Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]  #
@@ -45,24 +49,32 @@ class TestDSProgramDataSource:
         template = ""
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
-        source = DSProgramDataSource(hostname, ipaddress, template)
+        source = DSProgramDataSource(
+            hostname,
+            ipaddress,
+            configurator=DSProgramConfigurator(
+                hostname,
+                ipaddress,
+                template=template,
+            ),
+        )
 
         assert source.id == "agent"
         assert source.name() == ""
         # ProgramDataSource
         assert source._cpu_tracking_id == "ds"
-        assert source.source_cmdline == ""
-        assert source.source_stdin is None
-        assert source.describe() == "Program: "
+        assert source.configurator.cmdline == ""
+        assert source.configurator.stdin is None
+        assert source.configurator.description == "Program: "
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_template_translation(self, monkeypatch, ipaddress):
         template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
-        source = DSProgramDataSource(hostname, ipaddress, template)
+        configurator = DSProgramConfigurator(hostname, ipaddress, template=template)
 
-        assert source.source_cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
+        assert configurator.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
             ipaddress if ipaddress is not None else "",
             hostname,
         )
@@ -114,11 +126,21 @@ class TestSpecialAgentDataSource:
 
         # end of setup
 
-        source = SpecialAgentDataSource(hostname, ipaddress, special_agent_id, params)
+        source = SpecialAgentDataSource(
+            hostname,
+            ipaddress,
+            configurator=SpecialAgentConfigurator(
+                hostname,
+                ipaddress,
+                special_agent_id=special_agent_id,
+                params=params,
+            ),
+        )
 
         assert source.id == "special_%s" % special_agent_id
 
         assert source._cpu_tracking_id == "ds"
-        assert source.source_cmdline == (str(agent_dir / "special" /
-                                             ("agent_%s" % special_agent_id)) + " " + expected_args)
-        assert source.source_stdin == expected_stdin
+        assert source.configurator.cmdline == (str(agent_dir / "special" /
+                                                   ("agent_%s" % special_agent_id)) + " " +
+                                               expected_args)
+        assert source.configurator.stdin == expected_stdin

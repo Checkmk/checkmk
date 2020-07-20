@@ -27,7 +27,12 @@ from .agent import AgentDataSource, AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMIManagementBoardDataSource
 from .piggyback import PiggyBackDataSource
-from .programs import DSProgramDataSource, SpecialAgentDataSource
+from .programs import (
+    DSProgramConfigurator,
+    DSProgramDataSource,
+    SpecialAgentConfigurator,
+    SpecialAgentDataSource,
+)
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .tcp import TCPDataSource
 
@@ -141,7 +146,11 @@ class SourceBuilder:
             return DSProgramDataSource(
                 self._hostname,
                 self._ipaddress,
-                datasource_program,
+                configurator=DSProgramConfigurator(
+                    self._hostname,
+                    self._ipaddress,
+                    template=datasource_program,
+                ),
                 main_data_source=main_data_source,
             )
 
@@ -156,8 +165,12 @@ class SourceBuilder:
             SpecialAgentDataSource(
                 self._hostname,
                 self._ipaddress,
-                agentname,
-                params,
+                configurator=SpecialAgentConfigurator(
+                    self._hostname,
+                    self._ipaddress,
+                    special_agent_id=agentname,
+                    params=params,
+                ),
             ) for agentname, params in self._host_config.special_agents
         ]
 

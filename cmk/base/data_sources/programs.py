@@ -4,10 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 import os
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from six import ensure_str
 
@@ -21,90 +20,60 @@ import cmk.base.core_config as core_config
 from cmk.base.config import SelectedRawSections, SpecialAgentConfiguration
 from cmk.base.exceptions import MKAgentError
 
+from ._abstract import ABCConfigurator
 from .agent import AgentDataSource
 
 
-class ABCProgramDataSource(AgentDataSource):
-    """Abstract base class for all data source classes that execute external programs"""
-    @property
-    @abc.abstractmethod
-    def source_cmdline(self) -> str:
-        """Return the command line to the source."""
-        raise NotImplementedError()
+class ABCProgramConfigurator(ABCConfigurator):
+    def __init__(self, *, cmdline: str, stdin: Optional[str]) -> None:
+        super().__init__(description=ABCProgramConfigurator._make_description(
+            cmdline,
+            stdin,
+        ))
+        self.cmdline = cmdline
+        self.stdin = stdin
 
-    @property
-    @abc.abstractmethod
-    def source_stdin(self) -> Optional[str]:
-        """Return the standard in of the source, or None."""
-        raise NotImplementedError()
+    def configure_fetcher(self) -> Dict[str, Any]:
+        return {
+            "cmdline": self.cmdline,
+            "stdin": self.stdin,
+            "is_cmc": config.is_cmc(),
+        }
 
-    def _execute(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> RawAgentData:
-        self._logger.debug("Calling external program %r" % (self.source_cmdline))
-        # TODO(ml): Do something with the selection.
-        with ProgramDataFetcher(
-                self.source_cmdline,
-                self.source_stdin,
-                config.is_cmc(),
-        ) as fetcher:
-            return fetcher.data()
-        raise MKAgentError("Failed to read data")
-
-    def describe(self) -> str:
-        """Return a short textual description of the agent"""
-        response = ["Program: %s" % self.source_cmdline]
-        if self.source_stdin:
-            response.extend(["  Program stdin:", self.source_stdin])
+    @staticmethod
+    def _make_description(cmdline, stdin):
+        response = ["Program: %s" % cmdline]
+        if stdin:
+            response.extend(["  Program stdin:", stdin])
         return "\n".join(response)
 
 
-class DSProgramDataSource(ABCProgramDataSource):
+class DSProgramConfigurator(ABCProgramConfigurator):
     def __init__(
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
-        command_template: str,
-        main_data_source: bool = False,
-        id_="agent",
-        cpu_tracking_id="ds",
+        *,
+        template: str,
     ) -> None:
-        super(DSProgramDataSource, self).__init__(
-            hostname,
-            ipaddress,
-            main_data_source=main_data_source,
-            id_="agent",
-            cpu_tracking_id="ds",
+        super().__init__(
+            cmdline=DSProgramConfigurator._translate(
+                template,
+                hostname,
+                ipaddress,
+            ),
+            stdin=None,
         )
-        self._command_template = command_template
-
-    def name(self) -> str:
-        """Return a unique (per host) textual identification of the data source"""
-        program = self.source_cmdline.split(" ")[0]
-        return os.path.basename(program)
-
-    @property
-    def source_cmdline(self) -> str:
-        return DSProgramDataSource._translate(
-            self._command_template,
-            self._host_config,
-            self.ipaddress,
-        )
-
-    @property
-    def source_stdin(self):
-        return None
 
     @staticmethod
     def _translate(
         cmd: str,
-        host_config: config.HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
     ) -> str:
-        return DSProgramDataSource._translate_host_macros(
-            DSProgramDataSource._translate_legacy_macros(cmd, host_config.hostname, ipaddress),
+        host_config = config.HostConfig.make_host_config(hostname)
+        return DSProgramConfigurator._translate_host_macros(
+            DSProgramConfigurator._translate_legacy_macros(cmd, hostname, ipaddress),
             host_config,
         )
 
@@ -138,47 +107,31 @@ class DSProgramDataSource(ABCProgramDataSource):
         return ensure_str(core_config.replace_macros(cmd, macros))
 
 
-class SpecialAgentDataSource(ABCProgramDataSource):
+class SpecialAgentConfigurator(ABCProgramConfigurator):
     def __init__(
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
+        *,
         special_agent_id: str,
         params: Dict,
-        main_data_source: bool = False,
     ) -> None:
-        super(SpecialAgentDataSource, self).__init__(
-            hostname,
-            ipaddress,
-            main_data_source=main_data_source,
-            id_="special_%s" % special_agent_id,
-            cpu_tracking_id="ds",
+        super().__init__(
+            cmdline=SpecialAgentConfigurator._make_cmdline(
+                hostname,
+                ipaddress,
+                special_agent_id,
+                params,
+            ),
+            stdin=SpecialAgentConfigurator._make_stdin(
+                hostname,
+                ipaddress,
+                special_agent_id,
+                params,
+            ),
         )
-        self._special_agent_id = special_agent_id
-        self._params = params
-        self._cmdline = SpecialAgentDataSource._make_cmdline(
-            hostname,
-            ipaddress,
-            special_agent_id,
-            params,
-        )
-        self._stdin = SpecialAgentDataSource._make_stdin(
-            hostname,
-            ipaddress,
-            special_agent_id,
-            params,
-        )
+        self.special_agent_id = special_agent_id
         self.special_agent_plugin_file_name = "agent_%s" % special_agent_id
-
-    @property
-    def source_cmdline(self) -> str:
-        """Create command line using the special_agent_info"""
-        return self._cmdline
-
-    @property
-    def source_stdin(self) -> Optional[str]:
-        """Create command line using the special_agent_info"""
-        return self._stdin
 
     @staticmethod
     def _make_cmdline(
@@ -187,8 +140,8 @@ class SpecialAgentDataSource(ABCProgramDataSource):
         special_agent_id: str,
         params: Dict,
     ) -> str:
-        path = SpecialAgentDataSource._make_source_path(special_agent_id)
-        args = SpecialAgentDataSource._make_source_args(
+        path = SpecialAgentConfigurator._make_source_path(special_agent_id)
+        args = SpecialAgentConfigurator._make_source_args(
             hostname,
             ipaddress,
             special_agent_id,
@@ -227,3 +180,84 @@ class SpecialAgentDataSource(ABCProgramDataSource):
         info_func = config.special_agent_info[special_agent_id]
         agent_configuration = info_func(params, hostname, ipaddress)
         return core_config.active_check_arguments(hostname, None, agent_configuration)
+
+
+class ABCProgramDataSource(AgentDataSource):
+    """Abstract base class for all data source classes that execute external programs"""
+    def __init__(
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        *,
+        configurator: ABCProgramConfigurator,
+        id_: str,
+        cpu_tracking_id: str,
+        main_data_source: bool = False,
+    ) -> None:
+        super().__init__(
+            hostname,
+            ipaddress,
+            id_=id_,
+            cpu_tracking_id=cpu_tracking_id,
+            main_data_source=main_data_source,
+        )
+        self.configurator = configurator
+
+    def _execute(
+        self,
+        *,
+        selected_raw_sections: Optional[SelectedRawSections],
+    ) -> RawAgentData:
+        self._logger.debug("Calling external program %r" % (self.configurator.cmdline))
+        # TODO(ml): Do something with the selection.
+        with ProgramDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
+            return fetcher.data()
+        raise MKAgentError("Failed to read data")
+
+    def describe(self) -> str:
+        return self.configurator.description
+
+
+class DSProgramDataSource(ABCProgramDataSource):
+    def __init__(
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        *,
+        configurator: DSProgramConfigurator,
+        main_data_source: bool = False,
+        id_="agent",
+        cpu_tracking_id="ds",
+    ) -> None:
+        super().__init__(
+            hostname,
+            ipaddress,
+            configurator=configurator,
+            main_data_source=main_data_source,
+            id_="agent",
+            cpu_tracking_id="ds",
+        )
+
+    def name(self) -> str:
+        """Return a unique (per host) textual identification of the data source"""
+        program = self.configurator.cmdline.split(" ")[0]
+        return os.path.basename(program)
+
+
+class SpecialAgentDataSource(ABCProgramDataSource):
+    def __init__(
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        *,
+        configurator: SpecialAgentConfigurator,
+        main_data_source: bool = False,
+    ) -> None:
+        super(SpecialAgentDataSource, self).__init__(
+            hostname,
+            ipaddress,
+            configurator=configurator,
+            main_data_source=main_data_source,
+            id_="special_%s" % configurator.special_agent_id,
+            cpu_tracking_id="ds",
+        )

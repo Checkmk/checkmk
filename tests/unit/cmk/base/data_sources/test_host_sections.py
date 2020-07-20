@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import collections
-from functools import partial
 
 import pytest  # type: ignore[import]
 
@@ -21,7 +20,7 @@ from cmk.base.data_sources import ABCDataSource, ABCHostSections, make_host_sect
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
-from cmk.base.data_sources.programs import DSProgramDataSource, SpecialAgentDataSource
+from cmk.base.data_sources.programs import DSProgramConfigurator, DSProgramDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPHostSections
 from cmk.base.data_sources.tcp import TCPDataSource
 
@@ -468,7 +467,11 @@ class TestMakeHostSectionsHosts:
 
     @pytest.mark.parametrize("source", [
         PiggyBackDataSource,
-        partial(DSProgramDataSource, command_template=""),
+        lambda hostname, ipaddress: DSProgramDataSource(
+            hostname,
+            ipaddress,
+            configurator=DSProgramConfigurator(hostname, ipaddress, template=""),
+        ),
         TCPDataSource,
     ])
     def test_one_nonsnmp_source(self, hostname, ipaddress, config_cache, host_config, source):
@@ -494,10 +497,19 @@ class TestMakeHostSectionsHosts:
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
 
-    def test_multiple_sources_from_the_same_host(self, hostname, ipaddress, config_cache,
-                                                 host_config):
+    def test_multiple_sources_from_the_same_host(
+        self,
+        hostname,
+        ipaddress,
+        config_cache,
+        host_config,
+    ):
         sources = [
-            DSProgramDataSource(hostname, ipaddress, command_template=""),
+            DSProgramDataSource(
+                hostname,
+                ipaddress,
+                configurator=DSProgramConfigurator(hostname, ipaddress, template=""),
+            ),
             TCPDataSource(hostname, ipaddress),
         ]
 
@@ -524,7 +536,10 @@ class TestMakeHostSectionsHosts:
 
     def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, config_cache, host_config):
         sources = [
-            DSProgramDataSource(hostname + "0", ipaddress, command_template=""),
+            DSProgramDataSource(
+                hostname + "0", ipaddress,
+                configurator=DSProgramConfigurator(hostname + "0", ipaddress,
+                                                   template="",),),
             TCPDataSource(hostname + "1", ipaddress),
             TCPDataSource(hostname + "2", ipaddress),
         ]

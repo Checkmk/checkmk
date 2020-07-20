@@ -1219,7 +1219,11 @@ class AutomationDiagHost(Automation):
                 source = data_sources.programs.DSProgramDataSource(
                     host_config.hostname,
                     ipaddress,
-                    cmd,
+                    configurator=data_sources.programs.DSProgramConfigurator(
+                        host_config.hostname,
+                        ipaddress,
+                        template=cmd,
+                    ),
                 )
             elif isinstance(source, data_sources.tcp.TCPDataSource):
                 source.port = agent_port

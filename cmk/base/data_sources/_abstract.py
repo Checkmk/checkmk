@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import json
 import logging
 import os
 import sys
-from typing import cast, Final, Generic, Optional, Tuple, TypeVar, Union
+from typing import Any, cast, Dict, Final, Generic, Optional, Tuple, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -120,6 +121,23 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
 
 BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=ABCHostSections)
+
+
+class ABCConfigurator(abc.ABC):
+    """Generate the configuration for the fetchers.
+
+    Dump the JSON configuration from `configure_fetcher()`.
+
+    """
+    def __init__(self, *, description: str) -> None:
+        self.description: Final[str] = description
+
+    @abc.abstractmethod
+    def configure_fetcher(self) -> Dict[str, Any]:
+        raise NotImplementedError
+
+    def configure_fetcher_json(self) -> str:
+        return json.dumps(self.configure_fetcher())
 
 
 class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,

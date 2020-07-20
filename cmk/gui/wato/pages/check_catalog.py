@@ -403,14 +403,12 @@ class ModeCheckManPage(WatoMode):
             html.td(HTML(self._manpage["service_description"].replace("%s", "&#9744;")))
             html.close_tr()
 
-            if self._manpage.get("group"):
-                group = self._manpage["group"]
-                varname = "checkgroup_parameters:" + group
-                self._show_ruleset(varname)
+            check_ruleset_name = self._manpage.get("check_ruleset_name")
+            if check_ruleset_name is not None:
+                self._show_ruleset("checkgroup_parameters:%s" % check_ruleset_name)
 
         else:
-            varname = "active_checks:" + self._check_type[6:]
-            self._show_ruleset(varname)
+            self._show_ruleset("active_checks:%s" % self._check_type[6:])
 
         html.close_table()
 

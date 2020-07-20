@@ -37,6 +37,11 @@ public:
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 
+    // TODO(sp): The only 2 places where auth_user is actually used are
+    // HostListStateColumn::getValue() and ServiceListStateColumn::getValue().
+    // These methods aggregate values for hosts/services, but they should do
+    // this only for "allowed" hosts/services. Find a better design than this
+    // parameter passing hell..
     virtual int32_t getValue(Row row, const contact *auth_user) const = 0;
 };
 

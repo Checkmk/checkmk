@@ -16,6 +16,8 @@ import sys
 import time
 import urllib.parse
 
+from typing import Union
+
 from six import ensure_str
 
 from testlib.utils import (
@@ -330,6 +332,15 @@ class Site:
                                 (rel_link_name, link_rel_target, p.wait()))
         else:
             return os.symlink(link_rel_target, os.path.join(self.root, rel_link_name))
+
+    def resolve_path(self, rel_path: Union[str, Path]) -> Path:
+        if not self._is_running_as_site_user():
+            p = self.execute(["readlink", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
+            if p.wait() != 0:
+                raise Exception("Failed to read symlink at %s. Exit-Code: %d" %
+                                (rel_path, p.wait()))
+            return Path(p.stdout.read().strip())
+        return self.path(rel_path).resolve()
 
     def file_exists(self, rel_path):
         if not self._is_running_as_site_user():

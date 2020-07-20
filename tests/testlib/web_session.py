@@ -24,6 +24,16 @@ class APIError(Exception):
 logger = logging.getLogger()
 
 
+def _get_automation_secret(site):
+    secret_path = "var/check_mk/web/automation/automation.secret"
+    secret = site.read_file(secret_path)
+
+    if secret == "":
+        raise Exception("Failed to read secret from %s" % secret_path)
+
+    return secret
+
+
 class CMKWebSession:
     def __init__(self, site):
         super(CMKWebSession, self).__init__()
@@ -227,11 +237,7 @@ class CMKWebSession:
     #
 
     def _automation_credentials(self):
-        secret_path = "var/check_mk/web/automation/automation.secret"
-        secret = self.site.read_file(secret_path)
-
-        if secret == "":
-            raise Exception("Failed to read secret from %s" % secret_path)
+        secret = _get_automation_secret(self.site)
 
         return {
             "_username": "automation",
@@ -834,3 +840,80 @@ class CMKWebSession:
         for host in hosts:
             assert isinstance(result[host], dict)
         return result
+
+
+class CMKOpenAPISession:
+    VERSION = "v0"
+
+    def __init__(self, site):
+        self.site = site
+        self.session = self._get_session()
+        self.base_url = f"{site.url}api/{self.VERSION}"
+
+    def _get_session(self):
+        session = requests.session()
+        session.headers['Authorization'] = self._get_authentication_header()
+        session.headers['Accept'] = 'application/json'
+
+        return session
+
+    def _get_authentication_header(self):
+        secret = _get_automation_secret(self.site).strip()
+        return f"Bearer automation {secret}"
+
+    def request(self, method, endpoint, header_params=None, query_params=None, request_params=None):
+        url = f"{self.base_url}/{endpoint}"
+        return self.session.request(method,
+                                    url,
+                                    headers=header_params,
+                                    data=query_params,
+                                    json=request_params)
+
+    def add_host(self, host_name, folder="root", nodes=None, attributes=None):
+        request_params = {
+            "folder": folder,
+            "host_name": host_name,
+        }
+        if nodes:
+            request_params["nodes"] = nodes
+        if attributes:
+            request_params["attributes"] = attributes
+
+        resp = self.request("post",
+                            "domain-types/host_config/collections/all",
+                            request_params=request_params)
+        try:
+            resp.raise_for_status()
+        except Exception:
+            print(resp.json())
+            raise
+
+        return resp.json()
+
+    def activate_changes_async(self):
+        resp = self.request("post", "domain-types/activation_run/actions/activate-changes/invoke")
+        resp.raise_for_status()
+        return resp.json()
+
+    def activate_changes_sync(self):
+        resp = self.request("post", "domain-types/activation_run/actions/activate-changes/invoke")
+        resp.raise_for_status()
+        activation_id = resp.json()["id"]
+        self.request("get",
+                     f"objects/activation_run/{activation_id}/actions/wait-for-completion/invoke")
+
+    def get_baking_status(self):
+        return self.request("get", "domain-types/agent/actions/baking_status").json()
+
+    def bake_agents(self):
+        resp = self.request("post", "domain-types/agent/actions/bake")
+        resp.raise_for_status()
+        return resp
+
+    def bake_and_sign_agents(self, key_id, passphrase):
+        request_params = {"key_id": key_id, "passphrase": passphrase}
+        resp = self.request("post",
+                            "domain-types/agent/actions/bake_and_sign",
+                            request_params=request_params)
+        resp.raise_for_status()
+        return resp

@@ -137,12 +137,12 @@ def is_snmp_check(check_plugin_name: str) -> bool:
 
 # TODO (mo): *consider* using the type aliases.
 def get_default_parameters(
-    check_info_dict: Dict[str, Any],
+    check_legacy_info: Dict[str, Any],
     factory_settings: Dict[str, Dict[str, Any]],
     check_context: Dict[str, Any],
 ) -> Optional[Dict[str, Any]]:
     """compute default parameters"""
-    params_variable_name = check_info_dict.get("default_levels_variable")
+    params_variable_name = check_legacy_info.get("default_levels_variable")
     if not params_variable_name:
         return None
 

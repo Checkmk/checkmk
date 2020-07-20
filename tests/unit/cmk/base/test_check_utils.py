@@ -10,7 +10,7 @@ from cmk.base import check_utils
 def test_get_default_params_clean_case():
     # with params
     assert check_utils.get_default_parameters(
-        check_info_dict={"default_levels_variable": "foo"},
+        check_legacy_info={"default_levels_variable": "foo"},
         factory_settings={"foo": {
             "levels": (23, 42)
         }},
@@ -21,7 +21,7 @@ def test_get_default_params_clean_case():
 
     # without params
     assert check_utils.get_default_parameters(
-        check_info_dict={},
+        check_legacy_info={},
         factory_settings={},
         check_context={},
     ) is None
@@ -30,7 +30,7 @@ def test_get_default_params_clean_case():
 def test_get_default_params_with_user_update():
     # with params
     assert check_utils.get_default_parameters(
-        check_info_dict={"default_levels_variable": "foo"},
+        check_legacy_info={"default_levels_variable": "foo"},
         factory_settings={"foo": {
             "levels": (23, 42),
             "overwrite_this": None
@@ -49,7 +49,7 @@ def test_get_default_params_with_user_update():
 def test_get_default_params_ignore_user_defined_tuple():
     # with params
     assert check_utils.get_default_parameters(
-        check_info_dict={"default_levels_variable": "foo"},
+        check_legacy_info={"default_levels_variable": "foo"},
         factory_settings={},
         check_context={"foo": (23, 42)},
     ) == {}

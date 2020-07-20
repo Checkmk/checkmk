@@ -50,7 +50,7 @@ class SNMPDataFetcher:
         pass
 
     def data(self) -> SNMPRawData:
-        info: SNMPRawData = {}
+        fetched_data: SNMPRawData = {}
         for section_name, oid_info in self._oid_infos.items():
             self._logger.debug("%s: Fetching data", section_name)
 
@@ -60,9 +60,8 @@ class SNMPDataFetcher:
                                if self._use_snmpwalk_cache else snmp_table.get_snmp_table,
                                backend=factory.backend(self._snmp_config))
             # branch: List[SNMPTree]
-            check_info: List[SNMPTable] = []
+            fetched_section_data: List[SNMPTable] = []
             for entry in oid_info:
-                check_info_part = get_snmp(section_name, entry)
-                check_info.append(check_info_part)
-            info[section_name] = check_info
-        return info
+                fetched_section_data.append(get_snmp(section_name, entry))
+            fetched_data[section_name] = fetched_section_data
+        return fetched_data

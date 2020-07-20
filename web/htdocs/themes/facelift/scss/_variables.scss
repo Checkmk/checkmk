@@ -25,10 +25,10 @@ $yellow:	rgb(255, 215, 3); // yellow
 
 $lightgrey:     $grey-1; // light grey
 
-$color-text:                          rgb(26, 36, 61); // dark
+$font-color:                          rgb(26, 36, 61); // dark
 $color-background:                    rgb(240, 242, 244); // light grey
 
-$color-text-light:                    rgb(230, 230, 230); // light grey
+$font-color-light:                    rgb(230, 230, 230); // light grey
 
 
 // -----------------------------------------------------------------------------
@@ -118,7 +118,7 @@ $color-state-error-border:            rgb(226, 40, 40); // red
 $color-state-success-background:      rgb(170, 225, 153); // green
 $color-state-success-border:          rgb(154, 219, 133); // green
 
-$color-perfometer-title:              $color-text;
+$color-perfometer-title:              $font-color;
 
 
 // -----------------------------------------------------------------------------
@@ -138,9 +138,6 @@ $theme-font-table-header:                   16px;
 // -----------------------------------------------------------------------------
 // Sidebar
 // -----------------------------------------------------------------------------
-$color-sidebar-background:            rgb(37, 41, 42); // dark grey
-$color-sidebar-border:                rgb(61, 67, 70); // dark grey
-
 $theme-snapin-width:                        230px;
 
 
@@ -186,7 +183,7 @@ $tag-dropdown-active-bg-color:		    null;
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
 
-$primary-link-color:			    $color-text;
+$primary-link-color:			    $font-color;
 $secondary-link-color:			    $grey-6;
 
 $primary-border:			    null;
@@ -216,7 +213,7 @@ $toggle-switch-height:			    17px;
 $toggle-switch-font-weight:		    700;
 
 $toggle-button-off-border:		    null;
-$toggle-button-down-bg-color:		    $color-text-light;
+$toggle-button-down-bg-color:		    $font-color-light;
 $toggle-button-down-border-color:	    $button-border;
 $toggle-button-down-hover-bg-color:	    $button-border;
 $toggle-button-down-hover-border-color:	    rgb(204, 204, 204);
@@ -254,7 +251,7 @@ $even-tr-bg-color:			    null;
 
 $tr-data-border-bottom:			    null;
 
-$floatfilter-bg-color:			    rgba(255, 255, 255, 0.2);
+$floatfilter-bg-color:			    rgba($white, 0.2);
 
 $select2-border-color:			    $button-border;
 $select2-rendered-color:		    null;
@@ -278,9 +275,6 @@ $dashlet-bg-color:			    null;
 
 $tactical-overview-th-font-color:	    $color-nuance-5;
 $tactical-overview-td-bg-color:		    $color-background;
-
-$sidebar-iconbutton-bg-color:		    $color-sidebar-background;
-$sidebar-iconbutton-border-color:	    $color-table-border-dark-2;
 
 $table-header-border-bottom:		    1px solid $color-table-border;
 
@@ -438,7 +432,7 @@ $topology-filter-border-color:		    null;
 
 $host-folder-font-color:		    rgb(187, 221, 238);
 
-$snapin-link-hover-color:		    rgb(255, 255, 255);
+$snapin-link-hover-color:		    $white;
 
 $if-state-up-font-color:		    null;
 
@@ -458,7 +452,7 @@ $matches-search-bg-color:		    $color-nuance-2;
 $matches-search-font-color:		    null;
 
 $help-bg-color:				    rgb(255, 255, 204);
-$help-link-color:			    $color-text;
+$help-link-color:			    $font-color;
 
 $minority-font-color:			    null;
 
@@ -472,7 +466,7 @@ $timetable-hilite-even-bg-color:	    null;
 $timetable-hilite-odd-bg-color:		    null;
 
 $pnp-graph-img-border-color:		    $color-table-border;
-$graph-hover-popup-font-color:		    $color-text;
+$graph-hover-popup-font-color:		    $font-color;
 $graph-hover-popup-bg-color:		    $color-background;
 $graph-hover-popup-border:		    1px solid rgb(204, 207, 219);
 $graph-hover-popup-box-shadow:		    0.5px 0.5px 2px rgb(204, 204, 204);
@@ -503,21 +497,19 @@ $scatterdot-hilite-color:		    rgb(0, 185, 255);
  * these colors are not adapted for the facelift theme.
 */
 
-$ux-light-grey: #2c3640;
-$ux-grey: rgba(255, 255, 255, 0.5);
-$ux-dimmed-grey: rgba(255, 255, 255, 0.2);
-$ux-buttons: #353f4a;
-$ux-buttons-dark: #303944;
-$ux-sidebar-background: #1e262e;
-$ux-sidebar-snapin: #151c28;
-$ux-form-background: #151c28;
-$ux-text-primary: #eaeaea;
-$ux-text-highlight: #fff;
-$ux-table-odd: #151c28;
-$ux-table-even: #1e262e;
-$ux-medium-blue: #262f38;
-$ux-filter-group-title-color:               $black;
-$ux-popup-filters-border-radius:            2px;
-$ux-popup-button-border:                    1px solid $grey-2;
-$ux-spacing: 10px;
-$mega-menu-min-height:                          339px
+$menubar-topic-title-font-color:            rgba($white, 0.5);
+$menubar-topic-title-border-color:          rgba($white, 0.2);
+$button-bg-color-default:                   rgb(53, 63, 74);
+$button-bg-color-secondary:                 rgb(48, 57, 68);
+$navigation-bg-color:                       rgb(30, 38, 46);
+$snapin-bg-color:                           rgb(21, 28, 40);
+$sidebar-border-color:                      rgb(44, 54, 64);
+$form-bg-color:                             $snapin-bg-color;
+$form-font-color:                           rgb(234, 234, 234);
+$font-color-highlight:                      $white;
+$medium-blue:                               rgb(38, 47, 56);
+$filter-group-title-font-color:             $black;
+$popup-filters-border-radius:               2px;
+$popup-button-border:                       1px solid $grey-2;
+$spacing:                                   10px;
+$mega-menu-min-height:                      339px

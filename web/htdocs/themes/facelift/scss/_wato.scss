@@ -16,7 +16,7 @@
 
 
 .wato {
-  color: $color-text;
+  color: $font-color;
 }
 
 /* Icon image place inline in some documentation text */
@@ -41,7 +41,7 @@
     border-radius: 0;
 
     &.header_state {
-      color: $color-text !important;
+      color: $font-color !important;
       background: $wato-data-th-bg-color !important;
     }
   }
@@ -364,7 +364,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       height: auto;
       padding: 4px;
       line-height: 33px;
-      color: $color-text;
+      color: $font-color;
       background: none;
     }
 
@@ -392,7 +392,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
     }
 
     select option {
-      color: $color-text;
+      color: $font-color;
       background-color: $bg-color-tertiary;
     }
 
@@ -405,7 +405,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
   li a,
   li body.main .popup_menu span,
   body.main .popup_menu li span {
-    color: $color-text;
+    color: $font-color;
   }
 }
 
@@ -525,7 +525,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 .wato div.floatfolder.locked div.title {
   font-size: 13px;
   font-weight: 500;
-  color: $color-text;
+  color: $font-color;
 }
 
 .wato img.authicon {
@@ -562,7 +562,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   padding-left: 1px;
   margin-top: 10px;
   margin-bottom: 10px;
-  color: $color-text;
+  color: $font-color;
 }
 
 /* Controls for the audit log paged mechanism */
@@ -767,7 +767,7 @@ form.search, div.filter_buttons {
 }
 
 .wato form.search {
-  color: $color-text;
+  color: $font-color;
 }
 
 .wato div.mainmenu {
@@ -1092,7 +1092,7 @@ table.data tr.notification_context table {
 
   th {
     padding: 2px 4px;
-    color: $color-text;
+    color: $font-color;
     background-color: $primary-th-bg-color;
     border: 1px solid $color-table-border;
   }
@@ -1158,7 +1158,7 @@ table.data tr.data.dcd_log_entries {
         font-weight: $font-weight-default;
         color: $lightgrey;
         text-align: left;
-        background: $color-sidebar-background;
+        background: $navigation-bg-color;
         border: 1px solid $color-table-border-dark;
         border-radius: $theme-border-radius;
         box-shadow: none;
@@ -1630,7 +1630,7 @@ table.data.analyze_config td.buttons {
   font-size: $theme-font-table-header;
   font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-table;
-  color: $color-text;
+  color: $font-color;
 }
 
 .wato table.data.job_table {

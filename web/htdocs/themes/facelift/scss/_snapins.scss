@@ -281,15 +281,15 @@ img#speedometerbg, canvas#speedometer {
  */
 div#snapin_tactical_overview {
   /* remove the border-spacing of the first and last element */
-  width: calc(100% + 2 * #{$ux-spacing});
+  width: calc(100% + 2 * #{$spacing});
 }
 
 table.tacticaloverview {
   width: 100%;
   /* remove the border-spacing of the first and last element */
-  margin: 0 (-$ux-spacing);
+  margin: 0 (-$spacing);
   border-collapse: separate;
-  border-spacing: $ux-spacing 0;
+  border-spacing: $spacing 0;
 
   th {
     font-size: $font-size-small;
@@ -303,8 +303,8 @@ table.tacticaloverview {
   td {
     height: 24px;
     text-align: right;
-    background: $ux-buttons;
-    border-radius: $ux-popup-filters-border-radius;
+    background: $button-bg-color-default;
+    border-radius: $popup-filters-border-radius;
 
     &.states {
       box-shadow: none;
@@ -340,11 +340,11 @@ body.main .popup_menu table.tacticaloverview td span {
   font-size: $font-size-default;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
-  color: $color-text;
+  color: $font-color;
 }
 
 table.tacticaloverview td a.link, table.tacticaloverview td a:hover {
-  color: $color-text;
+  color: $font-color;
 }
 
 div.tacticalalert {
@@ -546,9 +546,9 @@ div.spacertop {
   padding: 12px;
   margin-top: 2px;
   font-size: 80%;
-  color: $ux-text-highlight;
-  background-color: $ux-buttons;
-  border: $ux-buttons;
+  color: $font-color-highlight;
+  background-color: $button-bg-color-default;
+  border: $button-bg-color-default;
   border-radius: 4px;
 
   a {
@@ -556,12 +556,12 @@ div.spacertop {
     width: 217px;
     padding-left: 5px;
     margin-bottom: 5px;
-    color: $ux-text-highlight;
+    color: $font-color-highlight;
     text-align: left;
     text-decoration: none;
 
     &:hover, &.active {
-      background-color: $ux-sidebar-snapin;
+      background-color: $snapin-bg-color;
     }
   }
 

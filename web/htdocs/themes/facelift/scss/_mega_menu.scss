@@ -47,8 +47,8 @@
     position: initial;
     width: 100%;
     height: 100%;
-    padding: $ux-spacing 4px $ux-spacing 0;
-    border-left: 4px solid $ux-sidebar-background;
+    padding: $spacing 4px $spacing 0;
+    border-left: 4px solid $navigation-bg-color;
     box-sizing: border-box;
 
     &:hover {
@@ -60,7 +60,7 @@
     }
 
     &.active {
-      background-color: $ux-buttons;
+      background-color: $button-bg-color-default;
 
       a.popup_trigger {
         font-weight: bold;
@@ -84,9 +84,9 @@
       z-index: 1000;
       overflow-x: hidden;
       overflow-y: auto;
-      background-color: $ux-buttons;
+      background-color: $button-bg-color-default;
       border-right: 4px solid $success;
-      border-left: 1px solid $ux-medium-blue;
+      border-left: 1px solid $medium-blue;
       visibility: hidden;
 
       #main_menu_user_manual div.content.inner div.topic {
@@ -114,7 +114,7 @@
           flex-grow: 1;
           width: 250px;
           padding: 10px 15px 24px;
-          border-right: 1px solid $ux-medium-blue;
+          border-right: 1px solid $medium-blue;
           box-sizing: border-box;
 
           &:last-child { flex-grow: 2; }
@@ -124,7 +124,7 @@
             margin: 0;
             font-size: 14px;
             font-weight: bold;
-            color: $ux-text-highlight;
+            color: $font-color-highlight;
             text-transform: uppercase;
 
             a.show_all_topics {
@@ -166,7 +166,7 @@
             margin-bottom: 2px;
             margin-left: 0;
             color: transparent;
-            border-bottom: 1px solid rgba($color-text, .6);
+            border-bottom: 1px solid rgba($font-color, .6);
           }
 
           &.extended {

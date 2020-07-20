@@ -20,7 +20,7 @@
 '-------------------------------------------------------------------------*/
 
 h1, h2, h3, h4 {
-  color: $color-text;
+  color: $font-color;
 }
 
 h3 {
@@ -65,7 +65,7 @@ body {
     font-family: $font-family-default;
     font-size: $font-size-default;
     font-weight: $font-weight-default;
-    color: $color-text;
+    color: $font-color;
     background: $color-background;
 
     /* Can be toggled with N/n display option */
@@ -130,7 +130,7 @@ body {
 	  }
 
 	  a, .popup_menu span, .popup_menu & span {
-	    color: $color-text;
+	    color: $font-color;
 	  }
 
           div.breadcrumb {
@@ -159,7 +159,7 @@ body {
 	&.right {
 	  width: 1%;
 	  font-size: 13px;
-	  color: $color-text;
+	  color: $font-color;
 	  text-align: right;
 
 	  img {
@@ -213,7 +213,7 @@ body {
     table.footer,
     table.footer .popup_menu a,
     table.footer .popup_menu span {
-      color: $color-text;
+      color: $font-color;
     }
 
     table.footer {
@@ -371,7 +371,7 @@ div.togglebutton {
       font-size: $font-size-global;
       font-weight: $font-weight-default;
       letter-spacing: $letter-spacing-default;
-      color: $color-text;
+      color: $font-color;
       text-decoration: none;
       background: $button-background-hover;
       border: 1px solid $color-table-border;
@@ -436,7 +436,7 @@ div.togglebutton {
         display: block;
         overflow: hidden;
         line-height: 18px;
-        color: $color-text;
+        color: $font-color;
         text-decoration: none;
         text-overflow: ellipsis;
         cursor: default;
@@ -491,7 +491,7 @@ table.data {
   width: 100%;
   padding: 0;
   margin: 0;
-  color: $color-text;
+  color: $font-color;
   border-collapse: $data-table-border-collapse;
   border-spacing: $data-table-border-spacing;
   empty-cells: show;
@@ -541,7 +541,7 @@ table.data {
     font-weight: 500;
     line-height: 1.3;
     letter-spacing: $letter-spacing-default;
-    color: $color-text;
+    color: $font-color;
     border: none;
 
     &.buttons {
@@ -677,7 +677,7 @@ table.data {
   }
 
   a {
-    color: $color-text;
+    color: $font-color;
     text-decoration: none;
 
     &:hover {
@@ -777,7 +777,7 @@ table.data {
 }
 
 table.data .popup_menu, body.main table.data .popup_menu {
-  color: $color-text;
+  color: $font-color;
 }
 
 /* Give each table's topmost row a top border */
@@ -841,7 +841,7 @@ tr.groupheader {
     padding: 0;
     margin: 0;
     font-weight: bold;
-    color: $color-text;
+    color: $font-color;
     background: transparent;
     border-style: none;
 
@@ -851,7 +851,7 @@ tr.groupheader {
       font-size: $theme-font-table-header;
       font-weight: $font-weight-default;
       letter-spacing: $letter-spacing-table;
-      color: $color-text;
+      color: $font-color;
       vertical-align: baseline;
 
       &.state {
@@ -870,7 +870,7 @@ tr.groupheader {
         font-size: $theme-font-table-header;
         font-weight: $font-weight-default;
         letter-spacing: $letter-spacing-table;
-        color: $color-text;
+        color: $font-color;
       }
 
       &.state a,
@@ -891,7 +891,7 @@ tr.groupheader {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    color: $color-text;
+    color: $font-color;
     text-decoration: none;
   }
 
@@ -997,7 +997,7 @@ input:not(.button), input[type=text], input[type=password],
 select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
   height: auto;
   padding: 3px 6px;
-  color: $color-text;
+  color: $font-color;
   background: $bg-color-default;
   background-image: none;
   border: 1px solid $color-table-border;
@@ -1310,7 +1310,7 @@ table.nform {
   }
 
   .title {
-    color: $color-text;
+    color: $font-color;
   }
 
   #view_p_options_tbl {
@@ -1519,7 +1519,7 @@ body.main .popup_menu span {
   display: block;
   padding-top: 1px;
   padding-bottom: 1px;
-  color: $color-text;
+  color: $font-color;
   text-align: left;
   text-decoration: none;
 
@@ -1662,7 +1662,7 @@ div.log_output, .crash_report pre {
   font-family: monospace;
   font-weight: $font-weight-default;
   color: $lightgrey;
-  background: $color-sidebar-background;
+  background: $navigation-bg-color;
   border: 1px solid $color-table-border-dark;
   border-radius: $theme-border-radius;
   box-shadow: none;

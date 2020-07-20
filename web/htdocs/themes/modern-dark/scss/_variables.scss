@@ -25,10 +25,10 @@ $yellow:        rgb(255, 215, 3); // yellow
 
 $lightgrey:     rgb(220, 220, 220); // light grey
 
-$color-text:                          $lightgrey;
+$font-color:                          $lightgrey;
 $color-background:                    $grey-5; // light grey
 
-$color-text-light:                    $lightgrey; // light grey
+$font-color-light:                    $lightgrey; // light grey
 
 
 // -----------------------------------------------------------------------------
@@ -55,10 +55,10 @@ $font-weight-bold:	  700;
 $letter-spacing-default:  .5px;
 $letter-spacing-table:    1px;
 
-$primary-font-color:			    $color-text;
-$secondary-font-color:			    $color-text;
+$primary-font-color:			    $font-color;
+$secondary-font-color:			    $font-color;
 $primary-hover-font-color:		    $grey-1;
-$primary-sidebar-font-color:		    $color-text;
+$primary-sidebar-font-color:		    $font-color;
 
 
 // -----------------------------------------------------------------------------
@@ -138,9 +138,6 @@ $theme-font-table-header:                   16px;
 // -----------------------------------------------------------------------------
 // Sidebar
 // -----------------------------------------------------------------------------
-$color-sidebar-background:            $grey-7; // dark grey
-$color-sidebar-border:                $grey-5;
-
 $theme-snapin-width:                        262px;
 
 
@@ -211,7 +208,7 @@ $toggle-switch-on-bg-color:		    rgb(20, 118, 20);
 $toggle-switch-on-border:		    1px solid rgb(40, 60, 40);
 $toggle-switch-off-bg-color:		    rgb(164, 0, 0);
 $toggle-switch-off-border:		    1px solid rgb(70, 40, 40);
-$toggle-switch-font-color:		    $color-text;
+$toggle-switch-font-color:		    $font-color;
 $toggle-switch-height:			    15px;
 $toggle-switch-font-weight:		    400;
 
@@ -247,7 +244,7 @@ $data-table-state-border-bottom:	    $secondary-table-border !important;
 
 $input-button-bg-color:			    $grey-3;
 $input-button-hover-bg-color:		    lighten($grey-3, 10%);
-$input-button-color:			    $color-text;
+$input-button-color:			    $font-color;
 
 $odd-tr-bg-color:			    $grey-7;
 $even-tr-bg-color:			    $grey-5;
@@ -257,7 +254,7 @@ $tr-data-border-bottom:			    1.8px solid $grey-7;
 $floatfilter-bg-color:			    null;
 
 $select2-border-color:			    $grey-7;
-$select2-rendered-color:		    $color-text;
+$select2-rendered-color:		    $font-color;
 $select2-selected-bg-color:		    $grey-5;
 $select2-highlighted-bg-color:		    rgb(93, 93, 93);
 
@@ -269,18 +266,15 @@ $td-unused-color:			    $grey-2;
 
 $color-div-box-shadow:			    null;
 
-$graph-legend-color:			    $color-text !important;
+$graph-legend-color:			    $font-color !important;
 
 $dark-font-color:			    $grey-7 !important;
 
 $body-dashlet-bg-color:			    $grey-6;
 $dashlet-bg-color:			    $grey-6;
 
-$tactical-overview-th-font-color:	    $color-text;
+$tactical-overview-th-font-color:	    $font-color;
 $tactical-overview-td-bg-color:		    $grey-3;
-
-$sidebar-iconbutton-bg-color:		    $grey-5;
-$sidebar-iconbutton-border-color:	    transparent;
 
 $table-header-border-bottom:		    1px solid $grey-5;
 
@@ -300,7 +294,7 @@ $tr-even3-bg-color:			    $grey-6;
 
 $graph-bg-color:			    $grey-6 !important;
 $graph-legend-th-border-bottom:		    1px solid $grey-1;
-$graph-time-color:			    $color-text;
+$graph-time-color:			    $font-color;
 
 $dashlet-stats-border-top-color:	    $grey-6;
 $dashlet-title-border-radius:		    0;
@@ -313,7 +307,7 @@ $wato-a-border:				    1px solid rgb(33, 33, 33);
 
 $wato-subtitle-color:			    $grey-2;
 
-$footnote-link-color:			    $color-text;
+$footnote-link-color:			    $font-color;
 
 $table-data-single-padding:		    2px 0;
 $td-single-left-border-right:		    null;
@@ -362,7 +356,7 @@ $repprogress-progress-border-color:	    rgb(111, 180, 198); // darkened nuance17
 $first-child-border-radius:		    $primary-border-radius;
 $last-child-border-radius:		    $primary-border-radius;
 
-$nform-table-hr-color:			    rgba(255, 255, 255, .1);
+$nform-table-hr-color:			    rgba($white, .1);
 
 $iconbutton-filter:			    invert(40%);
 
@@ -438,7 +432,7 @@ $node-vis-growth-root-color:		    $node-vis-darkgrey; // blue
 $topology-filter-bg-color:		    $grey-5;
 $topology-filter-border-color:		    $grey-7;
 
-$host-folder-font-color:		    $color-text;
+$host-folder-font-color:		    $font-color;
 
 $snapin-link-hover-color:		    $grey-1;
 
@@ -450,7 +444,7 @@ $foldertree-snapin-font-color:		    $primary-sidebar-font-color;
 $table-headerleft-border-bottom:	    1px solid $grey-5;
 
 $agent-config-inner-title-bg-color:	    $grey-5;
-$agent-config-td-color:			    $color-text;
+$agent-config-td-color:			    $font-color;
 
 $service-container-groupheader-bg-color:    $grey-6;
 
@@ -474,7 +468,7 @@ $timetable-hilite-even-bg-color:	    lighten($grey-5, 15%);
 $timetable-hilite-odd-bg-color:		    lighten($grey-7, 15%);
 
 $pnp-graph-img-border-color:		    rgb(240, 240, 240);
-$graph-hover-popup-font-color:		    $color-text;
+$graph-hover-popup-font-color:		    $font-color;
 $graph-hover-popup-bg-color:		    $grey-6;
 $graph-hover-popup-border:		    1px solid $grey-3;
 $graph-hover-popup-box-shadow:		    none;
@@ -503,21 +497,19 @@ $scatterdot-hilite-color:		    $yellow;
 
 /* NOTE: preliminary variables defined for the UX project mockups */
 
-$ux-light-grey: #38445d;
-$ux-grey: rgba(255, 255, 255, 0.5);
-$ux-dimmed-grey: rgba(255, 255, 255, 0.2);
-$ux-buttons: #353f4a;
-$ux-buttons-dark: #303944;
-$ux-sidebar-background: #172127;
-$ux-sidebar-snapin: #151c28;
-$ux-form-background: #353f4a;
-$ux-text-primary: #eaeaea;
-$ux-text-highlight: #fff;
-$ux-table-odd: #151c28;
-$ux-table-even: #1e262e;
-$ux-medium-blue: #262f38;
-$ux-filter-group-title-color:               $white;
-$ux-popup-filters-border-radius:            2px;
-$ux-popup-button-border:                    1px solid $grey-2;
-$ux-spacing: 10px;
-$mega-menu-min-height:                          339px
+$menubar-topic-title-font-color:            rgba($white, 0.5);
+$menubar-topic-title-border-color:          rgba($white, 0.2);
+$button-bg-color-default:                   rgb(53, 63, 74);
+$button-bg-color-secondary:                 rgb(48, 57, 68);
+$navigation-bg-color:                       rgb(23, 33, 39);
+$snapin-bg-color:                           $navigation-bg-color;
+$sidebar-border-color:                      rgb(56, 68, 93);
+$form-bg-color:                             $button-bg-color-default;
+$form-font-color:                           rgb(234, 234, 234);
+$font-color-highlight:                      $white;
+$medium-blue:                               rgb(38, 47, 56);
+$filter-group-title-font-color:             $white;
+$popup-filters-border-radius:               2px;
+$popup-button-border:                       1px solid $grey-2;
+$spacing:                                   10px;
+$mega-menu-min-height:                      339px

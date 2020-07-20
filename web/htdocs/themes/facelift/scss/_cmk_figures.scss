@@ -175,7 +175,7 @@ div.cmk_figure {
         }
 
         tr.scatterpoint + tr, tr.median + tr {
-          border-top: 1px solid $color-text;
+          border-top: 1px solid $font-color;
 
           td { padding-top: 4px; }
         }
@@ -214,7 +214,7 @@ div.cmk_figure {
     path.line { stroke-width: 2px; }
     path.mean_line { stroke: $dc-graph-color-1; }
     path.median_line { stroke: $dc-graph-color-2; }
-    path.pin { stroke: $color-text; }
+    path.pin { stroke: $font-color; }
     path.host.hilite { stroke: rgb(70, 130, 180); }
 
     circle.scatterdot {

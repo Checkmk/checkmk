@@ -110,8 +110,8 @@ input[type="checkbox"] {
     margin: -2px 4px 0 0;
     font-size: 12px;
     vertical-align: middle;
-    background-color: $ux-form-background;
-    border: 1px $ux-form-background solid;
+    background-color: $form-bg-color;
+    border: 1px $form-bg-color solid;
     content: "\00a0";
   }
 
@@ -430,8 +430,8 @@ div.really {
 }
 
 div.success {
-  background-color: $ux-buttons;
-  border: $ux-buttons;
+  background-color: $button-bg-color-default;
+  border: $button-bg-color-default;
 }
 
 div.message {
@@ -901,7 +901,7 @@ div.popup_trigger.colorpicker div.popup_menu {
 .cp-input {
   float: left;
   margin-top: 2px;
-  color: $color-text;
+  color: $font-color;
 
   input, select, textarea,
   div.snapin select, div.snapin & select,
@@ -1111,21 +1111,21 @@ table.modifydowntimes > tbody > tr {
   }
 
   .select2-dropdown {
-    background-color: $ux-buttons;
-    border: $ux-buttons;
+    background-color: $button-bg-color-default;
+    border: $button-bg-color-default;
   }
 
   .select2-results__option {
     color: $select2-rendered-color;
-    background-color: $ux-buttons;
+    background-color: $button-bg-color-default;
   }
 
   .select2-results__option[aria-selected=true] {
-    background-color: $ux-buttons;
+    background-color: $button-bg-color-default;
   }
 
   .select2-results__option--highlighted[aria-selected] {
-    background-color: $ux-buttons-dark;
+    background-color: $button-bg-color-secondary;
   }
 }
 
@@ -1194,7 +1194,7 @@ html {
   font-size: $font-size-default;
   font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-table;
-  color: $color-text;
+  color: $font-color;
   transition: color .15s ease-in-out;
 }
 
@@ -1308,7 +1308,7 @@ div.graph_with_timeranges {
       width: calc(100% - 16px);
       padding: 8px 0;
       font-weight: $font-weight-default;
-      color: $color-text;
+      color: $font-color;
       text-shadow: none;
       box-sizing: border-box;
     }
@@ -1373,7 +1373,7 @@ div.timerange {
 }
 
 body.main.visible div.foldable .title {
-  color: $color-text;
+  color: $font-color;
 }
 
 div.color {
@@ -1384,7 +1384,7 @@ div.color {
 
 /* TODO: Reproduce this element then get rid of important styles */
 th.header_state {
-  color: $color-text !important;
+  color: $font-color !important;
   background: transparent !important;
 
   &:hover {
@@ -1403,7 +1403,7 @@ div.info {
   font-size: $font-size-default;
   font-weight: 500;
   letter-spacing: $letter-spacing-default;
-  color: $color-text;
+  color: $font-color;
 }
 
 .age {
@@ -1422,7 +1422,7 @@ div.info {
 
 body.main a, body.main .popup_menu span, body.main .popup_menu a,
 body.main a:link, body.main a:visited {
-  color: $color-text;
+  color: $font-color;
 }
 
 img.glass {

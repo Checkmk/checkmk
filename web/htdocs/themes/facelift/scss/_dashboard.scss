@@ -208,7 +208,7 @@ table.dashlet_overview h2 {
 div.dashlet_inner div.stats table.hoststats a,
 div.dashlet_inner div.stats table.hoststats body.main .popup_menu span,
 body.main .popup_menu div.dashlet_inner div.stats table.hoststats span {
-  color: $color-text;
+  color: $font-color;
 }
 
 div.dashlet_inner div.stats {
@@ -323,7 +323,7 @@ iframe[id^=dashlet_iframe] {
   margin: 0;
   color: $lightgrey;
   list-style: none;
-  background-color: $color-sidebar-background;
+  background-color: $navigation-bg-color;
   border: 1px solid $color-table-border-dark;
   border-radius: $theme-border-radius;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
@@ -787,7 +787,7 @@ div.dashlet.single_metric {
 
 	&.state-fill-font, &.no-state-color {
 	  &, > a {
-	    fill: $color-text !important;
+	    fill: $font-color !important;
 	  }
 	}
 
@@ -845,7 +845,7 @@ div.dashlet.single_metric {
 
 	  &.state-color-font, &.no-state-color {
 	    &, > a {
-	      color: $color-text !important;
+	      color: $font-color !important;
 	      background-color: transparent !important;
 	    }
 	  }

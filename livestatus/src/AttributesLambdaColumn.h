@@ -42,9 +42,13 @@ public:
               // breaking anything. So here we make the "base" ctor happy with a
               // few more junk args.
               nullptr, AttributeKind::tags)
-        , get_value_{f} {}
-    virtual ~AttributesLambdaColumn() = default;
-    Attributes getValue(Row row) const override { return get_value_(row); }
+        , get_value_{std::move(f)} {}
+
+    ~AttributesLambdaColumn() override= default;
+
+    [[nodiscard]] Attributes getValue(Row row) const override {
+        return get_value_(row);
+    }
 
 private:
     std::function<Attributes(Row)> get_value_;

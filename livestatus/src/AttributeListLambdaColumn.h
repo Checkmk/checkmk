@@ -10,6 +10,7 @@
 
 #include <functional>
 #include <string>
+#include <utility>
 
 #include "AttributeListAsIntColumn.h"
 #include "ListColumn.h"
@@ -26,13 +27,15 @@ public:
     AttributeBitmaskLambdaColumn(std::string name, std::string description,
                                  std::function<int(Row)> f)
         : AttributeListAsIntColumn(std::move(name), std::move(description), {})
-        , get_value_{f} {}
-    virtual ~AttributeBitmaskLambdaColumn() = default;
+        , get_value_{std::move(f)} {}
+    ~AttributeBitmaskLambdaColumn() override = default;
     std::int32_t getValue(Row row,
                           const contact * /*auth_user*/) const override {
         return getValue(row);
     }
-    std::int32_t getValue(Row row) const { return get_value_(row); }
+    [[nodiscard]] std::int32_t getValue(Row row) const {
+        return get_value_(row);
+    }
 
 private:
     std::function<int(Row)> get_value_;
@@ -61,7 +64,7 @@ public:
         : ListColumn(std::move(name), std::move(description), {})
         , bitmask_col_{std::move(bitmask_col)} {}
 
-    std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override {
         return bitmask_col_.createFilter(kind, relOp, value);
@@ -71,7 +74,7 @@ public:
         std::chrono::seconds /*timezone_offset*/) const override {
         return getValue(row);
     }
-    std::vector<std::string> getValue(Row row) const {
+    [[nodiscard]] std::vector<std::string> getValue(Row row) const {
         std::vector<std::string> attrs;
         modified_attributes values(bitmask_col_.getValue(row));
         for (const auto &entry : known_attributes) {

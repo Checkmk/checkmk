@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ListColumn.h"
@@ -19,8 +20,8 @@ public:
     ListLambdaColumn(std::string name, std::string description,
                      std::function<std::vector<std::string>(Row)> f)
         : ListColumn(std::move(name), std::move(description), {})
-        , get_value_{f} {}
-    virtual ~ListLambdaColumn() = default;
+        , get_value_{std::move(f)} {}
+    ~ListLambdaColumn() override = default;
 
     std::vector<std::string> getValue(
         Row row, const contact* /*auth_user*/,

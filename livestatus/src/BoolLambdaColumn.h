@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <string>
+#include <utility>
 
 #include "IntColumn.h"
 #include "contact_fwd.h"
@@ -18,8 +19,8 @@ public:
     BoolLambdaColumn(std::string name, std::string description,
                      std::function<bool(Row)> f)
         : IntColumn(std::move(name), std::move(description), {})
-        , get_value_{f} {}
-    virtual ~BoolLambdaColumn() = default;
+        , get_value_{std::move(f)} {}
+    ~BoolLambdaColumn() override = default;
 
     std::int32_t getValue(Row row,
                           const contact* /*auth_user*/) const override {

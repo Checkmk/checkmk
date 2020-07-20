@@ -10,6 +10,7 @@
 
 #include <functional>
 #include <string>
+#include <utility>
 
 #include "StringColumn.h"
 class Row;
@@ -21,9 +22,13 @@ public:
     StringLambdaColumn(std::string name, std::string description,
                        std::function<std::string(Row)> gv)
         : StringColumn(std::move(name), std::move(description), {})
-        , get_value_(gv) {}
-    virtual ~StringLambdaColumn() = default;
-    std::string getValue(Row row) const override { return get_value_(row); }
+        , get_value_(std::move(gv)) {}
+
+    ~StringLambdaColumn() override = default;
+
+    [[nodiscard]] std::string getValue(Row row) const override {
+        return get_value_(row);
+    }
 
 private:
     std::function<std::string(Row)> get_value_;

@@ -110,7 +110,7 @@ def test_reverse_translation_metric_name(canonical_name, perf_data_names):
 @pytest.mark.parametrize(
     "metric_names, check_command, graph_ids",
     [
-        ([u'user', u'system', u'wait', u'util'], 'check_mk-kernel.util', ['cpu_utilization_5_util'
+        ([u'user', u'system', u'wait', u'util'], 'check_mk-kernel_util', ['cpu_utilization_5_util'
                                                                          ]),
         ([u'util1', u'util15'], None, ['util_average_2']),
         ([u'util'], None, ['util_fallback']),
@@ -120,8 +120,8 @@ def test_reverse_translation_metric_name(canonical_name, perf_data_names):
         ([u'util', u'util_average'], None, ['util_average_1']),
         ([u'user', u'util_numcpu_as_max'], None, ['cpu_utilization_numcpus']),
         ([u'user', u'util'], None, ['util_fallback', 'METRIC_user']),  # METRIC_user has no recipe
-        ([u'util'], 'check_mk-netapp_api_cpu.utilization', ['cpu_utilization_numcpus']),
-        ([u'user', u'util'], 'check_mk-winperf_processor.util', ['cpu_utilization_numcpus']),
+        ([u'util'], 'check_mk-netapp_api_cpu_utilization', ['cpu_utilization_numcpus']),
+        ([u'user', u'util'], 'check_mk-winperf_processor_util', ['cpu_utilization_numcpus']),
         ([u'user', u'system', u'idle', u'nice'], None, ['cpu_utilization_3']),
         ([u'user', u'system', u'idle', u'io_wait'], None, ['cpu_utilization_4']),
         ([u'user', u'system', u'io_wait'], None, ['cpu_utilization_5']),
@@ -129,7 +129,7 @@ def test_reverse_translation_metric_name(canonical_name, perf_data_names):
          ], 'check_mk-statgrab_cpu', ['cpu_utilization_7']),
         ([u'user', u'system', u'interrupt'], None, ['cpu_utilization_8']),
         ([u'user', u'system', u'wait', u'util', u'cpu_entitlement', u'cpu_entitlement_util'
-         ], 'check_mk-lparstat_aix.cpu_util', ['cpu_utilization_5_util', 'cpu_entitlement']),
+         ], 'check_mk-lparstat_aix_cpu_util', ['cpu_utilization_5_util', 'cpu_entitlement']),
         ([u'ramused', u'swapused', u'memused'], 'check_mk-statgrab_mem', ['ram_swap_used']),
         ([
             u'aws_ec2_running_ondemand_instances_total',

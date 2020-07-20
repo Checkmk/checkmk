@@ -133,7 +133,7 @@ check_metrics["check-mk-host-tcp"] = {
     },
 }
 for check in [
-        'winperf_processor.util', 'docker_container_cpu', 'hr_cpu', 'bintec_cpu',
+        'winperf_processor_util', 'docker_container_cpu', 'hr_cpu', 'bintec_cpu',
         'esx_vsphere_hostsystem'
 ]:
     check_metrics["check_mk-%s" % check] = {
@@ -141,9 +141,9 @@ for check in [
             "name": "util_average"
         },
     }
-check_metrics["check_mk-winperf_processor.util"].update({"util": {"name": "util_numcpu_as_max"}})
+check_metrics["check_mk-winperf_processor_util"].update({"util": {"name": "util_numcpu_as_max"}})
 check_metrics["check_mk-netapp_api_cpu"] = {"util": {"name": "util_numcpu_as_max"}}
-check_metrics["check_mk-netapp_api_cpu.utilization"] = {"util": {"name": "util_numcpu_as_max"}}
+check_metrics["check_mk-netapp_api_cpu_utilization"] = {"util": {"name": "util_numcpu_as_max"}}
 check_metrics["check_mk-citrix_serverload"] = {
     "perf": {
         "name": "citrix_load",
@@ -174,7 +174,7 @@ check_metrics["check_mk-postfix_mailq"] = {
         "name": "mail_queue_active_length"
     },
 }
-check_metrics["check_mk-jolokia_metrics.gc"] = {
+check_metrics["check_mk-jolokia_metrics_gc"] = {
     "CollectionCount": {
         "name": "jvm_garbage_collection_count",
         "scale": 1 / 60.0,
@@ -210,7 +210,7 @@ check_metrics["check_mk-rmon_stats"] = {
         "name": "rmon_packets_1518"
     },
 }
-check_metrics["check_mk-cpu.loads"] = {
+check_metrics["check_mk-cpu_loads"] = {
     "load5": {
         "auto_graph": False
     },
@@ -253,7 +253,7 @@ check_metrics["check_mk-statgrab_disk"] = {
         "name": "disk_write_throughput"
     }
 }
-check_metrics["check_mk-ibm_svc_systemstats.diskio"] = {
+check_metrics["check_mk-ibm_svc_systemstats_diskio"] = {
     "read": {
         "name": "disk_read_throughput"
     },
@@ -261,7 +261,7 @@ check_metrics["check_mk-ibm_svc_systemstats.diskio"] = {
         "name": "disk_write_throughput"
     }
 }
-check_metrics["check_mk-ibm_svc_nodestats.diskio"] = {
+check_metrics["check_mk-ibm_svc_nodestats_diskio"] = {
     "read": {
         "name": "disk_read_throughput"
     },
@@ -333,8 +333,8 @@ check_metrics["check_mk-solaris_mem"] = ram_used_swap_translation
 check_metrics["check_mk-docker_container_mem"] = ram_used_swap_translation
 check_metrics["check_mk-emc_ecs_mem"] = ram_used_swap_translation
 check_metrics["check_mk-aix_memory"] = ram_used_swap_translation
-check_metrics["check_mk-mem.used"] = ram_used_swap_translation
-check_metrics["check_mk-esx_vsphere_vm.mem_usage"] = {
+check_metrics["check_mk-mem_used"] = ram_used_swap_translation
+check_metrics["check_mk-esx_vsphere_vm_mem_usage"] = {
     "host": {
         "name": "mem_esx_host"
     },
@@ -351,7 +351,7 @@ check_metrics["check_mk-esx_vsphere_vm.mem_usage"] = {
         "name": "mem_esx_private"
     },
 }
-check_metrics["check_mk-ibm_svc_nodestats.disk_latency"] = {
+check_metrics["check_mk-ibm_svc_nodestats_disk_latency"] = {
     "read_latency": {
         "scale": m
     },
@@ -359,7 +359,7 @@ check_metrics["check_mk-ibm_svc_nodestats.disk_latency"] = {
         "scale": m
     },
 }
-check_metrics["check_mk-ibm_svc_systemstats.disk_latency"] = {
+check_metrics["check_mk-ibm_svc_systemstats_disk_latency"] = {
     "read_latency": {
         "scale": m
     },
@@ -367,7 +367,7 @@ check_metrics["check_mk-ibm_svc_systemstats.disk_latency"] = {
         "scale": m
     },
 }
-check_metrics["check_mk-netapp_api_disk.summary"] = {
+check_metrics["check_mk-netapp_api_disk_summary"] = {
     "total_disk_capacity": {
         "name": "disk_capacity"
     },
@@ -380,7 +380,7 @@ check_metrics["check_mk-emc_isilon_iops"] = {
         "name": "disk_ios"
     },
 }
-check_metrics["check_mk-vms_system.ios"] = {
+check_metrics["check_mk-vms_system_ios"] = {
     "direct": {
         "name": "direct_io"
     },
@@ -414,12 +414,12 @@ check_metrics["check_mk-oracle_recovery_area"] = {
         "scale": MB
     },
 }
-check_metrics["check_mk-vms_system.procs"] = {
+check_metrics["check_mk-vms_system_procs"] = {
     "procs": {
         "name": "processes"
     },
 }
-check_metrics["check_mk-jolokia_metrics.tp"] = {
+check_metrics["check_mk-jolokia_metrics_tp"] = {
     "currentThreadCount": {
         "name": "threads_idle"
     },
@@ -427,7 +427,7 @@ check_metrics["check_mk-jolokia_metrics.tp"] = {
         "name": "threads_busy"
     },
 }
-check_metrics["check_mk-mem.win"] = {
+check_metrics["check_mk-mem_win"] = {
     "memory": {
         "name": "mem_used",
         "scale": MB,
@@ -452,13 +452,13 @@ check_metrics["check_mk-mem.win"] = {
         "scale": MB
     },
 }
-check_metrics["check_mk-brocade_mlx.module_mem"] = {
+check_metrics["check_mk-brocade_mlx_module_mem"] = {
     "memused": {
         "name": "mem_used",
         "deprecated": "1.7.0i1",
     },
 }
-check_metrics["check_mk-jolokia_metrics.mem"] = {
+check_metrics["check_mk-jolokia_metrics_mem"] = {
     "heap": {
         "name": "mem_heap",
         "scale": MB
@@ -468,7 +468,7 @@ check_metrics["check_mk-jolokia_metrics.mem"] = {
         "scale": MB
     }
 }
-check_metrics["check_mk-jolokia_metrics.threads"] = {
+check_metrics["check_mk-jolokia_metrics_threads"] = {
     "ThreadRate": {
         "name": "threads_rate"
     },
@@ -485,7 +485,7 @@ check_metrics["check_mk-jolokia_metrics.threads"] = {
         "name": "threads_total"
     },
 }
-check_metrics["check_mk-mem.linux"] = {
+check_metrics["check_mk-mem_linux"] = {
     "cached": {
         "name": "mem_lnx_cached",
     },
@@ -629,7 +629,7 @@ check_metrics["check_mk-mem.linux"] = {
         "auto_graph": False
     },
 }
-check_metrics["check_mk-mem.vmalloc"] = {
+check_metrics["check_mk-mem_vmalloc"] = {
     "used": {
         "name": "mem_lnx_vmalloc_used"
     },
@@ -732,38 +732,38 @@ check_metrics["check_mk-df"] = df_translation
 check_metrics["check_mk-esx_vsphere_datastores"] = df_translation
 check_metrics["check_mk-netapp_api_aggr"] = df_translation
 check_metrics["check_mk-vms_df"] = df_translation
-check_metrics["check_mk-vms_diskstat.df"] = df_translation
+check_metrics["check_mk-vms_diskstat_df"] = df_translation
 check_metrics["check_disk"] = df_translation
 check_metrics["check_mk-df_netapp"] = df_translation
 check_metrics["check_mk-df_netapp32"] = df_translation
 check_metrics["check_mk-zfsget"] = df_translation
 check_metrics["check_mk-hr_fs"] = df_translation
 check_metrics["check_mk-oracle_asm_diskgroup"] = df_translation
-check_metrics["check_mk-esx_vsphere_counters.ramdisk"] = df_translation
+check_metrics["check_mk-esx_vsphere_counters_ramdisk"] = df_translation
 check_metrics["check_mk-hitachi_hnas_span"] = df_translation
 check_metrics["check_mk-hitachi_hnas_volume"] = df_translation
-check_metrics["check_mk-hitachi_hnas_volume.virtual"] = df_translation
-check_metrics["check_mk-emcvnx_raidgroups.capacity"] = df_translation
-check_metrics["check_mk-emcvnx_raidgroups.capacity_contiguous"] = df_translation
+check_metrics["check_mk-hitachi_hnas_volume_virtual"] = df_translation
+check_metrics["check_mk-emcvnx_raidgroups_capacity"] = df_translation
+check_metrics["check_mk-emcvnx_raidgroups_capacity_contiguous"] = df_translation
 check_metrics["check_mk-ibm_svc_mdiskgrp"] = df_translation
-check_metrics["check_mk-fast_lta_silent_cubes.capacity"] = df_translation
+check_metrics["check_mk-fast_lta_silent_cubes_capacity"] = df_translation
 check_metrics["check_mk-fast_lta_volumes"] = df_translation
-check_metrics["check_mk-libelle_business_shadow.archive_dir"] = df_translation
+check_metrics["check_mk-libelle_business_shadow_archive_dir"] = df_translation
 check_metrics["check_mk-netapp_api_luns"] = df_translation
 check_metrics["check_mk-netapp_api_qtree_quota"] = df_translation
 check_metrics["check_mk-emc_datadomain_fs"] = df_translation
 check_metrics["check_mk-emc_isilon_quota"] = df_translation
 check_metrics["check_mk-emc_isilon_ifs"] = df_translation
-check_metrics["check_mk-3par_cpgs.usage"] = df_translation
+check_metrics["check_mk-3par_cpgs_usage"] = df_translation
 check_metrics["check_mk-3par_capacity"] = df_translation
 check_metrics["check_mk-3par_volumes"] = df_translation
-check_metrics["check_mk-storeonce_clusterinfo.space"] = df_translation
-check_metrics["check_mk-storeonce_servicesets.capacity"] = df_translation
-check_metrics["check_mk-storeonce4x_appliances.storage"] = df_translation
+check_metrics["check_mk-storeonce_clusterinfo_space"] = df_translation
+check_metrics["check_mk-storeonce_servicesets_capacity"] = df_translation
+check_metrics["check_mk-storeonce4x_appliances_storage"] = df_translation
 check_metrics["check_mk-numble_volumes"] = df_translation
 check_metrics["check_mk-zpool"] = df_translation
 check_metrics["check_mk-vnx_quotas"] = df_translation
-check_metrics["check_mk-k8s_stats.fs"] = df_translation
+check_metrics["check_mk-k8s_stats_fs"] = df_translation
 check_metrics["check_mk-fjdarye200_pools"] = df_translation
 check_metrics["check_mk-netapp_api_volumes"] = {
     "fs_used": {
@@ -846,14 +846,14 @@ disk_utilization_translation = {
 check_metrics["check_mk-diskstat"] = disk_utilization_translation
 check_metrics["check_mk-emc_vplex_director_stats"] = disk_utilization_translation
 check_metrics["check_mk-emc_vplex_volumes"] = disk_utilization_translation
-check_metrics["check_mk-esx_vsphere_counters.diskio"] = disk_utilization_translation
-check_metrics["check_mk-hp_msa_controller.io"] = disk_utilization_translation
-check_metrics["check_mk-hp_msa_disk.io"] = disk_utilization_translation
-check_metrics["check_mk-hp_msa_volume.io"] = disk_utilization_translation
+check_metrics["check_mk-esx_vsphere_counters_diskio"] = disk_utilization_translation
+check_metrics["check_mk-hp_msa_controller_io"] = disk_utilization_translation
+check_metrics["check_mk-hp_msa_disk_io"] = disk_utilization_translation
+check_metrics["check_mk-hp_msa_volume_io"] = disk_utilization_translation
 check_metrics["check_mk-winperf_phydisk"] = disk_utilization_translation
-check_metrics["check_mk-arbor_peakflow_sp.disk_usage"] = disk_utilization_translation
-check_metrics["check_mk-arbor_peakflow_tms.disk_usage"] = disk_utilization_translation
-check_metrics["check_mk-arbor_pravail.disk_usage"] = disk_utilization_translation
+check_metrics["check_mk-arbor_peakflow_sp_disk_usage"] = disk_utilization_translation
+check_metrics["check_mk-arbor_peakflow_tms_disk_usage"] = disk_utilization_translation
+check_metrics["check_mk-arbor_pravail_disk_usage"] = disk_utilization_translation
 # in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
 if_translation = {
     "in": {
@@ -902,9 +902,9 @@ if_translation = {
     },
 }
 check_metrics["check_mk-esx_vsphere_counters"] = if_translation
-check_metrics["check_mk-esx_vsphere_counters.if"] = if_translation
+check_metrics["check_mk-esx_vsphere_counters_if"] = if_translation
 check_metrics["check_mk-fritz"] = if_translation
-check_metrics["check_mk-fritz.wan_if"] = if_translation
+check_metrics["check_mk-fritz_wan_if"] = if_translation
 check_metrics["check_mk-hitachi_hnas_fc_if"] = if_translation
 check_metrics["check_mk-if64"] = if_translation
 check_metrics["check_mk-if64adm"] = if_translation
@@ -925,9 +925,9 @@ check_metrics["check_mk-emc_vplex_if"] = if_translation
 check_metrics["check_mk-huawei_osn_if"] = if_translation
 check_metrics["check_mk-if_fortigate"] = if_translation
 check_metrics["check_mk-aix_if"] = if_translation
-check_metrics["check_mk-k8s_stats.network"] = if_translation
-check_metrics["check_mk-aws_ec2.network_io"] = if_translation
-check_metrics["check_mk-aws_rds.network_io"] = if_translation
+check_metrics["check_mk-k8s_stats_network"] = if_translation
+check_metrics["check_mk-aws_ec2_network_io"] = if_translation
+check_metrics["check_mk-aws_rds_network_io"] = if_translation
 check_metrics["check_mk-brocade_fcport"] = {
     "in": {
         "name": "fc_rx_bytes",
@@ -1036,7 +1036,7 @@ check_metrics["check_mk-qlogic_fcport"] = {
         "name": "fc_c2_frjt_frames"
     },
 }
-check_metrics["check_mk-mysql.innodb_io"] = {
+check_metrics["check_mk-mysql_innodb_io"] = {
     "read": {
         "name": "disk_read_throughput"
     },
@@ -1044,7 +1044,7 @@ check_metrics["check_mk-mysql.innodb_io"] = {
         "name": "disk_write_throughput"
     }
 }
-check_metrics["check_mk-esx_vsphere_counters.diskio"] = {
+check_metrics["check_mk-esx_vsphere_counters_diskio"] = {
     "read": {
         "name": "disk_read_throughput"
     },
@@ -1091,7 +1091,7 @@ check_metrics["check_mk-aix_diskiod"] = {
         "scale": 100.0
     },
 }
-check_metrics["check_mk-ibm_svc_systemstats.iops"] = {
+check_metrics["check_mk-ibm_svc_systemstats_iops"] = {
     "read": {
         "name": "disk_read_ios"
     },
@@ -1099,7 +1099,7 @@ check_metrics["check_mk-ibm_svc_systemstats.iops"] = {
         "name": "disk_write_ios"
     }
 }
-check_metrics["check_mk-docker_node_info.containers"] = {
+check_metrics["check_mk-docker_node_info_containers"] = {
     "containers": {
         "name": "docker_all_containers"
     },
@@ -1152,12 +1152,12 @@ check_metrics["check_mk-ipmi"] = {
         "name": "temp"
     },
 }
-check_metrics["check_mk-wagner_titanus_topsense.airflow_deviation"] = {
+check_metrics["check_mk-wagner_titanus_topsense_airflow_deviation"] = {
     "airflow_deviation": {
         "name": "deviation_airflow"
     }
 }
-check_metrics["check_mk-wagner_titanus_topsense.chamber_deviation"] = {
+check_metrics["check_mk-wagner_titanus_topsense_chamber_deviation"] = {
     "chamber_deviation": {
         "name": "deviation_calibration_point"
     }
@@ -1180,12 +1180,12 @@ check_metrics["check_mk-apc_symmetra"] = {
         "scale": 60
     },
 }
-check_metrics["check_mk-apc_symmetra.temp"] = {
+check_metrics["check_mk-apc_symmetra_temp"] = {
     "systemp": {
         "name": "battery_temp"
     },
 }
-check_metrics["check_mk-apc_symmetra.elphase"] = {
+check_metrics["check_mk-apc_symmetra_elphase"] = {
     "OutputLoad": {
         "name": "output_load"
     },
@@ -1204,11 +1204,11 @@ cpu_util_unix_translate = {
         "name": "cpu_util_steal"
     },
 }
-check_metrics["check_mk-kernel.util"] = cpu_util_unix_translate
+check_metrics["check_mk-kernel_util"] = cpu_util_unix_translate
 check_metrics["check_mk-statgrab_cpu"] = cpu_util_unix_translate
 check_metrics["check_mk-lxc_container_cpu"] = cpu_util_unix_translate
 check_metrics["check_mk-emc_ecs_cpu_util"] = cpu_util_unix_translate
-check_metrics["check_mk-lparstat_aix.cpu_util"] = {
+check_metrics["check_mk-lparstat_aix_cpu_util"] = {
     "wait": {
         "name": "io_wait"
     },
@@ -1223,12 +1223,12 @@ check_metrics["check_mk-vms_cpu"] = {
         "name": "io_wait"
     },
 }
-check_metrics["check_mk-vms_sys.util"] = {
+check_metrics["check_mk-vms_sys_util"] = {
     "wait": {
         "name": "io_wait"
     },
 }
-check_metrics["check_mk-winperf.cpuusage"] = {
+check_metrics["check_mk-winperf_cpuusage"] = {
     "cpuusage": {
         "name": "util"
     },
@@ -1238,7 +1238,7 @@ check_metrics["check_mk-h3c_lanswitch_cpu"] = {
         "name": "util"
     },
 }
-check_metrics["check_mk-brocade_mlx.module_cpu"] = {
+check_metrics["check_mk-brocade_mlx_module_cpu"] = {
     "cpu_util1": {
         "name": "util1s"
     },
@@ -1263,7 +1263,7 @@ check_metrics["check_mk-dell_powerconnect_cpu"] = {
         "name": "util5"
     },
 }
-check_metrics["check_mk-ibm_svc_nodestats.cache"] = {
+check_metrics["check_mk-ibm_svc_nodestats_cache"] = {
     "write_cache_pc": {
         "name": "write_cache_usage"
     },
@@ -1271,7 +1271,7 @@ check_metrics["check_mk-ibm_svc_nodestats.cache"] = {
         "name": "total_cache_usage"
     }
 }
-check_metrics["check_mk-ibm_svc_systemstats.cache"] = {
+check_metrics["check_mk-ibm_svc_systemstats_cache"] = {
     "write_cache_pc": {
         "name": "write_cache_usage"
     },
@@ -1288,8 +1288,8 @@ mem_vsphere_hostsystem = {
         "auto_graph": False
     },
 }
-check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage"] = mem_vsphere_hostsystem
-check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage_cluster"] = mem_vsphere_hostsystem
+check_metrics["check_mk-esx_vsphere_hostsystem_mem_usage"] = mem_vsphere_hostsystem
+check_metrics["check_mk-esx_vsphere_hostsystem_mem_usage_cluster"] = mem_vsphere_hostsystem
 check_metrics["check_mk-ibm_svc_host"] = {
     "active": {
         "name": "hosts_active"
@@ -1315,7 +1315,7 @@ juniper_mem = {
 }
 check_metrics["check_mk-juniper_screenos_mem"] = juniper_mem
 check_metrics["check_mk-juniper_trpz_mem"] = juniper_mem
-check_metrics["check_mk-ibm_svc_nodestats.iops"] = {
+check_metrics["check_mk-ibm_svc_nodestats_iops"] = {
     "read": {
         "name": "disk_read_ios"
     },
@@ -1379,7 +1379,7 @@ check_metrics["check_mk-chrony"] = {
         "scale": m
     },
 }
-check_metrics["check_mk-ntp.time"] = {
+check_metrics["check_mk-ntp_time"] = {
     "offset": {
         "name": "time_offset",
         "scale": m
@@ -1396,7 +1396,7 @@ check_metrics["check_mk-adva_fsp_if"] = {
         "name": "input_signal_power_dbm"
     }
 }
-check_metrics["check_mk-allnet_ip_sensoric.tension"] = {
+check_metrics["check_mk-allnet_ip_sensoric_tension"] = {
     "tension": {
         "name": "voltage_percent"
     },
@@ -1562,7 +1562,7 @@ check_metrics["check_mk-zfs_arc_cache"] = {
         "name": "zfs_metadata_max",
     },
 }
-check_metrics["check_mk-zfs_arc_cache.l2"] = {
+check_metrics["check_mk-zfs_arc_cache_l2"] = {
     "l2_size": {
         "name": "zfs_l2_size"
     },
@@ -1583,7 +1583,7 @@ check_metrics["check_mk-fileinfo"] = {
         "name": "file_size"
     },
 }
-check_metrics["check_mk-fileinfo.groups"] = {
+check_metrics["check_mk-fileinfo_groups"] = {
     "size": {
         "name": "total_file_size"
     },
@@ -1603,7 +1603,7 @@ check_metrics["check_mk-fileinfo.groups"] = {
         "name": "file_age_newest"
     },
 }
-check_metrics["check_mk-postgres_stat_database.size"] = {
+check_metrics["check_mk-postgres_stat_database_size"] = {
     "size": {
         "name": "database_size"
     },
@@ -1836,17 +1836,17 @@ check_metrics["check_mk-tsm_storagepools"] = {
         "name": "used_space"
     },
 }
-check_metrics["check_mk-hpux_tunables.shmseg"] = {
+check_metrics["check_mk-hpux_tunables_shmseg"] = {
     "segments": {
         "name": "shared_memory_segments"
     },
 }
-check_metrics["check_mk-hpux_tunables.semmns"] = {
+check_metrics["check_mk-hpux_tunables_semmns"] = {
     "entries": {
         "name": "semaphores"
     },
 }
-check_metrics["check_mk-hpux_tunables.maxfiles_lim"] = {
+check_metrics["check_mk-hpux_tunables_maxfiles_lim"] = {
     "files": {
         "name": "files_open"
     },
@@ -1878,7 +1878,7 @@ check_metrics["check_mk-netapp_fcpio"] = {
         "name": "disk_write_throughput"
     },
 }
-check_metrics["check_mk-netapp_api_vf_stats.traffic"] = {
+check_metrics["check_mk-netapp_api_vf_stats_traffic"] = {
     "read_bytes": {
         "name": "disk_read_throughput"
     },
@@ -1922,7 +1922,7 @@ ps_translation = {
         "name": "util_average"
     },
 }
-check_metrics["check_mk-smart.stats"] = {
+check_metrics["check_mk-smart_stats"] = {
     "Power_On_Hours": {
         "name": "uptime",
         "scale": 3600
@@ -1986,8 +1986,8 @@ check_metrics["check_mk-smart.stats"] = {
     },
 }
 check_metrics["check_mk-ps"] = ps_translation
-check_metrics["check_mk-ps.perf"] = ps_translation
-check_metrics["check_mk-mssql_counters.sqlstats"] = {
+check_metrics["check_mk-ps_perf"] = ps_translation
+check_metrics["check_mk-mssql_counters_sqlstats"] = {
     "batch_requests/sec": {
         "name": "requests_per_second"
     },
@@ -1998,7 +1998,7 @@ check_metrics["check_mk-mssql_counters.sqlstats"] = {
         "name": "requests_per_second"
     },
 }
-check_metrics["check_mk-mssql_counters.file_sizes"] = {
+check_metrics["check_mk-mssql_counters_file_sizes"] = {
     "log_files": {
         "name": "log_files_total"
     },
@@ -2034,7 +2034,7 @@ check_metrics["check_mk-cisco_asa_svcsessions"] = {
     },
 }
 
-for check_name in ["aws_elb.http_elb", "aws_elb.http_backend", "aws_elbv2_application.http_elb"]:
+for check_name in ["aws_elb_http_elb", "aws_elb_http_backend", "aws_elbv2_application_http_elb"]:
     check_metrics["check_mk-%s" % check_name] = {
         "http_4xx_rate": {
             "name": "aws_http_4xx_rate"
@@ -2049,12 +2049,12 @@ for check_name in ["aws_elb.http_elb", "aws_elb.http_backend", "aws_elbv2_applic
             "name": "aws_http_5xx_perc"
         },
     }
-check_metrics["check_mk-aws_elb.backend_connection_errors"] = {
+check_metrics["check_mk-aws_elb_backend_connection_errors"] = {
     "backend_connection_errors_rate": {
         "name": "aws_backend_connection_errors_rate"
     },
 }
-check_metrics["check_mk-aws_elbv2_application.connections"] = {
+check_metrics["check_mk-aws_elbv2_application_connections"] = {
     "aws_Active_connections": {
         "name": "aws_active_connections"
     },
@@ -2068,7 +2068,7 @@ check_metrics["check_mk-aws_elbv2_application.connections"] = {
         "name": "aws_client_tls_errors"
     },
 }
-check_metrics["check_mk-aws_s3_requests.http_errors"] = {
+check_metrics["check_mk-aws_s3_requests_http_errors"] = {
     "http_4xx_rate": {
         "name": "aws_http_4xx_rate"
     },

@@ -990,28 +990,34 @@ class AutomationGetCheckInformation(Automation):
     def execute(self, args: List[str]) -> Dict[CheckPluginNameStr, Dict[str, Any]]:
         manuals = man_pages.all_man_pages()
 
-        check_infos: Dict[CheckPluginNameStr, Dict[str, Any]] = {}
-        for check_plugin_name, check in config.check_info.items():
+        plugin_infos: Dict[CheckPluginNameStr, Dict[str, Any]] = {}
+        for plugin in config.registered_check_plugins.values():
+            plugin_info = plugin_infos.setdefault(
+                str(plugin.name), {
+                    "title": self._get_title(manuals, plugin),
+                    "name": str(plugin.name),
+                    "service_description": str(plugin.service_name),
+                })
+            if plugin.check_ruleset_name:
+                plugin_info["check_ruleset_name"] = str(plugin.check_ruleset_name)
+                # TODO: keept for compatibility. See if we can drop this.
+                plugin_info["group"] = str(plugin.check_ruleset_name)
+            if plugin.discovery_ruleset_name:
+                plugin_info["discovery_ruleset_name"] = str(plugin.discovery_ruleset_name)
+
+        return plugin_infos
+
+    @staticmethod
+    def _get_title(manuals, plugin) -> str:
+        manfile = manuals.get(str(plugin.name))
+        if manfile:
             try:
-                manfile = manuals.get(check_plugin_name)
-                if manfile:
-                    title = cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
-                else:
-                    title = ensure_str(check_plugin_name)
-
-                check_infos[check_plugin_name] = {"title": title}
-
-                if check["group"]:
-                    check_infos[check_plugin_name]["group"] = check["group"]
-
-                check_infos[check_plugin_name]["service_description"] = check.get(
-                    "service_description", "%s")
+                return cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
             except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise
-                raise MKAutomationError("Failed to parse man page '%s': %s" %
-                                        (check_plugin_name, e))
-        return check_infos
+                raise MKAutomationError("Failed to parse man page '%s': %s" % (plugin.name, e))
+        return str(plugin.name)
 
 
 automations.register(AutomationGetCheckInformation())

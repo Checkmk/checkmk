@@ -71,16 +71,22 @@ int32_t AttributeListAsIntColumn::getValue(
     return 0;
 }
 
-std::vector<std::string> AttributeListAsIntColumn::getAttributes(
-    Row row) const {
+// static
+std::vector<std::string> AttributeListAsIntColumn::decode(unsigned long mask) {
     std::vector<std::string> attributes;
-    if (const auto *p = columnData<unsigned long>(row)) {
-        modified_atttibutes values(*p);
-        for (const auto &entry : known_attributes) {
-            if (values[entry.second]) {
-                attributes.push_back(entry.first);
-            }
+    modified_atttibutes values(mask);
+    for (const auto &entry : known_attributes) {
+        if (values[entry.second]) {
+            attributes.push_back(entry.first);
         }
     }
     return attributes;
+}
+
+std::vector<std::string> AttributeListAsIntColumn::getAttributes(
+    Row row) const {
+    if (const auto *p = columnData<unsigned long>(row)) {
+        return decode(*p);
+    }
+    return {};
 }

@@ -44,7 +44,7 @@ public:
               nullptr, AttributeKind::tags)
         , get_value_{std::move(f)} {}
 
-    ~AttributesLambdaColumn() override= default;
+    ~AttributesLambdaColumn() override = default;
 
     [[nodiscard]] Attributes getValue(Row row) const override {
         return get_value_(row);

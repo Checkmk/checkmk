@@ -30,6 +30,8 @@ public:
     int32_t getValue(Row row, const contact *auth_user) const override;
 
     [[nodiscard]] std::vector<std::string> getAttributes(Row row) const;
+
+    static std::vector<std::string> decode(unsigned long mask);
 };
 
 #endif  // AttributeListAsIntColumn_h

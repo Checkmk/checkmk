@@ -66,9 +66,9 @@ from cmk.base.plugins.agent_based.utils import diskstat
         ),
     ],
 )
-def test_inventory_diskstat_generic(params, exp_res):
+def test_discovery_diskstat_generic(params, exp_res):
     assert list(
-        diskstat.inventory_diskstat_generic(
+        diskstat.discovery_diskstat_generic(
             params,
             {
                 'disk1': {},

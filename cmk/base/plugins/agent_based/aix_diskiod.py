@@ -134,7 +134,7 @@ register.check_plugin(
     discovery_ruleset_type="all",
     discovery_default_parameters={'summary': True},
     discovery_ruleset_name="diskstat_inventory",
-    discovery_function=diskstat.inventory_diskstat_generic,
+    discovery_function=diskstat.discovery_diskstat_generic,
     check_ruleset_name="diskstat",
     check_default_parameters={},
     check_function=check_aix_diskiod,

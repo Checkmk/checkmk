@@ -7,7 +7,7 @@
 from collections import defaultdict
 import re
 import time
-from typing import DefaultDict, Generator, Iterable, Mapping, Optional, Tuple, Union
+from typing import DefaultDict, Generator, Iterable, Mapping, Optional, Sequence, Tuple, Union
 from ..agent_based_api.v0 import (
     check_levels,
     get_average,
@@ -24,8 +24,8 @@ Section = Mapping[str, Disk]
 DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
 
 
-def inventory_diskstat_generic(
-    params: type_defs.Parameters,
+def discovery_diskstat_generic(
+    params: Sequence[type_defs.Parameters],
     section: Section,
 ) -> Generator[Service, None, None]:
     # Skip over on empty data

@@ -193,7 +193,7 @@ def check_md(item, _no_params, parsed):
     if "resync_state" in data:
         header = "[Resync]"
         infotexts.append("Status: %s" % data["resync_state"])
-        
+
     if "resync_values" in data:
         header = "[Resync]"
         infotexts.append(data["resync_values"])
@@ -201,21 +201,21 @@ def check_md(item, _no_params, parsed):
     if "recovery_values" in data:
         header = "[Recovery]"
         infotexts.append(data["recovery_values"])
-        
+
     if "finish" in data:
         infotexts.append("Finish: %s" % data["finish"])
 
     if "speed" in data:
         infotexts.append("Speed: %s" % data["speed"])
-        
+
     if "check_state" in data:
         header = "[Check]"
         infotexts.append("Status: %s" % data["check_state"])
         yield 0, "%s %s" % (header, ", ".join(infotexts))
-    
+
     elif infotexts:
         yield 1, "%s %s" % (header, ", ".join(infotexts))
-        
+
 
 check_info["md"] = {
     'parse_function': parse_md,

@@ -250,6 +250,10 @@ program_start num_hosts num_services'
     def query_non_parallel(self, query, headers) -> Response:
         return self._lookup_next_query(query, headers)
 
+    # SingleSiteConnection
+    def do_query(self, query, add_headers: str = '') -> Response:
+        return self._lookup_next_query(query, add_headers)
+
 
 def _compare(pattern: str, string: str, match_type: MatchType) -> bool:
     """Compare two strings on different ways.

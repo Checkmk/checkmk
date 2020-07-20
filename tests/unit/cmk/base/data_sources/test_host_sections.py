@@ -16,7 +16,13 @@ from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources import ABCDataSource, ABCHostSections, make_host_sections, make_sources
+from cmk.base.data_sources import (
+    ABCDataSource,
+    ABCHostSections,
+    _data_sources,
+    make_host_sections,
+    make_sources,
+)
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
@@ -658,13 +664,39 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     }
     address = "1.2.3.4"
     tags = {"agent": "no-agent"}
+    section_name = SectionName("test_section")
     config_cache = make_scenario(hostname, tags).apply(monkeypatch)
     host_config = config.HostConfig.make_host_config(hostname)
 
-    def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=False):
+    def lookup_ip_address(host_config, family=None, for_mgmt_board=False):
         return hosts[host_config.hostname]
 
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
+    def make_piggybacked_sections(hc):
+        if hc.nodes == host_config.nodes:
+            return {section_name: True}
+        return {}
+
+    def run(_, *, selected_raw_sections):
+        sections = {}
+        if selected_raw_sections is not None and section_name in selected_raw_sections:
+            sections = {section_name: [[str(section_name)]]}
+        return AgentHostSections(sections=sections)
+
+    monkeypatch.setattr(
+        ip_lookup,
+        "lookup_ip_address",
+        lookup_ip_address,
+    )
+    monkeypatch.setattr(
+        _data_sources,
+        "_make_piggybacked_sections",
+        make_piggybacked_sections,
+    )
+    monkeypatch.setattr(
+        ABCDataSource,
+        "run",
+        run,
+    )
     mocker.patch.object(
         cmk.utils.piggyback,
         "remove_source_status_file",
@@ -697,7 +729,8 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
         key = HostKey(host, addr, SourceType.HOST)
         assert key in mhs
         section = mhs[key]
-        assert not section.sections
+        assert len(section.sections) == 1
+        assert next(iter(section.sections)) == section_name
         assert not section.cache_info
         assert not section.piggybacked_raw_data
         assert not section.persisted_sections

@@ -8,6 +8,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
+import itertools
 from typing import Dict, Iterable, List, Optional, Tuple
 
 import cmk.utils.debug
@@ -213,11 +214,13 @@ def make_host_sections(
 
 
 def _make_piggybacked_sections(host_config) -> SelectedRawSections:
-    check_plugin_names = check_table.get_needed_check_names(
-        host_config.hostname,
-        remove_duplicates=True,
-        filter_mode="only_clustered",
-    )
+    check_plugin_names = set(
+        itertools.chain.from_iterable(
+            check_table.get_needed_check_names(
+                node_name,
+                remove_duplicates=True,
+                filter_mode="only_clustered",
+            ) for node_name in host_config.nodes))
     selected_raw_sections = {}
     for name in config.get_relevant_raw_sections(check_plugin_names=check_plugin_names):
         section = config.get_registered_section_plugin(name)

@@ -14,14 +14,21 @@ from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
 
-import cmk.base.config as config
+from cmk.base import check_table, config
+from cmk.base.api.agent_based import checking_types
+from cmk.base.api.agent_based.register import section_plugins
+from cmk.base.api.agent_based.utils import parse_to_string_table
 import cmk.base.data_sources.agent as agent
 from cmk.base.data_sources import make_sources
-from cmk.base.data_sources._data_sources import _make_host_sections
+from cmk.base.data_sources._data_sources import (
+    _make_host_sections,
+    _make_piggybacked_sections,
+)
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
 from cmk.base.data_sources.programs import DSProgramDataSource, SpecialAgentDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource
 from cmk.base.data_sources.tcp import TCPDataSource
+from cmk.utils.type_defs import CheckPluginName
 
 
 def make_scenario(hostname, tags):
@@ -115,3 +122,70 @@ def test_piggyback_storage(monkeypatch, mocker):
 
     assert mhs.piggybacked_raw_data
     assert args == (hostname, mhs.piggybacked_raw_data)
+
+
+@pytest.fixture(name="agent_section")
+def agent_section_fixture(monkeypatch):
+    section = section_plugins.create_agent_section_plugin(
+        name="unit_test_agent_section",
+        parse_function=parse_to_string_table,
+    )
+    monkeypatch.setitem(
+        config.registered_agent_sections,
+        section.name,
+        section,
+    )
+    yield section
+
+
+@pytest.fixture(name="check_plugin")
+def check_plugin_fixture(monkeypatch, agent_section):
+    check_plugin = checking_types.CheckPlugin(
+        CheckPluginName("unit_test_check_plugin"),
+        [agent_section.parsed_section_name],
+        "Unit Test",
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+    )
+    monkeypatch.setitem(
+        config.registered_check_plugins,
+        check_plugin.name,
+        check_plugin,
+    )
+    yield check_plugin
+
+
+def test_make_piggybacked_sections(monkeypatch, check_plugin):
+    cluster_name = "cluster"
+    node_name = "node"
+
+    def get_needed_check_names(
+        hostname,
+        remove_duplicates=False,
+        filter_mode=None,
+        skip_ignored=True,
+    ):
+        if hostname == node_name and filter_mode == 'only_clustered':
+            return {check_plugin.name}
+        return set()
+
+    monkeypatch.setattr(
+        check_table,
+        "get_needed_check_names",
+        get_needed_check_names,
+    )
+
+    Scenario().add_cluster(cluster_name, nodes=[node_name]).apply(monkeypatch)
+    host_config = config.HostConfig.make_host_config(cluster_name)
+    piggybacked_host_sections = _make_piggybacked_sections(host_config)
+
+    assert len(piggybacked_host_sections) == 1
+    # comparing cmk.utils.type_defs.SectionName and cmk.utils.type_defs.ParsedSectionName
+    assert str(next(iter(piggybacked_host_sections))) == str(check_plugin.sections[0])

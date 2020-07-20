@@ -115,6 +115,18 @@ class TestControllerApi:
         assert captured.out == make_success_answer("{}") + make_failure_answer(
             data="No process", hint="failed") + make_waiting_answer()
 
+    @pytest.mark.usefixtures("scenario")
+    def test_run_fetchers_bad_data(self, capsys):
+
+        FetcherConfig().write("heute")
+
+        run_fetchers(serial=str(FetcherConfig().serial), host_name="zzz", timeout=35)
+        captured = capsys.readouterr()
+        assert captured.out == make_failure_answer("fetcher file is absent", hint="config")
+        run_fetchers(serial=str(FetcherConfig().serial + 1), host_name="heute", timeout=35)
+        captured = capsys.readouterr()
+        assert captured.out == make_failure_answer("fetcher file is absent", hint="config")
+
 
 class TestHeader:
     @pytest.mark.parametrize("state", [Header.State.SUCCESS, "SUCCESS"])

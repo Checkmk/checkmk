@@ -60,7 +60,7 @@ def main() -> int:
             if command == "*":
                 break
             serial, host, timeout = command.split(sep=";", maxsplit=2)
-            controller.run(serial=serial, host_name=host_name, timeout=int(timeout))
+            controller.run_fetchers(serial=serial, host_name=host_name, timeout=int(timeout))
 
         return 0
 

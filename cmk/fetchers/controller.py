@@ -137,37 +137,45 @@ def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
 
     if not json_file.exists():
         sys.stdout.write(make_failure_answer("fetcher file is absent", hint="config"))
+        #  we do not send waiting answer - the fetcher should be dead
         return
 
     # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
-    _run_fetchers_from_file(file_name=json_file)
+    _run_fetchers_from_file(file_name=json_file, timeout=timeout)
 
 
-def _run_fetchers_from_file(file_name: Path) -> None:
-    with open(file_name) as f:
+def _run_fetcher(entry: Dict[str, Any], timeout: int) -> str:
+    """ timeout to be used by concrete fetcher implementation """
+
+    try:
+        ff = FetcherFactory()
+        fetcher_type = entry["fetcher_type"]
+        fetcher_params = entry["fetcher_params"]
+        fetcher = ff.make(fetcher_type=fetcher_type, fetcher_params=fetcher_params)
+        return make_success_answer(str(fetcher.data()))  # temporary: just text for output
+
+    except Exception as e:
+        # NOTE. The exception is too broad by design:
+        # we need specs for Exception coming from fetchers
+        # also (probably) we need a guard to log all exceptions in checkmk
+        return make_failure_answer(str(e), hint="failed")
+
+
+def _run_fetchers_from_file(file_name: Path, timeout: int) -> None:
+    with file_name.open() as f:
         data = json.load(f)
 
-        fetchers = data["fetchers"]
-        ff = FetcherFactory()
-        for entry in fetchers:
-            try:
-                fetcher_type = entry["fetcher_type"]
-                fetcher_params = entry["fetcher_params"]
-                fetcher = ff.make(fetcher_type=fetcher_type, fetcher_params=fetcher_params)
-                output = str(fetcher.data())  # temporary: just to provide kind text of output
-                sys.stdout.write(make_success_answer(output))
+    # CONTEXT: AT the moment we call fetcher-executors sequentially (due to different reasons).
+    # Possibilities:
+    # Sequential: slow fetcher may block other fetchers.
+    # Asyncio: every fetcher must be asyncio-aware. This is ok, but even estimation requires time
+    # Threading: some fetcher may be not thread safe(snmp, for example). May be dangerous.
+    # Multiprocessing: CPU and memory(at least in terms of kernel) hungry. Also duplicates
+    # functionality of the Microcore.
+    fetchers = data["fetchers"]
+    for entry in fetchers:
+        sys.stdout.write(_run_fetcher(entry, timeout))
 
-            # the exception is too broad by design
-            # we need specs for Exception coming from fetchers
-            # also (probably) we need a guard to log all exceptions in checkmk
-            except Exception as e:
-                sys.stdout.write(make_failure_answer(str(e), hint="failed"))
-
-    sys.stdout.write(make_waiting_answer())
-
-
-def run(serial: str, host_name: HostName, timeout: int) -> None:
-    run_fetchers(serial=serial, host_name=host_name, timeout=timeout)
     sys.stdout.write(make_waiting_answer())
 
 

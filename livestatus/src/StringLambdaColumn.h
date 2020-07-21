@@ -15,12 +15,13 @@
 #include "StringColumn.h"
 class Row;
 
+template <class T>
 class StringLambdaColumn : public StringColumn {
 public:
     struct Constant;
     struct Reference;
     StringLambdaColumn(std::string name, std::string description,
-                       Offsets offsets, std::function<std::string(Row)> gv)
+                       Offsets offsets, std::function<std::string(const T*)> gv)
         : StringColumn(std::move(name), std::move(description),
                        std::move(offsets))
         , get_value_(std::move(gv)) {}
@@ -28,23 +29,25 @@ public:
     ~StringLambdaColumn() override = default;
 
     [[nodiscard]] std::string getValue(Row row) const override {
-        return get_value_(row);
+        return get_value_(columnData<T>(row));
     }
 
 private:
-    std::function<std::string(Row)> get_value_;
+    std::function<std::string(const T*)> get_value_;
 };
 
-struct StringLambdaColumn::Constant : StringLambdaColumn {
+template <class T>
+struct StringLambdaColumn<T>::Constant : StringLambdaColumn {
     Constant(std::string name, std::string description, const std::string& x)
         : StringLambdaColumn(std::move(name), std::move(description), {},
-                             [x](Row /*row*/) { return x; }){};
+                             [x](const T* /*t*/) { return x; }){};
 };
 
-struct StringLambdaColumn::Reference : StringLambdaColumn {
+template <class T>
+struct StringLambdaColumn<T>::Reference : StringLambdaColumn {
     Reference(std::string name, std::string description, const std::string& x)
         : StringLambdaColumn(std::move(name), std::move(description), {},
-                             [&x](Row /*row*/) { return x; }){};
+                             [&x](const T* /*t*/) { return x; }){};
 };
 
 #endif

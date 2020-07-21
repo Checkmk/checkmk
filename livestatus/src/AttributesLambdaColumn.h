@@ -30,11 +30,12 @@ class RowRenderer;
 #include "nagios.h"
 #endif
 
+template <class T>
 class AttributesLambdaColumn : public CustomVarsDictColumn {
 public:
     AttributesLambdaColumn(std::string name, std::string description,
                            const Offsets& offsets,
-                           std::function<Attributes(Row)> f)
+                           std::function<Attributes(const T*)> f)
         : CustomVarsDictColumn(
               std::move(name), std::move(description), offsets,
               // TODO(ml): The hierarchy of every *LambdaColumn is wrong anyway
@@ -48,11 +49,11 @@ public:
     ~AttributesLambdaColumn() override = default;
 
     [[nodiscard]] Attributes getValue(Row row) const override {
-        return get_value_(row);
+        return get_value_(columnData<T>(row));
     }
 
 private:
-    std::function<Attributes(Row)> get_value_;
+    std::function<Attributes(const T*)> get_value_;
 };
 
 #endif

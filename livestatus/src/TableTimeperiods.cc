@@ -30,13 +30,12 @@ private:
 }  // namespace
 
 struct TimePeriodValue {
-    std::int32_t operator()(Row /*row*/);
+    std::int32_t operator()(const TimePeriodRow* r);
 };
 
-std::int32_t TimePeriodValue::operator()(Row row) {
+std::int32_t TimePeriodValue::operator()(const TimePeriodRow* r) {
     extern TimeperiodsCache* g_timeperiods_cache;
-    if (const auto* tp =
-            row.rawData<TableTimeperiods::IRow>()->getTimePeriod()) {
+    if (const auto* tp = r->getTimePeriod()) {
         return g_timeperiods_cache->inTimeperiod(tp) ? 1 : 0;
     }
     return 1;  // unknown timeperiod is assumed to be 24X7
@@ -44,23 +43,23 @@ std::int32_t TimePeriodValue::operator()(Row row) {
 
 TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
     Column::Offsets offsets{};
-    addColumn(std::make_unique<StringLambdaColumn>(
+    addColumn(std::make_unique<StringLambdaColumn<TimePeriodRow>>(
         "name", "The name of the timeperiod", offsets,
-        [](Row row) -> std::string {
-            if (const auto* tp = row.rawData<IRow>()->getTimePeriod()) {
+        [](const TimePeriodRow* tpr) -> std::string {
+            if (const auto* tp = tpr->getTimePeriod()) {
                 return tp->name;
             }
             return {};
         }));
-    addColumn(std::make_unique<StringLambdaColumn>(
+    addColumn(std::make_unique<StringLambdaColumn<TimePeriodRow>>(
         "alias", "The alias of the timeperiod", offsets,
-        [](Row row) -> std::string {
-            if (const auto* tp = row.rawData<IRow>()->getTimePeriod()) {
+        [](const TimePeriodRow* tpr) -> std::string {
+            if (const auto* tp = tpr->getTimePeriod()) {
                 return tp->alias;
             }
             return {};
         }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+    addColumn(std::make_unique<IntLambdaColumn<TimePeriodRow>>(
         "in", "Wether we are currently in this period (0/1)", offsets,
         TimePeriodValue{}));
     // TODO(mk): add days and exceptions

@@ -21,11 +21,12 @@
 //             - `TableContacts::GetCustomAttribute` and
 //             - `TableContacts::GetCustomAttributeElem`
 //           for an example of a dict column without pointer arithmetic.
-
+template <class T>
 class AttributeBitmaskLambdaColumn : public AttributeListAsIntColumn {
 public:
     AttributeBitmaskLambdaColumn(std::string name, std::string description,
-                                 Offsets offsets, std::function<int(Row)> f)
+                                 Offsets offsets,
+                                 std::function<int(const T*)> f)
         : AttributeListAsIntColumn(std::move(name), std::move(description),
                                    std::move(offsets))
         , get_value_{std::move(f)} {}
@@ -35,18 +36,19 @@ public:
         return getValue(row);
     }
     [[nodiscard]] std::int32_t getValue(Row row) const {
-        return get_value_(row);
+        return get_value_(columnData<T>(row));
     }
 
 private:
-    std::function<int(Row)> get_value_;
+    std::function<int(const T*)> get_value_;
 };
 
+template <class T>
 class AttributeListColumn2 : public ListColumn {
 public:
     AttributeListColumn2(std::string name, std::string description,
                          Offsets offsets,
-                         const AttributeBitmaskLambdaColumn& bitmask_col)
+                         const AttributeBitmaskLambdaColumn<T>& bitmask_col)
         : ListColumn(std::move(name), std::move(description),
                      std::move(offsets))
         , bitmask_col_{bitmask_col} {}
@@ -66,7 +68,7 @@ public:
     }
 
 private:
-    AttributeBitmaskLambdaColumn bitmask_col_;
+    AttributeBitmaskLambdaColumn<T> bitmask_col_;
 };
 
 #endif

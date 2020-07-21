@@ -14,35 +14,38 @@
 #include "contact_fwd.h"
 class Row;
 
+template <class T>
 class IntLambdaColumn : public IntColumn {
 public:
     struct Constant;
     struct Reference;
     IntLambdaColumn(std::string name, std::string description, Offsets offsets,
-                    std::function<int(Row)> gv)
+                    std::function<int(const T*)> gv)
         : IntColumn(std::move(name), std::move(description), std::move(offsets))
         , get_value_{std::move(gv)} {}
     ~IntLambdaColumn() override = default;
 
     std::int32_t getValue(Row row,
                           const contact* /*auth_user*/) const override {
-        return get_value_(row);
+        return get_value_(columnData<T>(row));
     }
 
 private:
-    std::function<int(Row)> get_value_;
+    std::function<int(const T*)> get_value_;
 };
 
-struct IntLambdaColumn::Constant : IntLambdaColumn {
+template <class T>
+struct IntLambdaColumn<T>::Constant : IntLambdaColumn {
     Constant(std::string name, std::string description, int x)
         : IntLambdaColumn(std::move(name), std::move(description), {},
-                          [x](Row /*row*/) { return x; }){};
+                          [x](const T* /*t*/) { return x; }){};
 };
 
-struct IntLambdaColumn::Reference : IntLambdaColumn {
+template <class T>
+struct IntLambdaColumn<T>::Reference : IntLambdaColumn {
     Reference(std::string name, std::string description, int& x)
         : IntLambdaColumn(std::move(name), std::move(description), {},
-                          [&x](Row /*row*/) { return x; }){};
+                          [&x](const T* /*t*/) { return x; }){};
 };
 
 #endif

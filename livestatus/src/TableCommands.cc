@@ -36,13 +36,14 @@ private:
 
 // static
 void TableCommands::addColumns(Table *table, const std::string &prefix) {
+    Column::Offsets offsets{};
     table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "name", "The name of the command", [](Row row) {
+        prefix + "name", "The name of the command", offsets, [](Row row) {
             const auto *r = row.rawData<Table::IRow>();
             return dynamic_cast<const IRow *>(r)->getCommand()._name;
         }));
     table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "line", "The shell command line", [](Row row) {
+        prefix + "line", "The shell command line", offsets, [](Row row) {
             const auto *r = row.rawData<Table::IRow>();
             return dynamic_cast<const IRow *>(r)->getCommand()._command_line;
         }));

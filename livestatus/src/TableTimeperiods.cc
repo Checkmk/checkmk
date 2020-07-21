@@ -43,22 +43,25 @@ std::int32_t TimePeriodValue::operator()(Row row) {
 }
 
 TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
+    Column::Offsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn>(
-        "name", "The name of the timeperiod", [](Row row) -> std::string {
+        "name", "The name of the timeperiod", offsets,
+        [](Row row) -> std::string {
             if (const auto* tp = row.rawData<IRow>()->getTimePeriod()) {
                 return tp->name;
             }
             return {};
         }));
     addColumn(std::make_unique<StringLambdaColumn>(
-        "alias", "The alias of the timeperiod", [](Row row) -> std::string {
+        "alias", "The alias of the timeperiod", offsets,
+        [](Row row) -> std::string {
             if (const auto* tp = row.rawData<IRow>()->getTimePeriod()) {
                 return tp->alias;
             }
             return {};
         }));
     addColumn(std::make_unique<IntLambdaColumn>(
-        "in", "Wether we are currently in this period (0/1)",
+        "in", "Wether we are currently in this period (0/1)", offsets,
         TimePeriodValue{}));
     // TODO(mk): add days and exceptions
 }

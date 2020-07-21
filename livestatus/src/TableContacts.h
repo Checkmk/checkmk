@@ -34,12 +34,8 @@ public:
     void answerQuery(Query *query) override;
     [[nodiscard]] Row findObject(const std::string &objectspec) const override;
 
-#ifdef CMC
     static void addColumns(Table *table, const std::string &prefix,
                            int indirect_offset);
-#else
-    static void addColumns(Table *table, const std::string &prefix);
-#endif
 };
 
 #endif  // TableContacts_h

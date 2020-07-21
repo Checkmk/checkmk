@@ -20,8 +20,9 @@ public:
     struct Constant;
     struct Reference;
     StringLambdaColumn(std::string name, std::string description,
-                       std::function<std::string(Row)> gv)
-        : StringColumn(std::move(name), std::move(description), {})
+                       Offsets offsets, std::function<std::string(Row)> gv)
+        : StringColumn(std::move(name), std::move(description),
+                       std::move(offsets))
         , get_value_(std::move(gv)) {}
 
     ~StringLambdaColumn() override = default;
@@ -36,13 +37,13 @@ private:
 
 struct StringLambdaColumn::Constant : StringLambdaColumn {
     Constant(std::string name, std::string description, const std::string& x)
-        : StringLambdaColumn(std::move(name), std::move(description),
+        : StringLambdaColumn(std::move(name), std::move(description), {},
                              [x](Row /*row*/) { return x; }){};
 };
 
 struct StringLambdaColumn::Reference : StringLambdaColumn {
     Reference(std::string name, std::string description, const std::string& x)
-        : StringLambdaColumn(std::move(name), std::move(description),
+        : StringLambdaColumn(std::move(name), std::move(description), {},
                              [&x](Row /*row*/) { return x; }){};
 };
 

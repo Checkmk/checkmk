@@ -16,9 +16,9 @@ class Row;
 
 class BoolLambdaColumn : public IntColumn {
 public:
-    BoolLambdaColumn(std::string name, std::string description,
+    BoolLambdaColumn(std::string name, std::string description, Offsets offsets,
                      std::function<bool(Row)> f)
-        : IntColumn(std::move(name), std::move(description), {})
+        : IntColumn(std::move(name), std::move(description), std::move(offsets))
         , get_value_{std::move(f)} {}
     ~BoolLambdaColumn() override = default;
 

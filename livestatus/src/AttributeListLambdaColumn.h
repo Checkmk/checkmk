@@ -25,8 +25,9 @@
 class AttributeBitmaskLambdaColumn : public AttributeListAsIntColumn {
 public:
     AttributeBitmaskLambdaColumn(std::string name, std::string description,
-                                 std::function<int(Row)> f)
-        : AttributeListAsIntColumn(std::move(name), std::move(description), {})
+                                 Offsets offsets, std::function<int(Row)> f)
+        : AttributeListAsIntColumn(std::move(name), std::move(description),
+                                   std::move(offsets))
         , get_value_{std::move(f)} {}
     ~AttributeBitmaskLambdaColumn() override = default;
     std::int32_t getValue(Row row,
@@ -44,8 +45,10 @@ private:
 class AttributeListColumn2 : public ListColumn {
 public:
     AttributeListColumn2(std::string name, std::string description,
+                         Offsets offsets,
                          const AttributeBitmaskLambdaColumn& bitmask_col)
-        : ListColumn(std::move(name), std::move(description), {})
+        : ListColumn(std::move(name), std::move(description),
+                     std::move(offsets))
         , bitmask_col_{bitmask_col} {}
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(

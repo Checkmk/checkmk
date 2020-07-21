@@ -33,9 +33,10 @@ class RowRenderer;
 class AttributesLambdaColumn : public CustomVarsDictColumn {
 public:
     AttributesLambdaColumn(std::string name, std::string description,
+                           const Offsets& offsets,
                            std::function<Attributes(Row)> f)
         : CustomVarsDictColumn(
-              std::move(name), std::move(description), {},
+              std::move(name), std::move(description), offsets,
               // TODO(ml): The hierarchy of every *LambdaColumn is wrong anyway
               // but this is the easiest way to get rid of the pointer
               // arithmetic by replacing inheritance with delegation without

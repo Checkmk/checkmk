@@ -17,9 +17,10 @@ class Row;
 
 class ListLambdaColumn : public ListColumn {
 public:
-    ListLambdaColumn(std::string name, std::string description,
+    ListLambdaColumn(std::string name, std::string description, Offsets offsets,
                      std::function<std::vector<std::string>(Row)> f)
-        : ListColumn(std::move(name), std::move(description), {})
+        : ListColumn(std::move(name), std::move(description),
+                     std::move(offsets))
         , get_value_{std::move(f)} {}
     ~ListLambdaColumn() override = default;
 

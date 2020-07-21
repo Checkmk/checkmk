@@ -16,7 +16,6 @@ import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.misc
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.type_defs import (
-    HostAddress,
     HostName,
     Metric,
     RawAgentData,
@@ -39,7 +38,7 @@ from cmk.base.check_utils import (
 from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
-from ._abstract import ABCDataSource, ABCHostSections
+from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections
 
 __all__ = ["AgentHostSections", "AgentDataSource"]
 
@@ -390,7 +389,7 @@ class Parser:
 class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentSections,
                                     AgentHostSections],
                       metaclass=abc.ABCMeta):
-    """Abstract base class for all data sources that work with the Check_MK agent data format"""
+    """Base for agent-based checkers."""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
@@ -400,17 +399,13 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
 
     def __init__(
         self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
         *,
-        id_: str,
+        configurator: ABCConfigurator,
         cpu_tracking_id: str,
         main_data_source: bool = False,
     ) -> None:
         super(AgentDataSource, self).__init__(
-            hostname,
-            ipaddress,
-            id_=id_,
+            configurator=configurator,
             cpu_tracking_id=cpu_tracking_id,
         )
         self._is_main_agent_data_source = main_data_source
@@ -453,14 +448,14 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
 
     def _convert_to_sections(self, raw_data: RawAgentData) -> AgentHostSections:
         return Parser(self._logger).parse(
-            self._host_config.hostname,
+            self.configurator.hostname,
             raw_data,
-            check_interval=self._host_config.check_mk_check_interval,
+            check_interval=self.configurator.host_config.check_mk_check_interval,
         )
 
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         if not isinstance(self._host_sections, AgentHostSections):
             raise TypeError(self._host_sections)
 
-        return Summarizer(self._host_config).summarize(
+        return Summarizer(self.configurator.host_config).summarize(
             self._host_sections.sections.get(SectionName("check_mk")), for_checking)

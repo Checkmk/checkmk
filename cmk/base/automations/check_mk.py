@@ -15,7 +15,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, cast, Dict, Iterator, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -1223,18 +1223,16 @@ class AutomationDiagHost(Automation):
             source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source, data_sources.programs.DSProgramDataSource) and cmd:
                 source = data_sources.programs.DSProgramDataSource(
-                    host_config.hostname,
-                    ipaddress,
                     configurator=data_sources.programs.DSProgramConfigurator(
                         host_config.hostname,
                         ipaddress,
                         template=cmd,
-                    ),
-                )
+                    ),)
             elif isinstance(source, data_sources.tcp.TCPDataSource):
-                source.port = agent_port
+                configurator = cast(data_sources.tcp.TCPConfigurator, source.configurator)
+                configurator.port = agent_port
                 if tcp_connect_timeout is not None:
-                    source.timeout = tcp_connect_timeout
+                    configurator.timeout = tcp_connect_timeout
             elif isinstance(source, data_sources.snmp.SNMPDataSource):
                 continue
 

@@ -39,7 +39,7 @@ from cmk.base.check_utils import (
     PiggybackRawData,
     SectionCacheInfo,
 )
-from cmk.base.config import SelectedRawSections
+from cmk.base.config import HostConfig, SelectedRawSections
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLookupError
 
 from ._cache import FileCache, SectionStore
@@ -124,13 +124,48 @@ BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=ABCHo
 
 
 class ABCConfigurator(abc.ABC):
-    """Generate the configuration for the fetchers.
+    """Hold the configuration to fetchers and checkers.
+
+    At best, this should only hold static data, that is, every
+    attribute is final.
 
     Dump the JSON configuration from `configure_fetcher()`.
 
     """
-    def __init__(self, *, description: str) -> None:
+    def __init__(
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        *,
+        source_type: SourceType,
+        description: str,
+        id_: str,
+    ) -> None:
+        self.hostname: Final[str] = hostname
+        self.ipaddress: Final[Optional[str]] = ipaddress
+        self.source_type: Final[SourceType] = source_type
         self.description: Final[str] = description
+        self.id: Final[str] = id_
+        self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
+        self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
+
+    def __repr__(self) -> str:
+        return "%s(%r, %r, description=%r, id=%r)" % (
+            type(self).__name__,
+            self.hostname,
+            self.ipaddress,
+            self.description,
+            self.id,
+        )
+
+    def _setup_logger(self) -> None:
+        """Add the source log prefix to the class logger"""
+        self._logger.propagate = False
+        handler = logging.StreamHandler(stream=sys.stdout)
+        fmt = " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id, tty.bold, tty.normal)
+        handler.setFormatter(logging.Formatter(fmt))
+        del self._logger.handlers[:]  # Remove all previously existing handlers
+        self._logger.addHandler(handler)
 
     @abc.abstractmethod
     def configure_fetcher(self) -> Dict[str, Any]:
@@ -143,9 +178,7 @@ class ABCConfigurator(abc.ABC):
 class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                             BoundedAbstractPersistedSections, BoundedAbstractHostSections],
                     metaclass=abc.ABCMeta):
-    """Abstract base class for all data source classes"""
-
-    source_type = SourceType.HOST
+    """Base checker class."""
 
     # TODO: Clean these options up! We need to change all call sites to use
     #       a single DataSources() object during processing first. Then we
@@ -166,50 +199,35 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
     def __init__(
         self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
         *,
-        id_: str,
+        configurator: ABCConfigurator,
         cpu_tracking_id: str,
     ) -> None:
-        """Initialize the abstract base class
-
-        :param hostname: The name of the host this data source is associated to
-        :param ipaddress: The IP address of the host this data source is associated to
-        """
         super(ABCDataSource, self).__init__()
-        self.hostname: Final[HostName] = hostname
-        self.ipaddress: Final[Optional[HostAddress]] = ipaddress
-        self.id: Final[str] = id_
+        self.configurator = configurator
         self._cpu_tracking_id: Final[str] = cpu_tracking_id
         self._max_cachefile_age: Optional[int] = None
-
-        self._logger = logging.getLogger("cmk.base.data_source.%s" % self.id)
-        self._setup_logger()
+        self._logger = self.configurator._logger
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self._exception: Optional[Exception] = None
         self._host_sections: Optional[BoundedAbstractHostSections] = None
         self._persisted_sections: Optional[BoundedAbstractPersistedSections] = None
 
-        self._config_cache = config.get_config_cache()
-        self._host_config = self._config_cache.get_host_config(self.hostname)
-
     def __repr__(self):
-        return "%s(%r, %r)" % (
-            type(self).__name__,
-            self.hostname,
-            self.ipaddress,
-        )
+        return "%s(%r)" % (type(self).__name__, self.configurator)
 
-    def _setup_logger(self) -> None:
-        """Add the source log prefix to the class logger"""
-        self._logger.propagate = False
-        handler = logging.StreamHandler(stream=sys.stdout)
-        fmt = " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id, tty.bold, tty.normal)
-        handler.setFormatter(logging.Formatter(fmt))
-        del self._logger.handlers[:]  # Remove all previously existing handlers
-        self._logger.addHandler(handler)
+    @property
+    def hostname(self) -> HostName:
+        return self.configurator.hostname
+
+    @property
+    def ipaddress(self) -> Optional[HostAddress]:
+        return self.configurator.ipaddress
+
+    @property
+    def id(self) -> str:
+        return self.configurator.id
 
     def run(self, *, selected_raw_sections: Optional[SelectedRawSections]) -> ABCHostSections:
         """
@@ -377,17 +395,19 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         """See _execute() for details"""
         raise NotImplementedError()
 
-    def _cache_file_path(self) -> str:
-        return os.path.join(self._cache_dir(), self.hostname)
-
+    @abc.abstractmethod
     def _cache_dir(self) -> str:
-        return os.path.join(cmk.utils.paths.data_source_cache_dir, self.id)
+        return os.path.join(cmk.utils.paths.data_source_cache_dir, self.configurator.id)
+
+    def _cache_file_path(self) -> str:
+        return os.path.join(self._cache_dir(), self.configurator.hostname)
+
+    @abc.abstractmethod
+    def _persisted_sections_dir(self) -> str:
+        return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.configurator.id)
 
     def _persisted_sections_file_path(self) -> str:
-        return os.path.join(self._persisted_sections_dir(), self.hostname)
-
-    def _persisted_sections_dir(self) -> str:
-        return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id)
+        return os.path.join(self._persisted_sections_dir(), self.configurator.hostname)
 
     def name(self) -> str:
         """Return a unique (per host) textual identification of the data source
@@ -399,7 +419,11 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         It is only used during execution of Check_MK and not persisted. This means
         the algorithm can be changed at any time.
         """
-        return ":".join([self.id, self.hostname, self.ipaddress or ""])
+        return ":".join([
+            self.configurator.id,
+            self.configurator.hostname,
+            self.configurator.ipaddress or "",
+        ])
 
     @abc.abstractmethod
     def describe(self) -> str:
@@ -450,16 +474,16 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         exc_msg = "%s" % self._exception
 
         if isinstance(self._exception, MKEmptyAgentData):
-            status = self._host_config.exit_code_spec().get("empty_output", 2)
+            status = self.configurator.host_config.exit_code_spec().get("empty_output", 2)
 
         elif isinstance(self._exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
-            status = self._host_config.exit_code_spec().get("connection", 2)
+            status = self.configurator.host_config.exit_code_spec().get("connection", 2)
 
         elif isinstance(self._exception, MKTimeout):
-            status = self._host_config.exit_code_spec().get("timeout", 2)
+            status = self.configurator.host_config.exit_code_spec().get("timeout", 2)
 
         else:
-            status = self._host_config.exit_code_spec().get("exception", 3)
+            status = self.configurator.host_config.exit_code_spec().get("exception", 3)
         status = cast(int, status)
 
         return status, exc_msg + check_api_utils.state_markers[status], []

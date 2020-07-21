@@ -13,22 +13,19 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
+from cmk.utils.type_defs import CheckPluginName
 
+import cmk.base.data_sources.agent as agent
 from cmk.base import check_table, config
 from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.utils import parse_to_string_table
-import cmk.base.data_sources.agent as agent
 from cmk.base.data_sources import make_sources
-from cmk.base.data_sources._data_sources import (
-    _make_host_sections,
-    _make_piggybacked_sections,
-)
+from cmk.base.data_sources._data_sources import _make_host_sections, _make_piggybacked_sections
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
 from cmk.base.data_sources.programs import DSProgramDataSource, SpecialAgentDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource
-from cmk.base.data_sources.tcp import TCPDataSource
-from cmk.utils.type_defs import CheckPluginName
+from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
 
 
 def make_scenario(hostname, tags):
@@ -95,7 +92,7 @@ def test_piggyback_storage(monkeypatch, mocker):
     ts.add_host(hostname)
     ts.apply(monkeypatch)
 
-    source = TCPDataSource(hostname, ipaddress)
+    source = TCPDataSource(configurator=TCPConfigurator(hostname, ipaddress),)
     monkeypatch.setattr(time, "time", lambda: 0)
     mhs = agent.Parser(logging.getLogger("test")).parse(hostname, raw_data, check_interval=0)
     monkeypatch.setattr(

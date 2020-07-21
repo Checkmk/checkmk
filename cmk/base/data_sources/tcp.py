@@ -5,90 +5,97 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import Optional
+from typing import cast, Optional
 
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.fetchers import TCPDataFetcher
 
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.check_utils import RawAgentData
-from cmk.base.config import SelectedRawSections
+from cmk.base.config import HostConfig, SelectedRawSections
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
+from ._abstract import ABCConfigurator
 from .agent import AgentDataSource
 
 
-class TCPDataSource(AgentDataSource):
+class TCPConfigurator(ABCConfigurator):
     _use_only_cache = False
 
     def __init__(
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
+    ) -> None:
+        super().__init__(
+            hostname,
+            ipaddress,
+            source_type=SourceType.HOST,
+            description=TCPConfigurator._make_description(hostname, ipaddress),
+            id_="agent",
+        )
+        self.port: Optional[int] = None
+        self.timeout: Optional[float] = None
+
+    def configure_fetcher(self):
+        ip_lookup.verify_ipaddress(self.ipaddress)
+        assert self.ipaddress
+
+        return {
+            "family": socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
+            "address": (self.ipaddress, self.port or self.host_config.agent_port),
+            "timeout": self.timeout or self.host_config.tcp_connect_timeout,
+            "encryption_settings": self.host_config.agent_encryption,
+        }
+
+    @staticmethod
+    def _make_description(hostname: HostName, ipaddress: Optional[HostAddress]) -> str:
+        return "TCP: %s:%d" % (
+            ipaddress,
+            HostConfig.make_host_config(hostname).agent_port,
+        )
+
+
+class TCPDataSource(AgentDataSource):
+    def __init__(
+        self,
+        *,
+        configurator: TCPConfigurator,
         main_data_source: bool = False,
     ) -> None:
         super(TCPDataSource, self).__init__(
-            hostname,
-            ipaddress,
+            configurator=configurator,
             main_data_source=main_data_source,
-            id_="agent",
             cpu_tracking_id="agent",
         )
-        self._port: Optional[int] = None
-        self._timeout: Optional[float] = None
-
-    @property
-    def port(self) -> int:
-        if self._port is None:
-            return self._host_config.agent_port
-        return self._port
-
-    @port.setter
-    def port(self, value: Optional[int]) -> None:
-        self._port = value
-
-    @property
-    def timeout(self) -> float:
-        if self._timeout is None:
-            return self._host_config.tcp_connect_timeout
-        return self._timeout
-
-    @timeout.setter
-    def timeout(self, value: Optional[float]) -> None:
-        self._timeout = value
 
     def _execute(
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> RawAgentData:
-        if self._use_only_cache:
+        if TCPConfigurator._use_only_cache:
             raise MKAgentError("Got no data: No usable cache file present at %s" %
                                self._cache_file_path())
 
-        ip_lookup.verify_ipaddress(self.ipaddress)
-        assert self.ipaddress
-
-        with TCPDataFetcher(
-                socket.AF_INET6 if self._host_config.is_ipv6_primary else socket.AF_INET,
-            (self.ipaddress, self.port),
-                self.timeout,
-                self._host_config.agent_encryption,
-        ) as fetcher:
+        with TCPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             output = fetcher.data()
+            # TODO(ml): Get rid of the `cast` by moving the error hanling to the fetcher.
+            configurator = cast(TCPConfigurator, self.configurator)
             if not output:  # may be caused by xinetd not allowing our address
-                raise MKEmptyAgentData("Empty output from agent at %s:%d" %
-                                       (self.ipaddress, self.port))
+                raise MKEmptyAgentData("Empty output from agent at %s:%d" % (
+                    configurator.ipaddress,
+                    configurator.port or self.configurator.host_config.agent_port,
+                ))
             if len(output) < 16:
                 raise MKAgentError("Too short output from agent: %r" % output)
             return output
         raise MKAgentError("Failed to read data")
 
     def describe(self) -> str:
-        """Return a short textual description of the agent"""
-        return "TCP: %s:%d" % (self.ipaddress, self._host_config.agent_port)
+        return self.configurator.description
 
-    @classmethod
-    def use_only_cache(cls) -> None:
-        cls._use_only_cache = True
+    @staticmethod
+    def use_only_cache() -> None:
+        TCPConfigurator._use_only_cache = True

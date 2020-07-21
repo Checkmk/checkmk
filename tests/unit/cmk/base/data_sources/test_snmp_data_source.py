@@ -19,21 +19,35 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
+from cmk.base.data_sources.snmp import (
+    SNMPConfigurator,
+    SNMPDataSource,
+    SNMPManagementBoardDataSource,
+)
 from cmk.base.exceptions import MKIPAddressLookupError
 
 
-def test_data_source_cache_default(monkeypatch):
-    Scenario().add_host("hostname").apply(monkeypatch)
-    source = SNMPDataSource("hostname", "ipaddress")
+@pytest.fixture(name="hostname")
+def hostname_fixture():
+    return "hostname"
 
+
+@pytest.fixture(name="ipaddress")
+def ipaddress_fixture():
+    return "1.2.3.4"
+
+
+@pytest.fixture(name="source")
+def source_fixture(hostname, ipaddress, monkeypatch):
+    Scenario().add_host(hostname).apply(monkeypatch)
+    return SNMPDataSource(configurator=SNMPConfigurator.snmp(hostname, ipaddress),)
+
+
+def test_data_source_cache_default(source):
     assert not source.is_agent_cache_disabled()
 
 
-def test_disable_data_source_cache(monkeypatch):
-    Scenario().add_host("hostname").apply(monkeypatch)
-    source = SNMPDataSource("hostname", "ipaddress")
-
+def test_disable_data_source_cache(source):
     assert not source.is_agent_cache_disabled()
 
     source.disable_data_source_cache()
@@ -41,133 +55,106 @@ def test_disable_data_source_cache(monkeypatch):
 
 
 @patchfs
-def test_disable_read_to_file_cache(monkeypatch, fs):
+def test_disable_read_to_file_cache(source, monkeypatch, fs):
     # Beginning of setup.
-    Scenario().add_host("hostname").apply(monkeypatch)
-    source = SNMPDataSource("hostname", "ipaddress")
     source.set_max_cachefile_age(999)
     source.set_may_use_cache_file()
 
     # Patch I/O: It is good enough to patch `store.save_file()`
     # as pyfakefs takes care of the rest.
-    monkeypatch.setattr(store, "save_file",
-                        lambda path, contents: fs.create_file(path, contents=contents))
-
-    file_cache = source._make_file_cache()
-    table: SNMPTable = []
-    raw_data: SNMPRawData = {SectionName("X"): table}
-    # End of setup.
-
-    assert not source.is_agent_cache_disabled()
-
-    file_cache = source._make_file_cache()
-    file_cache.write(raw_data)
-
-    assert file_cache.path.exists()
-    assert file_cache.read() == raw_data
-
-    source.disable_data_source_cache()
-    assert source.is_agent_cache_disabled()
-
-    file_cache = source._make_file_cache()
-    assert file_cache.read() is None
-
-
-@patchfs
-def test_disable_write_to_file_cache(monkeypatch, fs):
-    # Beginning of setup.
-    Scenario().add_host("hostname").apply(monkeypatch)
-    source = SNMPDataSource("hostname", "ipaddress")
-    source.set_max_cachefile_age(999)
-    source.set_may_use_cache_file()
-
-    # Patch I/O: It is good enough to patch `store.save_file()`
-    # as pyfakefs takes care of the rest.
-    monkeypatch.setattr(store, "save_file",
-                        lambda path, contents: fs.create_file(path, contents=contents))
-
-    file_cache = source._make_file_cache()
-    table: SNMPTable = []
-    raw_data: SNMPRawData = {SectionName("X"): table}
-    # End of setup.
-
-    source.disable_data_source_cache()
-    assert source.is_agent_cache_disabled()
-
-    # Another one bites the dust.
-    file_cache = source._make_file_cache()
-    file_cache.write(raw_data)
-
-    assert not file_cache.path.exists()
-    assert file_cache.read() is None
-
-
-@patchfs
-def test_write_and_read_file_cache(monkeypatch, fs):
-    # Beginning of setup.
-    Scenario().add_host("hostname").apply(monkeypatch)
-    source = SNMPDataSource("hostname", "ipaddress")
-    source.set_max_cachefile_age(999)
-    source.set_may_use_cache_file()
-
-    # Patch I/O: It is good enough to patch `store.save_file()`
-    # as pyfakefs takes care of the rest.
-    monkeypatch.setattr(store, "save_file",
-                        lambda path, contents: fs.create_file(path, contents=contents))
-
-    file_cache = source._make_file_cache()
-
-    table: SNMPTable = []
-    raw_data: SNMPRawData = {SectionName("X"): table}
-    # End of setup.
-
-    assert not source.is_agent_cache_disabled()
-    assert not file_cache.path.exists()
-
-    file_cache.write(raw_data)
-
-    assert file_cache.path.exists()
-    assert file_cache.read() == raw_data
-
-    # Another one bites the dust.
-    file_cache = source._make_file_cache()
-    assert file_cache.read() == raw_data
-
-
-def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
-    hostname = "testhost"
-    ipaddress = "1.2.3.4"
-
-    def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
-        return ipaddress
-
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.set_option("management_protocol", {hostname: "snmp"})
-    ts.apply(monkeypatch)
-
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
-    monkeypatch.setattr(config, "host_attributes", {
-        hostname: {
-            "management_address": ipaddress,
-        },
-    })
-
-    host_config = config.get_config_cache().get_host_config(hostname)
-    source = SNMPManagementBoardDataSource(
-        hostname,
-        ip_lookup.lookup_mgmt_board_ip_address(host_config),
+    monkeypatch.setattr(
+        store,
+        "save_file",
+        lambda path, contents: fs.create_file(path, contents=contents),
     )
 
-    assert source._host_config.management_address == ipaddress
-    assert source.ipaddress == ipaddress
+    file_cache = source._make_file_cache()
+    table: SNMPTable = []
+    raw_data: SNMPRawData = {SectionName("X"): table}
+    # End of setup.
+
+    assert not source.is_agent_cache_disabled()
+
+    file_cache = source._make_file_cache()
+    file_cache.write(raw_data)
+
+    assert file_cache.path.exists()
+    assert file_cache.read() == raw_data
+
+    source.disable_data_source_cache()
+    assert source.is_agent_cache_disabled()
+
+    file_cache = source._make_file_cache()
+    assert file_cache.read() is None
 
 
-def test_snmp_ipaddress_from_mgmt_board_unresolvable(monkeypatch):
+@patchfs
+def test_disable_write_to_file_cache(source, monkeypatch, fs):
+    # Beginning of setup.
+    source.set_max_cachefile_age(999)
+    source.set_may_use_cache_file()
+
+    # Patch I/O: It is good enough to patch `store.save_file()`
+    # as pyfakefs takes care of the rest.
+    monkeypatch.setattr(
+        store,
+        "save_file",
+        lambda path, contents: fs.create_file(path, contents=contents),
+    )
+
+    file_cache = source._make_file_cache()
+    table: SNMPTable = []
+    raw_data: SNMPRawData = {SectionName("X"): table}
+    # End of setup.
+
+    source.disable_data_source_cache()
+    assert source.is_agent_cache_disabled()
+
+    # Another one bites the dust.
+    file_cache = source._make_file_cache()
+    file_cache.write(raw_data)
+
+    assert not file_cache.path.exists()
+    assert file_cache.read() is None
+
+
+@patchfs
+def test_write_and_read_file_cache(source, monkeypatch, fs):
+    # Beginning of setup.
+    source.set_max_cachefile_age(999)
+    source.set_may_use_cache_file()
+
+    # Patch I/O: It is good enough to patch `store.save_file()`
+    # as pyfakefs takes care of the rest.
+    monkeypatch.setattr(
+        store,
+        "save_file",
+        lambda path, contents: fs.create_file(path, contents=contents),
+    )
+
+    file_cache = source._make_file_cache()
+
+    table: SNMPTable = []
+    raw_data: SNMPRawData = {SectionName("X"): table}
+    # End of setup.
+
+    assert not source.is_agent_cache_disabled()
+    assert not file_cache.path.exists()
+
+    file_cache.write(raw_data)
+
+    assert file_cache.path.exists()
+    assert file_cache.read() == raw_data
+
+    # Another one bites the dust.
+    file_cache = source._make_file_cache()
+    assert file_cache.read() == raw_data
+
+
+def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
     def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
         raise MKIPAddressLookupError("Failed to ...")
 
-    hostname = "hostname"
     Scenario().add_host(hostname).apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config, "host_attributes", {
@@ -179,17 +166,10 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(monkeypatch):
     assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
 
 
-def test_attribute_defaults(monkeypatch):
-    ipaddress = "1.2.3.4"
-    hostname = "testhost"
-
-    Scenario().add_host(hostname).apply(monkeypatch)
-    source = SNMPDataSource(hostname, ipaddress)
-
+def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "snmp"
-    assert source.title == "SNMP"
     assert source._cpu_tracking_id == "snmp"
     assert source.detector.do_snmp_scan is False
     # From the base class
@@ -199,18 +179,48 @@ def test_attribute_defaults(monkeypatch):
     assert source.exception() is None
 
 
-def test_source_requires_ipaddress(monkeypatch):
-    hostname = "testhost"
+def test_source_requires_ipaddress(hostname, monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
     with pytest.raises(TypeError):
-        SNMPDataSource(hostname, None)
+        SNMPConfigurator.snmp(hostname, None)
 
 
-def test_describe_with_ipaddress(monkeypatch):
-    hostname = "testhost"
-    ipaddress = "127.0.0.1"
-    Scenario().add_host(hostname).apply(monkeypatch)
-    source = SNMPDataSource(hostname, ipaddress)
-
+def test_describe_with_ipaddress(source, monkeypatch):
     default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)"
     assert source.describe() == default
+
+
+class TestSNMPConfigurator_SNMP:
+    def test_attribute_defaults(self, monkeypatch):
+        hostname = "testhost"
+        ipaddress = "1.2.3.4"
+
+        Scenario().add_host(hostname).apply(monkeypatch)
+
+        configurator = SNMPConfigurator.snmp(hostname, ipaddress)
+        assert configurator.description == (
+            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)")
+
+
+class TestSNMPConfigurator_MGMT:
+    def test_attribute_defaults(self, monkeypatch):
+        hostname = "testhost"
+        ipaddress = "1.2.3.4"
+
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.set_option("management_protocol", {hostname: "snmp"})
+        ts.set_option(
+            "host_attributes",
+            {
+                hostname: {
+                    "management_address": ipaddress
+                },
+            },
+        )
+        ts.apply(monkeypatch)
+
+        configurator = SNMPConfigurator.management_board(hostname, ipaddress)
+        assert configurator.description == (
+            "Management board - SNMP "
+            "(Community: 'public', Bulk walk: no, Port: 161, Inline: no)")

@@ -6,16 +6,17 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.data_sources.piggyback import PiggyBackDataSource
 from testlib.base import Scenario
+
+from cmk.base.data_sources.piggyback import PiggyBackConfigurator, PiggyBackDataSource
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
 def test_attribute_defaults(monkeypatch, ipaddress):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    source = PiggyBackDataSource(hostname, ipaddress)
+    source = PiggyBackDataSource(configurator=PiggyBackConfigurator(hostname, ipaddress),)
 
     assert source.id == "piggyback"
-    assert source.describe().startswith("Process piggyback data from")
+    assert source.configurator.description.startswith("Process piggyback data from")
     assert source._summary_result(False) == (0, "", [])

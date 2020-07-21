@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
+
 import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
@@ -11,7 +13,7 @@ from testlib.base import Scenario
 from cmk.utils.type_defs import ServiceCheckResult
 
 from cmk.base.data_sources.agent import AgentHostSections, Summarizer
-from cmk.base.data_sources.tcp import TCPDataSource
+from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
 
 
 @pytest.mark.parametrize("result,reported,rule", [
@@ -28,28 +30,37 @@ def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):
     ts.set_option("agent_config", {"only_from": [rule]} if rule else {})
     config_cache = ts.apply(monkeypatch)
 
-    # TODO(ml): Instantiating the DS here does not seem to be very useful.
-    source = TCPDataSource("hostname", "ipaddress")
+    configurator = TCPConfigurator("hostname", "ipaddress")
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
-    summarizer = Summarizer(source._host_config)
+    summarizer = Summarizer(configurator.host_config)
     assert summarizer._sub_result_only_from({"onlyfrom": reported}) == result
 
 
-@pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-def test_attribute_defaults(monkeypatch, ipaddress):
+def test_attribute_defaults(monkeypatch):
+    ipaddress = "1.2.3.4"
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    source = TCPDataSource(hostname, ipaddress)
+
+    configurator = TCPConfigurator(hostname, ipaddress)
+    assert configurator.configure_fetcher() == {
+        "family": socket.AF_INET,
+        "address": (ipaddress, 6556),
+        "timeout": 5.0,
+        "encryption_settings": {
+            "use_realtime": "enforce",
+            "use_regular": "disable",
+        },
+    }
+    assert configurator.description == "TCP: %s:%s" % (ipaddress, 6556)
+
+    source = TCPDataSource(configurator=configurator)
 
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "agent"
-    assert source.port == 6556
-    assert source.timeout == 5.0
     # From the base class
     assert source.name() == ("agent:%s:%s" % (hostname, ipaddress if ipaddress else ""))
-    assert source.describe() == "TCP: %s:%s" % (ipaddress, source.port)
     assert source.is_agent_cache_disabled() is False
     assert source.get_may_use_cache_file() is False
     assert source.exception() is None
@@ -59,7 +70,7 @@ def test_attribute_defaults(monkeypatch, ipaddress):
 def test_get_summary_result_requires_host_sections(monkeypatch, ipaddress):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    source = TCPDataSource(hostname, ipaddress)
+    source = TCPDataSource(configurator=TCPConfigurator(hostname, ipaddress))
 
     with pytest.raises(TypeError):
         source.get_summary_result_for_discovery()

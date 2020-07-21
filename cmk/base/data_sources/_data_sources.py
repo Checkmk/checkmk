@@ -26,16 +26,16 @@ from cmk.base.config import HostConfig, SelectedRawSections
 from ._abstract import ABCDataSource
 from .agent import AgentDataSource, AgentHostSections
 from .host_sections import HostKey, MultiHostSections
-from .ipmi import IPMIManagementBoardDataSource
-from .piggyback import PiggyBackDataSource
+from .ipmi import IPMIConfigurator, IPMIManagementBoardDataSource
+from .piggyback import PiggyBackConfigurator, PiggyBackDataSource
 from .programs import (
     DSProgramConfigurator,
     DSProgramDataSource,
     SpecialAgentConfigurator,
     SpecialAgentDataSource,
 )
-from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
-from .tcp import TCPDataSource
+from .snmp import SNMPConfigurator, SNMPDataSource, SNMPManagementBoardDataSource
+from .tcp import TCPConfigurator, TCPDataSource
 
 __all__ = ["DataSources", "make_host_sections", "make_sources"]
 
@@ -61,7 +61,7 @@ class SourceBuilder:
     def sources(self) -> DataSources:
         # Always execute piggyback at the end
         return sorted(self._sources.values(),
-                      key=lambda s: (isinstance(s, PiggyBackDataSource), s.id))
+                      key=lambda s: (isinstance(s, PiggyBackDataSource), s.configurator.id))
 
     def _initialize_data_sources(self) -> None:
         if self._host_config.is_cluster:
@@ -93,18 +93,20 @@ class SourceBuilder:
                 ))
 
         if "no-piggyback" not in self._host_config.tags:
-            self._add_source(PiggyBackDataSource(
-                self._hostname,
-                self._ipaddress,
-            ))
+            self._add_source(
+                PiggyBackDataSource(configurator=PiggyBackConfigurator(
+                    self._hostname,
+                    self._ipaddress,
+                ),))
 
     def _initialize_snmp_data_sources(self,) -> None:
         if not self._host_config.is_snmp_host:
             return
-        self._add_source(SNMPDataSource(
-            self._hostname,
-            self._ipaddress,
-        ))
+        self._add_source(
+            SNMPDataSource(configurator=SNMPConfigurator.snmp(
+                self._hostname,
+                self._ipaddress,
+            ),))
 
     def _initialize_management_board_data_sources(self) -> None:
         protocol = self._host_config.management_protocol
@@ -113,15 +115,15 @@ class SourceBuilder:
 
         ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._host_config)
         if protocol == "snmp":
-            self._add_source(SNMPManagementBoardDataSource(
-                self._hostname,
-                ip_address,
-            ))
+            self._add_source(
+                SNMPManagementBoardDataSource(configurator=SNMPConfigurator.management_board(
+                    self._hostname,
+                    ip_address,
+                ),))
         elif protocol == "ipmi":
-            self._add_source(IPMIManagementBoardDataSource(
-                self._hostname,
-                ip_address,
-            ))
+            self._add_source(
+                IPMIManagementBoardDataSource(configurator=IPMIConfigurator(
+                    self._hostname, ip_address),))
         else:
             raise NotImplementedError()
 
@@ -130,7 +132,7 @@ class SourceBuilder:
             self._add_source(source)
 
     def _add_source(self, source: ABCDataSource) -> None:
-        self._sources[source.id] = source
+        self._sources[source.configurator.id] = source
 
     def _get_agent_data_source(
         self,
@@ -145,8 +147,6 @@ class SourceBuilder:
         datasource_program = self._host_config.datasource_program
         if datasource_program is not None:
             return DSProgramDataSource(
-                self._hostname,
-                self._ipaddress,
                 configurator=DSProgramConfigurator(
                     self._hostname,
                     self._ipaddress,
@@ -156,23 +156,18 @@ class SourceBuilder:
             )
 
         return TCPDataSource(
-            self._hostname,
-            self._ipaddress,
+            configurator=TCPConfigurator(self._hostname, self._ipaddress),
             main_data_source=main_data_source,
         )
 
     def _get_special_agent_data_sources(self) -> List[SpecialAgentDataSource]:
         return [
-            SpecialAgentDataSource(
+            SpecialAgentDataSource(configurator=SpecialAgentConfigurator(
                 self._hostname,
                 self._ipaddress,
-                configurator=SpecialAgentConfigurator(
-                    self._hostname,
-                    self._ipaddress,
-                    special_agent_id=agentname,
-                    params=params,
-                ),
-            ) for agentname, params in self._host_config.special_agents
+                special_agent_id=agentname,
+                params=params,
+            ),) for agentname, params in self._host_config.special_agents
         ]
 
 
@@ -254,7 +249,7 @@ def _make_host_sections(
         for source in sources:
             source.set_max_cachefile_age(max_cachefile_age)
             host_sections = multi_host_sections.setdefault(
-                HostKey(hostname, ipaddress, source.source_type),
+                HostKey(hostname, ipaddress, source.configurator.source_type),
                 source._empty_host_sections(),
             )
             host_sections.update(

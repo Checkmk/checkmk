@@ -6,23 +6,23 @@
 """Code for support of Nagios (and compatible) cores"""
 
 import base64
-import os
-import sys
-import py_compile
-import tempfile
 import errno
-from typing import Tuple, Any, IO, Optional, List, Set, Dict, Union
+import os
+import py_compile
+import sys
+import tempfile
+from typing import Any, Dict, IO, List, Optional, Set, Tuple, Union
 
 from six import ensure_binary, ensure_str
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import section_name_of, maincheckify
+from cmk.utils.check_utils import maincheckify, section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
-    CheckPluginNameStr,
     CheckPluginName,
+    CheckPluginNameStr,
     ContactgroupName,
     HostAddress,
     HostgroupName,
@@ -32,20 +32,16 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-import cmk.base.utils
-from cmk.base.api.agent_based.type_defs import CheckPlugin
-import cmk.base.obsolete_output as out
+import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-import cmk.base.ip_lookup as ip_lookup
 import cmk.base.data_sources as data_sources
-import cmk.base.check_api_utils as check_api_utils
-from cmk.base.config import (
-    ConfigCache,
-    HostConfig,
-    ObjectAttributes,
-)
+import cmk.base.ip_lookup as ip_lookup
+import cmk.base.obsolete_output as out
+import cmk.base.utils
+from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.check_utils import ServiceID
+from cmk.base.config import ConfigCache, HostConfig, ObjectAttributes
 from cmk.base.core_config import CoreCommand, CoreCommandName
 
 ObjectSpec = Dict[str, Any]

@@ -49,23 +49,22 @@ class TestDSProgramDataSource:
         template = ""
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
-        source = DSProgramDataSource(
+
+        configurator = DSProgramConfigurator(
             hostname,
             ipaddress,
-            configurator=DSProgramConfigurator(
-                hostname,
-                ipaddress,
-                template=template,
-            ),
+            template=template,
         )
+        assert configurator.cmdline == ""
+        assert configurator.stdin is None
+        assert configurator.description == "Program: "
+
+        source = DSProgramDataSource(configurator=configurator)
 
         assert source.id == "agent"
         assert source.name() == ""
         # ProgramDataSource
         assert source._cpu_tracking_id == "ds"
-        assert source.configurator.cmdline == ""
-        assert source.configurator.stdin is None
-        assert source.configurator.description == "Program: "
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_template_translation(self, monkeypatch, ipaddress):
@@ -126,21 +125,18 @@ class TestSpecialAgentDataSource:
 
         # end of setup
 
-        source = SpecialAgentDataSource(
+        configurator = SpecialAgentConfigurator(
             hostname,
             ipaddress,
-            configurator=SpecialAgentConfigurator(
-                hostname,
-                ipaddress,
-                special_agent_id=special_agent_id,
-                params=params,
-            ),
+            special_agent_id=special_agent_id,
+            params=params,
         )
+        assert configurator.cmdline == (  #
+            str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
+        assert configurator.stdin == expected_stdin
+
+        source = SpecialAgentDataSource(configurator=configurator)
 
         assert source.id == "special_%s" % special_agent_id
 
         assert source._cpu_tracking_id == "ds"
-        assert source.configurator.cmdline == (str(agent_dir / "special" /
-                                                   ("agent_%s" % special_agent_id)) + " " +
-                                               expected_args)
-        assert source.configurator.stdin == expected_stdin

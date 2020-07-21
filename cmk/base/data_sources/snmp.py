@@ -30,7 +30,7 @@ from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
-from ._abstract import ABCDataSource, ABCHostSections
+from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections
 
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
@@ -106,28 +106,30 @@ class CachedSNMPDetector:
 class ABCSNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                       SNMPHostSections],
                         metaclass=abc.ABCMeta):
-    pass
+    def _cache_dir(self) -> str:  # pylint: disable=useless-super-delegation
+        return super()._cache_dir()
+
+    def _persisted_sections_dir(self) -> str:  # pylint: disable=useless-super-delegation
+        return super()._persisted_sections_dir()
 
 
-class SNMPDataSource(ABCSNMPDataSource):
-    source_type = SourceType.HOST
-
+class SNMPConfigurator(ABCConfigurator):
     def __init__(
         self,
         hostname: HostName,
-        ipaddress: Optional[HostAddress],
+        ipaddress: HostAddress,
         *,
-        id_: Optional[str] = None,
-        cpu_tracking_id: Optional[str] = None,
-        title: Optional[str] = None,
-    ) -> None:
-        super(SNMPDataSource, self).__init__(
+        source_type: SourceType,
+        id_: str,
+        title: str,
+    ):
+        super().__init__(
             hostname,
             ipaddress,
-            id_="snmp" if id_ is None else id_,
-            cpu_tracking_id="snmp" if cpu_tracking_id is None else cpu_tracking_id,
+            source_type=source_type,
+            description=SNMPConfigurator._make_description(hostname, ipaddress, title=title),
+            id_=id_,
         )
-        self.title: Final[str] = "SNMP" if title is None else title
         if self.ipaddress is None:
             # snmp_config.ipaddress is not Optional.
             #
@@ -137,37 +139,99 @@ class SNMPDataSource(ABCSNMPDataSource):
             # Looks like it could be the case for cluster hosts which
             # don't have an IP address set.
             raise TypeError(self.ipaddress)
-        self._snmp_config = (
+        self.snmp_config = (
             # Because of crap inheritance.
-            self._host_config.snmp_config(self.ipaddress)
-            if self.source_type is SourceType.HOST else self._host_config.management_snmp_config)
+            self.host_config.snmp_config(self.ipaddress)
+            if self.source_type is SourceType.HOST else self.host_config.management_snmp_config)
+
+    @classmethod
+    def snmp(
+        cls,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+    ) -> "SNMPConfigurator":
+        if ipaddress is None:
+            raise TypeError(ipaddress)
+        return cls(
+            hostname,
+            ipaddress,
+            source_type=SourceType.HOST,
+            id_="snmp",
+            title="SNMP",
+        )
+
+    @classmethod
+    def management_board(
+        cls,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+    ) -> "SNMPConfigurator":
+        if ipaddress is None:
+            raise TypeError(ipaddress)
+        return cls(
+            hostname,
+            ipaddress,
+            source_type=SourceType.MANAGEMENT,
+            id_="mgmt_snmp",
+            title="Management board - SNMP",
+        )
+
+    def configure_fetcher(self):
+        raise NotImplementedError
+
+    @staticmethod
+    def _make_description(
+        hostname: HostName,
+        ipaddress: HostAddress,
+        *,
+        title: str,
+    ) -> str:
+        snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
+        if snmp_config.is_usewalk_host:
+            return "SNMP (use stored walk)"
+
+        if snmp_config.is_inline_snmp_host:
+            inline = "yes"
+        else:
+            inline = "no"
+
+        if snmp_config.is_snmpv3_host:
+            credentials_text = "Credentials: '%s'" % ", ".join(snmp_config.credentials)
+        else:
+            credentials_text = "Community: %r" % snmp_config.credentials
+
+        if snmp_config.is_snmpv3_host or snmp_config.is_bulkwalk_host:
+            bulk = "yes"
+        else:
+            bulk = "no"
+
+        return "%s (%s, Bulk walk: %s, Port: %d, Inline: %s)" % (
+            title,
+            credentials_text,
+            bulk,
+            snmp_config.port,
+            inline,
+        )
+
+
+class SNMPDataSource(ABCSNMPDataSource):
+    def __init__(
+        self,
+        *,
+        configurator: SNMPConfigurator,
+        cpu_tracking_id: Optional[str] = None,
+    ) -> None:
+        super(SNMPDataSource, self).__init__(
+            configurator=configurator,
+            cpu_tracking_id="snmp" if cpu_tracking_id is None else cpu_tracking_id,
+        )
         self.detector: Final = CachedSNMPDetector()
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
         self._fetched_raw_section_names: Set[SectionName] = set()
 
     def describe(self) -> str:
-        snmp_config = self._snmp_config
-        if self._snmp_config.is_usewalk_host:
-            return "SNMP (use stored walk)"
-
-        if self._snmp_config.is_inline_snmp_host:
-            inline = "yes"
-        else:
-            inline = "no"
-
-        if self._snmp_config.is_snmpv3_host:
-            credentials_text = "Credentials: '%s'" % ", ".join(self._snmp_config.credentials)
-        else:
-            credentials_text = "Community: %r" % self._snmp_config.credentials
-
-        if self._snmp_config.is_snmpv3_host or snmp_config.is_bulkwalk_host:
-            bulk = "yes"
-        else:
-            bulk = "no"
-
-        return "%s (%s, Bulk walk: %s, Port: %d, Inline: %s)" % \
-               (self.title, credentials_text, bulk, snmp_config.port, inline)
+        return self.configurator.description
 
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         return 0, "Success", []
@@ -205,11 +269,12 @@ class SNMPDataSource(ABCSNMPDataSource):
         *,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> SNMPRawData:
-        ip_lookup.verify_ipaddress(self.ipaddress)
+        ip_lookup.verify_ipaddress(self.configurator.ipaddress)
         with SNMPDataFetcher(
                 self._make_oid_infos(selected_raw_sections=selected_raw_sections),
                 self._use_snmpwalk_cache,
-                self._snmp_config,
+                # TODO(ml): cast: this has to move to the configurator anyway.
+                cast(SNMPConfigurator, self.configurator).snmp_config,
         ) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
@@ -220,9 +285,11 @@ class SNMPDataSource(ABCSNMPDataSource):
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> Dict[SectionName, List[SNMPTree]]:
         oid_infos = {}  # Dict[SectionName, List[SNMPTree]]
+        # TODO(ml): This should move to the Configurator as well.
+        configurator = cast(SNMPConfigurator, self.configurator)
         for section_name in SNMPDataSource._sort_section_names(
             {s.name for s in selected_raw_sections.values()}
-                if selected_raw_sections is not None else self.detector(self._snmp_config)):
+                if selected_raw_sections is not None else self.detector(configurator.snmp_config)):
             plugin = config.registered_snmp_sections.get(section_name)
             if plugin is None:
                 self._logger.debug("%s: No such section definition", section_name)
@@ -274,7 +341,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         persisted_sections: SNMPPersistedSections = {}
 
         for section_name, section_content in raw_data.items():
-            fetch_interval = self._host_config.snmp_fetch_interval(section_name)
+            fetch_interval = self.configurator.host_config.snmp_fetch_interval(section_name)
             if fetch_interval is None:
                 continue
 
@@ -291,18 +358,15 @@ class SNMPDataSource(ABCSNMPDataSource):
 
 
 class SNMPManagementBoardDataSource(SNMPDataSource):
-    source_type = SourceType.MANAGEMENT
-
     def __init__(
         self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
+        *,
+        configurator: SNMPConfigurator,
     ) -> None:
         super(SNMPManagementBoardDataSource, self).__init__(
-            hostname,
-            ipaddress,
-            id_="mgmt_snmp",
+            configurator=configurator,
             cpu_tracking_id="snmp",
-            title="Management board - SNMP",
         )
-        self._credentials: Final = cast(SNMPCredentials, self._host_config.management_credentials)
+        # TODO(ml): Unused?
+        self._credentials: Final = cast(SNMPCredentials,
+                                        self.configurator.host_config.management_credentials)

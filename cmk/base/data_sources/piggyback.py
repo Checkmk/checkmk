@@ -4,13 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-from typing import Optional, Tuple
+from pathlib import Path
+from typing import Any, cast, Dict, Final, Optional, Tuple
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
-from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, ServiceCheckResult
 from cmk.utils.piggyback import get_piggyback_raw_data
+from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, ServiceCheckResult, SourceType
 
 from cmk.fetchers import PiggyBackDataFetcher
 
@@ -18,30 +18,54 @@ import cmk.base.config as config
 from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
+from ._abstract import ABCConfigurator
 from .agent import AgentDataSource
+
+
+class PiggyBackConfigurator(ABCConfigurator):
+    def __init__(
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+    ) -> None:
+        super().__init__(
+            hostname,
+            ipaddress,
+            source_type=SourceType.HOST,
+            description=PiggyBackConfigurator._make_description(hostname),
+            id_="piggyback",
+        )
+        self.time_settings: Final = (config.get_config_cache().get_piggybacked_hosts_time_settings(
+            piggybacked_hostname=hostname))
+
+    def configure_fetcher(self) -> Dict[str, Any]:
+        return {
+            "hostname": self.hostname,
+            "address": self.ipaddress,
+            "time_settings": self.time_settings,
+        }
+
+    @staticmethod
+    def _make_description(hostname: HostName):
+        return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / hostname)
 
 
 class PiggyBackDataSource(AgentDataSource):
     def __init__(
         self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
+        *,
+        configurator: PiggyBackConfigurator,
         main_data_source: bool = False,
     ) -> None:
         super(PiggyBackDataSource, self).__init__(
-            hostname,
-            ipaddress,
+            configurator=configurator,
             main_data_source=main_data_source,
-            id_="piggyback",
             cpu_tracking_id="agent",
         )
         self._summary: Optional[ServiceCheckResult] = None
-        self._time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings(
-            piggybacked_hostname=self.hostname)
 
     def describe(self) -> str:
-        path = os.path.join(tmp_dir, "piggyback", self.hostname)
-        return "Process piggyback data from %s" % path
+        return self.configurator.description
 
     def _execute(
         self,
@@ -49,15 +73,21 @@ class PiggyBackDataSource(AgentDataSource):
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> RawAgentData:
         self._summary = self._summarize()
-        with PiggyBackDataFetcher(self.hostname, self.ipaddress, self._time_settings) as fetcher:
+        with PiggyBackDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 
     def _summarize(self) -> ServiceCheckResult:
         states = [0]
         infotexts = set()
-        for origin in (self.hostname, self.ipaddress):
-            for src in get_piggyback_raw_data(origin if origin else "", self._time_settings):
+        # TODO(ml): Get rid of cast-the code is doubled with the fetcher
+        #           so that this could actually go the the configurator.
+        configurator = cast(PiggyBackConfigurator, self.configurator)
+        for origin in (self.configurator.hostname, self.configurator.ipaddress):
+            for src in get_piggyback_raw_data(
+                    origin if origin else "",
+                    configurator.time_settings,
+            ):
                 states.append(src.reason_status)
                 infotexts.add(src.reason)
         return max(states), ", ".join(infotexts), []
@@ -84,7 +114,7 @@ class PiggyBackDataSource(AgentDataSource):
             # and source status file
             return 0, '', []
 
-        if 'piggyback' in self._host_config.tags and not self._summary:
+        if 'piggyback' in self.configurator.host_config.tags and not self._summary:
             # Tag: 'Always use and expect piggback data'
             return 1, 'Missing data', []
 

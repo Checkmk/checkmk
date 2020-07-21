@@ -194,7 +194,7 @@ def _all_sources_fail(
         return False
 
     exceptions_by_source = {
-        source.id: source.exception()
+        source.configurator.id: source.exception()
         for source in data_sources.make_sources(host_config, ipaddress)
     }
     if "piggyback" in exceptions_by_source and not len(exceptions_by_source) == 1\
@@ -305,7 +305,11 @@ def _do_inv_for_realhost(
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be
                 # sections for inventory plugins which were not fetched yet.
                 host_sections = multi_host_sections.setdefault(
-                    HostKey(hostname, ipaddress, source.source_type),
+                    # TODO(ml): are
+                    #    hostname == source.hostname
+                    #    ipaddress == source.ipaddress
+                    # ?
+                    HostKey(hostname, ipaddress, source.configurator.source_type),
                     SNMPHostSections(),
                 )
                 source.set_fetched_raw_section_names(set(host_sections.sections))

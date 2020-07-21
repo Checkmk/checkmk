@@ -25,10 +25,10 @@ from cmk.base.data_sources import (
 )
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
-from cmk.base.data_sources.piggyback import PiggyBackDataSource
+from cmk.base.data_sources.piggyback import PiggyBackConfigurator, PiggyBackDataSource
 from cmk.base.data_sources.programs import DSProgramConfigurator, DSProgramDataSource
-from cmk.base.data_sources.snmp import SNMPDataSource, SNMPHostSections
-from cmk.base.data_sources.tcp import TCPDataSource
+from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPDataSource, SNMPHostSections
+from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
 
 _TestSection = collections.namedtuple(
     "TestSection",
@@ -456,7 +456,7 @@ class TestMakeHostSectionsHosts:
             config_cache,
             host_config,
             ipaddress,
-            sources=[SNMPDataSource(hostname, ipaddress)],
+            sources=[SNMPDataSource(configurator=SNMPConfigurator.snmp(hostname, ipaddress),)],
             max_cachefile_age=0,
             selected_raw_sections=None,
         )
@@ -472,17 +472,16 @@ class TestMakeHostSectionsHosts:
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
 
     @pytest.mark.parametrize("source", [
-        PiggyBackDataSource,
-        lambda hostname, ipaddress: DSProgramDataSource(
-            hostname,
-            ipaddress,
-            configurator=DSProgramConfigurator(hostname, ipaddress, template=""),
-        ),
-        TCPDataSource,
+        lambda hostname, ipaddress: PiggyBackDataSource(configurator=PiggyBackConfigurator(
+            hostname, ipaddress),),
+        lambda hostname, ipaddress: DSProgramDataSource(configurator=DSProgramConfigurator(
+            hostname, ipaddress, template=""),),
+        lambda hostname, ipaddress: TCPDataSource(configurator=TCPConfigurator(hostname, ipaddress),
+                                                 ),
     ])
     def test_one_nonsnmp_source(self, hostname, ipaddress, config_cache, host_config, source):
         source = source(hostname, ipaddress)
-        assert source.source_type is SourceType.HOST
+        assert source.configurator.source_type is SourceType.HOST
 
         mhs = make_host_sections(
             config_cache,
@@ -494,7 +493,7 @@ class TestMakeHostSectionsHosts:
         )
         assert len(mhs) == 1
 
-        key = HostKey(hostname, ipaddress, source.source_type)
+        key = HostKey(hostname, ipaddress, source.configurator.source_type)
         assert key in mhs
 
         section = mhs[key]
@@ -511,12 +510,9 @@ class TestMakeHostSectionsHosts:
         host_config,
     ):
         sources = [
-            DSProgramDataSource(
-                hostname,
-                ipaddress,
-                configurator=DSProgramConfigurator(hostname, ipaddress, template=""),
-            ),
-            TCPDataSource(hostname, ipaddress),
+            DSProgramDataSource(configurator=DSProgramConfigurator(hostname, ipaddress,
+                                                                   template=""),),
+            TCPDataSource(configurator=TCPConfigurator(hostname, ipaddress),),
         ]
 
         mhs = make_host_sections(
@@ -543,11 +539,12 @@ class TestMakeHostSectionsHosts:
     def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, config_cache, host_config):
         sources = [
             DSProgramDataSource(
-                hostname + "0", ipaddress,
                 configurator=DSProgramConfigurator(hostname + "0", ipaddress,
                                                    template="",),),
-            TCPDataSource(hostname + "1", ipaddress),
-            TCPDataSource(hostname + "2", ipaddress),
+            TCPDataSource(configurator=TCPConfigurator(hostname + "1", ipaddress),),
+            TCPDataSource(
+                configurator=TCPConfigurator(hostname + "2", ipaddress),
+            ),
         ]
 
         mhs = make_host_sections(

@@ -6,12 +6,12 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, cast, Dict, Optional
 
 from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostAddress, HostName, RawAgentData
+from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, SourceType
 
 from cmk.fetchers import ProgramDataFetcher
 
@@ -25,11 +25,25 @@ from .agent import AgentDataSource
 
 
 class ABCProgramConfigurator(ABCConfigurator):
-    def __init__(self, *, cmdline: str, stdin: Optional[str]) -> None:
-        super().__init__(description=ABCProgramConfigurator._make_description(
-            cmdline,
-            stdin,
-        ))
+    def __init__(
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        *,
+        id_: str,
+        cmdline: str,
+        stdin: Optional[str],
+    ) -> None:
+        super().__init__(
+            hostname,
+            ipaddress,
+            source_type=SourceType.HOST,
+            description=ABCProgramConfigurator._make_description(
+                cmdline,
+                stdin,
+            ),
+            id_=id_,
+        )
         self.cmdline = cmdline
         self.stdin = stdin
 
@@ -57,6 +71,9 @@ class DSProgramConfigurator(ABCProgramConfigurator):
         template: str,
     ) -> None:
         super().__init__(
+            hostname,
+            ipaddress,
+            id_="agent",
             cmdline=DSProgramConfigurator._translate(
                 template,
                 hostname,
@@ -117,6 +134,9 @@ class SpecialAgentConfigurator(ABCProgramConfigurator):
         params: Dict,
     ) -> None:
         super().__init__(
+            hostname,
+            ipaddress,
+            id_="special_%s" % special_agent_id,
             cmdline=SpecialAgentConfigurator._make_cmdline(
                 hostname,
                 ipaddress,
@@ -184,31 +204,11 @@ class SpecialAgentConfigurator(ABCProgramConfigurator):
 
 class ABCProgramDataSource(AgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
-    def __init__(
-        self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        *,
-        configurator: ABCProgramConfigurator,
-        id_: str,
-        cpu_tracking_id: str,
-        main_data_source: bool = False,
-    ) -> None:
-        super().__init__(
-            hostname,
-            ipaddress,
-            id_=id_,
-            cpu_tracking_id=cpu_tracking_id,
-            main_data_source=main_data_source,
-        )
-        self.configurator = configurator
-
     def _execute(
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> RawAgentData:
-        self._logger.debug("Calling external program %r" % (self.configurator.cmdline))
         # TODO(ml): Do something with the selection.
         with ProgramDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
@@ -221,43 +221,35 @@ class ABCProgramDataSource(AgentDataSource):
 class DSProgramDataSource(ABCProgramDataSource):
     def __init__(
         self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
         *,
         configurator: DSProgramConfigurator,
         main_data_source: bool = False,
-        id_="agent",
         cpu_tracking_id="ds",
     ) -> None:
         super().__init__(
-            hostname,
-            ipaddress,
             configurator=configurator,
             main_data_source=main_data_source,
-            id_="agent",
             cpu_tracking_id="ds",
         )
 
     def name(self) -> str:
         """Return a unique (per host) textual identification of the data source"""
-        program = self.configurator.cmdline.split(" ")[0]
+        # TODO(ml): Get rid of ugly cast by setting the constant `name` to the base class.
+        #           Is `cmdline.split(" ")[0]` not simply `source_path`?
+        configurator = cast(DSProgramConfigurator, self.configurator)
+        program = configurator.cmdline.split(" ")[0]
         return os.path.basename(program)
 
 
 class SpecialAgentDataSource(ABCProgramDataSource):
     def __init__(
         self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
         *,
         configurator: SpecialAgentConfigurator,
         main_data_source: bool = False,
     ) -> None:
         super(SpecialAgentDataSource, self).__init__(
-            hostname,
-            ipaddress,
             configurator=configurator,
             main_data_source=main_data_source,
-            id_="special_%s" % configurator.special_agent_id,
             cpu_tracking_id="ds",
         )

@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import hashlib
 import json
+import re
 from typing import Any, Dict, List, Optional, Union
+from urllib.parse import quote
 
 from connexion import ProblemException  # type: ignore[import]
 from werkzeug.datastructures import ETags
@@ -384,7 +386,7 @@ def domain_object_sub_collection_href(
         The href as a string.
 
     """
-    return f"/objects/{domain_type}/{obj_id}/collections/{collection_name}"
+    return f"/objects/{domain_type}/{url_safe(obj_id)}/collections/{collection_name}"
 
 
 def collection_href(domain_type: DomainType, name: str = 'all') -> str:
@@ -408,7 +410,7 @@ def collection_href(domain_type: DomainType, name: str = 'all') -> str:
         The href as a string
 
     """
-    return f'/domain-types/{domain_type}/collections/{name}'
+    return f'/domain-types/{domain_type}/collections/{url_safe(name)}'
 
 
 def object_action_href(
@@ -464,9 +466,44 @@ def object_href(
         '/objects/folder_config/5'
 
     Returns:
+        The URL.
 
     """
-    return f'/objects/{domain_type}/{obj_id}'
+    return f'/objects/{domain_type}/{url_safe(obj_id)}'
+
+
+def url_safe(part: Union[int, str]) -> str:
+    """Quote a part of the URL.
+
+    This is necessary because as it is a string, it may contain characters like '/' which
+    separates a URL path segment. This will lead to strange 404 errors if not handled correctly.
+
+    We therefore quote these characters here.
+
+    Args:
+        part:
+            The part of the URL to be escaped.
+
+    Returns:
+        An possibly escaped URL part.
+
+    Examples:
+
+        >>> url_safe('{variable}')
+        '{variable}'
+
+        >>> url_safe('{variable_name}')
+        '{variable_name}'
+
+        >>> url_safe('Filesystem /boot')
+        'Filesystem%2520%252Fboot'
+
+    """
+    _part = str(part)
+    # We don't want to escape variable templates.
+    if re.match('^[{][a-z_]+[}]$', _part):
+        return _part
+    return quote(quote(_part, safe=''))
 
 
 def domain_object(

@@ -10,6 +10,8 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.lowlevel import send_co
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.type_defs import LivestatusCommand
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.utils import to_timestamp
 
+# TODO: Test duration option
+
 RecurMode = Literal[
     "fixed",
     "hour",

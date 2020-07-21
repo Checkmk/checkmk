@@ -464,26 +464,23 @@ def _parse_man_page_header(name, path):
         "path": str(path),
     }
     key = ""
-    lineno = 0
     with path.open(encoding="utf-8") as fp:
-        for line in fp:
+        for lineno, line in enumerate(fp, start=1):
             line = line.rstrip()
-            lineno += 1
-            try:
-                if not line:
-                    parsed[key] += "\n\n"
-                elif line[0] == ' ':
-                    parsed[key] += "\n" + line.lstrip()
-                elif line[0] == '[':
-                    break  # End of header
-                else:
-                    key, rest = line.split(":", 1)
-                    parsed[key] = rest.lstrip()
-            except Exception:
+            if not line:
+                parsed[key] += "\n\n"
+            elif line[0] == ' ':
+                parsed[key] += "\n" + line.lstrip()
+            elif line[0] == '[':
+                break  # End of header
+            elif ':' in line:
+                key, rest = line.split(":", 1)
+                parsed[key] = rest.lstrip()
+            else:
+                msg = "ERROR: Invalid line %d in man page %s:\n%s" % (lineno, path, line)
                 if cmk.utils.debug.enabled():
-                    raise
-                sys.stderr.write(
-                    str("ERROR: Invalid line %d in man page %s\n%s") % (lineno, path, line))
+                    raise ValueError(msg)
+                sys.stderr.write("%s\n" % msg)
                 break
 
     # verify mandatory keys. FIXME: This list may be incomplete

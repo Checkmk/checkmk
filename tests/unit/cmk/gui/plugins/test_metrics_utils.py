@@ -118,6 +118,8 @@ def test_reverse_translation_metric_name(canonical_name, perf_data_names):
         ([u'user', u'system', u'idle', u'nice'], None, ['cpu_utilization_3']),
         ([u'user', u'system', u'idle', u'io_wait'], None, ['cpu_utilization_4']),
         ([u'user', u'system', u'io_wait'], None, ['cpu_utilization_5']),
+        (['util_average', 'util', 'wait', 'user', 'system', 'guest'
+         ], "check_mk-kernel.util", ['util_average_1', 'cpu_utilization_6_guest_util']),
         ([u'user', u'system', u'io_wait', 'guest', 'steal'
          ], 'check_mk-statgrab_cpu', ['cpu_utilization_7']),
         ([u'user', u'system', u'interrupt'], None, ['cpu_utilization_8']),

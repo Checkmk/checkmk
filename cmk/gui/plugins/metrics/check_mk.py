@@ -9837,7 +9837,7 @@ graph_info["cpu_utilization_4"] = {
     "range": (0, 100),
 }
 
-# The following 6 graphs come in pairs.
+# The following 8 graphs come in pairs.
 # If possible, we display the "util" metric,
 # otherwise we display the sum of the present metrics.
 
@@ -9879,7 +9879,7 @@ graph_info["cpu_utilization_5_util"] = {
 }
 
 #TODO which warn,crit?
-graph_info["cpu_utilization_6"] = {
+graph_info["cpu_utilization_6_steal"] = {
     "title": _("CPU utilization"),
     "metrics": [
         ("user", "area"),
@@ -9896,7 +9896,7 @@ graph_info["cpu_utilization_6"] = {
     "range": (0, 100),
 }
 
-graph_info["cpu_utilization_6_util"] = {
+graph_info["cpu_utilization_6_steal_util"] = {
     "title": _("CPU utilization"),
     "metrics": [
         ("user", "area"),
@@ -9910,6 +9910,41 @@ graph_info["cpu_utilization_6_util"] = {
         "util:crit",
     ],
     "conflicting_metrics": ["cpu_util_guest",],
+    "omit_zero_metrics": True,
+    "range": (0, 100),
+}
+#TODO which warn,crit?
+graph_info["cpu_utilization_6_guest"] = {
+    "title": _("CPU utilization"),
+    "metrics": [
+        ("user", "area"),
+        ("system", "stack"),
+        ("io_wait", "stack"),
+        ("cpu_util_guest", "stack"),
+        ("user,system,io_wait,cpu_util_steal,+,+,+#004080", "line", _("Total")),
+    ],
+    "conflicting_metrics": [
+        "util",
+        "cpu_util_steal",
+    ],
+    "omit_zero_metrics": True,
+    "range": (0, 100),
+}
+
+graph_info["cpu_utilization_6_guest_util"] = {
+    "title": _("CPU utilization"),
+    "metrics": [
+        ("user", "area"),
+        ("system", "stack"),
+        ("io_wait", "stack"),
+        ("cpu_util_guest", "stack"),
+        ("util#004080", "line", _("Total")),
+    ],
+    "scalars": [
+        "util:warn",
+        "util:crit",
+    ],
+    "conflicting_metrics": ["cpu_util_steal",],
     "omit_zero_metrics": True,
     "range": (0, 100),
 }
@@ -9948,7 +9983,7 @@ graph_info["cpu_utilization_7_util"] = {
     "range": (0, 100),
 }
 
-# ^-- last six graphs go pairwise together (see above)
+# ^-- last eight graphs go pairwise together (see above)
 
 #TODO which warn,crit?
 graph_info["cpu_utilization_8"] = {

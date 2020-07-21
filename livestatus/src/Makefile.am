@@ -99,7 +99,6 @@ liblivestatus_a_SOURCES = \
         BlobColumn.cc \
         Column.cc \
         ColumnFilter.cc \
-        ColumnsColumn.cc \
         CommentColumn.cc \
         ContactGroupsColumn.cc \
         ContactGroupsMemberColumn.cc \

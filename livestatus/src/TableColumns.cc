@@ -9,24 +9,28 @@
 #include <memory>
 
 #include "Column.h"
-#include "ColumnsColumn.h"
 #include "Query.h"
 #include "Row.h"
+#include "StringLambdaColumn.h"
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
     Column::Offsets offsets{};
-    addColumn(std::make_unique<ColumnsColumn>(
-        "table", "The name of the table", offsets, ColumnsColumn::Type::table,
-        *this));
-    addColumn(std::make_unique<ColumnsColumn>(
+    addColumn(std::make_unique<StringLambdaColumn<Column>>(
+        "table", "The name of the table", offsets, [this](const Column *col) {
+            return this->getValue(col, Type::table);
+        }));
+    addColumn(std::make_unique<StringLambdaColumn<Column>>(
         "name", "The name of the column within the table", offsets,
-        ColumnsColumn::Type::name, *this));
-    addColumn(std::make_unique<ColumnsColumn>(
+        [this](const Column *col) { return this->getValue(col, Type::name); }));
+    addColumn(std::make_unique<StringLambdaColumn<Column>>(
         "description", "A description of the column", offsets,
-        ColumnsColumn::Type::description, *this));
-    addColumn(std::make_unique<ColumnsColumn>(
+        [this](const Column *col) {
+            return this->getValue(col, Type::description);
+        }));
+    addColumn(std::make_unique<StringLambdaColumn<Column>>(
         "type", "The data type of the column (int, float, string, list)",
-        offsets, ColumnsColumn::Type::type, *this));
+        offsets,
+        [this](const Column *col) { return this->getValue(col, Type::type); }));
 }
 
 std::string TableColumns::name() const { return "columns"; }
@@ -43,19 +47,18 @@ void TableColumns::answerQuery(Query *query) {
     }
 }
 
-std::string TableColumns::getValue(const Column *column,
-                                   ColumnsColumn::Type colcol) const {
+std::string TableColumns::getValue(const Column *column, Type colcol) const {
     static const char *typenames[8] = {"int",  "float", "string", "list",
                                        "time", "dict",  "blob",   "null"};
 
     switch (colcol) {
-        case ColumnsColumn::Type::table:
+        case Type::table:
             return tableNameOf(column);
-        case ColumnsColumn::Type::name:
+        case Type::name:
             return column->name();
-        case ColumnsColumn::Type::description:
+        case Type::description:
             return column->description();
-        case ColumnsColumn::Type::type:
+        case Type::type:
             return typenames[static_cast<int>(column->type())];
     }
     return "";

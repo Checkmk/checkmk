@@ -13,14 +13,9 @@
 #include "Table.h"
 class MonitoringCore;
 class Query;
-struct Command;
 
 class TableCommands : public Table {
 public:
-    class IRow : virtual public Table::IRow {
-    public:
-        virtual Command getCommand() const = 0;
-    };
     explicit TableCommands(MonitoringCore *mc);
 
     [[nodiscard]] std::string name() const override;

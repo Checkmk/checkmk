@@ -40,11 +40,7 @@
 
 namespace {
 
-class LogRow :
-#ifndef CMC
-    public TableContacts::IRow,
-#endif
-    public TableCommands::IRow {
+class LogRow {
 public:
     LogRow(LogEntry *entry_, host *hst_, service *svc_, const contact *ctc_,
            Command command_)
@@ -53,11 +49,6 @@ public:
         , svc{svc_}
         , ctc{ctc_}
         , command{std::move(command_)} {};
-
-#ifndef CMC
-    [[nodiscard]] const contact *getContact() const override { return ctc; }
-#endif
-    [[nodiscard]] Command getCommand() const override { return command; }
 
     LogEntry *entry;
     host *hst;
@@ -235,7 +226,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
             reinterpret_cast<const contact *>(
                 core()->find_contact(entry->_contact_name)),
             core()->find_command(entry->_command_name)};
-        if (!query->processDataset(Row{dynamic_cast<Table::IRow *>(&lr)})) {
+        if (!query->processDataset(Row{&lr})) {
             return false;
         }
     }

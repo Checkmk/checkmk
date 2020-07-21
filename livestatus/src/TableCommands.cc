@@ -6,7 +6,6 @@
 #include "TableCommands.h"
 
 #include <memory>
-#include <utility>
 #include <vector>
 
 #include "Column.h"
@@ -23,36 +22,20 @@ std::string TableCommands::name() const { return "commands"; }
 
 std::string TableCommands::namePrefix() const { return "command_"; }
 
-namespace {
-class CommandRow : public TableCommands::IRow {
-public:
-    explicit CommandRow(Command cmd) : cmd_{std::move(cmd)} {};
-    [[nodiscard]] Command getCommand() const override { return cmd_; }
-
-private:
-    Command cmd_;
-};
-}  // namespace
-
 // static
 void TableCommands::addColumns(Table *table, const std::string &prefix) {
     Column::Offsets offsets{};
-    table->addColumn(std::make_unique<StringLambdaColumn<Table::IRow>>(
+    table->addColumn(std::make_unique<StringLambdaColumn<Command>>(
         prefix + "name", "The name of the command", offsets,
-        [](const Table::IRow *r) {
-            return dynamic_cast<const IRow *>(r)->getCommand()._name;
-        }));
-    table->addColumn(std::make_unique<StringLambdaColumn<Table::IRow>>(
+        [](const Command *cmd) { return cmd->_name; }));
+    table->addColumn(std::make_unique<StringLambdaColumn<Command>>(
         prefix + "line", "The shell command line", offsets,
-        [](const Table::IRow *r) {
-            return dynamic_cast<const IRow *>(r)->getCommand()._command_line;
-        }));
+        [](const Command *cmd) { return cmd->_command_line; }));
 }
 
 void TableCommands::answerQuery(Query *query) {
     for (auto &cmd : core()->commands()) {
-        auto r = CommandRow{cmd};
-        if (!query->processDataset(Row{dynamic_cast<Table::IRow *>(&r)})) {
+        if (!query->processDataset(Row{&cmd})) {
             break;
         }
     }

@@ -13,6 +13,7 @@ from testlib.base import Scenario  # type: ignore[import]
 import cmk.utils.piggyback
 from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -103,7 +104,7 @@ def _set_up(monkeypatch, hostname, nodes, cluster_mapping) -> None:
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config_cache, "host_of_clustered_service", host_of_clustered_service)
-    monkeypatch.setattr(config, "get_registered_section_plugin", MOCK_SECTIONS.get)
+    monkeypatch.setattr(agent_based_register._config, "get_section_plugin", MOCK_SECTIONS.get)
 
 
 @pytest.mark.parametrize(

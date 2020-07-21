@@ -12,15 +12,15 @@ import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import CheckPluginNameStr, SectionName
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.check_utils
 
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    create_snmp_section_plugin_from_legacy,)
-
-from cmk.utils.type_defs import CheckPluginNameStr
+    add_snmp_section_plugin_from_legacy,)
+from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
 InventoryPluginNameStr = str
 InventoryInfo = Dict[str, Any]
@@ -87,14 +87,14 @@ def _extract_snmp_sections() -> None:
         if 'snmp_info' not in plugin_info:
             continue
         section_name = section_name_of(plugin_name)
-        if config.get_registered_section_plugin(SectionName(section_name)):
+        if agent_based_register.get_section_plugin(SectionName(section_name)):
             continue
 
         fallback_files = ([_include_file_path(i) for i in plugin_info.get('includes', [])] +
                           [_plugin_file_lookup[plugin_name]])
 
         try:
-            snmp_section_plugin = create_snmp_section_plugin_from_legacy(
+            add_snmp_section_plugin_from_legacy(
                 section_name,
                 {},
                 plugin_info['snmp_scan_function'],
@@ -107,8 +107,6 @@ def _extract_snmp_sections() -> None:
                 raise MKGeneralException(msg)
             # TODO (mo): bring this back:
             #console.warning(msg)
-        else:
-            config.registered_snmp_sections[snmp_section_plugin.name] = snmp_section_plugin
 
 
 def _new_inv_context(get_check_api_context: config.GetCheckApiContext,
@@ -154,7 +152,8 @@ def _include_file_path(name: str) -> str:
 
 def is_snmp_plugin(check_plugin_name: str) -> bool:
     section_name = section_name_of(check_plugin_name)
-    return SectionName(section_name) in config.registered_snmp_sections
+    plugin = agent_based_register.get_section_plugin(SectionName(section_name))
+    return isinstance(plugin, SNMPSectionPlugin)
 
 
 def sorted_inventory_plugins() -> Iterator[Tuple[CheckPluginNameStr, InventoryInfo]]:

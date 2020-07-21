@@ -1037,13 +1037,13 @@ class AutomationGetSectionInformation(Automation):
                 # for now, we need only these two.
                 "name": str(section.name),
                 "type": "agent",
-            } for section in config.registered_agent_sections.values()
+            } for section in agent_based_register.iter_all_agent_sections()
         }
         section_infos.update({
             str(section.name): {
                 "name": str(section.name),
                 "type": "snmp",
-            } for section in config.registered_snmp_sections.values()
+            } for section in agent_based_register.iter_all_snmp_sections()
         })
         return section_infos
 

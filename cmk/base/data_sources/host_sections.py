@@ -20,6 +20,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.caching as caching
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -223,8 +224,8 @@ class MultiHostSections(collections.abc.MutableMapping):
         except KeyError:
             return self._parsed_to_raw_map.setdefault(cache_key, None)
 
-        section_def = config.get_parsed_section_creator(parsed_section_name,
-                                                        list(hosts_raw_sections))
+        section_def = agent_based_register.get_parsed_section_creator(parsed_section_name,
+                                                                      list(hosts_raw_sections))
         return self._parsed_to_raw_map.setdefault(cache_key, section_def)
 
     def get_section_content(
@@ -467,7 +468,7 @@ class MultiHostSections(collections.abc.MutableMapping):
 
         All exceptions raised by the parse function will be catched and re-raised as
         MKParseFunctionError() exceptions."""
-        section_plugin = config.get_registered_section_plugin(section_name)
+        section_plugin = agent_based_register.get_section_plugin(section_name)
         if section_plugin is None:
             # use legacy parse function for unmigrated sections
             parse_function = config.check_info.get(str(section_name), {}).get("parse_function")

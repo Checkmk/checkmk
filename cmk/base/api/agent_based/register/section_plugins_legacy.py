@@ -15,6 +15,7 @@ from cmk.base.api.agent_based.register.section_plugins import (
 )
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     create_detect_spec,)
+from cmk.base.api.agent_based.register import _config
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
@@ -214,8 +215,10 @@ def _create_host_label_function(discover_function: Optional[Callable],
     return host_label_function
 
 
-def create_agent_section_plugin_from_legacy(check_plugin_name: str,
-                                            check_info_dict: Dict[str, Any]) -> AgentSectionPlugin:
+def _create_agent_section_plugin_from_legacy(
+    check_plugin_name: str,
+    check_info_dict: Dict[str, Any],
+) -> AgentSectionPlugin:
     if check_info_dict.get("node_info"):
         # We refuse to tranform these. The requirement of adding the node info
         # makes rewriting of the base code too difficult.
@@ -236,12 +239,23 @@ def create_agent_section_plugin_from_legacy(check_plugin_name: str,
     )
 
 
-def create_snmp_section_plugin_from_legacy(
-        check_plugin_name: str,
-        check_info_dict: Dict[str, Any],
-        snmp_scan_function: Callable,
-        snmp_info: Any,
-        scan_function_fallback_files: Optional[List[str]] = None) -> SNMPSectionPlugin:
+def add_agent_section_plugin_from_legacy(
+    check_plugin_name: str,
+    check_info_dict: Dict[str, Any],
+) -> None:
+
+    agent_section = _create_agent_section_plugin_from_legacy(check_plugin_name, check_info_dict)
+
+    _config.registered_agent_sections[agent_section.name] = agent_section
+
+
+def _create_snmp_section_plugin_from_legacy(
+    check_plugin_name: str,
+    check_info_dict: Dict[str, Any],
+    snmp_scan_function: Callable,
+    snmp_info: Any,
+    scan_function_fallback_files: Optional[List[str]] = None,
+) -> SNMPSectionPlugin:
     if check_info_dict.get("node_info"):
         # We refuse to tranform these. There's no way we get the data layout recovery right.
         # This would add 19 plugins to list of failures, but some are on the list anyway.
@@ -272,3 +286,22 @@ def create_snmp_section_plugin_from_legacy(
         trees=trees,
         detect_spec=detect_spec,
     )
+
+
+def add_snmp_section_plugin_from_legacy(
+    check_plugin_name: str,
+    check_info_dict: Dict[str, Any],
+    snmp_scan_function: Callable,
+    snmp_info: Any,
+    scan_function_fallback_files: Optional[List[str]] = None,
+) -> None:
+
+    snmp_section = _create_snmp_section_plugin_from_legacy(
+        check_plugin_name,
+        check_info_dict,
+        snmp_scan_function,
+        snmp_info,
+        scan_function_fallback_files,
+    )
+
+    _config.registered_snmp_sections[snmp_section.name] = snmp_section

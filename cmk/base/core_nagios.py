@@ -1205,6 +1205,8 @@ def _get_needed_agent_based_modules(check_plugin_names: Set[CheckPluginName],) -
         for plugin in check_plugins_opt
         if plugin is not None and plugin.module is not None
     }
-    check_modules.update((section.module for section in config.get_relevant_raw_sections(
-        check_plugin_names=check_plugin_names).values() if section.module is not None))
+    check_modules.update((section.module
+                          for section in agent_based_register.get_relevant_raw_sections(
+                              check_plugin_names=check_plugin_names).values()
+                          if section.module is not None))
     return sorted(check_modules)

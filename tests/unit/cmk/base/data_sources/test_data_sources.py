@@ -131,7 +131,7 @@ def agent_section_fixture(monkeypatch):
         parse_function=parse_to_string_table,
     )
     monkeypatch.setitem(
-        config.registered_agent_sections,
+        agent_based_register._config.registered_agent_sections,
         section.name,
         section,
     )

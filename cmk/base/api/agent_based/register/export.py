@@ -62,11 +62,11 @@ def agent_section(
         module=get_plugin_module_name(),
     )
 
-    if (section_plugin.name in config.registered_agent_sections or
-            section_plugin.name in config.registered_snmp_sections):
+    if (section_plugin.name in _config.registered_agent_sections or
+            section_plugin.name in _config.registered_snmp_sections):
         raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
-    config.registered_agent_sections[section_plugin.name] = section_plugin
+    _config.registered_agent_sections[section_plugin.name] = section_plugin
 
 
 def snmp_section(
@@ -114,11 +114,11 @@ def snmp_section(
         module=get_plugin_module_name(),
     )
 
-    if (section_plugin.name in config.registered_agent_sections or
-            section_plugin.name in config.registered_snmp_sections):
+    if (section_plugin.name in _config.registered_agent_sections or
+            section_plugin.name in _config.registered_snmp_sections):
         raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
-    config.registered_snmp_sections[section_plugin.name] = section_plugin
+    _config.registered_snmp_sections[section_plugin.name] = section_plugin
 
 
 def check_plugin(

@@ -22,8 +22,10 @@ from cmk.snmplib.type_defs import (
 
 from cmk.fetchers import factory, SNMPDataFetcher
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
@@ -70,7 +72,7 @@ class CachedSNMPDetector:
     def sections(self) -> Iterable[SNMPScanSection]:
         return [
             SNMPScanSection(section.name, section.detect_spec)
-            for section in config.registered_snmp_sections.values()
+            for section in agent_based_register.iter_all_snmp_sections()
         ]
 
     # TODO (mo): Make this (and the called) function(s) return the sections directly!
@@ -275,8 +277,8 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         for section_name in SNMPDataSource._sort_section_names(
             {s.name for s in selected_raw_sections.values()}
                 if selected_raw_sections is not None else self.detector(configurator.snmp_config)):
-            plugin = config.registered_snmp_sections.get(section_name)
-            if plugin is None:
+            plugin = agent_based_register.get_section_plugin(section_name)
+            if not isinstance(plugin, SNMPSectionPlugin):
                 self._logger.debug("%s: No such section definition", section_name)
                 continue
 

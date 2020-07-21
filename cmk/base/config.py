@@ -70,11 +70,9 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostgroupName,
     HostName,
-    InventoryPluginName,
     Item,
     Labels,
     LabelSources,
-    ParsedSectionName,
     Ruleset,
     RulesetName,
     RuleSetName,
@@ -99,11 +97,10 @@ import cmk.base.default_config as default_config
 from cmk.base.api.agent_based.checking_classes import Parameters
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    create_agent_section_plugin_from_legacy,
-    create_snmp_section_plugin_from_legacy,
+    add_agent_section_plugin_from_legacy,
+    add_snmp_section_plugin_from_legacy,
 )
 from cmk.base.api.agent_based.type_defs import (
-    AgentSectionPlugin,
     CheckPlugin,
     SectionPlugin,
     SNMPSectionPlugin,
@@ -1278,68 +1275,6 @@ def get_http_proxy(http_proxy: Tuple[str, str]) -> Optional[str]:
     return None
 
 
-def get_registered_section_plugin(section_name: SectionName) -> Optional[SectionPlugin]:
-    if section_name in registered_agent_sections:
-        return registered_agent_sections[section_name]
-    if section_name in registered_snmp_sections:
-        return registered_snmp_sections[section_name]
-    return None
-
-
-def get_relevant_raw_sections(
-        *,
-        check_plugin_names: Iterable[CheckPluginName] = (),
-        inventory_plugin_names: Iterable[InventoryPluginName] = (),
-) -> SelectedRawSections:
-    """return the raw sections potentially relevant for the given check or inventory plugins"""
-    parsed_section_names: Set[ParsedSectionName] = set()
-
-    for check_plugin_name in check_plugin_names:
-        plugin = agent_based_register.get_check_plugin(check_plugin_name)
-        if plugin:
-            parsed_section_names.update(plugin.sections)
-
-    for inventory_plugin_name in inventory_plugin_names:
-        # TODO (mo): once the inventory plugins are facing the new API,
-        # this should look exactly as the block above!
-        # For now: every inventory plugin name is exactly the parsed section name
-        # Also TODO: add a few tests when this block is non-trivial.
-        parsed_section_names.add(ParsedSectionName(str(inventory_plugin_name)))
-
-    iter_all_sections: Iterable[SectionPlugin] = itertools.chain(
-        registered_agent_sections.values(),
-        registered_snmp_sections.values(),
-    )
-
-    return {
-        section.name: section
-        for section in iter_all_sections
-        if section.parsed_section_name in parsed_section_names
-    }
-
-
-def get_parsed_section_creator(
-        parsed_section_name: ParsedSectionName,
-        available_raw_sections: List[SectionName]) -> Optional[SectionPlugin]:
-    """return the section definition required to create the enquired parsed section"""
-    section_defs = (get_registered_section_plugin(name) for name in available_raw_sections)
-    candidates = [
-        p for p in section_defs if p is not None and p.parsed_section_name == parsed_section_name
-    ]
-    if not candidates:
-        return None
-
-    # We may still have more than one. The 'supersedes' feature should deal with that:
-    # TODO (mo): CMK-4232 remove superseded ones
-    plugins = candidates
-
-    # validation should have enforced that this is exactly one.
-    if not len(plugins) == 1:
-        raise MKGeneralException("conflicting section definitions: %s" %
-                                 ','.join(str(p) for p in plugins))
-    return plugins[0]
-
-
 #.
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |
@@ -1416,11 +1351,6 @@ snmp_scan_functions: Dict[str, SNMPScanFunction] = {}
 # definitions of active "legacy" checks
 active_check_info: Dict[str, Dict[str, Any]] = {}
 special_agent_info: Dict[str, SpecialAgentInfoFunction] = {}
-
-# The following data structures hold information registered by the API functions
-# with the correspondig name, e.g. register.agent_section -> registered_agent_sections
-registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
-registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
 
 # Collection of all discovery parameters.
 # Filled in _collect_discovery_parameter_rulesets_from_globals
@@ -1997,25 +1927,23 @@ def _extract_agent_and_snmp_sections() -> None:
         section_name = section_name_of(check_plugin_name)
         is_snmp_plugin = section_name in snmp_info
 
-        if get_registered_section_plugin(SectionName(section_name)):
+        if agent_based_register.get_section_plugin(SectionName(section_name)):
             continue
 
         check_info_dict = check_info.get(section_name, check_info[check_plugin_name])
         try:
             if is_snmp_plugin:
-                snmp_section_plugin = create_snmp_section_plugin_from_legacy(
+                add_snmp_section_plugin_from_legacy(
                     section_name,
                     check_info_dict,
                     snmp_scan_functions[section_name],
                     snmp_info[section_name],
                 )
-                registered_snmp_sections[snmp_section_plugin.name] = snmp_section_plugin
             else:
-                agent_section_plugin = create_agent_section_plugin_from_legacy(
+                add_agent_section_plugin_from_legacy(
                     section_name,
                     check_info_dict,
                 )
-                registered_agent_sections[agent_section_plugin.name] = agent_section_plugin
         except (NotImplementedError, KeyError, AssertionError, ValueError):
             # TODO (mo): Clean this up once we have a solution for the plugins currently
             # failing here. For now we need too keep it commented out, because we can't
@@ -2732,7 +2660,7 @@ class HostConfig:
         This has been added to reduce the fetch interval of single SNMP sections
         to be executed less frequently than the "Check_MK" service is executed.
         """
-        section = get_registered_section_plugin(section_name)
+        section = agent_based_register.get_section_plugin(section_name)
         if not isinstance(section, SNMPSectionPlugin):
             return None  # no values at all for non snmp section
 

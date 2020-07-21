@@ -250,7 +250,7 @@ def _get_relevant_raw_sections(services: List[Service], host_config: config.Host
     else:
         inventory_plugin_names = ()
 
-    return config.get_relevant_raw_sections(
+    return agent_based_register.get_relevant_raw_sections(
         check_plugin_names=(s.check_plugin_name for s in services),
         inventory_plugin_names=inventory_plugin_names,
     )

@@ -17,6 +17,7 @@ from cmk.snmplib.type_defs import SNMPTree
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
 import cmk.base.config as config
+
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     _explicit_conversions,
@@ -50,12 +51,12 @@ def _get_snmp_info(_load_all_checks):
 
 @pytest.fixture(scope="module", name="migrated_agent_sections", autouse=True)
 def _get_migrated_agent_sections(_load_all_checks):
-    return config.registered_agent_sections.copy()
+    return {s.name: s for s in agent_based_register.iter_all_agent_sections()}
 
 
 @pytest.fixture(scope="module", name="migrated_snmp_sections", autouse=True)
 def _get_migrated_snmp_sections(_load_all_checks):
-    return config.registered_snmp_sections.copy()
+    return {s.name: s for s in agent_based_register.iter_all_snmp_sections()}
 
 
 @pytest.fixture(scope="module", name="migrated_checks", autouse=True)

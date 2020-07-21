@@ -323,7 +323,7 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
             # see which raw sections we may need
             selected_raw_sections: Optional[SelectedRawSections] = None
             if check_plugin_names is not None:
-                selected_raw_sections = config.get_relevant_raw_sections(
+                selected_raw_sections = agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=check_plugin_names)
 
             multi_host_sections = data_sources.make_host_sections(
@@ -1057,14 +1057,17 @@ def _discover_host_labels(
     try:
         # We do *not* process all available raw sections. Instead we see which *parsed*
         # sections would result from them, and then process those.
-        section_plugins = (config.get_registered_section_plugin(rs) for rs in host_data.sections)
+        section_plugins = (agent_based_register.get_section_plugin(rs) for rs in host_data.sections)
         parsed_sections = {p.parsed_section_name for p in section_plugins if p is not None}
 
         console.vverbose("Trying host label discovery with: %s\n" %
                          ", ".join(str(p) for p in parsed_sections))
         for parsed_section_name in sorted(parsed_sections):
             try:
-                plugin = config.get_parsed_section_creator(parsed_section_name, host_data.sections)
+                plugin = agent_based_register.get_parsed_section_creator(
+                    parsed_section_name,
+                    host_data.sections,
+                )
                 parsed = multi_host_sections.get_parsed_section(host_key, parsed_section_name)
                 if plugin is None or parsed is None:
                     continue
@@ -1124,8 +1127,9 @@ def _find_candidates_by_source_type(
         for name in node_data.sections
     }
 
-    raw_sections = [(name, config.get_registered_section_plugin(name)) for name in raw_section_names
-                   ]
+    raw_sections = [
+        (name, agent_based_register.get_section_plugin(name)) for name in raw_section_names
+    ]
 
     parsed_section_names = {
         ParsedSectionName(str(name)) if section is None else section.parsed_section_name

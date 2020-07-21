@@ -18,6 +18,7 @@ import cmk.utils.tty as tty
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -215,7 +216,7 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
                 remove_duplicates=True,
                 filter_mode="only_clustered",
             ) for node_name in host_config.nodes))
-    return config.get_relevant_raw_sections(check_plugin_names=check_plugin_names)
+    return agent_based_register.get_relevant_raw_sections(check_plugin_names=check_plugin_names)
 
 
 def _make_host_sections(

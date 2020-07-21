@@ -121,9 +121,11 @@ from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-impor
     OID_BIN, OID_END, OID_END_BIN, OID_END_OCTET_STRING, OID_STRING, OIDBytes, OIDCached,
 )
 
+import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
+
 from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
     HOST_ONLY  # Symbolic representations of states in plugin output; Management board checks; Check is only executed for real SNMP host (e.g. interfaces),
 )
@@ -551,7 +553,8 @@ def _agent_cache_file_age(hostname: HostName,
     # For old-style plugins, plugin and section name are same, so check the
     # corresponding section:
     section_name_str = _cmk_utils.check_utils.section_name_of(check_plugin_name)
-    if _SectionName(section_name_str) in _config.registered_snmp_sections:
+    section = _agent_based_register.get_section_plugin(_SectionName(section_name_str))
+    if hasattr(section, "trees"):
         cachefile = "%s/%s.%s" % (_paths.tcp_cache_dir, hostname, section_name_str)
     else:
         cachefile = "%s/%s" % (_paths.tcp_cache_dir, hostname)

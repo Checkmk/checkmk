@@ -89,7 +89,7 @@ register.check_plugin(
     # Verify that the discovery worked as expected
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     for service in services:
-        if service.check_plugin_name == "test_check_1":
+        if str(service.check_plugin_name) == "test_check_1":
             assert service.item == "Parameters({'default': 42})"
             break
     else:
@@ -104,7 +104,7 @@ register.check_plugin(
     web.discover_services("modes-test-host")
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     for service in services:
-        if service.check_plugin_name == "test_check_1":
+        if str(service.check_plugin_name) == "test_check_1":
             assert service.item == "Parameters({'default': 42, 'levels': (1, 2)})"
             break
     else:
@@ -163,7 +163,7 @@ register.check_plugin(
     # Verify that the discovery worked as expected
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     for service in services:
-        if service.check_plugin_name == "test_check_2":
+        if str(service.check_plugin_name) == "test_check_2":
             assert service.item == "[Parameters({'default': 42})]"
             break
     else:
@@ -178,7 +178,7 @@ register.check_plugin(
     web.discover_services("modes-test-host")
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     for service in services:
-        if service.check_plugin_name == "test_check_2":
+        if str(service.check_plugin_name) == "test_check_2":
             assert service.item == ("[Parameters({'levels': (1, 2)}),"
                                     " Parameters({'default': 42})]")
             break

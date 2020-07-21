@@ -40,7 +40,7 @@ def host_label_esx_vshpere_systeminfo(section):
 
 
 register.agent_section(
-    name="esx_vsphere_systeminfo",
+    name="esx_systeminfo",
     parse_function=parse_esx_vsphere_systeminfo,
     host_label_function=host_label_esx_vshpere_systeminfo,
 )

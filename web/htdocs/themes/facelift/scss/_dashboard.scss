@@ -74,13 +74,13 @@ div.dashlet {
     padding-left: 9px;
     margin: 0;
     overflow: hidden;
-    font-size: $font-size-small;
+    font-size: $font-size-default;
+    text-align: center;
     font-weight: 500;
     letter-spacing: 2px;
-    color: $secondary-link-color;
-    text-transform: uppercase;
+    color: $font-color;
     white-space: nowrap;
-    background: $bg-color-secondary;
+    background: $headline-color;
     border: 1px solid $color-table-border;
     border-bottom: none;
     border-radius: $dashlet-title-border-radius;
@@ -187,12 +187,6 @@ div.dashlet {
   }
 }
 
-div.dashlet > div.title span a,
-div.dashlet > div.title span body.main .popup_menu span,
-body.main .popup_menu div.dashlet > div.title span span {
-  color: $secondary-link-color;
-}
-
 div.dashlet > div.title span {
   padding-left: 0; /* left align with titles of contained views */
   position: relative;
@@ -286,7 +280,7 @@ div[id^=dashlet] div.title + div.dashlet_inner > div {
 }
 
 iframe[id^=dashlet_iframe] {
-  background: $bg-color-tertiary;
+  background: $bg-color-secondary;
   transition: .15s ease-in-out;
 }
 

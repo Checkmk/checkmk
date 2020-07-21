@@ -25,10 +25,16 @@ $yellow:	rgb(255, 215, 3); // yellow
 
 $lightgrey:     $grey-1; // light grey
 
-$font-color:                          rgb(26, 36, 61); // dark
-$color-background:                    rgb(240, 242, 244); // light grey
+// UX colors
+$navbar-color:                              rgb(17, 24, 29);
+$bg-color:                                  rgb(28, 34, 40);
+$base-color:                                rgb(32, 39, 46);
+$headline-color:                            rgb(38, 47, 56);
+$table-highlight-color:                     rgb(38, 45, 52);
 
-$font-color-light:                    rgb(230, 230, 230); // light grey
+$font-color:                                rgb(26, 36, 61); // dark
+$font-color-light:                          rgb(230, 230, 230); // light grey
+$color-background:                          rgb(240, 242, 244); // light grey
 
 
 // -----------------------------------------------------------------------------
@@ -275,8 +281,6 @@ $dashlet-bg-color:			    null;
 
 $tactical-overview-th-font-color:	    $color-nuance-5;
 $tactical-overview-td-bg-color:		    $color-background;
-
-$table-header-border-bottom:		    1px solid $color-table-border;
 
 $state-border-top-color:		    null;
 

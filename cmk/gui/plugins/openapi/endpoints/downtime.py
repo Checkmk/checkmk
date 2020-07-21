@@ -4,7 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
+import http.client
 from datetime import datetime
+from typing import Dict
+
+from connexion import ProblemException  # type: ignore[import]
 
 from cmk.gui.http import Response
 from cmk.gui import sites
@@ -13,8 +17,12 @@ from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtime
 from cmk.gui.plugins.openapi.restful_objects import ParamDict
 from cmk.gui.watolib.downtime import (execute_livestatus_command, determine_downtime_mode,
                                       remove_downtime_command, DowntimeSchedule)
+from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (del_host_downtime,
+                                                                           del_service_downtime)
 from cmk.gui.plugins.openapi.restful_objects import (endpoint_schema, request_schemas, constructors,
                                                      response_schemas)
+
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
 
 RECURRING_OPTIONS = {
     "hour": 1,
@@ -118,6 +126,40 @@ def delete_downtime(params):
     downtime_type = "SVC" if is_service else "HOST"
     command_delete = remove_downtime_command(downtime_type, params['downtime_id'])
     execute_livestatus_command(command_delete, params['host_name'])
+    return Response(status=204)
+
+
+@endpoint_schema(constructors.domain_type_action_href('downtime', 'bulk-delete'),
+                 '.../delete',
+                 method='delete',
+                 request_schema=request_schemas.BulkDeleteDowntime,
+                 output_empty=True)
+def bulk_delete_downtimes(params):
+    """Bulk delete downtimes based upon downtime id"""
+    live = sites.live()
+    entries = params['entries']
+    not_found = []
+
+    downtimes: Dict[str, int] = {
+        downtime_id: is_service for downtime_id, is_service in Query(  # pylint: disable=unnecessary-comprehension
+            [Downtimes.id, Downtimes.is_service],
+            And(*[Downtimes.id.equals(downtime_id) for downtime_id in entries]),
+        ).fetch_values(live)
+    }
+
+    for downtime_id in entries:
+        if downtime_id not in downtimes:
+            not_found.append(downtime_id)
+
+    if not_found:
+        raise ProblemException(404, http.client.responses[400],
+                               f"Downtimes {', '.join(not_found)} not found")
+
+    for downtime_id, is_service in downtimes.items():
+        if is_service:
+            del_service_downtime(live, downtime_id)
+        else:
+            del_host_downtime(live, downtime_id)
     return Response(status=204)
 
 

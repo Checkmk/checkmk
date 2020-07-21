@@ -212,3 +212,16 @@ class AcknowledgeServiceProblem(Schema):
         example='This was expected.',
         description=param_description(acknowledge_service_problem.__doc__, 'comment'),
     )
+
+
+class BulkDeleteDowntime(Schema):
+    host_name = HOST_FIELD
+    entries = fields.List(
+        fields.Integer(
+            required=True,
+            description="The id for either a host downtime or service downtime",
+            example=1120,
+        ),
+        required=True,
+        example=[1120, 1121],
+    )

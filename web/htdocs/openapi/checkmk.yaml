@@ -192,6 +192,27 @@ components:
       - message
       - title
       type: object
+    BulkDeleteDowntime:
+      properties:
+        entries:
+          example:
+          - 1120
+          - 1121
+          items:
+            description: The id for either a host downtime or service downtime
+            example: 1120
+            format: int32
+            type: integer
+          type: array
+        host_name:
+          description: The hostname or IP address itself.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      required:
+      - entries
+      - host_name
+      type: object
     ConcreteFolder:
       discriminator:
         mapping:
@@ -1508,6 +1529,50 @@ paths:
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/objects/host/example.com/objects/downtime/54\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
+  /domain-types/downtime/actions/bulk-delete/invoke:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.downtime.bulk_delete_downtimes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkDeleteDowntime'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Bulk delete downtimes based upon downtime id
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.downtime
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
+          \    API_URL + \"/domain-types/downtime/actions/bulk-delete/invoke\",\n\
+          \    json={\n        \"entries\": [\n            1120,\n            1121\n\
+          \        ],\n        \"host_name\": \"example.com\"\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"entries\": [\n         \
+          \   1120,\n            1121\n          ],\n          \"host_name\": \"example.com\"\
+          \n        }' \\\n    \"$API_URL/domain-types/downtime/actions/bulk-delete/invoke\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/domain-types/downtime/actions/bulk-delete/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    entries='[1120,\
+          \ 1121]' \\\n    host_name='example.com'"
   /domain-types/folder_config/collections/all:
     get:
       description: ''
@@ -3416,6 +3481,9 @@ tags:
 - description: <SchemaDefinition schemaRef="#/components/schemas/CreateDowntime" showReadOnly={true}
     showWriteOnly={true} />
   name: CreateDowntime
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkDeleteDowntime"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BulkDeleteDowntime
 - name: cmk.gui.plugins.openapi.endpoints.folder_config
   x-displayName: Folders
 - description: "Every folder needs a parent folder to reside in. The uppermost folder\
@@ -3509,6 +3577,7 @@ x-tagGroups:
   - AcknowledgeServiceProblem
   - InputContactGroup
   - CreateDowntime
+  - BulkDeleteDowntime
   - CreateFolder
   - UpdateFolder
   - CreateHost

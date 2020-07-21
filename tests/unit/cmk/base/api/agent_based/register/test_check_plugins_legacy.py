@@ -53,7 +53,10 @@ def test_create_discovery_function(monkeypatch):
                             }
                         }})
     new_function = check_plugins_legacy._create_discovery_function(
-        "norris", {"inventory_function": insane_discovery})
+        "norris",
+        {"inventory_function": insane_discovery},
+        config.get_check_context,
+    )
 
     fixed_params = inspect.signature(new_function).parameters
     assert list(fixed_params) == ["section"]
@@ -107,12 +110,13 @@ def test_create_check_function():
     ]
 
 
-def test_create_check_plugin_from_legacy_wo_params(monkeypatch):
-    monkeypatch.setattr(config, '_check_contexts', {"norris": {}})
+def test_create_check_plugin_from_legacy_wo_params():
 
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
         MINIMAL_CHECK_INFO,
+        {},  # factory_settings
+        lambda _x: {},  # get_check_context
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -127,14 +131,7 @@ def test_create_check_plugin_from_legacy_wo_params(monkeypatch):
     assert plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"
 
 
-def test_create_check_plugin_from_legacy_with_params(monkeypatch):
-    monkeypatch.setattr(config, 'factory_settings', {"norris_default_levels": {"levels": (23, 42)}})
-    monkeypatch.setattr(config, '_check_contexts',
-                        {"norris": {
-                            "norris_default_levels": {
-                                "levels_lower": (1, 2)
-                            }
-                        }})
+def test_create_check_plugin_from_legacy_with_params():
 
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
@@ -143,6 +140,12 @@ def test_create_check_plugin_from_legacy_with_params(monkeypatch):
             "group": "norris_rule",
             "default_levels_variable": "norris_default_levels",
         },
+        {"norris_default_levels": {
+            "levels": (23, 42)
+        }},
+        lambda _x: {"norris_default_levels": {
+            "levels_lower": (1, 2)
+        }},
     )
 
     assert plugin.name == CheckPluginName("norris")

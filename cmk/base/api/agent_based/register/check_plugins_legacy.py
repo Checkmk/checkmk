@@ -22,7 +22,6 @@ from cmk.base.api.agent_based.checking_classes import (
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.type_defs import CheckPlugin
-import cmk.base.config as config
 from cmk.base.check_api_utils import Service as LegacyService
 from cmk.base.check_utils import get_default_parameters
 from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
@@ -54,6 +53,7 @@ CONSIDERED_KEYS = {
 def _create_discovery_function(
     check_name: str,
     check_info_dict: Dict[str, Any],
+    get_check_context: Callable,
 ) -> Callable:
     """Create an API compliant discovery function"""
 
@@ -80,7 +80,7 @@ def _create_discovery_function(
                     labels=list(element.service_labels),
                 )
             elif isinstance(element, tuple) and len(element) in (2, 3):
-                parameters = _resolve_string_parameters(element[-1], check_name)
+                parameters = _resolve_string_parameters(element[-1], check_name, get_check_context)
                 service = Service(
                     item=element[0] or None,
                     parameters=wrap_parameters(parameters or {}),
@@ -96,12 +96,16 @@ def _create_discovery_function(
     return discovery_migration_wrapper
 
 
-def _resolve_string_parameters(params_unresolved: Any, check_name: str) -> Any:
+def _resolve_string_parameters(
+    params_unresolved: Any,
+    check_name: str,
+    get_check_context: Callable,
+) -> Any:
     if not isinstance(params_unresolved, str):
         return params_unresolved
 
     try:
-        context = config.get_check_context(check_name)
+        context = get_check_context(check_name)
         # string may look like '{"foo": bar}', in the worst case.
         return eval(params_unresolved, context, context)
     except Exception:
@@ -224,13 +228,17 @@ def _create_signature_check_function(
     return check_migration_wrapper
 
 
-def _create_wrapped_parameters(check_plugin_name: str,
-                               check_info_dict: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def _create_wrapped_parameters(
+    check_plugin_name: str,
+    check_info_dict: Dict[str, Any],
+    factory_settings: Dict[str, Dict],
+    get_check_context: Callable,
+) -> Optional[Dict[str, Any]]:
     """compute default parameters and wrap them in a dictionary"""
     default_parameters = get_default_parameters(
         check_info_dict,
-        config.factory_settings,
-        config.get_check_context(check_plugin_name),
+        factory_settings,
+        get_check_context(check_plugin_name),
     )
     if default_parameters is None:
         return {} if check_info_dict.get("group") else None
@@ -253,6 +261,8 @@ def _create_cluster_legacy_mode_from_hell(check_function: Callable) -> Callable:
 def create_check_plugin_from_legacy(
     check_plugin_name: str,
     check_info_dict: Dict[str, Any],
+    factory_settings: Dict[str, Dict],
+    get_check_context: Callable,
 ) -> CheckPlugin:
 
     if check_info_dict.get('extra_sections'):
@@ -273,9 +283,18 @@ def create_check_plugin_from_legacy(
 
     new_check_name = maincheckify(check_plugin_name)
 
-    check_default_parameters = _create_wrapped_parameters(check_plugin_name, check_info_dict)
+    check_default_parameters = _create_wrapped_parameters(
+        check_plugin_name,
+        check_info_dict,
+        factory_settings,
+        get_check_context,
+    )
 
-    discovery_function = _create_discovery_function(check_plugin_name, check_info_dict)
+    discovery_function = _create_discovery_function(
+        check_plugin_name,
+        check_info_dict,
+        get_check_context,
+    )
 
     check_ruleset_name = check_info_dict.get("group")
     if check_ruleset_name is None and check_default_parameters is not None:

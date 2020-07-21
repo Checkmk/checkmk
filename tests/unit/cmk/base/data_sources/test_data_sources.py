@@ -17,6 +17,7 @@ from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.data_sources.agent as agent
 from cmk.base import check_table, config
+from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.utils import parse_to_string_table

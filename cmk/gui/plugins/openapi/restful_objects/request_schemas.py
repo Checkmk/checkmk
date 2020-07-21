@@ -225,3 +225,12 @@ class BulkDeleteDowntime(Schema):
         required=True,
         example=[1120, 1121],
     )
+
+
+class BulkDeleteHost(Schema):
+    # TODO: addition of etag field
+    entries = fields.List(
+        HOST_FIELD,
+        required=True,
+        example=["example", "sample"],
+    )

@@ -114,6 +114,24 @@ def delete(params):
     return Response(status=204)
 
 
+@endpoint_schema(constructors.domain_type_action_href('host_config', 'bulk-delete'),
+                 '.../delete',
+                 method='delete',
+                 request_schema=request_schemas.BulkDeleteHost,
+                 output_empty=True)
+def bulk_delete(params):
+    """Bulk delete hosts based upon host names"""
+    # TODO: require etag checking (409 Response)
+    entries = params['entries']
+    for host_name in entries:
+        check_hostname(host_name, should_exist=True)
+
+    for host_name in entries:
+        host = watolib.Host.host(host_name)
+        host.folder().delete_hosts([host.name()])
+    return Response(status=204)
+
+
 @endpoint_schema(constructors.object_href('host_config', '{host_name}'),
                  'cmk/show',
                  method='get',

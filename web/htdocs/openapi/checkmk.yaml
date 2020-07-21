@@ -213,6 +213,19 @@ components:
       - entries
       - host_name
       type: object
+    BulkDeleteHost:
+      properties:
+        entries:
+          example:
+          - example
+          - sample
+          items:
+            description: The hostname or IP address itself.
+            example: example.com
+            pattern: '[-0-9a-zA-Z_.]+'
+            type: string
+          type: array
+      type: object
     ConcreteFolder:
       discriminator:
         mapping:
@@ -2260,6 +2273,49 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
           \ a20ceacf346041dc' \\\n    attributes='{}' \\\n    nodes='[\"host1\", \"\
           host2\", \"host3\"]'"
+  /domain-types/host_config/actions/bulk-delete/invoke:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_config.bulk_delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkDeleteHost'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_config
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
+          \    API_URL + \"/domain-types/host_config/actions/bulk-delete/invoke\"\
+          ,\n    json={\n        \"entries\": [\n            \"example\",\n      \
+          \      \"sample\"\n        ]\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"entries\": [\n         \
+          \   \"example\",\n            \"sample\"\n          ]\n        }' \\\n \
+          \   \"$API_URL/domain-types/host_config/actions/bulk-delete/invoke\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/domain-types/host_config/actions/bulk-delete/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    entries='[\"\
+          example\", \"sample\"]'"
   /domain-types/host_group_config/collections/all:
     get:
       description: ''
@@ -3523,6 +3579,9 @@ tags:
     \ showWriteOnly={true} />"
   name: UpdateHost
   x-displayName: Updating of a host
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkDeleteHost" showReadOnly={true}
+    showWriteOnly={true} />
+  name: BulkDeleteHost
 - name: cmk.gui.plugins.openapi.endpoints.host_group_config
   x-displayName: Host-groups
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputHostGroup" showReadOnly={true}
@@ -3582,6 +3641,7 @@ x-tagGroups:
   - UpdateFolder
   - CreateHost
   - UpdateHost
+  - BulkDeleteHost
   - InputHostGroup
   - InputServiceGroup
   - AgentSign

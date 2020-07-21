@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
-from cmk.base import config
+from cmk.base import config  # Beware: != _config. config import supposed to be nuked
 from cmk.base.api.agent_based.register.utils import get_plugin_module_name
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.section_plugins import (
@@ -24,6 +24,7 @@ from cmk.base.api.agent_based.type_defs import (
     HostLabelFunction,
     SNMPParseFunction,
 )
+from cmk.base.api.agent_based.register import _config
 
 
 def agent_section(
@@ -173,10 +174,10 @@ def check_plugin(
         module=get_plugin_module_name(),
     )
 
-    if config.get_registered_check_plugin(plugin.name):
+    if _config.is_registered_check_plugin(plugin.name):
         raise ValueError("duplicate check plugin definition: %s" % plugin.name)
 
-    config.registered_check_plugins[plugin.name] = plugin
+    _config.add_check_plugin(plugin)
     if plugin.discovery_ruleset_name is not None:
         config.discovery_parameter_rulesets.setdefault(plugin.discovery_ruleset_name, [])
 

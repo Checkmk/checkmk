@@ -18,6 +18,9 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
+
+import cmk.base.api.agent_based.register as agent_based_register
+
 from cmk.base import config
 from cmk.base import check_table
 from cmk.base.api.agent_based.type_defs import CheckPlugin
@@ -423,8 +426,8 @@ def test_check_table__get_static_check_entries(monkeypatch, check_group_paramete
     config_cache = ts.apply(monkeypatch)
 
     monkeypatch.setattr(
-        config,
-        "get_registered_check_plugin",
+        agent_based_register,
+        "get_check_plugin",
         lambda cpn: CheckPlugin(
             CheckPluginName("ps"),
             [],

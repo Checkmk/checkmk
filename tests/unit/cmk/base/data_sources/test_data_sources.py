@@ -15,7 +15,9 @@ from testlib.base import Scenario  # type: ignore[import]
 import cmk.utils.piggyback
 from cmk.utils.type_defs import CheckPluginName
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.data_sources.agent as agent
+
 from cmk.base import check_table, config
 from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.register import section_plugins
@@ -153,7 +155,7 @@ def check_plugin_fixture(monkeypatch, agent_section):
         None,  # type: ignore[arg-type]  # irrelevant for test
     )
     monkeypatch.setitem(
-        config.registered_check_plugins,
+        agent_based_register._config.registered_check_plugins,
         check_plugin.name,
         check_plugin,
     )

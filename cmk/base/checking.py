@@ -52,6 +52,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
 import cmk.base.config as config
@@ -376,7 +377,7 @@ def service_outside_check_period(config_cache: config.ConfigCache, hostname: Hos
 def execute_check(multi_host_sections: MultiHostSections, host_config: config.HostConfig,
                   ipaddress: Optional[HostAddress], service: Service) -> bool:
 
-    plugin = config.get_registered_check_plugin(service.check_plugin_name)
+    plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
 
     # Make a bit of context information globally available, so that functions
     # called by checks know this context. set_service is needed for predictive levels!

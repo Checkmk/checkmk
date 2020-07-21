@@ -32,13 +32,15 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
+import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.utils
+import cmk.base.obsolete_output as out
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.data_sources as data_sources
 import cmk.base.ip_lookup as ip_lookup
-import cmk.base.obsolete_output as out
-import cmk.base.utils
+
 from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.check_utils import ServiceID
 from cmk.base.config import ConfigCache, HostConfig, ObjectAttributes
@@ -1195,7 +1197,7 @@ def _get_needed_check_file_names(needed_check_plugin_names: Set[CheckPluginNameS
 
 def _get_needed_agent_based_modules(check_plugin_names: Set[CheckPluginName],) -> List[str]:
     check_plugins_opt: List[Optional[CheckPlugin]] = [
-        config.get_registered_check_plugin(p) for p in check_plugin_names
+        agent_based_register.get_check_plugin(p) for p in check_plugin_names
     ]
 
     check_modules = {

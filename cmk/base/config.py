@@ -41,8 +41,6 @@ import cmk.utils
 from cmk.utils.check_utils import (
     maincheckify,
     unwrap_parameters,
-    is_management_name,
-    MANAGEMENT_NAME_PREFIX,
 )
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -94,12 +92,12 @@ from cmk.utils.type_defs import (
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
     OIDBytes, OIDCached, SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming)
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_utils
 import cmk.base.default_config as default_config
 from cmk.base.api.agent_based.checking_classes import Parameters
-from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_agent_section_plugin_from_legacy,
@@ -977,7 +975,7 @@ def service_description(
     check_plugin_name: CheckPluginName,
     item: Item,
 ) -> ServiceName:
-    plugin = get_registered_check_plugin(check_plugin_name)
+    plugin = agent_based_register.get_check_plugin(check_plugin_name)
     if plugin is None:
         if item:
             return "Unimplemented check %s / %s" % (check_plugin_name, item)
@@ -1289,20 +1287,6 @@ def get_registered_section_plugin(section_name: SectionName) -> Optional[Section
     return None
 
 
-def get_registered_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
-    plugin = registered_check_plugins.get(plugin_name)
-    if plugin is not None or not is_management_name(plugin_name):
-        return plugin
-
-    # create management board plugin on the fly:
-    non_mgmt_name = CheckPluginName(str(plugin_name)[len(MANAGEMENT_NAME_PREFIX):])
-    non_mgmt_plugin = registered_check_plugins.get(non_mgmt_name)
-    if non_mgmt_plugin is not None:
-        return management_plugin_factory(non_mgmt_plugin)
-
-    return None
-
-
 def get_relevant_raw_sections(
         *,
         check_plugin_names: Iterable[CheckPluginName] = (),
@@ -1312,7 +1296,7 @@ def get_relevant_raw_sections(
     parsed_section_names: Set[ParsedSectionName] = set()
 
     for check_plugin_name in check_plugin_names:
-        plugin = get_registered_check_plugin(check_plugin_name)
+        plugin = agent_based_register.get_check_plugin(check_plugin_name)
         if plugin:
             parsed_section_names.update(plugin.sections)
 
@@ -1438,7 +1422,6 @@ special_agent_info: Dict[str, SpecialAgentInfoFunction] = {}
 # with the correspondig name, e.g. register.agent_section -> registered_agent_sections
 registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
-registered_check_plugins: Dict[CheckPluginName, CheckPlugin] = {}
 
 # Collection of all discovery parameters.
 # Filled in _collect_discovery_parameter_rulesets_from_globals
@@ -2062,13 +2045,13 @@ def _extract_check_plugins() -> None:
         if check_info_dict.get("service_description") is None:
             continue
         try:
-            check_plugin = create_check_plugin_from_legacy(
-                check_plugin_name,
-                check_info_dict,
-                factory_settings,
-                get_check_context,
-            )
-            registered_check_plugins[check_plugin.name] = check_plugin
+            agent_based_register.add_check_plugin(
+                create_check_plugin_from_legacy(
+                    check_plugin_name,
+                    check_info_dict,
+                    factory_settings,
+                    get_check_context,
+                ))
         except (NotImplementedError, KeyError, AssertionError, ValueError):
             # TODO (mo): Clean this up once we have a solution for the plugins currently
             # failing here. For now we need too keep it commented out, because we can't
@@ -2183,7 +2166,7 @@ def compute_check_parameters(host: HostName,
     else:
         plugin_name = CheckPluginName(maincheckify(checktype))
 
-    plugin = get_registered_check_plugin(plugin_name)
+    plugin = agent_based_register.get_check_plugin(plugin_name)
     if plugin is None:  # handle vanished check plugin
         return None
 
@@ -3546,7 +3529,7 @@ class ConfigCache:
 
         # Some WATO rules might register icons on their own
         if check_plugin_name:
-            plugin = get_registered_check_plugin(check_plugin_name)
+            plugin = agent_based_register.get_check_plugin(check_plugin_name)
             if (plugin is not None and str(plugin.check_ruleset_name) in ('ps', 'services') and
                     isinstance(params, dict)):
                 icon = params.get('icon')

@@ -60,6 +60,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
@@ -1133,7 +1134,7 @@ def _find_candidates_by_source_type(
 
     return {
         plugin.name
-        for plugin in config.registered_check_plugins.values()
+        for plugin in agent_based_register.iter_all_check_plugins()
         if any(section in parsed_section_names for section in plugin.sections)
     }
 
@@ -1238,7 +1239,7 @@ def _execute_discovery(
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
         return
 
-    check_plugin = config.registered_check_plugins.get(check_plugin_name)
+    check_plugin = agent_based_register.get_check_plugin(check_plugin_name)
     if check_plugin is None:
         console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
         return
@@ -1538,7 +1539,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
     table: CheckPreviewTable = []
     for check_source, services in grouped_services.items():
         for service in services:
-            plugin = config.get_registered_check_plugin(service.check_plugin_name)
+            plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
             params = _preview_params(host_name, service, plugin, check_source)
 
             if check_source in ['legacy', 'active', 'custom']:

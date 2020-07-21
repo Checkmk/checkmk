@@ -324,12 +324,13 @@ class BaseCheck(metaclass=abc.ABCMeta):
 class Check(BaseCheck):
     def __init__(self, name):
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
+        from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
         super(Check, self).__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
         self.info = config.check_info[self.name]
         self.context = config._check_contexts[self.name]
-        self._migrated_plugin = config.get_registered_check_plugin(
+        self._migrated_plugin = register.get_check_plugin(
             config.CheckPluginName(self.name.replace('.', '_')))
 
     def default_parameters(self):

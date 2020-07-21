@@ -14,6 +14,7 @@ from cmk.utils.type_defs import SectionName, CheckPluginName
 
 from cmk.snmplib.type_defs import SNMPTree
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
 import cmk.base.config as config
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
@@ -59,7 +60,7 @@ def _get_migrated_snmp_sections(_load_all_checks):
 
 @pytest.fixture(scope="module", name="migrated_checks", autouse=True)
 def _get_migrated_checks(_load_all_checks):
-    return config.registered_check_plugins.copy()
+    return {p.name: p for p in agent_based_register.iter_all_check_plugins()}
 
 
 def test_management_board_interface_prefix(config_check_info):

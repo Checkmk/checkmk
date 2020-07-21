@@ -35,6 +35,7 @@ import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.fetchers.factory as snmp_factory
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.backup
 import cmk.base.check_api as check_api
 import cmk.base.check_utils
@@ -319,7 +320,7 @@ def mode_list_checks() -> None:
 
     legacy_check_plugins = {maincheckify(name) for name in config.check_info}
 
-    registered_checks = list(config.registered_check_plugins.items())
+    registered_checks = [(p.name, p) for p in agent_based_register.iter_all_check_plugins()]
     active_checks = [("check_%s" % name, entry) for name, entry in config.active_check_info.items()]
     # TODO clean mixed typed list up:
     all_checks = registered_checks + active_checks  # type: ignore[operator]

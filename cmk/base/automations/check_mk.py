@@ -43,6 +43,7 @@ from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig, SNMPTree
 
 from cmk.fetchers import factory
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
@@ -57,6 +58,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
+
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -665,7 +667,7 @@ class AutomationAnalyseServices(Automation):
             if service.description != servicedesc:
                 continue
 
-            plugin = config.get_registered_check_plugin(service.check_plugin_name)
+            plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
             if plugin is None:
                 # Just to be safe, and to let mypy know.
                 # plugin should never be None for services that are in the check_table.
@@ -991,7 +993,7 @@ class AutomationGetCheckInformation(Automation):
         manuals = man_pages.all_man_pages()
 
         plugin_infos: Dict[CheckPluginNameStr, Dict[str, Any]] = {}
-        for plugin in config.registered_check_plugins.values():
+        for plugin in agent_based_register.iter_all_check_plugins():
             plugin_info = plugin_infos.setdefault(
                 str(plugin.name), {
                     "title": self._get_title(manuals, plugin),
@@ -1632,7 +1634,7 @@ class AutomationGetServiceConfigurations(Automation):
     def _get_checkgroup_of_checks(self) -> Dict[str, Optional[str]]:
         return {
             str(plugin.name): str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
-            for plugin in config.registered_check_plugins.values()
+            for plugin in agent_based_register.iter_all_check_plugins()
         }
 
 

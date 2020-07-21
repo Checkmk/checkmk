@@ -17,11 +17,11 @@ from testlib import CheckManager  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.base import config
-import cmk.base.check_table as check_table
-from cmk.base.check_utils import Service
 from cmk.utils.type_defs import CheckPluginName
-from cmk.base.api.agent_based import checking_types
+from cmk.base import config
+from cmk.base import check_table
+from cmk.base.api.agent_based.type_defs import CheckPlugin
+from cmk.base.check_utils import Service
 
 
 # TODO: This misses a lot of cases
@@ -425,7 +425,7 @@ def test_check_table__get_static_check_entries(monkeypatch, check_group_paramete
     monkeypatch.setattr(
         config,
         "get_registered_check_plugin",
-        lambda cpn: checking_types.CheckPlugin(
+        lambda cpn: CheckPlugin(
             CheckPluginName("ps"),
             [],
             "Process item",

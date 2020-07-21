@@ -64,11 +64,12 @@ import cmk.base.inventory as inventory
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.utils
-from cmk.base.api.agent_based import checking_types, value_store
+from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     CLUSTER_LEGACY_MODE_FROM_HELL,
     wrap_parameters,
 )
+from cmk.base.api.agent_based.type_defs import CheckGenerator, CheckPlugin
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
@@ -420,8 +421,8 @@ def get_aggregated_result(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     service: Service,
-    plugin: Optional[checking_types.CheckPlugin],
-    params_function: Callable[[], checking_types.Parameters],
+    plugin: Optional[CheckPlugin],
+    params_function: Callable[[], checking_classes.Parameters],
 ) -> Tuple[bool, bool, ServiceCheckResult]:
     """Run the check function and aggregate the subresults
 
@@ -477,7 +478,7 @@ def get_aggregated_result(
         with value_store.context(plugin.name, service.item):
             result = _aggregate_results(check_function(**kwargs))
 
-    except (item_state.MKCounterWrapped, checking_types.IgnoreResultsError) as e:
+    except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
         msg = str(e) or "No service summary available"
         return False, True, (0, msg, [])
 
@@ -612,7 +613,7 @@ def _legacy_determine_cache_info(multi_host_sections: MultiHostSections,
     return (min(cached_ats), max(intervals)) if cached_ats else None
 
 
-def determine_check_params(entries: LegacyCheckParameters) -> checking_types.Parameters:
+def determine_check_params(entries: LegacyCheckParameters) -> checking_classes.Parameters:
     # TODO (mo): obviously, we do not want to keep legacy_determine_check_params
     # around in the long run. This needs cleaning up, once we've gotten
     # rid of tuple parameters.
@@ -620,7 +621,7 @@ def determine_check_params(entries: LegacyCheckParameters) -> checking_types.Par
     # wrap_parameters is a no-op for dictionaries.
     # For auto-migrated plugins expecting tuples, they will be
     # unwrapped by a decorator of the original check_function.
-    return checking_types.Parameters(wrap_parameters(params))
+    return checking_classes.Parameters(wrap_parameters(params))
 
 
 def legacy_determine_check_params(entries: LegacyCheckParameters) -> LegacyCheckParameters:
@@ -690,23 +691,21 @@ def is_manual_check(hostname: HostName, service_id: ServiceID) -> bool:
     )
 
 
-def _aggregate_results(
-    subresults: Iterable[Union[checking_types.Metric, checking_types.Result,
-                               checking_types.IgnoreResults]]
-) -> ServiceCheckResult:
+def _aggregate_results(subresults: CheckGenerator) -> ServiceCheckResult:
     perfdata: List[Metric] = []
     summaries: List[str] = []
     details: List[str] = []
-    status = checking_types.state(0)
+    status = checking_classes.state(0)
 
     for subr in list(subresults):  # consume *everything* here, before we may raise!
-        if isinstance(subr, checking_types.IgnoreResults):
-            raise checking_types.IgnoreResultsError(str(subr))
-        if isinstance(subr, checking_types.Metric):
+        if isinstance(subr, checking_classes.IgnoreResults):
+            raise checking_classes.IgnoreResultsError(str(subr))
+        if isinstance(subr, checking_classes.Metric):
             perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
             continue
+        assert isinstance(subr, checking_classes.Result)
 
-        status = checking_types.state.worst(status, subr.state)
+        status = checking_classes.state.worst(status, subr.state)
         state_marker = check_api_utils.state_markers[int(subr.state)]
 
         if subr.summary:

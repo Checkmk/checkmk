@@ -15,8 +15,12 @@ from cmk.utils.type_defs import ParsedSectionName, SectionName
 from cmk.snmplib.type_defs import OIDEnd, SNMPTree
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-import cmk.base.api.agent_based.section_types as section_types
-from cmk.base.api.agent_based.type_defs import SNMPStringTable, SNMPStringByteTable
+from cmk.base.api.agent_based.type_defs import (
+    AgentSectionPlugin,
+    SNMPSectionPlugin,
+    SNMPStringTable,
+    SNMPStringByteTable,
+)
 
 
 def _generator_function():
@@ -121,7 +125,7 @@ def test_create_agent_section_plugin():
         supersedes=None,  # ["Foo", "Bar"],
     )
 
-    assert isinstance(plugin, section_types.AgentSectionPlugin)
+    assert isinstance(plugin, AgentSectionPlugin)
     assert len(plugin) == 6
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("norris")  # "chuck")
@@ -133,7 +137,7 @@ def test_create_agent_section_plugin():
 def test_create_snmp_section_plugin():
 
     trees: List[SNMPTree] = [
-        section_types.SNMPTree(
+        SNMPTree(
             base='.1.2.3',
             oids=[OIDEnd(), '2.3'],
         ),
@@ -172,7 +176,7 @@ def test_create_snmp_section_plugin():
         supersedes=None,  # ["Foo", "Bar"],
     )
 
-    assert isinstance(plugin, section_types.SNMPSectionPlugin)
+    assert isinstance(plugin, SNMPSectionPlugin)
     assert len(plugin) == 8
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("norris")  # "chuck")

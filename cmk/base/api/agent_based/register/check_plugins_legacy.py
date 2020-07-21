@@ -13,8 +13,7 @@ import itertools
 from cmk.utils.check_utils import maincheckify, wrap_parameters, unwrap_parameters
 
 from cmk.base import item_state
-from cmk.base.api.agent_based.checking_types import (
-    CheckPlugin,
+from cmk.base.api.agent_based.checking_classes import (
     Metric,
     state,
     Parameters,
@@ -22,6 +21,7 @@ from cmk.base.api.agent_based.checking_types import (
     Service,
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+from cmk.base.api.agent_based.type_defs import CheckPlugin
 import cmk.base.config as config
 from cmk.base.check_api_utils import Service as LegacyService
 from cmk.base.check_utils import get_default_parameters

@@ -15,7 +15,7 @@ from cmk.base.api.agent_based.register.section_plugins import (
 )
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     create_detect_spec,)
-from cmk.base.api.agent_based.section_types import (
+from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,

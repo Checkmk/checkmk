@@ -21,19 +21,25 @@ Example:
             item: str,
             params: Parameters,
             section: Dict[str, str],
-        ) -> Generator[Union[Result, Metric], None, None]:
+        ) -> CheckGenerator:
             pass
 
 """
-from cmk.base.api.agent_based.checking_types import Parameters
+from cmk.base.api.agent_based.checking_classes import Parameters
 from cmk.base.api.agent_based.type_defs import (
     AgentStringTable,
+    CheckGenerator,
+    DiscoveryGenerator,
+    HostLabelGenerator,
     SNMPStringByteTable,
     SNMPStringTable,
 )
 
 __all__ = [
     "AgentStringTable",
+    "CheckGenerator",
+    "DiscoveryGenerator",
+    "HostLabelGenerator",
     "Parameters",
     "SNMPStringByteTable",
     "SNMPStringTable",

@@ -24,7 +24,7 @@ import cmk.base.caching as caching
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
-from cmk.base.api.agent_based.section_types import (
+from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
     SNMPParseFunction,

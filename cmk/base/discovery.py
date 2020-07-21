@@ -73,7 +73,8 @@ import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 import cmk.base.utils
-from cmk.base.api.agent_based import checking_types
+from cmk.base.api.agent_based import checking_classes
+from cmk.base.api.agent_based.type_defs import DiscoveryGenerator, CheckPlugin
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import FinalSectionContent, LegacyCheckParameters, Service, ServiceID
 from cmk.base.config import SelectedRawSections
@@ -1280,9 +1281,10 @@ def _execute_discovery(
 def _enriched_discovered_services(
     hostname: HostName,
     check_plugin_name: CheckPluginName,
-    plugins_services: Iterable[checking_types.Service],
+    plugins_services: DiscoveryGenerator,
 ) -> Generator[Service, None, None]:
     for service in plugins_services:
+        assert isinstance(service, checking_classes.Service)
         description = config.service_description(hostname, check_plugin_name, service.item)
         # make sanity check
         if not description:
@@ -1552,7 +1554,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
                     continue  # Skip not existing check silently
 
                 ruleset_name = str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
-                wrapped_params = checking_types.Parameters(wrap_parameters(params))
+                wrapped_params = checking_classes.Parameters(wrap_parameters(params))
 
                 _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
                     multi_host_sections,
@@ -1595,7 +1597,7 @@ def _preview_check_source(
 def _preview_params(
     host_name: HostName,
     service: Service,
-    plugin: Optional[checking_types.CheckPlugin],
+    plugin: Optional[CheckPlugin],
     check_source: str,
 ) -> Optional[LegacyCheckParameters]:
     params: Optional[LegacyCheckParameters] = None

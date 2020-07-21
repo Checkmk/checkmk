@@ -21,7 +21,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function impo
     _explicit_conversions,
     create_detect_spec,
 )
-from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
 
 pytestmark = pytest.mark.checks
 

@@ -10,19 +10,17 @@ from typing import Any, Callable, Dict, List, Optional
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 from cmk.base import config
-from cmk.base.api.agent_based.checking_types import (
-    CheckFunction,
-    DiscoveryFunction,
-    DiscoveryRuleSetType,
-)
 from cmk.base.api.agent_based.register.utils import get_plugin_module_name
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
 )
-from cmk.base.api.agent_based.section_types import (
+from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
+    CheckFunction,
+    DiscoveryFunction,
+    DiscoveryRuleSetType,
     HostLabelFunction,
     SNMPParseFunction,
 )

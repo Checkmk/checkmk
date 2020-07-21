@@ -14,10 +14,12 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Union
 from cmk.utils.check_utils import ensure_management_name, MANAGEMENT_NAME_PREFIX
 from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
-from cmk.base.api.agent_based.checking_types import (
+from cmk.base.api.agent_based.type_defs import (
     CheckPlugin,
     DISCOVERY_RULESET_TYPE_CHOICES,
     DiscoveryRuleSetType,
+)
+from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
     Metric,
     Result,

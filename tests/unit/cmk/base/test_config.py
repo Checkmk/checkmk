@@ -19,7 +19,7 @@ import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
-from cmk.base.api.agent_based import checking_types
+from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
 from cmk.base.check_utils import Service
@@ -1924,7 +1924,7 @@ def test_packed_config(pack_string):
 
 @pytest.fixture(name="test_plugin")
 def add_test_plugin_to_config():
-    test_plugin = checking_types.CheckPlugin(
+    test_plugin = CheckPlugin(
         CheckPluginName("check_unit_test"),
         [],
         "Unit Test",

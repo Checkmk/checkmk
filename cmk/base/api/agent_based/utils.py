@@ -18,7 +18,7 @@ from cmk.snmplib.type_defs import SNMPDetectSpec
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.prediction
-from cmk.base.api.agent_based.checking_types import IgnoreResultsError, Metric, Result, state
+from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, state
 
 
 # annotating this breaks validation.

@@ -15,8 +15,8 @@ from testlib.base import Scenario  # type: ignore[import]
 import cmk.utils.piggyback
 
 from cmk.base import check_table, config
-from cmk.base.api.agent_based import checking_types
 from cmk.base.api.agent_based.register import section_plugins
+from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.utils import parse_to_string_table
 import cmk.base.data_sources.agent as agent
 from cmk.base.data_sources import make_sources
@@ -140,7 +140,7 @@ def agent_section_fixture(monkeypatch):
 
 @pytest.fixture(name="check_plugin")
 def check_plugin_fixture(monkeypatch, agent_section):
-    check_plugin = checking_types.CheckPlugin(
+    check_plugin = CheckPlugin(
         CheckPluginName("unit_test_check_plugin"),
         [agent_section.parsed_section_name],
         "Unit Test",

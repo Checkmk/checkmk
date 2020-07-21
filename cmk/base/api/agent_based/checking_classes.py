@@ -3,23 +3,22 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Types and classes used by the API for check plugins
+"""Classes used by the API for check plugins
 """
 import enum
 from collections.abc import Mapping
 import pprint
-from typing import Any, Callable, Dict, Generator, List, Literal, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.type_defs import EvalableFloat, ParsedSectionName, CheckPluginName, RuleSetName
+from cmk.utils.type_defs import EvalableFloat
 
 from cmk.base.discovered_labels import ServiceLabel
 
+from cmk.base.api.agent_based.type_defs import ABCCheckGenerated, ABCDiscoveryGenerated
+
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
-
-DISCOVERY_RULESET_TYPE_CHOICES = ("merged", "all")  # can't we dedup this?
-DiscoveryRuleSetType = Literal["merged", "all"]
 
 
 class Parameters(Mapping):
@@ -43,7 +42,7 @@ class Parameters(Mapping):
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._data))
 
 
-class Service:
+class Service(ABCDiscoveryGenerated):
     """This class represents services that the discover function yields
 
     my_drive_service = Service(
@@ -189,7 +188,7 @@ class state(enum.Enum):
         return cls(max(int(s) for s in args))
 
 
-class Metric:
+class Metric(ABCCheckGenerated):
     @staticmethod
     def validate_name(metric_name):
         if not metric_name:
@@ -277,11 +276,12 @@ class Metric:
                                                          self.value, self.levels, self.boundaries)
 
 
-class Result(NamedTuple("ResultTuple", [
-    ("state", state),
-    ("summary", str),
-    ("details", str),
-])):
+class Result(ABCCheckGenerated,
+             NamedTuple("ResultTuple", [
+                 ("state", state),
+                 ("summary", str),
+                 ("details", str),
+             ])):
 
     _state_class = state  # avoid shadowing by keyword called "state"
 
@@ -338,7 +338,7 @@ class IgnoreResultsError(RuntimeError):
     pass
 
 
-class IgnoreResults:
+class IgnoreResults(ABCCheckGenerated):
     def __init__(self, value: str = "currently no results") -> None:
         self._value = value
 
@@ -347,25 +347,3 @@ class IgnoreResults:
 
     def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
-
-
-DiscoveryFunction = Callable[..., Generator[Service, None, None]]
-
-CheckFunction = Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]
-
-CheckPlugin = NamedTuple(
-    "CheckPlugin",
-    [
-        ("name", CheckPluginName),
-        ("sections", List[ParsedSectionName]),
-        ("service_name", str),
-        ("discovery_function", DiscoveryFunction),
-        ("discovery_default_parameters", Dict[str, Any]),
-        ("discovery_ruleset_name", Optional[RuleSetName]),
-        ("discovery_ruleset_type", DiscoveryRuleSetType),
-        ("check_function", CheckFunction),
-        ("check_default_parameters", Dict[str, Any]),
-        ("check_ruleset_name", Optional[RuleSetName]),
-        ("cluster_check_function", CheckFunction),
-        ("module", Optional[str]),  # not available for auto migrated plugins.
-    ])

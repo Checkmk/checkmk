@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Iterable, List, Union, Optional
-from cmk.base.api.agent_based.checking_types import (
+from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
     IgnoreResultsError,
     Metric,

@@ -18,7 +18,7 @@ Version 0
 
 from cmk.snmplib.type_defs import OIDBytes, OIDCached, OIDEnd
 
-from cmk.base.api.agent_based.checking_types import (
+from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
     IgnoreResultsError,
     Metric,
@@ -27,7 +27,7 @@ from cmk.base.api.agent_based.checking_types import (
     ServiceLabel,
     state,
 )
-from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.base.api.agent_based.type_defs import SNMPTree
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,

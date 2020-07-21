@@ -9,7 +9,7 @@ import math
 
 import pytest  # type: ignore[import]
 from cmk.base.api.agent_based import utils, render
-from cmk.base.api.agent_based.checking_types import state, Metric, Result
+from cmk.base.api.agent_based.checking_classes import state, Metric, Result
 
 
 @pytest.mark.parametrize("value, levels_upper, levels_lower, render_func, result", [

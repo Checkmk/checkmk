@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest  # type: ignore[import]
 
-from cmk.base.api.agent_based.checking_types import (
+from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
     Parameters,
     ServiceLabel,

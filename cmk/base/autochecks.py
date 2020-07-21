@@ -276,7 +276,7 @@ def _parse_autocheck_entry(
         raise Exception("Invalid autocheck: Wrong item type: %r" % item)
 
     try:
-        # Pre 1.7 check plugins had dots in them. With the new check API in
+        # Pre 1.7 check plugins had dots in the check plugin name. With the new check API in
         # 1.7 they are replaced by '_', renaming e.g. 'cpu.loads' to 'cpu_loads'.
         plugin_name = CheckPluginName(maincheckify(check_plugin_name))
     except Exception:

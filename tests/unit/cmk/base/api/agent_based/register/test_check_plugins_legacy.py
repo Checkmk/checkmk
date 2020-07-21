@@ -10,7 +10,7 @@ import inspect
 
 from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
-import cmk.base.api.agent_based.checking_types as checking_types
+import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
 from cmk.base.check_api_utils import Service as OldService
 import cmk.base.config as config
@@ -61,10 +61,10 @@ def test_create_discovery_function(monkeypatch):
 
     result = list(new_function(["info"]))
     assert result == [
-        checking_types.Service(item="foo"),
-        checking_types.Service(item="foo", parameters={"levels": "default"}),
+        checking_classes.Service(item="foo"),
+        checking_classes.Service(item="foo", parameters={"levels": "default"}),
         "some string",  # bogus value let through intentionally
-        checking_types.Service(item="bar", parameters={"P": "O"}),
+        checking_classes.Service(item="bar", parameters={"P": "O"}),
     ]
 
 
@@ -92,17 +92,18 @@ def test_create_check_function():
 
     result = new_function(item="Test Item", section=["info"])
     assert list(result) == [
-        checking_types.Result(
-            state=checking_types.state.OK,
+        checking_classes.Result(
+            state=checking_classes.state.OK,
             summary="Main info",
         ),
-        checking_types.Metric("mymetric", 23.0, levels=(2.0, 3.0)),
-        checking_types.Result(
-            state=checking_types.state.WARN,
+        checking_classes.Metric("mymetric", 23.0, levels=(2.0, 3.0)),
+        checking_classes.Result(
+            state=checking_classes.state.WARN,
             summary="still main, but very long",
             details="additional1",
         ),
-        checking_types.Result(state=checking_types.state.CRIT, details="additional2\nadditional3"),
+        checking_classes.Result(state=checking_classes.state.CRIT,
+                                details="additional2\nadditional3"),
     ]
 
 

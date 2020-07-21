@@ -33,7 +33,7 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.base.utils
-from cmk.base.api.agent_based.checking_types import CheckPlugin
+from cmk.base.api.agent_based.type_defs import CheckPlugin
 import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.core_config as core_config

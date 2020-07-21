@@ -241,6 +241,22 @@ components:
             pattern: '[-0-9a-zA-Z_.]+'
             type: string
           type: array
+      required:
+      - entries
+      type: object
+    BulkDeleteHostGroup:
+      properties:
+        entries:
+          example:
+          - windows
+          - panels
+          items:
+            description: The name of the host group config
+            example: windows
+            type: string
+          type: array
+      required:
+      - entries
       type: object
     ConcreteFolder:
       discriminator:
@@ -2636,6 +2652,49 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
           \ a20ceacf346041dc' \\\n    alias='Windows Servers' \\\n    name='windows'"
+  /domain-types/host_group_config/actions/bulk-delete/invoke:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_group_config.bulk_delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkDeleteHostGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_group_config
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
+          \    API_URL + \"/domain-types/host_group_config/actions/bulk-delete/invoke\"\
+          ,\n    json={\n        \"entries\": [\n            \"windows\",\n      \
+          \      \"panels\"\n        ]\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"entries\": [\n         \
+          \   \"windows\",\n            \"panels\"\n          ]\n        }' \\\n \
+          \   \"$API_URL/domain-types/host_group_config/actions/bulk-delete/invoke\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/domain-types/host_group_config/actions/bulk-delete/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    entries='[\"\
+          windows\", \"panels\"]'"
   /objects/host/{host_name}/collections/services:
     get:
       description: ''
@@ -3650,6 +3709,9 @@ tags:
     showWriteOnly={true} />
   name: InputHostGroup
   x-displayName: Creating a host group
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkDeleteHostGroup"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BulkDeleteHostGroup
 - name: cmk.gui.plugins.openapi.endpoints.service
   x-displayName: Service status endpoints
 - name: cmk.gui.plugins.openapi.endpoints.service_discovery
@@ -3706,5 +3768,6 @@ x-tagGroups:
   - UpdateHost
   - BulkDeleteHost
   - InputHostGroup
+  - BulkDeleteHostGroup
   - InputServiceGroup
   - AgentSign

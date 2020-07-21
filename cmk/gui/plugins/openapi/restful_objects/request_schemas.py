@@ -245,3 +245,16 @@ class BulkDeleteFolder(Schema):
         required=True,
         example=["production", "secondproduction"],
     )
+
+
+class BulkDeleteHostGroup(Schema):
+    # TODO: addition of etag field
+    entries = fields.List(
+        fields.String(
+            required=True,
+            description="The name of the host group config",
+            example="windows",
+        ),
+        required=True,
+        example=["windows", "panels"],
+    )

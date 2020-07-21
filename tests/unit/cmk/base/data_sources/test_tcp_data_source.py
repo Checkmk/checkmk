@@ -8,7 +8,8 @@ import socket
 
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.base.data_sources._abstract import Mode
 from cmk.base.data_sources.agent import AgentHostSections, AgentSummarizerDefault
@@ -39,6 +40,49 @@ def test_tcpdatasource_only_from(mode, monkeypatch, result, reported, rule):
 
     summarizer = AgentSummarizerDefault(configurator)
     assert summarizer._sub_result_only_from({"onlyfrom": reported}) == result
+
+
+@pytest.mark.parametrize("restricted_address_mismatch_state, only_from, rule, result", [
+    (None, "1.2.{3,4,5}.6", "1.2.3.6",
+     (1, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)', [])),
+    (None, "1.2.3.6", "1.2.3.{4,5,6}",
+     (1, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)', [])),
+    (1, "1.2.{3,4,5}.6", "1.2.3.6",
+     (1, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)', [])),
+    (1, "1.2.3.6", "1.2.3.{4,5,6}",
+     (1, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)', [])),
+    (0, "1.2.{3,4,5}.6", "1.2.3.6",
+     (0, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)', [])),
+    (0, "1.2.3.6", "1.2.3.{4,5,6}",
+     (0, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)', [])),
+    (2, "1.2.{3,4,5}.6", "1.2.3.6",
+     (2, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!!)', [])),
+    (2, "1.2.3.6", "1.2.3.{4,5,6}",
+     (2, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!!)', [])),
+    (3, "1.2.{3,4,5}.6", "1.2.3.6",
+     (3, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(?)', [])),
+    (3, "1.2.3.6", "1.2.3.{4,5,6}",
+     (3, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(?)', [])),
+])
+def test_tcpdatasource_restricted_address_mismatch(mode, monkeypatch,
+                                                   restricted_address_mismatch_state, only_from,
+                                                   rule, result):
+    hostname = "hostname"
+    ts = Scenario().add_host(hostname)
+    ts.set_option("agent_config", {"only_from": [(rule, [], [hostname], {})]})
+
+    if restricted_address_mismatch_state is not None:
+        ts.set_ruleset("check_mk_exit_status", [
+            ({
+                "restricted_address_mismatch": restricted_address_mismatch_state,
+            }, [], [hostname], {}),
+        ])
+
+    ts.apply(monkeypatch)
+    configurator = TCPConfigurator(hostname, "ipaddress", mode=mode)
+    summarizer = AgentSummarizerDefault(configurator)
+
+    assert summarizer._sub_result_only_from({"onlyfrom": only_from}) == result
 
 
 def test_attribute_defaults(mode, monkeypatch):

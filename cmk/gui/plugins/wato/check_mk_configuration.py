@@ -4755,8 +4755,21 @@ def _valuespec_check_mk_exit_status():
                                  Dictionary(title=_("Piggyback"),
                                             elements=_common_check_mk_exit_status_elements())),
                             ])),
+                ("restricted_address_mismatch",
+                 MonitoringState(
+                     title=_("State in case of restricted address missmatch"),
+                     help=
+                     _("If a Checkmk site is updated to a newer version but the agents of some "
+                       "hosts are not, then the warning <i>Unexpected allowed IP ranges</i> may "
+                       "be displayed in the details of the <i>Check_MK</i> service and the "
+                       "service state changes to <i>WARN</i> (by default).<br>"
+                       "With this setting you can overwrite the default service state. This will help "
+                       "you to reduce above warnings during the update process of your Checkmk sites "
+                       "and agents."),
+                     default_value=1,
+                 )),
             ],
-            optional_keys=["individual"],
+            optional_keys=["individual", "restricted_address_mismatch"],
         ),
         forth=transform_exit_code_spec,
         title=_("Status of the Check_MK services"),

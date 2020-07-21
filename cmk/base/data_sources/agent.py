@@ -221,12 +221,15 @@ class AgentSummarizerDefault(AgentSummarizer):
         exceeding = allowed_nets - expected_nets
         if exceeding:
             infotexts.append("exceeding: %s" % " ".join(sorted(exceeding)))
+
         missing = expected_nets - allowed_nets
         if missing:
             infotexts.append("missing: %s" % " ".join(sorted(missing)))
 
-        return 1, "Unexpected allowed IP ranges (%s)%s" % (", ".join(infotexts),
-                                                           state_markers[1]), []
+        mismatch_state = self._host_config.exit_code_spec().get("restricted_address_mismatch", 1)
+        assert isinstance(mismatch_state, int)
+        return (mismatch_state, "Unexpected allowed IP ranges (%s)%s" %
+                (", ".join(infotexts), state_markers[mismatch_state]), [])
 
     @staticmethod
     def _is_expected_agent_version(

@@ -18,15 +18,22 @@ def test_openapi_livestatus_downtimes(
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
 
-    downtime_result = [[
-        54, 'heute', 'CPU load', 1, 'cmkadmin', 1593770319, 1596448719, 0, 'Downtime for service'
-    ]]
+    live.add_table('downtimes', [{
+        'id': 54,
+        'host_name': 'heute',
+        'service_description': 'CPU load',
+        'is_service': 1,
+        'author': 'cmkadmin',
+        'start_time': 1593770319,
+        'end_time': 1596448719,
+        'recurring': 0,
+        'comment': 'Downtime for service',
+    }])
 
     live.expect_query([
         'GET downtimes',
         'Columns: id host_name service_description is_service author start_time end_time recurring comment'
-    ],
-                      result=downtime_result)
+    ])
     with live:
         resp = wsgi_app.call_method('get',
                                     base + "/domain-types/downtime/collections/all",

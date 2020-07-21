@@ -18,15 +18,20 @@ def test_openapi_livestatus_hosts(
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
 
-    host_result = [['heute', '127.0.0.1', 'heute', [], 0]]
+    live.add_table('hosts', [
+        {
+            'name': 'heute',
+            'address': '127.0.0.1',
+            'alias': 'heute',
+            'downtimes_with_info': [],
+            'scheduled_downtime_depth': 0,
+        },
+    ])
 
-    live.expect_query(
-        [
-            'GET hosts',
-            'Columns: name address alias downtimes_with_info scheduled_downtime_depth',
-        ],
-        result=host_result,
-    )
+    live.expect_query([
+        'GET hosts',
+        'Columns: name address alias downtimes_with_info scheduled_downtime_depth',
+    ],)
     with live:
         resp = wsgi_app.call_method(
             'get',
@@ -35,14 +40,11 @@ def test_openapi_livestatus_hosts(
         )
         assert len(resp.json['value']) == 1
 
-    live.expect_query(
-        [
-            'GET hosts',
-            'Columns: name address alias downtimes_with_info scheduled_downtime_depth',
-            'Filter: alias ~ heute',
-        ],
-        result=host_result,
-    )
+    live.expect_query([
+        'GET hosts',
+        'Columns: name address alias downtimes_with_info scheduled_downtime_depth',
+        'Filter: alias ~ heute',
+    ],)
     with live:
         resp = wsgi_app.call_method(
             'get',

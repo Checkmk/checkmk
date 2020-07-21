@@ -17,15 +17,34 @@ def test_openapi_livestatus_service(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    result = [['heute', 'Filesystem /opt/omd/sites/heute/tmp', 1593697877, 0]]
-
-    live.expect_query(
+    live.add_table(
+        'services',
         [
-            'GET services',
-            'Columns: host_name description last_check state state_type acknowledged',
+            {
+                'host_name': 'heute',
+                'host_alias': 'heute',
+                'description': 'Filesystem /opt/omd/sites/heute/tmp',
+                'state': 0,
+                'state_type': 'hard',
+                'last_check': 1593697877,
+                'acknowledged': 0,
+            },
+            {
+                'host_name': 'example.com',
+                'host_alias': 'example.com',
+                'description': 'Filesystem /boot',
+                'state': 0,
+                'state_type': 'hard',
+                'last_check': 0,
+                'acknowledged': 0,
+            },
         ],
-        result=result,
     )
+
+    live.expect_query([
+        'GET services',
+        'Columns: host_name description last_check state state_type acknowledged',
+    ],)
 
     with live:
         base = '/NO_SITE/check_mk/api/v0'
@@ -35,16 +54,13 @@ def test_openapi_livestatus_service(
             base + "/domain-types/service/collections/all",
             status=200,
         )
-        assert len(resp.json['value']) == 1
+        assert len(resp.json['value']) == 2
 
-    live.expect_query(
-        [
-            'GET services',
-            'Columns: host_name description last_check state state_type acknowledged',
-            'Filter: host_alias ~ heute',
-        ],
-        result=result,
-    )
+    live.expect_query([
+        'GET services',
+        'Columns: host_name description last_check state state_type acknowledged',
+        'Filter: host_alias ~ heute',
+    ],)
 
     with live:
         resp = wsgi_app.call_method(
@@ -58,10 +74,7 @@ def test_openapi_livestatus_service(
         'GET services',
         'Columns: host_name description last_check state state_type acknowledged',
         'Filter: host_name ~ example.com',
-    ],
-                      result=[
-                          ['example.com', 'The service', 0, 0],
-                      ])
+    ])
     with live:
         resp = wsgi_app.call_method(
             'get',

@@ -8,19 +8,21 @@
 For code to be admitted to this module, it should itself be tested thoroughly, so we won't
 have any friction during testing with these helpers themselves.
 
-
 """
 import contextlib
 import datetime as dt
+import operator
 import re
 import time
-from typing import Any, List, Literal, Optional, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 # TODO: Make livestatus.py a well tested package on pypi
 # TODO: Move this code to the livestatus package
 # TODO: Multi-site support. Need to have multiple lists of queries, one per site.
 
+FilterFunc = Callable[[Dict[str, Any]], bool]
 MatchType = Literal["strict", "ellipsis"]
+OperatorFunc = Callable[[Any, Any], bool]
 Response = List[List[Any]]
 
 
@@ -31,13 +33,12 @@ class MockLiveStatusConnection:
         You probably want to use the fixture: cmk.gui.conftest:mock_livestatus
 
     This object can remember queries and the order in which they should arrive. Once the expected
-    query was accepted, the pre-stored response will be given back.
+    query was accepted the query is evaluated and a response is constructed from stored table data.
 
-    It is up to the test-writer to set the appropriate queries and their responses.
+    It is up to the test-writer to set the appropriate queries and populate the table data.
 
-    The class will verify that:
-     * The expected queries (and _only_ those) are being issued in the `with` block.
-       This means that:
+    The class will verify that the expected queries (and _only_ those) are being issued
+    in the `with` block. This means that:
          * Any additional query will trigger a RuntimeError
          * Any missing query will trigger a RuntimeError
          * Any mismatched query will trigger a RuntimeError
@@ -50,16 +51,18 @@ class MockLiveStatusConnection:
 
     Examples:
 
-        This will pass:
+        This test will pass:
 
             >>> live = (MockLiveStatusConnection()
-            ...         .expect_query("GET hosts")
-            ...         .expect_query("GET services"))
+            ...         .expect_query("GET hosts\\nColumns: name")
+            ...         .expect_query("GET services\\nColumns: description"))
             >>> with live(expect_status_query=False):
-            ...     live.query_non_parallel("GET hosts", '')
-            ...     live.query_non_parallel("GET services", '')
+            ...     live.query_non_parallel("GET hosts\\nColumns: name", '')
+            ...     live.query_non_parallel("GET services\\nColumns: description", '')
+            [['heute']]
+            [['Memory']]
 
-        This will pass as well (useful in real WATO or REST-API calls):
+        This test will pass as well (useful in real GUI or REST-API calls):
 
             >>> live = MockLiveStatusConnection()
             >>> with live:
@@ -108,26 +111,42 @@ program_start num_hosts num_services'
              * 'Spanish inquisition!'
 
     """
-    def __init__(self, report_multiple=False):
+    def __init__(self, report_multiple: bool = False) -> None:
         self._prepend_site = False
-        self._expected_queries = []
+        self._expected_queries: List[Tuple[str, List[List[str]], MatchType]] = []
         self._num_queries = 0
         self._query_index = 0
         self._report_multiple = report_multiple
-        self._expect_status_query = None
+        self._expect_status_query: Optional[bool] = None
+
+        # We store some default values for some tables. May be expanded in the future.
+        _today = str(dt.datetime.utcnow().date())
+        _program_start_timestamp = int(time.time())
+        self._tables: Dict[str, List[Dict[str, Any]]] = {
+            'status': [{
+                'livestatus_version': _today,
+                'program_version': f'Check_MK {_today}',
+                'program_start': _program_start_timestamp,
+                'num_hosts': 1,
+                'num_services': 36,
+            }],
+            'hosts': [{
+                'name': 'heute'
+            }],
+            'services': [{
+                'description': 'Memory'
+            }]
+        }
 
     def _expect_post_connect_query(self) -> None:
         # cmk.gui.sites._connect_multiple_sites asks for some specifics upon initial connection.
         # We expect this query and give the expected result.
-        today = str(dt.date.today())
-        program_start_timestamp = int(time.time())
         self.expect_query(
             [
                 'GET status',
                 'Cache: reload',
                 'Columns: livestatus_version program_version program_start num_hosts num_services',
             ],
-            result=[[today, 'Check_MK ' + today, program_start_timestamp, 1, 36]],
             force_pos=0,  # first query to be expected
         )
 
@@ -135,7 +154,7 @@ program_start num_hosts num_services'
         self._expect_status_query = expect_status_query
         return self
 
-    def __enter__(self):
+    def __enter__(self) -> 'MockLiveStatusConnection':
         # This simulates a call to sites.live(). Upon call of sites.live(), the connection will be
         # ensured via _ensure_connected. This sends off a specific query to LiveStatus which we
         # expect to be called as the first query.
@@ -157,12 +176,18 @@ program_start num_hosts num_services'
             remaining_queries = ""
             for query in self._expected_queries:
                 remaining_queries += f"\n * {repr(query[0])}"
-            raise RuntimeError(f"Expected queries were not queried:" f"{remaining_queries}")
+            raise RuntimeError(f"Expected queries were not queried:{remaining_queries}")
+
+    def add_table(self, name: str, data: List[Dict[str, Any]]) -> 'MockLiveStatusConnection':
+        """Add the data of a table.
+
+        """
+        self._tables[name] = data
+        return self
 
     def expect_query(
         self,
         query: Union[str, List[str]],
-        result: List[List[Any]] = None,
         match_type: MatchType = 'strict',
         force_pos: Optional[int] = None,
     ) -> 'MockLiveStatusConnection':
@@ -172,11 +197,8 @@ program_start num_hosts num_services'
 
         Args:
             query:
-                The expected query. May be a `str` or a list of `str` which will tehn be joined by
-                newlines.
-
-            result:
-                What the result of this query should be.
+                The expected query. May be a `str` or a list of `str` which, in the list case, will
+                be joined by newlines.
 
             match_type:
                 Flags with which to decide comparison behavior.
@@ -186,12 +208,44 @@ program_start num_hosts num_services'
 
             force_pos:
                 Only used internally. Ignore.
+
+        Returns:
+            The object itself, so you can chain.
+
+        Raises:
+            KeyError: when a table or a column used by the `query` is not defined in the test-data.
+
+            ValueError: when an unknown `match_type` is given.
+
         """
         if match_type not in ('strict', 'ellipsis'):
             raise ValueError(f"match_type {match_type!r} not supported.")
 
         if isinstance(query, list):
             query = '\n'.join(query)
+
+        table = _table_of_query(query)
+        columns = _column_of_query(query)
+
+        if table and not columns:
+            # figure out columns from table store.
+            for entry in self._tables.get(table, []):
+                columns = sorted(entry.keys())
+
+        result = []  # default result is nothing
+        if table and columns:
+            # We check the store for data and filter for the actual data that is requested.
+            if table not in self._tables:
+                raise KeyError(f"Table {table!r} not stored. Call .add_table(...)")
+            result_dicts = evaluate_filter(query, self._tables[table])
+            for entry in result_dicts:
+                row = []
+                for col in columns:
+                    if col not in entry:
+                        raise KeyError(f"Column '{table}.{col}' not known. "
+                                       "Add to test-data or fix query.")
+                    row.append(entry[col])
+                result.append(row)
 
         if force_pos is not None:
             self._expected_queries.insert(force_pos, (query, result, match_type))
@@ -310,3 +364,280 @@ def simple_expect(query, match_type: MatchType = "ellipsis", expect_status_query
     live.expect_query(query, match_type=match_type)
     with live(expect_status_query=expect_status_query):
         yield live
+
+
+def evaluate_filter(query: str, result: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Filter a list of dictionaries according to the filters of a LiveStatus query.
+
+    The filters will be extracted from the query. And: and Or: directives are also supported.
+
+    Currently only standard "Filter:" directives are supported, not StatsFilter: etc.
+
+    Args:
+        query:
+            A LiveStatus query as a string.
+
+        result:
+            A list of dictionaries representing a LiveStatus table. The keys need to match the
+            columns of the LiveStatus query. A mismatch will lead to, at least, a KeyError.
+
+    Examples:
+
+        >>> q = "GET hosts\\nFilter: name = heute"
+        >>> data = [{'name': 'heute', 'state': 0}, {'name': 'morgen', 'state': 1}]
+        >>> evaluate_filter(q, data)
+        [{'name': 'heute', 'state': 0}]
+
+        >>> q = "GET hosts\\nFilter: name = heute\\nFilter: state > 0\\nAnd: 2"
+        >>> evaluate_filter(q, data)
+        []
+
+        >>> q = "GET hosts\\nFilter: name = heute\\nFilter: state = 0\\nAnd: 2"
+        >>> evaluate_filter(q, data)
+        [{'name': 'heute', 'state': 0}]
+
+        >>> q = "GET hosts\\nFilter: name = heute\\nFilter: state > 0\\nOr: 2"
+        >>> evaluate_filter(q, data)
+        [{'name': 'heute', 'state': 0}, {'name': 'morgen', 'state': 1}]
+
+        >>> q = "GET hosts\\nFilter: name ~ heu"
+        >>> evaluate_filter(q, data)
+        [{'name': 'heute', 'state': 0}]
+
+    Returns:
+        The filtered list of dictionaries.
+
+    """
+    filters = []
+    for line in query.split("\n"):
+        if line.startswith("Filter:"):
+            filters.append(make_filter_func(line))
+        elif line.startswith(("And:", "Or:")):
+            op, count_ = line.split(" ", 1)
+            count = int(count_)
+            filters, params = filters[:-count], filters[-count:]
+            filters.append(COMBINATORS[op](params))
+
+    if not filters:
+        # No filtering requested. Dump all the data.
+        return result
+
+    if len(filters) > 1:
+        raise ValueError(f"Got {len(filters)} filters, expected one. Forgot And/Or?")
+
+    return [entry for entry in result if filters[0](entry)]
+
+
+def and_(filters: List[FilterFunc]) -> FilterFunc:
+    """Combines multiple filters via a logical AND.
+
+    Args:
+        filters:
+            A list of filter functions.
+
+    Returns:
+        True if all filters return True, else False.
+
+    Examples:
+
+        >>> and_([lambda x: True, lambda x: False])({})
+        False
+
+        >>> and_([lambda x: True, lambda x: True])({})
+        True
+
+    """
+    def _and_impl(entry: Dict[str, Any]) -> bool:
+        return all([filt(entry) for filt in filters])
+
+    return _and_impl
+
+
+def or_(filters: List[FilterFunc]) -> FilterFunc:
+    """Combine multiple filters via a logical OR.
+
+    Args:
+        filters:
+            A list of filter functions.
+
+    Returns:
+        True if any of the filters returns True, else False
+
+    Examples:
+
+        >>> or_([lambda x: True, lambda x: False])({})
+        True
+
+        >>> or_([lambda x: False, lambda x: False])({})
+        False
+
+    """
+    def _or_impl(entry: Dict[str, Any]) -> bool:
+        return any([filt(entry) for filt in filters])
+
+    return _or_impl
+
+
+COMBINATORS: Dict[str, Callable[[List[FilterFunc]], FilterFunc]] = {
+    'And:': and_,
+    'Or:': or_,
+}
+"""A dict of logical combinator helper functions."""
+
+
+def cast_down(op: OperatorFunc) -> OperatorFunc:
+    """Cast the second argument to the type of the first argument, then compare.
+
+    No explicit checking for compatibility is done. You'll get a ValueError or a TypeError
+    (depending on the type) if such a cast is not possible.
+    """
+    def _casting_op(a: Any, b: Any) -> bool:
+        t = type(a)
+        return op(a, t(b))
+
+    return _casting_op
+
+
+def match_regexp(string_: str, regexp: str) -> bool:
+    """
+
+    Args:
+        string_: The string to check.
+        regexp: The regexp to use against the string.
+
+    Returns:
+        A boolean.
+
+    Examples:
+
+        >>> match_regexp("heute", "heu")
+        True
+
+        >>> match_regexp("heute", ".*")
+        True
+
+        >>> match_regexp("heute", "morgen")
+        False
+
+    """
+    return bool(re.match(regexp, string_))
+
+
+OPERATORS: Dict[str, OperatorFunc] = {
+    '=': cast_down(operator.eq),
+    '>': cast_down(operator.gt),
+    '<': cast_down(operator.lt),
+    '>=': cast_down(operator.le),
+    '<=': cast_down(operator.ge),
+    '~': match_regexp,
+}
+"""A dict of all implemented comparison operators."""
+
+
+def make_filter_func(line: str) -> FilterFunc:
+    """Make a filter-function from a LiveStatus-query filter row.
+
+    Args:
+        line:
+            A LiveStatus filter row.
+
+    Returns:
+        A function which checks an entry against the filter.
+
+    Examples:
+
+        Check for some concrete values:
+
+            >>> f = make_filter_func("Filter: name = heute")
+            >>> f({'name': 'heute'})
+            True
+
+            >>> f({'name': 'morgen'})
+            False
+
+            >>> f({'name': ' heute '})
+            False
+
+        Check for empty values:
+
+            >>> f = make_filter_func("Filter: name = ")
+            >>> f({'name': ''})
+            True
+
+            >>> f({'name': 'heute'})
+            False
+
+        If not implemented, yell:
+
+            >>> f = make_filter_func("Filter: name !! heute")
+            Traceback (most recent call last):
+            ...
+            ValueError: Operator '!!' not implemented. Please check docs or implement.
+
+
+    """
+    field, op, *value = line[7:].split(None, 2)  # strip Filter: as len("Filter:") == 7
+    if op not in OPERATORS:
+        raise ValueError(f"Operator {op!r} not implemented. Please check docs or implement.")
+
+    # For checking empty values. In this case an empty list.
+    if not value:
+        value = ['']
+
+    def _apply_op(entry: Dict[str, Any]) -> bool:
+        return OPERATORS[op](entry[field], *value)
+
+    return _apply_op
+
+
+def _column_of_query(query: str) -> Optional[List[str]]:
+    """Figure out the queried columns from a LiveStatus query.
+
+    Args:
+        query:
+            A LiveStatus query as a string.
+
+    Returns:
+        A list of column names referenced by the query.
+
+    Examples:
+
+        >>> _column_of_query('GET hosts\\nColumns: name status alias\\nFilter: name = foo')
+        ['name', 'status', 'alias']
+
+        >>> _column_of_query('GET hosts\\nFilter: name = foo')
+
+    """
+    for line in query.split("\n"):
+        if line.startswith('Columns:'):
+            return line[8:].split()  # len("Columns:") == 8
+
+    return None
+
+
+def _table_of_query(query: str) -> Optional[str]:
+    """Figure out a table from a LiveStatus query.
+
+    Args:
+        query:
+            A LiveStatus query as a string.
+
+    Returns:
+        The table name referenced by the LiveStatus query.
+
+    Examples:
+
+        >>> _table_of_query("GET hosts\\nColumns: name\\nFilter: name = foo")
+        'hosts'
+
+        >>> _table_of_query("GET     hosts\\nColumns: name\\nFilter: name = foo")
+        'hosts'
+
+        >>> _table_of_query("GET\\n")
+
+    """
+    lines = query.split("\n")
+    if lines and lines[0].startswith("GET "):
+        return lines[0].split(None, 1)[1]
+
+    return None

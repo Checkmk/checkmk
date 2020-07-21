@@ -121,6 +121,17 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
+    def _show_in_table_option(self) -> None:
+        """Option to show the custom attribute in overview tables of the setup menu."""
+        raise NotImplementedError()
+
+    def _render_table_option(self, section_title, label, help_text):
+        """Helper method to implement _show_in_table_option."""
+        forms.section(section_title)
+        html.help(help_text)
+        html.checkbox('show_in_table', self._attr.get('show_in_table', False), label=label)
+
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
@@ -229,14 +240,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
             html.write(dict(custom_attr_types())[self._attr.get('type')])
 
         self._add_extra_form_sections()
-
-        forms.section(_('Show in WATO host table'))
-        html.help(
-            _('This attribute is only visibile on the edit host and folder pages by default, but '
-              'you can also make it visible in the host overview tables of WATO.'))
-        html.checkbox('show_in_table',
-                      self._attr.get('show_in_table', False),
-                      label=_("Show the setting of the attribute in the WATO host list table"))
+        self._show_in_table_option()
 
         forms.section(_('Add to monitoring configuration'))
         html.help(self._macro_help)
@@ -290,6 +294,15 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 
     def _update_config(self):
         update_user_custom_attrs()
+
+    def _show_in_table_option(self):
+        self._render_table_option(
+            _('Show in user table'),
+            _('Show this attribute in the user table of the setup menu'),
+            _('This attribute is only visibile in the edit user '
+              'page by default. This option displays it in the user '
+              'overview table of the setup menu as well.'),
+        )
 
     def _add_extra_attrs_from_html_vars(self):
         self._attr['user_editable'] = html.get_checkbox('user_editable')
@@ -349,6 +362,15 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
     def _update_config(self):
         _update_host_custom_attrs()
+
+    def _show_in_table_option(self):
+        self._render_table_option(
+            _('Show in host tables'),
+            _("Show this attribute in host tables of the setup menu"),
+            _('This attribute is only visibile in the edit host and folder '
+              'pages by default. This option displays it in host overview '
+              'tables of the setup menu as well.'),
+        )
 
     def title(self):
         if self._new:

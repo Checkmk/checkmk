@@ -52,7 +52,7 @@ def test_config(monkeypatch):
 ]""",
             [
                 Service(
-                    'df', '123', u"", {
+                    CheckPluginName('df'), '123', u"", {
                         'inodes_levels': (10.0, 5.0),
                         'levels': (80.0, 90.0),
                         'levels_low': (50.0, 60.0),
@@ -75,7 +75,7 @@ def test_config(monkeypatch):
         # Dict: Exception on name reference behaves like SyntaxError
         (
             u"""[
-  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {}},
+  {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {}},
 ]""",
             [],
         ),
@@ -83,12 +83,12 @@ def test_config(monkeypatch):
         (
             u"""[
   {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {}},
-  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': {}, 'service_labels': {}},
+  {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': {}, 'service_labels': {}},
   {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {}},
 ]""",
             [
                 Service(
-                    'df', u'/', u"", {
+                    CheckPluginName('df'), u'/', u"", {
                         'inodes_levels': (10.0, 5.0),
                         'levels': (80.0, 90.0),
                         'levels_low': (50.0, 60.0),
@@ -99,8 +99,8 @@ def test_config(monkeypatch):
                         'trend_perfdata': True,
                         'trend_range': 24
                     }),
-                Service('cpu.loads', None, u"", (5.0, 10.0)),
-                Service('lnx_if', u'2', u"", {
+                Service(CheckPluginName('cpu_loads'), None, u"", (5.0, 10.0)),
+                Service(CheckPluginName('lnx_if'), u'2', u"", {
                     'errors': (0.01, 0.1),
                     'speed': 10000000,
                     'state': ['1']
@@ -259,11 +259,11 @@ def test_remove_autochecks_file():
 @pytest.mark.parametrize("items,expected_content", [
     ([], "[\n]\n"),
     ([
-        discovery.Service('df', u'/xyz', u"Filesystem /xyz", None,
+        discovery.Service(CheckPluginName('df'), u'/xyz', u"Filesystem /xyz", None,
                           DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
-        discovery.Service('df', u'/', u"Filesystem /", {},
+        discovery.Service(CheckPluginName('df'), u'/', u"Filesystem /", {},
                           DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
-        discovery.Service('cpu_loads', None, "CPU load", {},
+        discovery.Service(CheckPluginName('cpu_loads'), None, "CPU load", {},
                           DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
     ], """[
   {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': {}, 'service_labels': {'x': 'y'}},

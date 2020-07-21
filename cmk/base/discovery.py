@@ -74,7 +74,6 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_types
-from cmk.base.api.agent_based.register.check_plugins_legacy import resolve_legacy_name
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import FinalSectionContent, LegacyCheckParameters, Service, ServiceID
 from cmk.base.config import SelectedRawSections
@@ -1286,13 +1285,13 @@ def _enriched_discovered_services(
     for service in plugins_services:
         description = config.service_description(hostname, check_plugin_name, service.item)
         # make sanity check
-        if len(description) == 0:
+        if not description:
             console.error("%s: Check %s returned empty service description - ignoring it.\n" %
                           (hostname, check_plugin_name))
             continue
 
         yield Service(
-            check_plugin_name=resolve_legacy_name(check_plugin_name),
+            check_plugin_name=check_plugin_name,
             item=service.item,
             description=description,
             parameters=unwrap_parameters(service.parameters),
@@ -1407,7 +1406,7 @@ def _merge_manual_services(host_config: config.HostConfig, services: ServicesTab
         services[(CheckPluginName('custom'), entry['service_description'])] = (
             'custom',
             Service(
-                check_plugin_name='custom',
+                check_plugin_name=CheckPluginName('custom'),
                 item=entry['service_description'],
                 description=entry['service_description'],
                 parameters=None,
@@ -1421,7 +1420,7 @@ def _merge_manual_services(host_config: config.HostConfig, services: ServicesTab
             services[(CheckPluginName(plugin_name), descr)] = (
                 'active',
                 Service(
-                    check_plugin_name=plugin_name,
+                    check_plugin_name=CheckPluginName(plugin_name),
                     item=descr,
                     description=descr,
                     parameters=params,

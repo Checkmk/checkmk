@@ -34,7 +34,7 @@ from cmk.base.api.agent_based import checking_types
         ("ping-host", {}),
         ("no-autochecks", {
             (CheckPluginName('smart_temp'), '/dev/sda'): Service(
-                check_plugin_name="smart_temp",
+                check_plugin_name=CheckPluginName("smart_temp"),
                 item=u"/dev/sda",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART /dev/sda',
@@ -43,13 +43,13 @@ from cmk.base.api.agent_based import checking_types
         # Static checks overwrite the autocheck definitions
         ("autocheck-overwrite", {
             (CheckPluginName('smart_temp'), '/dev/sda'): Service(
-                check_plugin_name="smart_temp",
+                check_plugin_name=CheckPluginName("smart_temp"),
                 item=u"/dev/sda",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART /dev/sda',
             ),
             (CheckPluginName('smart_temp'), '/dev/sdb'): Service(
-                check_plugin_name='smart_temp',
+                check_plugin_name=CheckPluginName('smart_temp'),
                 item=u'/dev/sdb',
                 parameters={'is_autocheck': True},
                 description=u'Temperature SMART /dev/sdb',
@@ -58,7 +58,7 @@ from cmk.base.api.agent_based import checking_types
         ("ignore-not-existing-checks", {}),
         ("ignore-disabled-rules", {
             (CheckPluginName('smart_temp'), 'ITEM2'): Service(
-                check_plugin_name='smart_temp',
+                check_plugin_name=CheckPluginName('smart_temp'),
                 item=u"ITEM2",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART ITEM2',
@@ -66,7 +66,7 @@ from cmk.base.api.agent_based import checking_types
         }),
         ("static-check-overwrite", {
             (CheckPluginName('smart_temp'), '/dev/sda'): Service(
-                check_plugin_name="smart_temp",
+                check_plugin_name=CheckPluginName("smart_temp"),
                 item=u"/dev/sda",
                 parameters={
                     'levels': (35, 40),
@@ -77,26 +77,26 @@ from cmk.base.api.agent_based import checking_types
         }),
         ("node1", {
             (CheckPluginName('smart_temp'), 'auto-not-clustered'): Service(
-                check_plugin_name="smart_temp",
+                check_plugin_name=CheckPluginName("smart_temp"),
                 item=u"auto-not-clustered",
                 parameters={},
                 description=u'Temperature SMART auto-not-clustered',
             ),
             (CheckPluginName('smart_temp'), 'static-node1'): Service(
-                check_plugin_name="smart_temp",
+                check_plugin_name=CheckPluginName("smart_temp"),
                 item=u"static-node1",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART static-node1'),
         }),
         ("cluster1", {
             (CheckPluginName('smart_temp'), 'static-cluster'): Service(
-                check_plugin_name="smart_temp",
+                check_plugin_name=CheckPluginName("smart_temp"),
                 item=u"static-cluster",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART static-cluster',
             ),
             (CheckPluginName('smart_temp'), 'auto-clustered'): Service(
-                check_plugin_name="smart_temp",
+                check_plugin_name=CheckPluginName("smart_temp"),
                 item=u"auto-clustered",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART auto-clustered',
@@ -105,17 +105,47 @@ from cmk.base.api.agent_based import checking_types
     ])
 def test_get_check_table(monkeypatch, hostname, expected_result):
     autochecks = {
-        "ping-host": [Service("smart.temp", "bla", u'Temperature SMART bla', {})],
+        "ping-host": [Service(
+            CheckPluginName("smart_temp"),
+            "bla",
+            u'Temperature SMART bla',
+            {},
+        )],
         "autocheck-overwrite": [
-            Service('smart.temp', '/dev/sda', u'Temperature SMART /dev/sda',
-                    {"is_autocheck": True}),
-            Service('smart.temp', '/dev/sdb', u'Temperature SMART /dev/sdb',
-                    {"is_autocheck": True}),
+            Service(
+                CheckPluginName('smart_temp'),
+                '/dev/sda',
+                u'Temperature SMART /dev/sda',
+                {"is_autocheck": True},
+            ),
+            Service(
+                CheckPluginName('smart_temp'),
+                '/dev/sdb',
+                u'Temperature SMART /dev/sdb',
+                {"is_autocheck": True},
+            ),
         ],
-        "ignore-not-existing-checks": [Service("bla.blub", "ITEM", u'Blub ITEM', {}),],
+        "ignore-not-existing-checks": [
+            Service(
+                CheckPluginName("bla_blub"),
+                "ITEM",
+                u'Blub ITEM',
+                {},
+            ),
+        ],
         "node1": [
-            Service("smart.temp", "auto-clustered", u"Temperature SMART auto-clustered", {}),
-            Service("smart.temp", "auto-not-clustered", u'Temperature SMART auto-not-clustered', {})
+            Service(
+                CheckPluginName("smart_temp"),
+                "auto-clustered",
+                u"Temperature SMART auto-clustered",
+                {},
+            ),
+            Service(
+                CheckPluginName("smart_temp"),
+                "auto-not-clustered",
+                u'Temperature SMART auto-not-clustered',
+                {},
+            )
         ],
     }
 
@@ -161,9 +191,12 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
 def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
     autochecks = {
         "mgmt-board-ipmi": [
-            Service("mgmt_ipmi_sensors", "TEMP X", "Management Interface: IPMI Sensor TEMP X", {}),
+            Service(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X",
+                    "Management Interface: IPMI Sensor TEMP X", {}),
         ],
-        "ipmi-host": [Service("ipmi_sensors", "TEMP Y", "IPMI Sensor TEMP Y", {}),]
+        "ipmi-host": [
+            Service(CheckPluginName("ipmi_sensors"), "TEMP Y", "IPMI Sensor TEMP Y", {}),
+        ]
     }
 
     ts = Scenario().add_host("mgmt-board-ipmi",
@@ -207,7 +240,7 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
 def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result):
     static_checks = {
         "df_host": [
-            Service('df', '/snap/core/9066', u'Filesystem /snap/core/9066', [{
+            Service(CheckPluginName('df'), '/snap/core/9066', u'Filesystem /snap/core/9066', [{
                 'tp_values': [('24X7', {
                     'inodes_levels': None
                 })],
@@ -226,7 +259,7 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
         ],
         "df_host_1": [
             Service(
-                'df', '/snap/core/9067', u'Filesystem /snap/core/9067', {
+                CheckPluginName('df'), '/snap/core/9067', u'Filesystem /snap/core/9067', {
                     'trend_range': 24,
                     'show_levels': 'onmagic',
                     'inodes_levels': (10.0, 5.0),
@@ -244,7 +277,9 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
                     'trend_perfdata': True
                 })
         ],
-        "df_host_2": [Service('df', '/snap/core/9068', u'Filesystem /snap/core/9068', None)],
+        "df_host_2": [
+            Service(CheckPluginName('df'), '/snap/core/9068', u'Filesystem /snap/core/9068', None)
+        ],
     }
 
     ts = Scenario().add_host(hostname, tags={"criticality": "test"})
@@ -303,7 +338,7 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
 def _service_list():
     return [
         Service(
-            check_plugin_name="plugin_%s" % d,
+            check_plugin_name=CheckPluginName("plugin_%s" % d),
             item="item",
             description="description %s" % d,
             parameters={},

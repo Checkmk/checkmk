@@ -13,6 +13,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import CheckPluginName
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.check_utils import Service
@@ -92,7 +93,7 @@ def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
     host_config = config_cache.get_host_config(hostname)
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
-    service = Service("cpu.loads", None, "CPU load", {})
+    service = Service(CheckPluginName("cpu_loads"), None, "CPU load", {})
     service_spec = core_config.get_cmk_passive_service_attributes(config_cache, host_config,
                                                                   service, check_mk_attrs)
     assert service_spec == result

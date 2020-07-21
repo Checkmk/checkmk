@@ -18,14 +18,14 @@ import cmk.base.config as config
 
 
 def test_discovered_service_init():
-    ser = discovery.Service("abc", u"Item", u"ABC Item", None)
+    ser = discovery.Service(CheckPluginName("abc"), u"Item", u"ABC Item", None)
     assert ser.check_plugin_name == CheckPluginName("abc")
     assert ser.item == u"Item"
     assert ser.description == u"ABC Item"
     assert ser.parameters is None
     assert ser.service_labels.to_dict() == {}
 
-    ser = discovery.Service("abc", u"Item", u"ABC Item", None,
+    ser = discovery.Service(CheckPluginName("abc"), u"Item", u"ABC Item", None,
                             DiscoveredServiceLabels(ServiceLabel(u"läbel", u"lübel")))
     assert ser.service_labels.to_dict() == {u"läbel": u"lübel"}
 
@@ -34,11 +34,11 @@ def test_discovered_service_init():
 
 
 def test_discovered_service_eq():
-    ser1 = discovery.Service("abc", u"Item", u"ABC Item", None)
-    ser2 = discovery.Service("abc", u"Item", u"ABC Item", None)
-    ser3 = discovery.Service("xyz", u"Item", u"ABC Item", None)
-    ser4 = discovery.Service("abc", u"Xtem", u"ABC Item", None)
-    ser5 = discovery.Service("abc", u"Item", u"ABC Item", [])
+    ser1 = discovery.Service(CheckPluginName("abc"), u"Item", u"ABC Item", None)
+    ser2 = discovery.Service(CheckPluginName("abc"), u"Item", u"ABC Item", None)
+    ser3 = discovery.Service(CheckPluginName("xyz"), u"Item", u"ABC Item", None)
+    ser4 = discovery.Service(CheckPluginName("abc"), u"Xtem", u"ABC Item", None)
+    ser5 = discovery.Service(CheckPluginName("abc"), u"Item", u"ABC Item", [])
 
     assert ser1 == ser1  # pylint: disable=comparison-with-itself
     assert ser1 == ser2
@@ -115,7 +115,8 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
 
     params = {"inventory_rediscovery": {"service_whitelist": whitelist}}
     service_filters = discovery.get_service_filter_funcs(params)
-    service = discovery.Service("check_plugin_name", "item", "Test Description", None)
+    service = discovery.Service(CheckPluginName("check_plugin_name"), "item", "Test Description",
+                                None)
     assert service_filters.new is not None
     assert service_filters.new("hostname", service) is result
 
@@ -176,7 +177,8 @@ def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
 
     params = {"inventory_rediscovery": parameters_rediscovery}
     service_filters = discovery.get_service_filter_funcs(params)
-    service = discovery.Service("check_plugin_name", "item", "Test Description", None)
+    service = discovery.Service(CheckPluginName("check_plugin_name"), "item", "Test Description",
+                                None)
     assert service_filters.new is not None
     assert service_filters.new("hostname", service) is result
 
@@ -187,7 +189,7 @@ def service_table() -> discovery.ServicesTable:
         (CheckPluginName("check_plugin_name"), "New Item 1"): (
             "new",
             discovery.Service(
-                "check_plugin_name",
+                CheckPluginName("check_plugin_name"),
                 "New Item 1",
                 "Test Description New Item 1",
                 {},
@@ -196,7 +198,7 @@ def service_table() -> discovery.ServicesTable:
         (CheckPluginName("check_plugin_name"), "New Item 2"): (
             "new",
             discovery.Service(
-                "check_plugin_name",
+                CheckPluginName("check_plugin_name"),
                 "New Item 2",
                 "Test Description New Item 2",
                 {},
@@ -205,7 +207,7 @@ def service_table() -> discovery.ServicesTable:
         (CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
             "vanished",
             discovery.Service(
-                "check_plugin_name",
+                CheckPluginName("check_plugin_name"),
                 "Vanished Item 1",
                 "Test Description Vanished Item 1",
                 {},
@@ -214,7 +216,7 @@ def service_table() -> discovery.ServicesTable:
         (CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
             "vanished",
             discovery.Service(
-                "check_plugin_name",
+                CheckPluginName("check_plugin_name"),
                 "Vanished Item 2",
                 "Test Description Vanished Item 2",
                 {},
@@ -227,14 +229,32 @@ def service_table() -> discovery.ServicesTable:
 def grouped_services() -> discovery.ServicesByTransition:
     return {
         "new": [
-            discovery.Service("check_plugin_name", "New Item 1", "Test Description New Item 1", {}),
-            discovery.Service("check_plugin_name", "New Item 2", "Test Description New Item 2", {}),
+            discovery.Service(
+                CheckPluginName("check_plugin_name"),
+                "New Item 1",
+                "Test Description New Item 1",
+                {},
+            ),
+            discovery.Service(
+                CheckPluginName("check_plugin_name"),
+                "New Item 2",
+                "Test Description New Item 2",
+                {},
+            ),
         ],
         "vanished": [
-            discovery.Service("check_plugin_name", "Vanished Item 1",
-                              "Test Description Vanished Item 1", {}),
-            discovery.Service("check_plugin_name", "Vanished Item 2",
-                              "Test Description Vanished Item 2", {}),
+            discovery.Service(
+                CheckPluginName("check_plugin_name"),
+                "Vanished Item 1",
+                "Test Description Vanished Item 1",
+                {},
+            ),
+            discovery.Service(
+                CheckPluginName("check_plugin_name"),
+                "Vanished Item 2",
+                "Test Description Vanished Item 2",
+                {},
+            ),
         ],
     }
 

@@ -7,6 +7,8 @@
 # pylint: disable=redefined-outer-name
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
+
+from cmk.utils.type_defs import CheckPluginName
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -482,7 +484,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
 
     ts.add_host("host1")
     ts.set_autochecks("host1", [
-        Service("cpu.load",
+        Service(CheckPluginName("cpu_load"),
                 None,
                 "CPU load",
                 "{}",
@@ -495,7 +497,13 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
 
     ts.add_host("host2")
     ts.set_autochecks("host2", [
-        Service("cpu.load", None, "CPU load", "{}", service_labels=DiscoveredServiceLabels()),
+        Service(
+            CheckPluginName("cpu_load"),
+            None,
+            "CPU load",
+            "{}",
+            service_labels=DiscoveredServiceLabels(),
+        ),
     ])
 
     config_cache = ts.apply(monkeypatch)

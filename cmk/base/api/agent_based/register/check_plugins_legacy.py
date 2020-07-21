@@ -11,7 +11,6 @@ import functools
 import itertools
 
 from cmk.utils.check_utils import maincheckify, wrap_parameters, unwrap_parameters
-from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base import item_state
 from cmk.base.api.agent_based.checking_types import (
@@ -299,14 +298,3 @@ def create_check_plugin_from_legacy(
         check_ruleset_name=check_ruleset_name,
         cluster_check_function=_create_cluster_legacy_mode_from_hell(check_function),
     )
-
-
-@functools.lru_cache()
-def resolve_legacy_name(plugin_name: CheckPluginName) -> str:
-    """Get legacy plugin name back"""
-    # TODO (mo): remove this with CMK-4295. Function is only needed during transition
-    for legacy_name in config.check_info:
-        if str(plugin_name) == maincheckify(legacy_name):
-            return legacy_name
-    # nothing found, it may be a new plugin, which is OK.
-    return str(plugin_name)

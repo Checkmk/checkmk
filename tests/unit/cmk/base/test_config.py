@@ -1400,7 +1400,7 @@ def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "test-host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(u"""[
-    {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': (5.0, 10.0), 'service_labels': {u'äzzzz': u'eeeeez'}},
+    {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': (5.0, 10.0), 'service_labels': {u'äzzzz': u'eeeeez'}},
 ]""")
 
     config_cache = ts.apply(monkeypatch)
@@ -1634,11 +1634,13 @@ def test_host_ruleset_match_object_of_service(monkeypatch):
     ts.add_host("xyz")
     ts.add_host("test-host", tags={"agent": "no-agent"})
     ts.set_autochecks("test-host", [
-        Service("cpu.load",
-                None,
-                "CPU load",
-                "{}",
-                service_labels=DiscoveredServiceLabels(ServiceLabel(u"abc", u"xä"),))
+        Service(
+            CheckPluginName("cpu_load"),
+            None,
+            "CPU load",
+            "{}",
+            service_labels=DiscoveredServiceLabels(ServiceLabel(u"abc", u"xä"),),
+        )
     ])
     config_cache = ts.apply(monkeypatch)
 

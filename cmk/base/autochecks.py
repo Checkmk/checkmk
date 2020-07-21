@@ -145,10 +145,23 @@ class AutochecksManager:
 
         services: List[Service] = []
         for entry in autochecks_raw:
-            if isinstance(entry, tuple):
+            try:
+                item = entry["item"]
+            except TypeError:  # pre 1.6 tuple!
                 raise MKGeneralException(
                     "Invalid check entry '%r' of host '%s' (%s) found. This "
                     "entry is in pre Checkmk 1.6 format and needs to be converted. This is "
+                    "normally done by \"cmk-update-config -v\" during \"omd update\". Please "
+                    "execute \"cmk-update-config -v\" for convertig the old configuration." %
+                    (entry, hostname, path))
+
+            try:
+                plugin_name = CheckPluginName(entry["check_plugin_name"])
+                assert item is None or isinstance(item, str)
+            except Exception:
+                raise MKGeneralException(
+                    "Invalid check entry '%r' of host '%s' (%s) found. This "
+                    "entry is in pre Checkmk 1.7 format and needs to be converted. This is "
                     "normally done by \"cmk-update-config -v\" during \"omd update\". Please "
                     "execute \"cmk-update-config -v\" for convertig the old configuration." %
                     (entry, hostname, path))
@@ -157,25 +170,14 @@ class AutochecksManager:
             for label_id, label_value in entry["service_labels"].items():
                 labels.add_label(ServiceLabel(label_id, label_value))
 
-            # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
-            # items from existing autocheck files for compatibility. TODO remove this one day
-            item = entry["item"]
-
-            if not isinstance(entry["check_plugin_name"], str):
-                raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
-                                         "The check type must be a string." % (entry, hostname))
-
-            check_plugin_name_str = str(entry["check_plugin_name"])
-            # TODO (mo): centralize maincheckify: CMK-4295
-            check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
             try:
-                description = service_description(hostname, check_plugin_name, item)
+                description = service_description(hostname, plugin_name, item)
             except Exception:
                 continue  # ignore
 
             services.append(
                 Service(
-                    check_plugin_name=check_plugin_name_str,
+                    check_plugin_name=plugin_name,
                     item=item,
                     description=description,
                     parameters=entry["parameters"],
@@ -274,17 +276,19 @@ def _parse_autocheck_entry(
         raise Exception("Invalid autocheck: Wrong item type: %r" % item)
 
     try:
-        # TODO (mo): centralize maincheckify: CMK-4295
-        description = service_description(
-            hostname,
-            CheckPluginName(maincheckify(check_plugin_name)),
-            item,
-        )
+        # Pre 1.7 check plugins had dots in them. With the new check API in
+        # 1.7 they are replaced by '_', renaming e.g. 'cpu.loads' to 'cpu_loads'.
+        plugin_name = CheckPluginName(maincheckify(check_plugin_name))
+    except Exception:
+        raise Exception("Invalid autocheck: Wrong check plugin name: %r" % check_plugin_name)
+
+    try:
+        description = service_description(hostname, plugin_name, item)
     except Exception:
         return None  # ignore
 
     return Service(
-        check_plugin_name=check_plugin_name,
+        check_plugin_name=plugin_name,
         item=item,
         description=description,
         parameters=parameters,

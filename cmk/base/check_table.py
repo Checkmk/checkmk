@@ -110,7 +110,7 @@ class HostCheckTable:
             # TODO (mo): centralize maincheckify: CMK-4295
             check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
             descr = config.service_description(host_config.hostname, check_plugin_name, item)
-            entries.append(Service(check_plugin_name_str, item, descr, params))
+            entries.append(Service(check_plugin_name, item, descr, params))
 
         # Note: We need to reverse the order of the static_checks. This is
         # because users assume that earlier rules have precedence over later

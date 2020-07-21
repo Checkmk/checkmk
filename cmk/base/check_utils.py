@@ -6,10 +6,9 @@
 
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
-from cmk.utils.check_utils import maincheckify, section_name_of
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import (
     CheckPluginName,
-    CheckPluginNameStr,
     HostName,
     Item,
     RawAgentData,
@@ -60,16 +59,13 @@ class Service:
 
     def __init__(
         self,
-        check_plugin_name: Union[CheckPluginNameStr, CheckPluginName],
+        check_plugin_name: CheckPluginName,
         item: Item,
         description: str,
         parameters: LegacyCheckParameters,
         service_labels: DiscoveredServiceLabels = None,
     ) -> None:
-        # TODO (mo): centralize maincheckify: CMK-4295
-        self._check_plugin_name = (check_plugin_name
-                                   if isinstance(check_plugin_name, CheckPluginName) else
-                                   CheckPluginName(maincheckify(check_plugin_name)))
+        self._check_plugin_name = check_plugin_name
         self._item = item
         self._description = description
         self._service_labels = service_labels or DiscoveredServiceLabels()

@@ -328,21 +328,6 @@ def test_automation_get_real_time_checks(test_cfg, site):
         assert isinstance(title, str)
 
 
-def test_automation_get_check_manpage(test_cfg, site):
-    data = _execute_automation(site, "get-check-manpage", args=["uptime"])
-    assert isinstance(data, dict)
-    assert data["type"] == "check_mk"
-
-    for key in ["snmp_info", "has_perfdata", "service_description", "group", "header"]:
-        assert key in data
-
-    assert "description" in data["header"]
-    assert "title" in data["header"]
-    assert "agents" in data["header"]
-    assert "license" in data["header"]
-    assert "distribution" in data["header"]
-
-
 def test_automation_notification_replay(test_cfg, site):
     site.write_file(
         "var/check_mk/notify/backlog.mk",

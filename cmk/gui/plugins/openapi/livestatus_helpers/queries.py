@@ -43,12 +43,42 @@ class ResultRow(dict):
     >>> dict(row)
     {'a': '1', 'b': 2, 'c': [3.0]}
 
+    The right exception type will be raised on missing keys:
+
+        >>> row.foo
+        Traceback (most recent call last):
+        ...
+        AttributeError: 'foo'
+
+        >>> row['foo']
+        Traceback (most recent call last):
+        ...
+        KeyError: 'foo'
+
+    And because programmers sometimes have "creative" ideas:
+
+        >>> row.foo = 'bar'
+        Traceback (most recent call last):
+        ...
+        AttributeError: foo: Setting of attributes not allowed.
+
+        >>> row['foo'] = 'bar'
+        Traceback (most recent call last):
+        ...
+        KeyError: 'foo: Setting of keys not allowed.'
+
     """
     def __getattr__(self, item: str) -> Any:
         try:
             return self[item]
         except KeyError as exc:
             raise AttributeError(str(exc))
+
+    def __setitem__(self, key, value):
+        raise KeyError(f"{key}: Setting of keys not allowed.")
+
+    def __setattr__(self, key, value):
+        raise AttributeError(f"{key}: Setting of attributes not allowed.")
 
 
 class Query(BaseQuery):

@@ -4,11 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional
+
 import inspect
 from pathlib import Path
 
 
-def get_plugin_module_name() -> str:
+def get_plugin_module_name() -> Optional[str]:
     """find out which module registered the plugin"""
-    calling_from = inspect.stack()[2].filename
+    try:
+        calling_from = inspect.stack()[2].filename
+    except UnicodeDecodeError:  # calling from precompiled host file
+        return None
     return Path(calling_from).stem

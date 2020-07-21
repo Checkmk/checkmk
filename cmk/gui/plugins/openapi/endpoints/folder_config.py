@@ -86,10 +86,35 @@ def delete(params):
     """Delete a folder"""
     ident = params['ident']
     folder = load_folder(ident, status=404)
+    _delete_specific(folder)
+    return Response(status=204)
+
+
+@endpoint_schema(constructors.domain_type_action_href('folder_config', 'bulk-delete'),
+                 '.../delete',
+                 method='delete',
+                 request_schema=request_schemas.BulkDeleteFolder,
+                 output_empty=True)
+def bulk_delete(params):
+    """Bulk delete folders based upon folder id"""
+    # TODO: etag implementation
+    entries = params['entries']
+    folders = []
+    for folder_ident in entries:
+        folders.append(
+            load_folder(
+                folder_ident,
+                status=400,
+                message="folder config %s was not found" % folder_ident,
+            ))
+    for folder in folders:
+        _delete_specific(folder)
+    return Response(status=204)
+
+
+def _delete_specific(folder):
     parent = folder.parent()
     parent.delete_subfolder(folder.name())
-
-    return Response(status=204)
 
 
 @endpoint_schema(constructors.object_action_href('folder_config', '{ident}', action_name='move'),

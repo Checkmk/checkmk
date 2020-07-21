@@ -23,6 +23,14 @@ HOST_FIELD = fields.String(
     example="example.com",
 )
 
+FOLDER_FIELD = fields.String(
+    description=("The folder-id of the folder under which this folder shall be created. May be "
+                 "'root' for the root-folder."),
+    pattern="[a-fA-F0-9]{32}|root",
+    example="root",
+    required=True,
+)
+
 
 class CreateHost(Schema):
     """Creating a new host
@@ -38,13 +46,7 @@ class CreateHost(Schema):
       * `nodes`
     """
     host_name = HOST_FIELD
-    folder = fields.String(
-        description=("The folder-id of the folder under which this folder shall be created. May be "
-                     "'root' for the root-folder."),
-        pattern="[a-fA-F0-9]{32}|root",
-        example="root",
-        required=True,
-    )
+    folder = FOLDER_FIELD
     attributes = fields.Dict(example={})
     nodes = fields.List(fields.String(),
                         description="Nodes where the newly created host should be the "
@@ -233,4 +235,13 @@ class BulkDeleteHost(Schema):
         HOST_FIELD,
         required=True,
         example=["example", "sample"],
+    )
+
+
+class BulkDeleteFolder(Schema):
+    # TODO: addition of etag field
+    entries = fields.List(
+        FOLDER_FIELD,
+        required=True,
+        example=["production", "secondproduction"],
     )

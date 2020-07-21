@@ -149,10 +149,18 @@ def serialize_host(host):
         prop_format='string',
     )
 
+    attributes = host.attributes().copy()
+    del attributes['meta_data']
+
     return constructors.domain_object(
         domain_type='host_config',
         identifier=host.id(),
         title=host.alias(),
         members=members.to_dict(),
-        extensions={},
+        extensions={
+            'attributes': attributes,
+            'is_cluster': host.is_cluster(),
+            'is_offline': host.is_offline(),
+            'cluster_nodes': host.cluster_nodes(),
+        },
     )

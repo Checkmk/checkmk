@@ -308,6 +308,8 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
         or dynamically hidden by the depends_on_tags, editable features"""
         if not self.is_visible(for_what, new):
             return False
+        if not html:
+            return True
         return html.request.var('attr_display_%s' % self.name(), "1") == "1"
 
     def is_visible(self, for_what: str, new: bool) -> bool:

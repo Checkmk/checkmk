@@ -31,7 +31,19 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         '.../update',
         base=base,
         status=200,
-        params='{"attributes": {}}',
+        params='{"attributes": {"ipaddress": "127.0.0.1"}}',
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+    # also try to update with wrong attribute
+
+    wsgi_app.follow_link(
+        resp,
+        '.../update',
+        base=base,
+        status=400,
+        params='{"attributes": {"foobaz": "bar"}}',
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
     )

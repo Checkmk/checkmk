@@ -13,24 +13,24 @@
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
     : TableEventConsole(mc) {
+    Column::Offsets offsets{};
     addColumn(std::make_unique<IntEventConsoleColumn>(
         "history_line", "The line number of the event in the history file",
-        Column::Offsets{}));
+        offsets));
     addColumn(std::make_unique<TimeEventConsoleColumn>(
         "history_time",
         "Time when the event was written into the history file (Unix timestamp)",
-        Column::Offsets{}));
+        offsets));
     addColumn(std::make_unique<StringEventConsoleColumn>(
         "history_what",
         "What happened (one of ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)",
-        Column::Offsets{}));
+        offsets));
     addColumn(std::make_unique<StringEventConsoleColumn>(
-        "history_who", "The user who triggered the command",
-        Column::Offsets{}));
+        "history_who", "The user who triggered the command", offsets));
     addColumn(std::make_unique<StringEventConsoleColumn>(
         "history_addinfo",
         "Additional information, like email recipient/subject or action ID",
-        Column::Offsets{}));
+        offsets));
     TableEventConsoleEvents::addColumns(this);
 }
 

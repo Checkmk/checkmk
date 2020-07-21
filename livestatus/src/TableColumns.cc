@@ -14,18 +14,19 @@
 #include "Row.h"
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
+    Column::Offsets offsets{};
     addColumn(std::make_unique<ColumnsColumn>(
-        "table", "The name of the table", Column::Offsets{},
-        ColumnsColumn::Type::table, *this));
+        "table", "The name of the table", offsets, ColumnsColumn::Type::table,
+        *this));
     addColumn(std::make_unique<ColumnsColumn>(
-        "name", "The name of the column within the table", Column::Offsets{},
+        "name", "The name of the column within the table", offsets,
         ColumnsColumn::Type::name, *this));
     addColumn(std::make_unique<ColumnsColumn>(
-        "description", "A description of the column", Column::Offsets{},
+        "description", "A description of the column", offsets,
         ColumnsColumn::Type::description, *this));
     addColumn(std::make_unique<ColumnsColumn>(
         "type", "The data type of the column (int, float, string, list)",
-        Column::Offsets{}, ColumnsColumn::Type::type, *this));
+        offsets, ColumnsColumn::Type::type, *this));
 }
 
 std::string TableColumns::name() const { return "columns"; }

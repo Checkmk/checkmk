@@ -44,11 +44,9 @@ private:
     const contact *contact_;
 };
 
-// The fuchsia-trailing-return warning are all false positives.
 template <typename Member, typename Default>
-class GetAttr {  // NOLINT(fuchsia-trailing-return)
+class GetAttr {
 public:
-    // NOLINTNEXTLINE(fuchsia-trailing-return)
     GetAttr(Member contact::*m, Default d) : m_{m}, d_{std::move(d)} {}
     Default operator()(Row row) {
         const auto *r = row.rawData<Table::IRow>();
@@ -84,9 +82,8 @@ private:
 };
 
 template <typename Member>
-class GetTimePeriod {  // NOLINT(fuchsia-trailing-return)
+class GetTimePeriod {
 public:
-    // NOLINTNEXTLINE(fuchsia-trailing-return)
     GetTimePeriod(Member *contact::*m, bool d) : m_{m}, d_{d} {}
     bool operator()(Row row) {
         const auto *r = row.rawData<Table::IRow>();

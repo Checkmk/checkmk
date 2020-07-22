@@ -1221,8 +1221,8 @@ class AutomationDiagHost(Automation):
         state, output = 0, u""
         for source in data_sources.make_sources(host_config, ipaddress):
             source.set_max_cachefile_age(config.check_max_cachefile_age)
-            if isinstance(source, data_sources.programs.DSProgramDataSource) and cmd:
-                source = data_sources.programs.DSProgramDataSource(
+            if isinstance(source.configurator, data_sources.programs.DSProgramConfigurator) and cmd:
+                source = data_sources.programs.ProgramDataSource(
                     configurator=data_sources.programs.DSProgramConfigurator(
                         host_config.hostname,
                         ipaddress,

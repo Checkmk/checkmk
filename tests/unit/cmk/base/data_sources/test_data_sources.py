@@ -23,7 +23,7 @@ from cmk.base.api.agent_based.utils import parse_to_string_table
 from cmk.base.data_sources import make_sources
 from cmk.base.data_sources._data_sources import _make_host_sections, _make_piggybacked_sections
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
-from cmk.base.data_sources.programs import DSProgramDataSource, SpecialAgentDataSource
+from cmk.base.data_sources.programs import ProgramDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource
 from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
 
@@ -62,10 +62,10 @@ def make_scenario(hostname, tags):
     }, [TCPDataSource, SNMPDataSource, PiggyBackDataSource]),
     ("all-agents-host", {
         "agent": "all-agents"
-    }, [DSProgramDataSource, SpecialAgentDataSource, PiggyBackDataSource]),
+    }, [ProgramDataSource, ProgramDataSource, PiggyBackDataSource]),
     ("all-special-host", {
         "agent": "special-agents"
-    }, [SpecialAgentDataSource, PiggyBackDataSource]),
+    }, [ProgramDataSource, PiggyBackDataSource]),
 ])
 def test_get_sources(monkeypatch, hostname, tags, sources):
     ts = make_scenario(hostname, tags)

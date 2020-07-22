@@ -30,9 +30,8 @@ from .ipmi import IPMIConfigurator, IPMIManagementBoardDataSource
 from .piggyback import PiggyBackConfigurator, PiggyBackDataSource
 from .programs import (
     DSProgramConfigurator,
-    DSProgramDataSource,
     SpecialAgentConfigurator,
-    SpecialAgentDataSource,
+    ProgramDataSource,
 )
 from .snmp import SNMPConfigurator, SNMPDataSource
 from .tcp import TCPConfigurator, TCPDataSource
@@ -146,7 +145,7 @@ class SourceBuilder:
 
         datasource_program = self._host_config.datasource_program
         if datasource_program is not None:
-            return DSProgramDataSource(
+            return ProgramDataSource(
                 configurator=DSProgramConfigurator(
                     self._hostname,
                     self._ipaddress,
@@ -160,9 +159,9 @@ class SourceBuilder:
             main_data_source=main_data_source,
         )
 
-    def _get_special_agent_data_sources(self) -> List[SpecialAgentDataSource]:
+    def _get_special_agent_data_sources(self) -> List[ProgramDataSource]:
         return [
-            SpecialAgentDataSource(configurator=SpecialAgentConfigurator(
+            ProgramDataSource(configurator=SpecialAgentConfigurator(
                 self._hostname,
                 self._ipaddress,
                 special_agent_id=agentname,

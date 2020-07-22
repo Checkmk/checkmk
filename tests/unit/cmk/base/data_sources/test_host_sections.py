@@ -26,7 +26,7 @@ from cmk.base.data_sources import (
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.data_sources.piggyback import PiggyBackConfigurator, PiggyBackDataSource
-from cmk.base.data_sources.programs import DSProgramConfigurator, DSProgramDataSource
+from cmk.base.data_sources.programs import ProgramConfigurator, ProgramDataSource
 from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPDataSource, SNMPHostSections
 from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
 
@@ -474,7 +474,7 @@ class TestMakeHostSectionsHosts:
     @pytest.mark.parametrize("source", [
         lambda hostname, ipaddress: PiggyBackDataSource(configurator=PiggyBackConfigurator(
             hostname, ipaddress),),
-        lambda hostname, ipaddress: DSProgramDataSource(configurator=DSProgramConfigurator(
+        lambda hostname, ipaddress: ProgramDataSource(configurator=ProgramConfigurator.ds(
             hostname, ipaddress, template=""),),
         lambda hostname, ipaddress: TCPDataSource(configurator=TCPConfigurator(hostname, ipaddress),
                                                  ),
@@ -510,8 +510,8 @@ class TestMakeHostSectionsHosts:
         host_config,
     ):
         sources = [
-            DSProgramDataSource(configurator=DSProgramConfigurator(hostname, ipaddress,
-                                                                   template=""),),
+            ProgramDataSource(configurator=ProgramConfigurator.ds(hostname, ipaddress,
+                                                                  template=""),),
             TCPDataSource(configurator=TCPConfigurator(hostname, ipaddress),),
         ]
 
@@ -538,8 +538,8 @@ class TestMakeHostSectionsHosts:
 
     def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, config_cache, host_config):
         sources = [
-            DSProgramDataSource(
-                configurator=DSProgramConfigurator(hostname + "0", ipaddress,
+            ProgramDataSource(
+                configurator=ProgramConfigurator.ds(hostname + "0", ipaddress,
                                                    template="",),),
             TCPDataSource(configurator=TCPConfigurator(hostname + "1", ipaddress),),
             TCPDataSource(

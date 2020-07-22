@@ -17,9 +17,8 @@ import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
 from cmk.base.data_sources.programs import (
     DSProgramConfigurator,
-    DSProgramDataSource,
     SpecialAgentConfigurator,
-    SpecialAgentDataSource,
+    ProgramDataSource,
 )
 
 fun_args_stdin: Tuple[  #
@@ -59,7 +58,7 @@ class TestDSProgramDataSource:
         assert configurator.stdin is None
         assert configurator.description == "Program: "
 
-        source = DSProgramDataSource(configurator=configurator)
+        source = ProgramDataSource(configurator=configurator)
         assert source.id == "agent"
         # ProgramDataSource
         assert source._cpu_tracking_id == "ds"
@@ -133,7 +132,7 @@ class TestSpecialAgentDataSource:
             str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
         assert configurator.stdin == expected_stdin
 
-        source = SpecialAgentDataSource(configurator=configurator)
+        source = ProgramDataSource(configurator=configurator)
 
         assert source.id == "special_%s" % special_agent_id
 

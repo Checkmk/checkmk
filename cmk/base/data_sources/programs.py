@@ -23,7 +23,7 @@ from ._abstract import ABCConfigurator
 from .agent import AgentDataSource
 
 
-class ABCProgramConfigurator(ABCConfigurator):
+class ProgramConfigurator(ABCConfigurator):
     def __init__(
         self,
         hostname: HostName,
@@ -38,7 +38,7 @@ class ABCProgramConfigurator(ABCConfigurator):
             hostname,
             ipaddress,
             source_type=SourceType.HOST,
-            description=ABCProgramConfigurator._make_description(
+            description=ProgramConfigurator._make_description(
                 cmdline,
                 stdin,
             ),
@@ -47,6 +47,30 @@ class ABCProgramConfigurator(ABCConfigurator):
         )
         self.cmdline = cmdline
         self.stdin = stdin
+
+    @staticmethod
+    def special_agent(
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        *,
+        special_agent_id: str,
+        params: Dict,
+    ) -> "SpecialAgentConfigurator":
+        return SpecialAgentConfigurator(
+            hostname,
+            ipaddress,
+            special_agent_id=special_agent_id,
+            params=params,
+        )
+
+    @staticmethod
+    def ds(
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        *,
+        template: str,
+    ) -> "DSProgramConfigurator":
+        return DSProgramConfigurator(hostname, ipaddress, template=template)
 
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
@@ -63,7 +87,7 @@ class ABCProgramConfigurator(ABCConfigurator):
         return "\n".join(response)
 
 
-class DSProgramConfigurator(ABCProgramConfigurator):
+class DSProgramConfigurator(ProgramConfigurator):
     def __init__(
         self,
         hostname: HostName,
@@ -126,7 +150,7 @@ class DSProgramConfigurator(ABCProgramConfigurator):
         return ensure_str(core_config.replace_macros(cmd, macros))
 
 
-class SpecialAgentConfigurator(ABCProgramConfigurator):
+class SpecialAgentConfigurator(ProgramConfigurator):
     def __init__(
         self,
         hostname: HostName,
@@ -205,7 +229,7 @@ class SpecialAgentConfigurator(ABCProgramConfigurator):
         return core_config.active_check_arguments(hostname, None, agent_configuration)
 
 
-class ABCProgramDataSource(AgentDataSource):
+class ProgramDataSource(AgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
     def _execute(
         self,
@@ -216,11 +240,3 @@ class ABCProgramDataSource(AgentDataSource):
         with ProgramDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
-
-
-class DSProgramDataSource(ABCProgramDataSource):
-    pass
-
-
-class SpecialAgentDataSource(ABCProgramDataSource):
-    pass

@@ -13,7 +13,6 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheck
 
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names, SNMPScanSection
 from cmk.snmplib.type_defs import (
-    SNMPCredentials,
     SNMPHostConfig,
     SNMPPersistedSections,
     SNMPRawData,
@@ -354,12 +353,4 @@ class SNMPDataSource(ABCSNMPDataSource):
 
 
 class SNMPManagementBoardDataSource(SNMPDataSource):
-    def __init__(
-        self,
-        *,
-        configurator: SNMPConfigurator,
-    ) -> None:
-        super(SNMPManagementBoardDataSource, self).__init__(configurator=configurator,)
-        # TODO(ml): Unused?
-        self._credentials: Final = cast(SNMPCredentials,
-                                        self.configurator.host_config.management_credentials)
+    pass

@@ -401,13 +401,9 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         self,
         *,
         configurator: ABCConfigurator,
-        cpu_tracking_id: str,
         main_data_source: bool = False,
     ) -> None:
-        super(AgentDataSource, self).__init__(
-            configurator=configurator,
-            cpu_tracking_id=cpu_tracking_id,
-        )
+        super(AgentDataSource, self).__init__(configurator=configurator)
         self._is_main_agent_data_source = main_data_source
         """Tell the data source that it's the main agent based data source
 

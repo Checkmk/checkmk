@@ -121,6 +121,7 @@ class SNMPConfigurator(ABCConfigurator):
         *,
         source_type: SourceType,
         id_: str,
+        cpu_tracking_id: str,
         title: str,
     ):
         super().__init__(
@@ -129,6 +130,7 @@ class SNMPConfigurator(ABCConfigurator):
             source_type=source_type,
             description=SNMPConfigurator._make_description(hostname, ipaddress, title=title),
             id_=id_,
+            cpu_tracking_id=cpu_tracking_id,
         )
         if self.ipaddress is None:
             # snmp_config.ipaddress is not Optional.
@@ -157,6 +159,7 @@ class SNMPConfigurator(ABCConfigurator):
             ipaddress,
             source_type=SourceType.HOST,
             id_="snmp",
+            cpu_tracking_id="snmp",
             title="SNMP",
         )
 
@@ -173,6 +176,7 @@ class SNMPConfigurator(ABCConfigurator):
             ipaddress,
             source_type=SourceType.MANAGEMENT,
             id_="mgmt_snmp",
+            cpu_tracking_id="snmp",
             title="Management board - SNMP",
         )
 
@@ -215,16 +219,8 @@ class SNMPConfigurator(ABCConfigurator):
 
 
 class SNMPDataSource(ABCSNMPDataSource):
-    def __init__(
-        self,
-        *,
-        configurator: SNMPConfigurator,
-        cpu_tracking_id: Optional[str] = None,
-    ) -> None:
-        super(SNMPDataSource, self).__init__(
-            configurator=configurator,
-            cpu_tracking_id="snmp" if cpu_tracking_id is None else cpu_tracking_id,
-        )
+    def __init__(self, *, configurator: SNMPConfigurator) -> None:
+        super(SNMPDataSource, self).__init__(configurator=configurator)
         self.detector: Final = CachedSNMPDetector()
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
@@ -363,10 +359,7 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
         *,
         configurator: SNMPConfigurator,
     ) -> None:
-        super(SNMPManagementBoardDataSource, self).__init__(
-            configurator=configurator,
-            cpu_tracking_id="snmp",
-        )
+        super(SNMPManagementBoardDataSource, self).__init__(configurator=configurator,)
         # TODO(ml): Unused?
         self._credentials: Final = cast(SNMPCredentials,
                                         self.configurator.host_config.management_credentials)

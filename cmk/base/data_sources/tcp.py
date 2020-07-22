@@ -34,6 +34,7 @@ class TCPConfigurator(ABCConfigurator):
             source_type=SourceType.HOST,
             description=TCPConfigurator._make_description(hostname, ipaddress),
             id_="agent",
+            cpu_tracking_id="agent",
         )
         self.port: Optional[int] = None
         self.timeout: Optional[float] = None
@@ -58,18 +59,6 @@ class TCPConfigurator(ABCConfigurator):
 
 
 class TCPDataSource(AgentDataSource):
-    def __init__(
-        self,
-        *,
-        configurator: TCPConfigurator,
-        main_data_source: bool = False,
-    ) -> None:
-        super(TCPDataSource, self).__init__(
-            configurator=configurator,
-            main_data_source=main_data_source,
-            cpu_tracking_id="agent",
-        )
-
     def _execute(
         self,
         *,

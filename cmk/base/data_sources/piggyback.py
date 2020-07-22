@@ -34,6 +34,7 @@ class PiggyBackConfigurator(ABCConfigurator):
             source_type=SourceType.HOST,
             description=PiggyBackConfigurator._make_description(hostname),
             id_="piggyback",
+            cpu_tracking_id="agent",
         )
         self.time_settings: Final = (config.get_config_cache().get_piggybacked_hosts_time_settings(
             piggybacked_hostname=hostname))
@@ -60,7 +61,6 @@ class PiggyBackDataSource(AgentDataSource):
         super(PiggyBackDataSource, self).__init__(
             configurator=configurator,
             main_data_source=main_data_source,
-            cpu_tracking_id="agent",
         )
         self._summary: Optional[ServiceCheckResult] = None
 

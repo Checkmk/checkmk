@@ -31,6 +31,7 @@ class ABCProgramConfigurator(ABCConfigurator):
         ipaddress: Optional[HostAddress],
         *,
         id_: str,
+        cpu_tracking_id: str,
         cmdline: str,
         stdin: Optional[str],
     ) -> None:
@@ -43,6 +44,7 @@ class ABCProgramConfigurator(ABCConfigurator):
                 stdin,
             ),
             id_=id_,
+            cpu_tracking_id=cpu_tracking_id,
         )
         self.cmdline = cmdline
         self.stdin = stdin
@@ -74,6 +76,7 @@ class DSProgramConfigurator(ABCProgramConfigurator):
             hostname,
             ipaddress,
             id_="agent",
+            cpu_tracking_id="ds",
             cmdline=DSProgramConfigurator._translate(
                 template,
                 hostname,
@@ -137,6 +140,7 @@ class SpecialAgentConfigurator(ABCProgramConfigurator):
             hostname,
             ipaddress,
             id_="special_%s" % special_agent_id,
+            cpu_tracking_id="ds",
             cmdline=SpecialAgentConfigurator._make_cmdline(
                 hostname,
                 ipaddress,
@@ -219,19 +223,6 @@ class ABCProgramDataSource(AgentDataSource):
 
 
 class DSProgramDataSource(ABCProgramDataSource):
-    def __init__(
-        self,
-        *,
-        configurator: DSProgramConfigurator,
-        main_data_source: bool = False,
-        cpu_tracking_id="ds",
-    ) -> None:
-        super().__init__(
-            configurator=configurator,
-            main_data_source=main_data_source,
-            cpu_tracking_id="ds",
-        )
-
     def name(self) -> str:
         """Return a unique (per host) textual identification of the data source"""
         # TODO(ml): Get rid of ugly cast by setting the constant `name` to the base class.
@@ -242,14 +233,4 @@ class DSProgramDataSource(ABCProgramDataSource):
 
 
 class SpecialAgentDataSource(ABCProgramDataSource):
-    def __init__(
-        self,
-        *,
-        configurator: SpecialAgentConfigurator,
-        main_data_source: bool = False,
-    ) -> None:
-        super(SpecialAgentDataSource, self).__init__(
-            configurator=configurator,
-            main_data_source=main_data_source,
-            cpu_tracking_id="ds",
-        )
+    pass

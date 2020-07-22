@@ -132,20 +132,14 @@ class ABCConfigurator(abc.ABC):
     Dump the JSON configuration from `configure_fetcher()`.
 
     """
-    def __init__(
-        self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        *,
-        source_type: SourceType,
-        description: str,
-        id_: str,
-    ) -> None:
+    def __init__(self, hostname: HostName, ipaddress: Optional[HostAddress], *,
+                 source_type: SourceType, description: str, id_: str, cpu_tracking_id: str) -> None:
         self.hostname: Final[str] = hostname
         self.ipaddress: Final[Optional[str]] = ipaddress
         self.source_type: Final[SourceType] = source_type
         self.description: Final[str] = description
         self.id: Final[str] = id_
+        self.cpu_tracking_id: Final[str] = cpu_tracking_id
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
 
@@ -201,11 +195,9 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self,
         *,
         configurator: ABCConfigurator,
-        cpu_tracking_id: str,
     ) -> None:
         super(ABCDataSource, self).__init__()
         self.configurator = configurator
-        self._cpu_tracking_id: Final[str] = cpu_tracking_id
         self._max_cachefile_age: Optional[int] = None
         self._logger = self.configurator._logger
 
@@ -228,6 +220,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     @property
     def id(self) -> str:
         return self.configurator.id
+
+    @property
+    def _cpu_tracking_id(self) -> str:
+        return self.configurator.cpu_tracking_id
 
     def run(self, *, selected_raw_sections: Optional[SelectedRawSections]) -> ABCHostSections:
         """

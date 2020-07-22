@@ -41,6 +41,7 @@ class IPMIConfigurator(ABCConfigurator):
                      HostConfig.make_host_config(hostname).management_credentials),
             ),
             id_="mgmt_ipmi",
+            cpu_tracking_id="mgmt_ipmi",
         )
         self.credentials: Final[IPMICredentials] = cast(
             IPMICredentials,
@@ -74,18 +75,6 @@ class IPMIConfigurator(ABCConfigurator):
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
 class IPMIManagementBoardDataSource(AgentDataSource):
-    def __init__(
-        self,
-        *,
-        configurator: IPMIConfigurator,
-        main_data_source: bool = False,
-    ) -> None:
-        super(IPMIManagementBoardDataSource, self).__init__(
-            configurator=configurator,
-            main_data_source=main_data_source,
-            cpu_tracking_id="mgmt_ipmi",
-        )
-
     def describe(self) -> str:
         return self.configurator.description
 

@@ -22,7 +22,6 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources.snmp import (
     SNMPConfigurator,
     SNMPDataSource,
-    SNMPManagementBoardDataSource,
 )
 from cmk.base.exceptions import MKIPAddressLookupError
 

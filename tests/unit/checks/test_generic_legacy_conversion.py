@@ -356,8 +356,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'blade_bx_powerfan_default_levels',
         'blade_bx_status',
         'bluecat_command_server',
-        'bluecat_dhcp',
-        'bluecat_dns',
         'bluecat_ha',
         'bluecat_ntp',
         'bluenet2_powerrail_humidity_default_levels',

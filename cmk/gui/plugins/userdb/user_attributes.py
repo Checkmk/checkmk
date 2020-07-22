@@ -187,6 +187,25 @@ class UISidebarPosition(UserAttribute):
 
 
 @user_attribute_registry.register
+class UIIconPlacement(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "icons_per_item"
+
+    def topic(self):
+        return "personal"
+
+    def valuespec(self):
+        return Checkbox(
+            title=_("Icons per item"),
+            label=_("Show one icon per item in the mega menu"),
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
 class UIBasicAdvancedToggle(UserAttribute):
     @classmethod
     def name(cls):

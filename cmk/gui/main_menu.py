@@ -135,7 +135,7 @@ class MegaMenuRenderer:
                     onclick="cmk.popup_menu.mega_menu_show_all_topics('%s')" % topic_id)
         html.icon(title=_("Show all %s topics") % menu_ident, icon="collapse_arrow")
         html.close_a()
-        if topic.icon_name:
+        if not config.user.get_attribute("icons_per_item") and topic.icon_name:
             html.icon(title=None, icon=topic.icon_name)
         html.span(topic.title)
         html.close_h2()
@@ -164,11 +164,14 @@ class MegaMenuRenderer:
         cls = ["advanced" if item.is_advanced else None, "extended" if extended else None]
         html.open_li(class_=cls)
 
-        html.a(
-            item.title,
+        html.open_a(
             href=item.url,
             target="main",
             onclick="cmk.popup_menu.close_popup()",
         )
+        if config.user.get_attribute("icons_per_item") and item.icon_name:
+            html.icon(title=None, icon=item.icon_name)
+        html.write_text(item.title)
+        html.close_a()
 
         html.close_li()

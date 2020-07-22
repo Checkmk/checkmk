@@ -36,6 +36,7 @@ def test_sync_plugins(load_config):
         'groups_to_attributes',
         'groups_to_contactgroups',
         'groups_to_roles',
+        'icons_per_item',
         'disable_notifications',
         'force_authuser',
         'pager',

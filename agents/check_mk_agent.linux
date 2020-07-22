@@ -486,7 +486,7 @@ section_df() {
 
     # The exclusion list is getting a bit of a problem.
     # -l should hide any remote FS but seems to be all but working.
-    excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs -x devtmpfs -x autofs"
+    excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs -x devtmpfs -x autofs -x beegfs"
     if [ -z "$IS_LXC_CONTAINER" ]; then
         excludefs="${excludefs} -x zfs"
     fi

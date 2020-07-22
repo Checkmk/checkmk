@@ -692,26 +692,21 @@ def is_manual_check(hostname: HostName, service_id: ServiceID) -> bool:
 
 
 def _aggregate_results(subresults: CheckGenerator) -> ServiceCheckResult:
-    perfdata: List[Metric] = []
+
+    perfdata, results = _consume_and_dispatch_result_types(subresults)
+    needs_marker = len(results) > 1
+
     summaries: List[str] = []
     details: List[str] = []
     status = checking_classes.state(0)
+    for result in results:
+        status = checking_classes.state.worst(status, result.state)
+        state_marker = check_api_utils.state_markers[int(result.state)] if needs_marker else ""
 
-    for subr in list(subresults):  # consume *everything* here, before we may raise!
-        if isinstance(subr, checking_classes.IgnoreResults):
-            raise checking_classes.IgnoreResultsError(str(subr))
-        if isinstance(subr, checking_classes.Metric):
-            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
-            continue
-        assert isinstance(subr, checking_classes.Result)
+        if result.summary:
+            summaries.append(result.summary + state_marker)
 
-        status = checking_classes.state.worst(status, subr.state)
-        state_marker = check_api_utils.state_markers[int(subr.state)]
-
-        if subr.summary:
-            summaries.append(subr.summary + state_marker)
-
-        details.append(subr.details + state_marker)
+        details.append(result.details + state_marker)
 
     # Empty list? Check returned nothing
     if not details:
@@ -724,6 +719,30 @@ def _aggregate_results(subresults: CheckGenerator) -> ServiceCheckResult:
 
     all_text = [", ".join(summaries)] + details
     return int(status), "\n".join(all_text).strip(), perfdata
+
+
+def _consume_and_dispatch_result_types(
+    subresults: CheckGenerator,) -> Tuple[List[Metric], List[checking_classes.Result]]:
+    """Consume *all* check results, and *then* raise, if we encountered
+    an IgnoreResults instance.
+    """
+    ignore_results: List[checking_classes.IgnoreResults] = []
+    results: List[checking_classes.Result] = []
+    perfdata: List[Metric] = []
+
+    for subr in subresults:
+        if isinstance(subr, checking_classes.IgnoreResults):
+            ignore_results.append(subr)
+        elif isinstance(subr, checking_classes.Metric):
+            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
+        else:
+            assert isinstance(subr, checking_classes.Result)
+            results.append(subr)
+
+    if ignore_results:
+        raise checking_classes.IgnoreResultsError(str(ignore_results[-1]))
+
+    return perfdata, results
 
 
 def sanitize_check_result(

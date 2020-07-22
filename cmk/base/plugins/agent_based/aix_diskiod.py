@@ -105,7 +105,7 @@ def check_aix_diskiod(
     section: diskstat.Section,
 ) -> Generator[Union[Result, Metric, IgnoreResults], None, None]:
     if item == 'SUMMARY':
-        disk = diskstat.summarize_disks(key_val for key_val in section.items())
+        disk = diskstat.summarize_disks(section.items())
     else:
         try:
             disk = section[item]
@@ -123,8 +123,8 @@ def cluster_check_aix_diskoid(
         disk = diskstat.summarize_disks(
             item for node_section in section.values() for item in node_section.items())
     else:
-        disk = diskstat.combine_disks(disk for node_section in section.values()
-                                      for device, disk in node_section.items() if device == item)
+        disk = diskstat.combine_disks(
+            node_section[item] for node_section in section.values() if item in node_section)
     yield from _check_disk(params, disk)
 
 

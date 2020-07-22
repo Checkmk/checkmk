@@ -62,6 +62,7 @@ def _read_line() -> str:
 
 
 def main() -> int:
+    cmk.base.utils.register_sigint_handler()  # as in cmk: do_keepalive
     serial = ""
     host_name: HostName = ""
     try:

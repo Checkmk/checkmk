@@ -208,6 +208,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         Args:
             sites:
+                A LiveStatus connection object.
 
         Returns:
             The queried value.
@@ -221,6 +222,20 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             raise ValueError(f"Expected only one column, got {len(result)} columns.")
         return result[0]
 
+    def fetch_values(self, sites) -> List[List[Any]]:
+        """Return the result coming from LiveStatus.
+
+        This returns a list with each row being a list of len(number of columns requested).
+
+        Args:
+            sites:
+                A LiveStatus connection object.
+
+        Returns:
+            The response as a list of lists.
+        """
+        return sites.query(self.compile())
+
     def iterate(self, sites) -> Generator[ResultRow, None, None]:
         """Return a generator of the result.
 
@@ -232,7 +247,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         """
         names = self.column_names
-        for entry in sites.query(self.compile()):
+        for entry in self.fetch_values(sites):
             # This is Dict[str, Any], just with Attribute based access. Can't do much about this.
             yield ResultRow(list(zip(names, entry)))
 
@@ -240,7 +255,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         """Compile the current query and return it in string-form.
 
         Returns:
-            The Livestatus-Query as a string.
+            The LiveStatus-Query as a string.
 
         """
         _query = []

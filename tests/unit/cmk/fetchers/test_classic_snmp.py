@@ -8,9 +8,12 @@ import collections
 
 import pytest  # type: ignore[import]
 
+from cmk.utils.exceptions import MKGeneralException
+
 from cmk.snmplib.type_defs import SNMPHostConfig
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
+import cmk.fetchers.snmp_backend.classic as classic_snmp
 
 
 @pytest.mark.parametrize("port,expected", [
@@ -127,7 +130,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             is_ipv6_primary=False,
             hostname="lohost",
             ipaddress="public",
-            credentials=("authNoPriv", "abc", "md5", "abc"),
+            credentials=("authNoPriv", "md5", "md5", "abc"),
             port=161,
             is_bulkwalk_host=False,
             is_snmpv2or3_without_bulkwalk_host=False,
@@ -145,7 +148,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
         ),
         context_name="blabla",
     ), [
-        'snmpwalk', '-v3', '-l', 'authNoPriv', '-a', 'abc', '-u', 'md5', '-A', 'abc', '-m', '',
+        'snmpwalk', '-v3', '-l', 'authNoPriv', '-a', 'md5', '-u', 'md5', '-A', 'abc', '-m', '',
         '-M', '', '-t', '5.00', '-r', '1', '-n', 'blabla', '-Cc'
     ]),
     (SNMPSettings(
@@ -204,3 +207,29 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
 def test_snmp_walk_command(monkeypatch, settings, expected):
     backend = ClassicSNMPBackend(settings.snmp_config)
     assert backend._snmp_walk_command(settings.context_name) == expected
+
+
+@pytest.mark.parametrize("proto, result", [
+    ("md5", "md5"),
+    ("sha", "sha"),
+])
+def test_auth_proto(proto, result):
+    assert classic_snmp._auth_proto_for(proto) == result
+
+
+def test_auth_proto_unknown():
+    with pytest.raises(MKGeneralException):
+        classic_snmp._auth_proto_for("unknown")
+
+
+@pytest.mark.parametrize("proto, result", [
+    ("DES", "DES"),
+    ("AES", "AES"),
+])
+def test_priv_proto(proto, result):
+    assert classic_snmp._priv_proto_for(proto) == result
+
+
+def test_priv_proto_unknown():
+    with pytest.raises(MKGeneralException):
+        classic_snmp._priv_proto_for("unknown")

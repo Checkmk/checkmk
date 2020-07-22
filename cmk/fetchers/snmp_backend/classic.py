@@ -235,26 +235,31 @@ class ClassicSNMPBackend(ABCSNMPBackend):
             options += ["-c", self.config.credentials]
 
         else:
-            # Handle V3
-            if len(self.config.credentials) == 6:
-                options += [
-                    "-v3", "-l", self.config.credentials[0], "-a", self.config.credentials[1], "-u",
-                    self.config.credentials[2], "-A", self.config.credentials[3], "-x",
-                    self.config.credentials[4], "-X", self.config.credentials[5]
-                ]
-            elif len(self.config.credentials) == 4:
-                options += [
-                    "-v3", "-l", self.config.credentials[0], "-a", self.config.credentials[1], "-u",
-                    self.config.credentials[2], "-A", self.config.credentials[3]
-                ]
-            elif len(self.config.credentials) == 2:
-                options += [
-                    "-v3", "-l", self.config.credentials[0], "-u", self.config.credentials[1]
-                ]
-            else:
+            # TODO: Fix the horrible credentials typing
+            if not (isinstance(self.config.credentials, tuple) and
+                    len(self.config.credentials) in (2, 4, 6)):
                 raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be "
                                          "string, 2-tuple, 4-tuple or 6-tuple" %
                                          (self.config.credentials, self.config.hostname))
+
+            if len(self.config.credentials) == 6:
+                sec_level, auth_proto, sec_name, auth_pass, priv_proto, priv_pass = self.config.credentials
+                options += [
+                    "-v3", "-l", sec_level, "-a",
+                    _auth_proto_for(auth_proto), "-u", sec_name, "-A", auth_pass, "-x",
+                    _priv_proto_for(priv_proto), "-X", priv_pass
+                ]
+
+            elif len(self.config.credentials) == 4:
+                sec_level, auth_proto, sec_name, auth_pass = self.config.credentials
+                options += [
+                    "-v3", "-l", sec_level, "-a",
+                    _auth_proto_for(auth_proto), "-u", sec_name, "-A", auth_pass
+                ]
+
+            else:
+                sec_level, sec_name = self.config.credentials
+                options += ["-v3", "-l", sec_level, "-u", sec_name]
 
         # Do not load *any* MIB files. This save lot's of CPU.
         options += ["-m", "", "-M", ""]
@@ -270,3 +275,19 @@ class ClassicSNMPBackend(ABCSNMPBackend):
             options += ["-n", context_name]
 
         return command + options
+
+
+def _auth_proto_for(proto_name: str) -> str:
+    if proto_name == "md5":
+        return "md5"
+    if proto_name == "sha":
+        return "sha"
+    raise MKGeneralException("Invalid SNMP auth protocol: %s" % proto_name)
+
+
+def _priv_proto_for(proto_name: str) -> str:
+    if proto_name == "DES":
+        return "DES"
+    if proto_name == "AES":
+        return "AES"
+    raise MKGeneralException("Invalid SNMP priv protocol: %s" % proto_name)

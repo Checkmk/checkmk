@@ -22,7 +22,7 @@ repos:
           - id: trailing-whitespace
           - id: check-merge-conflict
             types: [file]
-          - id: check-docstring-first
+#         - id: check-docstring-first
           - id: check-yaml
           - id: end-of-file-fixer
 #    - repo: https://github.com/pre-commit/mirrors-scss-lint

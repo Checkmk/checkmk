@@ -212,6 +212,10 @@ def test_snmp_walk_command(monkeypatch, settings, expected):
 @pytest.mark.parametrize("proto, result", [
     ("md5", "md5"),
     ("sha", "sha"),
+    ("SHA-224", "SHA-224"),
+    ("SHA-256", "SHA-256"),
+    ("SHA-384", "SHA-384"),
+    ("SHA-512", "SHA-512"),
 ])
 def test_auth_proto(proto, result):
     assert classic_snmp._auth_proto_for(proto) == result
@@ -230,6 +234,15 @@ def test_priv_proto(proto, result):
     assert classic_snmp._priv_proto_for(proto) == result
 
 
-def test_priv_proto_unknown():
+@pytest.mark.parametrize("proto", [
+    "",
+    "unknown",
+    "3DES-EDE",
+    "AES-192",
+    "AES-256",
+    "AES-192-Blumenthal",
+    "AES-256-Blumenthal",
+])
+def test_priv_proto_unknown(proto):
     with pytest.raises(MKGeneralException):
-        classic_snmp._priv_proto_for("unknown")
+        classic_snmp._priv_proto_for(proto)

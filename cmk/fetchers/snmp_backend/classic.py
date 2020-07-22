@@ -282,6 +282,14 @@ def _auth_proto_for(proto_name: str) -> str:
         return "md5"
     if proto_name == "sha":
         return "sha"
+    if proto_name == "SHA-224":
+        return "SHA-224"
+    if proto_name == "SHA-256":
+        return "SHA-256"
+    if proto_name == "SHA-384":
+        return "SHA-384"
+    if proto_name == "SHA-512":
+        return "SHA-512"
     raise MKGeneralException("Invalid SNMP auth protocol: %s" % proto_name)
 
 

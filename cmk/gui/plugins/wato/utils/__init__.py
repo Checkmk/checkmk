@@ -182,7 +182,8 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
         help: _Optional[ValueSpecHelp] = None,
         only_v3: bool = False,
         default_value: _Optional[str] = "public",
-        allow_none: bool = False) -> Alternative:
+        allow_none: bool = False,
+        for_ec: bool = False) -> Alternative:
     def alternative_match(x):
         if only_v3:
             # NOTE: Indices are shifted by 1 due to a only_v3 hack below!!
@@ -215,7 +216,7 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
         _snmpv1_v2_credentials_element(),
         _snmpv3_no_auth_no_priv_credentials_element(),
         _snmpv3_auth_no_priv_credentials_element(),
-        _snmpv3_auth_priv_credentials_element(),
+        _snmpv3_auth_priv_credentials_element(for_ec=for_ec),
     ])
 
     if only_v3:
@@ -281,7 +282,23 @@ def _snmpv3_auth_no_priv_credentials_element() -> ValueSpec:
     )
 
 
-def _snmpv3_auth_priv_credentials_element() -> ValueSpec:
+def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
+    priv_protocol_choices = [
+        ("DES", _("CBC-DES")),
+        ("AES", _("AES-128")),
+    ]
+    if for_ec:
+        # TODO Remove this var once we use pysnmp in all places
+        # EC uses pysnmp which supports these protocols
+        # netsnmp/inline + classic does not support these protocols
+        priv_protocol_choices.extend([
+            ("3DES-EDE", _("3DES-EDE")),
+            ("AES-192", _("AES-192")),
+            ("AES-256", _("AES-256")),
+            ("AES-192-Blumenthal", _("AES-192-Blumenthal")),
+            ("AES-256-Blumenthal", _("AES-256-Blumenthal")),
+        ])
+
     return Tuple(
         title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
         elements=[
@@ -292,10 +309,7 @@ def _snmpv3_auth_priv_credentials_element() -> ValueSpec:
             ),
         ] + _snmpv3_auth_protocol_elements() + [
             DropdownChoice(
-                choices=[
-                    ("DES", _("DES")),
-                    ("AES", _("AES")),
-                ],
+                choices=priv_protocol_choices,
                 title=_("Privacy protocol"),
             ),
             Password(
@@ -310,8 +324,12 @@ def _snmpv3_auth_protocol_elements():
     return [
         DropdownChoice(
             choices=[
-                ("md5", _("MD5")),
-                ("sha", _("SHA1")),
+                ("md5", _("MD5 (MD5-96)")),
+                ("sha", _("SHA-1 (SHA-96)")),
+                ("SHA-224", _("SHA-2 (SHA-224)")),
+                ("SHA-256", _("SHA-2 (SHA-256)")),
+                ("SHA-384", _("SHA-2 (SHA-384)")),
+                ("SHA-512", _("SHA-2 (SHA-512)")),
             ],
             title=_("Authentication protocol"),
         ),

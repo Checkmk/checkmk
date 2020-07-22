@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 import ast
 import time
 from typing import cast, Dict, Final, Iterable, List, Optional, Set
@@ -97,19 +96,6 @@ class CachedSNMPDetector:
             backend=factory.backend(snmp_config),
         )
         return self._cached_result
-
-
-# TODO: Move common functionality of SNMPManagementBoardDataSource and
-# SNMPDataSource to ABCSNMPDataSource and make SNMPManagementBoardDataSource
-# inherit from ABCSNMPDataSource instead of SNMPDataSource
-class ABCSNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
-                                      SNMPHostSections],
-                        metaclass=abc.ABCMeta):
-    def _cache_dir(self) -> str:  # pylint: disable=useless-super-delegation
-        return super()._cache_dir()
-
-    def _persisted_sections_dir(self) -> str:  # pylint: disable=useless-super-delegation
-        return super()._persisted_sections_dir()
 
 
 class SNMPConfigurator(ABCConfigurator):
@@ -217,13 +203,20 @@ class SNMPConfigurator(ABCConfigurator):
         )
 
 
-class SNMPDataSource(ABCSNMPDataSource):
+class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
+                                   SNMPHostSections]):
     def __init__(self, *, configurator: SNMPConfigurator) -> None:
         super(SNMPDataSource, self).__init__(configurator=configurator)
         self.detector: Final = CachedSNMPDetector()
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
         self._fetched_raw_section_names: Set[SectionName] = set()
+
+    def _cache_dir(self) -> str:  # pylint: disable=useless-super-delegation
+        return super()._cache_dir()
+
+    def _persisted_sections_dir(self) -> str:  # pylint: disable=useless-super-delegation
+        return super()._persisted_sections_dir()
 
     def describe(self) -> str:
         return self.configurator.description
@@ -345,12 +338,3 @@ class SNMPDataSource(ABCSNMPDataSource):
             persisted_sections[section_name] = (cached_at, until, section_content)
 
         return persisted_sections
-
-
-#TODO
-# 1. TCP host + SNMP MGMT Board: standard SNMP beibehalten
-# 2. snmpv3 context
-
-
-class SNMPManagementBoardDataSource(SNMPDataSource):
-    pass

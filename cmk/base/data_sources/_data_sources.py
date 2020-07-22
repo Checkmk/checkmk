@@ -34,7 +34,7 @@ from .programs import (
     SpecialAgentConfigurator,
     SpecialAgentDataSource,
 )
-from .snmp import SNMPConfigurator, SNMPDataSource, SNMPManagementBoardDataSource
+from .snmp import SNMPConfigurator, SNMPDataSource
 from .tcp import TCPConfigurator, TCPDataSource
 
 __all__ = ["DataSources", "make_host_sections", "make_sources"]
@@ -116,7 +116,7 @@ class SourceBuilder:
         ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._host_config)
         if protocol == "snmp":
             self._add_source(
-                SNMPManagementBoardDataSource(configurator=SNMPConfigurator.management_board(
+                SNMPDataSource(configurator=SNMPConfigurator.management_board(
                     self._hostname,
                     ip_address,
                 ),))

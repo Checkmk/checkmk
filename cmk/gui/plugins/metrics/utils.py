@@ -612,13 +612,6 @@ def _get_explicit_graph_templates(translated_metrics):
             yield template
 
 
-def graph_template_for_metrics(graph_template, translated_metrics):
-    if _graph_possible(graph_template, translated_metrics):
-        return graph_template
-    if _graph_possible_without_optional_metrics(graph_template, translated_metrics):
-        return _graph_without_missing_optional_metrics(graph_template, translated_metrics)
-
-
 def _get_graphed_metrics(graph_templates: List) -> Set:
     graphed_metrics: Set = set()
     for graph_template in graph_templates:
@@ -650,55 +643,37 @@ def drop_metric_consolidation_advice(expression: str) -> str:
     return expression
 
 
-def _graph_possible(graph_template, translated_metrics):
-    for metric_definition in graph_template["metrics"]:
+def graph_template_for_metrics(graph_template, translated_metrics):
+    # Skip early on conflicting_metrics
+    for var in graph_template.get("conflicting_metrics", []):
+        if var in translated_metrics:
+            return {}
+
+    try:
+        reduced_metrics = list(
+            _filter_renderable_graph_metrics(graph_template['metrics'], translated_metrics,
+                                             graph_template.get('optional_metrics', [])))
+    except KeyError:
+        return {}
+
+    if reduced_metrics:
+        reduced_graph_template = graph_template.copy()
+        reduced_graph_template["metrics"] = reduced_metrics
+        return reduced_graph_template
+
+    return {}
+
+
+def _filter_renderable_graph_metrics(metric_definitions, translated_metrics, optional_metrics):
+    for metric_definition in metric_definitions:
         try:
             evaluate(metric_definition[0], translated_metrics)
-        except Exception:
-            return False
-
-    # Allow graphs to be disabled if certain (better) metrics
-    # are available
-    if "conflicting_metrics" in graph_template:
-        for var in graph_template["conflicting_metrics"]:
-            if var in translated_metrics:
-                return False
-
-    return True
-
-
-def _graph_possible_without_optional_metrics(graph_template, translated_metrics):
-    if "optional_metrics" in graph_template:
-        return _graph_possible(
-            graph_template, _add_fake_metrics(translated_metrics,
-                                              graph_template["optional_metrics"]))
-
-
-def _graph_without_missing_optional_metrics(graph_template, translated_metrics):
-    working_metrics = []
-
-    for metric_definition in graph_template["metrics"]:
-        try:
-            evaluate(metric_definition[0], translated_metrics)
-            working_metrics.append(metric_definition)
-        except Exception:
-            pass
-
-    reduced_graph_template = graph_template.copy()
-    reduced_graph_template["metrics"] = working_metrics
-    return reduced_graph_template
-
-
-def _add_fake_metrics(translated_metrics, metric_names):
-    with_fake = translated_metrics.copy()
-    for metric_name in metric_names:
-        with_fake[metric_name] = {
-            "value": 1.0,
-            "scale": 1.0,
-            "unit": unit_info[""],
-            "color": "#888888",
-        }
-    return with_fake
+            yield metric_definition
+        except KeyError as err:  # because can't find necessary metric_name in translated_metrics
+            metric_name = err.args[0]
+            if metric_name in optional_metrics:
+                continue
+            raise err
 
 
 #.

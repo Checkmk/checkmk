@@ -99,6 +99,7 @@ def _validate_function_args(plugin_name: str, func_type: str, function: Callable
 def _filter_discovery(
     generator: Callable[..., Generator[Any, None, None]],
     requires_item: bool,
+    validate_item: bool,
 ) -> Callable[..., Generator[Service, None, None]]:
     """Only let Services through
 
@@ -109,7 +110,7 @@ def _filter_discovery(
         for element in generator(*args, **kwargs):
             if not isinstance(element, Service):
                 raise TypeError("unexpected type in discovery: %r" % type(element))
-            if requires_item is (element.item is None):
+            if validate_item and requires_item is (element.item is None):
                 raise TypeError("unexpected type of item discovered: %r" % type(element.item))
             yield element
 
@@ -205,6 +206,7 @@ def create_check_plugin(
     check_ruleset_name: Optional[str] = None,
     cluster_check_function: Optional[Callable] = None,
     module: Optional[str] = None,
+    validate_item: bool = True,
 ) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one
 
@@ -237,7 +239,7 @@ def create_check_plugin(
         discovery_ruleset_name is not None,
         subscribed_sections,
     )
-    disco_func = _filter_discovery(discovery_function, requires_item)
+    disco_func = _filter_discovery(discovery_function, requires_item, validate_item)
     disco_params = discovery_default_parameters or {}
     disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 

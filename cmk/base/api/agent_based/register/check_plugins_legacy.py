@@ -297,4 +297,9 @@ def create_check_plugin_from_legacy(
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_ruleset_name,
         cluster_check_function=_create_cluster_legacy_mode_from_hell(check_function),
+        # Legacy check plugins may return an item even if the service description
+        # does not contain a '%s'. In this case the old check API assumes an implicit,
+        # trailing '%s'. Therefore, we disable this validation for legacy check plugins.
+        # Once all check plugins are migrated to the new API this flag can be removed.
+        validate_item=False,
     )

@@ -7,7 +7,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Notification via sms using the sms tools
-# Note: You have to add the side user to the sendsms group
+# Note: You have to add the site user to the sendsms group
 # and restart the site
 
 import os

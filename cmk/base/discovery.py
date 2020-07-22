@@ -322,11 +322,8 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
             # see which raw sections we may need
             selected_raw_sections: Optional[SelectedRawSections] = None
             if check_plugin_names is not None:
-                selected_raw_sections = {}
-                for name in config.get_relevant_raw_sections(check_plugin_names=check_plugin_names):
-                    section_ = config.get_registered_section_plugin(name)
-                    assert section_ is not None
-                    selected_raw_sections[name] = section_
+                selected_raw_sections = config.get_relevant_raw_sections(
+                    check_plugin_names=check_plugin_names)
 
             multi_host_sections = data_sources.make_host_sections(
                 config_cache,

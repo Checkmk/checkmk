@@ -215,12 +215,7 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
                 remove_duplicates=True,
                 filter_mode="only_clustered",
             ) for node_name in host_config.nodes))
-    selected_raw_sections = {}
-    for name in config.get_relevant_raw_sections(check_plugin_names=check_plugin_names):
-        section = config.get_registered_section_plugin(name)
-        if section is not None:
-            selected_raw_sections[name] = section
-    return selected_raw_sections
+    return config.get_relevant_raw_sections(check_plugin_names=check_plugin_names)
 
 
 def _make_host_sections(

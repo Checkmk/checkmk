@@ -22,7 +22,7 @@ public:
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 
-    static void addColumns(Table *table, const std::string &prefix);
+    static void addColumns(Table *table, const std::string &prefix, int offset);
 };
 
 #endif  // TableCommands_h

@@ -146,7 +146,8 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
                               false /* no hosts table */);
     TableContacts::addColumns(this, "current_contact_",
                               DANGEROUS_OFFSETOF(LogRow, ctc));
-    TableCommands::addColumns(this, "current_command_");
+    TableCommands::addColumns(this, "current_command_",
+                              DANGEROUS_OFFSETOF(LogRow, command));
 }
 
 std::string TableLog::name() const { return "log"; }

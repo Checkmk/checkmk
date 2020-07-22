@@ -258,6 +258,20 @@ components:
       required:
       - entries
       type: object
+    BulkDeleteServiceGroup:
+      properties:
+        entries:
+          example:
+          - windows
+          - panels
+          items:
+            description: The name of the service group config
+            example: windows
+            type: string
+          type: array
+      required:
+      - entries
+      type: object
     ConcreteFolder:
       discriminator:
         mapping:
@@ -1909,6 +1923,7 @@ paths:
         '204':
           description: Operation done successfully. No further output.
           headers: {}
+      summary: Bulk delete folders based upon folder id
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder_config
       x-codeSamples:
@@ -2368,6 +2383,7 @@ paths:
         '204':
           description: Operation done successfully. No further output.
           headers: {}
+      summary: Bulk delete hosts based upon host names
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_config
       x-codeSamples:
@@ -2672,6 +2688,7 @@ paths:
         '204':
           description: Operation done successfully. No further output.
           headers: {}
+      summary: Bulk delete host group configs
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group_config
       x-codeSamples:
@@ -3284,6 +3301,50 @@ paths:
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/service_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
           \ a20ceacf346041dc' \\\n    alias='Environment Sensors' \\\n    name='environment'"
+  /domain-types/service_group_config/actions/bulk-delete/invoke:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group_config.bulk_delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkDeleteServiceGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Bulk delete service groups
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.service_group_config
+      x-codeSamples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
+          \    API_URL + \"/domain-types/service_group_config/actions/bulk-delete/invoke\"\
+          ,\n    json={\n        \"entries\": [\n            \"windows\",\n      \
+          \      \"panels\"\n        ]\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"entries\": [\n         \
+          \   \"windows\",\n            \"panels\"\n          ]\n        }' \\\n \
+          \   \"$API_URL/domain-types/service_group_config/actions/bulk-delete/invoke\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/domain-types/service_group_config/actions/bulk-delete/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    entries='[\"\
+          windows\", \"panels\"]'"
   /version:
     get:
       description: ''
@@ -3722,6 +3783,9 @@ tags:
     showReadOnly={true} showWriteOnly={true} />
   name: InputServiceGroup
   x-displayName: Creating a service group
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkDeleteServiceGroup"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BulkDeleteServiceGroup
 - name: cmk.gui.plugins.openapi.endpoints.version
   x-displayName: Miscellaneous
 - name: cmk.gui.cee.plugins.openapi.endpoints.agent
@@ -3770,4 +3834,5 @@ x-tagGroups:
   - InputHostGroup
   - BulkDeleteHostGroup
   - InputServiceGroup
+  - BulkDeleteServiceGroup
   - AgentSign

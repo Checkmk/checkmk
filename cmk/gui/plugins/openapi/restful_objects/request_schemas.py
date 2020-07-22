@@ -258,3 +258,16 @@ class BulkDeleteHostGroup(Schema):
         required=True,
         example=["windows", "panels"],
     )
+
+
+class BulkDeleteServiceGroup(Schema):
+    # TODO: addition of etag field
+    entries = fields.List(
+        fields.String(
+            required=True,
+            description="The name of the service group config",
+            example="windows",
+        ),
+        required=True,
+        example=["windows", "panels"],
+    )

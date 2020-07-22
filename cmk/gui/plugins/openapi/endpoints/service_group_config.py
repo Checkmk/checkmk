@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Service-groups"""
+import http.client
+
+from connexion import ProblemException  # type: ignore[import]
+
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (
@@ -77,6 +81,23 @@ def delete(params):
     return Response(status=204)
 
 
+@endpoint_schema(constructors.domain_type_action_href('service_group_config', 'bulk-delete'),
+                 '.../delete',
+                 method='delete',
+                 request_schema=request_schemas.BulkDeleteServiceGroup,
+                 output_empty=True)
+def bulk_delete(params):
+    """Bulk delete service groups"""
+    entries = params['entries']
+    for group_name in entries:
+        _group = _fetch_service_group(group_name,
+                                      status=400,
+                                      message="service group %s was not found" % group_name)
+    for group_name in entries:
+        watolib.delete_group(group_name, group_type='service')
+    return Response(status=204)
+
+
 @endpoint_schema(constructors.object_href('service_group_config', '{name}'),
                  '.../update',
                  method='put',
@@ -95,8 +116,13 @@ def update(params):
     return serve_group(group, serialize_group('service_group_config'))
 
 
-def _fetch_service_group(ident):
+def _fetch_service_group(ident, status=404, message=None):
     groups = load_service_group_information()
-    group = groups[ident].copy()
+    try:
+        group = groups[ident].copy()
+    except KeyError as exc:
+        if message is None:
+            message = str(exc)
+        raise ProblemException(status, http.client.responses[status], message)
     group['id'] = ident
     return group

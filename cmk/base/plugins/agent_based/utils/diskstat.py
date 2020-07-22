@@ -7,13 +7,22 @@
 from collections import defaultdict
 import re
 import time
-from typing import DefaultDict, Generator, Iterable, Mapping, Optional, Sequence, Tuple, Union
+from typing import (
+    Callable,
+    DefaultDict,
+    Iterable,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    TypedDict,
+    Union,
+)
 from ..agent_based_api.v0 import (
     check_levels,
     get_average,
     Metric,
     render,
-    Result,
     Service,
     type_defs,
 )
@@ -27,7 +36,7 @@ DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
 def discovery_diskstat_generic(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> Generator[Service, None, None]:
+) -> type_defs.DiscoveryGenerator:
     # Skip over on empty data
     if not section:
         return
@@ -102,13 +111,85 @@ def summarize_disks(disks: Iterable[Tuple[str, Disk]]) -> Disk:
     return combine_disks(disk for device, disk in disks if not device.startswith("LVM "))
 
 
-def scale_levels(
+def _scale_levels(
     levels: Optional[Iterable[float]],
     factor: Union[int, float],
 ) -> Optional[Tuple[float, ...]]:
     if levels is None:
         return levels
     return tuple(level * factor for level in levels)
+
+
+class MetricSpecs(TypedDict, total=False):
+    value_scale: float
+    levels_key: str
+    levels_scale: float
+    render_func: Callable[[float], str]
+    label: str
+
+
+_METRICS: Mapping[str, MetricSpecs] = {
+    'utilization': {
+        'value_scale': 100,  # value comes as fraction, not in percent
+        'render_func': render.percent,
+    },
+    'read_throughput': {
+        'levels_key': 'read',
+        'levels_scale': 1e6,  # levels are specified in MB/s
+        'render_func': render.iobandwidth,
+    },
+    'write_throughput': {
+        'levels_key': 'write',
+        'levels_scale': 1e6,  # levels are specified in MB/s
+        'render_func': render.iobandwidth,
+    },
+    'average_wait': {
+        'levels_scale': 1e-3,  # levels are specified in ms
+        'render_func': render.timespan,
+    },
+    'average_read_wait': {
+        'levels_key': 'read_wait',
+        'levels_scale': 1e-3,  # levels are specified in ms
+        'render_func': render.timespan,
+    },
+    'average_write_wait': {
+        'levels_key': 'write_wait',
+        'levels_scale': 1e-3,  # levels are specified in ms
+        'render_func': render.timespan,
+    },
+    'latency': {
+        'levels_scale': 1e-3,  # levels are specified in ms
+        'render_func': render.timespan,
+    },
+    'read_latency': {
+        'levels_scale': 1e-3,  # levels are specified in ms
+        'render_func': render.timespan,
+    },
+    'write_latency': {
+        'levels_scale': 1e-3,  # levels are specified in ms
+        'render_func': render.timespan,
+    },
+    'queue_length': {
+        'render_func': lambda x: "%.2f" % x,
+        'label': 'Average queue length',
+    },
+    'read_ql': {
+        'render_func': lambda x: "%.2f" % x,
+        'label': 'Average read queue length',
+    },
+    'write_ql': {
+        'render_func': lambda x: "%.2f" % x,
+        'label': 'Average write queue length',
+    },
+    'read_ios': {
+        'render_func': lambda x: "%.2f/s" % x,
+        'label': 'Read operations',
+    },
+    'write_ios': {
+        'render_func': lambda x: "%.2f/s" % x,
+        'label': 'Write operations',
+    },
+}
 
 
 # Example:
@@ -133,7 +214,7 @@ def check_diskstat_dict(
     params: type_defs.Parameters,
     disk: Disk,
     value_store,
-) -> Generator[Union[Result, Metric], None, None]:
+) -> type_defs.CheckGenerator:
     # Averaging
     # Note: this check uses a simple method of averaging: As soon as averaging
     # is turned on the actual metrics are *replaced* by the averaged ones. No
@@ -150,7 +231,12 @@ def check_diskstat_dict(
             if isinstance(value, (int, float)):
                 avg_disk[key] = get_average(
                     value_store=value_store,
-                    key="%s.avg" % key,
+                    # We add 'check_diskstat_dict' to the key to avoid possible overlap with keys
+                    # used in check plugins. For example, for the SUMMARY-item, the check plugin
+                    # winperf_phydisk first computes all rates for all items using 'metric.item' as
+                    # key and then summarizes the disks. Hence, for a disk called 'avg', these keys
+                    # would be the same as the keys used here.
+                    key="check_diskstat_dict.%s.avg" % key,
                     time=time.time(),
                     value=value,
                     backlog_minutes=averaging / 60.,
@@ -160,110 +246,26 @@ def check_diskstat_dict(
         disk = avg_disk
         prefix = "%s average: " % render.timespan(averaging)
 
-    keys_left = set(disk.keys())
-
-    # Utilization
-    key = "utilization"
-    if key in disk:
-        keys_left.remove(key)
-        yield from check_levels(
-            disk[key] * 100,
-            levels_upper=params.get("utilization"),
-            metric_name="disk_utilization",
-            render_func=render.percent,
-            label=prefix + "Utilization",
-        )
-
-    # Throughput
-    for what in "read", "write":
-        key = what + "_throughput"
-        if what + "_throughput" in disk:
-            keys_left.remove(key)
+    for key, specs in _METRICS.items():
+        metric_val = disk.get(key)
+        if metric_val is not None:
             yield from check_levels(
-                disk[key],
-                # levels are specified in MB/s
-                levels_upper=scale_levels(params.get(what), 1e6),
-                metric_name="disk_" + what + "_throughput",
-                render_func=render.iobandwidth,
-                label=what.title(),
-            )
-
-    # Average wait from end to end
-    for what in ["wait", "read_wait", "write_wait"]:
-        key = "average_" + what
-        if key in disk:
-            keys_left.remove(key)
-            yield from check_levels(
-                disk[key],
-                # levels are specified in ms
-                levels_upper=scale_levels(params.get(what), 1e-3),
-                metric_name="disk_average_" + what,
-                render_func=render.timespan,
-                label="Average %s" % what.title().replace("_", " "),
-            )
-
-    # Average disk latency
-    key = "latency"
-    if key in disk:
-        keys_left.remove(key)
-        yield from check_levels(
-            disk[key],
-            # levels are specified in ms
-            levels_upper=scale_levels(params.get("latency"), 1e-3),
-            metric_name="disk_latency",
-            render_func=render.timespan,
-            label='Latency',
-        )
-
-    # Read/write disk latency
-    for what in ["read", "write"]:
-        latency_key = "%s_latency" % what
-        if latency_key in disk:
-            keys_left.remove(latency_key)
-            latency = disk[key]
-            if latency is not None:
-                yield from check_levels(
-                    latency,
-                    # levels are specified in ms
-                    levels_upper=scale_levels(params.get(latency_key), 1e-3),
-                    metric_name="disk_%s" % latency_key,
-                    render_func=render.timespan,
-                    label='%s latency' % what.title(),
-                )
-
-    # Queue lengths
-    for key, plugin_text in [
-        ("queue_length", "Queue Length"),
-        ("read_ql", "Read Queue Length"),
-        ("write_ql", "Write Queue Length"),
-    ]:
-        if key in disk:
-            keys_left.remove(key)
-            yield from check_levels(
-                disk[key],
-                levels_upper=params.get(key),
+                metric_val * specs.get('value_scale', 1),
+                levels_upper=_scale_levels(
+                    params.get(specs.get('levels_key') or key),
+                    specs.get('levels_scale', 1),
+                ),
                 metric_name="disk_" + key,
-                label="Average %s" % plugin_text,
+                render_func=specs.get('render_func'),
+                label=prefix + (specs.get('label') or key.replace("_", " ").capitalize()),
             )
-
-    # I/O operations
-    for what in "read", "write":
-        key = what + "_ios"
-        if key in disk:
-            keys_left.remove(key)
-            yield from check_levels(
-                disk[key],
-                levels_upper=params.get(what + "_ios"),
-                metric_name="disk_" + what + "_ios",
-                render_func=lambda x: str(x) + "/s",
-                label="%s operations" % what.title(),
-            )
+            prefix = ''
 
     # All the other metrics are currently not output in the plugin output - simply because
     # of their amount. They are present as performance data and will shown in graphs.
 
     # Send everything as performance data now. Sort keys alphabetically
-    for key in sorted(keys_left):
+    for key in sorted(set(disk) - set(_METRICS)):
         value = disk[key]
         if isinstance(value, (int, float)):
             # Currently the levels are not shown in the perfdata

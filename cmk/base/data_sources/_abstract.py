@@ -132,8 +132,16 @@ class ABCConfigurator(abc.ABC):
     Dump the JSON configuration from `configure_fetcher()`.
 
     """
-    def __init__(self, hostname: HostName, ipaddress: Optional[HostAddress], *,
-                 source_type: SourceType, description: str, id_: str, cpu_tracking_id: str) -> None:
+    def __init__(
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        *,
+        source_type: SourceType,
+        description: str,
+        id_: str,
+        cpu_tracking_id: str,
+    ) -> None:
         self.hostname: Final[str] = hostname
         self.ipaddress: Final[Optional[str]] = ipaddress
         self.source_type: Final[SourceType] = source_type
@@ -408,22 +416,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
     def _persisted_sections_file_path(self) -> str:
         return os.path.join(self._persisted_sections_dir(), self.configurator.hostname)
-
-    def name(self) -> str:
-        """Return a unique (per host) textual identification of the data source
-
-        This name is used to identify this data source instance compared to other
-        instances of this data source type and also to instances of other data source
-        types.
-
-        It is only used during execution of Check_MK and not persisted. This means
-        the algorithm can be changed at any time.
-        """
-        return ":".join([
-            self.configurator.id,
-            self.configurator.hostname,
-            self.configurator.ipaddress or "",
-        ])
 
     def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
         self._max_cachefile_age = max_cachefile_age

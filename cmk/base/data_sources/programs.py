@@ -4,9 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 from pathlib import Path
-from typing import Any, cast, Dict, Optional
+from typing import Any, Dict, Optional
 
 from six import ensure_str
 
@@ -220,13 +219,7 @@ class ABCProgramDataSource(AgentDataSource):
 
 
 class DSProgramDataSource(ABCProgramDataSource):
-    def name(self) -> str:
-        """Return a unique (per host) textual identification of the data source"""
-        # TODO(ml): Get rid of ugly cast by setting the constant `name` to the base class.
-        #           Is `cmdline.split(" ")[0]` not simply `source_path`?
-        configurator = cast(DSProgramConfigurator, self.configurator)
-        program = configurator.cmdline.split(" ")[0]
-        return os.path.basename(program)
+    pass
 
 
 class SpecialAgentDataSource(ABCProgramDataSource):

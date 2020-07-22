@@ -60,9 +60,7 @@ class TestDSProgramDataSource:
         assert configurator.description == "Program: "
 
         source = DSProgramDataSource(configurator=configurator)
-
         assert source.id == "agent"
-        assert source.name() == ""
         # ProgramDataSource
         assert source._cpu_tracking_id == "ds"
 

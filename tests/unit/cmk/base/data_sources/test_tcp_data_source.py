@@ -60,7 +60,6 @@ def test_attribute_defaults(monkeypatch):
     assert source.ipaddress == ipaddress
     assert source.id == "agent"
     # From the base class
-    assert source.name() == ("agent:%s:%s" % (hostname, ipaddress if ipaddress else ""))
     assert source.is_agent_cache_disabled() is False
     assert source.get_may_use_cache_file() is False
     assert source.exception() is None

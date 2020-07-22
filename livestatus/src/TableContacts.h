@@ -15,18 +15,8 @@
 class MonitoringCore;
 class Query;
 
-#ifndef CMC
-#include "contact_fwd.h"
-#endif
-
 class TableContacts : public Table {
 public:
-#ifndef CMC
-    class IRow : virtual public Table::IRow {
-    public:
-        virtual const contact *getContact() const = 0;
-    };
-#endif
     explicit TableContacts(MonitoringCore *mc);
 
     [[nodiscard]] std::string name() const override;

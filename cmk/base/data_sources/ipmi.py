@@ -75,9 +75,6 @@ class IPMIConfigurator(ABCConfigurator):
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
 class IPMIManagementBoardDataSource(AgentDataSource):
-    def describe(self) -> str:
-        return self.configurator.description
-
     def _execute(
         self,
         *,

@@ -222,6 +222,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return self.configurator.id
 
     @property
+    def description(self) -> str:
+        return self.configurator.description
+
+    @property
     def _cpu_tracking_id(self) -> str:
         return self.configurator.cpu_tracking_id
 
@@ -420,11 +424,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             self.configurator.hostname,
             self.configurator.ipaddress or "",
         ])
-
-    @abc.abstractmethod
-    def describe(self) -> str:
-        """Return a short textual description of the datasource"""
-        raise NotImplementedError()
 
     def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
         self._max_cachefile_age = max_cachefile_age

@@ -218,9 +218,6 @@ class ABCProgramDataSource(AgentDataSource):
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 
-    def describe(self) -> str:
-        return self.configurator.description
-
 
 class DSProgramDataSource(ABCProgramDataSource):
     def name(self) -> str:

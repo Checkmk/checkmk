@@ -184,9 +184,9 @@ def test_source_requires_ipaddress(hostname, monkeypatch):
         SNMPConfigurator.snmp(hostname, None)
 
 
-def test_describe_with_ipaddress(source, monkeypatch):
+def test_description_with_ipaddress(source, monkeypatch):
     default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)"
-    assert source.describe() == default
+    assert source.description == default
 
 
 class TestSNMPConfigurator_SNMP:

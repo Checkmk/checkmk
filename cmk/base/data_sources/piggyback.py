@@ -64,9 +64,6 @@ class PiggyBackDataSource(AgentDataSource):
         )
         self._summary: Optional[ServiceCheckResult] = None
 
-    def describe(self) -> str:
-        return self.configurator.description
-
     def _execute(
         self,
         *,

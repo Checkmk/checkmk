@@ -218,9 +218,6 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
     def _persisted_sections_dir(self) -> str:  # pylint: disable=useless-super-delegation
         return super()._persisted_sections_dir()
 
-    def describe(self) -> str:
-        return self.configurator.description
-
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         return 0, "Success", []
 

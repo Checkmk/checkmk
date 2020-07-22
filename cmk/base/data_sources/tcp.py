@@ -82,9 +82,6 @@ class TCPDataSource(AgentDataSource):
             return output
         raise MKAgentError("Failed to read data")
 
-    def describe(self) -> str:
-        return self.configurator.description
-
     @staticmethod
     def use_only_cache() -> None:
         TCPConfigurator._use_only_cache = True

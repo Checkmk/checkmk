@@ -9,7 +9,7 @@ import json
 import logging
 import os
 import sys
-from typing import Any, cast, Dict, Final, Generic, Optional, Tuple, TypeVar, Union
+from typing import Any, cast, Dict, Final, Generic, Optional, Sequence, Tuple, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -236,14 +236,23 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _cpu_tracking_id(self) -> str:
         return self.configurator.cpu_tracking_id
 
-    def run(self, *, selected_raw_sections: Optional[SelectedRawSections]) -> ABCHostSections:
+    def run(
+        self,
+        *,
+        selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
+    ) -> ABCHostSections:
         """
         :param selected_raw_section: A set of raw sections, that we
         are interested in.  If set, we assume that these sections should
         be produced if possible, and any raw section that is not listed
         here *may* be omitted.
         """
-        result = self._run(selected_raw_sections=selected_raw_sections, get_raw_data=False)
+        result = self._run(
+            selected_raw_sections=selected_raw_sections,
+            prefetched_sections=prefetched_sections,
+            get_raw_data=False,
+        )
         if not isinstance(result, ABCHostSections):
             raise TypeError("Got invalid type: %r" % result)
         return result
@@ -252,12 +261,17 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
     ) -> RawAgentData:
         """Small wrapper for self._run() which always returns raw data source data
 
         Both hostname and ipaddress are optional, used for virtual
         Check_MK clusters."""
-        result = self._run(selected_raw_sections=selected_raw_sections, get_raw_data=True)
+        result = self._run(
+            selected_raw_sections=selected_raw_sections,
+            prefetched_sections=prefetched_sections,
+            get_raw_data=True,
+        )
         if not isinstance(result, RawAgentData):
             raise TypeError("Got invalid type: %r" % result)
         return result
@@ -267,6 +281,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
         get_raw_data: bool,
     ) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]:
         """Wrapper for self._execute() that unifies several things:
@@ -291,6 +306,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             raw_data, is_cached_data = self._get_raw_data(
                 persisted_sections=persisted_sections,
                 selected_raw_sections=selected_raw_sections,
+                prefetched_sections=prefetched_sections,
             )
 
             self._host_sections = host_sections = self._parse(raw_data)
@@ -341,6 +357,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         *,
         persisted_sections: BoundedAbstractPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
     ) -> Tuple[BoundedAbstractRawData, bool]:
         """Returns the current raw data of this data source
 
@@ -364,6 +381,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         raw_data = self._execute(
             persisted_sections=persisted_sections,
             selected_raw_sections=selected_raw_sections,
+            prefetched_sections=prefetched_sections,
         )
         file_cache.write(raw_data)
         return raw_data, False
@@ -374,6 +392,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         *,
         persisted_sections: BoundedAbstractPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
     ) -> BoundedAbstractRawData:
         """Fetches the current agent data from the source specified with
         hostname and ipaddress and returns the result as "raw data" that is

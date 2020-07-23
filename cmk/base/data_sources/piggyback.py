@@ -5,12 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Any, cast, Dict, Final, Optional, Tuple
+from typing import Any, cast, Dict, Final, Optional, Sequence, Tuple
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import get_piggyback_raw_data
-from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, ServiceCheckResult, SourceType
+from cmk.utils.type_defs import (
+    HostAddress,
+    HostName,
+    RawAgentData,
+    SectionName,
+    ServiceCheckResult,
+    SourceType,
+)
 
 from cmk.fetchers import PiggyBackDataFetcher
 
@@ -70,6 +77,7 @@ class PiggyBackDataSource(AgentDataSource):
         *,
         persisted_sections: PersistedAgentSections,
         selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
     ) -> RawAgentData:
         self._summary = self._summarize()
         with PiggyBackDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
@@ -96,6 +104,7 @@ class PiggyBackDataSource(AgentDataSource):
         *,
         persisted_sections: PersistedAgentSections,
         selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
     ) -> Tuple[RawAgentData, bool]:
         """Returns the current raw data of this data source
 
@@ -105,6 +114,7 @@ class PiggyBackDataSource(AgentDataSource):
         return self._execute(
             persisted_sections=persisted_sections,
             selected_raw_sections=selected_raw_sections,
+            prefetched_sections=prefetched_sections,
         ), False
 
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:

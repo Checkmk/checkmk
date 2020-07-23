@@ -404,12 +404,15 @@ class TestMakeHostSectionsHosts:
                 pass
 
         monkeypatch.setattr(
-            ABCDataSource, "run", lambda self, *, selected_raw_sections: DummyHostSection(
+            ABCDataSource,
+            "run",
+            lambda self, *args, selected_raw_sections, **kwargs: DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
                 persisted_sections="",
-            ))
+            ),
+        )
 
     @pytest.fixture
     def hostname(self):
@@ -586,12 +589,15 @@ class TestMakeHostSectionsClusters:
                 pass
 
         monkeypatch.setattr(
-            ABCDataSource, "run", lambda self, *, selected_raw_sections: DummyHostSection(
+            ABCDataSource,
+            "run",
+            lambda self, *args, selected_raw_sections, **kwargs: DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
                 persisted_sections="",
-            ))
+            ),
+        )
 
     @pytest.fixture
     def cluster(self):
@@ -675,7 +681,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
             return {section_name: True}
         return {}
 
-    def run(_, *, selected_raw_sections):
+    def run(_, *args, selected_raw_sections, **kwargs):
         sections = {}
         if selected_raw_sections is not None and section_name in selected_raw_sections:
             sections = {section_name: [[str(section_name)]]}

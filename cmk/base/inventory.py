@@ -312,8 +312,11 @@ def _do_inv_for_realhost(
                     HostKey(hostname, ipaddress, source.configurator.source_type),
                     SNMPHostSections(),
                 )
-                source.set_fetched_raw_section_names(set(host_sections.sections))
-                host_sections.update(source.run(selected_raw_sections=None))
+                host_sections.update(
+                    source.run(
+                        prefetched_sections=host_sections.sections,
+                        selected_raw_sections=None,
+                    ))
 
     if multi_host_sections is None:
         multi_host_sections = data_sources.make_host_sections(

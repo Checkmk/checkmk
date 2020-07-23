@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import Optional
+from typing import Optional, Sequence
 
-from cmk.utils.type_defs import HostAddress, HostName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
 from cmk.fetchers import TCPDataFetcher
 
@@ -64,6 +64,7 @@ class TCPDataSource(AgentDataSource):
         *,
         persisted_sections: PersistedAgentSections,
         selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
     ) -> RawAgentData:
         if TCPConfigurator._use_only_cache:
             raise MKAgentError("Got no data: No usable cache file present at %s" %

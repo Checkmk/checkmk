@@ -394,7 +394,10 @@ def mode_dump_agent(hostname: HostName) -> None:
         for source in data_sources.make_sources(host_config, ipaddress):
             source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source, data_sources.agent.AgentDataSource):
-                output.append(source.run_raw(selected_raw_sections=None))
+                output.append(source.run_raw(
+                    selected_raw_sections=None,
+                    prefetched_sections=(),
+                ))
 
             source_state, source_output, _source_perfdata = source.get_summary_result_for_checking()
             if source_state != 0:

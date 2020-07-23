@@ -19,7 +19,6 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.data_sources.agent as agent
 
 from cmk.base import check_table, config
-from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.utils import parse_to_string_table
@@ -101,7 +100,7 @@ def test_piggyback_storage(monkeypatch, mocker):
     monkeypatch.setattr(
         type(source),
         "run",
-        lambda self, *, selected_raw_sections: mhs,
+        lambda self, *args, selected_raw_sections, **kwargs: mhs,
     )
 
     mocker.patch.object(

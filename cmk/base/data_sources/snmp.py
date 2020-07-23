@@ -6,7 +6,7 @@
 
 import ast
 import time
-from typing import cast, Dict, Final, Iterable, List, Optional, Set
+from typing import cast, Dict, Final, Iterable, List, Optional, Sequence, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -212,7 +212,6 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         self.detector: Final = CachedSNMPDetector()
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
-        self._fetched_raw_section_names: Set[SectionName] = set()
 
     def _cache_dir(self) -> str:  # pylint: disable=useless-super-delegation
         return super()._cache_dir()
@@ -241,27 +240,19 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
     def set_use_snmpwalk_cache(self, use_snmpwalk_cache: bool) -> None:
         self._use_snmpwalk_cache = use_snmpwalk_cache
 
-    def set_fetched_raw_section_names(self, raw_section_names: Set[SectionName]) -> None:
-        """Sets a list of already fetched host sections/check plugin names.
-
-        Especially for SNMP data sources there are already fetched
-        host sections of executed check plugins. But for some inventory plugins
-        which have no related check plugin the host must be contacted again
-        in order to create the full tree.
-        """
-        self._fetched_raw_section_names = raw_section_names
-
     def _execute(
         self,
         *,
         persisted_sections: SNMPPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
     ) -> SNMPRawData:
         ip_lookup.verify_ipaddress(self.configurator.ipaddress)
         with SNMPDataFetcher(
                 self._make_oid_infos(
                     persisted_sections=persisted_sections,
                     selected_raw_sections=selected_raw_sections,
+                    prefetched_sections=prefetched_sections,
                 ),
                 self._use_snmpwalk_cache,
                 # TODO(ml): cast: this has to move to the configurator anyway.
@@ -275,6 +266,7 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         *,
         persisted_sections: SNMPPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
     ) -> Dict[SectionName, List[SNMPTree]]:
         oid_infos = {}  # Dict[SectionName, List[SNMPTree]]
         # TODO(ml): This should move to the Configurator as well.
@@ -287,7 +279,7 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
                 self._logger.debug("%s: No such section definition", section_name)
                 continue
 
-            if section_name in self._fetched_raw_section_names:
+            if section_name in prefetched_sections:
                 continue
 
             # This checks data is configured to be persisted (snmp_fetch_interval) and recent enough.

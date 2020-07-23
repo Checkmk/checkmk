@@ -49,15 +49,18 @@ def parse_arguments() -> argparse.Namespace:
 
 # TODO (sk): replace with normal reader after consulting with SP
 # we are using temporary this method as proven(_base._read_line)
+# slow, but for one command 10-20 bytes length  is ok.
 def _read_line() -> str:
     line = b''
     while True:
         byte = os.read(0, 1)
-        if byte == b'\n':
-            return line.decode("")
-        if not byte:  # EOF
+        if not byte:  # EOF - should not be hit
             return ''
+
+        if byte == b'\n':
+            return line.decode("utf-8")
         line += byte
+
     return ''
 
 
@@ -85,8 +88,8 @@ def main() -> int:
         # reporting to site
         result = create_fetcher_crash_dump(serial=serial, host=host_name)
 
-        # reporting to check
-        sys.stdout.write(
+        # reporting to microcore
+        controller.write_data(
             controller.make_failure_answer("Exception is '" + str(e) + "'" + result, hint="main"))
         return 15
 

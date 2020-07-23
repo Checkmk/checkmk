@@ -4,12 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 from pathlib import Path
 import socket
 
 import importlib
 
 import pytest  # type: ignore[import]
+
+import cmk.fetchers.controller
 
 from cmk.fetchers.controller import (
     FetcherFactory,
@@ -52,6 +55,9 @@ class TestControllerApi:
 
     @pytest.fixture
     def scenario(self, monkeypatch, tmp_path):
+        def write_to_stdout(data: str) -> None:
+            sys.stdout.write(data)
+
         ts = base.Scenario()
         ts.add_host("heute")
         ts.add_host("rrd_host")
@@ -59,6 +65,10 @@ class TestControllerApi:
         ts.apply(monkeypatch)
         monkeypatch.setattr("cmk.utils.paths.core_fetcher_config_dir", tmp_path)
         importlib.reload(cmk.fetchers.controller)
+
+        # write_out cannot be used with capsys - monkeypatching this!
+        # More complicated method of testing may be written in the future
+        monkeypatch.setattr(cmk.fetchers.controller, "write_data", write_to_stdout)
 
     # TODO (sk): rework this test - simplify parametrize and make individual tests
     @pytest.mark.parametrize("fetcher_name, fetcher_params, fetcher_class", [

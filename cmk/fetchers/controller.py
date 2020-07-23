@@ -7,9 +7,9 @@
 #
 # Protocol: <header><payload>
 
-import sys
 import enum
 import json
+import os
 from pathlib import Path
 from typing import Any, Union, Dict
 
@@ -136,7 +136,7 @@ def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
     json_file = build_json_file_path(serial=serial, host_name=host_name)
 
     if not json_file.exists():
-        sys.stdout.write(make_failure_answer("fetcher file is absent", hint="config"))
+        write_data(make_failure_answer("fetcher file is absent", hint="config"))
         #  we do not send waiting answer - the fetcher should be dead
         return
 
@@ -174,9 +174,9 @@ def _run_fetchers_from_file(file_name: Path, timeout: int) -> None:
     # functionality of the Microcore.
     fetchers = data["fetchers"]
     for entry in fetchers:
-        sys.stdout.write(_run_fetcher(entry, timeout))
+        write_data(_run_fetcher(entry, timeout))
 
-    sys.stdout.write(make_waiting_answer())
+    write_data(make_waiting_answer())
 
 
 def read_json_file(serial: str, host_name: HostName) -> str:
@@ -186,3 +186,15 @@ def read_json_file(serial: str, host_name: HostName) -> str:
 
 def build_json_file_path(serial: str, host_name: HostName) -> Path:
     return Path("{}/{}/{}.json".format(core_fetcher_config_dir, serial, host_name))
+
+
+# Idea is based on the cmk method:
+# We are writing to non-blocking socket, because simple sys.stdout.write requires flushing
+# and flushing is not always appropriate. fd is fixed by design: stdout is always 1 and microcore
+# receives data from stdout
+def write_data(data: str) -> None:
+    output = data.encode("utf-8")
+    while output:
+        bytes_written = os.write(1, output)
+        output = output[bytes_written:]
+        # TODO (ml): We need improve performance - 100% CPU load if Microcore is busy

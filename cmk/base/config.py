@@ -58,7 +58,6 @@ from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
 import cmk.utils.migrated_check_variables
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
@@ -1464,14 +1463,7 @@ def load_all_checks(get_check_api_context: GetCheckApiContext) -> None:
 
     _initialize_data_structures()
 
-    for plugin, exception in load_plugins_with_exceptions(
-            "cmk.base.plugins.agent_based",
-            cmk.utils.paths.agent_based_plugins_dir,
-            cmk.utils.paths.local_agent_based_plugins_dir,
-    ):
-        console.error("Error in agent based plugin %s: %s\n", plugin, exception)
-        if cmk.utils.debug.enabled():
-            raise exception
+    agent_based_register.load_all_plugins()
 
     # LEGACY CHECK PLUGINS
     filelist = get_plugin_paths(str(cmk.utils.paths.local_checks_dir), cmk.utils.paths.checks_dir)

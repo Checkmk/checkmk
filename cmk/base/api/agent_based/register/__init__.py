@@ -4,16 +4,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._config import (
+import cmk.utils.debug
+import cmk.utils.paths
+
+from cmk.utils.log import console
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
+
+from cmk.base.api.agent_based.register._config import (
     add_check_plugin,
     get_check_plugin,
     is_registered_check_plugin,
     iter_all_check_plugins,
 )
 
+
+def load_all_plugins():
+    for plugin, exception in load_plugins_with_exceptions(
+            "cmk.base.plugins.agent_based",
+            cmk.utils.paths.agent_based_plugins_dir,
+            cmk.utils.paths.local_agent_based_plugins_dir,
+    ):
+        console.error("Error in agent based plugin %s: %s\n", plugin, exception)
+        if cmk.utils.debug.enabled():
+            raise exception
+
+
 __all__ = [
     "add_check_plugin",
     "get_check_plugin",
     "is_registered_check_plugin",
     "iter_all_check_plugins",
+    "load_all_plugins",
 ]

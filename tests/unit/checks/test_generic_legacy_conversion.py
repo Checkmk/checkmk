@@ -747,6 +747,7 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'janitza_umg_temp_default_levels',
         'jenkins_nodes_default_levels',
         'jenkins_queue_default_levels',
+        'job_default_levels',
         'jolokia_jvm_memory',
         'jolokia_jvm_memory_pools',
         'jolokia_jvm_threading.pool',

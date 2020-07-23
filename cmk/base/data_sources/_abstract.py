@@ -212,7 +212,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self._exception: Optional[Exception] = None
         self._host_sections: Optional[BoundedAbstractHostSections] = None
-        self._persisted_sections: Optional[BoundedAbstractPersistedSections] = None
 
     def __repr__(self):
         return "%s(%r)" % (type(self).__name__, self.configurator)
@@ -283,16 +282,16 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
         self._exception = None
         self._host_sections = None
-        self._persisted_sections = None
         section_store = SectionStore(self._persisted_sections_file_path(), self._logger)
 
         try:
-            persisted_sections_from_disk: BoundedAbstractPersistedSections = section_store.load(
+            persisted_sections: BoundedAbstractPersistedSections = section_store.load(
                 self._use_outdated_persisted_sections)
-            self._persisted_sections = persisted_sections_from_disk
 
             raw_data, is_cached_data = self._get_raw_data(
-                selected_raw_sections=selected_raw_sections)
+                persisted_sections=persisted_sections,
+                selected_raw_sections=selected_raw_sections,
+            )
 
             self._host_sections = host_sections = self._parse(raw_data)
             assert isinstance(host_sections, ABCHostSections)
@@ -301,15 +300,14 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                 return raw_data
 
             if host_sections.persisted_sections and not is_cached_data:
-                persisted_sections_from_disk.update(host_sections.persisted_sections)
-                section_store.store(persisted_sections_from_disk)
+                persisted_sections.update(host_sections.persisted_sections)
+                section_store.store(persisted_sections)
 
             # Add information from previous persisted infos
             host_sections = self._update_info_with_persisted_sections(
-                persisted_sections_from_disk,
+                persisted_sections,
                 host_sections,
             )
-            self._persisted_sections = host_sections.persisted_sections
 
             return host_sections
 
@@ -341,6 +339,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _get_raw_data(
         self,
         *,
+        persisted_sections: BoundedAbstractPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> Tuple[BoundedAbstractRawData, bool]:
         """Returns the current raw data of this data source
@@ -362,7 +361,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
 
         self._logger.log(VERBOSE, "Execute data source")
-        raw_data = self._execute(selected_raw_sections=selected_raw_sections)
+        raw_data = self._execute(
+            persisted_sections=persisted_sections,
+            selected_raw_sections=selected_raw_sections,
+        )
         file_cache.write(raw_data)
         return raw_data, False
 
@@ -370,6 +372,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _execute(
         self,
         *,
+        persisted_sections: BoundedAbstractPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> BoundedAbstractRawData:
         """Fetches the current agent data from the source specified with

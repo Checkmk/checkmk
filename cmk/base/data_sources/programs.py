@@ -16,6 +16,7 @@ from cmk.fetchers import ProgramDataFetcher
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
+from cmk.base.check_utils import PersistedAgentSections
 from cmk.base.config import SelectedRawSections, SpecialAgentConfiguration
 from cmk.base.exceptions import MKAgentError
 
@@ -234,6 +235,7 @@ class ProgramDataSource(AgentDataSource):
     def _execute(
         self,
         *,
+        persisted_sections: PersistedAgentSections,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> RawAgentData:
         # TODO(ml): Do something with the selection.

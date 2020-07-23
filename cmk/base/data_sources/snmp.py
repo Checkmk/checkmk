@@ -254,11 +254,15 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
     def _execute(
         self,
         *,
+        persisted_sections: SNMPPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> SNMPRawData:
         ip_lookup.verify_ipaddress(self.configurator.ipaddress)
         with SNMPDataFetcher(
-                self._make_oid_infos(selected_raw_sections=selected_raw_sections),
+                self._make_oid_infos(
+                    persisted_sections=persisted_sections,
+                    selected_raw_sections=selected_raw_sections,
+                ),
                 self._use_snmpwalk_cache,
                 # TODO(ml): cast: this has to move to the configurator anyway.
                 cast(SNMPConfigurator, self.configurator).snmp_config,
@@ -269,6 +273,7 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
     def _make_oid_infos(
         self,
         *,
+        persisted_sections: SNMPPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> Dict[SectionName, List[SNMPTree]]:
         oid_infos = {}  # Dict[SectionName, List[SNMPTree]]
@@ -287,7 +292,7 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
 
             # This checks data is configured to be persisted (snmp_fetch_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added later
-            if self._persisted_sections and section_name in self._persisted_sections:
+            if section_name in persisted_sections:
                 self._logger.debug("%s: Skip fetching data (persisted info exists)", section_name)
                 continue
 

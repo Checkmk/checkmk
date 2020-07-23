@@ -12,7 +12,7 @@ from cmk.utils.type_defs import HostAddress, HostName, SourceType
 from cmk.fetchers import TCPDataFetcher
 
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.check_utils import RawAgentData
+from cmk.base.check_utils import PersistedAgentSections, RawAgentData
 from cmk.base.config import HostConfig, SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
@@ -62,6 +62,7 @@ class TCPDataSource(AgentDataSource):
     def _execute(
         self,
         *,
+        persisted_sections: PersistedAgentSections,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> RawAgentData:
         if TCPConfigurator._use_only_cache:

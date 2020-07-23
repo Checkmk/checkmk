@@ -18,6 +18,7 @@ from cmk.utils.type_defs import (
 
 from cmk.fetchers import IPMIDataFetcher
 
+from cmk.base.check_utils import PersistedAgentSections
 from cmk.base.config import HostConfig, IPMICredentials, SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
@@ -78,6 +79,7 @@ class IPMIManagementBoardDataSource(AgentDataSource):
     def _execute(
         self,
         *,
+        persisted_sections: PersistedAgentSections,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> RawAgentData:
         if selected_raw_sections is None:

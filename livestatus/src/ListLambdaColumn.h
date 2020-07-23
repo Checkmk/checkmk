@@ -15,11 +15,13 @@
 #include "contact_fwd.h"
 class Row;
 
+// TODO(sp): Is there a way to have a default value in the template parameters?
+// Currently it is hardwired to the empty vector.
 template <class T>
 class ListLambdaColumn : public ListColumn {
 public:
     ListLambdaColumn(std::string name, std::string description, Offsets offsets,
-                     std::function<std::vector<std::string>(const T*)> f)
+                     std::function<std::vector<std::string>(const T&)> f)
         : ListColumn(std::move(name), std::move(description),
                      std::move(offsets))
         , get_value_{std::move(f)} {}
@@ -28,11 +30,12 @@ public:
     std::vector<std::string> getValue(
         Row row, const contact* /*auth_user*/,
         std::chrono::seconds /*timezone_offset*/) const override {
-        return get_value_(columnData<T>(row));
+        const T* data = columnData<T>(row);
+        return data == nullptr ? std::vector<std::string>{} : get_value_(*data);
     }
 
 private:
-    std::function<std::vector<std::string>(const T*)> get_value_;
+    std::function<std::vector<std::string>(const T&)> get_value_;
 };
 
 #endif

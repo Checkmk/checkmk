@@ -30,12 +30,14 @@ class RowRenderer;
 #include "nagios.h"
 #endif
 
+// TODO(sp): Is there a way to have a default value in the template parameters?
+// Currently it is hardwired to the empty Attributes.
 template <class T>
 class AttributesLambdaColumn : public CustomVarsDictColumn {
 public:
     AttributesLambdaColumn(std::string name, std::string description,
                            const Offsets& offsets,
-                           std::function<Attributes(const T*)> f)
+                           std::function<Attributes(const T&)> f)
         : CustomVarsDictColumn(
               std::move(name), std::move(description), offsets,
               // TODO(ml): The hierarchy of every *LambdaColumn is wrong anyway
@@ -49,11 +51,12 @@ public:
     ~AttributesLambdaColumn() override = default;
 
     [[nodiscard]] Attributes getValue(Row row) const override {
-        return get_value_(columnData<T>(row));
+        const T* data = columnData<T>(row);
+        return data == nullptr ? Attributes{} : get_value_(*data);
     }
 
 private:
-    std::function<Attributes(const T*)> get_value_;
+    std::function<Attributes(const T&)> get_value_;
 };
 
 #endif

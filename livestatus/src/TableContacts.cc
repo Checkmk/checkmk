@@ -39,11 +39,9 @@ class GetCustomAttribute {
 public:
     GetCustomAttribute(const MonitoringCore *const mc, const AttributeKind kind)
         : mc_{mc}, kind_{kind} {}
-    Attributes operator()(const contact *ct) {
-        if (ct != nullptr) {
-            if (const auto *p = ct->custom_variables) {
-                return mc_->customAttributes(&p, kind_);
-            }
+    Attributes operator()(const contact &ct) {
+        if (const auto *p = ct.custom_variables) {
+            return mc_->customAttributes(&p, kind_);
         }
         return {};
     };
@@ -59,7 +57,7 @@ public:
     GetCustomAttributeElem(const MonitoringCore *const mc,
                            const AttributeKind kind)
         : get_attrs_{mc, kind} {}
-    std::vector<std::string> operator()(const contact *ct) {
+    std::vector<std::string> operator()(const contact &ct) {
         auto attrs = get_attrs_(ct);
         std::vector<std::string> v(attrs.size());
         std::transform(

@@ -16,7 +16,7 @@
 class Row;
 
 // TODO(sp): Is there a way to have a default value in the template parameters?
-// Currently it is hardwired to the empty string.
+// Currently it is hardwired to the start of the epoch.
 template <class T>
 class TimeLambdaColumn : public TimeColumn {
 public:

@@ -300,12 +300,14 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             if get_raw_data:
                 return raw_data
 
+            if host_sections.persisted_sections and not is_cached_data:
+                persisted_sections_from_disk.update(host_sections.persisted_sections)
+                section_store.store(persisted_sections_from_disk)
+
             # Add information from previous persisted infos
             host_sections = self._update_info_with_persisted_sections(
                 persisted_sections_from_disk,
                 host_sections,
-                is_cached_data,
-                section_store,
             )
             self._persisted_sections = host_sections.persisted_sections
 
@@ -494,13 +496,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self,
         persisted_sections: BoundedAbstractPersistedSections,
         host_sections: BoundedAbstractHostSections,
-        is_cached_data: bool,
-        section_store: SectionStore,
     ) -> BoundedAbstractHostSections:
-        if host_sections.persisted_sections and not is_cached_data:
-            persisted_sections.update(host_sections.persisted_sections)
-            section_store.store(persisted_sections)
-
         if not persisted_sections:
             return host_sections
 

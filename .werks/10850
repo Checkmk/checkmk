@@ -1,8 +1,10 @@
 Title: mk_oracle: Fixed remote instances with excluded sections
+Knowledge: doc
 Level: 1
 Component: checks
 Compatible: incomp
 Edition: cre
+State: unknown
 Version: 1.6.0p14
 Date: 1594036835
 Class: fix

@@ -183,8 +183,8 @@ class MultiHostSections(collections.abc.MutableMapping):
             parse_function = section_def.parse_function
 
         try:
-            hosts_raw_sections = self._data[host_key].sections
-            string_table = hosts_raw_sections[raw_section_name]
+            host_data = self._data[host_key]
+            string_table = host_data.sections[raw_section_name]
         except KeyError:
             return self._parsed_sections.setdefault(cache_key, None)
 

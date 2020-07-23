@@ -226,7 +226,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                         DANGEROUS_OFFSETOF(host, event_handler_enabled)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "acknowledgement_type",
-        "Type of acknowledgement (0: none, 1: normal, 2: stick)",
+        "Type of acknowledgement (0: none, 1: normal, 2: sticky)",
         Column::Offsets{indirect_offset, extra_offset, -1,
                         DANGEROUS_OFFSETOF(host, acknowledgement_type)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
@@ -600,7 +600,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                         DANGEROUS_OFFSETOF(host, parent_hosts)},
         table->core(), false));
     table->addColumn(std::make_unique<HostListColumn>(
-        prefix + "childs", "A list of all direct childs of the host",
+        prefix + "childs", "A list of all direct children of the host",
         Column::Offsets{indirect_offset, extra_offset, -1,
                         DANGEROUS_OFFSETOF(host, child_hosts)},
         table->core(), false));

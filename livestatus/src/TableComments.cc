@@ -56,7 +56,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
         Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _source)}));
     addColumn(std::make_unique<OffsetIntColumn>(
         "entry_type",
-        "The type of the comment: 1 is user, 2 is downtime, 3 is flap and 4 is acknowledgement",
+        "The type of the comment: 1 is user, 2 is downtime, 3 is flapping and 4 is acknowledgement",
         Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _entry_type)}));
     addColumn(std::make_unique<OffsetIntColumn>(
         "expires", "Whether this comment expires",

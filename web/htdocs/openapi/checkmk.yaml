@@ -192,6 +192,55 @@ components:
       - message
       - title
       type: object
+    BulkAcknowledgeHostProblem:
+      properties:
+        comment:
+          description: If set, this comment will be stored alongside the acknowledgement.
+          example: This was expected.
+          type: string
+        entries:
+          example:
+          - example.com
+          - sample.com
+          items:
+            description: The hostname or IP address itself.
+            example: example.com
+            pattern: '[-0-9a-zA-Z_.]+'
+            type: string
+          type: array
+        notify:
+          description: If set, notifications will be sent out to the configured contacts.
+            Defaults to False.
+          example: false
+          type: boolean
+        persistent:
+          description: If set, the comment will persist a restart. Defaults to False.
+          example: false
+          type: boolean
+        stick:
+          description: 'If set, only a state-change of the host to an UP state will
+            discard the acknowledgement.
+
+            Otherwise it will be discarded on any state-change. Defaults to False.'
+          example: false
+          type: boolean
+      required:
+      - entries
+      type: object
+    BulkDeleteContactGroup:
+      properties:
+        entries:
+          example:
+          - windows
+          - panels
+          items:
+            description: The name of the contact group config
+            example: windows
+            type: string
+          type: array
+      required:
+      - entries
+      type: object
     BulkDeleteDowntime:
       properties:
         entries:
@@ -984,6 +1033,73 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
           \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
+  /domain-types/host/actions/bulk-acknowledge/invoke:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.bulk_set_acknowledgement_on_hosts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkAcknowledgeHostProblem'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Bulk acknowledge on selected hosts
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.acknowledgement
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/host/actions/bulk-acknowledge/invoke\"\
+          ,\n    json={\n        \"comment\": \"This was expected.\",\n        \"\
+          entries\": [\n            \"example.com\",\n            \"sample.com\"\n\
+          \        ],\n        \"notify\": false,\n        \"persistent\": false,\n\
+          \        \"stick\": false\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/host/actions/bulk-acknowledge/invoke\",\n\
+          \    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        \"comment\": \"This was expected.\"\
+          ,\n        \"entries\": [\n            \"example.com\",\n            \"\
+          sample.com\"\n        ],\n        \"notify\": false,\n        \"persistent\"\
+          : false,\n        \"stick\": false\n    }).encode('utf-8'),\n)\nresponse\
+          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
+          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
+          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
+          \          \"entries\": [\n            \"example.com\",\n            \"\
+          sample.com\"\n          ],\n          \"notify\": false,\n          \"persistent\"\
+          : false,\n          \"stick\": false\n        }' \\\n    \"$API_URL/domain-types/host/actions/bulk-acknowledge/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
+          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
+          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/host/actions/bulk-acknowledge/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    comment='This was expected.' \\\n    entries='[\"\
+          example.com\", \"sample.com\"]' \\\n    notify='False' \\\n    persistent='False'\
+          \ \\\n    stick='False' \\\n    --json"
   /objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge:
     post:
       description: ''
@@ -1622,6 +1738,67 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    alias='Not\
           \ on Sundays.' \\\n    name='OnCall' \\\n    --json"
+  /domain-types/contact_group_config/actions/bulk-delete/invoke:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group_config.bulk_delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkDeleteContactGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Bulk delete contact group configs
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/domain-types/contact_group_config/actions/bulk-delete/invoke\"\
+          ,\n    json={\n        \"entries\": [\n            \"windows\",\n      \
+          \      \"panels\"\n        ]\n    },\n)\nresp.raise_for_status()\ndata =\
+          \ resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/contact_group_config/actions/bulk-delete/invoke\"\
+          ,\n    method=\"DELETE\",\n    headers={\n        \"Authorization\": f\"\
+          Bearer {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\"\
+          ,\n    },\n    data=json.dumps({\n        \"entries\": [\n            \"\
+          windows\",\n            \"panels\"\n        ]\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
+          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
+          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"entries\": [\n            \"windows\"\
+          ,\n            \"panels\"\n          ]\n        }' \\\n    \"$API_URL/domain-types/contact_group_config/actions/bulk-delete/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
+          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
+          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/domain-types/contact_group_config/actions/bulk-delete/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    entries='[\"windows\", \"panels\"]' \\\n  \
+          \  --json"
   /domain-types/downtime/collections/all:
     get:
       description: ''
@@ -4627,6 +4804,9 @@ tags:
 - description: <SchemaDefinition schemaRef="#/components/schemas/AcknowledgeHostProblem"
     showReadOnly={true} showWriteOnly={true} />
   name: AcknowledgeHostProblem
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkAcknowledgeHostProblem"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BulkAcknowledgeHostProblem
 - description: <SchemaDefinition schemaRef="#/components/schemas/AcknowledgeServiceProblem"
     showReadOnly={true} showWriteOnly={true} />
   name: AcknowledgeServiceProblem
@@ -4638,6 +4818,9 @@ tags:
     showReadOnly={true} showWriteOnly={true} />
   name: InputContactGroup
   x-displayName: Creating a contact group
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkDeleteContactGroup"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BulkDeleteContactGroup
 - name: cmk.gui.plugins.openapi.endpoints.downtime
   x-displayName: Downtimes
 - description: <SchemaDefinition schemaRef="#/components/schemas/CreateDowntime" showReadOnly={true}
@@ -4748,8 +4931,10 @@ x-tagGroups:
 - name: Request Schemas
   tags:
   - AcknowledgeHostProblem
+  - BulkAcknowledgeHostProblem
   - AcknowledgeServiceProblem
   - InputContactGroup
+  - BulkDeleteContactGroup
   - CreateDowntime
   - BulkDeleteDowntime
   - CreateFolder

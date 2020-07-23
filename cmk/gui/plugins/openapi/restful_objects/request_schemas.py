@@ -164,29 +164,47 @@ class CreateDowntime(Schema):
     comment = fields.String(required=False, example="Security updates")
 
 
+HOST_STICKY_FIELD = fields.Boolean(
+    required=False,
+    example=False,
+    description=param_description(acknowledge_host_problem.__doc__, 'sticky'),
+)
+
+HOST_PERSISTENT_FIELD = fields.Boolean(
+    required=False,
+    example=False,
+    description=param_description(acknowledge_host_problem.__doc__, 'persistent'),
+)
+
+HOST_NOTIFY_FIELD = fields.Boolean(
+    required=False,
+    example=False,
+    description=param_description(acknowledge_host_problem.__doc__, 'notify'),
+)
+
+HOST_COMMENT_FIELD = fields.String(
+    required=False,
+    example='This was expected.',
+    description=param_description(acknowledge_host_problem.__doc__, 'comment'),
+)
+
+
 class AcknowledgeHostProblem(Schema):
-    sticky = fields.Boolean(
-        required=False,
-        example=False,
-        description=param_description(acknowledge_host_problem.__doc__, 'sticky'),
-    )
+    sticky = HOST_STICKY_FIELD
+    persistent = HOST_PERSISTENT_FIELD
+    notify = HOST_NOTIFY_FIELD
+    comment = HOST_COMMENT_FIELD
 
-    persistent = fields.Boolean(
-        required=False,
-        example=False,
-        description=param_description(acknowledge_host_problem.__doc__, 'persistent'),
-    )
 
-    notify = fields.Boolean(
-        required=False,
-        example=False,
-        description=param_description(acknowledge_host_problem.__doc__, 'notify'),
-    )
-
-    comment = fields.String(
-        required=False,
-        example='This was expected.',
-        description=param_description(acknowledge_host_problem.__doc__, 'comment'),
+class BulkAcknowledgeHostProblem(Schema):
+    stick = HOST_STICKY_FIELD
+    persistent = HOST_PERSISTENT_FIELD
+    notify = HOST_NOTIFY_FIELD
+    comment = HOST_COMMENT_FIELD
+    entries = fields.List(
+        HOST_FIELD,
+        required=True,
+        example=["example.com", "sample.com"],
     )
 
 

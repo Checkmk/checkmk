@@ -8,6 +8,7 @@
 # TODO: List acknowledgments
 # TODO: Acknowledge service problem
 from urllib.parse import unquote
+from typing import Dict
 
 from connexion import problem  # type: ignore[import]
 
@@ -54,6 +55,55 @@ def set_acknowledgement_on_host(params):
         user=str(config.user.id),
         comment=params.get('comment', 'Acknowledged'),
     )
+    return http.Response(status=204)
+
+
+@endpoint_schema(constructors.domain_type_action_href('host', 'bulk-acknowledge'),
+                 'cmk/create',
+                 request_schema=request_schemas.BulkAcknowledgeHostProblem,
+                 output_empty=True)
+def bulk_set_acknowledgement_on_hosts(params):
+    """Bulk acknowledge on selected hosts"""
+    live = sites.live()
+    entries = params['entries']
+
+    hosts: Dict[str, int] = {
+        host_name: host_state for host_name, host_state in Query(  # pylint: disable=unnecessary-comprehension
+            [Hosts.name, Hosts.state],
+            And(*[Hosts.name.equals(host_name) for host_name in entries]),
+        ).fetch_values(live)
+    }
+
+    not_found = []
+    for host_name in entries:
+        if host_name not in hosts:
+            not_found.append(host_name)
+
+    if not_found:
+        return problem(status=400,
+                       title=f"Hosts {', '.join(not_found)} not found",
+                       detail='Current not monitored')
+
+    up_hosts = []
+    for host_name in entries:
+        if hosts[host_name] == 0:
+            up_hosts.append(host_name)
+
+    if up_hosts:
+        return problem(status=400,
+                       title=f"Hosts {', '.join(up_hosts)} do not have a problem",
+                       detail="The states of these hosts are UP")
+
+    for host_name in entries:
+        acknowledge_host_problem(
+            sites.live(),
+            host_name,
+            sticky=params.get('sticky'),
+            notify=params.get('notify'),
+            persistent=params.get('persistent'),
+            user=str(config.user.id),
+            comment=params.get('comment', 'Acknowledged'),
+        )
     return http.Response(status=204)
 
 

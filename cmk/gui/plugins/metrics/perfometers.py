@@ -96,6 +96,19 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type": "linear",
+    "segments": ["ap_devices_percent_unhealthy"],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "wifi_connection_total",
+    "half_value": 5000,
+    "exponent": 2.0
+})
+
+perfometer_info.append({
+    "type": "linear",
     "segments": ["execution_time"],
     "total": 90.0,
 })

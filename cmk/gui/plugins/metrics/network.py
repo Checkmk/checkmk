@@ -813,22 +813,42 @@ metric_info["ap_devices_not_responding"] = {
     "color": "14/a"
 }
 
-for ctype, ccolor in (("critical", "14/a"), ("minor", "23/b"), ("cleared", "32/b")):
-    metric_info["ap_devices_" + ctype] = {"title": ctype.title(), "unit": "count", "color": ccolor}
+for ctype, ccolor in (
+    ("critical", "14/a"),
+    ("minor", "23/b"),
+    ("cleared", "32/b"),
+):
+    metric_info["ap_devices_" + ctype] = {
+        "title": ctype.title(),
+        "unit": "count",
+        "color": ccolor,
+    }
 
 for ctype, ccolor in (
-    ("11a", "21/a"),
-    ("11b", "21/b"),
-    ("11g", "33/a"),
-    ("11ac", "34/b"),
-    ("11n2_4", "45/a"),
-    ("11n5", "46/b"),
+    ("dot11a", "21/a"),
+    ("dot11b", "21/b"),
+    ("dot11g", "33/a"),
+    ("dot11ac", "34/b"),
+    ("dot11n2_4", "45/a"),
+    ("dot11n5", "46/b"),
 ):
-    metric_info["wifi_connection_dot" + ctype] = {
+    metric_info["wifi_connection_" + ctype] = {
         "title": "802." + ctype,
         "unit": "count",
-        "color": ccolor
+        "color": ccolor,
     }
+
+metric_info["wifi_connection_total"] = {
+    "title": "Total connections",
+    "unit": "count",
+    "color": "35/a",
+}
+
+metric_info["ap_devices_percent_unhealthy"] = {
+    "title": "Percentage of unhealthy access points",
+    "unit": "%",
+    "color": "33/a"
+}
 
 metric_info["request_rate"] = {
     "title": _("Request rate"),
@@ -1726,15 +1746,12 @@ graph_info["access_point_statistics"] = {
 }
 
 graph_info["access_point_statistics2"] = {
-    "title": _("Access Point Statistics"),
-    "metrics": [
-        ("ap_devices_" + ctype, "stack")  #
-        for ctype in ("cleared", "minor", "critical")
-    ]
+    "title": _("Access point statistics"),
+    "metrics": [("ap_devices_" + ctype, "stack") for ctype in ("cleared", "minor", "critical")]
 }
 
 graph_info["wifi_connections"] = {
-    "title": _("WiFi Statistics"),
+    "title": _("WiFi connection types"),
     "metrics": [("wifi_connection_dot%s" % ctype, "stack")
                 for ctype in ("11a", "11b", "11g", "11ac", "11n2_4", "11n5")]
 }

@@ -41,7 +41,7 @@ def check_cisco_prime_wifi_connections(item, params, parsed):
         if ctype == "":
             yield check_levels(
                 count,
-                None,
+                "wifi_connection_total",
                 (None, None) + (lower_levels or (None, None)),
                 human_readable_func=int,
                 infoname=cname,

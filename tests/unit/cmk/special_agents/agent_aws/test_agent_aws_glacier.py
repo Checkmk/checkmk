@@ -82,7 +82,6 @@ glacier_params = [(None, (None, None), 4), (['VaultName-0'], (None, None), 1),
 def test_agent_aws_glacier_limits(get_glacier_sections, names, tags, amount_vaults):
     glacier_limits, _glacier_summary, _glacier = get_glacier_sections(names, tags)
     glacier_limits_results = glacier_limits.run().results
-    assert glacier_limits.cache_interval == 86400
     assert glacier_limits.name == "glacier_limits"
 
     glacier_limits_result = glacier_limits_results[0]
@@ -102,7 +101,6 @@ def test_agent_aws_glacier_summary(get_glacier_sections, names, tags, amount_vau
     _glacier_summary_results = glacier_limits.run().results
     glacier_summary_results = glacier_summary.run().results
 
-    assert glacier_summary.cache_interval == 86400
     assert glacier_summary.name == "glacier_summary"
     assert glacier_summary_results == []
 
@@ -114,7 +112,6 @@ def test_agent_aws_glacier(get_glacier_sections, names, tags, amount_vaults):
     _glacier_summary_results = glacier_summary.run().results
     glacier_results = glacier.run().results
 
-    assert glacier_summary.cache_interval == 86400
     assert glacier_summary.name == "glacier_summary"
 
     if amount_vaults:
@@ -128,7 +125,6 @@ def test_agent_aws_glacier_summary_without_limits(get_glacier_sections, names, t
     _glacier_limits, glacier_summary, _glacier = get_glacier_sections(names, tags)
     glacier_summary_results = glacier_summary.run().results
 
-    assert glacier_summary.cache_interval == 86400
     assert glacier_summary.name == "glacier_summary"
     assert glacier_summary_results == []
 
@@ -140,7 +136,6 @@ def test_agent_aws_glacier_summary_without_limits2(get_glacier_sections, names, 
     _glacier_summary_results = glacier_summary.run().results
     glacier_results = glacier.run().results
 
-    assert glacier_summary.cache_interval == 86400
     assert glacier_summary.name == "glacier_summary"
 
     if amount_vaults:

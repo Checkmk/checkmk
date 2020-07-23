@@ -280,6 +280,11 @@ def _get_wafv2_web_acls(client,
     return web_acls
 
 
+def _get_seconds_since_midnight(current_time):
+    midnight = datetime.combine(current_time.date(), datetime.min.time())
+    return (current_time - midnight).total_seconds()
+
+
 #.
 #   .--section API---------------------------------------------------------.
 #   |                       _   _                  _    ____ ___           |
@@ -676,19 +681,26 @@ class CostsAndUsage(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
-        return 86400
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = _get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
 
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
+        granularity, interval = 'DAILY', 86400
         fmt = "%Y-%m-%d"
         response = self._client.get_cost_and_usage(
             TimePeriod={
-                'Start': datetime.strftime(NOW - timedelta(seconds=self.cache_interval), fmt),
+                'Start': datetime.strftime(NOW - timedelta(seconds=interval), fmt),
                 'End': datetime.strftime(NOW, fmt),
             },
-            Granularity='DAILY',
+            Granularity=granularity,
             Metrics=['UnblendedCost'],
             GroupBy=[{
                 'Type': 'DIMENSION',
@@ -1575,7 +1587,14 @@ class S3Limits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
-        return 86400
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = _get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+
+        return cache_interval
 
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
@@ -1607,7 +1626,13 @@ class S3Summary(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
-        return 86400
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = _get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
 
     def _get_colleague_contents(self):
         colleague = self._received_results.get('s3_limits')
@@ -1681,7 +1706,13 @@ class S3(AWSSectionCloudwatch):
     def cache_interval(self):
         # BucketSizeBytes and NumberOfObjects are available per day
         # and must include 00:00h
-        return 86400
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = _get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
 
     def _get_colleague_contents(self):
         colleague = self._received_results.get('s3_summary')
@@ -1824,7 +1855,13 @@ class GlacierLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
-        return 86400
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = _get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
 
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
@@ -1860,7 +1897,13 @@ class GlacierSummary(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
-        return 86400
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = _get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
 
     def _get_colleague_contents(self):
         colleague = self._received_results.get('glacier_limits')
@@ -1939,7 +1982,13 @@ class Glacier(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
-        return 86400
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = _get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
 
     def _get_colleague_contents(self):
         colleague = self._received_results.get('glacier_summary')

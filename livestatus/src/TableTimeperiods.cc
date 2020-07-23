@@ -24,13 +24,12 @@ TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
     addColumn(std::make_unique<StringLambdaColumn<timeperiod>>(
         "alias", "The alias of the timeperiod", offsets,
         [](const timeperiod* tp) { return tp == nullptr ? "" : tp->alias; }));
-    addColumn(std::make_unique<IntLambdaColumn<timeperiod>>(
+    // unknown timeperiod is assumed to be 24X7
+    addColumn(std::make_unique<IntLambdaColumn<timeperiod, 1>>(
         "in", "Wether we are currently in this period (0/1)", offsets,
-        [](const timeperiod* tp) {
+        [](const timeperiod& tp) {
             extern TimeperiodsCache* g_timeperiods_cache;
-            // unknown timeperiod is assumed to be 24X7
-            return tp == nullptr || g_timeperiods_cache->inTimeperiod(tp) ? 1
-                                                                          : 0;
+            return g_timeperiods_cache->inTimeperiod(&tp) ? 1 : 0;
         }));
     // TODO(mk): add days and exceptions
 }

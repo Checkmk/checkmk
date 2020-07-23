@@ -41,6 +41,7 @@
 #include "ServiceSpecialIntColumn.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
+#include "TimeLambdaColumn.h"
 #include "TimeperiodColumn.h"
 #include "auth.h"
 #include "nagios.h"
@@ -579,9 +580,10 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         table->core(), Column::Offsets{indirect_offset, -1, -1, 0}));
-    table->addColumn(std::make_unique<IntLambdaColumn<service>::Constant>(
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>::Constant>(
         prefix + "cached_at",
-        "A dummy column in order to be compatible with Check_MK Multisite", 0));
+        "A dummy column in order to be compatible with Check_MK Multisite",
+        std::chrono::system_clock::time_point{}));
     table->addColumn(std::make_unique<IntLambdaColumn<service>::Constant>(
         prefix + "cache_interval",
         "A dummy column in order to be compatible with Check_MK Multisite", 0));

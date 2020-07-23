@@ -16,21 +16,21 @@
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
     Column::Offsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<Column>>(
-        "table", "The name of the table", offsets, [this](const Column *col) {
+        "table", "The name of the table", offsets, [this](const Column &col) {
             return this->getValue(col, Type::table);
         }));
     addColumn(std::make_unique<StringLambdaColumn<Column>>(
         "name", "The name of the column within the table", offsets,
-        [this](const Column *col) { return this->getValue(col, Type::name); }));
+        [this](const Column &col) { return this->getValue(col, Type::name); }));
     addColumn(std::make_unique<StringLambdaColumn<Column>>(
         "description", "A description of the column", offsets,
-        [this](const Column *col) {
+        [this](const Column &col) {
             return this->getValue(col, Type::description);
         }));
     addColumn(std::make_unique<StringLambdaColumn<Column>>(
         "type", "The data type of the column (int, float, string, list)",
         offsets,
-        [this](const Column *col) { return this->getValue(col, Type::type); }));
+        [this](const Column &col) { return this->getValue(col, Type::type); }));
 }
 
 std::string TableColumns::name() const { return "columns"; }
@@ -47,7 +47,7 @@ void TableColumns::answerQuery(Query *query) {
     }
 }
 
-std::string TableColumns::getValue(const Column *column, Type colcol) const {
+std::string TableColumns::getValue(const Column &column, Type colcol) const {
     static const char *typenames[8] = {"int",  "float", "string", "list",
                                        "time", "dict",  "blob",   "null"};
 
@@ -55,19 +55,19 @@ std::string TableColumns::getValue(const Column *column, Type colcol) const {
         case Type::table:
             return tableNameOf(column);
         case Type::name:
-            return column->name();
+            return column.name();
         case Type::description:
-            return column->description();
+            return column.description();
         case Type::type:
-            return typenames[static_cast<int>(column->type())];
+            return typenames[static_cast<int>(column.type())];
     }
     return "";
 }
 
-std::string TableColumns::tableNameOf(const Column *column) const {
+std::string TableColumns::tableNameOf(const Column &column) const {
     for (const auto *const table : _tables) {
         if (table->any_column(
-                [&](const auto &c) { return c.get() == column; })) {
+                [&](const auto &c) { return c.get() == &column; })) {
             return table->name();
         }
     }

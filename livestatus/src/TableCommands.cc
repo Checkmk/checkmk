@@ -28,10 +28,10 @@ void TableCommands::addColumns(Table *table, const std::string &prefix,
     Column::Offsets offsets{offset};
     table->addColumn(std::make_unique<StringLambdaColumn<Command>>(
         prefix + "name", "The name of the command", offsets,
-        [](const Command *cmd) { return cmd->_name; }));
+        [](const Command &cmd) { return cmd._name; }));
     table->addColumn(std::make_unique<StringLambdaColumn<Command>>(
         prefix + "line", "The shell command line", offsets,
-        [](const Command *cmd) { return cmd->_command_line; }));
+        [](const Command &cmd) { return cmd._command_line; }));
 }
 
 void TableCommands::answerQuery(Query *query) {

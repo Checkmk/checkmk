@@ -20,10 +20,10 @@ TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
     Column::Offsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<timeperiod>>(
         "name", "The name of the timeperiod", offsets,
-        [](const timeperiod* tp) { return tp == nullptr ? "" : tp->name; }));
+        [](const timeperiod& tp) { return tp.name; }));
     addColumn(std::make_unique<StringLambdaColumn<timeperiod>>(
         "alias", "The alias of the timeperiod", offsets,
-        [](const timeperiod* tp) { return tp == nullptr ? "" : tp->alias; }));
+        [](const timeperiod& tp) { return tp.alias; }));
     // unknown timeperiod is assumed to be 24X7
     addColumn(std::make_unique<IntLambdaColumn<timeperiod, 1>>(
         "in", "Wether we are currently in this period (0/1)", offsets,

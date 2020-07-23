@@ -27,8 +27,8 @@ public:
     void answerQuery(Query *query) override;
 
     void addTable(const Table &table);
-    std::string getValue(const Column *column, Type colcol) const;
-    std::string tableNameOf(const Column *column) const;
+    std::string getValue(const Column &column, Type colcol) const;
+    std::string tableNameOf(const Column &column) const;
 
 private:
     std::vector<const Table *> _tables;

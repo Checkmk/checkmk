@@ -15,6 +15,8 @@
 #include "contact_fwd.h"
 class Row;
 
+// TODO(sp): Is there a way to have a default value in the template parameters?
+// Currently it is hardwired to the empty string.
 template <class T>
 class TimeLambdaColumn : public TimeColumn {
 public:
@@ -22,7 +24,7 @@ public:
     struct Reference;
     TimeLambdaColumn(
         std::string name, std::string description, Offsets offsets,
-        std::function<std::chrono::system_clock::time_point(const T*)> gv)
+        std::function<std::chrono::system_clock::time_point(const T&)> gv)
         : TimeColumn(std::move(name), std::move(description),
                      std::move(offsets))
         , get_value_{std::move(gv)} {}
@@ -31,10 +33,12 @@ public:
 private:
     [[nodiscard]] std::chrono::system_clock::time_point getRawValue(
         Row row) const override {
-        return get_value_(columnData<T>(row));
+        const T* data = columnData<T>(row);
+        return data == nullptr ? std::chrono::system_clock::time_point{}
+                               : get_value_(*data);
     }
 
-    std::function<std::chrono::system_clock::time_point(const T*)> get_value_;
+    std::function<std::chrono::system_clock::time_point(const T&)> get_value_;
 };
 
 template <class T>
@@ -42,7 +46,7 @@ struct TimeLambdaColumn<T>::Constant : TimeLambdaColumn {
     Constant(std::string name, std::string description,
              std::chrono::system_clock::time_point x)
         : TimeLambdaColumn(std::move(name), std::move(description), {},
-                           [x](const T* /*t*/) { return x; }){};
+                           [x](const T& /*t*/) { return x; }){};
 };
 
 template <class T>
@@ -50,7 +54,7 @@ struct TimeLambdaColumn<T>::Reference : TimeLambdaColumn {
     Reference(std::string name, std::string description,
               std::chrono::system_clock::time_point& x)
         : TimeLambdaColumn(std::move(name), std::move(description), {},
-                           [&x](const T* /*t*/) { return x; }){};
+                           [&x](const T& /*t*/) { return x; }){};
 };
 
 #endif

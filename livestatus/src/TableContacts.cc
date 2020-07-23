@@ -208,16 +208,13 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<AttributeBitmaskLambdaColumn<contact>>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified", offsets,
-        [](const contact *ct) {
-            return ct == nullptr ? 0 : ct->modified_attributes;
-        }));
+        [](const contact &ct) { return ct.modified_attributes; }));
     table->addColumn(std::make_unique<AttributeListColumn2<contact>>(
         prefix + "modified_attributes_list",
         "A list of all modified attributes", offsets,
         AttributeBitmaskLambdaColumn<contact>{
-            ""s, ""s, offsets, [](const contact *ct) {
-                return ct == nullptr ? 0 : ct->modified_attributes;
-            }}));
+            ""s, ""s, offsets,
+            [](const contact &ct) { return ct.modified_attributes; }}));
 }
 
 void TableContacts::answerQuery(Query *query) {

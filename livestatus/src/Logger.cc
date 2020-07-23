@@ -3,13 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "Logger.h"
-
 #include <cstddef>
 #include <iostream>
 #include <utility>
 
 #include "ChronoUtils.h"
+#include "Logger.h"
 
 // -----------------------------------------------------------------------------
 
@@ -173,6 +172,12 @@ LogManager LogManager::global_log_manager;
 std::ostream &operator<<(std::ostream &os, const generic_error &ge) {
     return os << ge.what();
 }
+
+std::ostream &operator<<(std::ostream &os,
+                         const std::chrono::system_clock::time_point &tp) {
+    return os << FormattedTimePoint(tp);
+}
+
 namespace cmc {
 std::ostream &operator<<(std::ostream &os, const cmc::core_error &ce) {
     return os << ce.what();

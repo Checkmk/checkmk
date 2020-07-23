@@ -36,6 +36,8 @@ enum class LogLevel {
 };
 
 std::ostream &operator<<(std::ostream &os, const LogLevel &c);
+std::ostream &operator<<(std::ostream &os,
+                         const std::chrono::system_clock::time_point &tp);
 
 // -----------------------------------------------------------------------------
 
@@ -318,7 +320,6 @@ public:
         : std::system_error(errno, std::generic_category(), what_arg) {}
 };
 std::ostream &operator<<(std::ostream &os, const generic_error &ge);
-
 namespace cmc {
 class core_error : public std::system_error {
 public:

@@ -3,12 +3,13 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include "Logger.h"
+
 #include <cstddef>
 #include <iostream>
 #include <utility>
 
 #include "ChronoUtils.h"
-#include "Logger.h"
 
 // -----------------------------------------------------------------------------
 

@@ -207,14 +207,13 @@ def parse_perf_data(perf_data_string: str, check_command: Optional[str] = None) 
     # Split the perf data string into parts. Preserve quoted strings!
     parts = _split_perf_data(perf_data_string)
 
-    if not parts:
-        return [], check_command
-
     # Try if check command is appended to performance data
     # in a PNP like style
-    if parts[-1].startswith("[") and parts[-1].endswith("]"):
+    if parts and parts[-1].startswith("[") and parts[-1].endswith("]"):
         check_command = parts[-1][1:-1]
         del parts[-1]
+
+    check_command = check_command.replace(".", "_")  # see function maincheckify
 
     # Parse performance data, at least try
     perf_data = []

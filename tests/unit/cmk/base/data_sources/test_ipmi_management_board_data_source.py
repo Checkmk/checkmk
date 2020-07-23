@@ -32,7 +32,7 @@ def test_attribute_defaults(monkeypatch):
     assert source.id == "mgmt_ipmi"
     assert source._cpu_tracking_id == source.id
     assert source._summary_result(True) == (0, "Version: unknown", [])
-    assert source._get_ipmi_version() == "unknown"
+    assert source._get_ipmi_version(None) == "unknown"
 
 
 def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):

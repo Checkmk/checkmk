@@ -22,7 +22,7 @@ from cmk.base.config import HostConfig, IPMICredentials, SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import ABCConfigurator
-from .agent import AgentDataSource
+from .agent import AgentDataSource, AgentHostSections
 
 
 class IPMIConfigurator(ABCConfigurator):
@@ -90,13 +90,14 @@ class IPMIManagementBoardDataSource(AgentDataSource):
         raise MKAgentError("Failed to read data")
 
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
-        return 0, "Version: %s" % self._get_ipmi_version(), []
+        return 0, "Version: %s" % self._get_ipmi_version(self._host_sections), []
 
-    def _get_ipmi_version(self) -> ServiceDetails:
-        if self._host_sections is None:
+    @staticmethod
+    def _get_ipmi_version(host_sections: Optional[AgentHostSections]) -> ServiceDetails:
+        if host_sections is None:
             return "unknown"
 
-        section = self._host_sections.sections.get(SectionName("mgmt_ipmi_firmware"))
+        section = host_sections.sections.get(SectionName("mgmt_ipmi_firmware"))
         if not section:
             return "unknown"
 

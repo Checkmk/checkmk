@@ -311,12 +311,18 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
                       key=lambda x:
                       (not ('cpu' in str(x) or x in cpu_sections_without_cpu_in_name), x))
 
-    def _convert_to_sections(self, raw_data: SNMPRawData) -> SNMPHostSections:
-        raw_data = cast(SNMPRawData, raw_data)
-        sections_to_persist = self._extract_persisted_sections(raw_data)
-        return SNMPHostSections(raw_data, persisted_sections=sections_to_persist)
+    def _parse(self, raw_data: SNMPRawData) -> SNMPHostSections:
+        persisted_sections = self._extract_persisted_sections(
+            raw_data,
+            self.configurator.host_config,
+        )
+        return SNMPHostSections(raw_data, persisted_sections=persisted_sections)
 
-    def _extract_persisted_sections(self, raw_data: SNMPRawData) -> SNMPPersistedSections:
+    @staticmethod
+    def _extract_persisted_sections(
+        raw_data: SNMPRawData,
+        host_config: config.HostConfig,
+    ) -> SNMPPersistedSections:
         """Extract the sections to be persisted from the raw_data and return it
 
         Gather the check types to be persisted, extract the related data from
@@ -326,7 +332,7 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         persisted_sections: SNMPPersistedSections = {}
 
         for section_name, section_content in raw_data.items():
-            fetch_interval = self.configurator.host_config.snmp_fetch_interval(section_name)
+            fetch_interval = host_config.snmp_fetch_interval(section_name)
             if fetch_interval is None:
                 continue
 

@@ -294,7 +294,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             raw_data, is_cached_data = self._get_raw_data(
                 selected_raw_sections=selected_raw_sections)
 
-            self._host_sections = host_sections = self._convert_to_sections(raw_data)
+            self._host_sections = host_sections = self._parse(raw_data)
             assert isinstance(host_sections, ABCHostSections)
 
             if get_raw_data:
@@ -372,7 +372,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     ) -> BoundedAbstractRawData:
         """Fetches the current agent data from the source specified with
         hostname and ipaddress and returns the result as "raw data" that is
-        later converted by self._convert_to_sections() to a HostSection().
+        later converted by self._parse() to a HostSection().
 
         The "raw data" is the raw byte string returned by the source for
         AgentDataSource sources. The SNMPDataSource source already
@@ -396,7 +396,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _convert_to_sections(
+    def _parse(
         self,
         raw_data: BoundedAbstractRawData,
     ) -> BoundedAbstractHostSections:

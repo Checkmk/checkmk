@@ -68,8 +68,21 @@ class Summarizer:
         super().__init__()
         self._host_config = host_config
 
-    def summarize(self, cmk_section: Optional[AgentSectionContent],
-                  for_checking: bool) -> ServiceCheckResult:
+    def summarize(
+        self,
+        host_sections: AgentHostSections,
+        for_checking: bool,
+    ) -> ServiceCheckResult:
+        return self._summarize(
+            host_sections.sections.get(SectionName("check_mk")),
+            for_checking,
+        )
+
+    def _summarize(
+        self,
+        cmk_section: Optional[AgentSectionContent],
+        for_checking: bool,
+    ) -> ServiceCheckResult:
         agent_info = self._get_agent_info(cmk_section)
         agent_version = agent_info["version"]
 
@@ -442,7 +455,7 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         # TODO: This does not seem to be needed
         return ensure_binary(raw_data)
 
-    def _convert_to_sections(self, raw_data: RawAgentData) -> AgentHostSections:
+    def _parse(self, raw_data: RawAgentData) -> AgentHostSections:
         return Parser(self._logger).parse(
             self.configurator.hostname,
             raw_data,
@@ -454,4 +467,6 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
             raise TypeError(self._host_sections)
 
         return Summarizer(self.configurator.host_config).summarize(
-            self._host_sections.sections.get(SectionName("check_mk")), for_checking)
+            self._host_sections,
+            for_checking,
+        )

@@ -62,7 +62,8 @@ class MultiHostSections(collections.abc.MutableMapping):
         # This is not quite the same as section_content_cache.
         # It is introduced for the changed data handling with the migration
         # to 'agent_based' plugins.
-        # It holy holds the result of individual calls of the parse_function.
+        # It holds the result of the parse_function along with the
+        # cache info of the raw section that was used.
         self._parsed_sections = caching.DictCache()
         self._parsed_to_raw_map = caching.DictCache()
 
@@ -152,12 +153,13 @@ class MultiHostSections(collections.abc.MutableMapping):
         """
         cached_ats: List[int] = []
         intervals: List[int] = []
-        for host_key, host_sections in self._data.items():
+        for host_key in self._data:
             for parsed_section_name in parsed_section_names:
-                raw_section = self._get_raw_section(host_key, parsed_section_name)
-                if raw_section is None:
-                    continue
-                cache_info = host_sections.cache_info.get(raw_section.name)
+                # Fear not, the parsing itself is cached. But in case we have not already
+                # parsed, we must do so in order to see which raw sections cache info we
+                # must use.
+                _parsed, cache_info = self._get_parsed_section_with_cache_info(
+                    host_key, parsed_section_name)
                 if cache_info:
                     cached_ats.append(cache_info[0])
                     intervals.append(cache_info[1])
@@ -169,6 +171,13 @@ class MultiHostSections(collections.abc.MutableMapping):
         host_key: HostKey,
         parsed_section_name: ParsedSectionName,
     ) -> Optional[ParsedSectionContent]:
+        return self._get_parsed_section_with_cache_info(host_key, parsed_section_name)[0]
+
+    def _get_parsed_section_with_cache_info(
+        self,
+        host_key: HostKey,
+        parsed_section_name: ParsedSectionName,
+    ) -> Tuple[Optional[ParsedSectionContent], Optional[Tuple[int, int]]]:
         cache_key = host_key + (parsed_section_name,)
         if cache_key in self._parsed_sections:
             return self._parsed_sections[cache_key]
@@ -185,12 +194,13 @@ class MultiHostSections(collections.abc.MutableMapping):
         try:
             host_data = self._data[host_key]
             string_table = host_data.sections[raw_section_name]
+            cache_info = host_data.cache_info.get(raw_section_name)
         except KeyError:
-            return self._parsed_sections.setdefault(cache_key, None)
+            return self._parsed_sections.setdefault(cache_key, (None, None))
 
         parsed = parse_function(string_table)
 
-        return self._parsed_sections.setdefault(cache_key, parsed)
+        return self._parsed_sections.setdefault(cache_key, (parsed, cache_info))
 
     def _get_raw_section(
         self,

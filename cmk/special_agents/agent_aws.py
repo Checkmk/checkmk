@@ -14,7 +14,7 @@ import json
 import logging
 from pathlib import Path
 import sys
-import time
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable
 
 import boto3  # type: ignore[import]
@@ -35,6 +35,8 @@ from cmk.utils.aws_constants import (
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
 )
+
+NOW = datetime.now()
 
 # NOTE: Quite a few of the type annotations below are just "educated guesses"
 # and may be wrong, but at least they make mypy happy for now. Nevertheless, we
@@ -423,7 +425,8 @@ class AWSSection(DataCache):
             float), "%s: Cache timestamp of colleague contents must be of type 'float'" % self.name
 
         raw_data = self.get_data(colleague_contents, use_cache=use_cache)
-        raw_content = AWSRawContent(raw_data, self.cache_timestamp if use_cache else time.time())
+        raw_content = AWSRawContent(raw_data,
+                                    self.cache_timestamp if use_cache else NOW.timestamp())
         assert isinstance(
             raw_content,
             AWSRawContent), "%s: Raw content must be of type 'AWSRawContent'" % self.name
@@ -591,7 +594,7 @@ class AWSSectionGeneric(AWSSection):
 class AWSSectionCloudwatch(AWSSection):
     def get_live_data(self, *args):
         (colleague_contents,) = args
-        end_time = time.time()
+        end_time = NOW.timestamp()
         start_time = end_time - self.period
         metric_specs = self._get_metrics(colleague_contents)
         if not metric_specs:
@@ -680,11 +683,10 @@ class CostsAndUsage(AWSSectionGeneric):
 
     def get_live_data(self, *args):
         fmt = "%Y-%m-%d"
-        now = time.time()
         response = self._client.get_cost_and_usage(
             TimePeriod={
-                'Start': time.strftime(fmt, time.gmtime(now - self.cache_interval)),
-                'End': time.strftime(fmt, time.gmtime(now)),
+                'Start': datetime.strftime(NOW - timedelta(seconds=self.cache_interval), fmt),
+                'End': datetime.strftime(NOW, fmt),
             },
             Granularity='DAILY',
             Metrics=['UnblendedCost'],

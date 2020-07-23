@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import cast, Optional
+from typing import Optional
 
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
@@ -14,7 +14,7 @@ from cmk.fetchers import TCPDataFetcher
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.check_utils import RawAgentData
 from cmk.base.config import HostConfig, SelectedRawSections
-from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
+from cmk.base.exceptions import MKAgentError
 
 from ._abstract import ABCConfigurator
 from .agent import AgentDataSource
@@ -69,17 +69,7 @@ class TCPDataSource(AgentDataSource):
                                self._cache_file_path())
 
         with TCPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
-            output = fetcher.data()
-            # TODO(ml): Get rid of the `cast` by moving the error hanling to the fetcher.
-            configurator = cast(TCPConfigurator, self.configurator)
-            if not output:  # may be caused by xinetd not allowing our address
-                raise MKEmptyAgentData("Empty output from agent at %s:%d" % (
-                    configurator.ipaddress,
-                    configurator.port or self.configurator.host_config.agent_port,
-                ))
-            if len(output) < 16:
-                raise MKAgentError("Too short output from agent: %r" % output)
-            return output
+            return fetcher.data()
         raise MKAgentError("Failed to read data")
 
     @staticmethod

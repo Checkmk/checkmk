@@ -107,6 +107,10 @@ class TCPDataFetcher(AbstractDataFetcher):
             # in an incorrect format, but how would we find that out?
             # In this case processing the output will fail
 
+        if not output:  # may be caused by xinetd not allowing our address
+            raise MKFetcherError("Empty output from agent at %s:%d" % self._address)
+        if len(output) < 16:
+            raise MKFetcherError("Too short output from agent: %r" % output)
         return output
 
     # TODO: Sync with real_type_checks._decrypt_rtc_package

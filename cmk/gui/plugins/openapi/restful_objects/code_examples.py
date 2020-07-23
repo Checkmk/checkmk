@@ -9,11 +9,10 @@ To add a new example (new language, library, etc.), a new Jinja2-Template has to
 be referenced in the result of _build_code_templates.
 
 """
-import collections
 import json
 import re
 import threading
-from typing import Dict, List, Sequence
+from typing import Any, Dict, List, NamedTuple, Sequence
 
 import jinja2
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
@@ -33,10 +32,25 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
 
 CODE_TEMPLATES_LOCK = threading.Lock()
 
-CODE_TEMPLATE_CURL = """
-API_URL = "http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
-USERNAME = "..."
-PASSWORD = "..."
+# This is
+CODE_TEMPLATE_MACROS = """
+{%- macro list_params(params, indent=8) -%}
+{%- for param in params %}{% if 'example' not in param %}{% continue %}{% endif %}
+{{ " " * indent }}"{{ param['name'] }}": "{{
+            param['example'] }}",{% if 'description' in param and param['description'] %}  #
+        {%- if param['required'] %} (required){% endif %} {{
+            param['description'] | first_sentence }}{% endif %}
+{%- endfor %}
+{%- endmacro %}
+
+{%- macro show_params(name, params, comment=None) %}
+{%- if params %}
+    {{ name }}={ {%- if comment %}  # {{ comment }}{% endif %}
+        {{- list_params(params) }}
+    },
+{%- endif %}
+{%- endmacro %}
+
 {%- macro show_query_params(params) %}
 {%- if params %}
 {%- for param in params %}
@@ -47,84 +61,137 @@ PASSWORD = "..."
 {{- param['name'] }}={{ param['example'] }}
 {%- endfor %}
 {%- endif %}
-{%- endmacro %}{%- if query_params %}
+{%- endmacro %}
+"""
 
-QUERY_STRING="{{ show_query_params(query_params) }}"
+CODE_TEMPLATE_URLLIB = """
+#!/usr/bin/env python3
+import json
+{%- if query_params %}
+import urllib.parse{% endif %}
+import urllib.request
+
+HOST_NAME = "{{ hostname }}"
+SITE_NAME = "{{ site }}"
+API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0"
+
+USERNAME = "{{ username }}"
+PASSWORD = "{{ password }}"
+
+{%- from '_macros' import list_params %}
+{%- if query_params %}
+
+query_string = urllib.parse.urlencode({
+    {{- list_params(query_params, indent=4) }}
+})
 {%- endif %}
+
+request = urllib.request.Request(
+    f"{API_URL}{{ request_endpoint | fill_out_parameters }}
+        {%- if query_params %}?{query_string}{% endif %}",
+    method="{{ request_method | upper }}",
+    headers={
+        "Authorization": f"Bearer {USERNAME} {PASSWORD}",
+        "Accept": "application/json",
+        {{- list_params(headers) }}
+    },
+    {%- if request_schema %}
+    data=json.dumps({{
+            request_schema |
+            to_dict |
+            to_json(indent=4, sort_keys=True) |
+            indent(skip_lines=1, spaces=4) }}).encode('utf-8'),
+    {%- endif %}
+)
+response = urllib.request.urlopen(request)
+data = json.loads(response.read())
+"""
+
+CODE_TEMPLATE_CURL = """
+#!/bin/bash
+HOST_NAME = "{{ hostname }}"
+SITE_NAME = "{{ site }}"
+API_URL = "http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
+
+USERNAME = "{{ username }}"
+PASSWORD = "{{ password }}"
 
 curl \\
     -X {{ request_method | upper }} \\
     --header "Authorization: Bearer $USERNAME $PASSWORD" \\
     --header "Accept: application/json" \\
 {%- for header in headers %}
-    --header "{{ header['name'] }}: {{ header['example'] }}" \\
-{%- endfor %}{% if request_schema %}
-    -d '{{ request_schema |
+    --header "{{ header.name }}: {{ header.example }}" \\
+{%- endfor %}
+{%- if query_params %}
+    -G  \\
+ {%- for param in query_params %}
+  {%- if param.example is defined and param.example %}
+    --data-urlencode "{{ param.name }}={{ param.example }}"{% if not loop.last %} \\{% endif %}
+  {%- endif %}
+ {%- endfor %}
+{%- endif %}
+{%- if request_schema %} \\
+    --data '{{ request_schema |
             to_dict |
             to_json(indent=2, sort_keys=True) |
             indent(skip_lines=1, spaces=8) }}' \\
 {%- endif %}
-    "$API_URL{{ request_endpoint | fill_out_parameters }}{% if query_params %}?$QUERY_STRING{% endif %}"
+    "$API_URL{{ request_endpoint | fill_out_parameters }}"
 """
 
 CODE_TEMPLATE_HTTPIE = """
+#!/bin/bash
+HOST_NAME = "{{ hostname }}"
+SITE_NAME = "{{ site }}"
 API_URL = "http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
-USERNAME = "..."
-PASSWORD = "..."
-{%- macro show_query_params(params) %}
-{%- if params %}
-{%- for param in params %}
-{%- if 'example' not in param %}
-    {%- continue %}
-{%- endif %}
-{%- if not loop.first %}&{% endif %}
-{{- param['name'] }}={{ param['example'] }}
-{%- endfor %}
-{%- endif %}
-{%- endmacro %}{% if query_params %}
 
-QUERY_STRING="{{ show_query_params(query_params) }}"
-{%- endif %}
+USERNAME = "{{ username }}"
+PASSWORD = "{{ password }}"
 
-http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}{%
-    if query_params %}?$QUERY_STRING{% endif %}" \\
-    "Authorization: Bearer $USERNAME $PASSWORD"
-{%- for header in headers %} \\
-    '{{ header['name'] }}: {{ header['example'] }}'{% if not loop.last %} \\{% endif %}
-{%- endfor %}{% if request_schema %} \\
-    {% for key, value in (request_schema | to_dict).items() | sort -%}
-        {{ key }}='{{ value | to_env }}'{% if not loop.last %} \\{% endif %}
-    {% endfor -%}
-{% endif %}
+http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
+    "Authorization: Bearer $USERNAME $PASSWORD" \\
+    "Accept: application/json" \\
+{%- for header in headers %}
+    '{{ header['name'] }}:{{ header['example'] }}' \\
+{% endfor -%}
+{%- if query_params %}
+ {%- for param in query_params %}
+  {%- if param.example is defined and param.example %}
+    {{ param.name }}=="{{ param.example }}" \\
+  {%- endif %}
+ {%- endfor %}
+{%- endif %}
+{%- if request_schema %}
+ {%- for key, value in (request_schema | to_dict).items() | sort %}
+    {{ key }}='{{ value | to_env }}' \\
+ {%- endfor %}
+{%- endif %}
+    --json
+
 """
 
 # Beware, correct whitespace handling in this template is a bit tricky.
 CODE_TEMPLATE_REQUESTS = """
+#!/usr/bin/env python3
 import requests
 
+HOST_NAME = "{{ hostname }}"
+SITE_NAME = "{{ site }}"
+API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0"
+
+USERNAME = "{{ username }}"
+PASSWORD = "{{ password }}"
+
 session = requests.session()
-session.headers['Authorization'] = 'Bearer username password'
+session.headers['Authorization'] = f"Bearer {USERNAME} {PASSWORD}"
 session.headers['Accept'] = 'application/json'
 {%- set method = request_method | lower %}
 
-# Replace HOST_NAME and SITE_NAME with the names from your host and site.
-API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'
-
-{%- macro show_params(name, params, comment=None) %}
-{%- if params %}
-    {{ name }}={ {%- if comment %}  # {{ comment }}{% endif %}
-{%- for param in params %}{% if 'example' not in param %}{% continue %}{% endif %}
-        "{{ param['name'] }}": "{{
-            param['example'] }}",{% if 'description' in param and param['description'] %}  #
-        {%- if param['required'] %} (required){% endif %} {{
-            param['description'] | first_sentence }}{% endif %}
-{%- endfor %}
-    },
-{%- endif %}
-{%- endmacro %}
+{%- from '_macros' import show_params %}
 
 resp = session.{{ method }}(
-    API_URL + "{{ request_endpoint | fill_out_parameters }}",
+    f"{API_URL}{{ request_endpoint | fill_out_parameters }}",
     {{- show_params("params", query_params, comment="goes into query string") }}
     {{- show_params("headers", headers) }}
     {%- if request_schema %}
@@ -136,7 +203,25 @@ resp = session.{{ method }}(
     {%- endif %}
 )
 resp.raise_for_status()
+data = resp.json()
 """
+
+CodeExample = NamedTuple("CodeExample", [('lang', str), ('label', str), ('template', str)])
+
+# NOTE: To add a new code-example, you need to add them to this list.
+CODE_EXAMPLES: List[CodeExample] = [
+    CodeExample(lang='python', label='requests', template=CODE_TEMPLATE_REQUESTS),
+    CodeExample(lang='python', label='urllib', template=CODE_TEMPLATE_URLLIB),
+    CodeExample(lang='bash', label='curl', template=CODE_TEMPLATE_CURL),
+    CodeExample(lang='bash', label='httpie', template=CODE_TEMPLATE_HTTPIE),
+]
+
+# The examples will appear in the order they are put in above, as starting from Python 3.7, dicts
+# keep insertion order.
+TEMPLATES = {
+    '_macros': CODE_TEMPLATE_MACROS,
+    **{example.label: example.template for example in CODE_EXAMPLES}
+}
 
 
 def _to_env(value):
@@ -250,20 +335,16 @@ def _transform_params(param_list):
 
 
 # noinspection PyDefaultArgument
-def code_samples(  # pylint: disable=dangerous-default-value
+def code_samples(
     path: str,
     method: HTTPMethod,
     request_schema: RequestSchema,
     operation_spec: OperationSpecType,
-    code_templates=[],
 ) -> List[Dict[str, str]]:
     """Create a list of rendered code sample Objects
 
     These are not specified by OpenAPI but are specific to ReDoc."""
-    if not code_templates:
-        with CODE_TEMPLATES_LOCK:
-            if not code_templates:
-                code_templates.append(_build_code_templates())
+    env = _jinja_environment()
 
     parameters = operation_spec.get('parameters', [])
 
@@ -271,8 +352,13 @@ def code_samples(  # pylint: disable=dangerous-default-value
     query_params = _filter_params(parameters, 'query')
 
     return [{
-        'lang': language,
-        'source': template.render(
+        'label': example.label,
+        'lang': example.lang,
+        'source': env.get_template(example.label).render(
+            hostname='localhost',
+            site='heute',
+            username='automation',
+            password='test123',
             request_endpoint=path,
             request_method=method,
             request_schema=(resolve_schema_instance(request_schema)
@@ -281,7 +367,7 @@ def code_samples(  # pylint: disable=dangerous-default-value
             headers=headers,
             query_params=query_params,
         ).strip(),
-    } for language, template in code_templates[0].items()]
+    } for example in CODE_EXAMPLES]
 
 
 def _filter_params(
@@ -295,14 +381,18 @@ def _filter_params(
     return query_parameters
 
 
-def _build_code_templates():
+def _jinja_environment() -> jinja2.Environment:
     """Create a map with code templates, ready to render.
 
     We don't want to build all this stuff at the module-level as it is only needed when
     re-generating the SPEC file.
 
-    >>> tmpls = _build_code_templates()
-    >>> result = tmpls['curl'].render(
+    >>> env = _jinja_environment()
+    >>> result = env.get_template('curl').render(
+    ...     hostname='localhost',
+    ...     site='heute',
+    ...     username='automation',
+    ...     password='test123',
     ...     request_endpoint='foo',
     ...     request_method='get',
     ...     request_schema=resolve_schema_instance('CreateHost'),
@@ -319,7 +409,7 @@ def _build_code_templates():
     tmpl_env = jinja2.Environment(  # nosec
         extensions=['jinja2.ext.loopcontrols'],
         autoescape=False,  # because copy-paste we don't want HTML entities in our code examples.
-        loader=jinja2.BaseLoader(),
+        loader=jinja2.DictLoader(TEMPLATES),
         undefined=jinja2.StrictUndefined,
         keep_trailing_newline=True,
     )
@@ -337,18 +427,11 @@ def _build_code_templates():
         spec=SPEC,
         parameters=SPEC.components.to_dict().get('parameters', {}),
     )
-
-    # NOTE: To add a new code-example, just add them to this OrderedDict. The examples will
-    # appear in the order they are put in here.
-    return collections.OrderedDict([
-        ('requests', tmpl_env.from_string(CODE_TEMPLATE_REQUESTS)),
-        ('curl', tmpl_env.from_string(CODE_TEMPLATE_CURL)),
-        ('httpie', tmpl_env.from_string(CODE_TEMPLATE_HTTPIE)),
-    ])
+    return tmpl_env
 
 
 @jinja2.contextfilter
-def fill_out_parameters(ctx, val):
+def fill_out_parameters(ctx: Dict[str, Any], val):
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:

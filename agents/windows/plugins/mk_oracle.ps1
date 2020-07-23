@@ -577,38 +577,94 @@ Function sqlcall {
 # SQL for Performance information
 ################################################################################
 Function sql_performance {
-     if ($DBVERSION -gt 101000) {
+     if ($DBVERSION -gt 121000) {
+          $query_performance = @'
+          PROMPT <<<oracle_performance:sep(124)>>>'
+          select upper(i.INSTANCE_NAME)
+               ||'|'|| 'sys_time_model'
+               ||'|'|| S.STAT_NAME
+               ||'|'|| Round(s.value/1000000)
+          from v$instance i,
+               v$sys_time_model s
+          where s.stat_name in('DB time', 'DB CPU')
+          order by s.stat_name;
+          select upper(i.INSTANCE_NAME ||'.'||vd.name)
+               ||'|'|| 'sys_time_model'
+               ||'|'|| S.STAT_NAME
+               ||'|'|| Round(s.value/1000000)
+          from v$instance i
+          join v$con_sys_time_model s on s.stat_name in('DB time', 'DB CPU')
+          join v$containers vd on vd.con_id = s.con_id
+          join v$database d on d.cdb = 'YES'
+          where vd.con_id <> 2
+          order by s.stat_name;
+          select upper(i.INSTANCE_NAME)
+               ||'|'|| 'buffer_pool_statistics'
+               ||'|'|| b.name
+               ||'|'|| b.db_block_gets
+               ||'|'|| b.db_block_change
+               ||'|'|| b.consistent_gets
+               ||'|'|| b.physical_reads
+               ||'|'|| b.physical_writes
+               ||'|'|| b.FREE_BUFFER_WAIT
+               ||'|'|| b.BUFFER_BUSY_WAIT
+          from v$instance i, v$BUFFER_POOL_STATISTICS b;
+          select upper(i.INSTANCE_NAME)
+               ||'|'|| 'SGA_info'
+               ||'|'|| s.name
+               ||'|'|| s.bytes
+          from v$sgainfo s, v$instance i;
+          select upper(i.INSTANCE_NAME)
+               ||'|'|| 'librarycache'
+               ||'|'|| b.namespace
+               ||'|'|| b.gets
+               ||'|'|| b.gethits
+               ||'|'|| b.pins
+               ||'|'|| b.pinhits
+               ||'|'|| b.reloads
+               ||'|'|| b.invalidations
+          from v$instance i, v$librarycache b;"
+
+'@
+          echo $query_performance
+     }
+     elseif ($DBVERSION -gt 101000) {
           $query_performance = @'
           prompt <<<oracle_performance:sep(124)>>>;
           select upper(i.INSTANCE_NAME)
-                     ||'|'|| 'sys_time_model'
-                     ||'|'|| S.STAT_NAME
-                     ||'|'|| Round(s.value/1000000)
-              from v$instance i,
-                   v$sys_time_model s
-              where s.stat_name in('DB time', 'DB CPU')
-              order by s.stat_name;
-              select upper(i.INSTANCE_NAME)
-                     ||'|'|| 'buffer_pool_statistics'
-                     ||'|'|| b.name
-                     ||'|'|| b.db_block_gets
-                     ||'|'|| b.db_block_change
-                     ||'|'|| b.consistent_gets
-                     ||'|'|| b.physical_reads
-                     ||'|'|| b.physical_writes
-                     ||'|'|| b.FREE_BUFFER_WAIT
-                     ||'|'|| b.BUFFER_BUSY_WAIT
-              from v$instance i, V$BUFFER_POOL_STATISTICS b;
-              select upper(i.INSTANCE_NAME)
-                     ||'|'|| 'librarycache'
-                     ||'|'|| b.namespace
-                     ||'|'|| b.gets
-                     ||'|'|| b.gethits
-                     ||'|'|| b.pins
-                     ||'|'|| b.pinhits
-                     ||'|'|| b.reloads
-                     ||'|'|| b.invalidations
-              from v$instance i, V$librarycache b;
+               ||'|'|| 'sys_time_model'
+               ||'|'|| S.STAT_NAME
+               ||'|'|| Round(s.value/1000000)
+          from v$instance i,
+               v$sys_time_model s
+          where s.stat_name in('DB time', 'DB CPU')
+          order by s.stat_name;
+          select upper(i.INSTANCE_NAME)
+               ||'|'|| 'buffer_pool_statistics'
+               ||'|'|| b.name
+               ||'|'|| b.db_block_gets
+               ||'|'|| b.db_block_change
+               ||'|'|| b.consistent_gets
+               ||'|'|| b.physical_reads
+               ||'|'|| b.physical_writes
+               ||'|'|| b.FREE_BUFFER_WAIT
+               ||'|'|| b.BUFFER_BUSY_WAIT
+          from v$instance i, V$BUFFER_POOL_STATISTICS b;
+          select upper(i.INSTANCE_NAME)
+               ||'|'|| 'SGA_info'
+               ||'|'|| s.name
+               ||'|'|| s.bytes
+          from v$sgainfo s, v$instance i;
+          select upper(i.INSTANCE_NAME)
+               ||'|'|| 'librarycache'
+               ||'|'|| b.namespace
+               ||'|'|| b.gets
+               ||'|'|| b.gethits
+               ||'|'|| b.pins
+               ||'|'|| b.pinhits
+               ||'|'|| b.reloads
+               ||'|'|| b.invalidations
+          from v$instance i, V$librarycache b;
 
 '@
           echo $query_performance
@@ -623,145 +679,143 @@ Function sql_tablespaces {
      if ($DBVERSION -gt 121000) {
           $query_tablespace = @'
           prompt <<<oracle_tablespaces:sep(124)>>>;
-              SET SERVEROUTPUT ON feedback off
-              DECLARE
-                  type x is table of varchar2(20000) index by pls_integer;
-                  xx x;
-              begin
-                  begin
-                      execute immediate 'select upper(decode(vp.con_id, null, d.NAME
-                                            ,d.NAME||''.''||vp.name))
-                  || ''|'' || dbf.file_name
-                  || ''|'' || dbf.tablespace_name
-                  || ''|'' || dbf.fstatus
-                  || ''|'' || dbf.AUTOEXTENSIBLE
-                  || ''|'' || dbf.blocks
-                  || ''|'' || dbf.maxblocks
-                  || ''|'' || dbf.USER_BLOCKS
-                  || ''|'' || dbf.INCREMENT_BY
-                  || ''|'' || dbf.ONLINE_STATUS
-                  || ''|'' || dbf.BLOCK_SIZE
-                  || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
-                  || ''|'' || dbf.free_blocks
-                  || ''|'' || dbf.contents
-                  || ''|'' || i.version
-           from v$database d
-           join v$instance i on 1=1
-           join (
-                    select f.con_id, f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
-                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
-                    f.ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
-                    from cdb_data_files f
-                    join cdb_tablespaces t on f.tablespace_name = t.tablespace_name
-                                          and f.con_id = t.con_id
-                    left outer join cdb_free_space fs on f.file_id = fs.file_id
-                                                     and f.con_id = fs.con_id
-                    group by f.con_id, f.file_name, f.tablespace_name, f.status, f.autoextensible,
-                    f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
-                    t.block_size, t.status, t.contents
-                ) dbf on 1=1
-           left outer join v$pdbs vp on dbf.con_id = vp.con_id
-           where d.database_role = ''PRIMARY'''
-                      bulk collect into xx;
-                      if xx.count >= 1 then
-                          for i in 1 .. xx.count loop
+          SET SERVEROUTPUT ON feedback off
+          DECLARE
+               type x is table of varchar2(20000) index by pls_integer;
+               xx x;
+          begin
+               begin
+                    execute immediate
+                         'select upper(decode(vp.con_id, null, d.NAME,d.NAME||''.''||vp.name))
+                              || ''|'' || dbf.file_name
+                              || ''|'' || dbf.tablespace_name
+                              || ''|'' || dbf.fstatus
+                              || ''|'' || dbf.AUTOEXTENSIBLE
+                              || ''|'' || dbf.blocks
+                              || ''|'' || dbf.maxblocks
+                              || ''|'' || dbf.USER_BLOCKS
+                              || ''|'' || dbf.INCREMENT_BY
+                              || ''|'' || dbf.ONLINE_STATUS
+                              || ''|'' || dbf.BLOCK_SIZE
+                              || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
+                              || ''|'' || dbf.free_blocks
+                              || ''|'' || dbf.contents
+                              || ''|'' || i.version
+                         from v$database d
+                         join v$instance i on 1=1
+                         join (
+                              select f.con_id, f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
+                                   f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
+                                   f.ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
+                              from cdb_data_files f
+                              join cdb_tablespaces t on f.tablespace_name = t.tablespace_name
+                                   and f.con_id = t.con_id
+                              left outer join cdb_free_space fs on f.file_id = fs.file_id
+                                   and f.con_id = fs.con_id
+                              group by f.con_id, f.file_name, f.tablespace_name, f.status, f.autoextensible,
+                                   f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
+                                   t.block_size, t.status, t.contents
+                         ) dbf on 1=1
+                         left outer join v$pdbs vp on dbf.con_id = vp.con_id
+                         where d.database_role = ''PRIMARY'''
+                    bulk collect into xx;
+                    if xx.count >= 1 then
+                         for i in 1 .. xx.count loop
                               dbms_output.put_line(xx(i));
-                          end loop;
-                      end if;
-                  exception
-                      when others then
-                          for cur1 in (select upper(name) name from  v$database) loop
-                              dbms_output.put_line(cur1.name || '| Debug (121) 1: ' ||sqlerrm);
-                          end loop;
-                  end;
-              END;
+                         end loop;
+                    end if;
+                    exception
+                         when others then
+                              for cur1 in (select upper(name) name from  v$database) loop
+                                   dbms_output.put_line(cur1.name || '| Debug (121) 1: ' ||sqlerrm);
+                              end loop;
+               end;
+          END;
 /
-              DECLARE
-                  type x is table of varchar2(20000) index by pls_integer;
-                  xx x;
-              begin
-                  begin
-                      execute immediate 'select upper(decode(dbf.con_id, null, d.NAME
-                                            ,dbf.name))
-                  || ''|'' || dbf.file_name
-                  || ''|'' || dbf.tablespace_name
-                  || ''|'' || dbf.fstatus
-                  || ''|'' || dbf.AUTOEXTENSIBLE
-                  || ''|'' || dbf.blocks
-                  || ''|'' || dbf.maxblocks
-                  || ''|'' || dbf.USER_BLOCKS
-                  || ''|'' || dbf.INCREMENT_BY
-                  || ''|'' || dbf.ONLINE_STATUS
-                  || ''|'' || dbf.BLOCK_SIZE
-                  || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
-                  || ''|'' || dbf.free_blocks
-                  || ''|'' || ''TEMPORARY''
-                  || ''|'' || i.version
-           FROM v$database d
-           JOIN v$instance i ON 1 = 1
-           JOIN (
-                 SELECT vp.name,
-                        vp.con_id,
-                        f.file_name,
-                        t.tablespace_name,
-                        f.status fstatus,
-                        f.autoextensible,
-                        f.blocks,
-                        f.maxblocks,
-                        f.user_blocks,
-                        f.increment_by,
-                        ''ONLINE'' online_status,
-                        t.block_size,
-                        t.status tstatus,
-                        f.blocks - nvl(SUM(tu.blocks),0) free_blocks,
-                        t.contents
-                 FROM cdb_tablespaces t
-                 JOIN (
-                       SELECT vp.con_id
-                             ,d.name || ''.''|| vp.name name
-                       FROM v$containers vp
-                       JOIN v$database d ON 1 = 1
-                       WHERE d.cdb = ''YES''
-                         AND vp.con_id <> 2
-                       UNION ALL
-                       SELECT 0
-                             ,name
-                       FROM v$database
-                      ) vp ON t.con_id = vp.con_id
-                 LEFT OUTER JOIN cdb_temp_files f ON t.con_id = f.con_id
-                                                 AND t.tablespace_name = f.tablespace_name
-                 LEFT OUTER JOIN gv$tempseg_usage tu ON f.con_id = tu.con_id
-                                                      AND f.tablespace_name = tu.tablespace
-                                                      AND f.RELATIVE_FNO = tu.SEGRFNO#
-                 WHERE t.contents = ''TEMPORARY''
-                 GROUP BY vp.name,
-                          vp.con_id,
-                          f.file_name,
-                          t.tablespace_name,
-                          f.status,
-                          f.autoextensible,
-                          f.blocks,
-                          f.maxblocks,
-                          f.user_blocks,
-                          f.increment_by,
-                          t.block_size,
-                          t.status,
-                          t.contents
-                ) dbf ON 1 = 1
-           where d.database_role = ''PRIMARY'''
-                      bulk collect into xx;
-                      if xx.count >= 1 then
+          DECLARE
+               type x is table of varchar2(20000) index by pls_integer;
+               xx x;
+          begin
+               begin
+                    execute immediate
+                         'select upper(decode(dbf.con_id, null, d.NAME,dbf.name))
+                              || ''|'' || dbf.file_name
+                              || ''|'' || dbf.tablespace_name
+                              || ''|'' || dbf.fstatus
+                              || ''|'' || dbf.AUTOEXTENSIBLE
+                              || ''|'' || dbf.blocks
+                              || ''|'' || dbf.maxblocks
+                              || ''|'' || dbf.USER_BLOCKS
+                              || ''|'' || dbf.INCREMENT_BY
+                              || ''|'' || dbf.ONLINE_STATUS
+                              || ''|'' || dbf.BLOCK_SIZE
+                              || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
+                              || ''|'' || dbf.free_blocks
+                              || ''|'' || ''TEMPORARY''
+                              || ''|'' || i.version
+                         FROM v$database d
+                         JOIN v$instance i ON 1 = 1
+                         JOIN (
+                              SELECT vp.name,
+                                   vp.con_id,
+                                   f.file_name,
+                                   t.tablespace_name,
+                                   f.status fstatus,
+                                   f.autoextensible,
+                                   f.blocks,
+                                   f.maxblocks,
+                                   f.user_blocks,
+                                   f.increment_by,
+                                   ''ONLINE'' online_status,
+                                   t.block_size,
+                                   t.status tstatus,
+                                   f.blocks - nvl(SUM(tu.blocks),0) free_blocks,
+                                   t.contents
+                              FROM cdb_tablespaces t
+                              JOIN (
+                                   SELECT vp.con_id,d.name || ''.''|| vp.name name
+                                   FROM v$containers vp
+                                   JOIN v$database d ON 1 = 1
+                                   WHERE d.cdb = ''YES''
+                                        AND vp.con_id <> 2
+                                   UNION ALL
+                                   SELECT 0,name
+                                   FROM v$database
+                              ) vp ON t.con_id = vp.con_id
+                              LEFT OUTER JOIN cdb_temp_files f ON t.con_id = f.con_id
+                                   AND t.tablespace_name = f.tablespace_name
+                              LEFT OUTER JOIN gv$tempseg_usage tu ON f.con_id = tu.con_id
+                                   AND f.tablespace_name = tu.tablespace
+                                   AND f.RELATIVE_FNO = tu.SEGRFNO#
+                              WHERE t.contents = ''TEMPORARY''
+                              GROUP BY vp.name,
+                                        vp.con_id,
+                                        f.file_name,
+                                        t.tablespace_name,
+                                        f.status,
+                                        f.autoextensible,
+                                        f.blocks,
+                                        f.maxblocks,
+                                        f.user_blocks,
+                                        f.increment_by,
+                                        t.block_size,
+                                        t.status,
+                                        t.contents
+                         ) dbf ON 1 = 1
+                         where d.database_role = ''PRIMARY'''
+                    bulk collect into xx;
+                    if xx.count >= 1 then
                           for i in 1 .. xx.count loop
                               dbms_output.put_line(xx(i));
                           end loop;
-                      end if;
-                  exception
-                      when others then
-                          for cur1 in (select upper(name) name from  v$database) loop
+                    end if;
+               exception
+                    when others then
+                         for cur1 in (select upper(name) name from  v$database) loop
                               dbms_output.put_line(cur1.name || '| Debug (121) 2: ' ||sqlerrm);
-                          end loop;
-                  end;
-              END;
+                         end loop;
+               end;
+          END;
 /
               set serverout off
 
@@ -773,115 +827,117 @@ Function sql_tablespaces {
           prompt <<<oracle_tablespaces:sep(124)>>>;
           SET SERVEROUTPUT ON feedback off
           DECLARE
-              type x is table of varchar2(20000) index by pls_integer;
-              xx x;
+               type x is table of varchar2(20000) index by pls_integer;
+               xx x;
           begin
-              begin
-                  execute immediate 'select upper(i.instance_name)
-                      || ''|'' || file_name ||''|''|| tablespace_name ||''|''|| fstatus ||''|''|| AUTOEXTENSIBLE
-                      ||''|''|| blocks ||''|''|| maxblocks ||''|''|| USER_BLOCKS ||''|''|| INCREMENT_BY
-                      ||''|''|| ONLINE_STATUS ||''|''|| BLOCK_SIZE
-                      ||''|''|| decode(tstatus,''READ ONLY'', ''READONLY'', tstatus) || ''|'' || free_blocks
-                      ||''|''|| contents
-                      ||''|''|| iversion
-                    from v$database d , v$instance i, (
-                        select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
-                        f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
-                        f.ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents,
-                        (select version from v$instance) iversion
-                        from dba_data_files f, dba_tablespaces t, dba_free_space fs
-                        where f.tablespace_name = t.tablespace_name
-                        and f.file_id = fs.file_id(+)
-                        group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
-                        f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
-                        t.block_size, t.status, t.contents)
-               where d.database_role = ''PRIMARY'''
-                  bulk collect into xx;
-                  if xx.count >= 1 then
-                      for i in 1 .. xx.count loop
-                          dbms_output.put_line(xx(i));
-                      end loop;
-                  end if;
-              exception
-                  when others then
-                      for cur1 in (select upper(name) name from  v$database) loop
-                          dbms_output.put_line(cur1.name || '| Debug (102) 1: ' ||sqlerrm);
-                      end loop;
-              end;
+               begin
+                    execute immediate
+                         'select upper(i.instance_name)
+                              || ''|'' || file_name ||''|''|| tablespace_name ||''|''|| fstatus ||''|''|| AUTOEXTENSIBLE
+                              ||''|''|| blocks ||''|''|| maxblocks ||''|''|| USER_BLOCKS ||''|''|| INCREMENT_BY
+                              ||''|''|| ONLINE_STATUS ||''|''|| BLOCK_SIZE
+                              ||''|''|| decode(tstatus,''READ ONLY'', ''READONLY'', tstatus) || ''|'' || free_blocks
+                              ||''|''|| contents
+                              ||''|''|| iversion
+                         from v$database d , v$instance i, (
+                              select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
+                                   f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
+                                   f.ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents,
+                                   (select version from v$instance) iversion
+                              from dba_data_files f, dba_tablespaces t, dba_free_space fs
+                              where f.tablespace_name = t.tablespace_name
+                                   and f.file_id = fs.file_id(+)
+                              group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
+                                   f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
+                                   t.block_size, t.status, t.contents)
+                              where d.database_role = ''PRIMARY'''
+                    bulk collect into xx;
+                    if xx.count >= 1 then
+                         for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                         end loop;
+                    end if;
+               exception
+                    when others then
+                         for cur1 in (select upper(name) name from  v$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (102) 1: ' ||sqlerrm);
+                         end loop;
+               end;
           END;
 /
 
           DECLARE
-              type x is table of varchar2(20000) index by pls_integer;
-              xx x;
+               type x is table of varchar2(20000) index by pls_integer;
+               xx x;
           begin
-              begin
-                  execute immediate 'select upper(i.instance_name)
-              || ''|'' || dbf.file_name
-              || ''|'' || dbf.tablespace_name
-              || ''|'' || dbf.fstatus
-              || ''|'' || dbf.AUTOEXTENSIBLE
-              || ''|'' || dbf.blocks
-              || ''|'' || dbf.maxblocks
-              || ''|'' || dbf.USER_BLOCKS
-              || ''|'' || dbf.INCREMENT_BY
-              || ''|'' || dbf.ONLINE_STATUS
-              || ''|'' || dbf.BLOCK_SIZE
-              || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
-              || ''|'' || dbf.free_blocks
-              || ''|'' || ''TEMPORARY''
-              || ''|'' || i.version
-       FROM v$database d
-       JOIN v$instance i ON 1 = 1
-       JOIN (
-             SELECT vp.name,
-                    f.file_name,
-                    t.tablespace_name,
-                    f.status fstatus,
-                    f.autoextensible,
-                    f.blocks,
-                    f.maxblocks,
-                    f.user_blocks,
-                    f.increment_by,
-                    ''ONLINE'' online_status,
-                    t.block_size,
-                    t.status tstatus,
-                    f.blocks - nvl(SUM(tu.blocks),0) free_blocks,
-                    t.contents
-             FROM dba_tablespaces t
-             JOIN ( SELECT 0
-                         ,name
-                   FROM v$database
-                  ) vp ON 1=1
-             LEFT OUTER JOIN dba_temp_files f ON t.tablespace_name = f.tablespace_name
-             LEFT OUTER JOIN gv$tempseg_usage tu ON f.tablespace_name = tu.tablespace
-                                                  AND f.RELATIVE_FNO = tu.SEGRFNO#
-             WHERE t.contents = ''TEMPORARY''
-             GROUP BY vp.name,
-                      f.file_name,
-                      t.tablespace_name,
-                      f.status,
-                      f.autoextensible,
-                      f.blocks,
-                      f.maxblocks,
-                      f.user_blocks,
-                      f.increment_by,
-                      t.block_size,
-                      t.status,
-                      t.contents
-            ) dbf ON 1 = 1'
-                  bulk collect into xx;
-                  if xx.count >= 1 then
-                      for i in 1 .. xx.count loop
-                          dbms_output.put_line(xx(i));
-                      end loop;
-                  end if;
-              exception
-                  when others then
-                      for cur1 in (select upper(name) name from  v$database) loop
-                          dbms_output.put_line(cur1.name || '| Debug (102) 2: ' ||sqlerrm);
-                      end loop;
-              end;
+               begin
+                    execute immediate
+                         'select upper(i.instance_name)
+                              || ''|'' || dbf.file_name
+                              || ''|'' || dbf.tablespace_name
+                              || ''|'' || dbf.fstatus
+                              || ''|'' || dbf.AUTOEXTENSIBLE
+                              || ''|'' || dbf.blocks
+                              || ''|'' || dbf.maxblocks
+                              || ''|'' || dbf.USER_BLOCKS
+                              || ''|'' || dbf.INCREMENT_BY
+                              || ''|'' || dbf.ONLINE_STATUS
+                              || ''|'' || dbf.BLOCK_SIZE
+                              || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
+                              || ''|'' || dbf.free_blocks
+                              || ''|'' || ''TEMPORARY''
+                              || ''|'' || i.version
+                         FROM v$database d
+                         JOIN v$instance i ON 1 = 1
+                         JOIN (
+                              SELECT vp.name,
+                                   f.file_name,
+                                   t.tablespace_name,
+                                   f.status fstatus,
+                                   f.autoextensible,
+                                   f.blocks,
+                                   f.maxblocks,
+                                   f.user_blocks,
+                                   f.increment_by,
+                                   ''ONLINE'' online_status,
+                                   t.block_size,
+                                   t.status tstatus,
+                                   f.blocks - nvl(SUM(tu.blocks),0) free_blocks,
+                                   t.contents
+                              FROM dba_tablespaces t
+                              JOIN ( SELECT 0
+                                   ,name
+                                   FROM v$database
+                              ) vp ON 1=1
+                              LEFT OUTER JOIN dba_temp_files f ON t.tablespace_name = f.tablespace_name
+                              LEFT OUTER JOIN gv$tempseg_usage tu ON f.tablespace_name = tu.tablespace
+                                   AND f.RELATIVE_FNO = tu.SEGRFNO#
+                              WHERE t.contents = ''TEMPORARY''
+                              GROUP BY vp.name,
+                                   f.file_name,
+                                   t.tablespace_name,
+                                   f.status,
+                                   f.autoextensible,
+                                   f.blocks,
+                                   f.maxblocks,
+                                   f.user_blocks,
+                                   f.increment_by,
+                                   t.block_size,
+                                   t.status,
+                                   t.contents
+                         ) dbf ON 1 = 1'
+                    bulk collect into xx;
+                    if xx.count >= 1 then
+                         for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                         end loop;
+                    end if;
+               exception
+                    when others then
+                         for cur1 in (select upper(name) name from  v$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (102) 2: ' ||sqlerrm);
+                         end loop;
+               end;
           END;
 /
           set serverout off
@@ -892,31 +948,83 @@ Function sql_tablespaces {
      elseif ($DBVERSION -gt 92000) {
           $query_tablespace = @'
           prompt <<<oracle_tablespaces:sep(124)>>>;
-          select upper(d.NAME) || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
-                  ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
-                  ||'|'|| ONLINE_STATUS ||'|'|| BLOCK_SIZE
-                  ||'|'|| decode(tstatus,'READ ONLY', 'READONLY', tstatus) || '|' || free_blocks
-                  ||'|'|| contents
-           from v$database d , (
-                    select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
-                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
-                    'ONLINE' ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
-                    from dba_data_files f, dba_tablespaces t, dba_free_space fs
-                    where f.tablespace_name = t.tablespace_name
-                    and f.file_id = fs.file_id(+)
-                    group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
-                    f.blocks, f.maxblocks, f.user_blocks, f.increment_by, 'ONLINE',
-                    t.block_size, t.status, t.contents
-                    UNION
-                    select f.file_name, f.tablespace_name, 'ONLINE' status, f.AUTOEXTENSIBLE,
-                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP',
-                    t.BLOCK_SIZE, 'TEMP' status, sum(sh.blocks_free) free_blocks, 'TEMPORARY'
-                    from v$thread th, dba_temp_files f, dba_tablespaces t, v$temp_space_header sh
-                    WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
-                    GROUP BY th.instance, f.file_name, f.tablespace_name, 'ONLINE',
-                    f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
-                    'TEMP', t.block_size, t.status);
-select * from v$instance;
+          select upper(d.NAME)
+               || '|' || file_name
+               || '|' || tablespace_name
+               || '|' || fstatus
+               || '|' || AUTOEXTENSIBLE
+               || '|' || blocks
+               || '|' || maxblocks
+               || '|' || USER_BLOCKS
+               || '|' || INCREMENT_BY
+               || '|' || ONLINE_STATUS
+               || '|' || BLOCK_SIZE
+               || '|' || decode(tstatus,'READ ONLY', 'READONLY', tstatus)
+               || '|' || free_blocks
+               || '|' || contents
+          from v$database d , (
+               select
+                    f.file_name,
+                    f.tablespace_name,
+                    f.status fstatus,
+                    f.AUTOEXTENSIBLE,
+                    f.blocks,
+                    f.maxblocks,
+                    f.USER_BLOCKS,
+                    f.INCREMENT_BY,
+                    'ONLINE' ONLINE_STATUS,
+                    t.BLOCK_SIZE,
+                    t.status tstatus,
+                    nvl(sum(fs.blocks),0) free_blocks,
+                    t.contents
+               from dba_data_files f, dba_tablespaces t, dba_free_space fs
+               where f.tablespace_name = t.tablespace_name
+               and f.file_id = fs.file_id(+)
+               group by
+                    f.file_name,
+                    f.tablespace_name,
+                    f.status,
+                    f.autoextensible,
+                    f.blocks,
+                    f.maxblocks,
+                    f.user_blocks,
+                    f.increment_by,
+                    'ONLINE',
+                    t.block_size,
+                    t.status,
+                    t.contents
+               UNION
+               select
+                    f.file_name,
+                    f.tablespace_name,
+                    'ONLINE' status,
+                    f.AUTOEXTENSIBLE,
+                    f.blocks,
+                    f.maxblocks,
+                    f.USER_BLOCKS,
+                    f.INCREMENT_BY,
+                    'TEMP',
+                    t.BLOCK_SIZE,
+                    'TEMP' status,
+                    sum(sh.blocks_free) free_blocks,
+                    'TEMPORARY'
+               from v$thread th, dba_temp_files f, dba_tablespaces t, v$temp_space_header sh
+               WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
+               GROUP BY
+                    th.instance,
+                    f.file_name,
+                    f.tablespace_name,
+                    'ONLINE',
+                    f.autoextensible,
+                    f.blocks,
+                    f.maxblocks,
+                    f.user_blocks,
+                    f.increment_by,
+                    'TEMP',
+                    t.block_size,
+                    t.status
+          );
+          select * from v$instance;
 
 '@
 
@@ -959,25 +1067,6 @@ Function sql_dataguard_stats {
           ORDER BY 1;
 
 '@
-          echo $query_dataguard_stats
-     }
-     else {
-          $query_dataguard_stats = @'
-          prompt <<<oracle_dataguard_stats:sep(124)>>>;
-          SELECT upper(d.NAME)
-                     ||'|'|| upper(d.DB_UNIQUE_NAME)
-                     ||'|'|| d.DATABASE_ROLE
-                     ||'|'|| ds.name
-                     ||'|'|| ds.value
-              FROM  v$database d
-              JOIN  v$parameter vp on 1=1
-              left outer join V$dataguard_stats ds on 1=1
-              WHERE vp.name = 'log_archive_config'
-              AND   vp.value is not null
-              ORDER BY 1;
-
-'@
-
           echo $query_dataguard_stats
      }
 }
@@ -1067,71 +1156,76 @@ Function sql_rman {
           $query_rman = @'
           prompt <<<oracle_rman:sep(124)>>>;
           select /* check_mk rman1 */ upper(name)
-                 || '|'|| 'COMPLETED'
-                 || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                 || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                 || '|'|| case when INCREMENTAL_LEVEL IS NULL
-                          then 'DB_FULL'
-                          else 'DB_INCR'
-                          end
-                 || '|'|| INCREMENTAL_LEVEL
-                 || '|'|| round(((sysdate-COMPLETION_TIME) * 24 * 60), 0)
-                 || '|'|| INCREMENTAL_CHANGE#
-            from (select upper(i.instance_name) name
-                       , bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#, min(bd2.COMPLETION_TIME) COMPLETION_TIME
-                  from (select bd.file#, bd.INCREMENTAL_LEVEL, max(bd.COMPLETION_TIME) COMPLETION_TIME
-                        from v$backup_datafile bd
-                        join v$datafile_header dh on dh.file# = bd.file#
-                        where dh.status = 'ONLINE'
-                          and dh.con_id <> 2
-                        group by bd.file#, bd.INCREMENTAL_LEVEL
-                                       ) bd
-                 join v$backup_datafile bd2 on bd2.file# = bd.file#
-                                           and bd2.COMPLETION_TIME = bd.COMPLETION_TIME
-                 join v$database vd on vd.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE#
-                 join v$instance i on 1=1
-                 group by upper(i.instance_name)
-                        , bd2.INCREMENTAL_LEVEL
-                        , bd2.INCREMENTAL_CHANGE#
-                 order by name, bd2.INCREMENTAL_LEVEL);
+               || '|'|| 'COMPLETED'
+               || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+               || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+               || '|'|| case when INCREMENTAL_LEVEL IS NULL
+                        then 'DB_FULL'
+                        else 'DB_INCR'
+                        end
+               || '|'|| INCREMENTAL_LEVEL
+               || '|'|| round(((sysdate-COMPLETION_TIME) * 24 * 60), 0)
+               || '|'|| INCREMENTAL_CHANGE#
+          from (
+               select upper(i.instance_name) name
+                    , bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#, min(bd2.COMPLETION_TIME) COMPLETION_TIME
+               from (
+                    select bd.file#, bd.INCREMENTAL_LEVEL, max(bd.COMPLETION_TIME) COMPLETION_TIME
+                    from v$backup_datafile bd
+                    join v$datafile_header dh on dh.file# = bd.file#
+                    where dh.status = 'ONLINE'
+                         and dh.con_id <> 2
+                    group by bd.file#, bd.INCREMENTAL_LEVEL
+               ) bd
+               join v$backup_datafile bd2 on bd2.file# = bd.file#
+                    and bd2.COMPLETION_TIME = bd.COMPLETION_TIME
+               join v$database vd on vd.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE#
+               join v$instance i on 1=1
+               group by upper(i.instance_name)
+                    , bd2.INCREMENTAL_LEVEL
+                    , bd2.INCREMENTAL_CHANGE#
+               order by name, bd2.INCREMENTAL_LEVEL
+          );
 
           select /* check_mk rman2 */ name
-                || '|' || 'COMPLETED'
-                || '|'
-                || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
-                || '|' || 'CONTROLFILE'
-                || '|'
-                || '|' || round((sysdate - CHECKPOINT_TIME) * 24 * 60)
-                || '|' || '0'
-          from (select upper(i.instance_name) name
-                      ,max(bcd.CHECKPOINT_TIME) CHECKPOINT_TIME
-                from v$database d
-                join V$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
-                join v$instance i on 1=1
-                group by upper(i.instance_name)
-               );
+               || '|' || 'COMPLETED'
+               || '|'
+               || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
+               || '|' || 'CONTROLFILE'
+               || '|'
+               || '|' || round((sysdate - CHECKPOINT_TIME) * 24 * 60)
+               || '|' || '0'
+          from (
+               select upper(i.instance_name) name
+                    ,max(bcd.CHECKPOINT_TIME) CHECKPOINT_TIME
+               from v$database d
+               join V$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
+               join v$instance i on 1=1
+               group by upper(i.instance_name)
+          );
 
           select /* check_mk rman3 */ name
-                 || '|COMPLETED'
-                 || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
-                 || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
-                 || '|ARCHIVELOG||'
-                 || round((sysdate - completed)*24*60,0)
-                 || '|'
+               || '|COMPLETED'
+               || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
+               || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
+               || '|ARCHIVELOG||'
+               || round((sysdate - completed)*24*60,0)
+               || '|'
           from (
-                select upper(i.instance_name) name
-                     , max(a.completion_time) completed
-                     , case when a.backup_count > 0 then 1 else 0 end
-                from v$archived_log a, v$database d, v$instance i
-                where a.backup_count > 0
-                      and a.dest_id in
-                      (select b.dest_id
-                       from v$archive_dest b
-                       where b.target = 'PRIMARY'
-                         and b.SCHEDULE = 'ACTIVE'
-                      )
-                group by d.NAME, i.instance_name
-                       , case when a.backup_count > 0 then 1 else 0 end);
+               select upper(i.instance_name) name
+                    , max(a.completion_time) completed
+                    , case when a.backup_count > 0 then 1 else 0 end
+               from v$archived_log a, v$database d, v$instance i
+               where a.backup_count > 0
+                    and a.dest_id in (
+                         select b.dest_id
+                         from v$archive_dest b
+                         where b.target = 'PRIMARY'
+                              and b.SCHEDULE = 'ACTIVE'
+                    )
+               group by d.NAME, i.instance_name
+                    , case when a.backup_count > 0 then 1 else 0 end
+          );
 
 '@
           echo $query_rman
@@ -1140,70 +1234,75 @@ Function sql_rman {
           $query_rman = @'
           prompt <<<oracle_rman:sep(124)>>>;
           select /* check_mk rman1 */ upper(name)
-                 || '|'|| 'COMPLETED'
-                 || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                 || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                 || '|'|| case when INCREMENTAL_LEVEL IS NULL
-                          then 'DB_FULL'
-                          else 'DB_INCR'
-                          end
-                 || '|'|| INCREMENTAL_LEVEL
-                 || '|'|| round(((sysdate-COMPLETION_TIME) * 24 * 60), 0)
-                 || '|'|| INCREMENTAL_CHANGE#
-            from (select upper(i.instance_name) name
-                       , bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#, min(bd2.COMPLETION_TIME) COMPLETION_TIME
-                  from (select bd.file#, bd.INCREMENTAL_LEVEL, max(bd.COMPLETION_TIME) COMPLETION_TIME
-                        from v$backup_datafile bd
-                        join v$datafile_header dh on dh.file# = bd.file#
-                        where dh.status = 'ONLINE'
-                        group by bd.file#, bd.INCREMENTAL_LEVEL
-                                       ) bd
-                 join v$backup_datafile bd2 on bd2.file# = bd.file#
-                                           and bd2.COMPLETION_TIME = bd.COMPLETION_TIME
-                 join v$database vd on vd.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE#
-                 join v$instance i on 1=1
-                 group by upper(i.instance_name)
-                        , bd2.INCREMENTAL_LEVEL
-                        , bd2.INCREMENTAL_CHANGE#
-                 order by name, bd2.INCREMENTAL_LEVEL);
+               || '|'|| 'COMPLETED'
+               || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+               || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+               || '|'|| case when INCREMENTAL_LEVEL IS NULL
+                         then 'DB_FULL'
+                         else 'DB_INCR'
+                         end
+               || '|'|| INCREMENTAL_LEVEL
+               || '|'|| round(((sysdate-COMPLETION_TIME) * 24 * 60), 0)
+               || '|'|| INCREMENTAL_CHANGE#
+          from (
+               select upper(i.instance_name) name
+                    , bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#, min(bd2.COMPLETION_TIME) COMPLETION_TIME
+               from (
+                    select bd.file#, bd.INCREMENTAL_LEVEL, max(bd.COMPLETION_TIME) COMPLETION_TIME
+                    from v$backup_datafile bd
+                    join v$datafile_header dh on dh.file# = bd.file#
+                    where dh.status = 'ONLINE'
+                    group by bd.file#, bd.INCREMENTAL_LEVEL
+               ) bd
+               join v$backup_datafile bd2 on bd2.file# = bd.file#
+                    and bd2.COMPLETION_TIME = bd.COMPLETION_TIME
+               join v$database vd on vd.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE#
+               join v$instance i on 1=1
+               group by upper(i.instance_name)
+                    , bd2.INCREMENTAL_LEVEL
+                    , bd2.INCREMENTAL_CHANGE#
+               order by name, bd2.INCREMENTAL_LEVEL
+          );
 
           select /* check_mk rman2 */ name
-                || '|' || 'COMPLETED'
-                || '|'
-                || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
-                || '|' || 'CONTROLFILE'
-                || '|'
-                || '|' || round((sysdate - CHECKPOINT_TIME) * 24 * 60)
-                || '|' || '0'
-          from (select upper(i.instance_name) name
-                      ,max(bcd.CHECKPOINT_TIME) CHECKPOINT_TIME
-                from v$database d
-                join V$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
-                join v$instance i on 1=1
-                group by upper(i.instance_name)
-               );
+               || '|' || 'COMPLETED'
+               || '|'
+               || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
+               || '|' || 'CONTROLFILE'
+               || '|'
+               || '|' || round((sysdate - CHECKPOINT_TIME) * 24 * 60)
+               || '|' || '0'
+          from (
+               select upper(i.instance_name) name
+                    ,max(bcd.CHECKPOINT_TIME) CHECKPOINT_TIME
+               from v$database d
+               join V$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
+               join v$instance i on 1=1
+               group by upper(i.instance_name)
+          );
 
           select /* check_mk rman3 */ name
-                 || '|COMPLETED'
-                 || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
-                 || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
-                 || '|ARCHIVELOG||'
-                 || round((sysdate - completed)*24*60,0)
-                 || '|'
+               || '|COMPLETED'
+               || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
+               || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
+               || '|ARCHIVELOG||'
+               || round((sysdate - completed)*24*60,0)
+               || '|'
           from (
-                select upper(i.instance_name) name
-                     , max(a.completion_time) completed
-                     , case when a.backup_count > 0 then 1 else 0 end
-                from v$archived_log a, v$database d, v$instance i
-                where a.backup_count > 0
-                      and a.dest_id in
-                      (select b.dest_id
-                       from v$archive_dest b
-                       where b.target = 'PRIMARY'
-                         and b.SCHEDULE = 'ACTIVE'
-                      )
-                group by d.NAME, i.instance_name
-                       , case when a.backup_count > 0 then 1 else 0 end);
+               select upper(i.instance_name) name
+                    , max(a.completion_time) completed
+                    , case when a.backup_count > 0 then 1 else 0 end
+               from v$archived_log a, v$database d, v$instance i
+               where a.backup_count > 0
+                    and a.dest_id in (
+                         select b.dest_id
+                         from v$archive_dest b
+                         where b.target = 'PRIMARY'
+                              and b.SCHEDULE = 'ACTIVE'
+                    )
+               group by d.NAME, i.instance_name
+                    , case when a.backup_count > 0 then 1 else 0 end
+          );
 
 '@
           echo $query_rman
@@ -1212,39 +1311,40 @@ Function sql_rman {
           $query_rman = @'
           prompt <<<oracle_rman:sep(124)>>>;
           SELECT upper(d.NAME)
-                 ||'|'|| a.STATUS
-                 ||'|'|| to_char(a.START_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                 ||'|'|| to_char(a.END_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                 ||'|'|| replace(b.INPUT_TYPE, ' ', '_')
-                 ||'|'|| round(((sysdate - END_TIME) * 24 * 60),0)
-                 FROM V$RMAN_BACKUP_JOB_DETAILS a, v$database d,
-                      (SELECT input_type, max(command_id) as command_id
-                       FROM V$RMAN_BACKUP_JOB_DETAILS
-                      WHERE START_TIME > sysdate-14
-                        and input_type != 'ARCHIVELOG'
-                        and STATUS<>'RUNNING' GROUP BY input_type) b
-                 WHERE a.COMMAND_ID = b.COMMAND_ID
+               ||'|'|| a.STATUS
+               ||'|'|| to_char(a.START_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+               ||'|'|| to_char(a.END_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+               ||'|'|| replace(b.INPUT_TYPE, ' ', '_')
+               ||'|'|| round(((sysdate - END_TIME) * 24 * 60),0)
+          FROM V$RMAN_BACKUP_JOB_DETAILS a, v$database d, (
+               SELECT input_type, max(command_id) as command_id
+               FROM V$RMAN_BACKUP_JOB_DETAILS
+               WHERE START_TIME > sysdate-14
+                    and input_type != 'ARCHIVELOG'
+                    and STATUS<>'RUNNING' GROUP BY input_type
+          ) b
+          WHERE a.COMMAND_ID = b.COMMAND_ID
           UNION ALL
           select name
-                 || '|COMPLETED'
-                 || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
-                 || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
-                 || '|ARCHIVELOG|'
-                 || round((sysdate - completed)*24*60,0)
+               || '|COMPLETED'
+               || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
+               || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
+               || '|ARCHIVELOG|'
+               || round((sysdate - completed)*24*60,0)
           from (
-                select d.name
-                     , max(a.completion_time) completed
-                     , case when a.backup_count > 0 then 1 else 0 end
-                from v$archived_log a, v$database d
-                where a.backup_count > 0
-                      and a.dest_id in
-                      (select b.dest_id
-                       from v$archive_dest b
-                       where b.target = 'PRIMARY'
-                         and b.SCHEDULE = 'ACTIVE'
-                          )
-                group by d.name, case when a.backup_count > 0 then 1 else 0 end)
-;
+               select d.name
+                    , max(a.completion_time) completed
+                    , case when a.backup_count > 0 then 1 else 0 end
+               from v$archived_log a, v$database d
+               where a.backup_count > 0
+                    and a.dest_id in (
+                         select b.dest_id
+                         from v$archive_dest b
+                         where b.target = 'PRIMARY'
+                              and b.SCHEDULE = 'ACTIVE'
+                    )
+               group by d.name, case when a.backup_count > 0 then 1 else 0 end
+          );
 
 '@
           echo $query_rman
@@ -1356,24 +1456,46 @@ Function sql_undostat {
 Function sql_resumable {
      $query_resumable = @'
           prompt <<<oracle_resumable:sep(124)>>>;
-          select upper(i.INSTANCE_NAME)
-                 ||'|'|| u.username
-                 ||'|'|| a.SESSION_ID
-                 ||'|'|| a.status
-                 ||'|'|| a.TIMEOUT
-                 ||'|'|| round((sysdate-to_date(a.SUSPEND_TIME,'mm/dd/yy hh24:mi:ss'))*24*60*60)
-                 ||'|'|| a.ERROR_NUMBER
-                 ||'|'|| to_char(to_date(a.SUSPEND_TIME, 'mm/dd/yy hh24:mi:ss'),'mm/dd/yy_hh24:mi:ss')
-                 ||'|'|| a.RESUME_TIME
-                 ||'|'|| a.ERROR_MSG
-          from dba_resumable a, v$instance i, dba_users u
-          where a.INSTANCE_ID = i.INSTANCE_NUMBER
-          and u.user_id = a.user_id
-          and a.SUSPEND_TIME is not null
-          union all
-          select upper(i.INSTANCE_NAME)
-                 || '|||||||||'
-          from v$instance i;
+          SET SERVEROUTPUT ON feedback off
+          DECLARE
+               type x is table of varchar2(20000) index by pls_integer;
+               xx x;
+          begin
+               begin
+                    execute immediate
+                         'select upper(i.INSTANCE_NAME)
+                              ||'|'|| u.username
+                              ||'|'|| a.SESSION_ID
+                              ||'|'|| a.status
+                              ||'|'|| a.TIMEOUT
+                              ||'|'|| round((sysdate-to_date(a.SUSPEND_TIME,'mm/dd/yy hh24:mi:ss'))*24*60*60)
+                              ||'|'|| a.ERROR_NUMBER
+                              ||'|'|| to_char(to_date(a.SUSPEND_TIME, 'mm/dd/yy hh24:mi:ss'),'mm/dd/yy_hh24:mi:ss')
+                              ||'|'|| a.RESUME_TIME
+                              ||'|'|| a.ERROR_MSG
+                         from dba_resumable a, v$instance i, dba_users u
+                         where a.INSTANCE_ID = i.INSTANCE_NUMBER
+                         and u.user_id = a.user_id
+                         and a.SUSPEND_TIME is not null
+                         union all
+                         select upper(i.INSTANCE_NAME)
+                              || '|||||||||'
+                         from v$instance i'
+                    bulk collect into xx;
+                    if xx.count >= 1 then
+                        for i in 1 .. xx.count loop
+                            dbms_output.put_line(xx(i));
+                        end loop;
+                    end if;
+               exception
+                    when others then
+                         for cur1 in (select upper(i.instance_name) instance_name from  v$instance i) loop
+                              dbms_output.put_line(cur1.instance_name || '| Debug: '||sqlerrm);
+                         end loop;
+               end;
+          END;
+          /
+          set serverout off
 
 '@
      echo $query_resumable
@@ -1392,55 +1514,56 @@ Function sql_jobs {
               type x is table of varchar2(20000) index by pls_integer;
               xx x;
           begin
-              begin
-                  execute immediate 'SELECT upper(vp.name)
-                 ||''|''|| j.OWNER
-                 ||''|''|| j.JOB_NAME
-                 ||''|''|| j.STATE
-                 ||''|''|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
-                 ||''|''|| j.RUN_COUNT
-                 ||''|''|| j.ENABLED
-                 ||''|''|| NVL(j.NEXT_RUN_DATE, to_date(''1970-01-01'', ''YYYY-mm-dd''))
-                 ||''|''|| NVL(j.SCHEDULE_NAME, ''-'')
-                 ||''|''|| jd.STATUS
-          FROM cdb_scheduler_jobs j
-          JOIN ( SELECT vp.con_id
-                       ,d.name || ''|'' || vp.name name
-                   FROM v$containers vp
-                   JOIN v$database d on 1=1
-                  WHERE d.cdb = ''YES'' and vp.con_id <> 2
-                    AND d.database_role = ''PRIMARY''
-                    AND d.open_mode = ''READ WRITE''
-                UNION ALL
-                 SELECT 0, name
-                   FROM v$database d
-                  WHERE d.database_role = ''PRIMARY''
-                    AND d.open_mode = ''READ WRITE''
-           ) vp on j.con_id = vp.con_id
-                       left outer join (SELECT con_id, owner, job_name, max(LOG_ID) log_id
-                              FROM cdb_scheduler_job_run_details dd
-                             group by con_id, owner, job_name
-                           ) jm on  jm.JOB_NAME = j.JOB_NAME
-                               and jm.owner=j.OWNER
-                               and jm.con_id = j.con_id
-          left outer join cdb_scheduler_job_run_details jd
-                          on  jd.con_id = jm.con_id
-                          AND jd.owner = jm.OWNER
-                          AND jd.JOB_NAME = jm.JOB_NAME
-                          AND jd.LOG_ID = jm.LOG_ID
-          WHERE not (j.auto_drop = ''TRUE'' and REPEAT_INTERVAL is null)'
-                  bulk collect into xx;
-                  if xx.count >= 1 then
-                      for i in 1 .. xx.count loop
-                          dbms_output.put_line(xx(i));
-                      end loop;
-                  end if;
-              exception
-                  when others then
-                      for cur1 in (select upper(name) name from  v$database) loop
-                          dbms_output.put_line(cur1.name || '| Debug (121): ' ||sqlerrm);
-                      end loop;
-              end;
+               begin
+                    execute immediate
+                         'SELECT upper(vp.name)
+                              ||''|''|| j.OWNER
+                              ||''|''|| j.JOB_NAME
+                              ||''|''|| j.STATE
+                              ||''|''|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
+                              ||''|''|| j.RUN_COUNT
+                              ||''|''|| j.ENABLED
+                              ||''|''|| NVL(j.NEXT_RUN_DATE, to_date(''1970-01-01'', ''YYYY-mm-dd''))
+                              ||''|''|| NVL(j.SCHEDULE_NAME, ''-'')
+                              ||''|''|| jd.STATUS
+                         FROM cdb_scheduler_jobs j
+                              JOIN (
+                                   SELECT vp.con_id,d.name || ''|'' || vp.name name
+                                   FROM v$containers vp
+                                   JOIN v$database d on 1=1
+                                   WHERE d.cdb = ''YES'' and vp.con_id <> 2
+                                   AND d.database_role = ''PRIMARY''
+                                   AND d.open_mode = ''READ WRITE''
+                                   UNION ALL
+                                   SELECT 0, name
+                                   FROM v$database d
+                                   WHERE d.database_role = ''PRIMARY''
+                                   AND d.open_mode = ''READ WRITE''
+                                   ) vp on j.con_id = vp.con_id
+                              left outer join (SELECT con_id, owner, job_name, max(LOG_ID) log_id
+                                   FROM cdb_scheduler_job_run_details dd
+                                   group by con_id, owner, job_name
+                                   ) jm on jm.JOB_NAME = j.JOB_NAME
+                                   and jm.owner=j.OWNER
+                                   and jm.con_id = j.con_id
+                              left outer join cdb_scheduler_job_run_details jd
+                                   on jd.con_id = jm.con_id
+                                   AND jd.owner = jm.OWNER
+                                   AND jd.JOB_NAME = jm.JOB_NAME
+                                   AND jd.LOG_ID = jm.LOG_ID
+                         WHERE not (j.auto_drop = ''TRUE'' and REPEAT_INTERVAL is null)'
+                    bulk collect into xx;
+                    if xx.count >= 1 then
+                         for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                         end loop;
+                    end if;
+               exception
+                    when others then
+                         for cur1 in (select upper(name) name from  v$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (121): ' ||sqlerrm);
+                         end loop;
+               end;
           END;
           /
           set serverout off
@@ -1451,22 +1574,54 @@ Function sql_jobs {
      elseif ($DBVERSION -gt 102000) {
           $query_scheduler_jobs = @'
           prompt <<<oracle_jobs:sep(124)>>>;
-          SELECT upper(d.NAME)
-                     ||'|'|| j.OWNER
-                     ||'|'|| j.JOB_NAME
-                     ||'|'|| j.STATE
-                     ||'|'|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
-                     ||'|'|| j.RUN_COUNT
-                     ||'|'|| j.ENABLED
-                     ||'|'|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
-                     ||'|'|| NVL(j.SCHEDULE_NAME, '-')
-                     ||'|'|| d.STATUS
-              FROM dba_scheduler_jobs j, dba_scheduler_job_run_details d, v$database d
-              WHERE d.owner=j.OWNER AND d.JOB_NAME=j.JOB_NAME
-                AND d.LOG_ID=(SELECT max(LOG_ID) FROM dba_scheduler_job_run_details dd
-                              WHERE dd.owner=j.OWNER and dd.JOB_NAME=j.JOB_NAME
-                             )
-                AND not (j.auto_drop = 'TRUE' and REPEAT_INTERVAL is null);
+          SET SERVEROUTPUT ON feedback off
+               DECLARE
+                    type x is table of varchar2(20000) index by pls_integer;
+                    xx x;
+          begin
+               begin
+                    execute immediate
+                         'SELECT upper(d.NAME)
+                              ||'|'|| j.OWNER
+                              ||'|'|| j.JOB_NAME
+                              ||'|'|| j.STATE
+                              ||'|'|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
+                              ||'|'|| j.RUN_COUNT
+                              ||'|'|| j.ENABLED
+                              ||'|'|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
+                              ||'|'|| NVL(j.SCHEDULE_NAME, '-')
+                              ||'|'|| d.STATUS
+                         FROM dba_scheduler_jobs j
+                         join v$database vd on 1 = 1
+                         join v$instance i on 1 = 1
+                         left outer join (
+                              SELECT owner, job_name, max(LOG_ID) log_id
+                              FROM dba_scheduler_job_run_details dd
+                              group by owner, job_name
+                              ) jm on jm.JOB_NAME = j.JOB_NAME
+                              and jm.owner=j.OWNER
+                         left outer join dba_scheduler_job_run_details jd
+                              on jd.owner = jm.OWNER
+                              AND jd.JOB_NAME = jm.JOB_NAME
+                              AND jd.LOG_ID = jm.LOG_ID
+                         WHERE vd.database_role = ''PRIMARY''
+                         AND vd.open_mode = ''READ WRITE''
+                         AND not (j.auto_drop = ''TRUE'' and REPEAT_INTERVAL is null)'
+                    bulk collect into xx;
+                    if xx.count >= 1 then
+                         for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                         end loop;
+                    end if;
+               exception
+                    when others then
+                         for cur1 in (select upper(name) name from  v$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (102): ' ||sqlerrm);
+                         end loop;
+               end;
+          END;
+          /
+          set serverout off
 
 '@
           echo $query_scheduler_jobs
@@ -1479,19 +1634,19 @@ Function sql_jobs {
 ################################################################################
 Function sql_ts_quotas {
      $query_ts_quotas = @'
-prompt <<<oracle_ts_quotas:sep(124)>>>;
-select upper(d.NAME)
-                 ||'|'|| Q.USERNAME
-                 ||'|'|| Q.TABLESPACE_NAME
-                 ||'|'|| Q.BYTES
-                 ||'|'|| Q.MAX_BYTES
-          from dba_ts_quotas Q, v$database d
-          where max_bytes > 0
-          union all
-          select upper(d.NAME)
-                 ||'|||'
-          from v$database d
-          order by 1;
+     prompt <<<oracle_ts_quotas:sep(124)>>>;
+     select upper(d.NAME)
+          ||'|'|| Q.USERNAME
+          ||'|'|| Q.TABLESPACE_NAME
+          ||'|'|| Q.BYTES
+          ||'|'|| Q.MAX_BYTES
+     from dba_ts_quotas Q, v$database d
+     where max_bytes > 0
+     union all
+     select upper(d.NAME)
+          ||'|||'
+     from v$database d
+     order by 1;
 
 '@
      echo $query_ts_quotas
@@ -1504,11 +1659,11 @@ select upper(d.NAME)
 ################################################################################
 Function sql_version {
      $query_version = @'
-prompt <<<oracle_version:sep(124)>>>;
-select upper(i.INSTANCE_NAME)
-	  || '|' || banner
-	  from v$version, v$instance i
-	  where banner like 'Oracle%';
+     prompt <<<oracle_version:sep(124)>>>;
+     select upper(i.INSTANCE_NAME)
+	     || '|' || banner
+	from v$version, v$instance i
+	where banner like 'Oracle%';
 
 '@
      echo $query_version
@@ -1524,72 +1679,71 @@ Function sql_instance {
           $query_instance = @'
           prompt <<<oracle_instance:sep(124)>>>;
           select upper(i.instance_name)
-                     || '|' || i.VERSION
-                     || '|' || i.STATUS
-                     || '|' || i.LOGINS
-                     || '|' || i.ARCHIVER
-                     || '|' || round((sysdate - i.startup_time) * 24*60*60)
-                     || '|' || '0'
-                     || '|' || 'NO'
-                     || '|' || 'ASM'
-                     || '|' || 'NO'
-                     || '|' || i.instance_name
-                from v$instance i
-;
+               || '|' || i.VERSION
+               || '|' || i.STATUS
+               || '|' || i.LOGINS
+               || '|' || i.ARCHIVER
+               || '|' || round((sysdate - i.startup_time) * 24*60*60)
+               || '|' || '0'
+               || '|' || 'NO'
+               || '|' || 'ASM'
+               || '|' || 'NO'
+               || '|' || i.instance_name
+          from v$instance i;
 
 '@
      }
      else {
           if ($DBVERSION -gt 121000) {
                $query_instance = @'
-              prompt <<<oracle_instance:sep(124)>>>;
-              select upper(instance_name)
-                     || '|' || version
-                     || '|' || status
-                     || '|' || logins
-                     || '|' || archiver
-                     || '|' || round((sysdate - startup_time) * 24*60*60)
-                     || '|' || dbid
-                     || '|' || log_mode
-                     || '|' || database_role
-                     || '|' || force_logging
-                     || '|' || name
-                     || '|' || to_char(created, 'ddmmyyyyhh24mi')
-                     || '|' || upper(value)
-                     || '|' || con_id
-                     || '|' || pname
-                     || '|' || pdbid
-                     || '|' || popen_mode
-                     || '|' || prestricted
-                     || '|' || ptotal_time
-                     || '|' || precovery_status
-                     || '|' || round(nvl(popen_time, -1))
-                     || '|' || pblock_size
-              from(
-                  select i.instance_name, i.version, i.status, i.logins, i.archiver
-                        ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
-                        ,d.name, d.created, p.value, vp.con_id, vp.name pname
-                        ,vp.dbid pdbid, vp.open_mode popen_mode, vp.restricted prestricted, vp.total_size ptotal_time
-                        ,vp.block_size pblock_size, vp.recovery_status precovery_status
-                        ,(cast(systimestamp as date) - cast(open_time as date))  * 24*60*60 popen_time
+               prompt <<<oracle_instance:sep(124)>>>;
+               select upper(instance_name)
+                    || '|' || version
+                    || '|' || status
+                    || '|' || logins
+                    || '|' || archiver
+                    || '|' || round((sysdate - startup_time) * 24*60*60)
+                    || '|' || dbid
+                    || '|' || log_mode
+                    || '|' || database_role
+                    || '|' || force_logging
+                    || '|' || name
+                    || '|' || to_char(created, 'ddmmyyyyhh24mi')
+                    || '|' || upper(value)
+                    || '|' || con_id
+                    || '|' || pname
+                    || '|' || pdbid
+                    || '|' || popen_mode
+                    || '|' || prestricted
+                    || '|' || ptotal_time
+                    || '|' || precovery_status
+                    || '|' || round(nvl(popen_time, -1))
+                    || '|' || pblock_size
+               from(
+                    select i.instance_name, i.version, i.status, i.logins, i.archiver
+                         ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
+                         ,d.name, d.created, p.value, vp.con_id, vp.name pname
+                         ,vp.dbid pdbid, vp.open_mode popen_mode, vp.restricted prestricted, vp.total_size ptotal_time
+                         ,vp.block_size pblock_size, vp.recovery_status precovery_status
+                         ,(cast(systimestamp as date) - cast(open_time as date))  * 24*60*60 popen_time
                     from v$instance i
                     join v$database d on 1=1
                     join v$parameter p on 1=1
                     join v$pdbs vp on 1=1
                     where p.name = 'enable_pluggable_database'
-                  union all
-                  select
+                    union all
+                    select
                          i.instance_name, i.version, i.status, i.logins, i.archiver
-                        ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
-                        ,d.name, d.created, p.value, 0 con_id, null pname
-                        ,0 pdbis, null popen_mode, null prestricted, null ptotal_time
-                        ,0 pblock_size, null precovery_status, null popen_time
+                         ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
+                         ,d.name, d.created, p.value, 0 con_id, null pname
+                         ,0 pdbis, null popen_mode, null prestricted, null ptotal_time
+                         ,0 pblock_size, null precovery_status, null popen_time
                     from v$instance i
                     join v$database d on 1=1
                     join v$parameter p on 1=1
                     where p.name = 'enable_pluggable_database'
                     order by con_id
-                  );
+               );
 
 '@
           }
@@ -1607,6 +1761,7 @@ Function sql_instance {
                          || '|' || DATABASE_ROLE
                          || '|' || FORCE_LOGGING
                          || '|' || d.name
+                         || '|' || to_char(d.created, 'ddmmyyyyhh24mi')
                     from v$instance i, v$database d;
 
 '@
@@ -1624,25 +1779,25 @@ Function sql_instance {
 Function sql_sessions {
      if ($DBVERSION -gt 121000) {
           $query_sessions = @'
-           prompt <<<oracle_sessions:sep(124)>>>;
-           SELECT upper(vp.name)
-                 || '|' || ltrim(COUNT(1))
-                 || decode(vp.con_id
-                           , 0, '|'||ltrim(rtrim(LIMIT_VALUE))||'|-1')
-           FROM ( SELECT vp.con_id
-                     ,i.instance_name || '.' || vp.name name
-                  FROM v$containers vp
-                  JOIN v$instance i ON 1 = 1
-                  JOIN v$database d on 1=1
-                  WHERE d.cdb = 'YES' and vp.con_id <> 2
-                 UNION ALL
-                  SELECT 0, instance_name
-                  FROM v$instance
-                ) vp
-           JOIN v$resource_limit rl on RESOURCE_NAME = 'sessions'
-           LEFT OUTER JOIN v$session vs ON vp.con_id = vs.con_id
-           GROUP BY vp.name, vp.con_id, rl.LIMIT_VALUE
-           ORDER BY 1;
+          prompt <<<oracle_sessions:sep(124)>>>;
+          SELECT upper(vp.name)
+               || '|' || ltrim(COUNT(1))
+               || decode(vp.con_id, 0, '|'||ltrim(rtrim(LIMIT_VALUE))||'|-1')
+          FROM (
+               SELECT vp.con_id
+                    ,i.instance_name || '.' || vp.name name
+               FROM v$containers vp
+               JOIN v$instance i ON 1 = 1
+               JOIN v$database d on 1=1
+               WHERE d.cdb = 'YES' and vp.con_id <> 2
+               UNION ALL
+               SELECT 0, instance_name
+               FROM v$instance
+               ) vp
+          JOIN v$resource_limit rl on RESOURCE_NAME = 'sessions'
+          LEFT OUTER JOIN v$session vs ON vp.con_id = vs.con_id
+          GROUP BY vp.name, vp.con_id, rl.LIMIT_VALUE
+          ORDER BY 1;
 
 '@
           echo $query_sessions
@@ -1651,7 +1806,9 @@ Function sql_sessions {
           $query_sessions = @'
           prompt <<<oracle_sessions:sep(124)>>>;
           select upper(i.instance_name)
-                  || '|' || CURRENT_UTILIZATION
+               || '|' || CURRENT_UTILIZATION
+               || '|' || ltrim(LIMIT_VALUE)
+               || '|' || MAX_UTILIZATION
           from v$resource_limit, v$instance i
           where RESOURCE_NAME = 'sessions';
 
@@ -1667,13 +1824,12 @@ Function sql_sessions {
 ################################################################################
 Function sql_processes {
      $query_processes = @'
-prompt <<<oracle_processes:sep(124)>>>;
-select upper(i.instance_name)
-                  || '|' || CURRENT_UTILIZATION
-                  || '|' || ltrim(rtrim(LIMIT_VALUE))
-           from v$resource_limit, v$instance i
-           where RESOURCE_NAME = 'processes'
-           ;
+     prompt <<<oracle_processes:sep(124)>>>;
+     select upper(i.instance_name)
+          || '|' || CURRENT_UTILIZATION
+          || '|' || ltrim(rtrim(LIMIT_VALUE))
+     from v$resource_limit, v$instance i
+     where RESOURCE_NAME = 'processes';
 
 '@
      echo $query_processes
@@ -1686,15 +1842,14 @@ select upper(i.instance_name)
 ################################################################################
 Function sql_logswitches {
      $query_logswitches = @'
-prompt <<<oracle_logswitches:sep(124)>>>;
-select upper(i.instance_name)
-                  || '|' || logswitches
-           from v$instance i ,
-                (select count(1) logswitches
-                 from v$loghist h , v$instance i
-                 where h.first_time > sysdate - 1/24
-                 and h.thread# = i.instance_number)
-                ;
+     prompt <<<oracle_logswitches:sep(124)>>>;
+     select upper(i.instance_name)
+          || '|' || logswitches
+     from v$instance i ,
+          (select count(1) logswitches
+           from v$loghist h , v$instance i
+           where h.first_time > sysdate - 1/24
+           and h.thread# = i.instance_number);
 
 '@
      echo $query_logswitches
@@ -1709,80 +1864,79 @@ Function sql_locks {
           $query_locks = @'
           prompt <<<oracle_locks:sep(124)>>>;
           select upper(vp.name)
-                 || '|' || b.sid
-                 || '|' || b.serial#
-                 || '|' || b.machine
-                 || '|' || b.program
-                 || '|' || b.process
-                 || '|' || b.osuser
-                 || '|' || b.username
-                 || '|' || b.SECONDS_IN_WAIT
-                 || '|' || b.BLOCKING_SESSION_STATUS
-                 || '|' || bs.inst_id
-                 || '|' || bs.sid
-                 || '|' || bs.serial#
-                 || '|' || bs.machine
-                 || '|' || bs.program
-                 || '|' || bs.process
-                 || '|' || bs.osuser
-                 || '|' || bs.username
+               || '|' || b.sid
+               || '|' || b.serial#
+               || '|' || b.machine
+               || '|' || b.program
+               || '|' || b.process
+               || '|' || b.osuser
+               || '|' || b.username
+               || '|' || b.SECONDS_IN_WAIT
+               || '|' || b.BLOCKING_SESSION_STATUS
+               || '|' || bs.inst_id
+               || '|' || bs.sid
+               || '|' || bs.serial#
+               || '|' || bs.machine
+               || '|' || bs.program
+               || '|' || bs.process
+               || '|' || bs.osuser
+               || '|' || bs.username
           from v$session b
           join gv$session bs on bs.inst_id = b.BLOCKING_INSTANCE
-                             and bs.sid = b.BLOCKING_SESSION
-                             and bs.con_id = b.con_id
-          join ( SELECT vp.con_id
-                       ,i.instance_name || '.' || vp.name name
-             FROM v$containers vp
-             JOIN v$instance i ON 1 = 1
-             JOIN v$database d on 1=1
-             WHERE d.cdb = 'YES' and vp.con_id <> 2
-            UNION ALL
-             SELECT 0, instance_name
-             FROM v$instance
-           ) vp on b.con_id = vp.con_id
+               and bs.sid = b.BLOCKING_SESSION
+               and bs.con_id = b.con_id
+          join (
+               SELECT vp.con_id,i.instance_name || '.' || vp.name name
+               FROM v$containers vp
+               JOIN v$instance i ON 1 = 1
+               JOIN v$database d on 1=1
+               WHERE d.cdb = 'YES' and vp.con_id <> 2
+               UNION ALL
+               SELECT 0, instance_name
+               FROM v$instance
+          ) vp on b.con_id = vp.con_id
           where b.BLOCKING_SESSION is not null;
-
           SELECT upper(i.instance_name || '.' || vp.name)
-                 || '|||||||||||||||||'
-            FROM v$containers vp
-            JOIN v$instance i ON 1 = 1
-             JOIN v$database d on 1=1
-            WHERE d.cdb = 'YES' and vp.con_id <> 2
-           UNION ALL
-            SELECT upper(i.instance_name)
-                 || '|||||||||||||||||'
-            FROM v$instance i;
+               || '|||||||||||||||||'
+          FROM v$containers vp
+          JOIN v$instance i ON 1 = 1
+          JOIN v$database d on 1=1
+          WHERE d.cdb = 'YES' and vp.con_id <> 2
+          UNION ALL
+          SELECT upper(i.instance_name)
+               || '|||||||||||||||||'
+          FROM v$instance i;
 
 '@
           echo $query_locks
      }
      elseif ($DBVERSION -gt 102000) {
           $query_locks = @'
-        select upper(i.instance_name)
-                 || '|' || b.sid
-                 || '|' || b.serial#
-                 || '|' || b.machine
-                 || '|' || b.program
-                 || '|' || b.process
-                 || '|' || b.osuser
-                 || '|' || b.username
-                 || '|' || b.SECONDS_IN_WAIT
-                 || '|' || b.BLOCKING_SESSION_STATUS
-                 || '|' || bs.inst_id
-                 || '|' || bs.sid
-                 || '|' || bs.serial#
-                 || '|' || bs.machine
-                 || '|' || bs.program
-                 || '|' || bs.process
-                 || '|' || bs.osuser
-                 || '|' || bs.username
+          select upper(i.instance_name)
+               || '|' || b.sid
+               || '|' || b.serial#
+               || '|' || b.machine
+               || '|' || b.program
+               || '|' || b.process
+               || '|' || b.osuser
+               || '|' || b.username
+               || '|' || b.SECONDS_IN_WAIT
+               || '|' || b.BLOCKING_SESSION_STATUS
+               || '|' || bs.inst_id
+               || '|' || bs.sid
+               || '|' || bs.serial#
+               || '|' || bs.machine
+               || '|' || bs.program
+               || '|' || bs.process
+               || '|' || bs.osuser
+               || '|' || bs.username
           from v$session b
           join v$instance i on 1=1
           join gv$session bs on bs.inst_id = b.BLOCKING_INSTANCE
-                             and bs.sid = b.BLOCKING_SESSION
+               and bs.sid = b.BLOCKING_SESSION
           where b.BLOCKING_SESSION is not null;
           select upper(i.instance_name)
-                 || '|||||||||||||||||'
+               || '|||||||||||||||||'
           from v$instance i;
 
 '@
@@ -1795,48 +1949,50 @@ Function sql_locks_old {
           $query_locks = @'
           prompt <<<oracle_locks:sep(124)>>>;
           SET SERVEROUTPUT ON feedback off
-DECLARE
-    type x is table of varchar2(20000) index by pls_integer;
-    xx x;
-begin
-    begin
-        execute immediate 'select upper(i.instance_name)
-           || ''|'' || a.sid
-           || ''|'' || b.serial#
-           || ''|'' || b.machine
-           || ''|'' || b.program
-           || ''|'' || b.process
-           || ''|'' || b.osuser
-           || ''|'' || a.ctime
-           || ''|'' || decode(c.owner,NULL,''NULL'',c.owner)
-           || ''|'' || decode(c.object_name,NULL,''NULL'',c.object_name)
-            from V$LOCK a, v$session b, dba_objects c, v$instance i
-            where (a.id1, a.id2, a.type)
-                       IN (SELECT id1, id2, type
-                           FROM GV$LOCK
-                           WHERE request>0
-                          )
-            and request=0
-            and a.sid = b.sid
-            and a.id1 = c.object_id (+)
-            union all
-            select upper(i.instance_name) || ''|||||||||''
-            from  v$instance i'
-        bulk collect into xx;
-        if xx.count >= 1 then
-            for i in 1 .. xx.count loop
-                dbms_output.put_line(xx(i));
-            end loop;
-        end if;
-    exception
-        when others then
-            for cur1 in (select upper(i.instance_name) instance_name from  v$instance i) loop
-                dbms_output.put_line(cur1.instance_name || '|||||||||'||sqlerrm);
-            end loop;
-    end;
-END;
-/
-set serverout off
+          DECLARE
+               type x is table of varchar2(20000) index by pls_integer;
+               xx x;
+          begin
+               begin
+                    execute immediate
+                         'select upper(i.instance_name)
+                              || ''|'' || a.sid
+                              || ''|'' || b.serial#
+                              || ''|'' || b.machine
+                              || ''|'' || b.program
+                              || ''|'' || b.process
+                              || ''|'' || b.osuser
+                              || ''|'' || a.ctime
+                              || ''|'' || decode(c.owner,NULL,''NULL'',c.owner)
+                              || ''|'' || decode(c.object_name,NULL,''NULL'',c.object_name)
+                         from V$LOCK a, v$session b, dba_objects c, v$instance i
+                         where (a.id1, a.id2, a.type)
+                         IN (
+                              SELECT id1, id2, type
+                              FROM GV$LOCK
+                              WHERE request>0
+                         )
+                         and request=0
+                         and a.sid = b.sid
+                         and a.id1 = c.object_id (+)
+                         union all
+                         select upper(i.instance_name) || ''|||||||||''
+                         from  v$instance i'
+                    bulk collect into xx;
+                    if xx.count >= 1 then
+                         for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                         end loop;
+                    end if;
+               exception
+                    when others then
+                         for cur1 in (select upper(i.instance_name) instance_name from  v$instance i) loop
+                              dbms_output.put_line(cur1.instance_name || '|||||||||'||sqlerrm);
+                         end loop;
+               end;
+          END;
+          /
+          set serverout off
 
 '@
           echo $query_locks
@@ -1854,41 +2010,41 @@ Function sql_longactivesessions {
           $query_longactivesessions = @'
           prompt <<<oracle_longactivesessions:sep(124)>>>;
           select upper(vp.name)
-                 || '|' || s.sid
-                 || '|' || s.serial#
-                 || '|' || s.machine
-                 || '|' || s.process
-                 || '|' || s.osuser
-                 || '|' || s.program
-                 || '|' || s.last_call_et
-                 || '|' || s.sql_id
+               || '|' || s.sid
+               || '|' || s.serial#
+               || '|' || s.machine
+               || '|' || s.process
+               || '|' || s.osuser
+               || '|' || s.program
+               || '|' || s.last_call_et
+               || '|' || s.sql_id
           from v$session s
-          join ( SELECT vp.con_id
-                       ,i.instance_name || '.' || vp.name name
-             FROM v$containers vp
-             JOIN v$instance i ON 1 = 1
-             JOIN v$database d on 1=1
-             WHERE d.cdb = 'YES' and vp.con_id <> 2
-            UNION ALL
-             SELECT 0, instance_name
-             FROM v$instance
-               ) vp on 1=1
+          join (
+               SELECT vp.con_id
+                    ,i.instance_name || '.' || vp.name name
+               FROM v$containers vp
+               JOIN v$instance i ON 1 = 1
+               JOIN v$database d on 1=1
+               WHERE d.cdb = 'YES' and vp.con_id <> 2
+               UNION ALL
+               SELECT 0, instance_name
+               FROM v$instance
+          ) vp on 1=1
           where s.status = 'ACTIVE'
-            and s.type != 'BACKGROUND'
-            and s.username is not null
-            and s.username not in('PUBLIC')
-            and s.last_call_et > 60*60;
-
+               and s.type != 'BACKGROUND'
+               and s.username is not null
+               and s.username not in('PUBLIC')
+               and s.last_call_et > 60*60;
           SELECT upper(i.instance_name || '.' || vp.name)
-                 || '||||||||'
-            FROM v$containers vp
-            JOIN v$instance i ON 1 = 1
-            JOIN v$database d on 1=1
-           WHERE d.cdb = 'YES' and vp.con_id <> 2
-           UNION ALL
+               || '||||||||'
+          FROM v$containers vp
+          JOIN v$instance i ON 1 = 1
+          JOIN v$database d on 1=1
+          WHERE d.cdb = 'YES' and vp.con_id <> 2
+          UNION ALL
           SELECT upper(i.instance_name)
-                 || '||||||||'
-            FROM v$instance i;
+               || '||||||||'
+          FROM v$instance i;
 
 '@
           echo $query_longactivesessions
@@ -1897,25 +2053,24 @@ Function sql_longactivesessions {
           $query_longactivesessions = @'
           prompt <<<oracle_longactivesessions:sep(124)>>>;
           select upper(i.instance_name)
-                     || '|' || s.sid
-                     || '|' || s.serial#
-                     || '|' || s.machine
-                     || '|' || s.process
-                     || '|' || s.osuser
-                     || '|' || s.program
-                     || '|' || s.last_call_et
-                     || '|' || s.sql_id
-              from v$session s, v$instance i
-              where s.status = 'ACTIVE'
-              and type != 'BACKGROUND'
-              and s.username is not null
-              and s.username not in('PUBLIC')
-              and s.last_call_et > 60*60
-              union all
-              select upper(i.instance_name)
-                     || '||||||||'
-              from v$instance i
-              ;
+               || '|' || s.sid
+               || '|' || s.serial#
+               || '|' || s.machine
+               || '|' || s.process
+               || '|' || s.osuser
+               || '|' || s.program
+               || '|' || s.last_call_et
+               || '|' || s.sql_id
+          from v$session s, v$instance i
+          where s.status = 'ACTIVE'
+               and type != 'BACKGROUND'
+               and s.username is not null
+               and s.username not in('PUBLIC')
+               and s.last_call_et > 60*60
+          union all
+          select upper(i.instance_name)
+               || '||||||||'
+          from v$instance i;
 
 '@
           echo $query_longactivesessions
@@ -1934,20 +2089,35 @@ Function sql_asm_diskgroup {
           $query_asm_diskgroup = @'
           prompt <<<oracle_asm_diskgroup:sep(124)>>>;
           select STATE
-                     || '|' || TYPE
-                     || '|' || 'N'
-                     || '|' || sector_size
-                     || '|' || block_size
-                     || '|' || allocation_unit_size
-                     || '|' || total_mb
-                     || '|' || free_mb
-                     || '|' || required_mirror_free_mb
-                     || '|' || usable_file_mb
-                     || '|' || offline_disks
-                     || '|' || voting_files
-                     || '|' || name || '/'
-                from v$asm_diskgroup
-                ;
+               || '|' || g.type
+               || '|' || g.name
+               || '|' || g.BLOCK_SIZE
+               || '|' || g.ALLOCATION_UNIT_SIZE
+               || '|' || g.REQUIRED_MIRROR_FREE_MB
+               || '|' || sum(d.total_mb)
+               || '|' || sum(d.free_mb)
+               || '|' || d.failgroup
+               || '|' || max(d.VOTING_FILE)
+               || '|' || d.FAILGROUP_TYPE
+               || '|' || g.offline_disks
+               || '|' || min(decode(d.REPAIR_TIMER, 0, 8640000, d.REPAIR_TIMER))
+               || '|' || count(*)
+          FROM v$asm_diskgroup g
+          LEFT OUTER JOIN v$asm_disk d on d.group_number = g.group_number
+               and d.group_number = g.group_number
+               and d.group_number <> 0
+          GROUP BY g.name
+               , g.state
+               , g.type
+               , d.failgroup
+               , d.VOTING_FILE
+               , g.BLOCK_SIZE
+               , g.ALLOCATION_UNIT_SIZE
+               , g.REQUIRED_MIRROR_FREE_MB
+               , g.offline_disks
+               , d.FAILGROUP_TYPE
+               , d.REPAIR_TIMER
+          ORDER BY g.name, d.failgroup;
 
 '@
      }

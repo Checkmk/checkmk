@@ -153,18 +153,16 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<BoolLambdaColumn<contact>>(
         prefix + "in_host_notification_period",
         "Wether the contact is currently in his/her host notification period (0/1)",
-        offsets, [](const contact *ct) {
-            return ct == nullptr ? false
-                                 : g_timeperiods_cache->inTimeperiod(
-                                       ct->host_notification_period_ptr);
+        offsets, [](const contact &ct) {
+            return g_timeperiods_cache->inTimeperiod(
+                ct.host_notification_period_ptr);
         }));
     table->addColumn(std::make_unique<BoolLambdaColumn<contact>>(
         prefix + "in_service_notification_period",
         "Wether the contact is currently in his/her service notification period (0/1)",
-        offsets, [](const contact *ct) {
-            return ct == nullptr ? false
-                                 : g_timeperiods_cache->inTimeperiod(
-                                       ct->service_notification_period_ptr);
+        offsets, [](const contact &ct) {
+            return g_timeperiods_cache->inTimeperiod(
+                ct.service_notification_period_ptr);
         }));
     table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
         prefix + "custom_variable_names",

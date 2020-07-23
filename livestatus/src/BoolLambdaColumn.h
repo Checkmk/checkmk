@@ -14,22 +14,23 @@
 #include "contact_fwd.h"
 class Row;
 
-template <class T>
+template <class T, bool Default = false>
 class BoolLambdaColumn : public IntColumn {
 public:
     BoolLambdaColumn(std::string name, std::string description, Offsets offsets,
-                     std::function<bool(const T*)> f)
+                     std::function<bool(const T&)> f)
         : IntColumn(std::move(name), std::move(description), std::move(offsets))
         , get_value_{std::move(f)} {}
     ~BoolLambdaColumn() override = default;
 
     std::int32_t getValue(Row row,
                           const contact* /*auth_user*/) const override {
-        return get_value_(columnData<T>(row)) ? 1 : 0;
+        const T* data = columnData<T>(row);
+        return (data == nullptr ? Default : get_value_(*data)) ? 1 : 0;
     }
 
 private:
-    std::function<bool(const T*)> get_value_;
+    std::function<bool(const T&)> get_value_;
 };
 
 #endif  // BoolLambdaColumn.h

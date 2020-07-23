@@ -227,6 +227,46 @@ components:
       required:
       - entries
       type: object
+    BulkAcknowledgeServiceProblem:
+      properties:
+        sticky:
+          description: 'If set, only a state-change of the service to an OK state
+            will discard the
+
+            acknowledgement. Otherwise it will be discarded on any state-change. Defaults
+            to False.'
+          example: false
+          type: boolean
+        persistent:
+          description: If set, the comment will persist a restart. Defaults to False.
+          example: false
+          type: boolean
+        notify:
+          description: If set, notifications will be sent out to the configured contacts.
+            Defaults to False.
+          example: false
+          type: boolean
+        comment:
+          description: If set, this comment will be stored alongside the acknowledgement.
+          example: This was expected.
+          type: string
+        host_name:
+          description: The hostname or IP address itself.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+        entries:
+          example:
+          - CPU utilization
+          - Memory
+          items:
+            example: CPU utilization
+            type: string
+          type: array
+      required:
+      - entries
+      - host_name
+      type: object
     BulkDeleteContactGroup:
       properties:
         entries:
@@ -1276,7 +1316,7 @@ paths:
           \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
           \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
   /domain-types/host/actions/bulk-acknowledge/invoke:
-    get:
+    post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.bulk_set_acknowledgement_on_hosts
       requestBody:
@@ -1305,7 +1345,7 @@ paths:
           \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/host/actions/bulk-acknowledge/invoke\"\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host/actions/bulk-acknowledge/invoke\"\
           ,\n    json={\n        'sticky': False,\n        'persistent': False,\n\
           \        'notify': False,\n        'comment': 'This was expected.',\n  \
           \      'entries': ['example.com', 'sample.com']\n    },\n)\nresp.raise_for_status()\n\
@@ -1316,7 +1356,7 @@ paths:
           \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/host/actions/bulk-acknowledge/invoke\",\n\
-          \    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
           \    },\n    data=json.dumps({\n        'sticky': False,\n        'persistent':\
           \ False,\n        'notify': False,\n        'comment': 'This was expected.',\n\
@@ -1326,7 +1366,7 @@ paths:
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
           \          \"entries\": [\n            \"example.com\",\n            \"\
@@ -1336,7 +1376,7 @@ paths:
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/host/actions/bulk-acknowledge/invoke\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host/actions/bulk-acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='This was expected.' \\\n    entries='[\"\
           example.com\", \"sample.com\"]' \\\n    notify='False' \\\n    persistent='False'\
@@ -1472,6 +1512,75 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
           \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
+  /domain-types/service/actions/bulk-acknowledge/invoke:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.bulk_set_acknowledgement_on_host_service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkAcknowledgeServiceProblem'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Bulk Acknowledge specific services on specific host
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.acknowledgement
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/service/actions/bulk-acknowledge/invoke\"\
+          ,\n    json={\n        'sticky': False,\n        'persistent': False,\n\
+          \        'notify': False,\n        'comment': 'This was expected.',\n  \
+          \      'host_name': 'example.com',\n        'entries': ['CPU utilization',\
+          \ 'Memory']\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/service/actions/bulk-acknowledge/invoke\"\
+          ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        'sticky': False,\n        'persistent':\
+          \ False,\n        'notify': False,\n        'comment': 'This was expected.',\n\
+          \        'host_name': 'example.com',\n        'entries': ['CPU utilization',\
+          \ 'Memory']\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
+          \          \"entries\": [\n            \"CPU utilization\",\n          \
+          \  \"Memory\"\n          ],\n          \"host_name\": \"example.com\",\n\
+          \          \"notify\": false,\n          \"persistent\": false,\n      \
+          \    \"sticky\": false\n        }' \\\n    \"$API_URL/domain-types/service/actions/bulk-acknowledge/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/service/actions/bulk-acknowledge/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    comment='This was expected.' \\\n    entries='[\"\
+          CPU utilization\", \"Memory\"]' \\\n    host_name='example.com' \\\n   \
+          \ notify='False' \\\n    persistent='False' \\\n    sticky='False' \\\n\
+          \    --json"
   /domain-types/activation_run/actions/activate-changes/invoke:
     post:
       description: ''
@@ -5099,6 +5208,9 @@ tags:
 - description: <SchemaDefinition schemaRef="#/components/schemas/AcknowledgeServiceProblem"
     showReadOnly={true} showWriteOnly={true} />
   name: AcknowledgeServiceProblem
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkAcknowledgeServiceProblem"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BulkAcknowledgeServiceProblem
 - name: cmk.gui.plugins.openapi.endpoints.activate_changes
   x-displayName: Activate changes
 - name: cmk.gui.plugins.openapi.endpoints.contact_group_config
@@ -5222,6 +5334,7 @@ x-tagGroups:
   - AcknowledgeHostProblem
   - BulkAcknowledgeHostProblem
   - AcknowledgeServiceProblem
+  - BulkAcknowledgeServiceProblem
   - InputContactGroup
   - BulkDeleteContactGroup
   - CreateDowntime

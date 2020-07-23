@@ -141,10 +141,12 @@ class UpdateFolder(BaseSchema):
 
 
 class CreateDowntimeBase(BaseSchema):
-    downtime_type = fields.String(required=True,
-                                  description="The type of downtime to create.",
-                                  enum=['host', 'service', 'hostgroup', 'servicegroup'],
-                                  example="host")
+    downtime_type = fields.String(
+        required=True,
+        description="The type of downtime to create.",
+        enum=['host', 'service', 'hostgroup', 'servicegroup'],
+        example="host",
+    )
     start_time = fields.DateTime(
         format="iso8601",
         required=True,
@@ -177,6 +179,8 @@ class CreateDowntimeBase(BaseSchema):
     )
     comment = fields.String(required=False, example="Security updates")
 
+
+SERVICE_DESCRIPTION_FIELD = fields.String(required=False, example="CPU utilization")
 
 HOST_DURATION = fields.Integer(
     required=False,
@@ -292,29 +296,44 @@ class BulkAcknowledgeHostProblem(AcknowledgeHostProblem):
     )
 
 
+SERVICE_STICKY_FIELD = fields.Boolean(
+    required=False,
+    example=False,
+    description=param_description(acknowledge_service_problem.__doc__, 'sticky'),
+)
+
+SERVICE_PERSISTENT_FIELD = fields.Boolean(
+    required=False,
+    example=False,
+    description=param_description(acknowledge_service_problem.__doc__, 'persistent'),
+)
+
+SERVICE_NOTIFY_FIELD = fields.Boolean(
+    required=False,
+    example=False,
+    description=param_description(acknowledge_service_problem.__doc__, 'notify'),
+)
+
+SERVICE_COMMENT_FIELD = fields.String(
+    required=False,
+    example='This was expected.',
+    description=param_description(acknowledge_service_problem.__doc__, 'comment'),
+)
+
+
 class AcknowledgeServiceProblem(BaseSchema):
-    sticky = fields.Boolean(
-        required=False,
-        example=False,
-        description=param_description(acknowledge_service_problem.__doc__, 'sticky'),
-    )
+    sticky = SERVICE_STICKY_FIELD
+    persistent = SERVICE_PERSISTENT_FIELD
+    notify = SERVICE_NOTIFY_FIELD
+    comment = SERVICE_COMMENT_FIELD
 
-    persistent = fields.Boolean(
-        required=False,
-        example=False,
-        description=param_description(acknowledge_service_problem.__doc__, 'persistent'),
-    )
 
-    notify = fields.Boolean(
-        required=False,
-        example=False,
-        description=param_description(acknowledge_service_problem.__doc__, 'notify'),
-    )
-
-    comment = fields.String(
-        required=False,
-        example='This was expected.',
-        description=param_description(acknowledge_service_problem.__doc__, 'comment'),
+class BulkAcknowledgeServiceProblem(AcknowledgeServiceProblem):
+    host_name = HOST_FIELD
+    entries = fields.List(
+        SERVICE_DESCRIPTION_FIELD,
+        required=True,
+        example=["CPU utilization", "Memory"],
     )
 
 

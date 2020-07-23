@@ -46,7 +46,8 @@ CmkEndpointName = Literal[
     'cmk/bakery-status',
     'cmk/service.move-monitored',
     'cmk/service.move-undecided',
-    'cmk/service.move-ignored'
+    'cmk/service.move-ignored',
+    'cmk/service.bulk-acknowledge',
 ]  # yapf: disable
 
 RestfulEndpointName = Literal[

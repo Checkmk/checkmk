@@ -60,6 +60,7 @@ def set_acknowledgement_on_host(params):
 
 @endpoint_schema(constructors.domain_type_action_href('host', 'bulk-acknowledge'),
                  'cmk/create',
+                 method='post',
                  request_schema=request_schemas.BulkAcknowledgeHostProblem,
                  output_empty=True)
 def bulk_set_acknowledgement_on_hosts(params):
@@ -192,6 +193,62 @@ def set_acknowledgement_on_host_service(params):
         user=_user_id(),
         comment=body.get('comment', 'Acknowledged'),
     )
+    return http.Response(status=204)
+
+
+@endpoint_schema(constructors.domain_type_action_href("service", "bulk-acknowledge"),
+                 'cmk/service.bulk-acknowledge',
+                 method='post',
+                 request_schema=request_schemas.BulkAcknowledgeServiceProblem,
+                 output_empty=True)
+def bulk_set_acknowledgement_on_host_service(params):
+    """Bulk Acknowledge specific services on specific host"""
+    live = sites.live()
+    body = params['body']
+    host_name = body['host_name']
+    entries = body.get('entries', [])
+
+    query = Query(
+        [Services.description, Services.state],
+        And(
+            Services.host_name.equals(host_name),
+            Or(*[
+                Services.description.equals(service_description) for service_description in entries
+            ])))
+
+    services = query.to_dict(live)
+
+    not_found = []
+    for service_description in entries:
+        if service_description not in services:
+            not_found.append(service_description)
+
+    if not_found:
+        return problem(status=400,
+                       title=f"Services {', '.join(not_found)} not found on host {host_name}",
+                       detail='Currently not monitored')
+
+    up_services = []
+    for service_description in entries:
+        if services[service_description] == 0:
+            up_services.append(service_description)
+
+    if up_services:
+        return problem(status=400,
+                       title=f"Services {', '.join(up_services)} do not have a problem",
+                       detail="The states of these services are OK")
+
+    for service_description in entries:
+        acknowledge_service_problem(
+            sites.live(),
+            host_name,
+            service_description,
+            sticky=body.get('sticky', False),
+            notify=body.get('notify', False),
+            persistent=body.get('persistent', False),
+            user=str(config.user.id),
+            comment=body.get('comment', 'Acknowledged'),
+        )
     return http.Response(status=204)
 
 

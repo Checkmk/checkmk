@@ -208,3 +208,81 @@ def test_openapi_acknowledge_host(
             content_type='application/json',
             status=http_response_code,
         )
+
+
+def test_openapi_bulk_acknowledge(
+    wsgi_app,
+    with_automation_user,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    live.add_table('services', [
+        {
+            'host_name': 'heute',
+            'description': 'Memory',
+            'state': 1,
+        },
+    ])
+
+    live.expect_query([
+        'GET services',
+        'Columns: description state',
+        'Filter: host_name = heute',
+        'Filter: description = Memory',
+        'And: 2',
+    ])
+
+    live.expect_query(
+        f'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;Memory;2;1;1;test123-...;Hello world!',
+        match_type='ellipsis',
+    )
+
+    with live:
+        wsgi_app.post(
+            base + "/domain-types/service/actions/bulk-acknowledge/invoke",
+            params=json.dumps({
+                'host_name': 'heute',
+                'entries': ['Memory'],
+                'sticky': True,
+                'notify': True,
+                'persistent': True,
+                'comment': 'Hello world!',
+            }),
+            content_type='application/json',
+            status=204,
+        )
+
+    live.add_table('services', [
+        {
+            'host_name': 'heute',
+            'description': 'CPU load',
+            'state': 0,
+        },
+    ])
+
+    live.expect_query([
+        'GET services',
+        'Columns: description state',
+        'Filter: host_name = heute',
+        'Filter: description = CPU load',
+        'And: 2',
+    ])
+
+    with live:
+        wsgi_app.post(
+            base + "/domain-types/service/actions/bulk-acknowledge/invoke",
+            params=json.dumps({
+                'host_name': 'heute',
+                'entries': ['CPU load'],
+                'sticky': True,
+                'notify': True,
+                'persistent': True,
+                'comment': 'Hello world!',
+            }),
+            content_type='application/json',
+            status=400,
+        )

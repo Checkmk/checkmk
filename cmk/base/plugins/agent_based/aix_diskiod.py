@@ -25,21 +25,18 @@
 # 6. Kb_wrtn    -> Kilobytes written since system boot
 
 import time
-from typing import Generator, Mapping, Tuple, Union
+from typing import Mapping, Optional
 from .agent_based_api.v0 import (
     get_value_store,
     get_rate,
     IgnoreResultsError,
-    IgnoreResults,
-    Metric,
     register,
-    Result,
     type_defs,
 )
 from .utils import diskstat
 
 
-def parse_aix_diskiod(string_table: type_defs.AgentStringTable) -> diskstat.Section:
+def parse_aix_diskiod(string_table: type_defs.AgentStringTable) -> Optional[diskstat.Section]:
 
     section = {}
 
@@ -52,7 +49,7 @@ def parse_aix_diskiod(string_table: type_defs.AgentStringTable) -> diskstat.Sect
         except ValueError:
             continue
 
-    return section
+    return section if section else None
 
 
 register.agent_section(
@@ -64,7 +61,7 @@ register.agent_section(
 def _compute_rates(
     disk: diskstat.Disk,
     value_store,
-) -> Tuple[diskstat.Disk, bool]:
+) -> diskstat.Disk:
     now = time.time()
     disk_with_rates = {}
     ignore_res = False
@@ -78,20 +75,17 @@ def _compute_rates(
             )
         except IgnoreResultsError:
             ignore_res = True
-    return disk_with_rates, ignore_res
+    if ignore_res:
+        raise IgnoreResultsError('Initializing counters')
+    return disk_with_rates
 
 
 def _check_disk(
     params: type_defs.Parameters,
     disk: diskstat.Disk,
-) -> Generator[Union[Result, Metric, IgnoreResults], None, None]:
-
+) -> type_defs.CheckGenerator:
     value_store = get_value_store()
-    disk_with_rates, ignore_res = _compute_rates(disk, value_store)
-    if ignore_res:
-        yield IgnoreResults()
-        return
-
+    disk_with_rates = _compute_rates(disk, value_store)
     yield from diskstat.check_diskstat_dict(
         params,
         disk_with_rates,
@@ -103,7 +97,7 @@ def check_aix_diskiod(
     item: str,
     params: type_defs.Parameters,
     section: diskstat.Section,
-) -> Generator[Union[Result, Metric, IgnoreResults], None, None]:
+) -> type_defs.CheckGenerator:
     if item == 'SUMMARY':
         disk = diskstat.summarize_disks(section.items())
     else:
@@ -118,7 +112,7 @@ def cluster_check_aix_diskoid(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, diskstat.Section],
-) -> Generator[Union[Result, Metric, IgnoreResults], None, None]:
+) -> type_defs.CheckGenerator:
     if item == 'SUMMARY':
         disk = diskstat.summarize_disks(
             item for node_section in section.values() for item in node_section.items())

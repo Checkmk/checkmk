@@ -11,6 +11,7 @@
 
 from functools import partial
 from pathlib import Path
+from typing import cast
 
 import pytest  # type: ignore[import]
 
@@ -31,7 +32,7 @@ import cmk.base.modes
 import cmk.base.modes.check_mk
 from cmk.base.data_sources import ABCDataSource
 from cmk.base.data_sources.agent import AgentDataSource
-from cmk.base.data_sources.snmp import SNMPDataSource
+from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPDataSource
 
 # TODO: These tests need to be tuned, because they involve a lot of checks being loaded which takes
 # too much time.
@@ -113,10 +114,11 @@ def _patch_data_source_run(mocker, **kwargs):
                     defaults["_use_outdated_persisted_sections"])
 
         elif isinstance(self, SNMPDataSource):
-            assert self.detector.do_snmp_scan == defaults["do_snmp_scan"]
-            assert self.detector.on_error == defaults["on_error"]
-            assert self._use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
-            assert self._ignore_check_interval == defaults["_ignore_check_interval"]
+            configurator = cast(SNMPConfigurator, self.configurator)
+            assert configurator.detector.do_snmp_scan == defaults["do_snmp_scan"]
+            assert configurator.detector.on_error == defaults["on_error"]
+            assert configurator.use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
+            assert configurator.ignore_check_interval == defaults["_ignore_check_interval"]
 
         return callback(self, *args, **kwargs)
 

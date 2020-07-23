@@ -170,7 +170,17 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert source.ipaddress == ipaddress
     assert source.id == "snmp"
     assert source._cpu_tracking_id == "snmp"
-    assert source.detector.do_snmp_scan is False
+
+    configurator = source.configurator
+    assert configurator.hostname == hostname
+    assert configurator.ipaddress == ipaddress
+    assert configurator.id == "snmp"
+    assert configurator.cpu_tracking_id == "snmp"
+
+    detector = configurator.detector
+    assert detector.on_error == "raise"
+    assert detector.do_snmp_scan is False
+
     # From the base class
     assert source.is_agent_cache_disabled() is False
     assert source.get_may_use_cache_file() is False

@@ -13,6 +13,7 @@ from types import FrameType
 from typing import (
     Any,
     Callable,
+    cast,
     Counter,
     Dict,
     Generator,
@@ -1245,10 +1246,11 @@ def _get_sources_for_discovery(
     )
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
-            source.detector.on_error = on_error
-            source.detector.do_snmp_scan = do_snmp_scan
-            source.set_use_snmpwalk_cache(False)
-            source.set_ignore_check_interval(True)
+            configurator = cast(data_sources.snmp.SNMPConfigurator, source.configurator)
+            configurator.detector.on_error = on_error
+            configurator.detector.do_snmp_scan = do_snmp_scan
+            configurator.use_snmpwalk_cache = False
+            configurator.ignore_check_interval = True
 
             # During discovery, the snmp datasource can never fully rely on the locally cached data,
             # since the available oid trees depend on the current running checks

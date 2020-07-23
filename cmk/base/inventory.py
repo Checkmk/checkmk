@@ -9,7 +9,7 @@ while the inventory is performed for one host.
 In the future all inventory code should be moved to this module."""
 
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import cast, Dict, List, Optional, Tuple
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -298,11 +298,12 @@ def _do_inv_for_realhost(
 ) -> None:
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
-            source.detector.on_error = "raise"  # default
-            source.detector.do_snmp_scan = True
+            configurator = cast(data_sources.snmp.SNMPConfigurator, source.configurator)
+            configurator.detector.on_error = "raise"  # default
+            configurator.detector.do_snmp_scan = True
             data_sources.snmp.SNMPDataSource.disable_data_source_cache()
-            source.set_use_snmpwalk_cache(False)
-            source.set_ignore_check_interval(True)
+            configurator.use_snmpwalk_cache = False
+            configurator.ignore_check_interval = True
             if multi_host_sections is not None:
                 # Status data inventory already provides filled multi_host_sections object.
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be

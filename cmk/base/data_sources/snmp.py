@@ -6,7 +6,7 @@
 
 import ast
 import time
-from typing import cast, Dict, Final, Iterable, List, Optional, Sequence, Set
+from typing import Any, cast, Dict, Final, Iterable, List, Optional, Sequence, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -132,6 +132,13 @@ class SNMPConfigurator(ABCConfigurator):
             # Because of crap inheritance.
             self.host_config.snmp_config(self.ipaddress)
             if self.source_type is SourceType.HOST else self.host_config.management_snmp_config)
+        self.detector: Final = CachedSNMPDetector()
+        # Attributes below are wrong
+        self.use_snmpwalk_cache = True
+        self.ignore_check_interval = False
+        self.persisted_sections: SNMPPersistedSections = {}
+        self.selected_raw_sections: Optional[SelectedRawSections] = None
+        self.prefetched_sections: Sequence[SectionName] = ()
 
     @classmethod
     def snmp(
@@ -167,8 +174,63 @@ class SNMPConfigurator(ABCConfigurator):
             title="Management board - SNMP",
         )
 
-    def configure_fetcher(self):
-        raise NotImplementedError
+    def configure_fetcher(self) -> Dict[str, Any]:
+        return {
+            "oid_infos": self._make_oid_infos(
+                persisted_sections=self.persisted_sections,
+                selected_raw_sections=self.selected_raw_sections,
+                prefetched_sections=self.prefetched_sections,
+            ),
+            "usesnmpwalk_cache": self.use_snmpwalk_cache,
+            "snmp_config": self.snmp_config._asdict(),
+        }
+
+    def _make_oid_infos(
+        self,
+        *,
+        persisted_sections: SNMPPersistedSections,
+        selected_raw_sections: Optional[SelectedRawSections],
+        prefetched_sections: Sequence[SectionName],
+    ) -> Dict[SectionName, List[SNMPTree]]:
+        oid_infos = {}  # Dict[SectionName, List[SNMPTree]]
+        for section_name in SNMPConfigurator._sort_section_names(
+            {s.name for s in selected_raw_sections.values()}
+                if selected_raw_sections is not None else self.detector(self.snmp_config)):
+            plugin = agent_based_register.get_section_plugin(section_name)
+            if not isinstance(plugin, SNMPSectionPlugin):
+                self._logger.debug("%s: No such section definition", section_name)
+                continue
+
+            if section_name in prefetched_sections:
+                continue
+
+            # This checks data is configured to be persisted (snmp_fetch_interval) and recent enough.
+            # Skip gathering new data here. The persisted data will be added later
+            if section_name in persisted_sections:
+                self._logger.debug("%s: Skip fetching data (persisted info exists)", section_name)
+                continue
+
+            oid_infos[section_name] = plugin.trees
+        return oid_infos
+
+    @staticmethod
+    def _sort_section_names(section_names: Iterable[SectionName]) -> Iterable[SectionName]:
+        # In former Check_MK versions (<=1.4.0) CPU check plugins were
+        # checked before other check plugins like interface checks.
+        # In Check_MK versions >= 1.5.0 the order is random and
+        # interface check plugins are executed before CPU check plugins.
+        # This leads to high CPU utilization sent by device. Thus we have
+        # to re-order the check plugin names.
+        # There are some nested check plugin names which have to be considered, too.
+        #   for f in $(grep "service_description.*CPU [^lL]" -m1 * | cut -d":" -f1); do
+        #   if grep -q "snmp_info" $f; then echo $f; fi done
+        cpu_sections_without_cpu_in_name = {
+            SectionName("brocade_sys"),
+            SectionName("bvip_util"),
+        }
+        return sorted(section_names,
+                      key=lambda x:
+                      (not ('cpu' in str(x) or x in cpu_sections_without_cpu_in_name), x))
 
     @staticmethod
     def _make_description(
@@ -207,12 +269,6 @@ class SNMPConfigurator(ABCConfigurator):
 
 class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                    SNMPHostSections]):
-    def __init__(self, *, configurator: SNMPConfigurator) -> None:
-        super(SNMPDataSource, self).__init__(configurator=configurator)
-        self.detector: Final = CachedSNMPDetector()
-        self._use_snmpwalk_cache = True
-        self._ignore_check_interval = False
-
     def _cache_dir(self) -> str:  # pylint: disable=useless-super-delegation
         return super()._cache_dir()
 
@@ -234,12 +290,6 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
     def _to_cache_file(self, raw_data: SNMPRawData) -> bytes:
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
-    def set_ignore_check_interval(self, ignore_check_interval: bool) -> None:
-        self._ignore_check_interval = ignore_check_interval
-
-    def set_use_snmpwalk_cache(self, use_snmpwalk_cache: bool) -> None:
-        self._use_snmpwalk_cache = use_snmpwalk_cache
-
     def _execute(
         self,
         *,
@@ -247,68 +297,16 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         selected_raw_sections: Optional[SelectedRawSections],
         prefetched_sections: Sequence[SectionName],
     ) -> SNMPRawData:
+        # This is wrong
+        configurator = cast(SNMPConfigurator, self.configurator)
+        configurator.persisted_sections = persisted_sections
+        configurator.selected_raw_sections = selected_raw_sections
+        configurator.prefetched_sections = prefetched_sections
+        # End of wrong
         ip_lookup.verify_ipaddress(self.configurator.ipaddress)
-        with SNMPDataFetcher(
-                self._make_oid_infos(
-                    persisted_sections=persisted_sections,
-                    selected_raw_sections=selected_raw_sections,
-                    prefetched_sections=prefetched_sections,
-                ),
-                self._use_snmpwalk_cache,
-                # TODO(ml): cast: this has to move to the configurator anyway.
-                cast(SNMPConfigurator, self.configurator).snmp_config,
-        ) as fetcher:
+        with SNMPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
-
-    def _make_oid_infos(
-        self,
-        *,
-        persisted_sections: SNMPPersistedSections,
-        selected_raw_sections: Optional[SelectedRawSections],
-        prefetched_sections: Sequence[SectionName],
-    ) -> Dict[SectionName, List[SNMPTree]]:
-        oid_infos = {}  # Dict[SectionName, List[SNMPTree]]
-        # TODO(ml): This should move to the Configurator as well.
-        configurator = cast(SNMPConfigurator, self.configurator)
-        for section_name in SNMPDataSource._sort_section_names(
-            {s.name for s in selected_raw_sections.values()}
-                if selected_raw_sections is not None else self.detector(configurator.snmp_config)):
-            plugin = agent_based_register.get_section_plugin(section_name)
-            if not isinstance(plugin, SNMPSectionPlugin):
-                self._logger.debug("%s: No such section definition", section_name)
-                continue
-
-            if section_name in prefetched_sections:
-                continue
-
-            # This checks data is configured to be persisted (snmp_fetch_interval) and recent enough.
-            # Skip gathering new data here. The persisted data will be added later
-            if section_name in persisted_sections:
-                self._logger.debug("%s: Skip fetching data (persisted info exists)", section_name)
-                continue
-
-            oid_infos[section_name] = plugin.trees
-        return oid_infos
-
-    @staticmethod
-    def _sort_section_names(section_names: Set[SectionName]) -> List[SectionName]:
-        # In former Check_MK versions (<=1.4.0) CPU check plugins were
-        # checked before other check plugins like interface checks.
-        # In Check_MK versions >= 1.5.0 the order is random and
-        # interface check plugins are executed before CPU check plugins.
-        # This leads to high CPU utilization sent by device. Thus we have
-        # to re-order the check plugin names.
-        # There are some nested check plugin names which have to be considered, too.
-        #   for f in $(grep "service_description.*CPU [^lL]" -m1 * | cut -d":" -f1); do
-        #   if grep -q "snmp_info" $f; then echo $f; fi done
-        cpu_sections_without_cpu_in_name = {
-            SectionName("brocade_sys"),
-            SectionName("bvip_util"),
-        }
-        return sorted(section_names,
-                      key=lambda x:
-                      (not ('cpu' in str(x) or x in cpu_sections_without_cpu_in_name), x))
 
     def _parse(self, raw_data: SNMPRawData) -> SNMPHostSections:
         persisted_sections = self._extract_persisted_sections(

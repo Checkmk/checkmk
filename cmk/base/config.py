@@ -329,6 +329,14 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
         return super(SetFolderPathDict, self).__setitem__(cluster_name, value)
 
 
+def cleanup_fs_used_marker_flag(log):
+    # Test if User migrated during 1.6 to new name fs_used. If so delete marker flag file
+    old_config_flag = os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk')
+    if os.path.exists(old_config_flag):
+        log('remove flag %s\n' % old_config_flag)
+        os.remove(old_config_flag)
+
+
 def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
     helper_vars = {
         "FOLDER_PATH": None,
@@ -342,6 +350,8 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
 
     global_dict = globals()
     global_dict.update(helper_vars)
+
+    cleanup_fs_used_marker_flag(console.info)  # safety cleanup for 1.6->1.7 update
 
     for path in _get_config_file_paths(with_conf_d):
         _f = str(path)

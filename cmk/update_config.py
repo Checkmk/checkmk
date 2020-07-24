@@ -11,7 +11,6 @@ be called manually.",
 """
 
 import re
-import os
 from pathlib import Path
 import errno
 from typing import List, Tuple, Any, Dict, Set
@@ -108,12 +107,6 @@ class UpdateConfig:
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
     def _update_fs_used_name(self):
-        # Test if User migrated during 1.6 to new name fs_used. If so delete marker flag file
-        old_config_flag = os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk')
-        if os.path.exists(old_config_flag):
-            self._logger.log(VERBOSE, 'remove flag %s' % old_config_flag)
-            os.remove(old_config_flag)
-
         check_df_includes_use_new_metric()
         cmk.update_rrd_fs_names.update()
 

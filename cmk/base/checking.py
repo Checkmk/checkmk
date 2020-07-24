@@ -691,6 +691,13 @@ def is_manual_check(hostname: HostName, service_id: ServiceID) -> bool:
     )
 
 
+def _add_state_marker(
+    result_str: str,
+    state_marker: str,
+) -> str:
+    return result_str if state_marker in result_str else result_str + state_marker
+
+
 def _aggregate_results(subresults: CheckGenerator) -> ServiceCheckResult:
 
     perfdata, results = _consume_and_dispatch_result_types(subresults)
@@ -704,9 +711,15 @@ def _aggregate_results(subresults: CheckGenerator) -> ServiceCheckResult:
         state_marker = check_api_utils.state_markers[int(result.state)] if needs_marker else ""
 
         if result.summary:
-            summaries.append(result.summary + state_marker)
+            summaries.append(_add_state_marker(
+                result.summary,
+                state_marker,
+            ))
 
-        details.append(result.details + state_marker)
+        details.append(_add_state_marker(
+            result.details,
+            state_marker,
+        ))
 
     # Empty list? Check returned nothing
     if not details:

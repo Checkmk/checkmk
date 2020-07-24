@@ -144,7 +144,7 @@ def _validate_default_parameters(params_type: str, ruleset_name: Optional[str],
     if not isinstance(default_parameters, dict):
         raise TypeError("default %s parameters must be dict" % (params_type,))
 
-    if ruleset_name is None:
+    if ruleset_name is None and params_type != 'check':
         raise TypeError("missing ruleset name for default %s parameters" % (params_type))
 
 
@@ -255,7 +255,7 @@ def create_check_plugin(
         "check",
         check_function,
         requires_item,
-        check_ruleset_name is not None,
+        check_default_parameters is not None,
         subscribed_sections,
     )
 

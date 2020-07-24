@@ -29,7 +29,7 @@ from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib import init_wato_datastructures
-from cmk.gui.plugins.main_menu.mega_menus import make_main_menu_breadcrumb
+from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

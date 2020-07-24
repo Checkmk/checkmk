@@ -15,12 +15,14 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.sidebar.quicksearch import QuicksearchSnapin
 from cmk.gui.utils.popups import MethodInline
-
-from cmk.gui.plugins.main_menu.utils import (
-    mega_menu_registry,
+from cmk.gui.type_defs import (
     MegaMenu,
     TopicMenuTopic,
     TopicMenuItem,
+)
+
+from cmk.gui.plugins.main_menu.utils import (
+    mega_menu_registry,
     any_advanced_items,
 )
 

@@ -49,7 +49,8 @@ from cmk.gui.valuespec import (
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuSetup
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuSetup
 
 #.
 #   .--Config--------------------------------------------------------------.

@@ -36,8 +36,8 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger
 from cmk.gui.globals import html
-from cmk.gui.plugins.main_menu.mega_menus import make_main_menu_breadcrumb, MegaMenuMonitoring
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuMonitoring
+from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
 
 from cmk.gui.exceptions import (
     HTTPRedirect,

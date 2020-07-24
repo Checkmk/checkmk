@@ -12,7 +12,7 @@ from cmk.gui.globals import html
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
-from cmk.gui.plugins.main_menu.utils import MegaMenu
+from cmk.gui.type_defs import MegaMenu
 from cmk.gui.plugins.main_menu.mega_menus import MegaMenuSetup
 
 NewMode = Union[None, bool, str]

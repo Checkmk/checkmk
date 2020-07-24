@@ -38,8 +38,8 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
-from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuMonitoring
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb, Breadcrumb
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuMonitoring
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 

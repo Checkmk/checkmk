@@ -81,3 +81,28 @@ class SetOnceDict(dict):
 
     def __delitem__(self, key):
         raise NotImplementedError("Deleting items are not supported.")
+
+
+TopicMenuItem = NamedTuple("TopicMenuItem", [
+    ("name", str),
+    ("title", str),
+    ("url", str),
+    ("sort_index", int),
+    ("is_advanced", bool),
+    ("icon_name", Optional[str]),
+])
+
+TopicMenuTopic = NamedTuple("TopicMenuTopic", [
+    ("name", "str"),
+    ("title", "str"),
+    ("items", List[TopicMenuItem]),
+    ("icon_name", Optional[str]),
+])
+
+MegaMenu = NamedTuple("MegaMenu", [
+    ("name", str),
+    ("title", str),
+    ("icon_name", str),
+    ("sort_index", int),
+    ("topics", Callable[[], List[TopicMenuTopic]]),
+])

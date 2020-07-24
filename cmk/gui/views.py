@@ -33,8 +33,8 @@ import cmk.gui.sites as sites
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
-from cmk.gui.plugins.main_menu.mega_menus import make_topic_breadcrumb, MegaMenuMonitoring
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuMonitoring
+from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
     Alternative,

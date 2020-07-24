@@ -50,8 +50,8 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
 from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.plugins.main_menu.mega_menus import make_topic_breadcrumb, MegaMenuMonitoring
+from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuMonitoring
 
 from cmk.gui.type_defs import (
     ColumnName,

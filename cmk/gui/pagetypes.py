@@ -60,11 +60,12 @@ from cmk.gui.permissions import (
     declare_permission_section,
     declare_permission,
 )
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.plugins.main_menu.mega_menus import (
+from cmk.gui.breadcrumb import (
     make_main_menu_breadcrumb,
-    MegaMenuConfigure,
+    Breadcrumb,
+    BreadcrumbItem,
 )
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuConfigure
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |

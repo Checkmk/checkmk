@@ -26,7 +26,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     declare_permission,
 )
-from cmk.gui.plugins.main_menu.utils import (
+from cmk.gui.type_defs import (
     TopicMenuTopic,
     TopicMenuItem,
 )

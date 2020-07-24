@@ -33,7 +33,8 @@ from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.config import LoggedInUser
-from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuConfigure
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuConfigure
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module

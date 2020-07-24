@@ -36,7 +36,8 @@ from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import FilterHeaders
-from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuMonitoring
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuMonitoring
 
 TopologyConfig = Dict[str, Any]
 Mesh = Set[str]

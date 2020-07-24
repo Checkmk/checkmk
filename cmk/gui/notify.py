@@ -37,7 +37,8 @@ from cmk.gui.valuespec import (
     Optional,
     TextAreaUnicode,
 )
-from cmk.gui.plugins.main_menu.mega_menus import make_simple_page_breadcrumb, MegaMenuSetup
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.plugins.main_menu.mega_menus import MegaMenuSetup
 
 
 def get_gui_messages(user_id=None):

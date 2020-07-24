@@ -12,6 +12,8 @@ from typing import NamedTuple, MutableSequence, List, Iterable, Optional
 
 from cmk.gui.globals import html
 
+from cmk.gui.type_defs import MegaMenu
+
 BreadcrumbItem = NamedTuple("BreadcrumbItem", [
     ("title", str),
     ("url", Optional[str]),
@@ -53,3 +55,52 @@ class BreadcrumbRenderer:
                 html.span(item.title)
 
         html.close_div()
+
+
+def make_simple_page_breadcrumb(menu: MegaMenu, title: str) -> Breadcrumb:
+    """Helper to create breadcrumbs for simple pages
+
+    This can be used to create breadcrumbs for pages that are on the level
+    right below the main menu
+    """
+    breadcrumb = make_main_menu_breadcrumb(menu)
+    breadcrumb.append(make_current_page_breadcrumb_item(title))
+
+    return breadcrumb
+
+
+def make_current_page_breadcrumb_item(title: str) -> BreadcrumbItem:
+    """Helper to create a breadcrumb link to the current page"""
+    return BreadcrumbItem(
+        title=title,
+        url="javascript:document.location.reload(false)",
+    )
+
+
+def make_topic_breadcrumb(menu: MegaMenu, topic_id: str) -> Breadcrumb:
+    """Helper to create a breadcrumb down to topic level"""
+    # 1. Main menu level
+    breadcrumb = make_main_menu_breadcrumb(menu)
+
+    # TODO: Temporarily(tm) disabled until we have decided whether or not we want this
+    # # 2. Topic level
+    #topic_id = self.spec["topic"]
+    #PagetypeTopics.load()
+    #topic = PagetypeTopics.find_page(topic_id)
+    #if topic is None:
+    #    topic = PagetypeTopics.find_page("other")
+
+    #breadcrumb.append(BreadcrumbItem(
+    #    title=topic.title(),
+    #    url=None,
+    #))
+
+    return breadcrumb
+
+
+def make_main_menu_breadcrumb(menu: MegaMenu) -> Breadcrumb:
+    """Create a breadcrumb for the main menu level"""
+    return Breadcrumb([BreadcrumbItem(
+        title=menu.title,
+        url=None,
+    )])

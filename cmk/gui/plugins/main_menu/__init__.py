@@ -12,9 +12,6 @@ from cmk.utils.plugin_loader import load_plugins
 
 from cmk.gui.plugins.main_menu.utils import (
     mega_menu_registry,
-    MegaMenu,
-    TopicMenuTopic,
-    TopicMenuItem,
     any_advanced_items,
 )
 

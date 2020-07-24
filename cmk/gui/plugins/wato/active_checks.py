@@ -1645,6 +1645,7 @@ def _valuespec_custom_checks():
                       DropdownChoice(
                           title=_("State in case of absent updates"),
                           choices=[
+                              (0, _("OK")),
                               (1, _("WARN")),
                               (2, _("CRIT")),
                               (3, _("UNKNOWN")),

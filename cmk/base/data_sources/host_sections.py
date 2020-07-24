@@ -25,13 +25,6 @@ import cmk.base.caching as caching
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
-from cmk.base.api.agent_based.type_defs import (
-    AgentParseFunction,
-    AgentSectionPlugin,
-    SNMPParseFunction,
-    SNMPSectionPlugin,
-)
-from cmk.base.api.agent_based.utils import parse_to_string_table
 from cmk.base.check_api_utils import HOST_ONLY as LEGACY_HOST_ONLY
 from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
@@ -66,7 +59,6 @@ class MultiHostSections(collections.abc.MutableMapping):
         # It holds the result of the parse_function along with the
         # cache info of the raw section that was used.
         self._parsed_sections = caching.DictCache()
-        self._parsed_to_raw_map = caching.DictCache()
 
     def __len__(self) -> int:
         return len(self._data)
@@ -183,50 +175,23 @@ class MultiHostSections(collections.abc.MutableMapping):
         if cache_key in self._parsed_sections:
             return self._parsed_sections[cache_key]
 
-        section_def = self._get_raw_section(host_key, parsed_section_name)
-        if section_def is None:
-            # no section creating the desired one was found, assume a 'default' section:
-            raw_section_name = SectionName(str(parsed_section_name))
-            parse_function: Union[SNMPParseFunction, AgentParseFunction] = parse_to_string_table
-        else:
-            raw_section_name = section_def.name
-            parse_function = section_def.parse_function
-
         try:
             host_data = self._data[host_key]
-            string_table = host_data.sections[raw_section_name]
-            cache_info = host_data.cache_info.get(raw_section_name)
         except KeyError:
             return self._parsed_sections.setdefault(cache_key, (None, None))
 
-        parsed = parse_function(string_table)
+        for section in agent_based_register.get_ranked_sections(
+                host_data.sections,
+            {parsed_section_name},
+        ):
+            parsed = section.parse_function(host_data.sections[section.name])
+            if parsed is None:
+                continue
 
-        return self._parsed_sections.setdefault(cache_key, (parsed, cache_info))
+            cache_info = host_data.cache_info.get(section.name)
+            return self._parsed_sections.setdefault(cache_key, (parsed, cache_info))
 
-    def _get_raw_section(
-        self,
-        host_key: HostKey,
-        parsed_section_name: ParsedSectionName,
-    ) -> Union[AgentSectionPlugin, SNMPSectionPlugin]:
-        """Get the raw sections name that will be parsed into the required section
-
-        Raw sections may get renamed once they are parsed, if they declare it. This function
-        deals with the task of determining which section we need to parse, in order to end
-        up with the desired parsed section.
-        This depends on the available raw sections, and thus on the host.
-        """
-        cache_key = host_key + (parsed_section_name,)
-        if cache_key in self._parsed_to_raw_map:
-            return self._parsed_to_raw_map[cache_key]
-
-        try:
-            hosts_raw_sections = self._data[host_key].sections
-        except KeyError:
-            return self._parsed_to_raw_map.setdefault(cache_key, None)
-
-        section_def = agent_based_register.get_parsed_section_creator(parsed_section_name,
-                                                                      list(hosts_raw_sections))
-        return self._parsed_to_raw_map.setdefault(cache_key, section_def)
+        return self._parsed_sections.setdefault(cache_key, (None, None))
 
     # DEPRECATED
     # This function is only kept for the legacy cluster mode from hell

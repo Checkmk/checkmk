@@ -25,6 +25,7 @@ from cmk.base.api.agent_based.type_defs import (
 )
 from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
+from cmk.base.api.agent_based.register.utils import rank_sections_by_supersedes
 
 registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
@@ -46,6 +47,19 @@ def iter_all_agent_sections() -> Iterable[AgentSectionPlugin]:
 
 def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:
     return registered_snmp_sections.values()  # pylint: disable=dict-values-not-iterating
+
+
+def get_ranked_sections(
+    available_raw_sections: Iterable[SectionName],
+    filter_parsed_section: Optional[Set[ParsedSectionName]],
+) -> List[SectionPlugin]:
+    """
+    Get the raw sections [that will be parsed into the required section] ordered by supersedings
+    """
+    return rank_sections_by_supersedes(
+        ((name, get_section_plugin(name)) for name in available_raw_sections),
+        filter_parsed_section,
+    )
 
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:

@@ -35,11 +35,11 @@ CODE_TEMPLATES_LOCK = threading.Lock()
 # This is
 CODE_TEMPLATE_MACROS = """
 {%- macro list_params(params, indent=8) -%}
-{%- for param in params %}{% if 'example' not in param %}{% continue %}{% endif %}
-{{ " " * indent }}"{{ param['name'] }}": "{{
-            param['example'] }}",{% if 'description' in param and param['description'] %}  #
-        {%- if param['required'] %} (required){% endif %} {{
-            param['description'] | first_sentence }}{% endif %}
+{%- for param in params %}{% if not (param.example is defined and param.example) %}{% continue %}{% endif %}
+{{ " " * indent }}"{{ param.name }}": "{{
+            param.example }}",{% if param.description is defined and param.description %}  #
+        {%- if param.required %} (required){% endif %} {{
+            param.description | first_sentence }}{% endif %}
 {%- endfor %}
 {%- endmacro %}
 
@@ -54,11 +54,11 @@ CODE_TEMPLATE_MACROS = """
 {%- macro show_query_params(params) %}
 {%- if params %}
 {%- for param in params %}
-{%- if 'example' not in param %}
+{%- if not (param.example is defined and param.example) %}
     {%- continue %}
 {%- endif %}
 {%- if not loop.first %}&{% endif %}
-{{- param['name'] }}={{ param['example'] }}
+{{- param.name }}={{ param.example }}
 {%- endfor %}
 {%- endif %}
 {%- endmacro %}
@@ -109,12 +109,12 @@ data = json.loads(response.read())
 
 CODE_TEMPLATE_CURL = """
 #!/bin/bash
-HOST_NAME = "{{ hostname }}"
-SITE_NAME = "{{ site }}"
-API_URL = "http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
+HOST_NAME="{{ hostname }}"
+SITE_NAME="{{ site }}"
+API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
 
-USERNAME = "{{ username }}"
-PASSWORD = "{{ password }}"
+USERNAME="{{ username }}"
+PASSWORD="{{ password }}"
 
 curl \\
     -X {{ request_method | upper }} \\
@@ -142,18 +142,18 @@ curl \\
 
 CODE_TEMPLATE_HTTPIE = """
 #!/bin/bash
-HOST_NAME = "{{ hostname }}"
-SITE_NAME = "{{ site }}"
-API_URL = "http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
+HOST_NAME="{{ hostname }}"
+SITE_NAME="{{ site }}"
+API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
 
-USERNAME = "{{ username }}"
-PASSWORD = "{{ password }}"
+USERNAME="{{ username }}"
+PASSWORD="{{ password }}"
 
 http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
     "Authorization: Bearer $USERNAME $PASSWORD" \\
     "Accept: application/json" \\
 {%- for header in headers %}
-    '{{ header['name'] }}:{{ header['example'] }}' \\
+    '{{ header.name }}:{{ header.example }}' \\
 {% endfor -%}
 {%- if query_params %}
  {%- for param in query_params %}

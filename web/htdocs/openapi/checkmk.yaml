@@ -1018,18 +1018,18 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
           \          \"notify\": false,\n          \"persistent\": false,\n      \
           \    \"sticky\": false\n        }' \\\n    \"$API_URL/objects/host/example.com/actions/acknowledge/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/actions/acknowledge/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/actions/acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
           \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
@@ -1083,9 +1083,9 @@ paths:
           \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
           \          \"entries\": [\n            \"example.com\",\n            \"\
@@ -1093,9 +1093,9 @@ paths:
           : false,\n          \"stick\": false\n        }' \\\n    \"$API_URL/domain-types/host/actions/bulk-acknowledge/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/host/actions/bulk-acknowledge/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/host/actions/bulk-acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='This was expected.' \\\n    entries='[\"\
           example.com\", \"sample.com\"]' \\\n    notify='False' \\\n    persistent='False'\
@@ -1150,18 +1150,18 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
           \          \"notify\": false,\n          \"persistent\": false,\n      \
           \    \"sticky\": false\n        }' \\\n    \"$API_URL/domain-types/service/Memory/actions/acknowledge/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/service/Memory/actions/acknowledge/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/service/Memory/actions/acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
           \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
@@ -1216,18 +1216,18 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
           \          \"notify\": false,\n          \"persistent\": false,\n      \
           \    \"sticky\": false\n        }' \\\n    \"$API_URL/objects/host/example.com/objects/service/Memory/actions/acknowledge/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/objects/service/Memory/actions/acknowledge/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/objects/service/Memory/actions/acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
           \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
@@ -1272,16 +1272,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/domain-types/activation_run/actions/activate-changes/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/activation_run/actions/activate-changes/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/activation_run/actions/activate-changes/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
   /objects/activation_run/{activation_id}/actions/wait-for-completion/invoke:
@@ -1333,16 +1333,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00/actions/wait-for-completion/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00/actions/wait-for-completion/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00/actions/wait-for-completion/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
   /objects/activation_run/{activation_id}:
@@ -1395,16 +1395,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/activation_run/d3b07384d113e0ec49eaa6238ad5ff00\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
   /domain-types/activation_run/collections/running:
@@ -1448,16 +1448,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/domain-types/activation_run/collections/running\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/activation_run/collections/running\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/activation_run/collections/running\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
   /domain-types/contact_group_config/collections/all:
@@ -1501,16 +1501,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/domain-types/contact_group_config/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/contact_group_config/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/contact_group_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     post:
@@ -1572,17 +1572,17 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"alias\": \"Not on Sundays.\",\n    \
           \      \"name\": \"OnCall\"\n        }' \\\n    \"$API_URL/domain-types/contact_group_config/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/contact_group_config/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/contact_group_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    alias='Not on Sundays.' \\\n    name='OnCall'\
           \ \\\n    --json"
@@ -1638,16 +1638,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/contact_group_config/pathname\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/objects/contact_group_config/pathname\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/contact_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
@@ -1702,16 +1702,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/objects/contact_group_config/pathname\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/objects/contact_group_config/pathname\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/contact_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     put:
@@ -1788,18 +1788,18 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
           \          \"alias\": \"Not on Sundays.\",\n          \"name\": \"OnCall\"\
           \n        }' \\\n    \"$API_URL/objects/contact_group_config/pathname\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp PUT \"$API_URL/objects/contact_group_config/pathname\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/contact_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    alias='Not\
           \ on Sundays.' \\\n    name='OnCall' \\\n    --json"
@@ -1850,17 +1850,17 @@ paths:
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"entries\": [\n            \"windows\"\
           ,\n            \"panels\"\n          ]\n        }' \\\n    \"$API_URL/domain-types/contact_group_config/actions/bulk-delete/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/domain-types/contact_group_config/actions/bulk-delete/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/contact_group_config/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[\"windows\", \"panels\"]' \\\n  \
           \  --json"
@@ -1929,17 +1929,17 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    -G  \\\n    --data-urlencode \"host_name=example.com\" \\\n  \
           \  --data-urlencode \"service_description=CPU utilization\"\n    \"$API_URL/domain-types/downtime/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/downtime/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/downtime/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    host_name==\"example.com\" \\\n    service_description==\"\
           CPU utilization\" \\\n    --json"
@@ -1994,9 +1994,9 @@ paths:
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"comment\": \"Security updates\",\n \
           \         \"delayed_duration\": 3600,\n          \"end_time\": \"2017-07-21T17:32:28Z\"\
@@ -2006,9 +2006,9 @@ paths:
           $API_URL/domain-types/downtime/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/downtime/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/downtime/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='Security updates' \\\n    delayed_duration='3600'\
           \ \\\n    end_time='2017-07-21T17:32:28Z' \\\n    host_name='example.com'\
@@ -2061,16 +2061,16 @@ paths:
           response = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/objects/host/example.com/objects/downtime/54\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/objects/host/example.com/objects/downtime/54\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/host/example.com/objects/downtime/54\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
   /domain-types/downtime/actions/bulk-delete/invoke:
@@ -2121,18 +2121,18 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"entries\": [\n            1120,\n  \
           \          1121\n          ],\n          \"host_name\": \"example.com\"\n\
           \        }' \\\n    \"$API_URL/domain-types/downtime/actions/bulk-delete/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/domain-types/downtime/actions/bulk-delete/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/downtime/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[1120, 1121]' \\\n    host_name='example.com'\
           \ \\\n    --json"
@@ -2177,16 +2177,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/domain-types/folder_config/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/folder_config/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/folder_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     post:
@@ -2251,9 +2251,9 @@ paths:
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"attributes\": {\n            \"foo\"\
           : \"bar\"\n          },\n          \"name\": \"production\",\n         \
@@ -2261,9 +2261,9 @@ paths:
           \     }' \\\n    \"$API_URL/domain-types/folder_config/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/folder_config/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/folder_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    attributes='{\"foo\": \"bar\"}' \\\n    name='production'\
           \ \\\n    parent='root' \\\n    title='Production Hosts' \\\n    --json"
@@ -2320,16 +2320,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
@@ -2384,16 +2384,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     put:
@@ -2474,9 +2474,9 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
           \          \"attributes\": [\n            {\n              \"key\": \"foo\"\
@@ -2484,9 +2484,9 @@ paths:
           \     \"title\": \"Virtual Servers.\"\n        }' \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp PUT \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='[{\"\
           key\": \"foo\", \"value\": \"bar\"}]' \\\n    title='Virtual Servers.' \\\
@@ -2538,18 +2538,18 @@ paths:
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"entries\": [\n            \"production\"\
           ,\n            \"secondproduction\"\n          ]\n        }' \\\n    \"\
           $API_URL/domain-types/folder_config/actions/bulk-delete/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/domain-types/folder_config/actions/bulk-delete/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/folder_config/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[\"production\", \"secondproduction\"\
           ]' \\\n    --json"
@@ -2620,16 +2620,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
   /domain-types/host/collections/all:
@@ -2724,18 +2724,18 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    -G  \\\n    --data-urlencode \"host_name=example.com\" \\\n  \
           \  --data-urlencode \"acknowledged=1\" \\\n    --data-urlencode \"in_downtime=0\"\
           \ \\\n    \"$API_URL/domain-types/host/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/host/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/host/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    host_name==\"example.com\" \\\n    acknowledged==\"\
           1\" \\\n    in_downtime==\"0\" \\\n    --json"
@@ -2780,16 +2780,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/domain-types/host_config/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/host_config/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/host_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     post:
@@ -2855,9 +2855,9 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"attributes\": {},\n          \"folder\"\
           : \"root\",\n          \"host_name\": \"example.com\",\n          \"nodes\"\
@@ -2865,9 +2865,9 @@ paths:
           \n          ]\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    attributes='{}' \\\n    folder='root' \\\n\
           \    host_name='example.com' \\\n    nodes='[\"host1\", \"host2\", \"host3\"\
@@ -2924,16 +2924,16 @@ paths:
           \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/host_config/example.com\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/objects/host_config/example.com\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/host_config/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
@@ -2988,16 +2988,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/objects/host_config/example.com\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/objects/host_config/example.com\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/host_config/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     put:
@@ -3075,9 +3075,9 @@ paths:
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
           \          \"attributes\": {},\n          \"nodes\": [\n            \"host1\"\
@@ -3085,9 +3085,9 @@ paths:
           \ \\\n    \"$API_URL/objects/host_config/example.com\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp PUT \"$API_URL/objects/host_config/example.com\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_config/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{}'\
           \ \\\n    nodes='[\"host1\", \"host2\", \"host3\"]' \\\n    --json"
@@ -3138,17 +3138,17 @@ paths:
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"entries\": [\n            \"example\"\
           ,\n            \"sample\"\n          ]\n        }' \\\n    \"$API_URL/domain-types/host_config/actions/bulk-delete/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/domain-types/host_config/actions/bulk-delete/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/host_config/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[\"example\", \"sample\"]' \\\n  \
           \  --json"
@@ -3193,16 +3193,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/domain-types/host_group_config/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/host_group_config/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/host_group_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     post:
@@ -3264,17 +3264,17 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"alias\": \"Windows Servers\",\n    \
           \      \"name\": \"windows\"\n        }' \\\n    \"$API_URL/domain-types/host_group_config/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/host_group_config/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_group_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    alias='Windows Servers' \\\n    name='windows'\
           \ \\\n    --json"
@@ -3330,16 +3330,16 @@ paths:
           \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/host_group_config/pathname\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/objects/host_group_config/pathname\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/host_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
@@ -3394,16 +3394,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/objects/host_group_config/pathname\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/objects/host_group_config/pathname\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/host_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     put:
@@ -3480,18 +3480,18 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
           \          \"alias\": \"Windows Servers\",\n          \"name\": \"windows\"\
           \n        }' \\\n    \"$API_URL/objects/host_group_config/pathname\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp PUT \"$API_URL/objects/host_group_config/pathname\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    alias='Windows\
           \ Servers' \\\n    name='windows' \\\n    --json"
@@ -3542,17 +3542,17 @@ paths:
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"entries\": [\n            \"windows\"\
           ,\n            \"panels\"\n          ]\n        }' \\\n    \"$API_URL/domain-types/host_group_config/actions/bulk-delete/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/domain-types/host_group_config/actions/bulk-delete/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/host_group_config/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[\"windows\", \"panels\"]' \\\n  \
           \  --json"
@@ -3641,18 +3641,18 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    -G  \\\n    --data-urlencode \"host_alias=example\" \\\n    --data-urlencode\
           \ \"acknowledged=0\" \\\n    --data-urlencode \"in_downtime=1\" \\\n   \
           \ --data-urlencode \"status=0\"\n    \"$API_URL/objects/host/example.com/collections/services\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/objects/host/example.com/collections/services\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/host/example.com/collections/services\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    host_alias==\"example\" \\\n    acknowledged==\"\
           0\" \\\n    in_downtime==\"1\" \\\n    status==\"0\" \\\n    --json"
@@ -3743,9 +3743,9 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    -G  \\\n    --data-urlencode \"host_name=example.com\" \\\n  \
           \  --data-urlencode \"host_alias=example\" \\\n    --data-urlencode \"acknowledged=0\"\
@@ -3753,9 +3753,9 @@ paths:
           status=0\"\n    \"$API_URL/domain-types/service/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/service/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/service/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    host_name==\"example.com\" \\\n    host_alias==\"\
           example\" \\\n    acknowledged==\"0\" \\\n    in_downtime==\"1\" \\\n  \
@@ -3833,17 +3833,17 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    -G  \\\n    --data-urlencode \"host=example.com\" \\\n    --data-urlencode\
           \ \"discovery_state=monitored\"\n    \"$API_URL/domain-types/service/collections/services\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/service/collections/services\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/service/collections/services\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    host==\"example.com\" \\\n    discovery_state==\"\
           monitored\" \\\n    --json"
@@ -3906,16 +3906,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/objects/host/example.com/service/asoidjfo2jifa09/action/move/monitored\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp PUT \"$API_URL/objects/host/example.com/service/asoidjfo2jifa09/action/move/monitored\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host/example.com/service/asoidjfo2jifa09/action/move/monitored\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
   /objects/host/{host_name}/actions/discover-services/mode/{discover_mode}:
@@ -3966,16 +3966,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/objects/host/example.com/actions/discover-services/mode/tabula-rasa\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/actions/discover-services/mode/tabula-rasa\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/actions/discover-services/mode/tabula-rasa\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
   /domain-types/service_group_config/collections/all:
@@ -4019,16 +4019,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/domain-types/service_group_config/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/service_group_config/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/service_group_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     post:
@@ -4090,17 +4090,17 @@ paths:
           \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"alias\": \"Environment Sensors\",\n\
           \          \"name\": \"environment\"\n        }' \\\n    \"$API_URL/domain-types/service_group_config/collections/all\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/service_group_config/collections/all\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/service_group_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    alias='Environment Sensors' \\\n    name='environment'\
           \ \\\n    --json"
@@ -4156,16 +4156,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/service_group_config/pathname\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/objects/service_group_config/pathname\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/service_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
@@ -4220,16 +4220,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/objects/service_group_config/pathname\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/objects/service_group_config/pathname\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/service_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     put:
@@ -4306,18 +4306,18 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
           \          \"alias\": \"Environment Sensors\",\n          \"name\": \"environment\"\
           \n        }' \\\n    \"$API_URL/objects/service_group_config/pathname\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp PUT \"$API_URL/objects/service_group_config/pathname\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/service_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    alias='Environment\
           \ Sensors' \\\n    name='environment' \\\n    --json"
@@ -4368,17 +4368,17 @@ paths:
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"entries\": [\n            \"windows\"\
           ,\n            \"panels\"\n          ]\n        }' \\\n    \"$API_URL/domain-types/service_group_config/actions/bulk-delete/invoke\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp DELETE \"$API_URL/domain-types/service_group_config/actions/bulk-delete/invoke\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/service_group_config/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[\"windows\", \"panels\"]' \\\n  \
           \  --json"
@@ -4422,16 +4422,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/version\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/version\" \\\n    \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/version\" \\\n    \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\" \\\n\
           \    --json"
   /domain-types/agent/actions/sign:
@@ -4483,17 +4483,17 @@ paths:
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"key_id\": 42,\n          \"passphrase\"\
           : \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    key_id='42' \\\n    passphrase='sw0rdfish'\
           \ \\\n    --json"
@@ -4538,17 +4538,17 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/collections/agent\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/collections/agent\" \\\n\
-          \    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/collections/agent\" \\\n \
+          \   \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
           \ \\\n    --json"
   /domain-types/agent/actions/bake:
     post:
@@ -4591,16 +4591,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/domain-types/agent/actions/bake\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
   /domain-types/agent/actions/bake_and_sign:
@@ -4653,17 +4653,17 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"key_id\": 42,\n          \"passphrase\"\
           : \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/bake_and_sign\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake_and_sign\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake_and_sign\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    key_id='42' \\\n    passphrase='sw0rdfish'\
           \ \\\n    --json"
@@ -4708,16 +4708,16 @@ paths:
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/domain-types/agent/actions/automatic-deployment\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/agent/actions/automatic-deployment\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/agent/actions/automatic-deployment\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
   /domain-types/agent/actions/baking_status:
@@ -4761,16 +4761,16 @@ paths:
           data = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    \"$API_URL/domain-types/agent/actions/baking_status\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/agent/actions/baking_status\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/agent/actions/baking_status\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
   /objects/agent/{agent_hash}:
@@ -4847,17 +4847,17 @@ paths:
           response = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    -G  \\\n    --data-urlencode \"os_type=linux_tgz\" \\\n    --data-urlencode\
           \ \"host_name=example.com\"\n    \"$API_URL/objects/agent/80e99ba3a66d4880\""
       - label: httpie
         lang: bash
-        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/objects/agent/80e99ba3a66d4880\"\
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/agent/80e99ba3a66d4880\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    os_type==\"linux_tgz\" \\\n    host_name==\"\
           example.com\" \\\n    --json"

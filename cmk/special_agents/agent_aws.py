@@ -27,6 +27,7 @@ from cmk.utils.exceptions import MKException
 from cmk.special_agents.utils import (
     datetime_serializer,
     DataCache,
+    get_seconds_since_midnight,
 )
 from cmk.utils.aws_constants import (
     AWSRegions,
@@ -278,11 +279,6 @@ def _get_wafv2_web_acls(client,
     ]
 
     return web_acls
-
-
-def _get_seconds_since_midnight(current_time):
-    midnight = datetime.combine(current_time.date(), datetime.min.time())
-    return (current_time - midnight).total_seconds()
 
 
 #.
@@ -685,7 +681,7 @@ class CostsAndUsage(AWSSectionGeneric):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = _get_seconds_since_midnight(NOW)
+        cache_interval = get_seconds_since_midnight(NOW)
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1591,7 +1587,7 @@ class S3Limits(AWSSectionLimits):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = _get_seconds_since_midnight(NOW)
+        cache_interval = get_seconds_since_midnight(NOW)
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
 
         return cache_interval
@@ -1630,7 +1626,7 @@ class S3Summary(AWSSectionGeneric):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = _get_seconds_since_midnight(NOW)
+        cache_interval = get_seconds_since_midnight(NOW)
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1710,7 +1706,7 @@ class S3(AWSSectionCloudwatch):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = _get_seconds_since_midnight(NOW)
+        cache_interval = get_seconds_since_midnight(NOW)
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1859,7 +1855,7 @@ class GlacierLimits(AWSSectionLimits):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = _get_seconds_since_midnight(NOW)
+        cache_interval = get_seconds_since_midnight(NOW)
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1901,7 +1897,7 @@ class GlacierSummary(AWSSectionGeneric):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = _get_seconds_since_midnight(NOW)
+        cache_interval = get_seconds_since_midnight(NOW)
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1986,7 +1982,7 @@ class Glacier(AWSSectionGeneric):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = _get_seconds_since_midnight(NOW)
+        cache_interval = get_seconds_since_midnight(NOW)
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 

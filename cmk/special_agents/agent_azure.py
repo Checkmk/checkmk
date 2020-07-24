@@ -24,7 +24,11 @@ import requests
 
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import DataCache, vcrtrace
+from cmk.special_agents.utils import (
+    DataCache,
+    vcrtrace,
+    get_seconds_since_midnight,
+)
 import cmk.utils.password_store
 
 cmk.utils.password_store.replace_passwords()
@@ -638,8 +642,7 @@ class UsageClient(DataCache):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        utc_today_start = NOW.combine(NOW.date(), datetime.time(0))
-        cache_interval = (NOW - utc_today_start).seconds
+        cache_interval = int(get_seconds_since_midnight(NOW))
         LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 

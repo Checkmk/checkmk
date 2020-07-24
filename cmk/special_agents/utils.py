@@ -253,3 +253,8 @@ def vcrtrace(**vcr_init_kwargs):
             global_context.__enter__()
 
     return VcrTraceAction
+
+
+def get_seconds_since_midnight(current_time) -> float:
+    midnight = datetime.datetime.combine(current_time.date(), datetime.datetime.min.time())
+    return (current_time - midnight).total_seconds()

@@ -22,13 +22,13 @@
 #include "CustomVarsExplicitColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
+#include "DoubleLambdaColumn.h"
 #include "DowntimeColumn.h"
 #include "DynamicColumn.h"
 #include "DynamicServiceRRDColumn.h"
 #include "IntLambdaColumn.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
-#include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetPerfdataColumn.h"
 #include "OffsetStringColumn.h"
@@ -60,6 +60,7 @@ std::string TableServices::namePrefix() const { return "service_"; }
 // static
 void TableServices::addColumns(Table *table, const std::string &prefix,
                                int indirect_offset, bool add_hosts) {
+    Column::Offsets offsets{indirect_offset, 0};
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
     table->addColumn(std::make_unique<OffsetStringColumn>(
@@ -391,49 +392,39 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         ServiceSpecialDoubleColumn::Type::staleness));
 
     // columns of type double
-    table->addColumn(std::make_unique<OffsetDoubleColumn>(
+    table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
         prefix + "check_interval",
         "Number of basic interval lengths between two scheduled checks of the service",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, check_interval)}));
-    table->addColumn(std::make_unique<OffsetDoubleColumn>(
+        offsets, [](const service &r) { return r.check_interval; }));
+    table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
         prefix + "retry_interval",
         "Number of basic interval lengths between checks when retrying after a soft error",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, retry_interval)}));
-    table->addColumn(std::make_unique<OffsetDoubleColumn>(
+        offsets, [](const service &r) { return r.retry_interval; }));
+    table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
         prefix + "notification_interval",
-        "Interval of periodic notification or 0 if its off",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, notification_interval)}));
-    table->addColumn(std::make_unique<OffsetDoubleColumn>(
+        "Interval of periodic notification or 0 if its off", offsets,
+        [](const service &r) { return r.notification_interval; }));
+    table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
         prefix + "first_notification_delay",
-        "Delay before the first notification",
-        Column::Offsets{
-            indirect_offset, -1, -1,
-            DANGEROUS_OFFSETOF(service, first_notification_delay)}));
-    table->addColumn(std::make_unique<OffsetDoubleColumn>(
+        "Delay before the first notification", offsets,
+        [](const service &r) { return r.first_notification_delay; }));
+    table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
         prefix + "low_flap_threshold", "Low threshold of flap detection",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, low_flap_threshold)}));
-    table->addColumn(std::make_unique<OffsetDoubleColumn>(
+        offsets, [](const service &r) { return r.low_flap_threshold; }));
+    table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
         prefix + "high_flap_threshold", "High threshold of flap detection",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, high_flap_threshold)}));
-    table->addColumn(std::make_unique<OffsetDoubleColumn>(
+        offsets, [](const service &r) { return r.high_flap_threshold; }));
+    table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
         prefix + "latency",
         "Time difference between scheduled check time and actual check time",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, latency)}));
-    table->addColumn(std::make_unique<OffsetDoubleColumn>(
+        offsets, [](const service &r) { return r.latency; }));
+    table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
         prefix + "execution_time",
-        "Time the service check needed for execution",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, execution_time)}));
-    table->addColumn(std::make_unique<OffsetDoubleColumn>(
-        prefix + "percent_state_change", "Percent state change",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, percent_state_change)}));
+        "Time the service check needed for execution", offsets,
+        [](const service &r) { return r.execution_time; }));
+    table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
+        prefix + "percent_state_change", "Percent state change", offsets,
+        [](const service &r) { return r.percent_state_change; }));
 
     table->addColumn(std::make_unique<TimeperiodColumn>(
         prefix + "in_check_period",
@@ -595,11 +586,11 @@ void TableServices::answerQuery(Query *query) {
     if (auto value = query->stringValueRestrictionFor("host_name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
         // TODO(sp): Remove ugly cast.
-        if (host *host =
+        if (const auto *host =
                 reinterpret_cast<::host *>(core()->find_host(*value))) {
-            for (servicesmember *m = host->services; m != nullptr;
-                 m = m->next) {
-                if (!query->processDataset(Row(m->service_ptr))) {
+            for (const auto *m = host->services; m != nullptr; m = m->next) {
+                const service *r = m->service_ptr;
+                if (!query->processDataset(Row(r))) {
                     break;
                 }
             }
@@ -610,10 +601,11 @@ void TableServices::answerQuery(Query *query) {
     // do we know the service group?
     if (auto value = query->stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using service group index with '" << *value << "'";
-        if (servicegroup *sg =
+        if (const auto *sg =
                 find_servicegroup(const_cast<char *>(value->c_str()))) {
-            for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
-                if (!query->processDataset(Row(m->service_ptr))) {
+            for (const auto *m = sg->members; m != nullptr; m = m->next) {
+                const service *r = m->service_ptr;
+                if (!query->processDataset(Row(r))) {
                     break;
                 }
             }
@@ -624,12 +616,13 @@ void TableServices::answerQuery(Query *query) {
     // do we know the host group?
     if (auto value = query->stringValueRestrictionFor("host_groups")) {
         Debug(logger()) << "using host group index with '" << *value << "'";
-        if (hostgroup *hg =
+        if (const auto *hg =
                 find_hostgroup(const_cast<char *>(value->c_str()))) {
-            for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
-                for (servicesmember *smem = m->host_ptr->services;
-                     smem != nullptr; smem = smem->next) {
-                    if (!query->processDataset(Row(smem->service_ptr))) {
+            for (const auto *m = hg->members; m != nullptr; m = m->next) {
+                for (const auto *smem = m->host_ptr->services; smem != nullptr;
+                     smem = smem->next) {
+                    const service *r = smem->service_ptr;
+                    if (!query->processDataset(Row(r))) {
                         return;
                     }
                 }
@@ -640,8 +633,9 @@ void TableServices::answerQuery(Query *query) {
 
     // no index -> iterator over *all* services
     Debug(logger()) << "using full table scan";
-    for (service *svc = service_list; svc != nullptr; svc = svc->next) {
-        if (!query->processDataset(Row(svc))) {
+    for (const auto *svc = service_list; svc != nullptr; svc = svc->next) {
+        const service *r = svc;
+        if (!query->processDataset(Row(r))) {
             break;
         }
     }

@@ -25,6 +25,7 @@ from pathlib import Path
 import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
 import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation
 import cmk.base.check_api as check_api  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.rrd  # pylint: disable=cmk-module-layer-violation
 try:
@@ -37,20 +38,22 @@ import cmk.utils.debug
 
 logger = logging.getLogger("RRD INFO Metric Migration")
 
-CHECKS_USING_DF_INCLUDE = [
-    "3par_capacity", "3par_cpgs", "3par_cpgs.usage", "3par_system", "3par_volumes", "ceph_df",
-    "datapower_fs", "db2_logsizes", "dell_compellent_folder", "df", "df_netapp", "df_netapp32",
-    "df_netscaler", "df_zos", "emc_datadomain_fs", "emc_isilon_ifs", "emc_isilon_quota",
-    "emcvnx_raidgroups.capacity", "emcvnx_raidgroups.capacity_contiguous",
-    "esx_vsphere_counters.ramdisk", "esx_vsphere_datastores", "fast_lta_silent_cubes.capacity",
-    "fast_lta_volumes", "hitachi_hnas_span", "hitachi_hnas_volume", "hp_msa_volume.df", "hr_fs",
-    "ibm_svc_mdiskgrp", "k8s_stats.fs", "libelle_business_shadow.archive_dir", "lvm_vgs",
-    "mgmt_hr_fs", "netapp_api_aggr", "netapp_api_luns", "netapp_api_qtree_quota",
-    "netapp_api_volumes", "nimble_volumes", "oracle_asm_diskgroup", "prism_storage_pools",
-    "sap_hana_data_volume", "sap_hana_diskusage", "scaleio_pd", "scaleio_sds",
-    "scaleio_storage_pool", "scaleio_system", "storeonce_clusterinfo.space",
-    "storeonce_servicesets.capacity", "ucd_disk", "vms_diskstat.df", "vnx_quotas", "zfsget", "zpool"
-]
+CHECKS_USING_DF_INCLUDE = list(
+    map(CheckPluginName, [
+        "3par_capacity", "3par_cpgs", "3par_cpgs_usage", "3par_system", "3par_volumes", "ceph_df",
+        "datapower_fs", "db2_logsizes", "dell_compellent_folder", "df", "df_netapp", "df_netapp32",
+        "df_netscaler", "df_zos", "emc_datadomain_fs", "emc_isilon_ifs", "emc_isilon_quota",
+        "emcvnx_raidgroups_capacity", "emcvnx_raidgroups_capacity_contiguous",
+        "esx_vsphere_counters_ramdisk", "esx_vsphere_datastores", "fast_lta_silent_cubes_capacity",
+        "fast_lta_volumes", "hitachi_hnas_span", "hitachi_hnas_volume", "hp_msa_volume_df", "hr_fs",
+        "ibm_svc_mdiskgrp", "k8s_stats_fs", "libelle_business_shadow_archive_dir", "lvm_vgs",
+        "mgmt_hr_fs", "netapp_api_aggr", "netapp_api_luns", "netapp_api_qtree_quota",
+        "netapp_api_volumes", "nimble_volumes", "oracle_asm_diskgroup", "prism_storage_pools",
+        "sap_hana_data_volume", "sap_hana_diskusage", "scaleio_pd", "scaleio_sds",
+        "scaleio_storage_pool", "scaleio_system", "storeonce_clusterinfo_space",
+        "storeonce_servicesets_capacity", "ucd_disk", "vms_diskstat_df", "vnx_quotas", "zfsget",
+        "zpool"
+    ]))
 
 
 def get_hostnames(config_cache):

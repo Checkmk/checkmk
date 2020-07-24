@@ -25,6 +25,7 @@ from werkzeug.test import create_environ
 # with it.
 import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
+import cmk.base.check_api
 
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
@@ -122,6 +123,7 @@ class UpdateConfig:
         root_folder.rewrite_hosts_files()
 
     def _rewrite_autochecks(self):
+        cmk.base.config.load_all_checks(cmk.base.check_api.get_check_api_context)
         check_variables = cmk.base.config.get_check_variables()
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = autocheck_file.stem

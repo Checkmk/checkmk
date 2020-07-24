@@ -6,13 +6,10 @@
 """Background tools required to register a check plugin
 """
 import functools
-import inspect
-import itertools
-from inspect import signature
 from typing import Any, Callable, Dict, Generator, get_args, List, Optional, Union
 
 from cmk.utils.check_utils import ensure_management_name, MANAGEMENT_NAME_PREFIX
-from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
+from cmk.utils.type_defs import CheckPluginName, RuleSetName
 
 from cmk.base.api.agent_based.type_defs import (
     CheckPlugin,
@@ -24,6 +21,11 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     Service,
     state,
+)
+from cmk.base.api.agent_based.register.utils import (
+    create_subscribed_sections,
+    validate_function_arguments,
+    validate_default_parameters,
 )
 
 ITEM_VARIABLE = "%s"
@@ -51,48 +53,6 @@ def _validate_service_name(plugin_name: str, service_name: str) -> None:
 def _requires_item(service_name: str) -> bool:
     """See if this check requires an item"""
     return ITEM_VARIABLE in service_name
-
-
-def _create_sections(sections: Optional[List[str]],
-                     plugin_name: CheckPluginName) -> List[ParsedSectionName]:
-    if sections is None:
-        return [ParsedSectionName(str(plugin_name))]
-    if not isinstance(sections, list):
-        raise TypeError("'sections' must be a list of str, got %r" % (sections,))
-    if not sections:
-        raise ValueError("'sections' must not be empty")
-    return [ParsedSectionName(n) for n in sections]
-
-
-def _validate_function_args(func_type: str, function: Callable, has_item: bool, has_params: bool,
-                            sections: List[ParsedSectionName]) -> None:
-    """Validate the functions signature and type"""
-
-    if not inspect.isgeneratorfunction(function):
-        raise TypeError("%s function must be a generator function" % (func_type,))
-
-    parameters = enumerate(signature(function).parameters, 1)
-    if has_item:
-        pos, name = next(parameters)
-        if name != "item":
-            raise TypeError("%s function must have 'item' as %d. argument, got %s" %
-                            (func_type, pos, name))
-    if has_params:
-        pos, name = next(parameters)
-        if name != "params":
-            raise TypeError("%s function must have 'params' as %d. argument, got %s" %
-                            (func_type, pos, name))
-
-    if len(sections) == 1:
-        pos, name = next(parameters)
-        if name != 'section':
-            raise TypeError("%s function must have 'section' as %d. argument, got %r" %
-                            (func_type, pos, name))
-    else:
-        for (pos, name), section in itertools.zip_longest(parameters, sections):
-            if name != "section_%s" % section:
-                raise TypeError("%s function must have 'section_%s' as %d. argument, got %r" %
-                                (func_type, section, pos, name))
 
 
 def _filter_discovery(
@@ -131,21 +91,6 @@ def _filter_check(
             yield element
 
     return filtered_generator
-
-
-def _validate_default_parameters(params_type: str, ruleset_name: Optional[str],
-                                 default_parameters: Optional[Dict]) -> None:
-    if default_parameters is None:
-        if ruleset_name is None:
-            return
-        raise TypeError("missing default %s parameters for ruleset %s" %
-                        (params_type, ruleset_name))
-
-    if not isinstance(default_parameters, dict):
-        raise TypeError("default %s parameters must be dict" % (params_type,))
-
-    if ruleset_name is None and params_type != 'check':
-        raise TypeError("missing ruleset name for default %s parameters" % (params_type))
 
 
 def _validate_discovery_ruleset(ruleset_name: Optional[str],
@@ -214,13 +159,13 @@ def create_check_plugin(
     """
     plugin_name = CheckPluginName(name)
 
-    subscribed_sections = _create_sections(sections, plugin_name)
+    subscribed_sections = create_subscribed_sections(sections, plugin_name)
 
     _validate_service_name(name, service_name)
     requires_item = _requires_item(service_name)
 
     # validate discovery arguments
-    _validate_default_parameters(
+    validate_default_parameters(
         "discovery",
         discovery_ruleset_name,
         discovery_default_parameters,
@@ -230,7 +175,7 @@ def create_check_plugin(
         discovery_default_parameters,
     )
     _validate_discovery_ruleset_type(discovery_ruleset_type,)
-    _validate_function_args(
+    validate_function_arguments(
         "discovery",
         discovery_function,
         False,  # no item
@@ -242,7 +187,7 @@ def create_check_plugin(
     disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 
     # validate check arguments
-    _validate_default_parameters(
+    validate_default_parameters(
         "check",
         check_ruleset_name,
         check_default_parameters,
@@ -251,7 +196,7 @@ def create_check_plugin(
         check_ruleset_name,
         check_default_parameters,
     )
-    _validate_function_args(
+    validate_function_arguments(
         "check",
         check_function,
         requires_item,
@@ -262,7 +207,7 @@ def create_check_plugin(
     if cluster_check_function is None:
         cluster_check_function = unfit_for_clustering_wrapper(check_function)
     else:
-        _validate_function_args(
+        validate_function_arguments(
             "cluster check",
             cluster_check_function,
             requires_item,

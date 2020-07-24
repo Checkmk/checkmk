@@ -4,12 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 import inspect
+import itertools
+
 from pathlib import Path
 
-from cmk.utils.type_defs import ParsedSectionName, SectionName
+from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, SectionName
 
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 
@@ -49,3 +51,70 @@ def rank_sections_by_supersedes(
         return -len(section.supersedes & candidate_names), section.name
 
     return sorted(candidates.values(), key=_count_relevant_supersedings)
+
+
+def create_subscribed_sections(
+    sections: Optional[List[str]],
+    plugin_name: CheckPluginName,
+) -> List[ParsedSectionName]:
+    if sections is None:
+        return [ParsedSectionName(str(plugin_name))]
+    if not isinstance(sections, list):
+        raise TypeError("'sections' must be a list of str, got %r" % (sections,))
+    if not sections:
+        raise ValueError("'sections' must not be empty")
+    return [ParsedSectionName(n) for n in sections]
+
+
+def validate_function_arguments(
+    func_type: str,
+    function: Callable,
+    has_item: bool,
+    has_params: bool,
+    sections: List[ParsedSectionName],
+) -> None:
+    """Validate the functions signature and type"""
+
+    if not inspect.isgeneratorfunction(function):
+        raise TypeError("%s function must be a generator function" % (func_type,))
+
+    parameters = enumerate(inspect.signature(function).parameters, 1)
+    if has_item:
+        pos, name = next(parameters)
+        if name != "item":
+            raise TypeError("%s function must have 'item' as %d. argument, got %s" %
+                            (func_type, pos, name))
+    if has_params:
+        pos, name = next(parameters)
+        if name != "params":
+            raise TypeError("%s function must have 'params' as %d. argument, got %s" %
+                            (func_type, pos, name))
+
+    if len(sections) == 1:
+        pos, name = next(parameters)
+        if name != 'section':
+            raise TypeError("%s function must have 'section' as %d. argument, got %r" %
+                            (func_type, pos, name))
+    else:
+        for (pos, name), section in itertools.zip_longest(parameters, sections):
+            if name != "section_%s" % section:
+                raise TypeError("%s function must have 'section_%s' as %d. argument, got %r" %
+                                (func_type, section, pos, name))
+
+
+def validate_default_parameters(
+    params_type: str,
+    ruleset_name: Optional[str],
+    default_parameters: Optional[Dict],
+) -> None:
+    if default_parameters is None:
+        if ruleset_name is None:
+            return
+        raise TypeError("missing default %s parameters for ruleset %s" %
+                        (params_type, ruleset_name))
+
+    if not isinstance(default_parameters, dict):
+        raise TypeError("default %s parameters must be dict" % (params_type,))
+
+    if ruleset_name is None and params_type != 'check':
+        raise TypeError("missing ruleset name for default %s parameters" % (params_type))

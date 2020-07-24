@@ -84,7 +84,7 @@ def test_requires_item(service_name, expected):
 ])
 def test_create_sections_invalid(sections):
     with pytest.raises((TypeError, ValueError)):
-        check_plugins._create_sections(sections, None)  # type: ignore[arg-type]
+        check_plugins.create_subscribed_sections(sections, None)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("sections, plugin_name, expected", [
@@ -96,7 +96,7 @@ def test_create_sections_invalid(sections):
     ),
 ])
 def test_create_sections(sections, plugin_name, expected):
-    assert check_plugins._create_sections(sections, plugin_name) == expected
+    assert check_plugins.create_subscribed_sections(sections, plugin_name) == expected
 
 
 @pytest.mark.parametrize("function, has_item, has_params, sections, raises", [
@@ -124,11 +124,11 @@ def test_create_sections(sections, plugin_name, expected):
 ])
 def test_validate_function_args(function, has_item, has_params, sections, raises):
     if raises is None:
-        check_plugins._validate_function_args("", function, has_item, has_params, sections)
+        check_plugins.validate_function_arguments("", function, has_item, has_params, sections)
         return
 
     with pytest.raises(raises):
-        check_plugins._validate_function_args("", function, has_item, has_params, sections)
+        check_plugins.validate_function_arguments("", function, has_item, has_params, sections)
 
 
 @pytest.mark.parametrize("key", list(MINIMAL_CREATION_KWARGS.keys()))

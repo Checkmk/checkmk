@@ -13,8 +13,8 @@
 #include "Column.h"
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
+#include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
-#include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
@@ -36,33 +36,33 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<OffsetSStringColumn>(
         "comment", "A comment text",
         Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _comment)}));
-    addColumn(std::make_unique<OffsetIntColumn>(
-        "id", "The id of the comment",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _id)}));
+    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
+        "id", "The id of the comment", offsets,
+        [](const Comment &r) { return r._id; }));
     addColumn(std::make_unique<OffsetTimeColumn>(
         "entry_time", "The time the entry was made as UNIX timestamp",
         Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _entry_time)}));
-    addColumn(std::make_unique<OffsetIntColumn>(
-        "type", "The type of the comment: 1 is host, 2 is service",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _type)}));
+    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
+        "type", "The type of the comment: 1 is host, 2 is service", offsets,
+        [](const Comment &r) { return r._type; }));
     addColumn(std::make_unique<BoolLambdaColumn<Comment>>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service", offsets,
         [](const Comment &r) { return r._is_service; }));
 
-    addColumn(std::make_unique<OffsetIntColumn>(
-        "persistent", "Whether this comment is persistent (0/1)",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _persistent)}));
-    addColumn(std::make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
+        "persistent", "Whether this comment is persistent (0/1)", offsets,
+        [](const Comment &r) { return r._persistent; }));
+    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
         "source", "The source of the comment (0 is internal and 1 is external)",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _source)}));
-    addColumn(std::make_unique<OffsetIntColumn>(
+        offsets, [](const Comment &r) { return r._source; }));
+    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
         "entry_type",
         "The type of the comment: 1 is user, 2 is downtime, 3 is flapping and 4 is acknowledgement",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _entry_type)}));
-    addColumn(std::make_unique<OffsetIntColumn>(
-        "expires", "Whether this comment expires",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _expires)}));
+        offsets, [](const Comment &r) { return r._entry_type; }));
+    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
+        "expires", "Whether this comment expires", offsets,
+        [](const Comment &r) { return r._expires; }));
     addColumn(std::make_unique<OffsetTimeColumn>(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
         Column::Offsets{-1, -1, -1,

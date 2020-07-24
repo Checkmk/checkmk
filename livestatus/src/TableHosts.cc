@@ -5,6 +5,7 @@
 
 #include "TableHosts.h"
 
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <optional>
@@ -32,10 +33,10 @@
 #include "HostMetricsColumn.h"
 #include "HostSpecialDoubleColumn.h"
 #include "HostSpecialIntColumn.h"
+#include "IntLambdaColumn.h"
 #include "Logger.h"
 #include "LogwatchListColumn.h"
 #include "MonitoringCore.h"
-#include "OffsetIntColumn.h"
 #include "OffsetPerfdataColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetStringHostMacroColumn.h"
@@ -183,69 +184,56 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         Column::Offsets{indirect_offset, extra_offset, -1,
                         DANGEROUS_OFFSETOF(host, long_plugin_output)}));
 
-    table->addColumn(std::make_unique<OffsetIntColumn>(
-        prefix + "initial_state", "Initial host state",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, initial_state)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
+        prefix + "initial_state", "Initial host state", offsets,
+        [](const host &r) { return r.initial_state; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "max_check_attempts",
-        "Max check attempts for active host checks",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, max_attempts)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Max check attempts for active host checks", offsets,
+        [](const host &r) { return r.max_attempts; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "flap_detection_enabled",
-        "Whether flap detection is enabled (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, flap_detection_enabled)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Whether flap detection is enabled (0/1)", offsets,
+        [](const host &r) { return r.flap_detection_enabled; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "check_freshness",
-        "Whether freshness checks are activated (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, check_freshness)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Whether freshness checks are activated (0/1)", offsets,
+        [](const host &r) { return r.check_freshness; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "process_performance_data",
-        "Whether processing of performance data is enabled (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, process_performance_data)}));
+        "Whether processing of performance data is enabled (0/1)", offsets,
+        [](const host &r) { return r.process_performance_data; }));
 #ifndef NAGIOS4
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "accept_passive_checks",
-        "Whether passive host checks are accepted (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, accept_passive_host_checks)}));
+        "Whether passive host checks are accepted (0/1)", offsets,
+        [](const host &r) { return r.accept_passive_host_checks; }));
 #else
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "accept_passive_checks",
-        "Whether passive host checks are accepted (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, accept_passive_checks)}));
+        "Whether passive host checks are accepted (0/1)", offsets,
+        [](const host &r) { return r.accept_passive_checks; }));
 #endif  // NAGIOS4
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "event_handler_enabled",
-        "Whether event handling is enabled (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, event_handler_enabled)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Whether event handling is enabled (0/1)", offsets,
+        [](const host &r) { return r.event_handler_enabled; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "acknowledgement_type",
-        "Type of acknowledgement (0: none, 1: normal, 2: sticky)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, acknowledgement_type)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
-        prefix + "check_type", "Type of check (0: active, 1: passive)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, check_type)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
-        prefix + "last_state", "State before last state change",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, last_state)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
-        prefix + "last_hard_state", "Last hard state",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, last_hard_state)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Type of acknowledgement (0: none, 1: normal, 2: sticky)", offsets,
+        [](const host &r) { return r.acknowledgement_type; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
+        prefix + "check_type", "Type of check (0: active, 1: passive)", offsets,
+        [](const host &r) { return r.check_type; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
+        prefix + "last_state", "State before last state change", offsets,
+        [](const host &r) { return r.last_state; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
+        prefix + "last_hard_state", "Last hard state", offsets,
+        [](const host &r) { return r.last_hard_state; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "current_attempt", "Number of the current check attempts",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, current_attempt)}));
+        offsets, [](const host &r) { return r.current_attempt; }));
 #ifndef NAGIOS4
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "last_notification",
@@ -279,64 +267,51 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "Time of the last hard state change (Unix timestamp)",
         Column::Offsets{indirect_offset, extra_offset, -1,
                         DANGEROUS_OFFSETOF(host, last_hard_state_change)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "has_been_checked",
-        "Whether the host has already been checked (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, has_been_checked)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Whether the host has already been checked (0/1)", offsets,
+        [](const host &r) { return r.has_been_checked; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "current_notification_number",
-        "Number of the current notification",
-        Column::Offsets{
-            indirect_offset, extra_offset, -1,
-            DANGEROUS_OFFSETOF(host, current_notification_number)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Number of the current notification", offsets,
+        [](const host &r) { return r.current_notification_number; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "pending_flex_downtime",
-        "Number of pending flexible downtimes",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, pending_flex_downtime)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Number of pending flexible downtimes", offsets,
+        [](const host &r) { return r.pending_flex_downtime; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "total_services", "The total number of services of the host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, total_services)}));
+        offsets, [](const host &r) { return r.total_services; }));
     // Note: this is redundant with "active_checks_enabled". Nobody noted this
     // before...
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "checks_enabled",
-        "Whether checks of the host are enabled (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, checks_enabled)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Whether checks of the host are enabled (0/1)", offsets,
+        [](const host &r) { return r.checks_enabled; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "notifications_enabled",
-        "Whether notifications of the host are enabled (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, notifications_enabled)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Whether notifications of the host are enabled (0/1)", offsets,
+        [](const host &r) { return r.notifications_enabled; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "acknowledged",
-        "Whether the current host problem has been acknowledged (0/1)",
-        Column::Offsets{
-            indirect_offset, extra_offset, -1,
-            DANGEROUS_OFFSETOF(host, problem_has_been_acknowledged)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Whether the current host problem has been acknowledged (0/1)", offsets,
+        [](const host &r) { return r.problem_has_been_acknowledged; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "state",
         "The current state of the host (0: up, 1: down, 2: unreachable)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, current_state)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        offsets, [](const host &r) { return r.current_state; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "state_type", "Type of the current state (0: soft, 1: hard)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, state_type)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        offsets, [](const host &r) { return r.state_type; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "no_more_notifications",
-        "Whether to stop sending notifications (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, no_more_notifications)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Whether to stop sending notifications (0/1)", offsets,
+        [](const host &r) { return r.no_more_notifications; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "check_flapping_recovery_notification",
         "Whether to check to send a recovery notification when flapping stops (0/1)",
-        Column::Offsets{
-            indirect_offset, extra_offset, -1,
-            DANGEROUS_OFFSETOF(host, check_flapping_recovery_notification)}));
+        offsets,
+        [](const host &r) { return r.check_flapping_recovery_notification; }));
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "last_check", "Time of the last check (Unix timestamp)",
         Column::Offsets{indirect_offset, extra_offset, -1,
@@ -363,42 +338,35 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         Column::Offsets{indirect_offset, extra_offset, -1,
                         DANGEROUS_OFFSETOF(host, last_time_unreachable)}));
 
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "is_flapping", "Whether the host state is flapping (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, is_flapping)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        offsets, [](const host &r) { return r.is_flapping; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "scheduled_downtime_depth",
-        "The number of downtimes this host is currently in",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, scheduled_downtime_depth)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "The number of downtimes this host is currently in", offsets,
+        [](const host &r) { return r.scheduled_downtime_depth; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "is_executing",
-        "is there a host check currently running... (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, is_executing)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "is there a host check currently running... (0/1)", offsets,
+        [](const host &r) { return r.is_executing; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "active_checks_enabled",
-        "Whether active checks are enabled for the host (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, checks_enabled)}));
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+        "Whether active checks are enabled for the host (0/1)", offsets,
+        [](const host &r) { return r.checks_enabled; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "check_options",
-        "The current check option, forced, normal, freshness... (0-2)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, check_options)}));
+        "The current check option, forced, normal, freshness... (0-2)", offsets,
+        [](const host &r) { return r.check_options; }));
 #ifndef NAGIOS4
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "obsess_over_host",
-        "The current obsess_over_host setting... (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, obsess_over_host)}));
+        "The current obsess_over_host setting... (0/1)", offsets,
+        [](const host &r) { return r.obsess_over_host; }));
 #else
-    table->addColumn(std::make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "obsess_over_host",
-        "The current obsess_over_host setting... (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, obsess)}));
+        "The current obsess_over_host setting... (0/1)", offsets,
+        [](const host &r) { return r.obsess; }));
 #endif  // NAGIOS4
     table->addColumn(std::make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",

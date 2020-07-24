@@ -15,12 +15,12 @@
 #include <utility>
 
 #include "Column.h"
+#include "IntLambdaColumn.h"
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "LogEntryStringColumn.h"
 #include "Logfile.h"
 #include "MonitoringCore.h"
-#include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
@@ -62,19 +62,19 @@ public:
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
     auto entry_offset = DANGEROUS_OFFSETOF(LogRow, entry);
+    Column::Offsets offsets{entry_offset, 0};
     addColumn(std::make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (UNIX timestamp)",
         Column::Offsets{entry_offset, -1, -1,
                         DANGEROUS_OFFSETOF(LogEntry, _time)}));
-    addColumn(std::make_unique<OffsetIntColumn>(
-        "lineno", "The number of the line in the log file",
-        Column::Offsets{entry_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(LogEntry, _lineno)}));
-    addColumn(std::make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
+        "lineno", "The number of the line in the log file", offsets,
+        [](const LogEntry &r) { return r._lineno; }));
+    addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
-        Column::Offsets{entry_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(LogEntry, _class)}));
+        offsets,
+        [](const LogEntry &r) { return static_cast<int32_t>(r._class); }));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "message", "The complete message line including the timestamp",
         Column::Offsets{entry_offset, -1, -1,
@@ -102,10 +102,9 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         "The complete output of the check, if any is associated with the message",
         Column::Offsets{entry_offset, -1, -1,
                         DANGEROUS_OFFSETOF(LogEntry, _long_plugin_output)}));
-    addColumn(std::make_unique<OffsetIntColumn>(
-        "state", "The state of the host or service in question",
-        Column::Offsets{entry_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(LogEntry, _state)}));
+    addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
+        "state", "The state of the host or service in question", offsets,
+        [](const LogEntry &r) { return r._state; }));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "state_type", "The type of the state (varies on different log classes)",
         Column::Offsets{entry_offset, -1, -1,
@@ -113,10 +112,9 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<LogEntryStringColumn>(
         "state_info", "Additional information about the state",
         Column::Offsets{entry_offset, -1, -1, 0}));
-    addColumn(std::make_unique<OffsetIntColumn>(
-        "attempt", "The number of the check attempt",
-        Column::Offsets{entry_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(LogEntry, _attempt)}));
+    addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
+        "attempt", "The number of the check attempt", offsets,
+        [](const LogEntry &r) { return r._attempt; }));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
@@ -227,7 +225,8 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
             reinterpret_cast<const contact *>(
                 core()->find_contact(entry->_contact_name)),
             core()->find_command(entry->_command_name)};
-        if (!query->processDataset(Row{&lr})) {
+        const LogRow *r = &lr;
+        if (!query->processDataset(Row{r})) {
             return false;
         }
     }

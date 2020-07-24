@@ -206,10 +206,18 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
     if allow_none:
         # Wrap match() function defined above
         match = lambda x: 0 if x is None else (alternative_match(x) + 1)
+        elements = [_snmp_no_credentials_element()]
     else:
         match = alternative_match
+        elements = []
 
-    elements = _snmp_credentials_elements(allow_none)
+    elements.extend([
+        _snmpv1_v2_credentials_element(),
+        _snmpv3_no_auth_no_priv_credentials_element(),
+        _snmpv3_auth_no_priv_credentials_element(),
+        _snmpv3_auth_priv_credentials_element(),
+    ])
+
     if only_v3:
         # HACK: This shifts the indices in alternative_match above!!
         # Furthermore, it doesn't work in conjunction with allow_none.
@@ -228,21 +236,24 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
     )
 
 
-def _snmp_credentials_elements(allow_none: bool) -> List[ValueSpec]:
-    none_elements: List[ValueSpec] = []
-    if allow_none:
-        none_elements = [FixedValue(
-            None,
-            title=_("No explicit credentials"),
-            totext="",
-        )]
+def _snmp_no_credentials_element() -> ValueSpec:
+    return FixedValue(
+        None,
+        title=_("No explicit credentials"),
+        totext="",
+    )
 
-    return none_elements + [
-        Password(
-            title=_("SNMP community (SNMP Versions 1 and 2c)"),
-            allow_empty=False,
-        ),
-        Transform(Tuple(
+
+def _snmpv1_v2_credentials_element() -> ValueSpec:
+    return Password(
+        title=_("SNMP community (SNMP Versions 1 and 2c)"),
+        allow_empty=False,
+    )
+
+
+def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
+    return Transform(
+        Tuple(
             title=_("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
             elements=[
                 FixedValue(
@@ -251,39 +262,51 @@ def _snmp_credentials_elements(allow_none: bool) -> List[ValueSpec]:
                     totext=_("No authentication, no privacy"),
                 ),
                 TextAscii(title=_("Security name"), attrencode=True, allow_empty=False),
-            ]),
-                  forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", "")),
-        Tuple(
-            title=_("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
-            elements=[
-                FixedValue(
-                    "authNoPriv",
-                    title=_("Security Level"),
-                    totext=_("authentication but no privacy"),
-                ),
-            ] + _snmpv3_auth_elements()),
-        Tuple(title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
-              elements=[
-                  FixedValue(
-                      "authPriv",
-                      title=_("Security Level"),
-                      totext=_("authentication and encryption"),
-                  ),
-              ] + _snmpv3_auth_elements() + [
-                  DropdownChoice(choices=[
-                      ("DES", _("DES")),
-                      ("AES", _("AES")),
-                  ],
-                                 title=_("Privacy protocol")),
-                  Password(
-                      title=_("Privacy pass phrase"),
-                      minlen=8,
-                  ),
-              ]),
-    ]
+            ],
+        ),
+        forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", ""),
+    )
 
 
-def _snmpv3_auth_elements():
+def _snmpv3_auth_no_priv_credentials_element() -> ValueSpec:
+    return Tuple(
+        title=_("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
+        elements=[
+            FixedValue(
+                "authNoPriv",
+                title=_("Security Level"),
+                totext=_("authentication but no privacy"),
+            ),
+        ] + _snmpv3_auth_protocol_elements(),
+    )
+
+
+def _snmpv3_auth_priv_credentials_element() -> ValueSpec:
+    return Tuple(
+        title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
+        elements=[
+            FixedValue(
+                "authPriv",
+                title=_("Security Level"),
+                totext=_("authentication and encryption"),
+            ),
+        ] + _snmpv3_auth_protocol_elements() + [
+            DropdownChoice(
+                choices=[
+                    ("DES", _("DES")),
+                    ("AES", _("AES")),
+                ],
+                title=_("Privacy protocol"),
+            ),
+            Password(
+                title=_("Privacy pass phrase"),
+                minlen=8,
+            ),
+        ],
+    )
+
+
+def _snmpv3_auth_protocol_elements():
     return [
         DropdownChoice(
             choices=[

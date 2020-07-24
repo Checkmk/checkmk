@@ -14,6 +14,7 @@ from six import ensure_str
 from cmk.utils.regex import regex
 import cmk.utils.defines as defines
 import cmk.utils.render
+from cmk.utils.structured_data import StructuredDataTree
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -188,7 +189,7 @@ def _declare_inv_column(invpath, datatype, title, short=None):
                 "title": _("Inventory") + ": " + title,
                 "columns": ["host_inventory", "host_structured_status"],
                 "load_inv": True,
-                "cmp": lambda self, a, b: cmp_inventory_node(a, b, self._spec["_inv_path"]),
+                "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inv_path"]),
             })
 
         filter_info = _inv_filter_info().get(datatype, {})
@@ -225,9 +226,23 @@ def _declare_inv_column(invpath, datatype, title, short=None):
         filter_registry.register(filter_class)
 
 
-def cmp_inventory_node(a, b, invpath):
+def _cmp_inventory_node(a: Dict[str, StructuredDataTree], b: Dict[str, StructuredDataTree],
+                        invpath: str) -> int:
+    # Returns
+    # (1)  1 if val_a > val_b
+    # (2)  0 if val_a == val_b
+    # (3) -1 if val_a < val_b
     val_a = inventory.get_inventory_data(a["host_inventory"], invpath)
     val_b = inventory.get_inventory_data(b["host_inventory"], invpath)
+
+    if val_a is None:
+        # as (2) or (3)
+        return 0 if val_b is None else -1
+
+    if val_b is None:
+        # as (2) or (1)
+        return 0 if val_a is None else 1
+
     return (val_a > val_b) - (val_a < val_b)
 
 

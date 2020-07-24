@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# No stub file
+import pytest  # type: ignore[import]
+
+import cmk.gui.inventory
 import cmk.gui.plugins.views.inventory as inventory
 
 RAW_ROWS = [('this_site', 'this_hostname')]
@@ -174,3 +178,17 @@ def test_query_row_multi_table_inventory_add_columns(monkeypatch):
     rows = row_table.query(None, ['host_foo'], None, None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_MULTI_KEYS + ['host_foo'])
+
+
+@pytest.mark.parametrize("val_a, val_b, result", [
+    (None, None, 0),
+    (None, 0, -1),
+    (0, None, 1),
+    (0, 0, 0),
+    (1, 0, 1),
+    (0, 1, -1),
+])
+def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
+    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_data", lambda val, path: val)
+    assert inventory._cmp_inventory_node({"host_inventory": val_a}, {"host_inventory": val_b},
+                                         "any-path") == result

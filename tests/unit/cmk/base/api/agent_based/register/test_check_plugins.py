@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from typing import Any, Dict
 
 import pytest  # type: ignore[import]
@@ -122,11 +124,11 @@ def test_create_sections(sections, plugin_name, expected):
 ])
 def test_validate_function_args(function, has_item, has_params, sections, raises):
     if raises is None:
-        check_plugins._validate_function_args("", "", function, has_item, has_params, sections)
+        check_plugins._validate_function_args("", function, has_item, has_params, sections)
         return
 
     with pytest.raises(raises):
-        check_plugins._validate_function_args("", "", function, has_item, has_params, sections)
+        check_plugins._validate_function_args("", function, has_item, has_params, sections)
 
 
 @pytest.mark.parametrize("key", list(MINIMAL_CREATION_KWARGS.keys()))

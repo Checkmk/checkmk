@@ -33,21 +33,19 @@ MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
 def _validate_service_name(plugin_name: str, service_name: str) -> None:
     if not isinstance(service_name, str):
-        raise TypeError("[%s]: service_name must be str, got %r" % (plugin_name, service_name))
+        raise TypeError("service_name must be str, got %r" % (service_name,))
     if not service_name:
-        raise ValueError("[%s]: service_name must not be empty" % plugin_name)
+        raise ValueError("service_name must not be empty")
     if service_name.count(ITEM_VARIABLE) not in (0, 1):
-        raise ValueError("[%s]: service_name must contain %r at most once" %
-                         (plugin_name, ITEM_VARIABLE))
+        raise ValueError("service_name must contain %r at most once" % ITEM_VARIABLE)
 
     if (plugin_name.startswith(MANAGEMENT_NAME_PREFIX)
             is not service_name.startswith(MANAGEMENT_DESCR_PREFIX)):
         raise ValueError(
-            "[%s]: service name and description inconsistency: Please neither have your plugins "
+            "service name and description inconsistency: Please neither have your plugins "
             "name start with %r, nor the description with %r. In the rare case that you want to "
             "implement a check plugin explicitly designed for management boards (and nothing else),"
-            " you must do both of the above." %
-            (plugin_name, MANAGEMENT_NAME_PREFIX, MANAGEMENT_DESCR_PREFIX))
+            " you must do both of the above." % (MANAGEMENT_NAME_PREFIX, MANAGEMENT_DESCR_PREFIX))
 
 
 def _requires_item(service_name: str) -> bool:
@@ -60,41 +58,41 @@ def _create_sections(sections: Optional[List[str]],
     if sections is None:
         return [ParsedSectionName(str(plugin_name))]
     if not isinstance(sections, list):
-        raise TypeError("[%s]: 'sections' must be a list of str, got %r" % (plugin_name, sections))
+        raise TypeError("'sections' must be a list of str, got %r" % (sections,))
     if not sections:
-        raise ValueError("[%s]: 'sections' must not be empty" % plugin_name)
+        raise ValueError("'sections' must not be empty")
     return [ParsedSectionName(n) for n in sections]
 
 
-def _validate_function_args(plugin_name: str, func_type: str, function: Callable, has_item: bool,
-                            has_params: bool, sections: List[ParsedSectionName]) -> None:
+def _validate_function_args(func_type: str, function: Callable, has_item: bool, has_params: bool,
+                            sections: List[ParsedSectionName]) -> None:
     """Validate the functions signature and type"""
 
     if not inspect.isgeneratorfunction(function):
-        raise TypeError("[%s]: %s function must be a generator function" % (plugin_name, func_type))
+        raise TypeError("%s function must be a generator function" % (func_type,))
 
     parameters = enumerate(signature(function).parameters, 1)
     if has_item:
         pos, name = next(parameters)
         if name != "item":
-            raise TypeError("[%s]: %s function must have 'item' as %d. argument, got %s" %
-                            (plugin_name, func_type, pos, name))
+            raise TypeError("%s function must have 'item' as %d. argument, got %s" %
+                            (func_type, pos, name))
     if has_params:
         pos, name = next(parameters)
         if name != "params":
-            raise TypeError("[%s]: %s function must have 'params' as %d. argument, got %s" %
-                            (plugin_name, func_type, pos, name))
+            raise TypeError("%s function must have 'params' as %d. argument, got %s" %
+                            (func_type, pos, name))
 
     if len(sections) == 1:
         pos, name = next(parameters)
         if name != 'section':
-            raise TypeError("[%s]: %s function must have 'section' as %d. argument, got %r" %
-                            (plugin_name, func_type, pos, name))
+            raise TypeError("%s function must have 'section' as %d. argument, got %r" %
+                            (func_type, pos, name))
     else:
         for (pos, name), section in itertools.zip_longest(parameters, sections):
             if name != "section_%s" % section:
-                raise TypeError("[%s]: %s function must have 'section_%s' as %d. argument, got %r" %
-                                (plugin_name, func_type, section, pos, name))
+                raise TypeError("%s function must have 'section_%s' as %d. argument, got %r" %
+                                (func_type, section, pos, name))
 
 
 def _filter_discovery(
@@ -233,7 +231,6 @@ def create_check_plugin(
     )
     _validate_discovery_ruleset_type(discovery_ruleset_type,)
     _validate_function_args(
-        name,
         "discovery",
         discovery_function,
         False,  # no item
@@ -255,7 +252,6 @@ def create_check_plugin(
         check_default_parameters,
     )
     _validate_function_args(
-        name,
         "check",
         check_function,
         requires_item,
@@ -267,7 +263,6 @@ def create_check_plugin(
         cluster_check_function = unfit_for_clustering_wrapper(check_function)
     else:
         _validate_function_args(
-            name,
             "cluster check",
             cluster_check_function,
             requires_item,

@@ -5,14 +5,15 @@
 
 #include "TableComments.h"
 
+#include <cstdint>
 #include <memory>
 #include <utility>
 
+#include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
 #include "MonitoringCore.h"
-#include "OffsetBoolColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
 #include "OffsetTimeColumn.h"
@@ -27,6 +28,7 @@
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
+    Column::Offsets offsets{};
     addColumn(std::make_unique<OffsetSStringColumn>(
         "author", "The contact that entered the comment",
         Column::Offsets{-1, -1, -1,
@@ -43,10 +45,10 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<OffsetIntColumn>(
         "type", "The type of the comment: 1 is host, 2 is service",
         Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _type)}));
-    addColumn(std::make_unique<OffsetBoolColumn>(
+    addColumn(std::make_unique<BoolLambdaColumn<Comment>>(
         "is_service",
-        "0, if this entry is for a host, 1 if it is for a service",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _is_service)}));
+        "0, if this entry is for a host, 1 if it is for a service", offsets,
+        [](const Comment &r) { return r._is_service; }));
 
     addColumn(std::make_unique<OffsetIntColumn>(
         "persistent", "Whether this comment is persistent (0/1)",
@@ -79,7 +81,10 @@ std::string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query *query) {
     for (const auto &entry : core()->impl<Store>()->_comments) {
-        if (!query->processDataset(Row(entry.second.get()))) {
+        // NOTE: Our typing is horrible here, so we need a downcast. Use
+        // templates instead?
+        const auto *r = static_cast<const Comment *>(entry.second.get());
+        if (!query->processDataset(Row(r))) {
             break;
         }
     }

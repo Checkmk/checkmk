@@ -5,14 +5,15 @@
 
 #include "TableDowntimes.h"
 
+#include <cstdint>
 #include <memory>
 #include <utility>
 
+#include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
 #include "MonitoringCore.h"
-#include "OffsetBoolColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
 #include "OffsetTimeColumn.h"
@@ -27,6 +28,7 @@
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
+    Column::Offsets offsets{};
     addColumn(std::make_unique<OffsetSStringColumn>(
         "author", "The contact that scheduled the downtime",
         Column::Offsets{-1, -1, -1,
@@ -45,11 +47,10 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "type",
         "The type of the downtime: 0 if it is active, 1 if it is pending",
         Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _type)}));
-    addColumn(std::make_unique<OffsetBoolColumn>(
+    addColumn(std::make_unique<BoolLambdaColumn<Downtime>>(
         "is_service",
-        "0, if this entry is for a host, 1 if it is for a service",
-        Column::Offsets{-1, -1, -1,
-                        DANGEROUS_OFFSETOF(Downtime, _is_service)}));
+        "0, if this entry is for a host, 1 if it is for a service", offsets,
+        [](const Downtime &r) { return r._is_service; }));
 
     addColumn(std::make_unique<OffsetTimeColumn>(
         "start_time", "The start time of the downtime as UNIX timestamp",
@@ -83,7 +84,10 @@ std::string TableDowntimes::namePrefix() const { return "downtime_"; }
 
 void TableDowntimes::answerQuery(Query *query) {
     for (const auto &entry : core()->impl<Store>()->_downtimes) {
-        if (!query->processDataset(Row(entry.second.get()))) {
+        // NOTE: Our typing is horrible here, so we need a downcast. Use
+        // templates instead?
+        const auto *r = static_cast<const Downtime *>(entry.second.get());
+        if (!query->processDataset(Row(r))) {
             break;
         }
     }

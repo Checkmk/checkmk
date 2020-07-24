@@ -14,7 +14,7 @@ import datetime as dt
 import operator
 import re
 import time
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Literal, Optional, Tuple, Union
 
 # TODO: Make livestatus.py a well tested package on pypi
 # TODO: Move this code to the livestatus package
@@ -358,8 +358,33 @@ def _compare(pattern: str, string: str, match_type: MatchType) -> bool:
 
 
 @contextlib.contextmanager
-def simple_expect(query, match_type: MatchType = "ellipsis", expect_status_query=False):
-    """A simplified testing context manager."""
+def simple_expect(
+    query,
+    match_type: MatchType = "ellipsis",
+    expect_status_query=False,
+) -> Generator[MockLiveStatusConnection, None, None]:
+    """A simplified testing context manager.
+
+    Args:
+        query:
+            A livestatus query.
+
+        match_type:
+            Either 'strict' or 'ellipsis'. Default is 'ellipsis'.
+
+        expect_status_query:
+            If the query of the status table (which Checkmk does when calling sites.live()) should
+            be expected. Defaults to False.
+
+    Returns:
+        A context manager.
+
+    Examples:
+
+        >>> with simple_expect("GET hosts") as _live:
+        ...    _ = _live.do_query("GET hosts")
+
+    """
     live = MockLiveStatusConnection()
     live.expect_query(query, match_type=match_type)
     with live(expect_status_query=expect_status_query):

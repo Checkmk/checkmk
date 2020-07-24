@@ -6,17 +6,18 @@
 
 import datetime as dt
 
-from marshmallow import Schema, fields  # type: ignore[import]
+from marshmallow import fields  # type: ignore[import]
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui.plugins.openapi import plugins
+from cmk.gui.plugins.openapi.utils import BaseSchema
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
 # TODO: websocket verbindung um events/etc. zu streamen.
 
 
-class ApiError(Schema):
+class ApiError(BaseSchema):
     code = fields.Integer(
         description="The HTTP status code.",
         required=True,
@@ -40,7 +41,7 @@ class ApiError(Schema):
     )
 
 
-class UserSchema(Schema):
+class UserSchema(BaseSchema):
     id = fields.Int(dump_only=True)
     name = fields.Str(description="The user's name")
     created = fields.DateTime(dump_only=True,
@@ -48,7 +49,7 @@ class UserSchema(Schema):
                               doc_default="The current datetime")
 
 
-class LinkSchema(Schema):
+class LinkSchema(BaseSchema):
     """A Link representation according to A-24 (2.7)
 
     """
@@ -89,7 +90,7 @@ class LinkSchema(Schema):
     )
 
 
-class Linkable(Schema):
+class Linkable(BaseSchema):
     links = fields.List(
         fields.Nested(LinkSchema),
         required=True,
@@ -233,7 +234,7 @@ class DomainObject(Linkable):
     members = fields.Nested(ObjectMemberDict())
 
 
-class FolderMembers(Schema):
+class FolderMembers(BaseSchema):
     hosts = fields.Nested(
         ObjectCollectionMember(),
         description="A list of links pointing to the actual host-resources.",
@@ -262,7 +263,7 @@ class ConcreteFolder(OneOfSchema):
     type_field = 'domainType'
 
 
-class MoveFolder(Schema):
+class MoveFolder(BaseSchema):
     destination = fields.String(
         description=("The folder-id of the folder to which this folder shall be moved to. May "
                      "be 'root' for the root-folder."),
@@ -297,7 +298,7 @@ class Configuration(DomainObject):
     domainType = fields.Constant("config", required=True)
 
 
-class SiteStateMembers(Schema):
+class SiteStateMembers(BaseSchema):
     sites = fields.Dict()
 
 
@@ -306,7 +307,7 @@ class SiteState(Linkable):
     members = fields.Nested(SiteStateMembers, description="All the members of the host object.")
 
 
-class HostMembers(Schema):
+class HostMembers(BaseSchema):
     folder_config = fields.Nested(
         ConcreteFolder,
         description="The folder in which this host resides. It is represented by a hexadecimal "
@@ -365,7 +366,7 @@ class User(Linkable):
     )
 
 
-class InstalledVersions(Schema):
+class InstalledVersions(BaseSchema):
     site = fields.String(description="The site where this API call was made on.",
                          example="production")
     group = fields.String(description="The Apache WSGI application group this call was made on.",
@@ -375,7 +376,7 @@ class InstalledVersions(Schema):
     demo = fields.Bool(description="Whether this is a demo version or not.", example=False)
 
 
-class VersionCapabilities(Schema):
+class VersionCapabilities(BaseSchema):
     blobsClobs = fields.Bool(
         required=False,
         description="attachment support",

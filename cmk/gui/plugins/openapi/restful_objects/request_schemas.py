@@ -3,15 +3,15 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from marshmallow import Schema, fields  # type: ignore[import]
+from marshmallow import fields  # type: ignore[import]
 
-from cmk.gui.plugins.openapi.utils import param_description
+from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME_REGEXP
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import \
     acknowledge_host_problem, acknowledge_service_problem
 
 
-class InputAttribute(Schema):
+class InputAttribute(BaseSchema):
     key = fields.String(required=True)
     value = fields.String(required=True)
 
@@ -32,7 +32,7 @@ FOLDER_FIELD = fields.String(
 )
 
 
-class CreateHost(Schema):
+class CreateHost(BaseSchema):
     """Creating a new host
 
     Required arguments:
@@ -55,7 +55,7 @@ class CreateHost(Schema):
                         example=["host1", "host2", "host3"])
 
 
-class UpdateHost(Schema):
+class UpdateHost(BaseSchema):
     """Updating of a host
 
     Only the `attributes` and `nodes` values may be changed.
@@ -73,25 +73,25 @@ class UpdateHost(Schema):
     nodes = fields.List(fields.String(pattern="foo"), example=["host1", "host2", "host3"])
 
 
-class InputHostGroup(Schema):
+class InputHostGroup(BaseSchema):
     """Creating a host group"""
     name = fields.String(required=True, example="windows")
     alias = fields.String(example="Windows Servers")
 
 
-class InputContactGroup(Schema):
+class InputContactGroup(BaseSchema):
     """Creating a contact group"""
     name = fields.String(required=True, example="OnCall")
     alias = fields.String(example="Not on Sundays.")
 
 
-class InputServiceGroup(Schema):
+class InputServiceGroup(BaseSchema):
     """Creating a service group"""
     name = fields.String(required=True, example="environment")
     alias = fields.String(example="Environment Sensors")
 
 
-class CreateFolder(Schema):
+class CreateFolder(BaseSchema):
     """Creating a folder
 
     Every folder needs a parent folder to reside in. The uppermost folder is called the "root"
@@ -123,7 +123,7 @@ class CreateFolder(Schema):
     attributes = fields.Dict(example={'foo': 'bar'})
 
 
-class UpdateFolder(Schema):
+class UpdateFolder(BaseSchema):
     """Updating a folder"""
     title = fields.String(required=True, example="Virtual Servers.")
     attributes = fields.List(fields.Nested(InputAttribute),
@@ -133,7 +133,7 @@ class UpdateFolder(Schema):
                              }])
 
 
-class CreateDowntime(Schema):
+class CreateDowntime(BaseSchema):
     service_description = fields.String(required=False, example="CPU utilization")
     host_name = HOST_FIELD
     end_time = fields.String(
@@ -189,14 +189,14 @@ HOST_COMMENT_FIELD = fields.String(
 )
 
 
-class AcknowledgeHostProblem(Schema):
+class AcknowledgeHostProblem(BaseSchema):
     sticky = HOST_STICKY_FIELD
     persistent = HOST_PERSISTENT_FIELD
     notify = HOST_NOTIFY_FIELD
     comment = HOST_COMMENT_FIELD
 
 
-class BulkAcknowledgeHostProblem(Schema):
+class BulkAcknowledgeHostProblem(BaseSchema):
     stick = HOST_STICKY_FIELD
     persistent = HOST_PERSISTENT_FIELD
     notify = HOST_NOTIFY_FIELD
@@ -208,7 +208,7 @@ class BulkAcknowledgeHostProblem(Schema):
     )
 
 
-class AcknowledgeServiceProblem(Schema):
+class AcknowledgeServiceProblem(BaseSchema):
     sticky = fields.Boolean(
         required=False,
         example=False,
@@ -234,7 +234,7 @@ class AcknowledgeServiceProblem(Schema):
     )
 
 
-class BulkDeleteDowntime(Schema):
+class BulkDeleteDowntime(BaseSchema):
     host_name = HOST_FIELD
     entries = fields.List(
         fields.Integer(
@@ -247,7 +247,7 @@ class BulkDeleteDowntime(Schema):
     )
 
 
-class BulkDeleteHost(Schema):
+class BulkDeleteHost(BaseSchema):
     # TODO: addition of etag field
     entries = fields.List(
         HOST_FIELD,
@@ -256,7 +256,7 @@ class BulkDeleteHost(Schema):
     )
 
 
-class BulkDeleteFolder(Schema):
+class BulkDeleteFolder(BaseSchema):
     # TODO: addition of etag field
     entries = fields.List(
         FOLDER_FIELD,
@@ -265,7 +265,7 @@ class BulkDeleteFolder(Schema):
     )
 
 
-class BulkDeleteHostGroup(Schema):
+class BulkDeleteHostGroup(BaseSchema):
     # TODO: addition of etag field
     entries = fields.List(
         fields.String(
@@ -278,7 +278,7 @@ class BulkDeleteHostGroup(Schema):
     )
 
 
-class BulkDeleteServiceGroup(Schema):
+class BulkDeleteServiceGroup(BaseSchema):
     # TODO: addition of etag field
     entries = fields.List(
         fields.String(
@@ -291,7 +291,7 @@ class BulkDeleteServiceGroup(Schema):
     )
 
 
-class BulkDeleteContactGroup(Schema):
+class BulkDeleteContactGroup(BaseSchema):
     # TODO: addition of etag field
     entries = fields.List(
         fields.String(

@@ -6,7 +6,16 @@
 
 from typing import Literal, Optional
 
+from marshmallow import Schema  # type: ignore[import]
+
 import docstring_parser  # type: ignore[import]
+
+
+class BaseSchema(Schema):
+    """The Base Schema for all request and response schemas."""
+    class Meta:
+        """Holds configuration for marshmallow"""
+        ordered = True  # we want to have documentation in definition-order
 
 
 def param_description(

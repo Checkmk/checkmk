@@ -76,19 +76,6 @@ components:
       type: object
     AcknowledgeServiceProblem:
       properties:
-        comment:
-          description: If set, this comment will be stored alongside the acknowledgement.
-          example: This was expected.
-          type: string
-        notify:
-          description: If set, notifications will be sent out to the configured contacts.
-            Defaults to False.
-          example: false
-          type: boolean
-        persistent:
-          description: If set, the comment will persist a restart. Defaults to False.
-          example: false
-          type: boolean
         sticky:
           description: 'If set, only a state-change of the service to an OK state
             will discard the
@@ -97,6 +84,19 @@ components:
             to False.'
           example: false
           type: boolean
+        persistent:
+          description: If set, the comment will persist a restart. Defaults to False.
+          example: false
+          type: boolean
+        notify:
+          description: If set, notifications will be sent out to the configured contacts.
+            Defaults to False.
+          example: false
+          type: boolean
+        comment:
+          description: If set, this comment will be stored alongside the acknowledgement.
+          example: This was expected.
+          type: string
       type: object
     ActionResult:
       discriminator:
@@ -114,11 +114,11 @@ components:
           items:
             $ref: '#/components/schemas/Link'
           type: array
-        result:
-          type: object
         resultType:
           default: object
           type: string
+        result:
+          type: object
         value:
           description: The return value of this action.
           example:
@@ -136,11 +136,11 @@ components:
           items:
             $ref: '#/components/schemas/Link'
           type: array
-        result:
-          type: object
         resultType:
           default: scalar
           type: string
+        result:
+          type: object
         value:
           description: The return value of this action.
           example: Done.
@@ -172,13 +172,6 @@ components:
           example: 404
           format: int32
           type: integer
-        errors:
-          description: Optionally a list of errors used for debugging.
-          example: null
-          items:
-            type: string
-          nullable: true
-          type: array
         message:
           description: Detailed information on what exactly went wrong.
           example: The resource could not be found.
@@ -187,6 +180,13 @@ components:
           description: A summary of the problem.
           example: Not found
           type: string
+        errors:
+          description: Optionally a list of errors used for debugging.
+          example: null
+          items:
+            type: string
+          nullable: true
+          type: array
       required:
       - code
       - message
@@ -243,6 +243,11 @@ components:
       type: object
     BulkDeleteDowntime:
       properties:
+        host_name:
+          description: The hostname or IP address itself.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
         entries:
           example:
           - 1120
@@ -253,11 +258,6 @@ components:
             format: int32
             type: integer
           type: array
-        host_name:
-          description: The hostname or IP address itself.
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
       required:
       - entries
       - host_name
@@ -345,20 +345,20 @@ components:
       type: object
     ContactGroup:
       properties:
-        domainType:
-          default: contact_group
-          type: string
-        id:
-          type: string
         links:
           description: list of links to other resources.
           items:
             $ref: '#/components/schemas/Link'
           type: array
-        members:
-          $ref: '#/components/schemas/ObjectMemberDict'
+        domainType:
+          default: contact_group
+          type: string
+        id:
+          type: string
         title:
           type: string
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
       required:
       - domainType
       - links
@@ -411,13 +411,12 @@ components:
       type: object
     CreateFolder:
       properties:
-        attributes:
-          example:
-            foo: bar
-          type: object
         name:
           description: The name of the folder.
           example: production
+          type: string
+        title:
+          example: Production Hosts
           type: string
         parent:
           description: The folder-id of the folder under which this folder shall be
@@ -425,9 +424,10 @@ components:
           example: root
           pattern: '[a-fA-F0-9]{32}|root'
           type: string
-        title:
-          example: Production Hosts
-          type: string
+        attributes:
+          example:
+            foo: bar
+          type: object
       required:
       - name
       - parent
@@ -435,20 +435,20 @@ components:
       type: object
     CreateHost:
       properties:
-        attributes:
-          example: {}
-          type: object
+        host_name:
+          description: The hostname or IP address itself.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
         folder:
           description: The folder-id of the folder under which this folder shall be
             created. May be 'root' for the root-folder.
           example: root
           pattern: '[a-fA-F0-9]{32}|root'
           type: string
-        host_name:
-          description: The hostname or IP address itself.
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
+        attributes:
+          example: {}
+          type: object
         nodes:
           description: Nodes where the newly created host should be the cluster-container
             of.
@@ -465,81 +465,81 @@ components:
       type: object
     DomainObject:
       properties:
-        domainType:
-          type: string
-        id:
-          type: string
         links:
           description: list of links to other resources.
           items:
             $ref: '#/components/schemas/Link'
           type: array
-        members:
-          $ref: '#/components/schemas/ObjectMemberDict'
+        domainType:
+          type: string
+        id:
+          type: string
         title:
           type: string
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
       required:
       - domainType
       - links
       type: object
     DomainObjectCollection:
       properties:
-        domainType:
-          type: string
-        extensions:
-          type: object
-        id:
-          type: string
         links:
           description: list of links to other resources.
           items:
             $ref: '#/components/schemas/Link'
           type: array
+        id:
+          type: string
+        domainType:
+          type: string
         value:
           items:
             $ref: '#/components/schemas/Link'
           type: array
+        extensions:
+          type: object
       required:
       - links
       type: object
     Folder:
       properties:
-        domainType:
-          default: folder_config
-          type: string
-        id:
-          type: string
         links:
           description: list of links to other resources.
           items:
             $ref: '#/components/schemas/Link'
           type: array
-        members:
-          $ref: '#/components/schemas/FolderMembers'
+        domainType:
+          default: folder_config
+          type: string
+        id:
+          type: string
         title:
           type: string
+        members:
+          $ref: '#/components/schemas/FolderMembers'
       required:
       - domainType
       - links
       type: object
     FolderCollection:
       properties:
-        domainType:
-          default: folder_config
-          type: string
-        extensions:
-          type: object
-        id:
-          type: string
         links:
           description: list of links to other resources.
           items:
             $ref: '#/components/schemas/Link'
           type: array
+        id:
+          type: string
+        domainType:
+          default: folder_config
+          type: string
         value:
           items:
             $ref: '#/components/schemas/ConcreteFolder'
           type: array
+        extensions:
+          type: object
       required:
       - links
       type: object
@@ -557,38 +557,38 @@ components:
       type: object
     Host:
       properties:
-        domainType:
-          default: host_config
-          type: string
-        id:
-          type: string
         links:
           description: list of links to other resources.
           items:
             $ref: '#/components/schemas/Link'
           type: array
+        domainType:
+          default: host_config
+          type: string
+        id:
+          type: string
+        title:
+          type: string
         members:
           allOf:
           - $ref: '#/components/schemas/HostMembers'
           description: All the members of the host object.
-        title:
-          type: string
       required:
       - domainType
       - links
       type: object
     HostCollection:
       properties:
-        domainType:
-          default: host_config
-          type: string
-        id:
-          type: string
         links:
           description: list of links to other resources.
           items:
             $ref: '#/components/schemas/Link'
           type: array
+        domainType:
+          default: host_config
+          type: string
+        id:
+          type: string
         title:
           type: string
         value:
@@ -601,20 +601,20 @@ components:
       type: object
     HostGroup:
       properties:
-        domainType:
-          default: host_group
-          type: string
-        id:
-          type: string
         links:
           description: list of links to other resources.
           items:
             $ref: '#/components/schemas/Link'
           type: array
-        members:
-          $ref: '#/components/schemas/ObjectMemberDict'
+        domainType:
+          default: host_group
+          type: string
+        id:
+          type: string
         title:
           type: string
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
       required:
       - domainType
       - links
@@ -640,60 +640,60 @@ components:
       type: object
     InputContactGroup:
       properties:
-        alias:
-          example: Not on Sundays.
-          type: string
         name:
           example: OnCall
+          type: string
+        alias:
+          example: Not on Sundays.
           type: string
       required:
       - name
       type: object
     InputHostGroup:
       properties:
-        alias:
-          example: Windows Servers
-          type: string
         name:
           example: windows
+          type: string
+        alias:
+          example: Windows Servers
           type: string
       required:
       - name
       type: object
     InputServiceGroup:
       properties:
-        alias:
-          example: Environment Sensors
-          type: string
         name:
           example: environment
+          type: string
+        alias:
+          example: Environment Sensors
           type: string
       required:
       - name
       type: object
     InstalledVersions:
       properties:
-        demo:
-          description: Whether this is a demo version or not.
-          example: false
-          type: boolean
-        edition:
-          description: The Checkmk edition.
-          example: raw
+        site:
+          description: The site where this API call was made on.
+          example: production
           type: string
         group:
           description: The Apache WSGI application group this call was made on.
           example: de
-          type: string
-        site:
-          description: The site where this API call was made on.
-          example: production
           type: string
         versions:
           description: Some version numbers
           example:
             checkmk: 1.8.0p1
           type: object
+        edition:
+          description: The Checkmk edition.
+          example: raw
+          type: string
+        demo:
+          description: Whether this is a demo version or not.
+          example: false
+          type: boolean
       type: object
     Link:
       properties:
@@ -740,14 +740,19 @@ components:
       type: object
     ObjectActionMember:
       properties:
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        id:
+          type: string
         disabledReason:
           description: Provides the reason (or the literal "disabled") why an object
             property or collection is un-modifiable, or, in the case of an action,
             unusable (and hence no links to mutate that member's state, or invoke
             the action, are provided).
           nullable: true
-          type: string
-        id:
           type: string
         invalidReason:
           description: Provides the reason (or the literal "invalid") why a proposed
@@ -756,18 +761,13 @@ components:
           example: invalid
           nullable: true
           type: string
-        links:
-          description: list of links to other resources.
-          items:
-            $ref: '#/components/schemas/Link'
-          type: array
-        memberType:
-          default: action
-          type: string
         x-ro-invalidReason:
           description: Provides the reason why a SET OF proposed values for properties
             or arguments is invalid.
           nullable: true
+          type: string
+        memberType:
+          default: action
           type: string
       required:
       - id
@@ -775,14 +775,19 @@ components:
       type: object
     ObjectCollectionMember:
       properties:
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        id:
+          type: string
         disabledReason:
           description: Provides the reason (or the literal "disabled") why an object
             property or collection is un-modifiable, or, in the case of an action,
             unusable (and hence no links to mutate that member's state, or invoke
             the action, are provided).
           nullable: true
-          type: string
-        id:
           type: string
         invalidReason:
           description: Provides the reason (or the literal "invalid") why a proposed
@@ -791,11 +796,11 @@ components:
           example: invalid
           nullable: true
           type: string
-        links:
-          description: list of links to other resources.
-          items:
-            $ref: '#/components/schemas/Link'
-          type: array
+        x-ro-invalidReason:
+          description: Provides the reason why a SET OF proposed values for properties
+            or arguments is invalid.
+          nullable: true
+          type: string
         memberType:
           default: collection
           type: string
@@ -803,11 +808,6 @@ components:
           items:
             $ref: '#/components/schemas/Link'
           type: array
-        x-ro-invalidReason:
-          description: Provides the reason why a SET OF proposed values for properties
-            or arguments is invalid.
-          nullable: true
-          type: string
       required:
       - id
       - links
@@ -832,14 +832,19 @@ components:
       type: object
     ObjectPropertyMember:
       properties:
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        id:
+          type: string
         disabledReason:
           description: Provides the reason (or the literal "disabled") why an object
             property or collection is un-modifiable, or, in the case of an action,
             unusable (and hence no links to mutate that member's state, or invoke
             the action, are provided).
           nullable: true
-          type: string
-        id:
           type: string
         invalidReason:
           description: Provides the reason (or the literal "invalid") why a proposed
@@ -848,18 +853,13 @@ components:
           example: invalid
           nullable: true
           type: string
-        links:
-          description: list of links to other resources.
-          items:
-            $ref: '#/components/schemas/Link'
-          type: array
-        memberType:
-          default: property
-          type: string
         x-ro-invalidReason:
           description: Provides the reason why a SET OF proposed values for properties
             or arguments is invalid.
           nullable: true
+          type: string
+        memberType:
+          default: property
           type: string
       required:
       - id
@@ -867,26 +867,29 @@ components:
       type: object
     ServiceGroup:
       properties:
-        domainType:
-          default: service_group
-          type: string
-        id:
-          type: string
         links:
           description: list of links to other resources.
           items:
             $ref: '#/components/schemas/Link'
           type: array
-        members:
-          $ref: '#/components/schemas/ObjectMemberDict'
+        domainType:
+          default: service_group
+          type: string
+        id:
+          type: string
         title:
           type: string
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
       required:
       - domainType
       - links
       type: object
     UpdateFolder:
       properties:
+        title:
+          example: Virtual Servers.
+          type: string
         attributes:
           example:
           - key: foo
@@ -894,9 +897,6 @@ components:
           items:
             $ref: '#/components/schemas/InputAttribute'
           type: array
-        title:
-          example: Virtual Servers.
-          type: string
       required:
       - title
       type: object

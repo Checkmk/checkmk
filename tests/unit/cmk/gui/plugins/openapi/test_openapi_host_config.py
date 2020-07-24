@@ -56,3 +56,21 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
     )
+
+
+def test_openapi_bulk_hosts(wsgi_app, with_automation_user, suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/actions/bulk-create/invoke",
+        params=
+        '{"entries": [{"host_name": "foobar", "folder": "root"}, {"host_name": "sample", "folder": "root"}]}',
+        status=200,
+        content_type='application/json',
+    )
+
+    assert len(resp.json['value']) == 2

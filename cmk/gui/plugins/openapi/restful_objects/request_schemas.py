@@ -62,6 +62,19 @@ class CreateHost(BaseSchema):
                         example=["host1", "host2", "host3"])
 
 
+class BulkCreateHost(BaseSchema):
+    entries = fields.List(
+        fields.Nested(CreateHost),
+        example=[{
+            "host_name": "example.com",
+            "folder": "root",
+            "attributes": {},
+            "nodes": ["host1", "host2"],
+        }],
+        uniqueItems=True,
+    )
+
+
 class UpdateHost(BaseSchema):
     """Updating of a host
 

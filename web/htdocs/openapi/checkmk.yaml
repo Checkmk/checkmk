@@ -267,6 +267,21 @@ components:
       - entries
       - host_name
       type: object
+    BulkCreateHost:
+      properties:
+        entries:
+          example:
+          - attributes: {}
+            folder: root
+            host_name: example.com
+            nodes:
+            - host1
+            - host2
+          items:
+            $ref: '#/components/schemas/CreateHost'
+          type: array
+          uniqueItems: true
+      type: object
     BulkDeleteContactGroup:
       properties:
         entries:
@@ -3216,6 +3231,77 @@ paths:
           \ application/json\" \\\n    attributes='{\"ipaddress\": \"192.168.0.123\"\
           }' \\\n    folder='root' \\\n    host_name='example.com' \\\n    nodes='[\"\
           host1\", \"host2\", \"host3\"]' \\\n    --json"
+  /domain-types/host_config/actions/bulk-create/invoke:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_config.bulk_create_hosts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkCreateHost'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostCollection'
+          description: ''
+          headers: {}
+      summary: Bulk create hosts
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_config/actions/bulk-create/invoke\"\
+          ,\n    json={\n        'entries': [{\n            'host_name': 'example.com',\n\
+          \            'folder': 'root',\n            'attributes': {},\n        \
+          \    'nodes': ['host1', 'host2']\n        }]\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/host_config/actions/bulk-create/invoke\"\
+          ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        'entries': [{\n            'host_name':\
+          \ 'example.com',\n            'folder': 'root',\n            'attributes':\
+          \ {},\n            'nodes': ['host1', 'host2']\n        }]\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"entries\": [\n            {\n      \
+          \        \"attributes\": {},\n              \"folder\": \"root\",\n    \
+          \          \"host_name\": \"example.com\",\n              \"nodes\": [\n\
+          \                \"host1\",\n                \"host2\"\n              ]\n\
+          \            }\n          ]\n        }' \\\n    \"$API_URL/domain-types/host_config/actions/bulk-create/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/actions/bulk-create/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    entries='[{\"host_name\": \"example.com\",\
+          \ \"folder\": \"root\", \"attributes\": {}, \"nodes\": [\"host1\", \"host2\"\
+          ]}]' \\\n    --json"
   /objects/host_config/{host_name}:
     delete:
       description: ''
@@ -5266,6 +5352,9 @@ tags:
     #/components/schemas/CreateHost\" showReadOnly={true} showWriteOnly={true} />"
   name: CreateHost
   x-displayName: Creating a new host
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkCreateHost" showReadOnly={true}
+    showWriteOnly={true} />
+  name: BulkCreateHost
 - description: "Only the `attributes` and `nodes` values may be changed.\n\nRequired\
     \ attributes:\n\n  * none\n\nOptional arguments:\n\n  * `attributes`\n  * `nodes`\n\
     \n<SchemaDefinition schemaRef=\"#/components/schemas/UpdateHost\" showReadOnly={true}\
@@ -5343,6 +5432,7 @@ x-tagGroups:
   - UpdateFolder
   - BulkDeleteFolder
   - CreateHost
+  - BulkCreateHost
   - UpdateHost
   - BulkDeleteHost
   - InputHostGroup

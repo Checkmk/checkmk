@@ -34,6 +34,7 @@ CmkEndpointName = Literal[
     'cmk/bake',
     'cmk/bake_and_sign',
     'cmk/cancel',
+    'cmk/bulk_create',
     'cmk/create',
     'cmk/download',
     'cmk/list',

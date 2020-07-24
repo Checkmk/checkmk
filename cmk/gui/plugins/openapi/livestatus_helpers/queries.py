@@ -3,7 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Generator, List, Optional
+from typing import Any, Dict, Generator, List, Optional
 
 from cmk.gui.plugins.openapi.livestatus_helpers.base import BaseQuery
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
@@ -241,6 +241,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         Args:
             sites:
+                A LiveStatus connection object.
 
         Returns:
             The generator which yields one ResultRow per row.
@@ -250,6 +251,26 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         for entry in self.fetch_values(sites):
             # This is Dict[str, Any], just with Attribute based access. Can't do much about this.
             yield ResultRow(list(zip(names, entry)))
+
+    def to_dict(self, sites) -> Dict[Any, Any]:
+        """Return a dict from the result set.
+
+        The first column will be the mapping key, the second one the value.
+
+        Args:
+            sites:
+                A LiveStatus connection object.
+
+        Returns:
+            The finished dictionary.
+
+        """
+        result = {}
+        if len(self.columns) != 2:
+            raise ValueError("Number of columns need to be exactly 2 to create a dict.")
+        for key, value in self.iterate(sites):
+            result[key] = value
+        return result
 
     def compile(self) -> str:
         """Compile the current query and return it in string-form.

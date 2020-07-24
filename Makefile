@@ -307,6 +307,8 @@ $(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules/.bin/redoc-cli
 		sed -i 's/\s\+$$//' $(OPENAPI_DOC) && \
 		echo >> $(OPENAPI_DOC)  # fix trailing whitespaces and end of file newline
 
+openapi-clean:
+	rm -f $(OPENAPI_SPEC)
 openapi: $(OPENAPI_SPEC)
 openapi-doc: $(OPENAPI_DOC)
 

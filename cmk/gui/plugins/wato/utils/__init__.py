@@ -317,6 +317,19 @@ class SNMPCredentials(Alternative):
             none_elements = []
             match = alternative_match
 
+        priv_protocol_choices = [
+            ("DES", _("CBC-DES")),
+            ("AES", _("AES-128")),
+        ]
+        if kwargs.get("for_ec", False):
+            priv_protocol_choices.extend([
+                ("3DES-EDE", _("3DES-EDE")),
+                ("AES-192", _("AES-192")),
+                ("AES-256", _("AES-256")),
+                ("AES-192-Blumenthal", _("AES-192-Blumenthal")),
+                ("AES-256-Blumenthal", _("AES-256-Blumenthal")),
+            ])
+
         kwargs.update({
             "elements": none_elements + [
                 Password(
@@ -352,11 +365,10 @@ class SNMPCredentials(Alternative):
                               totext=_("authentication and encryption"),
                           ),
                       ] + self._snmpv3_auth_elements() + [
-                          DropdownChoice(choices=[
-                              ("DES", _("DES")),
-                              ("AES", _("AES")),
-                          ],
-                                         title=_("Privacy protocol")),
+                          DropdownChoice(
+                              choices=priv_protocol_choices,
+                              title=_("Privacy protocol"),
+                          ),
                           Password(
                               title=_("Privacy pass phrase"),
                               minlen=8,
@@ -381,11 +393,17 @@ class SNMPCredentials(Alternative):
 
     def _snmpv3_auth_elements(self):
         return [
-            DropdownChoice(choices=[
-                ("md5", _("MD5")),
-                ("sha", _("SHA1")),
-            ],
-                           title=_("Authentication protocol")),
+            DropdownChoice(
+                choices=[
+                    ("md5", _("MD5 (MD5-96)")),
+                    ("sha", _("SHA-1 (SHA-96)")),
+                    ("SHA-224", _("SHA-2 (SHA-224)")),
+                    ("SHA-256", _("SHA-2 (SHA-256)")),
+                    ("SHA-384", _("SHA-2 (SHA-384)")),
+                    ("SHA-512", _("SHA-2 (SHA-512)")),
+                ],
+                title=_("Authentication protocol"),
+            ),
             TextAscii(title=_("Security name"), attrencode=True),
             Password(
                 title=_("Authentication password"),

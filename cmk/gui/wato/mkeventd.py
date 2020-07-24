@@ -3483,7 +3483,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
             Dictionary(
                 elements=[
                     ("description", TextUnicode(title=_("Description"),)),
-                    ("credentials", SNMPCredentials()),
+                    ("credentials", SNMPCredentials(for_ec=True)),
                     ("engine_ids",
                      ListOfStrings(
                          valuespec=TextAscii(

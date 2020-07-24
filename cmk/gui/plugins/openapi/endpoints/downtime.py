@@ -3,6 +3,8 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Downtimes"""
+
 import json
 import http.client
 from datetime import datetime
@@ -47,6 +49,8 @@ DOWNTIME_ID = ParamDict.create('downtime_id',
                  request_schema=request_schemas.CreateDowntime,
                  output_empty=True)
 def create_downtime(params):
+    """Create downtime"""
+
     body = params['body']
     host_name = body['host_name']
     start_dt = _time_dt(body['start_time'])
@@ -78,15 +82,26 @@ def create_downtime(params):
                  '.../collection',
                  method='get',
                  parameters=[
-                     ParamDict.create('host_name', 'query', required=False,
-                                      schema_type='string').to_dict(),
-                     ParamDict.create('service_description',
-                                      'query',
-                                      required=False,
-                                      schema_type='string').to_dict()
+                     ParamDict.create(
+                         'host_name',
+                         'query',
+                         required=False,
+                         schema_type='string',
+                         description="The name of the host where the downtimes belong",
+                         example="example.com",
+                     ).to_dict(),
+                     ParamDict.create(
+                         'service_description',
+                         'query',
+                         required=False,
+                         schema_type='string',
+                         description="The service description of a specific service downtime",
+                         example='CPU utilization',
+                     ).to_dict()
                  ],
                  response_schema=response_schemas.DomainObjectCollection)
 def list_service_downtimes(param):
+    """List downtimes"""
     live = sites.live()
 
     q = Query([
@@ -119,6 +134,7 @@ def list_service_downtimes(param):
                  parameters=['host_name', DOWNTIME_ID],
                  output_empty=True)
 def delete_downtime(params):
+    """Delete downtime"""
     is_service = Query(
         [Downtimes.is_service],
         Downtimes.id.contains(params['downtime_id']),
@@ -135,7 +151,7 @@ def delete_downtime(params):
                  request_schema=request_schemas.BulkDeleteDowntime,
                  output_empty=True)
 def bulk_delete_downtimes(params):
-    """Bulk delete downtimes based upon downtime id"""
+    """Bulk delete downtimes"""
     live = sites.live()
     entries = params['entries']
     not_found = []

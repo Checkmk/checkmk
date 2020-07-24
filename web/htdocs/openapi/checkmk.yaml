@@ -1628,12 +1628,16 @@ paths:
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.list_service_downtimes
       parameters:
       - allowEmptyValue: false
+        description: The name of the host where the downtimes belong
+        example: example.com
         in: query
         name: host_name
         required: false
         schema:
           type: string
       - allowEmptyValue: false
+        description: The service description of a specific service downtime
+        example: CPU utilization
         in: query
         name: service_description
         required: false
@@ -1653,6 +1657,7 @@ paths:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
           headers: {}
+      summary: List downtimes
       tags:
       - cmk.gui.plugins.openapi.endpoints.downtime
       x-codeSamples:
@@ -1663,15 +1668,20 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/downtime/collections/all\"\
-          ,\n    params={  # goes into query string\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          ,\n    params={  # goes into query string\n        \"host_name\": \"example.com\"\
+          ,  # The name of the host where the downtimes belong\n        \"service_description\"\
+          : \"CPU utilization\",  # The service description of a specific service\
+          \ downtime\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.parse\nimport\
           \ urllib.request\n\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
           \ = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\n\nUSERNAME = \"\
           automation\"\nPASSWORD = \"test123\"\n\nquery_string = urllib.parse.urlencode({\n\
-          })\n\nrequest = urllib.request.Request(\n    f\"{API_URL}/domain-types/downtime/collections/all?{query_string}\"\
+          \    \"host_name\": \"example.com\",  # The name of the host where the downtimes\
+          \ belong\n    \"service_description\": \"CPU utilization\",  # The service\
+          \ description of a specific service downtime\n})\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/downtime/collections/all?{query_string}\"\
           ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
@@ -1681,14 +1691,16 @@ paths:
           \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
           \nPASSWORD = \"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    -G  \\\n    \"$API_URL/domain-types/downtime/collections/all\""
+          \ \\\n    -G  \\\n    --data-urlencode \"host_name=example.com\" \\\n  \
+          \  --data-urlencode \"service_description=CPU utilization\"\n    \"$API_URL/domain-types/downtime/collections/all\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
           \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
           \nPASSWORD = \"test123\"\n\nhttp GET \"$API_URL/domain-types/downtime/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
+          \ application/json\" \\\n    host_name==\"example.com\" \\\n    service_description==\"\
+          CPU utilization\" \\\n    --json"
     post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.create_downtime
@@ -1708,6 +1720,7 @@ paths:
         '204':
           description: Operation done successfully. No further output.
           headers: {}
+      summary: Create downtime
       tags:
       - cmk.gui.plugins.openapi.endpoints.downtime
       x-codeSamples:
@@ -1783,6 +1796,7 @@ paths:
         '204':
           description: Operation done successfully. No further output.
           headers: {}
+      summary: Delete downtime
       tags:
       - cmk.gui.plugins.openapi.endpoints.downtime
       x-codeSamples:
@@ -1837,7 +1851,7 @@ paths:
         '204':
           description: Operation done successfully. No further output.
           headers: {}
-      summary: Bulk delete downtimes based upon downtime id
+      summary: Bulk delete downtimes
       tags:
       - cmk.gui.plugins.openapi.endpoints.downtime
       x-codeSamples:
@@ -4625,6 +4639,7 @@ tags:
   name: InputContactGroup
   x-displayName: Creating a contact group
 - name: cmk.gui.plugins.openapi.endpoints.downtime
+  x-displayName: Downtimes
 - description: <SchemaDefinition schemaRef="#/components/schemas/CreateDowntime" showReadOnly={true}
     showWriteOnly={true} />
   name: CreateDowntime

@@ -39,7 +39,6 @@ AgentParseFunction = Callable[[AgentStringTable], Any]
 CheckGenerator = Generator[ABCCheckGenerated, None, None]
 CheckFunction = Callable[..., CheckGenerator]
 
-DISCOVERY_RULESET_TYPE_CHOICES = ("merged", "all")
 DiscoveryRuleSetType = Literal["merged", "all"]
 
 DiscoveryGenerator = Generator[ABCDiscoveryGenerated, None, None]

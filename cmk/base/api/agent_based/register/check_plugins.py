@@ -9,14 +9,13 @@ import functools
 import inspect
 import itertools
 from inspect import signature
-from typing import Any, Callable, Dict, Generator, List, Optional, Union
+from typing import Any, Callable, Dict, Generator, get_args, List, Optional, Union
 
 from cmk.utils.check_utils import ensure_management_name, MANAGEMENT_NAME_PREFIX
 from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
 from cmk.base.api.agent_based.type_defs import (
     CheckPlugin,
-    DISCOVERY_RULESET_TYPE_CHOICES,
     DiscoveryRuleSetType,
 )
 from cmk.base.api.agent_based.checking_classes import (
@@ -164,9 +163,9 @@ def _validate_discovery_ruleset(ruleset_name: Optional[str],
 
 
 def _validate_discovery_ruleset_type(ruleset_type: DiscoveryRuleSetType) -> None:
-    if ruleset_type not in DISCOVERY_RULESET_TYPE_CHOICES:
+    if ruleset_type not in get_args(DiscoveryRuleSetType):
         raise ValueError("invalid discovery ruleset type %r. Allowed are %s" %
-                         (ruleset_type, ",".join(repr(c) for c in DISCOVERY_RULESET_TYPE_CHOICES)))
+                         (ruleset_type, ",".join(repr(c) for c in get_args(DiscoveryRuleSetType))))
 
 
 def _validate_check_ruleset(ruleset_name: Optional[str],

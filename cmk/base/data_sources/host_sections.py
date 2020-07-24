@@ -6,7 +6,7 @@
 
 import collections.abc
 import sys
-from typing import Any, Callable, NamedTuple, cast, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, NamedTuple, cast, Dict, List, Optional, Set, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
@@ -149,7 +149,7 @@ class MultiHostSections(collections.abc.MutableMapping):
         """
         cached_ats: List[int] = []
         intervals: List[int] = []
-        for host_key in self._data:
+        for host_key in self:
             for parsed_section_name in parsed_section_names:
                 # Fear not, the parsing itself is cached. But in case we have not already
                 # parsed, we must do so in order to see which raw sections cache info we
@@ -179,7 +179,7 @@ class MultiHostSections(collections.abc.MutableMapping):
             return self._parsed_sections[cache_key]
 
         try:
-            host_data = self._data[host_key]
+            host_data = self[host_key]
         except KeyError:
             return self._parsed_sections.setdefault(cache_key, (None, None))
 
@@ -196,6 +196,41 @@ class MultiHostSections(collections.abc.MutableMapping):
 
         return self._parsed_sections.setdefault(cache_key, (None, None))
 
+    def determine_available_parsed_sections(
+        self,
+        parse_sections: Set[ParsedSectionName],
+        source_type: SourceType,
+    ) -> Set[ParsedSectionName]:
+        """Try to parse all given sections and return a set of names for which the
+        parsed sections value is not None.
+
+        This takes into account the supersedings and permanently "dismisses" all
+        superseded raw sections (by setting their parsing result to None).
+        """
+        parsed_sections = set()
+        for host_key, host_data in self.items():
+            if host_key.source_type != source_type:
+                continue
+
+            for section in agent_based_register.get_ranked_sections(
+                    host_data.sections,
+                    parse_sections,
+            ):
+                parsed = self._get_parsing_result(host_key, section)
+                if parsed is None:
+                    continue
+
+                parsed_sections.add(section.parsed_section_name)
+                self._parsed_sections[host_key + (section.parsed_section_name,)] = (
+                    parsed,
+                    host_data.cache_info.get(section.name),
+                )
+                # set result of superseded ones to None:
+                for superseded in section.supersedes:
+                    self._parsing_results[host_key + (superseded,)] = None
+
+        return parsed_sections
+
     def _get_parsing_result(
         self,
         host_key: HostKey,
@@ -209,7 +244,7 @@ class MultiHostSections(collections.abc.MutableMapping):
             return self._parsing_results[cache_key]
 
         try:
-            data = self._data[host_key].sections[section.name]
+            data = self[host_key].sections[section.name]
         except KeyError:
             return self._parsing_results.setdefault(cache_key, None)
 
@@ -328,7 +363,7 @@ class MultiHostSections(collections.abc.MutableMapping):
                 continue
 
             try:
-                host_section_content = self._data[node_key].sections[section_name]
+                host_section_content = self[node_key].sections[section_name]
             except KeyError:
                 continue
 

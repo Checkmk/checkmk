@@ -10,11 +10,13 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType
 
-from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.data_sources.agent import AgentHostSections
-import cmk.base.discovery as discovery
+from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.discovered_labels import ServiceLabel, DiscoveredServiceLabels
+
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
+import cmk.base.discovery as discovery
 
 
 def test_discovered_service_init():
@@ -779,29 +781,46 @@ def test__find_candidates():
         # any HostSections type is fine.
         HostKey("test_node", "1.2.3.4", SourceType.HOST): AgentHostSections({
             SectionName("kernel"): [],  # host only
-            SectionName("uptime"): [],  # host & mgmt
+            SectionName("uptime"): [['123']],  # host & mgmt
         }),
         HostKey("test_node", "1.2.3.4", SourceType.MANAGEMENT): AgentHostSections({
-            SectionName("uptime"): [],  # host & mgmt
-            SectionName("liebert_fans"): [],  # mgmt only
-            SectionName("mgmt_snmp_info"): [],  # is already mgmt_ prefixed
+            SectionName("uptime"): [['123']],  # host & mgmt
+            SectionName("liebert_fans"): [[]],  # mgmt only
+            SectionName("mgmt_snmp_info"): [[]],  # is already mgmt_ prefixed
         }),
     }
 
-    assert discovery._find_candidates_by_source_type(mhs, SourceType.HOST) == {
+    preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
+    parsed_sections_of_interest = {
+        parsed_section_name for plugin in preliminary_candidates
+        for parsed_section_name in plugin.sections
+    }
+
+    assert discovery._find_host_candidates(
+        mhs,
+        preliminary_candidates,
+        parsed_sections_of_interest,
+    ) == {
         CheckPluginName("kernel"),
         CheckPluginName('kernel_performance'),
         CheckPluginName('kernel_util'),
         CheckPluginName("uptime"),
     }
 
-    assert discovery._find_candidates_by_source_type(mhs, SourceType.MANAGEMENT) == {
-        CheckPluginName("liebert_fans"),
-        CheckPluginName("uptime"),
-        CheckPluginName("mgmt_snmp_info"),
+    assert discovery._find_mgmt_candidates(
+        mhs,
+        preliminary_candidates,
+        parsed_sections_of_interest,
+    ) == {
+        CheckPluginName("mgmt_liebert_fans"),
+        CheckPluginName("mgmt_uptime"),
+        CheckPluginName("mgmt_snmp_info"),  # not mgmt_mgmt_...
     }
 
-    assert discovery._find_candidates(mhs) == {
+    assert discovery._find_candidates(
+        mhs,
+        selected_check_plugins=None,
+    ) == {
         CheckPluginName("kernel"),
         CheckPluginName('kernel_performance'),
         CheckPluginName('kernel_util'),

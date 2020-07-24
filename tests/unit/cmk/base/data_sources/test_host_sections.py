@@ -3,6 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
+
 import collections
 
 import pytest  # type: ignore[import]
@@ -53,7 +56,7 @@ SECTION_TWO = _TestSection(
         "parsed_by": "two",
         "node": x[0][0]
     },
-    {ParsedSectionName("one")},
+    {SectionName("one")},
 )
 
 SECTION_THREE = _TestSection(
@@ -66,10 +69,21 @@ SECTION_THREE = _TestSection(
     set(),
 )
 
+SECTION_FOUR = _TestSection(
+    SectionName("four"),
+    ParsedSectionName("parsed_four"),
+    lambda x: {
+        "parsed_by": "four",
+        "node": x[0][0]
+    },
+    {SectionName("one")},
+)
+
 MOCK_SECTIONS = {
     SECTION_ONE.name: SECTION_ONE,
     SECTION_TWO.name: SECTION_TWO,
     SECTION_THREE.name: SECTION_THREE,
+    SECTION_FOUR.name: SECTION_FOUR,
 }
 
 NODE_1 = [
@@ -99,7 +113,7 @@ def _set_up(monkeypatch, hostname, nodes, cluster_mapping) -> None:
     def host_of_clustered_service(hostname, _service_description):
         return cluster_mapping[hostname]
 
-    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=False):
+    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=False):  # pylint: disable=unused-argument
         return "127.0.0.1"
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
@@ -108,24 +122,28 @@ def _set_up(monkeypatch, hostname, nodes, cluster_mapping) -> None:
                         MOCK_SECTIONS.__getitem__)
 
 
-@pytest.mark.parametrize(
-    "node_section_content,expected_result",
-    [
-        ({}, None),
-        ({
-            SectionName("one"): NODE_1
-        }, {
-            "parsed_by": "one",
-            "node": "node1"
-        }),
-        ({
-            SectionName("two"): NODE_1
-        }, {
-            "parsed_by": "two",
-            "node": "node1"
-        }),
-        # TODO (mo): CMK-4232 # ({"one": NODE_1, "two": NODE_1}, {"parsed_by": "two", "node": "node1"}),
-    ])
+@pytest.mark.parametrize("node_section_content,expected_result", [
+    ({}, None),
+    ({
+        SectionName("one"): NODE_1
+    }, {
+        "parsed_by": "one",
+        "node": "node1"
+    }),
+    ({
+        SectionName("two"): NODE_1
+    }, {
+        "parsed_by": "two",
+        "node": "node1"
+    }),
+    ({
+        SectionName("one"): NODE_1,
+        SectionName("two"): NODE_1,
+    }, {
+        "parsed_by": "two",
+        "node": "node1",
+    }),
+])
 def test_get_parsed_section(monkeypatch, node_section_content, expected_result):
 
     _set_up(monkeypatch, "node1", None, {})
@@ -149,20 +167,20 @@ def test_get_parsed_section(monkeypatch, node_section_content, expected_result):
     (["nonexistent"], {}),
     (["parsed"], {
         "section": {
-            "parsed_by": "one",
+            "parsed_by": "two",
             "node": "node1"
         }
     }),
     (["parsed", "nonexistent"], {
         "section_parsed": {
-            "parsed_by": "one",
+            "parsed_by": "two",
             "node": "node1"
         },
         "section_nonexistent": None
     }),
     (["parsed", "parsed2"], {
         "section_parsed": {
-            "parsed_by": "one",
+            "parsed_by": "two",
             "node": "node1"
         },
         "section_parsed2": {
@@ -177,7 +195,7 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
 
     node_section_content = {
         SectionName("one"): NODE_1,
-        # TODO (mo): CMK-4232 # SectionName("two"): NODE_1,
+        SectionName("two"): NODE_1,
         SectionName("three"): NODE_1
     }
 
@@ -203,7 +221,7 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
     (["parsed"], {
         "section": {
             "node1": {
-                "parsed_by": "one",
+                "parsed_by": "two",
                 "node": "node1"
             },
             "node2": {
@@ -215,7 +233,7 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
     (["parsed", "nonexistent"], {
         "section_parsed": {
             "node1": {
-                "parsed_by": "one",
+                "parsed_by": "two",
                 "node": "node1"
             },
             "node2": {
@@ -231,7 +249,7 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
     (["parsed", "parsed2"], {
         "section_parsed": {
             "node1": {
-                "parsed_by": "one",
+                "parsed_by": "two",
                 "node": "node1"
             },
             "node2": {
@@ -257,7 +275,7 @@ def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_res
 
     node1_section_content = {
         SectionName("one"): NODE_1,
-        # TODO (mo): CMK-4232 # SectionName("two"): NODE_1,
+        SectionName("two"): NODE_1,
         SectionName("three"): NODE_1
     }
 
@@ -284,6 +302,60 @@ def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_res
 
     assert expected_result == kwargs,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, kwargs)
+
+
+def _get_host_section_for_parse_sections_test():
+    node_section_content = {
+        SectionName("one"): NODE_1,
+        SectionName("four"): NODE_1,
+    }
+
+    host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
+
+    mhs = MultiHostSections()
+    mhs.setdefault(
+        host_key,
+        AgentHostSections(sections=node_section_content),
+    )
+    return host_key, mhs
+
+
+def test_parse_sections_unsuperseded(monkeypatch):
+
+    host_key, mhs = _get_host_section_for_parse_sections_test()
+
+    monkeypatch.setattr(
+        agent_based_register._config,
+        "get_section_plugin",
+        MOCK_SECTIONS.get,
+    )
+
+    assert mhs.determine_available_parsed_sections(
+        {ParsedSectionName("parsed")},
+        host_key.source_type,
+    ) == {
+        ParsedSectionName("parsed"),
+    }
+    assert mhs.get_parsed_section(host_key, ParsedSectionName("parsed")) is not None
+
+
+def test_parse_sections_superseded(monkeypatch):
+
+    host_key, mhs = _get_host_section_for_parse_sections_test()
+
+    monkeypatch.setattr(
+        agent_based_register._config,
+        "get_section_plugin",
+        MOCK_SECTIONS.get,
+    )
+
+    assert mhs.determine_available_parsed_sections(
+        {ParsedSectionName("parsed"), ParsedSectionName("parsed_four")},
+        host_key.source_type,
+    ) == {
+        ParsedSectionName("parsed_four"),
+    }
+    assert mhs.get_parsed_section(host_key, ParsedSectionName("parsed")) is None
 
 
 @pytest.mark.parametrize(

@@ -55,6 +55,7 @@ from cmk.utils.type_defs import (
     HostState,
     Item,
     Metric,
+    ParsedSectionName,
     RulesetName,
     SourceType,
 )
@@ -1090,7 +1091,10 @@ def _discover_host_labels(
     return discovered_host_labels
 
 
-def _find_candidates(mhs: MultiHostSections) -> Set[CheckPluginName]:
+def _find_candidates(
+    mhs: MultiHostSections,
+    selected_check_plugins: Optional[Set[CheckPluginName]],
+) -> Set[CheckPluginName]:
     """Return names of check plugins that this multi_host_section may
     contain data for.
 
@@ -1106,37 +1110,59 @@ def _find_candidates(mhs: MultiHostSections) -> Set[CheckPluginName]:
     plugins that are not allready designed for management boards.
 
     """
+    if selected_check_plugins is None:
+        preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
+    else:
+        preliminary_candidates = [
+            p for p in agent_based_register.iter_all_check_plugins()
+            if p.name in selected_check_plugins
+        ]
 
-    return {
-        # *filter out* all names of management only check plugins
-        n
-        for n in _find_candidates_by_source_type(mhs, SourceType.HOST)
-        if not is_management_name(n)
-    } | {
-        # *create* all management only names of the plugins
-        ensure_management_name(n)
-        for n in _find_candidates_by_source_type(mhs, SourceType.MANAGEMENT)
+    parsed_sections_of_interest = {
+        parsed_section_name for plugin in preliminary_candidates
+        for parsed_section_name in plugin.sections
     }
 
+    return (_find_host_candidates(mhs, preliminary_candidates, parsed_sections_of_interest) |
+            _find_mgmt_candidates(mhs, preliminary_candidates, parsed_sections_of_interest))
 
-def _find_candidates_by_source_type(
+
+def _find_host_candidates(
     mhs: MultiHostSections,
-    source_type: SourceType,
+    preliminary_candidates: List[CheckPlugin],
+    parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
-    raw_section_names = {
-        name for node_key, node_data in mhs.items() if node_key.source_type == source_type
-        for name in node_data.sections
-    }
 
-    parsed_section_names = {
-        agent_based_register.get_section_plugin(name).parsed_section_name
-        for name in raw_section_names
-    }
+    available_parsed_sections = mhs.determine_available_parsed_sections(
+        parsed_sections_of_interest,
+        SourceType.HOST,
+    )
 
     return {
         plugin.name
-        for plugin in agent_based_register.iter_all_check_plugins()
-        if any(section in parsed_section_names for section in plugin.sections)
+        for plugin in preliminary_candidates
+        # *filter out* all names of management only check plugins
+        if not is_management_name(plugin.name) and any(
+            section in available_parsed_sections for section in plugin.sections)
+    }
+
+
+def _find_mgmt_candidates(
+    mhs: MultiHostSections,
+    preliminary_candidates: List[CheckPlugin],
+    parsed_sections_of_interest: Set[ParsedSectionName],
+) -> Set[CheckPluginName]:
+
+    available_parsed_sections = mhs.determine_available_parsed_sections(
+        parsed_sections_of_interest,
+        SourceType.MANAGEMENT,
+    )
+
+    return {
+        # *create* all management only names of the plugins
+        ensure_management_name(plugin.name)
+        for plugin in preliminary_candidates
+        if any(section in available_parsed_sections for section in plugin.sections)
     }
 
 
@@ -1170,9 +1196,7 @@ def _discover_services(
     check_api_utils.set_hostname(hostname)
 
     # find out which plugins we need to discover
-    plugin_candidates = _find_candidates(multi_host_sections)
-    if check_plugin_whitelist is not None:
-        plugin_candidates = plugin_candidates.intersection(check_plugin_whitelist)
+    plugin_candidates = _find_candidates(multi_host_sections, check_plugin_whitelist)
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
 

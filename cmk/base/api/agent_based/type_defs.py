@@ -22,7 +22,13 @@ from typing import (
 )
 import pprint
 
-from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName, SectionName
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    InventoryPluginName,
+    ParsedSectionName,
+    RuleSetName,
+    SectionName,
+)
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 from cmk.base.discovered_labels import HostLabel
@@ -71,6 +77,9 @@ DiscoveryRuleSetType = Literal["merged", "all"]
 
 DiscoveryGenerator = Generator[ABCDiscoveryGenerated, None, None]
 DiscoveryFunction = Callable[..., DiscoveryGenerator]
+
+InventoryGenerator = Generator[ABCInventoryGenerated, None, None]
+InventoryFunction = Callable[..., InventoryGenerator]
 
 HostLabelGenerator = Generator[HostLabel, None, None]
 HostLabelFunction = Callable[..., HostLabelGenerator]
@@ -124,3 +133,15 @@ SNMPSectionPlugin = NamedTuple(
 )
 
 SectionPlugin = Union[AgentSectionPlugin, SNMPSectionPlugin]
+
+InventoryPlugin = NamedTuple(
+    "InventoryPlugin",
+    [
+        ("name", InventoryPluginName),
+        ("sections", List[ParsedSectionName]),
+        ("inventory_function", InventoryFunction),
+        ("inventory_default_parameters", Dict[str, Any]),
+        ("inventory_ruleset_name", Optional[RuleSetName]),
+        ("module", Optional[str]),  # not available for auto migrated plugins.
+    ],
+)

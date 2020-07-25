@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import inspect
 import itertools
 
 from pathlib import Path
 
-from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, SectionName
+from cmk.utils.type_defs import CheckPluginName, InventoryPluginName, ParsedSectionName, SectionName
 from cmk.utils.paths import agent_based_plugins_dir
 
 from cmk.base.api.agent_based.type_defs import SectionPlugin
@@ -61,7 +61,7 @@ def rank_sections_by_supersedes(
 
 def create_subscribed_sections(
     sections: Optional[List[str]],
-    plugin_name: CheckPluginName,
+    plugin_name: Union[InventoryPluginName, CheckPluginName],
 ) -> List[ParsedSectionName]:
     if sections is None:
         return [ParsedSectionName(str(plugin_name))]

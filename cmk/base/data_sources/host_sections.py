@@ -228,6 +228,8 @@ class MultiHostSections(collections.abc.MutableMapping):
                                                                       list(hosts_raw_sections))
         return self._parsed_to_raw_map.setdefault(cache_key, section_def)
 
+    # DEPRECATED
+    # This function is only kept for the legacy cluster mode from hell
     def get_section_content(
             self,
             host_key: HostKey,
@@ -321,6 +323,8 @@ class MultiHostSections(collections.abc.MutableMapping):
                 nodename, service_description)
         ]
 
+    # DEPRECATED
+    # This function is only kept for the legacy cluster mode from hell
     def _get_section_content(
         self,
         host_key: HostKey,
@@ -379,6 +383,8 @@ class MultiHostSections(collections.abc.MutableMapping):
                     host_key.source_type) for hostname in host_config.nodes
         ]
 
+    # DEPRECATED
+    # This function is only kept for the legacy cluster mode from hell
     def _update_with_extra_sections(
         self,
         host_key: HostKey,
@@ -407,6 +413,8 @@ class MultiHostSections(collections.abc.MutableMapping):
             ) for extra_section_name in extra_sections
         ]
 
+    # DEPRECATED
+    # This function is only kept for the legacy cluster mode from hell
     @staticmethod
     def _update_with_node_column(section_content: AbstractSectionContent,
                                  check_plugin_name: CheckPluginNameStr, hostname: HostName,
@@ -434,6 +442,8 @@ class MultiHostSections(collections.abc.MutableMapping):
 
         return MultiHostSections._add_node_column(section_content, node_name)
 
+    # DEPRECATED
+    # This function is only kept for the legacy cluster mode from hell
     # TODO: Add correct type hint for node wrapped SectionContent. We would have to create some kind
     # of AbstractSectionContentWithNodeInfo.
     @staticmethod
@@ -453,6 +463,8 @@ class MultiHostSections(collections.abc.MutableMapping):
                 new_section_content.append([node_text] + line)  # type: ignore[arg-type,operator]
         return new_section_content  # type: ignore[return-value]
 
+    # DEPRECATED
+    # This function is only kept for the legacy cluster mode from hell
     @staticmethod
     def _update_with_parse_function(
         section_content: AbstractSectionContent,
@@ -469,24 +481,21 @@ class MultiHostSections(collections.abc.MutableMapping):
         All exceptions raised by the parse function will be catched and re-raised as
         MKParseFunctionError() exceptions."""
         section_plugin = agent_based_register.get_section_plugin(section_name)
+        # We can use the migrated section: we refuse to migrate sections with
+        # "'node_info'=True", so the auto-migrated ones will keep working.
+        # This function will never be called on checks programmed against the new
+        # API (or migrated manually)
         if section_plugin is None:
             # use legacy parse function for unmigrated sections
             parse_function = config.check_info.get(str(section_name), {}).get("parse_function")
-            if parse_function is None:
-                return section_content
         else:
-            # TODO (mo): deal with the parsed_section_name feature (CMK-4006)
-            if str(section_plugin.name) != str(section_plugin.parsed_section_name):
-                raise NotImplementedError()
-            parse_function = section_plugin.parse_function
+            parse_function = cast(Callable[[AbstractSectionContent], ParsedSectionContent],
+                                  section_plugin.parse_function)
 
-        # TODO (mo): make this unnecessary
-        parse_function = cast(Callable[[AbstractSectionContent], ParsedSectionContent],
-                              parse_function)
+        if parse_function is None:
+            return section_content
 
-        # TODO: Item state needs to be handled in local objects instead of the
-        # item_state._cached_item_states object
-        # TODO (mo): ValueStores (formally Item state) need to be *only* available
+        # (mo): ValueStores (formally Item state) need to be *only* available
         # from within the check function, nowhere else.
         orig_item_state_prefix = item_state.get_item_state_prefix()
         try:

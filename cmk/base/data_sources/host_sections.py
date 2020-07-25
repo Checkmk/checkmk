@@ -25,6 +25,7 @@ import cmk.base.caching as caching
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.check_api_utils import HOST_ONLY as LEGACY_HOST_ONLY
 from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
@@ -53,10 +54,12 @@ class MultiHostSections(collections.abc.MutableMapping):
         self._data: Dict[HostKey, ABCHostSections] = {} if data is None else data
         self._config_cache = config.get_config_cache()
         self._section_content_cache = caching.DictCache()
-        # This is not quite the same as section_content_cache.
-        # It is introduced for the changed data handling with the migration
+        # The following are not quite the same as section_content_cache.
+        # They are introduced for the changed data handling with the migration
         # to 'agent_based' plugins.
-        # It holds the result of the parse_function along with the
+        # This hodls the result of the parsing of individual raw sections
+        self._parsing_results = caching.DictCache()
+        # This hodls the result of the superseding section along with the
         # cache info of the raw section that was used.
         self._parsed_sections = caching.DictCache()
 
@@ -184,7 +187,7 @@ class MultiHostSections(collections.abc.MutableMapping):
                 host_data.sections,
             {parsed_section_name},
         ):
-            parsed = section.parse_function(host_data.sections[section.name])
+            parsed = self._get_parsing_result(host_key, section)
             if parsed is None:
                 continue
 
@@ -192,6 +195,25 @@ class MultiHostSections(collections.abc.MutableMapping):
             return self._parsed_sections.setdefault(cache_key, (parsed, cache_info))
 
         return self._parsed_sections.setdefault(cache_key, (None, None))
+
+    def _get_parsing_result(
+        self,
+        host_key: HostKey,
+        section: SectionPlugin,
+    ) -> Any:
+        # lookup the parsing result in the cache, it might have been computed
+        # during resolving of the supersedings (or set to None b/c the section
+        # *is* superseeded)
+        cache_key = host_key + (section.name,)
+        if cache_key in self._parsing_results:
+            return self._parsing_results[cache_key]
+
+        try:
+            data = self._data[host_key].sections[section.name]
+        except KeyError:
+            return self._parsing_results.setdefault(cache_key, None)
+
+        return self._parsing_results.setdefault(cache_key, section.parse_function(data))
 
     # DEPRECATED
     # This function is only kept for the legacy cluster mode from hell

@@ -28,6 +28,7 @@ from cmk.utils.type_defs import (
     HostgroupName,
     HostName,
     Item,
+    SectionName,
     ServicegroupName,
     ServiceName,
 )
@@ -953,9 +954,14 @@ def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None
             if e.errno != errno.ENOENT:
                 raise
 
-    needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names = (
-        _get_needed_check_plugin_names(host_config))
-    if not (needed_legacy_check_plugin_names or needed_agent_based_check_plugin_names):
+    (needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names,
+     needed_agent_based_inventory_plugin_names) = _get_needed_plugin_names(host_config)
+
+    if not any((
+            needed_legacy_check_plugin_names,
+            needed_agent_based_check_plugin_names,
+            needed_agent_based_inventory_plugin_names,
+    )):
         console.verbose("(no Check_MK checks)\n")
         return
 
@@ -986,7 +992,10 @@ def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None
     output.write("import cmk.base.check_api as check_api\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")
     output.write("\n")
-    for module in _get_needed_agent_based_modules(needed_agent_based_check_plugin_names):
+    for module in _get_needed_agent_based_modules(
+            needed_agent_based_check_plugin_names,
+            needed_agent_based_inventory_plugin_names,
+    ):
         full_mod_name = "cmk.base.plugins.agent_based.%s" % module
         output.write("import %s\n" % full_mod_name)
         console.verbose(" %s%s%s", tty.green, full_mod_name, tty.normal, stream=sys.stderr)
@@ -1114,8 +1123,9 @@ if '-d' in sys.argv:
     console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
 
-def _get_needed_check_plugin_names(
-    host_config: config.HostConfig,) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName]]:
+def _get_needed_plugin_names(
+    host_config: config.HostConfig,
+) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName], Set[str]]:
     from cmk.base.check_table import get_needed_check_names  # pylint: disable=import-outside-toplevel
     needed_legacy_check_plugin_names: Set[CheckPluginNameStr] = set([])
     needed_agent_based_check_plugin_names: Set[CheckPluginName] = set([])
@@ -1161,7 +1171,26 @@ def _get_needed_check_plugin_names(
                 else:
                     needed_agent_based_check_plugin_names.add(check_plugin_name)
 
-    return needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names
+    # inventory plugins get passed parsed data these days. Make sure we load the required sections,
+    # otherwise inventory plugins will crash upon unparsed data.
+    needed_agent_based_inventory_plugin_names: Set[str] = set()  # str for now
+    if host_config.do_status_data_inventory:
+        import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
+        from cmk.base.check_api import get_check_api_context  # pylint: disable=import-outside-toplevel
+        from cmk.base.inventory import get_inventory_context  # pylint: disable=import-outside-toplevel
+        inventory_plugins.load_plugins(get_check_api_context, get_inventory_context)
+        for plugin_name in inventory_plugins.inv_info:
+            if plugin_name in legacy_plugin_name_lookup:
+                # no need to actually look up for inventory plugins
+                needed_legacy_check_plugin_names.add(plugin_name)
+            else:
+                needed_agent_based_inventory_plugin_names.add(plugin_name)
+
+    return (
+        needed_legacy_check_plugin_names,
+        needed_agent_based_check_plugin_names,
+        needed_agent_based_inventory_plugin_names,
+    )
 
 
 def _get_needed_check_file_names(needed_check_plugin_names: Set[CheckPluginNameStr]) -> List[str]:
@@ -1195,18 +1224,27 @@ def _get_needed_check_file_names(needed_check_plugin_names: Set[CheckPluginNameS
     return filenames
 
 
-def _get_needed_agent_based_modules(check_plugin_names: Set[CheckPluginName],) -> List[str]:
+def _get_needed_agent_based_modules(
+    check_plugin_names: Set[CheckPluginName],
+    inventory_plugin_names: Set[str],
+) -> List[str]:
     check_plugins_opt: List[Optional[CheckPlugin]] = [
         agent_based_register.get_check_plugin(p) for p in check_plugin_names
     ]
 
-    check_modules = {
+    modules = {
         plugin.module
         for plugin in check_plugins_opt
         if plugin is not None and plugin.module is not None
     }
-    check_modules.update((section.module
-                          for section in agent_based_register.get_relevant_raw_sections(
-                              check_plugin_names=check_plugin_names).values()
-                          if section.module is not None))
-    return sorted(check_modules)
+    modules.update((section.module for section in agent_based_register.get_relevant_raw_sections(
+        check_plugin_names=check_plugin_names).values() if section.module is not None))
+
+    # add sections required for inventory
+    # TODO (mo): update this once inventory plugins are on the new API!
+    section_plugins_opt = (agent_based_register.get_section_plugin(SectionName(name.split('.')[0]))
+                           for name in inventory_plugin_names)
+    modules.update((section.module
+                    for section in section_plugins_opt
+                    if section is not None and section.module is not None))
+    return sorted(modules)

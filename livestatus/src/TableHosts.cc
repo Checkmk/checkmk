@@ -5,6 +5,7 @@
 
 #include "TableHosts.h"
 
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -40,10 +41,10 @@
 #include "OffsetPerfdataColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetStringHostMacroColumn.h"
-#include "OffsetTimeColumn.h"
 #include "Query.h"
 #include "ServiceListColumn.h"
 #include "ServiceListStateColumn.h"
+#include "TimeLambdaColumn.h"
 #include "TimeperiodColumn.h"
 #include "auth.h"
 #include "nagios.h"
@@ -235,38 +236,50 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "current_attempt", "Number of the current check attempts",
         offsets, [](const host &r) { return r.current_attempt; }));
 #ifndef NAGIOS4
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "last_notification",
-        "Time of the last notification (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, last_host_notification)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        "Time of the last notification (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(
+                r.last_host_notification);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "next_notification",
-        "Time of the next notification (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, next_host_notification)}));
+        "Time of the next notification (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(
+                r.next_host_notification);
+        }));
 #else
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
-        prefix + "last_notification",
-        "Time of the last notification (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, last_notification)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+    table->addColumn(std::make_unique <
+                     TimeLambdaColumn<host>(
+                         prefix + "last_notification",
+                         "Time of the last notification (Unix timestamp)",
+                         offsets,
+                         [](const host &r) {
+                             return std::chrono::system_clock::from_time_t(
+                                 r.last_notification);
+                         }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "next_notification",
-        "Time of the next notification (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, next_notification)}));
+        "Time of the next notification (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(r.next_notification);
+        }));
 #endif  // NAGIOS4
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "next_check",
-        "Scheduled time for the next check (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, next_check)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        "Scheduled time for the next check (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(r.next_check);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "last_hard_state_change",
-        "Time of the last hard state change (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, last_hard_state_change)}));
+        "Time of the last hard state change (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(
+                r.last_hard_state_change);
+        }));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "has_been_checked",
         "Whether the host has already been checked (0/1)", offsets,
@@ -312,31 +325,37 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "Whether to check to send a recovery notification when flapping stops (0/1)",
         offsets,
         [](const host &r) { return r.check_flapping_recovery_notification; }));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "last_check", "Time of the last check (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, last_check)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        offsets, [](const host &r) {
+            return std::chrono::system_clock::from_time_t(r.last_check);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "last_state_change",
         "Time of the last state change - soft or hard (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, last_state_change)}));
+        offsets, [](const host &r) {
+            return std::chrono::system_clock::from_time_t(r.last_state_change);
+        }));
 
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "last_time_up",
-        "The last time the host was UP (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, last_time_up)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        "The last time the host was UP (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(r.last_time_up);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "last_time_down",
-        "The last time the host was DOWN (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, last_time_down)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        "The last time the host was DOWN (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(r.last_time_down);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "last_time_unreachable",
-        "The last time the host was UNREACHABLE (Unix timestamp)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, last_time_unreachable)}));
+        "The last time the host was UNREACHABLE (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(
+                r.last_time_unreachable);
+        }));
 
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "is_flapping", "Whether the host state is flapping (0/1)",

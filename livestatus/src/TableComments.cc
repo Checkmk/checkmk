@@ -5,6 +5,7 @@
 
 #include "TableComments.h"
 
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -16,12 +17,12 @@
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "OffsetSStringColumn.h"
-#include "OffsetTimeColumn.h"
 #include "Query.h"
 #include "Row.h"
 #include "Store.h"
 #include "TableHosts.h"
 #include "TableServices.h"
+#include "TimeLambdaColumn.h"
 #include "auth.h"
 #include "nagios.h"
 
@@ -39,9 +40,11 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntLambdaColumn<Comment>>(
         "id", "The id of the comment", offsets,
         [](const Comment &r) { return r._id; }));
-    addColumn(std::make_unique<OffsetTimeColumn>(
-        "entry_time", "The time the entry was made as UNIX timestamp",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _entry_time)}));
+    addColumn(std::make_unique<TimeLambdaColumn<Comment>>(
+        "entry_time", "The time the entry was made as UNIX timestamp", offsets,
+        [](const Comment &r) {
+            return std::chrono::system_clock::from_time_t(r._entry_time);
+        }));
     addColumn(std::make_unique<IntLambdaColumn<Comment>>(
         "type", "The type of the comment: 1 is host, 2 is service", offsets,
         [](const Comment &r) { return r._type; }));
@@ -63,10 +66,11 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntLambdaColumn<Comment>>(
         "expires", "Whether this comment expires", offsets,
         [](const Comment &r) { return r._expires; }));
-    addColumn(std::make_unique<OffsetTimeColumn>(
+    addColumn(std::make_unique<TimeLambdaColumn<Comment>>(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
-        Column::Offsets{-1, -1, -1,
-                        DANGEROUS_OFFSETOF(Comment, _expire_time)}));
+        offsets, [](const Comment &r) {
+            return std::chrono::system_clock::from_time_t(r._expire_time);
+        }));
 
     TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Comment, _host),
                            -1);

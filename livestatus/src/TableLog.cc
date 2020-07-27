@@ -6,6 +6,7 @@
 #include "TableLog.h"
 
 #include <bitset>
+#include <chrono>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -23,13 +24,13 @@
 #include "MonitoringCore.h"
 #include "OffsetSStringColumn.h"
 #include "OffsetStringColumn.h"
-#include "OffsetTimeColumn.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
+#include "TimeLambdaColumn.h"
 
 #ifdef CMC
 #include "cmc.h"
@@ -63,10 +64,11 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
     auto entry_offset = DANGEROUS_OFFSETOF(LogRow, entry);
     Column::Offsets offsets{entry_offset, 0};
-    addColumn(std::make_unique<OffsetTimeColumn>(
-        "time", "Time of the log event (UNIX timestamp)",
-        Column::Offsets{entry_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(LogEntry, _time)}));
+    addColumn(std::make_unique<TimeLambdaColumn<LogEntry>>(
+        "time", "Time of the log event (UNIX timestamp)", offsets,
+        [](const LogEntry &r) {
+            return std::chrono::system_clock::from_time_t(r._time);
+        }));
     addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
         "lineno", "The number of the line in the log file", offsets,
         [](const LogEntry &r) { return r._lineno; }));

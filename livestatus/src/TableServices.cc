@@ -32,7 +32,6 @@
 #include "OffsetPerfdataColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
-#include "OffsetTimeColumn.h"
 #include "Query.h"
 #include "ServiceContactsColumn.h"
 #include "ServiceGroupsColumn.h"
@@ -214,60 +213,71 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "no_more_notifications",
         "Whether to stop sending notifications (0/1)", offsets,
         [](const service &r) { return r.no_more_notifications; }));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
         prefix + "last_time_ok",
-        "The last time the service was OK (Unix timestamp)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, last_time_ok)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        "The last time the service was OK (Unix timestamp)", offsets,
+        [](const service &r) {
+            return std::chrono::system_clock::from_time_t(r.last_time_ok);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
         prefix + "last_time_warning",
         "The last time the service was in WARNING state (Unix timestamp)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, last_time_warning)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        offsets, [](const service &r) {
+            return std::chrono::system_clock::from_time_t(r.last_time_warning);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
         prefix + "last_time_critical",
-        "The last time the service was CRITICAL (Unix timestamp)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, last_time_critical)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        "The last time the service was CRITICAL (Unix timestamp)", offsets,
+        [](const service &r) {
+            return std::chrono::system_clock::from_time_t(r.last_time_critical);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
         prefix + "last_time_unknown",
-        "The last time the service was UNKNOWN (Unix timestamp)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, last_time_unknown)}));
+        "The last time the service was UNKNOWN (Unix timestamp)", offsets,
+        [](const service &r) {
+            return std::chrono::system_clock::from_time_t(r.last_time_unknown);
+        }));
 
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
         prefix + "last_check", "The time of the last check (Unix timestamp)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, last_check)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        offsets, [](const service &r) {
+            return std::chrono::system_clock::from_time_t(r.last_check);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
         prefix + "next_check",
-        "The scheduled time of the next check (Unix timestamp)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, next_check)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        "The scheduled time of the next check (Unix timestamp)", offsets,
+        [](const service &r) {
+            return std::chrono::system_clock::from_time_t(r.next_check);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
         prefix + "last_notification",
-        "The time of the last notification (Unix timestamp)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, last_notification)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        "The time of the last notification (Unix timestamp)", offsets,
+        [](const service &r) {
+            return std::chrono::system_clock::from_time_t(r.last_notification);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
         prefix + "next_notification",
-        "The time of the next notification (Unix timestamp)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, next_notification)}));
+        "The time of the next notification (Unix timestamp)", offsets,
+        [](const service &r) {
+            return std::chrono::system_clock::from_time_t(r.next_notification);
+        }));
     table->addColumn(std::make_unique<IntLambdaColumn<service>>(
         prefix + "current_notification_number",
         "The number of the current notification", offsets,
         [](const service &r) { return r.current_notification_number; }));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
         prefix + "last_state_change",
         "The time of the last state change - soft or hard (Unix timestamp)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, last_state_change)}));
-    table->addColumn(std::make_unique<OffsetTimeColumn>(
+        offsets, [](const service &r) {
+            return std::chrono::system_clock::from_time_t(r.last_state_change);
+        }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
         prefix + "last_hard_state_change",
-        "The time of the last hard state change (Unix timestamp)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, last_hard_state_change)}));
+        "The time of the last hard state change (Unix timestamp)", offsets,
+        [](const service &r) {
+            return std::chrono::system_clock::from_time_t(
+                r.last_hard_state_change);
+        }));
     table->addColumn(std::make_unique<IntLambdaColumn<service>>(
         prefix + "scheduled_downtime_depth",
         "The number of scheduled downtimes the service is currently in",

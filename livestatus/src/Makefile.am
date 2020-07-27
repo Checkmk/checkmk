@@ -154,7 +154,6 @@ liblivestatus_a_SOURCES = \
         OffsetStringHostMacroColumn.cc \
         OffsetStringMacroColumn.cc \
         OffsetStringServiceMacroColumn.cc \
-        OffsetTimeColumn.cc \
         OringFilter.cc \
         OutputBuffer.cc \
         PerfdataAggregator.cc \

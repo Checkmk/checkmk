@@ -1937,7 +1937,7 @@ def _extract_agent_and_snmp_sections() -> None:
         section_name = section_name_of(check_plugin_name)
         is_snmp_plugin = section_name in snmp_info
 
-        if agent_based_register.get_section_plugin(SectionName(section_name)):
+        if agent_based_register.is_registered_section_plugin(SectionName(section_name)):
             continue
 
         check_info_dict = check_info.get(section_name, check_info[check_plugin_name])

@@ -104,7 +104,8 @@ def _set_up(monkeypatch, hostname, nodes, cluster_mapping) -> None:
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config_cache, "host_of_clustered_service", host_of_clustered_service)
-    monkeypatch.setattr(agent_based_register._config, "get_section_plugin", MOCK_SECTIONS.get)
+    monkeypatch.setattr(agent_based_register._config, "get_section_plugin",
+                        MOCK_SECTIONS.__getitem__)
 
 
 @pytest.mark.parametrize(

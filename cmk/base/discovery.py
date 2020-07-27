@@ -55,7 +55,6 @@ from cmk.utils.type_defs import (
     HostState,
     Item,
     Metric,
-    ParsedSectionName,
     RulesetName,
     SourceType,
 )
@@ -1057,8 +1056,10 @@ def _discover_host_labels(
     try:
         # We do *not* process all available raw sections. Instead we see which *parsed*
         # sections would result from them, and then process those.
-        section_plugins = (agent_based_register.get_section_plugin(rs) for rs in host_data.sections)
-        parsed_sections = {p.parsed_section_name for p in section_plugins if p is not None}
+        parsed_sections = {
+            agent_based_register.get_section_plugin(rs).parsed_section_name
+            for rs in host_data.sections
+        }
 
         console.vverbose("Trying host label discovery with: %s\n" %
                          ", ".join(str(p) for p in parsed_sections))
@@ -1127,13 +1128,9 @@ def _find_candidates_by_source_type(
         for name in node_data.sections
     }
 
-    raw_sections = [
-        (name, agent_based_register.get_section_plugin(name)) for name in raw_section_names
-    ]
-
     parsed_section_names = {
-        ParsedSectionName(str(name)) if section is None else section.parsed_section_name
-        for name, section in raw_sections
+        agent_based_register.get_section_plugin(name).parsed_section_name
+        for name in raw_section_names
     }
 
     return {

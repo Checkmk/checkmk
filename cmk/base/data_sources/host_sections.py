@@ -480,15 +480,15 @@ class MultiHostSections(collections.abc.MutableMapping):
 
         All exceptions raised by the parse function will be catched and re-raised as
         MKParseFunctionError() exceptions."""
-        section_plugin = agent_based_register.get_section_plugin(section_name)
         # We can use the migrated section: we refuse to migrate sections with
         # "'node_info'=True", so the auto-migrated ones will keep working.
         # This function will never be called on checks programmed against the new
         # API (or migrated manually)
-        if section_plugin is None:
+        if not agent_based_register.is_registered_section_plugin(section_name):
             # use legacy parse function for unmigrated sections
             parse_function = config.check_info.get(str(section_name), {}).get("parse_function")
         else:
+            section_plugin = agent_based_register.get_section_plugin(section_name)
             parse_function = cast(Callable[[AbstractSectionContent], ParsedSectionContent],
                                   section_plugin.parse_function)
 

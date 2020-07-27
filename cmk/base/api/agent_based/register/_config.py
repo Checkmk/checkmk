@@ -24,14 +24,20 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
+from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 
 registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
 registered_check_plugins: Dict[CheckPluginName, CheckPlugin] = {}
 
 
-def get_section_plugin(section_name: SectionName) -> Optional[SectionPlugin]:
-    return registered_agent_sections.get(section_name) or registered_snmp_sections.get(section_name)
+def is_registered_section_plugin(section_name: SectionName) -> bool:
+    return section_name in registered_agent_sections or section_name in registered_snmp_sections
+
+
+def get_section_plugin(section_name: SectionName) -> SectionPlugin:
+    return (registered_agent_sections.get(section_name) or
+            registered_snmp_sections.get(section_name) or trivial_section_factory(section_name))
 
 
 def iter_all_agent_sections() -> Iterable[AgentSectionPlugin]:
@@ -46,7 +52,7 @@ def add_check_plugin(check_plugin: CheckPlugin) -> None:
     registered_check_plugins[check_plugin.name] = check_plugin
 
 
-def is_registered_check_plugin(check_plugin_name: CheckPluginName):
+def is_registered_check_plugin(check_plugin_name: CheckPluginName) -> bool:
     return check_plugin_name in registered_check_plugins
 
 

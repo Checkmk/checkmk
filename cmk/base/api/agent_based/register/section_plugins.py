@@ -19,15 +19,15 @@ from cmk.snmplib.type_defs import OIDBytes, OIDSpec, SNMPDetectSpec, SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
+    AgentStringTable,
     HostLabelFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
-)
-from cmk.base.api.agent_based.type_defs import (
-    AgentStringTable,
     SNMPStringByteTable,
     SNMPStringTable,
 )
+from cmk.base.api.agent_based.utils import parse_to_string_table
+
 from cmk.base.discovered_labels import HostLabel
 
 
@@ -252,3 +252,14 @@ def validate_section_supersedes(all_supersedes: Dict[SectionName, Set[SectionNam
             raise ValueError("Section plugin '%s' implicitly supersedes section(s) %s. "
                              "You must add those to the supersedes keyword argument." %
                              (name, ', '.join("'%s'" % n for n in sorted(implicitly))))
+
+
+def trivial_section_factory(section_name: SectionName) -> AgentSectionPlugin:
+    return AgentSectionPlugin(
+        name=section_name,
+        parsed_section_name=ParsedSectionName(str(section_name)),
+        parse_function=parse_to_string_table,
+        host_label_function=_noop_host_label_function,
+        supersedes=set(),
+        module=None,
+    )

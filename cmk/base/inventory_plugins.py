@@ -87,7 +87,8 @@ def _extract_snmp_sections() -> None:
         if 'snmp_info' not in plugin_info:
             continue
         section_name = section_name_of(plugin_name)
-        if agent_based_register.get_section_plugin(SectionName(section_name)):
+        if isinstance(agent_based_register.get_section_plugin(SectionName(section_name)),
+                      SNMPSectionPlugin):
             continue
 
         fallback_files = ([_include_file_path(i) for i in plugin_info.get('includes', [])] +

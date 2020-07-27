@@ -80,7 +80,7 @@ public:
         // TODO(sp): This class sets different logclasses on match -> fix this
         invalid = 0x7fffffff  // never stored
     };
-    static constexpr uint32_t all_classes = 0xffffu;
+    static constexpr uint32_t all_classes = 0xffffU;
 
     // TODO(sp): Wrong type, caused by TableLog accessing it via
     // OffsetIntColumn, should be size_t
@@ -138,8 +138,8 @@ private:
 
     void assign(Param par, const std::string &field);
     void classifyLogMessage();
-    bool textStartsWith(const std::string &what) const;
-    bool textContains(const std::string &what) const;
+    [[nodiscard]] bool textStartsWith(const std::string &what) const;
+    [[nodiscard]] bool textContains(const std::string &what) const;
 };
 
 #endif  // LogEntry_h

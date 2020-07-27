@@ -16,10 +16,10 @@
 #include "DowntimesOrComments.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
-#include "OffsetSStringColumn.h"
 #include "Query.h"
 #include "Row.h"
 #include "Store.h"
+#include "StringLambdaColumn.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeLambdaColumn.h"
@@ -30,13 +30,12 @@
 
 TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     Column::Offsets offsets{};
-    addColumn(std::make_unique<OffsetSStringColumn>(
-        "author", "The contact that entered the comment",
-        Column::Offsets{-1, -1, -1,
-                        DANGEROUS_OFFSETOF(Comment, _author_name)}));
-    addColumn(std::make_unique<OffsetSStringColumn>(
-        "comment", "A comment text",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Comment, _comment)}));
+    addColumn(std::make_unique<StringLambdaColumn<Comment>>(
+        "author", "The contact that entered the comment", offsets,
+        [](const Comment &r) { return r._author_name; }));
+    addColumn(std::make_unique<StringLambdaColumn<Comment>>(
+        "comment", "A comment text", offsets,
+        [](const Comment &r) { return r._comment; }));
     addColumn(std::make_unique<IntLambdaColumn<Comment>>(
         "id", "The id of the comment", offsets,
         [](const Comment &r) { return r._id; }));

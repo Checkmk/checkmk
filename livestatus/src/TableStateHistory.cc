@@ -25,10 +25,10 @@
 #include "LogEntry.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
-#include "OffsetSStringColumn.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "Row.h"
+#include "StringLambdaColumn.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TableServices.h"
@@ -134,34 +134,25 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "in_service_period",
         "Shows if the host or service is within its service period", offsets,
         [](const HostServiceState &r) { return r._in_service_period; }));
-    addColumn(std::make_unique<OffsetSStringColumn>(
+    addColumn(std::make_unique<StringLambdaColumn<HostServiceState>>(
         "service_period",
-        "The service period of the host or service in question",
-        Column::Offsets{
-            -1, -1, -1,
-            DANGEROUS_OFFSETOF(HostServiceState, _service_period)}));
-    addColumn(std::make_unique<OffsetSStringColumn>(
-        "debug_info", "Debug information",
-        Column::Offsets{-1, -1, -1,
-                        DANGEROUS_OFFSETOF(HostServiceState, _debug_info)}));
-    addColumn(std::make_unique<OffsetSStringColumn>(
-        "host_name", "Host name",
-        Column::Offsets{-1, -1, -1,
-                        DANGEROUS_OFFSETOF(HostServiceState, _host_name)}));
-    addColumn(std::make_unique<OffsetSStringColumn>(
-        "service_description", "Description of the service",
-        Column::Offsets{
-            -1, -1, -1,
-            DANGEROUS_OFFSETOF(HostServiceState, _service_description)}));
-    addColumn(std::make_unique<OffsetSStringColumn>(
-        "log_output", "Logfile output relevant for this state",
-        Column::Offsets{-1, -1, -1,
-                        DANGEROUS_OFFSETOF(HostServiceState, _log_output)}));
-    addColumn(std::make_unique<OffsetSStringColumn>(
+        "The service period of the host or service in question", offsets,
+        [](const HostServiceState &r) { return r._service_period; }));
+    addColumn(std::make_unique<StringLambdaColumn<HostServiceState>>(
+        "debug_info", "Debug information", offsets,
+        [](const HostServiceState &r) { return r._debug_info; }));
+    addColumn(std::make_unique<StringLambdaColumn<HostServiceState>>(
+        "host_name", "Host name", offsets,
+        [](const HostServiceState &r) { return r._host_name; }));
+    addColumn(std::make_unique<StringLambdaColumn<HostServiceState>>(
+        "service_description", "Description of the service", offsets,
+        [](const HostServiceState &r) { return r._service_description; }));
+    addColumn(std::make_unique<StringLambdaColumn<HostServiceState>>(
+        "log_output", "Logfile output relevant for this state", offsets,
+        [](const HostServiceState &r) { return r._log_output; }));
+    addColumn(std::make_unique<StringLambdaColumn<HostServiceState>>(
         "long_log_output", "Complete logfile output relevant for this state",
-        Column::Offsets{
-            -1, -1, -1,
-            DANGEROUS_OFFSETOF(HostServiceState, _long_log_output)}));
+        offsets, [](const HostServiceState &r) { return r._long_log_output; }));
 
     addColumn(std::make_unique<IntLambdaColumn<HostServiceState>>(
         "duration_ok", "OK duration of state ( until - from )", offsets,

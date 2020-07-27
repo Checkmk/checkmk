@@ -149,7 +149,6 @@ liblivestatus_a_SOURCES = \
         NagiosCore.cc \
         NullColumn.cc \
         OffsetPerfdataColumn.cc \
-        OffsetSStringColumn.cc \
         OffsetStringColumn.cc \
         OffsetStringHostMacroColumn.cc \
         OffsetStringMacroColumn.cc \

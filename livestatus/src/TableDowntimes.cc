@@ -16,10 +16,10 @@
 #include "DowntimesOrComments.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
-#include "OffsetSStringColumn.h"
 #include "Query.h"
 #include "Row.h"
 #include "Store.h"
+#include "StringLambdaColumn.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeLambdaColumn.h"
@@ -30,13 +30,12 @@
 
 TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     Column::Offsets offsets{};
-    addColumn(std::make_unique<OffsetSStringColumn>(
-        "author", "The contact that scheduled the downtime",
-        Column::Offsets{-1, -1, -1,
-                        DANGEROUS_OFFSETOF(Downtime, _author_name)}));
-    addColumn(std::make_unique<OffsetSStringColumn>(
-        "comment", "A comment text",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _comment)}));
+    addColumn(std::make_unique<StringLambdaColumn<Downtime>>(
+        "author", "The contact that scheduled the downtime", offsets,
+        [](const Downtime &r) { return r._author_name; }));
+    addColumn(std::make_unique<StringLambdaColumn<Downtime>>(
+        "comment", "A comment text", offsets,
+        [](const Downtime &r) { return r._comment; }));
     addColumn(std::make_unique<IntLambdaColumn<Downtime>>(
         "id", "The id of the downtime", offsets,
         [](const Downtime &r) { return r._id; }));

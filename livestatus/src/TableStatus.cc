@@ -14,6 +14,7 @@
 #include "Average.h"
 #include "BoolPointerColumn.h"
 #include "Column.h"
+#include "DoubleLambdaColumn.h"
 #include "DoublePointerColumn.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
@@ -63,12 +64,6 @@ namespace {
 time_t dummy_time = 0;
 }  // namespace
 #endif  // NAGIOS4
-
-namespace {
-// NOTE: We have a FixedDoubleColumn, but this lives somewhere else, and this is
-// only a temporary hack.
-double dummy_double{0};
-}  // namespace
 
 TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     Column::Offsets offsets{};
@@ -244,27 +239,27 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "average_latency_generic",
         "The average latency for executing active checks (i.e. the time the start of the execution is behind the schedule)",
         offsets, &g_average_active_latency));
-    addColumn(std::make_unique<DoublePointerColumn>(
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "average_latency_cmk",
         "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
-        offsets, &dummy_double));
-    addColumn(std::make_unique<DoublePointerColumn>(
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "average_latency_real_time",
         "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
-        offsets, &dummy_double));
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
 
-    addColumn(std::make_unique<DoublePointerColumn>(
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "helper_usage_generic",
         "The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets, &dummy_double));
-    addColumn(std::make_unique<DoublePointerColumn>(
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "helper_usage_cmk",
         "The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets, &dummy_double));
-    addColumn(std::make_unique<DoublePointerColumn>(
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "helper_usage_real_time",
         "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets, &dummy_double));
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
 
     addColumn(std::make_unique<BoolPointerColumn>(
         "has_event_handlers",
@@ -310,5 +305,6 @@ std::string TableStatus::name() const { return "status"; }
 std::string TableStatus::namePrefix() const { return "status_"; }
 
 void TableStatus::answerQuery(Query *query) {
-    query->processDataset(Row(this));
+    const TableStatus *r = this;
+    query->processDataset(Row(r));
 }

@@ -46,3 +46,7 @@ VERSION_V11_2_PLUS = matches(OID_F5_BIG_IP_sysProductVersion, VERSION_GE_V11_2_P
 
 VERSION_PRE_V11 = not_matches(OID_F5_BIG_IP_sysProductVersion, VERSION_GE_V11_PATTERN)
 VERSION_V11_PLUS = matches(OID_F5_BIG_IP_sysProductVersion, VERSION_GE_V11_PATTERN)
+
+F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS = {
+    "type": "active_standby",
+}

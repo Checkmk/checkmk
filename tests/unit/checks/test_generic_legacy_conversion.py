@@ -534,7 +534,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'etherbox_info',
         'ewon_discovery_rules',
         'f5_bigip_chassis_temp_default_params',
-        'f5_bigip_cluster_default_levels',
         'f5_bigip_conns_default_levels',
         'f5_bigip_cpu_temp_default_params',
         'f5_bigip_fans_default_levels',

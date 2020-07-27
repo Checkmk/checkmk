@@ -22,17 +22,18 @@ from .agent_based_api.v0.type_defs import (
     CheckGenerator,
     DiscoveryGenerator,
 )
-from .utils.f5_bigip import F5_BIGIP, VERSION_PRE_V11_2, VERSION_V11_2_PLUS
+from .utils.f5_bigip import (
+    F5_BIGIP,
+    VERSION_PRE_V11_2,
+    VERSION_V11_2_PLUS,
+    F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
+)
 
 NodeState = int
 
 STATE_NAMES = {
     True: ("unknown", "offline", "forced offline", "standby", "active"),
     False: ("standby", "active 1", "active 2", "active")
-}
-
-F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS = {
-    "type": "active_standby",
 }
 
 

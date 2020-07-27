@@ -61,12 +61,19 @@ def parse_windows_tasks(info):
     for line in info:
         name = line[0].strip()
         value = ":".join(line[1:]).strip()
-        if last_task and name != "TaskName":
+        if value and last_task and name != "TaskName":
             data[last_task][name] = value
 
-        if name == 'TaskName':
+        elif name == 'TaskName':
             last_task = value
             data[last_task] = {}
+
+        # this is a line continuation from TaskName
+        elif not value and not data[last_task]:
+            data.pop(last_task)
+            last_task += " " + name
+            data[last_task] = {}
+
     return data
 
 

@@ -101,7 +101,6 @@ liblivestatus_a_SOURCES = \
         ColumnFilter.cc \
         CommentColumn.cc \
         ContactGroupsColumn.cc \
-        ContactGroupsMemberColumn.cc \
         CountAggregator.cc \
         CrashReport.cc \
         CustomTimeperiodColumn.cc \

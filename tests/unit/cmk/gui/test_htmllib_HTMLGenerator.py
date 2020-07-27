@@ -96,3 +96,16 @@ def test_text_input(register_builtin_html):
         written_text = "".join(html.drain())
         assert compare_html(
             written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />')
+
+
+def test_render_a(register_builtin_html):
+    a = html.render_a("bla", href="blu", class_=["eee"], target="_blank")
+    assert compare_html(a, '<a href="blu" target="_blank" class="eee">bla</a>')
+
+    a = html.render_a("b<script>alert(1)</script>la",
+                      href="b<script>alert(1)</script>lu",
+                      class_=["eee"],
+                      target="_blank")
+    assert compare_html(
+        a, '<a href="b&lt;script&gt;alert(1)&lt;/script&gt;lu" target="_blank" '
+        'class="eee">b&lt;script&gt;alert(1)&lt;/script&gt;la</a>')

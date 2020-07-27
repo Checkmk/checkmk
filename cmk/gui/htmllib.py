@@ -200,10 +200,13 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
         # Links require href to be first attribute
         href = attrs.pop('href', None)
         if href:
-            yield ' href=\"%s\"' % href
+            attributes = list(attrs.items())
+            attributes.insert(0, ("href", href))
+        else:
+            attributes = list(attrs.items())
 
         # render all attributes
-        for key_unescaped, v in attrs.items():
+        for key_unescaped, v in attributes:
             if v is None:
                 continue
 

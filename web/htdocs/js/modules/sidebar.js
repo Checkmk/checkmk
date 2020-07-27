@@ -659,10 +659,9 @@ export function reset_sidebar_scheduler() {
 }
 
 export function execute_sidebar_scheduler() {
-    if (g_seconds_to_update == null)
-        g_seconds_to_update = sidebar_update_interval;
-    else
-        g_seconds_to_update -= 1;
+    g_seconds_to_update = g_seconds_to_update !== null ?
+        g_seconds_to_update - 1 :
+        sidebar_update_interval;
 
     // Stop reload of the snapins in case the browser window / tab is not visible
     // for the user. Retry after short time.
@@ -698,20 +697,18 @@ export function execute_sidebar_scheduler() {
         }
     }
 
-    // Are there any snapins to be bulk updates?
-    if(to_be_updated.length > 0) {
-        if (g_seconds_to_update <= 0) {
-            url = "sidebar_snapin.py?names=" + to_be_updated.join(",");
-            if (sidebar_restart_time !== null)
-                url += "&since=" + sidebar_restart_time;
+    // Are there any snapins to be bulk updated?
+    if (to_be_updated.length > 0 && g_seconds_to_update <= 0) {
+        url = "sidebar_snapin.py?names=" + to_be_updated.join(",");
+        if (sidebar_restart_time !== null)
+            url += "&since=" + sidebar_restart_time;
 
-            const ids = [], len = to_be_updated.length;
-            for (let i = 0; i < len; i++) {
-                ids.push("snapin_" + to_be_updated[i]);
-            }
-
-            ajax.get_url(url, bulk_update_contents, ids);
+        const ids = [], len = to_be_updated.length;
+        for (let i = 0; i < len; i++) {
+            ids.push("snapin_" + to_be_updated[i]);
         }
+
+        ajax.get_url(url, bulk_update_contents, ids);
     }
 
     if (g_sidebar_notify_interval !== null) {

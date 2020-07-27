@@ -917,3 +917,11 @@ class CMKOpenAPISession:
                             request_params=request_params)
         resp.raise_for_status()
         return resp
+
+    def sign_agents(self, key_id, passphrase):
+        request_params = {"key_id": key_id, "passphrase": passphrase}
+        resp = self.request("post",
+                            "domain-types/agent/actions/sign",
+                            request_params=request_params)
+        resp.raise_for_status()
+        return resp

@@ -210,9 +210,8 @@ span#msg_label {
 
 /* General layout of snapins */
 body.side div.snapin, div.add_snapin div.snapin  {
-  width: 85%;
-  padding: 0;
-  margin: (1.5 * $spacing) (2 * $spacing);
+  width: 100%;
+  padding: (0.75 * $spacing) (2 * $spacing);
   overflow: hidden;
   background: $navigation-bg-color;
   border-radius: 4px;

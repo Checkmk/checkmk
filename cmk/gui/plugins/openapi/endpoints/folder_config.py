@@ -7,6 +7,7 @@
 import http.client
 
 from connexion import ProblemException  # type: ignore
+from connexion import problem  # type: ignore[import]
 
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
@@ -50,6 +51,44 @@ def create(params):
     folder = parent_folder.create_subfolder(name, title, attributes)
 
     return _serve_folder(folder)
+
+
+@endpoint_schema(constructors.domain_type_action_href('folder_config', 'bulk-create'),
+                 'cmk/bulk_create',
+                 method='post',
+                 response_schema=response_schemas.FolderCollection,
+                 request_body_required=True,
+                 request_schema=request_schemas.BulkCreateFolder)
+def bulk_create(params):
+    """Bulk create folders"""
+    body = params['body']
+    entries = body['entries']
+    missing_folders = []
+    for details in entries:
+        parent = details['parent']
+        try:
+            load_folder(parent, status=400)
+        except MKUserError:
+            missing_folders.append(parent)
+
+    if missing_folders:
+        return problem(
+            status=400,
+            title="Missing parent folders",
+            detail=f"The following parent folders do not exist: {' ,'.join(missing_folders)}")
+
+    folders = []
+    for details in entries:
+        parent_folder = load_folder(details['parent'], status=400)
+
+        folder = parent_folder.create_subfolder(
+            details['name'],
+            details['title'],
+            details.get('attributes', {}),
+        )
+        folders.append(folder)
+
+    return constructors.serve_json(_folders_collection(folders))
 
 
 @endpoint_schema(constructors.object_href('folder_config', '{ident}'),
@@ -148,23 +187,25 @@ def move(params):
                  response_schema=response_schemas.FolderCollection)
 def list_folders(_params):
     """List folders"""
-    folders = [
-        constructors.collection_item(
-            domain_type='folder_config',
-            obj={
-                'title': folder.title(),
-                'id': folder.id()
-            },
-        ) for folder in watolib.Folder.root_folder().subfolders()
-    ]
+    folders = watolib.Folder.root_folder().subfolders()
+    return constructors.serve_json(_folders_collection(folders))
 
+
+def _folders_collection(folders):
     collection_object = constructors.collection_object(
         domain_type='folder_config',
-        value=folders,
+        value=[
+            constructors.collection_item(
+                domain_type='folder_config',
+                obj={
+                    'title': folder.title(),
+                    'id': folder.id()
+                },
+            ) for folder in folders
+        ],
         links=[constructors.link_rel('self', constructors.collection_href('folder_config'))],
     )
-
-    return constructors.serve_json(collection_object)
+    return collection_object
 
 
 @endpoint_schema(constructors.object_href('folder_config', '{ident}'),

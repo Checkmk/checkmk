@@ -267,6 +267,18 @@ components:
       - entries
       - host_name
       type: object
+    BulkCreateFolder:
+      properties:
+        entries:
+          example:
+          - attributes:
+              foo: bar
+            name: production
+            parent: root
+          items:
+            $ref: '#/components/schemas/CreateFolder'
+          type: array
+      type: object
     BulkCreateHost:
       properties:
         entries:
@@ -2629,6 +2641,77 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    attributes='{\"foo\": \"bar\"}' \\\n    name='production'\
           \ \\\n    parent='root' \\\n    title='Production Hosts' \\\n    --json"
+  /domain-types/folder_config/actions/bulk-create/invoke:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.folder_config.bulk_create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkCreateFolder'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderCollection'
+          description: ''
+          headers: {}
+      summary: Bulk create folders
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.folder_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/folder_config/actions/bulk-create/invoke\"\
+          ,\n    json={\n        \"entries\": [\n            {\n                \"\
+          attributes\": {\n                    \"foo\": \"bar\"\n                },\n\
+          \                \"name\": \"production\",\n                \"parent\":\
+          \ \"root\"\n            }\n        ]\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/folder_config/actions/bulk-create/invoke\"\
+          ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        \"entries\": [\n            {\n\
+          \                \"attributes\": {\n                    \"foo\": \"bar\"\
+          \n                },\n                \"name\": \"production\",\n      \
+          \          \"parent\": \"root\"\n            }\n        ]\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"entries\": [\n            {\n      \
+          \        \"attributes\": {\n                \"foo\": \"bar\"\n         \
+          \     },\n              \"name\": \"production\",\n              \"parent\"\
+          : \"root\"\n            }\n          ]\n        }' \\\n    \"$API_URL/domain-types/folder_config/actions/bulk-create/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/folder_config/actions/bulk-create/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    entries='[{\"name\": \"production\", \"parent\"\
+          : \"root\", \"attributes\": {\"foo\": \"bar\"}}]' \\\n    --json"
   /objects/folder_config/{ident}:
     delete:
       description: ''
@@ -5331,6 +5414,9 @@ tags:
     \ showWriteOnly={true} />"
   name: CreateFolder
   x-displayName: Creating a folder
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkCreateFolder"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BulkCreateFolder
 - description: <SchemaDefinition schemaRef="#/components/schemas/UpdateFolder" showReadOnly={true}
     showWriteOnly={true} />
   name: UpdateFolder
@@ -5429,6 +5515,7 @@ x-tagGroups:
   - CreateDowntime
   - BulkDeleteDowntime
   - CreateFolder
+  - BulkCreateFolder
   - UpdateFolder
   - BulkDeleteFolder
   - CreateHost

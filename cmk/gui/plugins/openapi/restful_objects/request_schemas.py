@@ -143,6 +143,20 @@ class CreateFolder(BaseSchema):
     attributes = fields.Dict(example={'foo': 'bar'})
 
 
+class BulkCreateFolder(BaseSchema):
+    entries = fields.List(
+        fields.Nested(CreateFolder),
+        example=[{
+            "name": "production",
+            "parent": "root",
+            "attributes": {
+                "foo": "bar"
+            },
+        }],
+        uniqueItems=True,
+    )
+
+
 class UpdateFolder(BaseSchema):
     """Updating a folder"""
     title = fields.String(required=True, example="Virtual Servers.")

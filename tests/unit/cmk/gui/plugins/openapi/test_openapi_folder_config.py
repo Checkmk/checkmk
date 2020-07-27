@@ -99,3 +99,28 @@ def test_openapi_missing_folder(wsgi_app, with_automation_user):
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     wsgi_app.get("/NO_SITE/check_mk/api/v0/objects/folder_config/asdf" + uuid.uuid4().hex,
                  status=404)
+
+
+def test_openapi_bulk_folder(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    resp = wsgi_app.call_method(
+        'get',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        status=200,
+    )
+    assert resp.json['value'] == []
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/folder_config/actions/bulk-create/invoke",
+        params='{"entries": [{"name": "new_folder", "title": "foo", "parent": "root"}, \
+                {"name": "another_folder", "title": "fio", "parent": "root"}]}',
+        status=200,
+        content_type='application/json',
+    )
+
+    assert len(resp.json['value']) == 2

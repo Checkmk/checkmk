@@ -20,8 +20,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'cisco_wlc'),
     ('section', 'diskstat'),
     ('section', 'domino_tasks'),
-    ('section', 'f5_bigip_cluster'),
-    ('section', 'f5_bigip_cluster_v11'),
     ('section', 'f5_bigip_vcmpfailover'),
     ('section', 'f5_bigip_vcmpguests'),
     ('section', 'if'),

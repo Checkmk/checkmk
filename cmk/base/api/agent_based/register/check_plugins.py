@@ -6,13 +6,15 @@
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Any, Callable, Dict, Generator, get_args, List, Optional, Union
+from typing import Any, Callable, Dict, Generator, get_args, List, Optional
 
 from cmk.utils.check_utils import ensure_management_name, MANAGEMENT_NAME_PREFIX
 from cmk.utils.type_defs import CheckPluginName, RuleSetName
 
 from cmk.base.api.agent_based.type_defs import (
+    CheckFunction,
     CheckPlugin,
+    DiscoveryFunction,
     DiscoveryRuleSetType,
 )
 from cmk.base.api.agent_based.checking_classes import (
@@ -59,7 +61,7 @@ def _filter_discovery(
     generator: Callable[..., Generator[Any, None, None]],
     requires_item: bool,
     validate_item: bool,
-) -> Callable[..., Generator[Service, None, None]]:
+) -> DiscoveryFunction:
     """Only let Services through
 
     This allows for better typing in base code.
@@ -76,9 +78,7 @@ def _filter_discovery(
     return filtered_generator
 
 
-def _filter_check(
-    generator: Callable[..., Generator[Any, None, None]],
-) -> Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]:
+def _filter_check(generator: Callable[..., Generator[Any, None, None]],) -> CheckFunction:
     """Only let Result, Metric and IgnoreResults through
 
     This allows for better typing in base code.

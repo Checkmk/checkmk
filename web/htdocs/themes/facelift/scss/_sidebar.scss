@@ -73,20 +73,10 @@ body.side {
 
     a {
       flex: 1 0 auto;
-      margin-top: $spacing;
-      margin-bottom: $spacing;
       font-size: $font-size-small;
       line-height: 1.7;
       text-align: center;
       text-decoration: none;
-
-      &:first-of-type {
-        margin-left: $spacing;
-      }
-
-      &:last-of-type {
-        margin-right: $spacing;
-      }
 
       &:hover img {
         opacity: .5;
@@ -99,7 +89,9 @@ body.side {
   }
 
   #side_content {
-    height: 100%;
+    /* NOTE: Subtract the height of div.shortcuts so that SimpleBar calculates */
+    /*       the height of the scrollable content correctly. */
+    height: calc(100% - 57px);
     overflow: auto;
     color: rgb(0, 0, 0);
 

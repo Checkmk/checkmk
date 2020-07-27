@@ -124,6 +124,7 @@ PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
 PYTHON3_MODULES_LIST += dnspython-1.16.0.zip  # needed by python-active-directory
 PYTHON3_MODULES_LIST += python-active-directory-1.0.5.tar.gz  # direct dependency
 PYTHON3_MODULES_LIST += docstring_parser-0.7.2.tar.gz  # direct dependency
+PYTHON3_MODULES_LIST += yapf-0.30.0.tar.gz  # formatter for REST-API documentation code examples
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target
@@ -219,7 +220,6 @@ python3-modules-dump-Pipfile:
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
 	@echo 'responses = "*" # used for unit tests'
-	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
 	@echo 'polib = "*"  # used by locale/add-authors for working with .po files'
 	@echo 'webtest = "*"  # used by WSGI based tests'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'

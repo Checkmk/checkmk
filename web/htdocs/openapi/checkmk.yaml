@@ -1001,9 +1001,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/objects/host/example.com/actions/acknowledge/invoke\"\
-          ,\n    json={\n        \"comment\": \"This was expected.\",\n        \"\
-          notify\": false,\n        \"persistent\": false,\n        \"sticky\": false\n\
-          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'sticky': False,\n        'persistent': False,\n\
+          \        'notify': False,\n        'comment': 'This was expected.'\n   \
+          \ },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -1012,9 +1012,9 @@ paths:
           \    f\"{API_URL}/objects/host/example.com/actions/acknowledge/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"comment\": \"This was expected.\"\
-          ,\n        \"notify\": false,\n        \"persistent\": false,\n        \"\
-          sticky\": false\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          \    },\n    data=json.dumps({\n        'sticky': False,\n        'persistent':\
+          \ False,\n        'notify': False,\n        'comment': 'This was expected.'\n\
+          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -1064,10 +1064,10 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/host/actions/bulk-acknowledge/invoke\"\
-          ,\n    json={\n        \"comment\": \"This was expected.\",\n        \"\
-          entries\": [\n            \"example.com\",\n            \"sample.com\"\n\
-          \        ],\n        \"notify\": false,\n        \"persistent\": false,\n\
-          \        \"stick\": false\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'stick': False,\n        'persistent': False,\n \
+          \       'notify': False,\n        'comment': 'This was expected.',\n   \
+          \     'entries': ['example.com', 'sample.com']\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -1076,11 +1076,10 @@ paths:
           \    f\"{API_URL}/domain-types/host/actions/bulk-acknowledge/invoke\",\n\
           \    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"comment\": \"This was expected.\"\
-          ,\n        \"entries\": [\n            \"example.com\",\n            \"\
-          sample.com\"\n        ],\n        \"notify\": false,\n        \"persistent\"\
-          : false,\n        \"stick\": false\n    }).encode('utf-8'),\n)\nresponse\
-          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \    },\n    data=json.dumps({\n        'stick': False,\n        'persistent':\
+          \ False,\n        'notify': False,\n        'comment': 'This was expected.',\n\
+          \        'entries': ['example.com', 'sample.com']\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -1133,9 +1132,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/service/Memory/actions/acknowledge/invoke\"\
-          ,\n    json={\n        \"comment\": \"This was expected.\",\n        \"\
-          notify\": false,\n        \"persistent\": false,\n        \"sticky\": false\n\
-          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'sticky': False,\n        'persistent': False,\n\
+          \        'notify': False,\n        'comment': 'This was expected.'\n   \
+          \ },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -1144,9 +1143,9 @@ paths:
           \    f\"{API_URL}/domain-types/service/Memory/actions/acknowledge/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"comment\": \"This was expected.\"\
-          ,\n        \"notify\": false,\n        \"persistent\": false,\n        \"\
-          sticky\": false\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          \    },\n    data=json.dumps({\n        'sticky': False,\n        'persistent':\
+          \ False,\n        'notify': False,\n        'comment': 'This was expected.'\n\
+          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -1199,9 +1198,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/objects/host/example.com/objects/service/Memory/actions/acknowledge/invoke\"\
-          ,\n    json={\n        \"comment\": \"This was expected.\",\n        \"\
-          notify\": false,\n        \"persistent\": false,\n        \"sticky\": false\n\
-          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'sticky': False,\n        'persistent': False,\n\
+          \        'notify': False,\n        'comment': 'This was expected.'\n   \
+          \ },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -1210,9 +1209,9 @@ paths:
           \    f\"{API_URL}/objects/host/example.com/objects/service/Memory/actions/acknowledge/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"comment\": \"This was expected.\"\
-          ,\n        \"notify\": false,\n        \"persistent\": false,\n        \"\
-          sticky\": false\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          \    },\n    data=json.dumps({\n        'sticky': False,\n        'persistent':\
+          \ False,\n        'notify': False,\n        'comment': 'This was expected.'\n\
+          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -1557,8 +1556,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/contact_group_config/collections/all\"\
-          ,\n    json={\n        \"alias\": \"Not on Sundays.\",\n        \"name\"\
-          : \"OnCall\"\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={'name': 'OnCall', 'alias': 'Not on Sundays.'},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -1567,9 +1566,8 @@ paths:
           \    f\"{API_URL}/domain-types/contact_group_config/collections/all\",\n\
           \    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"alias\": \"Not on Sundays.\",\n\
-          \        \"name\": \"OnCall\"\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \    },\n    data=json.dumps({'name': 'OnCall', 'alias': 'Not on Sundays.'}).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -1771,9 +1769,8 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/contact_group_config/pathname\"\
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
-          \ The ETag of the object to be modified.\n    },\n    json={\n        \"\
-          alias\": \"Not on Sundays.\",\n        \"name\": \"OnCall\"\n    },\n)\n\
-          resp.raise_for_status()\ndata = resp.json()"
+          \ The ETag of the object to be modified.\n    },\n    json={'name': 'OnCall',\
+          \ 'alias': 'Not on Sundays.'},\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -1782,10 +1779,9 @@ paths:
           \    f\"{API_URL}/objects/contact_group_config/pathname\",\n    method=\"\
           PUT\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
           ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
-          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({\n\
-          \        \"alias\": \"Not on Sundays.\",\n        \"name\": \"OnCall\"\n\
-          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({'name':\
+          \ 'OnCall', 'alias': 'Not on Sundays.'}).encode('utf-8'),\n)\nresponse =\
+          \ urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -1834,9 +1830,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/domain-types/contact_group_config/actions/bulk-delete/invoke\"\
-          ,\n    json={\n        \"entries\": [\n            \"windows\",\n      \
-          \      \"panels\"\n        ]\n    },\n)\nresp.raise_for_status()\ndata =\
-          \ resp.json()"
+          ,\n    json={'entries': ['windows', 'panels']},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -1845,8 +1840,7 @@ paths:
           \    f\"{API_URL}/domain-types/contact_group_config/actions/bulk-delete/invoke\"\
           ,\n    method=\"DELETE\",\n    headers={\n        \"Authorization\": f\"\
           Bearer {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\"\
-          ,\n    },\n    data=json.dumps({\n        \"entries\": [\n            \"\
-          windows\",\n            \"panels\"\n        ]\n    }).encode('utf-8'),\n\
+          ,\n    },\n    data=json.dumps({'entries': ['windows', 'panels']}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -1973,11 +1967,11 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/downtime/collections/all\"\
-          ,\n    json={\n        \"comment\": \"Security updates\",\n        \"delayed_duration\"\
-          : 3600,\n        \"end_time\": \"2017-07-21T17:32:28Z\",\n        \"host_name\"\
-          : \"example.com\",\n        \"recurring_option\": \"hour\",\n        \"\
-          service_description\": \"CPU utilization\",\n        \"start_time\": \"\
-          2017-07-21T17:32:28Z\"\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'host_name': 'example.com',\n        'service_description':\
+          \ 'CPU utilization',\n        'end_time': '2017-07-21T17:32:28Z',\n    \
+          \    'start_time': '2017-07-21T17:32:28Z',\n        'recurring_option':\
+          \ 'hour',\n        'delayed_duration': 3600,\n        'comment': 'Security\
+          \ updates'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -1986,12 +1980,12 @@ paths:
           \    f\"{API_URL}/domain-types/downtime/collections/all\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({\n        \"comment\": \"Security updates\",\n      \
-          \  \"delayed_duration\": 3600,\n        \"end_time\": \"2017-07-21T17:32:28Z\"\
-          ,\n        \"host_name\": \"example.com\",\n        \"recurring_option\"\
-          : \"hour\",\n        \"service_description\": \"CPU utilization\",\n   \
-          \     \"start_time\": \"2017-07-21T17:32:28Z\"\n    }).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \ data=json.dumps({\n        'host_name': 'example.com',\n        'service_description':\
+          \ 'CPU utilization',\n        'end_time': '2017-07-21T17:32:28Z',\n    \
+          \    'start_time': '2017-07-21T17:32:28Z',\n        'recurring_option':\
+          \ 'hour',\n        'delayed_duration': 3600,\n        'comment': 'Security\
+          \ updates'\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -2104,9 +2098,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/domain-types/downtime/actions/bulk-delete/invoke\"\
-          ,\n    json={\n        \"entries\": [\n            1120,\n            1121\n\
-          \        ],\n        \"host_name\": \"example.com\"\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          ,\n    json={\n        'host_name': 'example.com',\n        'entries': [1120,\
+          \ 1121]\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -2115,9 +2108,8 @@ paths:
           \    f\"{API_URL}/domain-types/downtime/actions/bulk-delete/invoke\",\n\
           \    method=\"DELETE\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"entries\": [\n            1120,\n\
-          \            1121\n        ],\n        \"host_name\": \"example.com\"\n\
-          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          \    },\n    data=json.dumps({\n        'host_name': 'example.com',\n  \
+          \      'entries': [1120, 1121]\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -2233,10 +2225,10 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/folder_config/collections/all\"\
-          ,\n    json={\n        \"attributes\": {\n            \"foo\": \"bar\"\n\
-          \        },\n        \"name\": \"production\",\n        \"parent\": \"root\"\
-          ,\n        \"title\": \"Production Hosts\"\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          ,\n    json={\n        'name': 'production',\n        'title': 'Production\
+          \ Hosts',\n        'parent': 'root',\n        'attributes': {\n        \
+          \    'foo': 'bar'\n        }\n    },\n)\nresp.raise_for_status()\ndata =\
+          \ resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -2245,10 +2237,10 @@ paths:
           \    f\"{API_URL}/domain-types/folder_config/collections/all\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({\n        \"attributes\": {\n            \"foo\": \"\
-          bar\"\n        },\n        \"name\": \"production\",\n        \"parent\"\
-          : \"root\",\n        \"title\": \"Production Hosts\"\n    }).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \ data=json.dumps({\n        'name': 'production',\n        'title': 'Production\
+          \ Hosts',\n        'parent': 'root',\n        'attributes': {\n        \
+          \    'foo': 'bar'\n        }\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -2454,10 +2446,10 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
-          \ The ETag of the object to be modified.\n    },\n    json={\n        \"\
-          attributes\": [\n            {\n                \"key\": \"foo\",\n    \
-          \            \"value\": \"bar\"\n            }\n        ],\n        \"title\"\
-          : \"Virtual Servers.\"\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          \ The ETag of the object to be modified.\n    },\n    json={\n        'title':\
+          \ 'Virtual Servers.',\n        'attributes': [{\n            'key': 'foo',\n\
+          \            'value': 'bar'\n        }]\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -2467,11 +2459,10 @@ paths:
           ,\n    method=\"PUT\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
           \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
-          \ object to be modified.\n    },\n    data=json.dumps({\n        \"attributes\"\
-          : [\n            {\n                \"key\": \"foo\",\n                \"\
-          value\": \"bar\"\n            }\n        ],\n        \"title\": \"Virtual\
-          \ Servers.\"\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \ object to be modified.\n    },\n    data=json.dumps({\n        'title':\
+          \ 'Virtual Servers.',\n        'attributes': [{\n            'key': 'foo',\n\
+          \            'value': 'bar'\n        }]\n    }).encode('utf-8'),\n)\nresponse\
+          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -2522,8 +2513,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/domain-types/folder_config/actions/bulk-delete/invoke\"\
-          ,\n    json={\n        \"entries\": [\n            \"production\",\n   \
-          \         \"secondproduction\"\n        ]\n    },\n)\nresp.raise_for_status()\n\
+          ,\n    json={'entries': ['production', 'secondproduction']},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -2533,8 +2523,7 @@ paths:
           \    f\"{API_URL}/domain-types/folder_config/actions/bulk-delete/invoke\"\
           ,\n    method=\"DELETE\",\n    headers={\n        \"Authorization\": f\"\
           Bearer {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\"\
-          ,\n    },\n    data=json.dumps({\n        \"entries\": [\n            \"\
-          production\",\n            \"secondproduction\"\n        ]\n    }).encode('utf-8'),\n\
+          ,\n    },\n    data=json.dumps({'entries': ['production', 'secondproduction']}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -2836,10 +2825,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_config/collections/all\"\
-          ,\n    json={\n        \"attributes\": {},\n        \"folder\": \"root\"\
-          ,\n        \"host_name\": \"example.com\",\n        \"nodes\": [\n     \
-          \       \"host1\",\n            \"host2\",\n            \"host3\"\n    \
-          \    ]\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'host_name': 'example.com',\n        'folder': 'root',\n\
+          \        'attributes': {},\n        'nodes': ['host1', 'host2', 'host3']\n\
+          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -2848,10 +2836,9 @@ paths:
           \    f\"{API_URL}/domain-types/host_config/collections/all\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({\n        \"attributes\": {},\n        \"folder\": \"\
-          root\",\n        \"host_name\": \"example.com\",\n        \"nodes\": [\n\
-          \            \"host1\",\n            \"host2\",\n            \"host3\"\n\
-          \        ]\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          \ data=json.dumps({\n        'host_name': 'example.com',\n        'folder':\
+          \ 'root',\n        'attributes': {},\n        'nodes': ['host1', 'host2',\
+          \ 'host3']\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -3057,9 +3044,8 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/host_config/example.com\"\
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
-          \ The ETag of the object to be modified.\n    },\n    json={\n        \"\
-          attributes\": {},\n        \"nodes\": [\n            \"host1\",\n      \
-          \      \"host2\",\n            \"host3\"\n        ]\n    },\n)\nresp.raise_for_status()\n\
+          \ The ETag of the object to be modified.\n    },\n    json={\n        'attributes':\
+          \ {},\n        'nodes': ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -3070,9 +3056,9 @@ paths:
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
           ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
           ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({\n\
-          \        \"attributes\": {},\n        \"nodes\": [\n            \"host1\"\
-          ,\n            \"host2\",\n            \"host3\"\n        ]\n    }).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \        'attributes': {},\n        'nodes': ['host1', 'host2', 'host3']\n\
+          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3122,9 +3108,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/domain-types/host_config/actions/bulk-delete/invoke\"\
-          ,\n    json={\n        \"entries\": [\n            \"example\",\n      \
-          \      \"sample\"\n        ]\n    },\n)\nresp.raise_for_status()\ndata =\
-          \ resp.json()"
+          ,\n    json={'entries': ['example', 'sample']},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3133,8 +3118,7 @@ paths:
           \    f\"{API_URL}/domain-types/host_config/actions/bulk-delete/invoke\"\
           ,\n    method=\"DELETE\",\n    headers={\n        \"Authorization\": f\"\
           Bearer {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\"\
-          ,\n    },\n    data=json.dumps({\n        \"entries\": [\n            \"\
-          example\",\n            \"sample\"\n        ]\n    }).encode('utf-8'),\n\
+          ,\n    },\n    data=json.dumps({'entries': ['example', 'sample']}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -3249,8 +3233,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_group_config/collections/all\"\
-          ,\n    json={\n        \"alias\": \"Windows Servers\",\n        \"name\"\
-          : \"windows\"\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={'name': 'windows', 'alias': 'Windows Servers'},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3259,9 +3243,8 @@ paths:
           \    f\"{API_URL}/domain-types/host_group_config/collections/all\",\n  \
           \  method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"alias\": \"Windows Servers\",\n\
-          \        \"name\": \"windows\"\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \    },\n    data=json.dumps({'name': 'windows', 'alias': 'Windows Servers'}).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3463,9 +3446,8 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/host_group_config/pathname\"\
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
-          \ The ETag of the object to be modified.\n    },\n    json={\n        \"\
-          alias\": \"Windows Servers\",\n        \"name\": \"windows\"\n    },\n)\n\
-          resp.raise_for_status()\ndata = resp.json()"
+          \ The ETag of the object to be modified.\n    },\n    json={'name': 'windows',\
+          \ 'alias': 'Windows Servers'},\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3474,10 +3456,9 @@ paths:
           \    f\"{API_URL}/objects/host_group_config/pathname\",\n    method=\"PUT\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
           ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
-          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({\n\
-          \        \"alias\": \"Windows Servers\",\n        \"name\": \"windows\"\n\
-          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({'name':\
+          \ 'windows', 'alias': 'Windows Servers'}).encode('utf-8'),\n)\nresponse\
+          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3526,9 +3507,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/domain-types/host_group_config/actions/bulk-delete/invoke\"\
-          ,\n    json={\n        \"entries\": [\n            \"windows\",\n      \
-          \      \"panels\"\n        ]\n    },\n)\nresp.raise_for_status()\ndata =\
-          \ resp.json()"
+          ,\n    json={'entries': ['windows', 'panels']},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3537,8 +3517,7 @@ paths:
           \    f\"{API_URL}/domain-types/host_group_config/actions/bulk-delete/invoke\"\
           ,\n    method=\"DELETE\",\n    headers={\n        \"Authorization\": f\"\
           Bearer {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\"\
-          ,\n    },\n    data=json.dumps({\n        \"entries\": [\n            \"\
-          windows\",\n            \"panels\"\n        ]\n    }).encode('utf-8'),\n\
+          ,\n    },\n    data=json.dumps({'entries': ['windows', 'panels']}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -4075,8 +4054,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/service_group_config/collections/all\"\
-          ,\n    json={\n        \"alias\": \"Environment Sensors\",\n        \"name\"\
-          : \"environment\"\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'name': 'environment',\n        'alias': 'Environment\
+          \ Sensors'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -4085,9 +4064,9 @@ paths:
           \    f\"{API_URL}/domain-types/service_group_config/collections/all\",\n\
           \    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"alias\": \"Environment Sensors\"\
-          ,\n        \"name\": \"environment\"\n    }).encode('utf-8'),\n)\nresponse\
-          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \    },\n    data=json.dumps({\n        'name': 'environment',\n       \
+          \ 'alias': 'Environment Sensors'\n    }).encode('utf-8'),\n)\nresponse =\
+          \ urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -4289,9 +4268,9 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/service_group_config/pathname\"\
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
-          \ The ETag of the object to be modified.\n    },\n    json={\n        \"\
-          alias\": \"Environment Sensors\",\n        \"name\": \"environment\"\n \
-          \   },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          \ The ETag of the object to be modified.\n    },\n    json={\n        'name':\
+          \ 'environment',\n        'alias': 'Environment Sensors'\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -4301,8 +4280,8 @@ paths:
           PUT\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
           ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
           ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({\n\
-          \        \"alias\": \"Environment Sensors\",\n        \"name\": \"environment\"\
-          \n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          \        'name': 'environment',\n        'alias': 'Environment Sensors'\n\
+          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -4352,9 +4331,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/domain-types/service_group_config/actions/bulk-delete/invoke\"\
-          ,\n    json={\n        \"entries\": [\n            \"windows\",\n      \
-          \      \"panels\"\n        ]\n    },\n)\nresp.raise_for_status()\ndata =\
-          \ resp.json()"
+          ,\n    json={'entries': ['windows', 'panels']},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -4363,8 +4341,7 @@ paths:
           \    f\"{API_URL}/domain-types/service_group_config/actions/bulk-delete/invoke\"\
           ,\n    method=\"DELETE\",\n    headers={\n        \"Authorization\": f\"\
           Bearer {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\"\
-          ,\n    },\n    data=json.dumps({\n        \"entries\": [\n            \"\
-          windows\",\n            \"panels\"\n        ]\n    }).encode('utf-8'),\n\
+          ,\n    },\n    data=json.dumps({'entries': ['windows', 'panels']}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -4469,8 +4446,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
-          ,\n    json={\n        \"key_id\": 42,\n        \"passphrase\": \"sw0rdfish\"\
-          \n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -4478,9 +4455,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n\
-          \        \"key_id\": 42,\n        \"passphrase\": \"sw0rdfish\"\n    }).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
+          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -4638,8 +4615,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
-          ,\n    json={\n        \"key_id\": 42,\n        \"passphrase\": \"sw0rdfish\"\
-          \n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -4648,9 +4625,8 @@ paths:
           \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({\n        \"key_id\": 42,\n        \"passphrase\": \"\
-          sw0rdfish\"\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\

@@ -15,6 +15,7 @@ import threading
 from typing import Any, Dict, List, NamedTuple, Sequence
 
 import jinja2
+import yapf.yapflib.yapf_api  # type: ignore[import]
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
 
@@ -99,7 +100,7 @@ request = urllib.request.Request(
     data=json.dumps({{
             request_schema |
             to_dict |
-            to_json(indent=4, sort_keys=True) |
+            to_python |
             indent(skip_lines=1, spaces=4) }}).encode('utf-8'),
     {%- endif %}
 )
@@ -198,7 +199,7 @@ resp = session.{{ method }}(
     json={{
             request_schema |
             to_dict |
-            to_json(indent=4, sort_keys=True) |
+            to_python |
             indent(skip_lines=1, spaces=4) }},
     {%- endif %}
 )
@@ -381,6 +382,17 @@ def _filter_params(
     return query_parameters
 
 
+def yapf_format(obj):
+    style = {
+        'COLUMN_LIMIT': 50,
+        'ALLOW_SPLIT_BEFORE_DICT_VALUE': False,
+        'COALESCE_BRACKETS': True,
+        'DEDENT_CLOSING_BRACKETS': True,
+    }
+    text, _ = yapf.yapflib.yapf_api.FormatCode(str(obj), style_config=style)
+    return text
+
+
 def _jinja_environment() -> jinja2.Environment:
     """Create a map with code templates, ready to render.
 
@@ -421,6 +433,7 @@ def _jinja_environment() -> jinja2.Environment:
         to_dict=to_dict,
         to_env=_to_env,
         to_json=json.dumps,
+        to_python=yapf_format,
     )
     # These objects will be available in the templates
     tmpl_env.globals.update(

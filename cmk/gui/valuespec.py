@@ -4605,10 +4605,9 @@ class IconSelector(ValueSpec):
         html.open_ul()
         for category_name, category_alias, icons in available_icons:
             html.open_li(class_="active" if active_category == category_name else None)
-            # TODO: TEST
             html.a(category_alias,
-                   href="javascript:cmk.valuespecs.iconselector_toggle(\'%s\', \'%s\')" %
-                   (varprefix, category_name),
+                   href="javascript:cmk.valuespecs.iconselector_toggle(%s, %s)" %
+                   (json.dumps(varprefix), json.dumps(category_name)),
                    id_="%s_%s_nav" % (varprefix, category_name),
                    class_="%s_nav" % varprefix)
             html.close_li()
@@ -4625,8 +4624,8 @@ class IconSelector(ValueSpec):
                 html.open_a(
                     href=None,
                     class_="icon",
-                    onclick='cmk.valuespecs.iconselector_select(event, \'%s\', \'%s\')' %
-                    (varprefix, icon),
+                    onclick='cmk.valuespecs.iconselector_select(event, %s, %s)' %
+                    (json.dumps(varprefix), json.dumps(icon)),
                     title=icon,
                 )
 

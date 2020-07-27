@@ -519,10 +519,14 @@ class HTMLGenerator(OutputFunnel):
         # Links require href to be first attribute
         href = attrs.pop('href', None)
         if href:
-            yield ' href=\"%s\"' % href
+            attributes = [("href", href)]
+        else:
+            attributes = []
+
+        attributes += attrs.iteritems()
 
         # render all attributes
-        for k, v in attrs.iteritems():
+        for k, v in attributes:
 
             if v is None:
                 continue

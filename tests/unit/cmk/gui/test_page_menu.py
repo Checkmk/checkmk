@@ -67,28 +67,32 @@ def test_simple_page_menu():
         ),
     ])
 
-    assert len(pm.dropdowns) == 1
+    assert len(pm.dropdowns) == 2  # help-Dropdown is added automatically
     assert len(list(pm.shortcuts)) == 0
     assert len(list(pm.suggestions)) == 0
     assert pm.has_suggestions is False
 
-    for dropdown in pm.dropdowns:
-        assert dropdown.name == "hallo"
-        assert dropdown.title == "HALLO"
-        assert len(dropdown.topics) == 1
-        assert dropdown.any_advanced_entries is False
-        assert dropdown.is_empty is False
+    dropdown = pm.dropdowns[0]
+    assert dropdown.name == "hallo"
+    assert dropdown.title == "HALLO"
+    assert len(dropdown.topics) == 1
+    assert dropdown.any_advanced_entries is False
+    assert dropdown.is_empty is False
 
-        for topic in dropdown.topics:
-            assert topic.title == "Title"
-            assert len(topic.entries) == 1
+    for topic in dropdown.topics:
+        assert topic.title == "Title"
+        assert len(topic.entries) == 1
 
-            for entry in topic.entries:
-                assert entry.name == "abc"
-                assert entry.title == "Mach das"
-                assert entry.description == "Ich beschreibe"
-                assert entry.icon_name == "icon"
-                assert isinstance(entry.item, PageMenuLink)
-                assert entry.item.link.url == "https://checkmk.com/"
-                assert entry.item.link.target == "_blank"
-                assert entry.item.link.onclick is None
+        for entry in topic.entries:
+            assert entry.name == "abc"
+            assert entry.title == "Mach das"
+            assert entry.description == "Ich beschreibe"
+            assert entry.icon_name == "icon"
+            assert isinstance(entry.item, PageMenuLink)
+            assert entry.item.link.url == "https://checkmk.com/"
+            assert entry.item.link.target == "_blank"
+            assert entry.item.link.onclick is None
+
+    help_dropdown = pm.dropdowns[1]
+    assert help_dropdown.name == "help"
+    assert help_dropdown.topics[0].entries[0].name == "inline_help"

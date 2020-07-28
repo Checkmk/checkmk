@@ -112,7 +112,7 @@ from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
-from cmk.gui.page_menu import PageMenu, PageMenuRenderer
+from cmk.gui.page_menu import PageMenu, PageMenuRenderer, enable_page_menu_entry
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -1710,27 +1710,8 @@ class html(ABCHTMLGenerator):
 
         self.close_div()  # top_heading
 
-    # TODO: Re-enable this or remove it
-    #def top_heading_right(self) -> None:
-    #    cssclass = "active" if config.user.show_help else "passive"
-
-    #    self.icon_button(None,
-    #                     _("Toggle context help texts"),
-    #                     "help",
-    #                     id_="helpbutton",
-    #                     onclick="cmk.help.toggle()",
-    #                     style="display:none",
-    #                     cssclass=cssclass)
-    #    self.open_a(href="https://checkmk.com", class_="head_logo", target="_blank")
-    #    self.img(src="themes/%s/images/logo_cmk_small.png" % self._theme)
-    #    self.close_a()
-    #    self.close_td()
-    #    self.close_tr()
-    #    self.close_table()
-    #    self.hr(class_="header")
-
-    #    if self.enable_debug:
-    #        self._dump_get_vars()
+        if self.enable_debug:
+            self._dump_get_vars()
 
     def footer(self, show_footer: bool = True, show_body_end: bool = True) -> None:
         if self.output_format == "html":
@@ -1788,7 +1769,7 @@ class html(ABCHTMLGenerator):
 
     def body_end(self) -> None:
         if self.have_help:
-            self.javascript("cmk.help.enable();")
+            enable_page_menu_entry("inline_help")
         if self.final_javascript_code:
             self.javascript(self.final_javascript_code)
         self.javascript("cmk.visibility_detection.initialize();")

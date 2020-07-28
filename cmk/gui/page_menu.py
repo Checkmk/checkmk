@@ -18,7 +18,21 @@ import json
 from dataclasses import dataclass, field
 from typing import List, Iterator, Optional
 
+from cmk.gui.i18n import _
 from cmk.gui.globals import html
+
+
+def enable_page_menu_entry(name):
+    _toggle_page_menu_entry(name, state=True)
+
+
+def disable_page_menu_entry(name):
+    _toggle_page_menu_entry(name, state=False)
+
+
+def _toggle_page_menu_entry(name: str, state: bool) -> None:
+    html.javascript("cmk.page_menu.enable_menu_entry(%s, %s)" %
+                    (json.dumps(name), json.dumps(state)))
 
 
 @dataclass
@@ -101,6 +115,11 @@ class PageMenu:
     """Representing the whole menu of the page"""
     dropdowns: List[PageMenuDropdown] = field(default_factory=list)
 
+    def __post_init__(self):
+        if self.dropdowns:
+            # Add the help dropdown, which shall be shown on all pages
+            self.dropdowns.append(make_help_dropdown())
+
     @property
     def shortcuts(self) -> Iterator[PageMenuEntry]:
         for dropdown in self.dropdowns:
@@ -118,6 +137,37 @@ class PageMenu:
     @property
     def has_suggestions(self) -> bool:
         return any(True for _s in self.suggestions)
+
+
+def make_help_dropdown() -> PageMenuDropdown:
+    return PageMenuDropdown(
+        name="help",
+        title=_("Help"),
+        topics=[
+            PageMenuTopic(
+                title=_("Context sensitive help"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Toggle inline help on this page"),
+                        icon_name="help",
+                        item=make_javascript_link("cmk.help.toggle()"),
+                        name="inline_help",
+                        is_enabled=False,
+                    )
+                ],
+            ),
+            PageMenuTopic(
+                title=_("Articles in the user guide"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Checkmk - The official guide"),
+                        icon_name="manual",
+                        item=make_external_link("https://checkmk.com/cms_index.html"),
+                    ),
+                ],
+            ),
+        ],
+    )
 
 
 class PageMenuRenderer:
@@ -185,7 +235,7 @@ class PageMenuRenderer:
             ("advanced" if entry.is_advanced else "basic"),
         ]
 
-        html.open_div(class_=classes, id_=entry.name)
+        html.open_div(class_=classes, id_="menu_entry_%s" % entry.name)
 
         #if self.disabled_reason:
         #    html.open_div(class_="tooltip")

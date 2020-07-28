@@ -435,10 +435,11 @@ div.snapin {
 }
 
 #add_snapin {
-  margin: 18px 0;
   text-align: center;
 
   a {
+    display: block;
+    padding: $spacing 0;
     text-decoration: none;
 
     img {

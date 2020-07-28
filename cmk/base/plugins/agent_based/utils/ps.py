@@ -7,7 +7,7 @@
 import collections
 import re
 
-from ..agent_based_api.v0 import regex
+from ..agent_based_api.v0 import get_rate, get_value_store, IgnoreResultsError, regex
 
 ps_info = collections.namedtuple(
     "Process_Info", ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile',
@@ -219,3 +219,11 @@ def ps_cleanup_params(params):
         params["cpu_rescale_max"] = None
 
     return params
+
+
+def cpu_rate(counter, now, lifetime):
+    value_store = get_value_store()
+    try:
+        return get_rate(value_store, counter, now, lifetime)
+    except IgnoreResultsError:
+        return 0

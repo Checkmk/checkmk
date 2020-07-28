@@ -15,6 +15,7 @@ from cmk.base.plugins.agent_based.utils.ps import (
     format_process_list,
     parse_ps_time,
     ps_cleanup_params,
+    cpu_rate,
 )
 
 GRAB_USER = False
@@ -254,13 +255,6 @@ def handle_count_check(processes, params):
                         params.get("handle_count", (None, None)),
                         human_readable_func=int,
                         infoname="process handles")
-
-
-def cpu_rate(counter, now, lifetime):
-    try:
-        return get_rate(counter, now, lifetime, onwrap=RAISE)
-    except MKCounterWrapped:
-        return 0
 
 
 class ProcessAggregator(object):

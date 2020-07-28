@@ -15,6 +15,10 @@ from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
 from testlib import MissingCheckInfoError
 from generictests.checkhandler import checkhandler
 
+from cmk.utils.type_defs import CheckPluginName
+
+from cmk.base.api.agent_based import value_store
+
 # TODO CMK-4180
 #from cmk.gui.watolib.rulespecs import rulespec_registry
 
@@ -257,7 +261,8 @@ def run(check_info, check_manager, dataset, write=False):
 
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
-            with MockItemState(mock_is), \
+            with value_store.context(CheckPluginName("test"), "unit-test"), \
+                 MockItemState(mock_is), \
                  MockHostExtraConf(check, mock_hec), \
                  MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
 

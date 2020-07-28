@@ -12,6 +12,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pytest  # type: ignore[import]
 
+from cmk.utils.type_defs import CheckPluginName
+
+from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
@@ -394,13 +397,10 @@ def test_wato_rules(check_manager):
     (["test", "ps"], "sp", "~.*t$", False),
     (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
 ])
-def test_process_matches(check_manager, ps_line, ps_pattern, user_pattern, result):
-    check = check_manager.get_check("ps")
-    process_attributes_match = check.context["process_attributes_match"]
-    process_matches = check.context["process_matches"]
-
-    matches_attr = process_attributes_match(check.context["ps_info"](ps_line[0]), user_pattern, (None, False))
-    matches_proc = process_matches(ps_line[1:], ps_pattern)
+def test_process_matches(ps_line, ps_pattern, user_pattern, result):
+    psi = ps_utils.ps_info(ps_line[0])  # type: ignore[call-arg]
+    matches_attr = ps_utils.process_attributes_match(psi, user_pattern, (None, False))
+    matches_proc = ps_utils.process_matches(ps_line[1:], ps_pattern)
 
     assert (matches_attr and matches_proc) == result
 
@@ -412,14 +412,11 @@ def test_process_matches(check_manager, ps_line, ps_pattern, user_pattern, resul
     (["test", "123_foo"], "~.*\\\\(.*)_foo", None, ['123'], False),
     (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ['123'], True),
 ])
-def test_process_matches_match_groups(check_manager, ps_line, ps_pattern, user_pattern,
+def test_process_matches_match_groups(ps_line, ps_pattern, user_pattern,
                                       match_groups, result):
-    check = check_manager.get_check("ps")
-    process_attributes_match = check.context["process_attributes_match"]
-    process_matches = check.context["process_matches"]
-
-    matches_attr = process_attributes_match(check.context["ps_info"](ps_line[0]), user_pattern, (None, False))
-    matches_proc = process_matches(ps_line[1:], ps_pattern, match_groups)
+    psi = ps_utils.ps_info(ps_line[0])  # type: ignore[call-arg]
+    matches_attr = ps_utils.process_attributes_match(psi, user_pattern, (None, False))
+    matches_proc = ps_utils.process_matches(ps_line[1:], ps_pattern, match_groups)
 
     assert (matches_attr and matches_proc) == result
 
@@ -726,8 +723,9 @@ def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
     with on_time(1540375342, "CET"):
         factory_defaults = {"levels": (1, 1, 99999, 99999)}
         factory_defaults.update(inv_item[1])
-        test_result = CheckResult(check.context["check_ps_common"](
-            inv_item[0], factory_defaults, parsed, total_ram=total_ram))
+        with value_store.context(CheckPluginName("ps"), "unit-test"):
+            test_result = CheckResult(check.context["check_ps_common"](
+                inv_item[0], factory_defaults, parsed, total_ram=total_ram))
         assertCheckResultsEqual(test_result, reference)
 
 
@@ -782,10 +780,11 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
     if data.cpu_rescale_max is not None:
         inv_item[1].update({"cpu_rescale_max": data.cpu_rescale_max})
 
-    # Initialize counters
-    time_info(data.agent_info, 0, 0, data.cpu_cores)
-    # Check_cpu_utilization
-    output = time_info(data.agent_info, 60, data.cputime, data.cpu_cores)
+    with value_store.context(CheckPluginName("ps"), "unit-test"):
+        # Initialize counters
+        time_info(data.agent_info, 0, 0, data.cpu_cores)
+        # Check_cpu_utilization
+        output = time_info(data.agent_info, 60, data.cputime, data.cpu_cores)
 
     reference = CheckResult([
         (0, "Processes: 1", [("count", 1, 100000, 100000, 0)]),
@@ -914,10 +913,11 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
             return CheckResult(check.context["check_ps_common"](
             'firefox', params, parsed, cpu_cores=cpu_cores))
 
-    # CPU utilization is a counter, initialize it
-    run_check_ps_common_with_elapsed_time(0, 0)
-    # CPU utilization is a counter, after 60s time, one process consumes 2 min of CPU
-    output = run_check_ps_common_with_elapsed_time(60, 2)
+    with value_store.context(CheckPluginName("ps"), "unit-test"):
+        # CPU utilization is a counter, initialize it
+        run_check_ps_common_with_elapsed_time(0, 0)
+        # CPU utilization is a counter, after 60s time, one process consumes 2 min of CPU
+        output = run_check_ps_common_with_elapsed_time(60, 2)
 
     cpu_util = 200.0 / cpu_cores
     cpu_util_s = check.context['get_percent_human_readable'](cpu_util)

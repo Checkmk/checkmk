@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.utils.ps import (
+    get_discovery_specs,
     ps_info,
     ps_info_tuple,
     minn,
@@ -26,22 +27,8 @@ factory_settings["ps_default_levels"] = {
 
 
 def ps_wato_configured_inventory_rules(invrules):
-    inventory_specs = []
-    for value in host_extra_conf(host_name(), invrules):
-        default_params = value.get('default_params', value)
-        if "cpu_rescale_max" not in default_params:
-            default_params["cpu_rescale_max"] = None
-
-        inventory_specs.append((
-            value['descr'],
-            value.get('match'),
-            value.get('user'),
-            value.get('cgroup', (None, False)),
-            value.get('label', {}),
-            default_params,
-        ))
-
-    return inventory_specs
+    """encapsulates the 'host_extra_conf' magic, that will not be neede in the new API"""
+    return get_discovery_specs(host_extra_conf(host_name(), invrules))
 
 
 def inventory_ps_common(invrules, parsed):

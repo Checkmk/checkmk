@@ -16,6 +16,25 @@ ps_info = collections.namedtuple(
 ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)  # type: ignore[attr-defined]
 
 
+def get_discovery_specs(params):
+    inventory_specs = []
+    for value in params:
+        default_params = value.get('default_params', value)
+        if "cpu_rescale_max" not in default_params:
+            default_params["cpu_rescale_max"] = None
+
+        inventory_specs.append((
+            value['descr'],
+            value.get('match'),
+            value.get('user'),
+            value.get('cgroup', (None, False)),
+            value.get('label', {}),
+            default_params,
+        ))
+
+    return inventory_specs
+
+
 def minn(a, b):
     if a is None:
         return b

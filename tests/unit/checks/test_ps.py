@@ -12,8 +12,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pytest  # type: ignore[import]
 
-from cmk.base.check_api import MKGeneralException
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
+from cmk.base.plugins.agent_based.utils import ps as ps_utils
+
 from checktestlib import CheckResult, assertCheckResultsEqual
 
 from testlib import on_time  # type: ignore[import]
@@ -433,10 +434,8 @@ def test_process_matches_match_groups(check_manager, ps_line, ps_pattern, user_p
     ("users", "~user", True),
     ("users", "user", False),
 ])
-def test_ps_match_user(check_manager, attribute, pattern, result):
-    check = check_manager.get_check("ps")
-    match_function = check.context["match_attribute"]
-    assert match_function(attribute, pattern) == result
+def test_ps_match_user(attribute, pattern, result):
+    assert ps_utils.match_attribute(attribute, pattern) == result
 
 
 @pytest.mark.parametrize("text, result", [
@@ -629,7 +628,7 @@ def test_replace_service_description(check_manager, service_description, matches
 def test_replace_service_description_exception(check_manager):
     check = check_manager.get_check("ps")
 
-    with pytest.raises(MKGeneralException, match="1 replaceable elements"):
+    with pytest.raises(ValueError, match="1 replaceable elements"):
         check.context["replace_service_description"]("%s", [], "")
 
 

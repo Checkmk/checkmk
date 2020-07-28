@@ -220,7 +220,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         result = self.fetchone(sites)
         if len(result) != 1:
             raise ValueError(f"Expected only one column, got {len(result)} columns.")
-        return result[0]
+        return list(result.values())[0]
 
     def fetch_values(self, sites) -> List[List[Any]]:
         """Return the result coming from LiveStatus.

@@ -6,6 +6,7 @@
 #include "TableStatus.h"
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <ctime>
 #include <filesystem>
@@ -20,17 +21,12 @@
 #include "Query.h"
 #include "Row.h"
 #include "StringLambdaColumn.h"
-#include "TimePointerColumn.h"
+#include "TimeLambdaColumn.h"
 #include "global_counters.h"
 #include "mk_inventory.h"
 #include "nagios.h"
 
-extern time_t program_start;
 extern int nagios_pid;
-#ifndef NAGIOS4
-extern time_t last_command_check;
-#endif
-extern time_t last_log_rotation;
 extern int enable_notifications;
 extern int execute_service_checks;
 extern int accept_passive_service_checks;
@@ -57,11 +53,6 @@ extern std::atomic_int32_t g_livestatus_active_connections;
 #ifndef NAGIOS4
 extern circular_buffer external_command_buffer;
 extern int external_command_buffer_slots;
-#else
-// TODO: check if this data is available in nagios_squeue
-namespace {
-time_t dummy_time = 0;
-}  // namespace
 #endif  // NAGIOS4
 
 TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
@@ -147,23 +138,35 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "check_external_commands",
         "Whether Nagios checks for external commands at its command pipe (0/1)",
         check_external_commands));
-    addColumn(std::make_unique<TimePointerColumn>(
+    addColumn(std::make_unique<TimeLambdaColumn<TableStatus>>(
         "program_start", "The time of the last program start as UNIX timestamp",
-        &program_start, offsets));
+        offsets, [](const TableStatus & /*r*/) {
+            extern time_t program_start;
+            return std::chrono::system_clock::from_time_t(program_start);
+        }));
 #ifndef NAGIOS4
-    addColumn(std::make_unique<TimePointerColumn>(
+    addColumn(std::make_unique<TimeLambdaColumn<TableStatus>>(
         "last_command_check",
-        "The time of the last check for a command as UNIX timestamp",
-        &last_command_check, offsets));
+        "The time of the last check for a command as UNIX timestamp", offsets,
+        [](const TableStatus & /*r*/) {
+            extern time_t last_command_check;
+            return std::chrono::system_clock::from_time_t(last_command_check);
+        }));
 #else
-    addColumn(std::make_unique<TimePointerColumn>(
+    addColumn(std::make_unique<TimeLambdaColumn<TableStatus>>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp (placeholder)",
-        &dummy_time, offsets));
+        offsets, [](const TableStatus & /*r*/) {
+            // TODO: check if this data is available in nagios_squeue
+            return std::chrono::system_clock::from_time_t(0);
+        }));
 #endif  // NAGIOS4
-    addColumn(std::make_unique<TimePointerColumn>(
-        "last_log_rotation", "Time time of the last log file rotation",
-        &last_log_rotation, offsets));
+    addColumn(std::make_unique<TimeLambdaColumn<TableStatus>>(
+        "last_log_rotation", "Time time of the last log file rotation", offsets,
+        [](const TableStatus & /*r*/) {
+            extern time_t last_log_rotation;
+            return std::chrono::system_clock::from_time_t(last_log_rotation);
+        }));
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>::Reference>(
         "interval_length", "The default interval length from nagios.cfg",
         interval_length));

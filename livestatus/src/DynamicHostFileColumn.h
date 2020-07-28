@@ -15,7 +15,6 @@
 
 #include "Column.h"
 #include "DynamicColumn.h"
-class Row;
 
 template <class T>
 class DynamicHostFileColumn : public DynamicColumn {

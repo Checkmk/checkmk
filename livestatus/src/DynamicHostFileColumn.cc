@@ -10,8 +10,7 @@
 #include <utility>
 
 #include "FileSystemHelper.h"
-#include "HostFileColumn.h"
-class Row;
+#include "HostFileColumn.h"  // IWYU pragma: keep
 
 template <class T>
 DynamicHostFileColumn<T>::DynamicHostFileColumn(

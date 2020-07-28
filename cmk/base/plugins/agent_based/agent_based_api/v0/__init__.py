@@ -16,6 +16,7 @@ Version 0
 """
 # For an explanation of what is what see comments in __all__definition at the end
 
+from cmk.utils.regex import regex
 from cmk.snmplib.type_defs import OIDBytes, OIDCached, OIDEnd
 
 from cmk.base.api.agent_based.checking_classes import (
@@ -82,6 +83,7 @@ __all__ = [
     "OIDCached",
     "OIDEnd",
     "parse_to_string_table",
+    "regex",
     "register",
     "render",
     "Result",

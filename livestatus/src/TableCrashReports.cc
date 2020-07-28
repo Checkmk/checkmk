@@ -27,7 +27,7 @@ TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<StringLambdaColumn<CrashReport>>(
         "component", "The component that crashed (gui, agent, check, etc.)",
         offsets, [](const CrashReport &r) { return r._component; }));
-    addDynamicColumn(std::make_unique<DynamicHostFileColumn>(
+    addDynamicColumn(std::make_unique<DynamicHostFileColumn<CrashReport>>(
         "file", "Files related to the crash report (crash.info, etc.)", offsets,
         [mc] { return mc->crashReportPath(); },
         [](const Column & /*unused*/, const Row & /*unused*/,

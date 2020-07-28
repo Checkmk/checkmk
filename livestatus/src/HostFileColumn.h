@@ -19,6 +19,7 @@
 #include "Column.h"
 class Row;
 
+template <class T>
 class HostFileColumn : public BlobColumn {
 public:
     HostFileColumn(const std::string& name, const std::string& description,

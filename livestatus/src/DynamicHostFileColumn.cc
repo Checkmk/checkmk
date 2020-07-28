@@ -13,7 +13,8 @@
 #include "HostFileColumn.h"
 class Row;
 
-DynamicHostFileColumn::DynamicHostFileColumn(
+template <class T>
+DynamicHostFileColumn<T>::DynamicHostFileColumn(
     const std::string &name, const std::string &description,
     Column::Offsets offsets, std::function<std::filesystem::path()> basepath,
     std::function<std::optional<std::filesystem::path>(
@@ -23,12 +24,14 @@ DynamicHostFileColumn::DynamicHostFileColumn(
     , _basepath{std::move(basepath)}
     , _filepath{std::move(filepath)} {}
 
-[[nodiscard]] std::filesystem::path DynamicHostFileColumn::basepath() const {
+template <class T>
+[[nodiscard]] std::filesystem::path DynamicHostFileColumn<T>::basepath() const {
     // This delays the call to mc to after it is constructed.
     return _basepath();
 }
 
-std::unique_ptr<Column> DynamicHostFileColumn::createColumn(
+template <class T>
+std::unique_ptr<Column> DynamicHostFileColumn<T>::createColumn(
     const std::string &name, const std::string &arguments) {
     // Arguments contains a path relative to basepath and possibly escaped.
     if (arguments.empty()) {
@@ -44,7 +47,7 @@ std::unique_ptr<Column> DynamicHostFileColumn::createColumn(
                                  "': '" + f.string() + "' not in '" +
                                  basepath().string() + "'");
     }
-    return std::make_unique<HostFileColumn>(
+    return std::make_unique<HostFileColumn<T>>(
         name, _description, _offsets, _basepath,
         [this, f](const Column &col, const Row &row) {
             return _filepath(col, row, f);

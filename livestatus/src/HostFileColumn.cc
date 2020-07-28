@@ -12,7 +12,8 @@
 #include "Logger.h"
 #include "Row.h"
 
-HostFileColumn::HostFileColumn(
+template <class T>
+HostFileColumn<T>::HostFileColumn(
     const std::string& name, const std::string& description,
     const Column::Offsets& offsets,
     std::function<std::filesystem::path()> basepath,
@@ -23,7 +24,8 @@ HostFileColumn::HostFileColumn(
     , _basepath(std::move(basepath))
     , _filepath(std::move(filepath)) {}
 
-std::unique_ptr<std::vector<char>> HostFileColumn::getValue(Row row) const {
+template <class T>
+std::unique_ptr<std::vector<char>> HostFileColumn<T>::getValue(Row row) const {
     if (!std::filesystem::exists(_basepath())) {
         // The basepath is not configured.
         return nullptr;

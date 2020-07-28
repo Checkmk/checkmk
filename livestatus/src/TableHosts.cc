@@ -685,7 +685,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
         HostSpecialIntColumn::Type::mk_inventory_last));
 
-    table->addColumn(std::make_unique<HostFileColumn>(
+    table->addColumn(std::make_unique<HostFileColumn<host>>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW-Inventory",
         Column::Offsets{indirect_offset, extra_offset, -1, 0},
@@ -697,7 +697,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return {};
         }));
-    table->addColumn(std::make_unique<HostFileColumn>(
+    table->addColumn(std::make_unique<HostFileColumn<host>>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW-Inventory",
         Column::Offsets{indirect_offset, extra_offset, -1, 0},
@@ -709,7 +709,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return {};
         }));
-    table->addColumn(std::make_unique<HostFileColumn>(
+    table->addColumn(std::make_unique<HostFileColumn<host>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
         Column::Offsets{indirect_offset, extra_offset, -1, 0},
@@ -726,7 +726,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "This list of logfiles with problems fetched via mk_logwatch",
         Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core()));
 
-    table->addDynamicColumn(std::make_unique<DynamicHostFileColumn>(
+    table->addDynamicColumn(std::make_unique<DynamicHostFileColumn<host>>(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch",
         Column::Offsets{indirect_offset, extra_offset, -1, 0},

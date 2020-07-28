@@ -11,6 +11,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.page_menu import PageMenu
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.type_defs import MegaMenu
 from cmk.gui.plugins.main_menu.mega_menus import MegaMenuSetup
@@ -91,6 +92,10 @@ class WatoMode(metaclass=abc.ABCMeta):
         to link to the correct page.
         """
         return html.makeuri_contextless([("mode", self.name())], filename="wato.py")
+
+    def page_menu(self) -> PageMenu:
+        """Returns the data structure representing the page menu for this mode"""
+        return PageMenu()
 
     def buttons(self) -> None:
         global_buttons()

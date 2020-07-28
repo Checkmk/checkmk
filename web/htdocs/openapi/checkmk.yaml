@@ -1100,7 +1100,72 @@ paths:
           \ application/json\" \\\n    comment='This was expected.' \\\n    entries='[\"\
           example.com\", \"sample.com\"]' \\\n    notify='False' \\\n    persistent='False'\
           \ \\\n    stick='False' \\\n    --json"
-  /objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge:
+  /domain-types/service/{service_description}/actions/acknowledge/invoke:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_for_service
+      parameters:
+      - $ref: '#/components/parameters/service_description'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeServiceProblem'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Acknowledge problems for a specific service globally.
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.acknowledgement
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/service/Memory/actions/acknowledge/invoke\"\
+          ,\n    json={\n        \"comment\": \"This was expected.\",\n        \"\
+          notify\": false,\n        \"persistent\": false,\n        \"sticky\": false\n\
+          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/service/Memory/actions/acknowledge/invoke\"\
+          ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        \"comment\": \"This was expected.\"\
+          ,\n        \"notify\": false,\n        \"persistent\": false,\n        \"\
+          sticky\": false\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
+          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
+          \nPASSWORD = \"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
+          \          \"notify\": false,\n          \"persistent\": false,\n      \
+          \    \"sticky\": false\n        }' \\\n    \"$API_URL/domain-types/service/Memory/actions/acknowledge/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
+          \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
+          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/domain-types/service/Memory/actions/acknowledge/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
+          \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
+  /objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge/invoke:
     post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_host_service
@@ -1133,7 +1198,7 @@ paths:
           \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/objects/host/example.com/objects/service/Memory/actions/acknowledge\"\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/objects/host/example.com/objects/service/Memory/actions/acknowledge/invoke\"\
           ,\n    json={\n        \"comment\": \"This was expected.\",\n        \"\
           notify\": false,\n        \"persistent\": false,\n        \"sticky\": false\n\
           \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
@@ -1142,7 +1207,7 @@ paths:
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
           \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/objects/host/example.com/objects/service/Memory/actions/acknowledge\"\
+          \    f\"{API_URL}/objects/host/example.com/objects/service/Memory/actions/acknowledge/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
           \    },\n    data=json.dumps({\n        \"comment\": \"This was expected.\"\
@@ -1157,12 +1222,12 @@ paths:
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
           \          \"notify\": false,\n          \"persistent\": false,\n      \
-          \    \"sticky\": false\n        }' \\\n    \"$API_URL/objects/host/example.com/objects/service/Memory/actions/acknowledge\""
+          \    \"sticky\": false\n        }' \\\n    \"$API_URL/objects/host/example.com/objects/service/Memory/actions/acknowledge/invoke\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
           \ = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME = \"automation\"\
-          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/objects/service/Memory/actions/acknowledge\"\
+          \nPASSWORD = \"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/objects/service/Memory/actions/acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
           \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"

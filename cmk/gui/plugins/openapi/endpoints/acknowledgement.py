@@ -15,7 +15,7 @@ from connexion import problem  # type: ignore[import]
 from cmk.gui import config, sites, http
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import \
     acknowledge_host_problem, acknowledge_service_problem
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, Or
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Services
 from cmk.gui.plugins.openapi.restful_objects import constructors, endpoint_schema, request_schemas
@@ -49,10 +49,10 @@ def set_acknowledgement_on_host(params):
     acknowledge_host_problem(
         sites.live(),
         host_name,
-        sticky=params.get('sticky'),
-        notify=params.get('notify'),
-        persistent=params.get('persistent'),
-        user=str(config.user.id),
+        sticky=bool(params.get('sticky')),
+        notify=bool(params.get('notify')),
+        persistent=bool(params.get('persistent')),
+        user=_user_id(),
         comment=params.get('comment', 'Acknowledged'),
     )
     return http.Response(status=204)
@@ -101,20 +101,60 @@ def bulk_set_acknowledgement_on_hosts(params):
             sticky=params.get('sticky'),
             notify=params.get('notify'),
             persistent=params.get('persistent'),
-            user=str(config.user.id),
+            user=_user_id(),
             comment=params.get('comment', 'Acknowledged'),
         )
     return http.Response(status=204)
 
 
-#
-# Acknowledge all services of a given name:
-#    /objects/service/service_description/actions/acknowledge
-#
+@endpoint_schema("/domain-types/service/{service_description}/actions/acknowledge/invoke",
+                 'cmk/create',
+                 method='post',
+                 parameters=['service_description'],
+                 request_schema=request_schemas.AcknowledgeServiceProblem,
+                 output_empty=True)
+def set_acknowledgement_for_service(params):
+    """Acknowledge problems for a specific service globally."""
+    service_description = unquote(params['service_description'])
+    body = params['body']
+
+    live = sites.live()
+
+    services = Query(
+        [Services.host_name, Services.description],
+        And(
+            Services.description.equals(service_description),
+            Or(
+                Services.state == 1,
+                Services.state == 2,
+            ),
+        ),
+    ).fetch_values(live)
+
+    if not len(services):
+        return problem(
+            status=400,
+            title=f'No services {service_description!r} with problems found.',
+            detail='All services are OK.',
+        )
+
+    for _host_name, _service_description in services:
+        acknowledge_service_problem(
+            live,
+            _host_name,
+            _service_description,
+            sticky=body.get('sticky', False),
+            notify=body.get('notify', False),
+            persistent=body.get('persistent', False),
+            user=_user_id(),
+            comment=body.get('comment', 'Acknowledged'),
+        )
+
+    return http.Response(status=204)
 
 
 @endpoint_schema(
-    "/objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge",
+    "/objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge/invoke",
     'cmk/create',
     method='post',
     parameters=['host_name', 'service_description'],
@@ -149,7 +189,14 @@ def set_acknowledgement_on_host_service(params):
         sticky=body.get('sticky', False),
         notify=body.get('notify', False),
         persistent=body.get('persistent', False),
-        user=str(config.user.id),
+        user=_user_id(),
         comment=body.get('comment', 'Acknowledged'),
     )
     return http.Response(status=204)
+
+
+# mypy can't know this will work.
+def _user_id() -> str:
+    if config.user.id is None:
+        raise RuntimeError("No user set. Check your setup.")
+    return config.user.id

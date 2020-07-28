@@ -59,8 +59,9 @@ class MockLiveStatusConnection:
             >>> with live(expect_status_query=False):
             ...     live.query_non_parallel("GET hosts\\nColumns: name", '')
             ...     live.query_non_parallel("GET services\\nColumns: description", '')
-            [['heute']]
-            [['Memory']]
+            [['heute'], ['example.com']]
+            [['Memory'], ['CPU load'], ['CPU load']]
+
 
         This test will pass as well (useful in real GUI or REST-API calls):
 
@@ -130,12 +131,63 @@ program_start num_hosts num_services'
                 'num_hosts': 1,
                 'num_services': 36,
             }],
-            'hosts': [{
-                'name': 'heute'
+            'downtimes': [{
+                'id': 54,
+                'host_name': 'heute',
+                'service_description': 'CPU load',
+                'is_service': 1,
+                'author': 'cmkadmin',
+                'start_time': 1593770319,
+                'end_time': 1596448719,
+                'recurring': 0,
+                'comment': 'Downtime for service',
             }],
-            'services': [{
-                'description': 'Memory'
-            }]
+            'hosts': [
+                {
+                    'name': 'heute',
+                },
+                {
+                    'name': 'example.com',
+                },
+            ],
+            'services': [
+                {
+                    'host_name': 'example.com',
+                    'description': 'Memory',
+                },
+                {
+                    'host_name': 'example.com',
+                    'description': 'CPU load',
+                },
+                {
+                    'host_name': 'heute',
+                    'description': 'CPU load',
+                },
+            ],
+            'hostgroups': [
+                {
+                    'name': 'heute',
+                    'members': ['heute'],
+                },
+                {
+                    'name': 'example',
+                    'members': ['example.com', 'heute'],
+                },
+            ],
+            'servicegroups': [
+                {
+                    'name': 'heute',
+                    'members': [['heute', 'Memory']],
+                },
+                {
+                    'name': 'example',
+                    'members': [
+                        ['example.com', 'Memory'],
+                        ['example.com', 'CPU load'],
+                        ['heute', 'CPU load'],
+                    ],
+                },
+            ],
         }
 
     def _expect_post_connect_query(self) -> None:
@@ -298,6 +350,9 @@ program_start num_hosts num_services'
     def set_prepend_site(self, prepend_site: bool) -> None:
         self._prepend_site = prepend_site
 
+    def query(self, query, headers='') -> Response:
+        return self._lookup_next_query(query, headers)
+
     def query_parallel(self, query, headers) -> Response:
         return self._lookup_next_query(query, headers)
 
@@ -359,7 +414,7 @@ def _compare(pattern: str, string: str, match_type: MatchType) -> bool:
 
 @contextlib.contextmanager
 def simple_expect(
-    query,
+    query='',
     match_type: MatchType = "ellipsis",
     expect_status_query=False,
 ) -> Generator[MockLiveStatusConnection, None, None]:
@@ -386,7 +441,8 @@ def simple_expect(
 
     """
     live = MockLiveStatusConnection()
-    live.expect_query(query, match_type=match_type)
+    if query:
+        live.expect_query(query, match_type=match_type)
     with live(expect_status_query=expect_status_query):
         yield live
 

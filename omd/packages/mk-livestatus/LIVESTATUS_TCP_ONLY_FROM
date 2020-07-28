@@ -9,17 +9,28 @@
 #  port available to all IPv4 and IPv6 clients,
 
 case "$1" in
-    default)
-        echo "0.0.0.0 ::/0"
+default)
+    echo "0.0.0.0 ::/0"
     ;;
-    choices)
-        echo "(?:(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})(/[0-9]{1,2})?\s?)+"
+choices)
+    # See only_from in xinetd.conf(5) for a list of allowed formats. At the moment
+    # we allow the following options supported by xinetd:
+    #
+    # a)   a numeric address in the form of %d.%d.%d.%d. If the rightmost  com‐
+    #      ponents   are  0,  they  are  treated  as  wildcards  (for  example,
+    #      128.138.12.0 matches all hosts on the 128.138.12  subnet).   0.0.0.0
+    #      matches  all Internet addresses.  IPv6 hosts may be specified in the
+    #      form of abcd:ef01::2345:6789.  The rightmost rule for IPv4 addresses
+    #      does not apply to IPv6 addresses.
+    # e)   an  ip  address/netmask  range  in the form of 1.2.3.4/32.  IPv6 ad‐
+    #      dress/netmask ranges in the form of 1234::/46 are also valid.
+
+    echo "(?:(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})(/[0-9]{1,2})?\s?)+"
     ;;
-    set)
-        sed -ri "s@#?([[:space:]]*only_from[[:space:]]*=[[:space:]]*)(.*)@\1$2@" $OMD_ROOT/etc/mk-livestatus/xinetd.conf
+set)
+    sed -ri "s@#?([[:space:]]*only_from[[:space:]]*=[[:space:]]*)(.*)@\1$2@" "$OMD_ROOT"/etc/mk-livestatus/xinetd.conf
     ;;
-    depends)
-        [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
+depends)
+    [ "$CONFIG_CORE" != none ] && [ "$CONFIG_LIVESTATUS_TCP" = on ]
     ;;
 esac
-

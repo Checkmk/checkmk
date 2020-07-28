@@ -12,7 +12,7 @@
 #include <memory>
 
 #include "Average.h"
-#include "BoolPointerColumn.h"
+#include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "DoubleLambdaColumn.h"
 #include "DoublePointerColumn.h"
@@ -261,10 +261,10 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
 
-    addColumn(std::make_unique<BoolPointerColumn>(
+    addColumn(std::make_unique<BoolLambdaColumn<TableStatus>>(
         "has_event_handlers",
-        "Whether or not at alert handler rules are configured (0/1)",
-        &g_any_event_handler_enabled));
+        "Whether or not at alert handler rules are configured (0/1)", offsets,
+        [](const TableStatus & /*r*/) { return g_any_event_handler_enabled; }));
 
     // Special stuff for Check_MK
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>>(

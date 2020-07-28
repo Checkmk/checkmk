@@ -26,7 +26,6 @@ import cmk.gui.notify as notify
 import cmk.gui.werks as werks
 import cmk.gui.sites as sites
 import cmk.gui.pages
-from cmk.gui.main_menu import MainMenuRenderer, get_show_more_setting
 import cmk.gui.plugins.sidebar
 import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
@@ -34,7 +33,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.config import LoggedInUser
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuConfigure
+from cmk.gui.pagetypes import MegaMenuConfigure
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
@@ -52,6 +51,7 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
 )
 
 from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin
+from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer, get_show_more_setting
 
 quicksearch_match_plugins: List[Type[QuicksearchMatchPlugin]] = []
 

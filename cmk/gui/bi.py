@@ -39,7 +39,7 @@ from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuMonitoring
+from cmk.gui.main_menu import MegaMenuMonitoring
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,

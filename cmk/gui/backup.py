@@ -50,7 +50,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuSetup
+from cmk.gui.main_menu import MegaMenuSetup
 
 #.
 #   .--Config--------------------------------------------------------------.

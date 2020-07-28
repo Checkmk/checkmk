@@ -41,7 +41,7 @@ from cmk.gui.breadcrumb import (
     BreadcrumbItem,
     Breadcrumb,
 )
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuSetup
+from cmk.gui.main_menu import MegaMenuSetup
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 

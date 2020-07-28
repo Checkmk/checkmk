@@ -46,7 +46,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
 )
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
-from cmk.gui.i18n import _u, _
+from cmk.gui.i18n import _l, _u, _
 from cmk.gui.globals import html
 from cmk.gui.type_defs import HTTPVariables
 
@@ -65,7 +65,12 @@ from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
 )
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuConfigure
+from cmk.gui.type_defs import (
+    MegaMenu,
+    TopicMenuTopic,
+    TopicMenuItem,
+)
+from cmk.gui.main_menu import mega_menu_registry
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
@@ -1578,3 +1583,96 @@ class PagetypeTopics(Overridable):
 
 
 declare(PagetypeTopics)
+
+#   .--Main menu-----------------------------------------------------------.
+#   |          __  __       _                                              |
+#   |         |  \/  | __ _(_)_ __    _ __ ___   ___ _ __  _   _           |
+#   |         | |\/| |/ _` | | '_ \  | '_ ` _ \ / _ \ '_ \| | | |          |
+#   |         | |  | | (_| | | | | | | | | | | |  __/ | | | |_| |          |
+#   |         |_|  |_|\__,_|_|_| |_| |_| |_| |_|\___|_| |_|\__,_|          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Register all pagetypes in the main menu                              |
+#   '----------------------------------------------------------------------'
+#.
+
+
+def _configure_menu_topics() -> List[TopicMenuTopic]:
+    general_items = []
+
+    monitoring_items = [
+        TopicMenuItem(
+            name="views",
+            title=_("Views"),
+            url="edit_views.py",
+            sort_index=10,
+            is_advanced=False,
+            icon_name="view",
+        ),
+        TopicMenuItem(
+            name="dashboards",
+            title=_("Dashboards"),
+            url="edit_dashboards.py",
+            sort_index=20,
+            is_advanced=False,
+            icon_name="dashboard",
+        ),
+        TopicMenuItem(
+            name="reports",
+            title=_("Reports"),
+            url="edit_reports.py",
+            sort_index=30,
+            is_advanced=True,
+            icon_name="report",
+        ),
+    ]
+
+    graph_items = []
+
+    for index, page_type_ in enumerate(all_page_types().values()):
+        item = TopicMenuItem(
+            name=page_type_.type_name(),
+            title=page_type_.phrase("title_plural"),
+            url="%ss.py" % page_type_.type_name(),
+            sort_index=40 + (index * 10),
+            is_advanced=page_type_.type_is_advanced(),
+            icon_name=page_type_.type_name(),
+        )
+
+        if page_type_.type_name() in ("pagetype_topic", "bookmark_list", "custom_snapin"):
+            general_items.append(item)
+        elif "graph" in page_type_.type_name():
+            graph_items.append(item)
+        else:
+            monitoring_items.append(item)
+
+    return [
+        TopicMenuTopic(
+            name="general",
+            title=_("General"),
+            icon_name="topic_general",
+            items=general_items,
+        ),
+        TopicMenuTopic(
+            name="monitoring",
+            title=_("Monitoring"),
+            icon_name="topic_configure",
+            items=monitoring_items,
+        ),
+        TopicMenuTopic(
+            name="graphs",
+            title=_("Graphs"),
+            icon_name="topic_graphs",
+            items=graph_items,
+        )
+    ]
+
+
+MegaMenuConfigure = mega_menu_registry.register(
+    MegaMenu(
+        name="configure",
+        title=_l("Configure"),
+        icon_name="main_configure",
+        sort_index=10,
+        topics=_configure_menu_topics,
+    ))

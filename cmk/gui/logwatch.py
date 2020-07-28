@@ -19,7 +19,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuMonitoring
+from cmk.gui.main_menu import MegaMenuMonitoring
 from cmk.gui.plugins.views.utils import make_host_breadcrumb
 
 #   .--HTML Output---------------------------------------------------------.

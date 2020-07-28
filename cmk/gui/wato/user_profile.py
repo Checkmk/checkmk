@@ -19,7 +19,7 @@ import cmk.gui.forms as forms
 import cmk.gui.login as login
 
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuUser
+from cmk.gui.main_menu import MegaMenuUser
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException

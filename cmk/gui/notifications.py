@@ -23,7 +23,7 @@ from cmk.gui.permissions import (
     declare_permission,
 )
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuMonitoring
+from cmk.gui.main_menu import MegaMenuMonitoring
 
 g_acknowledgement_time = {}
 g_modified_time = 0.0

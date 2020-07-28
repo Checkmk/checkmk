@@ -58,7 +58,7 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuConfigure
+from cmk.gui.pagetypes import MegaMenuConfigure
 
 from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,

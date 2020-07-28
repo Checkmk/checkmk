@@ -61,7 +61,7 @@ from cmk.gui.watolib.notifications import (
     load_notification_rules,
     load_user_notification_rules,
 )
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuUser
+from cmk.gui.main_menu import MegaMenuUser
 
 
 class NotificationsMode(EventsMode):

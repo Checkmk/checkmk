@@ -14,7 +14,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.type_defs import MegaMenu
-from cmk.gui.plugins.main_menu.mega_menus import MegaMenuSetup
+from cmk.gui.main_menu import MegaMenuSetup
 
 NewMode = Union[None, bool, str]
 ActionResult = Union[NewMode, Tuple[NewMode, str]]

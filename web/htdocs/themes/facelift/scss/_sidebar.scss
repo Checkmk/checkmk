@@ -220,6 +220,11 @@ body.side div.snapin, div.add_snapin div.snapin  {
 }
 
 div.snapin {
+  &.dragging {
+    position: absolute;
+    z-index: 200;
+  }
+
   /* Header of the snapin */
   div.head {
     position: relative;

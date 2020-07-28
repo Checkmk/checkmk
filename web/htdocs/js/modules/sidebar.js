@@ -119,12 +119,11 @@ function snapinDrag(event) {
     // It can move e.g. if the scroll wheel is wheeled during dragging...
 
     // Drag the snapin
-    g_snapin_dragging.style.position = "absolute";
+    utils.add_class(g_snapin_dragging, "dragging");
     let newTop = event.clientY  - g_snapin_offset[0] - g_snapin_scroll_top;
     newTop += document.getElementById("side_content").scrollTop;
-    g_snapin_dragging.style.top      = newTop + "px";
-    g_snapin_dragging.style.left     = (event.clientX - g_snapin_offset[1]) + "px";
-    g_snapin_dragging.style.zIndex   = 200;
+    g_snapin_dragging.style.top = newTop + "px";
+    g_snapin_dragging.style.left = (event.clientX - g_snapin_offset[1]) + "px";
 
     // Refresh the drop marker
     removeSnapinDragIndicator();
@@ -156,13 +155,13 @@ function removeSnapinDragIndicator() {
 }
 
 function snapinDrop(event, targetpos) {
-    if (g_snapin_dragging == false)
+    if (g_snapin_dragging === false)
         return true;
 
     // Reset properties
-    g_snapin_dragging.style.top      = "";
-    g_snapin_dragging.style.left     = "";
-    g_snapin_dragging.style.position = "";
+    utils.remove_class(g_snapin_dragging, "dragging");
+    g_snapin_dragging.style.top = "";
+    g_snapin_dragging.style.left = "";
 
     // Catch quick clicks without movement on the title bar
     // Don't reposition the object in this case.
@@ -188,9 +187,9 @@ function snapinTerminateDrag() {
         return true;
     removeSnapinDragIndicator();
     // Reset properties
-    g_snapin_dragging.style.top      = "";
-    g_snapin_dragging.style.left     = "";
-    g_snapin_dragging.style.position = "";
+    utils.remove_class(g_snapin_dragging, "dragging");
+    g_snapin_dragging.style.top = "";
+    g_snapin_dragging.style.left = "";
     g_snapin_dragging = false;
 }
 

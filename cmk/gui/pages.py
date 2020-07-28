@@ -20,8 +20,23 @@ PageResult = Any
 AjaxPageResult = Dict[str, Any]
 
 
+# At the moment pages are simply callables that somehow render content for the HTTP response
+# and send it to the client.
+#
+# At least for HTML pages we should standardize the pages a bit more since there are things all pages do
+# - Create a title, render the header
+# - Have a breadcrumb
+# - Optional: Handle actions
+# - Render the page
+#
+# TODO: Check out the WatoMode class and find out how to do this. Looks like handle_page() could
+# implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
 class Page(metaclass=abc.ABCMeta):
-    #TODO: Use when we are using python3 abc.abstractmethod
+    # TODO: In theory a page class could be registered below multiple URLs. For this case it would
+    # be better to move the ident out of the class, to the registry. At the moment the URL is stored
+    # in self._ident by PageRegistry.register_page().
+    # In practice this is no problem at the moment, because each page is accessible only through a
+    # single endpoint.
     @classmethod
     def ident(cls) -> str:
         raise NotImplementedError()

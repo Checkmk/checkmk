@@ -18,6 +18,8 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.check_utils
 
+from cmk.base.api.agent_based.register.inventory_plugins_legacy import (
+    create_inventory_plugin_from_legacy,)
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_snmp_section_plugin_from_legacy,)
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
@@ -80,6 +82,7 @@ def load_plugins(get_check_api_context: config.GetCheckApiContext,
             _plugin_file_lookup.setdefault(check_plugin_name, f)
 
     _extract_snmp_sections(inv_info, _plugin_file_lookup)
+    _extract_inventory_plugins(inv_info)
 
 
 def _extract_snmp_sections(
@@ -108,6 +111,21 @@ def _extract_snmp_sections(
                 ))
         except (NotImplementedError, KeyError, AssertionError, ValueError):
             msg = config.AUTO_MIGRATION_ERR_MSG % ('section', plugin_name)
+            if cmk.utils.debug.enabled():
+                raise MKGeneralException(msg)
+            console.warning(msg)
+
+
+def _extract_inventory_plugins(inf_info: Dict[InventoryPluginNameStr, InventoryInfo],) -> None:
+    for plugin_name, plugin_info in sorted(inv_info.items()):
+        try:
+            agent_based_register.add_inventory_plugin(
+                create_inventory_plugin_from_legacy(
+                    plugin_name,
+                    plugin_info,
+                ))
+        except NotImplementedError:
+            msg = config.AUTO_MIGRATION_ERR_MSG % ('inventory', plugin_name)
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
             console.warning(msg)

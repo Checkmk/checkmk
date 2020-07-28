@@ -36,6 +36,9 @@ import cmk.base.data_sources as data_sources
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
+
+from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
+from cmk.base.api.agent_based.type_defs import InventoryGenerator
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.data_sources.snmp import SNMPHostSections
 from cmk.base.discovered_labels import HostLabel
@@ -362,6 +365,70 @@ def _do_inv_for_realhost(
             args += [host_config.inventory_parameters(section_name)]
         inv_function(*args, **kwargs)
     console.verbose("\n")
+
+
+def _aggregate_inventory_results(
+    inventory_generator: InventoryGenerator,
+    inventory_tree: StructuredDataTree,
+    status_data_tree: StructuredDataTree,
+) -> None:
+
+    try:
+        inventory_items = list(inventory_generator)
+    except Exception as exc:
+        if cmk.utils.debug.enabled():
+            raise
+        console.warning("Error in plugin: %s" % exc)
+        return
+
+    for item in inventory_items:
+        if isinstance(item, Attributes):
+            _integrate_attributes(item, inventory_tree, status_data_tree)
+        elif isinstance(item, TableRow):
+            _integrate_table_row(item, inventory_tree, status_data_tree)
+        else:  # can't happen
+            raise NotImplementedError()
+
+
+def _integrate_attributes(
+    attributes: Attributes,
+    inventory_tree: StructuredDataTree,
+    status_data_tree: StructuredDataTree,
+) -> None:
+
+    leg_path = ".".join(attributes.path) + "."
+    if attributes.inventory_attributes:
+        inventory_tree.get_dict(leg_path).update(attributes.inventory_attributes)
+    if attributes.status_attributes:
+        status_data_tree.get_dict(leg_path).update(attributes.status_attributes)
+
+
+def _integrate_table_row(
+    table_row: TableRow,
+    inventory_tree: StructuredDataTree,
+    status_data_tree: StructuredDataTree,
+) -> None:
+    def _find_matching_row_index(rows, key_columns):
+        for index, row in enumerate(rows):
+            if all(row[k] == v for k, v in key_columns.items()):
+                return index
+        return None
+
+    leg_path = ".".join(table_row.path) + ":"
+
+    inv_rows = inventory_tree.get_list(leg_path)
+    idx = _find_matching_row_index(inv_rows, table_row.key_columns)
+    if idx is None:
+        inv_rows.append({**table_row.key_columns, **table_row.inventory_columns})
+    else:
+        inv_rows[idx].update(table_row.inventory_columns)
+
+    sd_rows = status_data_tree.get_list(leg_path)
+    idx = _find_matching_row_index(sd_rows, table_row.key_columns)
+    if idx is None:
+        sd_rows.append({**table_row.key_columns, **table_row.status_columns})
+    else:
+        sd_rows[idx].update(table_row.status_columns)
 
 
 #.

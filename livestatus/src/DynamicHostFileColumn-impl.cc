@@ -3,9 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "CrashReport.h"
+#include <memory>
+
 #include "DynamicHostFileColumn.cc"
+#include "DynamicHostFileColumn.h"
 #include "nagios.h"
+class CrashReport;
 
 template class DynamicHostFileColumn<CrashReport>;
 template class DynamicHostFileColumn<host>;

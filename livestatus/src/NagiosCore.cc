@@ -102,6 +102,12 @@ std::chrono::system_clock::time_point NagiosCore::last_logfile_rotation() {
     return std::chrono::system_clock::from_time_t(last_log_rotation);
 }
 
+std::chrono::system_clock::time_point NagiosCore::last_config_change() {
+    // NOTE: Nagios doesn't reload, it restarts for config changes.
+    extern time_t program_start;
+    return std::chrono::system_clock::from_time_t(program_start);
+}
+
 size_t NagiosCore::maxLinesPerLogFile() const {
     return _limits._max_lines_per_logfile;
 }

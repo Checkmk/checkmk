@@ -69,6 +69,7 @@ public:
                                            const Contact *contact) override;
 
     std::chrono::system_clock::time_point last_logfile_rotation() override;
+    std::chrono::system_clock::time_point last_config_change() override;
     size_t maxLinesPerLogFile() const override;
 
     Command find_command(const std::string &name) const override;

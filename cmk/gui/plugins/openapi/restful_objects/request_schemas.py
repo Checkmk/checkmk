@@ -99,6 +99,18 @@ class InputHostGroup(BaseSchema):
     alias = fields.String(example="Windows Servers")
 
 
+class BulkInputHostGroup(BaseSchema):
+    """Bulk creating host groups"""
+    entries = fields.List(
+        fields.Nested(InputHostGroup),
+        example=[{
+            'name': 'windows',
+            'alias': 'Windows Servers',
+        }],
+        uniqueItems=True,
+    )
+
+
 class InputContactGroup(BaseSchema):
     """Creating a contact group"""
     name = fields.String(required=True, example="OnCall")

@@ -14,6 +14,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     serve_group,
     serialize_group,
     serialize_group_list,
+    load_groups,
 )
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -40,6 +41,26 @@ def create(params):
     add_group(name, 'host', {'alias': alias})
     group = _fetch_host_group(name)
     return serve_group(group, serialize_group('host_group_config'))
+
+
+@endpoint_schema(constructors.domain_type_action_href('host_group_config', 'bulk-create'),
+                 'cmk/bulk_create',
+                 method='post',
+                 request_schema=request_schemas.BulkInputHostGroup,
+                 response_schema=response_schemas.DomainObjectCollection)
+def bulk_create(params):
+    """Bulk create host-groups"""
+    body = params['body']
+    entries = body['entries']
+    host_group_details = load_groups('host', entries)
+
+    host_group_names = []
+    for group_name, group_alias in host_group_details.items():
+        add_group(group_name, 'host', {'alias': group_alias})
+        host_group_names.append(group_name)
+
+    host_groups = _fetch_select_host_groups(host_group_names)
+    return constructors.serve_json(serialize_group_list('host_group_config', host_groups))
 
 
 @endpoint_schema(constructors.collection_href('host_group_config'),
@@ -122,11 +143,26 @@ def get(params):
 
 def _fetch_host_group(ident, status=404, message=None):
     groups = load_host_group_information()
+    group = _retrieve_group(ident, groups, status, message)
+    group['id'] = ident
+    return group
+
+
+def _fetch_select_host_groups(idents, status=404, message=None):
+    groups = load_host_group_information()
+    result = []
+    for ident in idents:
+        group = _retrieve_group(ident, groups, status, message)
+        group['id'] = ident
+        result.append(group)
+    return result
+
+
+def _retrieve_group(ident, groups, status, message):
     try:
         group = groups[ident].copy()
     except KeyError as exc:
         if message is None:
             message = str(exc)
         raise ProblemException(status, http.client.responses[status], message)
-    group['id'] = ident
     return group

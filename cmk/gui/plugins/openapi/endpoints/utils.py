@@ -4,10 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, Dict, Literal, Sequence
+from typing import Any, Dict, Literal, Sequence, List, Optional
+
+from connexion import ProblemException  # type: ignore[import]
 
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors
+from cmk.gui.groups import load_group_information
 
 GroupName = Literal[
     'host_group_config',
@@ -64,3 +67,25 @@ def serialize_group(name: GroupName) -> Any:
         )
 
     return _serializer
+
+
+def load_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Optional[str]]:
+    specific_existing_groups = load_group_information()[group_type]
+    group_details = {}
+    already_existing = []
+    for details in entries:
+        name = details['name']
+        if name in specific_existing_groups:
+            already_existing.append(name)
+            continue
+        group_details[name] = details.get('alias')
+
+    if already_existing:
+        raise ProblemException(
+            status=400,
+            title=f"Some {group_type} groups already exist",
+            detail=
+            f"The following {group_type} group names already exist: {', '.join(already_existing)}",
+        )
+
+    return group_details

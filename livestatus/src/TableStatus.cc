@@ -20,7 +20,7 @@
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
-#include "StringPointerColumn.h"
+#include "StringLambdaColumn.h"
 #include "TimePointerColumn.h"
 #include "global_counters.h"
 #include "mk_inventory.h"
@@ -174,9 +174,9 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>::Reference>(
         "num_services", "The total number of services", g_num_services));
 
-    addColumn(std::make_unique<StringPointerColumn>(
+    addColumn(std::make_unique<StringLambdaColumn<TableStatus>>(
         "program_version", "The version of the monitoring daemon", offsets,
-        get_program_version()));
+        [](const TableStatus & /*r*/) { return get_program_version(); }));
 
 // External command buffer
 #ifndef NAGIOS4
@@ -213,9 +213,9 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets, [](const TableStatus &ts) {
             return static_cast<int32_t>(ts.core()->numCachedLogMessages());
         }));
-    addColumn(std::make_unique<StringPointerColumn>(
+    addColumn(std::make_unique<StringLambdaColumn<TableStatus>>(
         "livestatus_version", "The version of the MK Livestatus module",
-        offsets, VERSION));
+        offsets, [](const TableStatus & /*r*/) { return VERSION; }));
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>>(
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus", offsets,

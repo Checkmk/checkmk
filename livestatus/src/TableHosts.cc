@@ -687,40 +687,21 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostFileColumn<host>>(
         prefix + "mk_inventory",
-        "The file content of the Check_MK HW/SW-Inventory",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0},
+        "The file content of the Check_MK HW/SW-Inventory", offsets,
         [mc]() { return mc->mkInventoryPath(); },
-        [](const Column &col,
-           const Row &row) -> std::optional<std::filesystem::path> {
-            if (const auto *hst = col.columnData<host>(row)) {
-                return hst->name;
-            }
-            return {};
-        }));
+        [](const host &r) { return std::filesystem::path{r.name}; }));
     table->addColumn(std::make_unique<HostFileColumn<host>>(
         prefix + "mk_inventory_gz",
-        "The gzipped file content of the Check_MK HW/SW-Inventory",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0},
+        "The gzipped file content of the Check_MK HW/SW-Inventory", offsets,
         [mc]() { return mc->mkInventoryPath(); },
-        [](const Column &col,
-           const Row &row) -> std::optional<std::filesystem::path> {
-            if (const auto *hst = col.columnData<host>(row)) {
-                return std::string{hst->name} + ".gz";
-            }
-            return {};
+        [](const host &r) {
+            return std::filesystem::path{std::string{r.name} + ".gz"};
         }));
     table->addColumn(std::make_unique<HostFileColumn<host>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0},
-        [mc]() { return mc->structuredStatusPath(); },
-        [](const Column &col,
-           const Row &row) -> std::optional<std::filesystem::path> {
-            if (const auto *hst = col.columnData<host>(row)) {
-                return hst->name;
-            }
-            return {};
-        }));
+        offsets, [mc]() { return mc->structuredStatusPath(); },
+        [](const host &r) { return std::filesystem::path{r.name}; }));
     table->addColumn(std::make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch",
@@ -728,15 +709,10 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addDynamicColumn(std::make_unique<DynamicHostFileColumn<host>>(
         prefix + "mk_logwatch_file",
-        "This contents of a logfile fetched via mk_logwatch",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0},
+        "This contents of a logfile fetched via mk_logwatch", offsets,
         [mc]() { return mc->mkLogwatchPath(); },
-        [](const Column &col, const Row &row,
-           const std::string &args) -> std::optional<std::filesystem::path> {
-            if (const auto *hst = col.columnData<host>(row)) {
-                return std::filesystem::path{hst->name} / args;
-            }
-            return {};
+        [](const host &r, const std::string &args) {
+            return std::filesystem::path{r.name} / args;
         }));
 
     table->addColumn(std::make_unique<HostSpecialDoubleColumn>(

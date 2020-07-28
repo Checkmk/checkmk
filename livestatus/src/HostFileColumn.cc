@@ -17,9 +17,7 @@ HostFileColumn<T>::HostFileColumn(
     const std::string& name, const std::string& description,
     const Column::Offsets& offsets,
     std::function<std::filesystem::path()> basepath,
-    std::function<std::optional<std::filesystem::path>(const Column&,
-                                                       const Row&)>
-        filepath)
+    std::function<std::optional<std::filesystem::path>(const T&)> filepath)
     : BlobColumn(name, description, offsets)
     , _basepath(std::move(basepath))
     , _filepath(std::move(filepath)) {}
@@ -30,7 +28,11 @@ std::unique_ptr<std::vector<char>> HostFileColumn<T>::getValue(Row row) const {
         // The basepath is not configured.
         return nullptr;
     }
-    auto f = _filepath(*this, row);
+    const T* data = columnData<T>(row);
+    if (data == nullptr) {
+        return nullptr;
+    }
+    auto f = _filepath(*data);
     if (!f) {
         return nullptr;
     }

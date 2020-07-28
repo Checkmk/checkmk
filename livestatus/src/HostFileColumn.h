@@ -22,20 +22,17 @@ class Row;
 template <class T>
 class HostFileColumn : public BlobColumn {
 public:
-    HostFileColumn(const std::string& name, const std::string& description,
-                   const Column::Offsets&,
-                   std::function<std::filesystem::path()> basepath,
-                   std::function<std::optional<std::filesystem::path>(
-                       const Column&, const Row&)>
-                       filepath);
+    HostFileColumn(
+        const std::string& name, const std::string& description,
+        const Column::Offsets&, std::function<std::filesystem::path()> basepath,
+        std::function<std::optional<std::filesystem::path>(const T&)> filepath);
 
     [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
         Row row) const override;
 
 private:
     const std::function<std::filesystem::path()> _basepath;
-    const std::function<std::optional<std::filesystem::path>(const Column&,
-                                                             const Row&)>
+    const std::function<std::optional<std::filesystem::path>(const T&)>
         _filepath;
 };
 

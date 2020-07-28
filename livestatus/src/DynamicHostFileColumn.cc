@@ -17,8 +17,8 @@ template <class T>
 DynamicHostFileColumn<T>::DynamicHostFileColumn(
     const std::string &name, const std::string &description,
     Column::Offsets offsets, std::function<std::filesystem::path()> basepath,
-    std::function<std::optional<std::filesystem::path>(
-        const Column &, const Row &, const std::string &)>
+    std::function<std::optional<std::filesystem::path>(const T &,
+                                                       const std::string &)>
         filepath)
     : DynamicColumn(name, description, std::move(offsets))
     , _basepath{std::move(basepath)}
@@ -49,7 +49,5 @@ std::unique_ptr<Column> DynamicHostFileColumn<T>::createColumn(
     }
     return std::make_unique<HostFileColumn<T>>(
         name, _description, _offsets, _basepath,
-        [this, f](const Column &col, const Row &row) {
-            return _filepath(col, row, f);
-        });
+        [this, f](const T &r) { return _filepath(r, f); });
 }

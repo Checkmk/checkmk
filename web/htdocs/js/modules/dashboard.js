@@ -316,10 +316,10 @@ export function calculate_dashboard() {
         return; // another resize is processed
     g_dashboard_resizer = true;
 
-    g_dashboard_top    = dashboard_properties.header_height + dashboard_properties.screen_margin;
+    g_dashboard_top    = dashboard_properties.header_height;
     g_dashboard_left   = dashboard_properties.screen_margin;
-    g_dashboard_width  = utils.page_width() - 2*dashboard_properties.screen_margin;
-    g_dashboard_height = utils.page_height() - 2*dashboard_properties.screen_margin - dashboard_properties.header_height;
+    g_dashboard_width  = utils.page_width() - dashboard_properties.screen_margin;
+    g_dashboard_height = utils.page_height() - dashboard_properties.header_height;
 
     var oDash = document.getElementById("dashboard");
     oDash.style.left     = g_dashboard_left + "px";
@@ -396,9 +396,6 @@ function toggle_dashboard_menu(show, event) {
         // Gather and update the position of the menu
         if (event) {
             var target = utils.get_target(event);
-            controls.style.left = (event.clientX - target.offsetLeft + 5) + "px";
-            controls.style.top  = (event.clientY - target.offsetTop + 5) + "px";
-
             var dashboard = document.getElementById("dashboard");
 
             // When menu is out of screen on the right, move to left

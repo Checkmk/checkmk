@@ -286,7 +286,7 @@ $state-border-top-color:		    $grey-6;
 
 $body-side-bg-color:			    $bg-color-default;
 
-$td-gap-bg-color:			    $grey-6;
+$td-gap-bg-color:			    $bg-color-secondary;
 $td-border-left-right:			    none;
 
 $td-text-overflow:			    ellipsis;
@@ -296,7 +296,7 @@ $span-dots-color:			    $grey-1;
 $tr-odd3-bg-color:			    $bg-color-default;
 $tr-even3-bg-color:			    $grey-6;
 
-$graph-bg-color:			    $grey-6 !important;
+$graph-bg-color:			    $bg-color-secondary !important;
 $graph-legend-th-border-bottom:		    1px solid $grey-1;
 $graph-time-color:			    $font-color;
 
@@ -406,7 +406,7 @@ $duallist-control-a-hover-bg-color:	    $wato-a-hover-bg-color;
 $side-content-top:                          null;
 $snapin-margin:				    4px 0;
 
-$main-body-padding:			    50px 12px 60px;
+$main-body-padding:                         0 0 0 12px;
 
 $snapin-cmc-table-width:                    100%;
 $snapin-list-color:			    $white;
@@ -511,7 +511,6 @@ $sidebar-border-color:                      rgb(56, 68, 93);
 $form-bg-color:                             $button-bg-color-default;
 $form-font-color:                           rgb(234, 234, 234);
 $font-color-highlight:                      $white;
-$medium-blue:                               rgb(38, 47, 56);
 $filter-group-title-font-color:             $white;
 $popup-filters-border-radius:               2px;
 $popup-button-border:                       1px solid $grey-2;

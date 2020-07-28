@@ -2,8 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import SimpleBar from "simplebar";
-
 import * as utils from "utils";
 import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
@@ -28,12 +26,11 @@ export function initialize_sidebar(update_interval, refresh, restart, static_) {
 
     execute_sidebar_scheduler();
 
-    g_scrollbar = new SimpleBar(document.getElementById("side_content"));
+    g_scrollbar = utils.add_simplebar_scrollbar(document.getElementById("side_content"));
     g_scrollbar.getScrollElement().addEventListener("scroll", function() {
         store_scroll_position();
         return false;
     }, false);
-
     register_event_handlers();
     if (is_content_frame_accessible()) {
         update_content_location();

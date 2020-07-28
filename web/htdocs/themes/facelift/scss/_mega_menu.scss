@@ -85,7 +85,7 @@
       overflow-y: auto;
       background-color: $button-bg-color-default;
       border-right: 4px solid $success;
-      border-left: 1px solid $medium-blue;
+      border-left: 1px solid $headline-color;
       visibility: hidden;
 
       #main_menu_user_manual div.content.inner div.topic {
@@ -113,7 +113,7 @@
           flex-grow: 1;
           width: 250px;
           padding: 10px 15px 24px;
-          border-right: 1px solid $medium-blue;
+          border-right: 1px solid $headline-color;
           box-sizing: border-box;
 
           &:last-child { flex-grow: 2; }

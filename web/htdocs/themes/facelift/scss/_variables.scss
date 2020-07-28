@@ -387,29 +387,29 @@ $lightened-hostdown-bg-color:		    lighten($hostdown-bg-color, 10%);
 
 $nform-vlof-border-color:		    $color-table-border;
 
-$availability-data-table-border:		        $wato-data-table-border;
-$availability-data-th-bg-color:		            $wato-data-th-bg-color;
-$availability-data-table-box-shadow:		    $wato-data-table-box-shadow;
+$availability-data-table-border:	    $wato-data-table-border;
+$availability-data-th-bg-color:		    $wato-data-th-bg-color;
+$availability-data-table-box-shadow:	    $wato-data-table-box-shadow;
 
-$data-table-td-count-state-border-color:        null;
+$data-table-td-count-state-border-color:    null;
 
-$timelineevents-data-table-border:		        $wato-data-table-border;
-$timelineevents-data-th-bg-color:		        $wato-data-th-bg-color;
-$timelineevents-data-table-box-shadow:		    $wato-data-table-box-shadow;
+$timelineevents-data-table-border:	    $wato-data-table-border;
+$timelineevents-data-th-bg-color:	    $wato-data-th-bg-color;
+$timelineevents-data-table-box-shadow:	    $wato-data-table-box-shadow;
 
-$table-cell-last-child-border-radius: $last-child-border-radius;
+$table-cell-last-child-border-radius:       $last-child-border-radius;
 
-$duallist-control-a-hover-bg-color:             $wato-a-hover-bg-color;
+$duallist-control-a-hover-bg-color:         $wato-a-hover-bg-color;
 
-$side-content-top:                              66px;
-$snapin-margin:                                 8px 0;
+$side-content-top:                          66px;
+$snapin-margin:                             8px 0;
 
-$main-body-padding:                             50px 16px 60px;
+$main-body-padding:                         0 0 0 12px;
 
-$snapin-cmc-table-width:                        228px;
-$snapin-list-color:                             $white;
+$snapin-cmc-table-width:                    228px;
+$snapin-list-color:                         $white;
 
-$performance-table-shared-padding:              8px;
+$performance-table-shared-padding:          8px;
 
 
 // -----------------------------------------------------------------------------
@@ -511,7 +511,6 @@ $sidebar-border-color:                      rgb(44, 54, 64);
 $form-bg-color:                             $snapin-bg-color;
 $form-font-color:                           rgb(234, 234, 234);
 $font-color-highlight:                      $white;
-$medium-blue:                               rgb(38, 47, 56);
 $filter-group-title-font-color:             $black;
 $popup-filters-border-radius:               2px;
 $popup-button-border:                       1px solid $grey-2;

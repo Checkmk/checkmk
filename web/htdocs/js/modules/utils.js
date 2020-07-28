@@ -564,6 +564,6 @@ export function toggle_more(trigger, toggle_id, dom_levels_up) {
             + "&state=" + encodeURIComponent (state));
 }
 
-export function add_simplebar_scrollbar(scrollable) {
-    new SimpleBar(scrollable);
+export function add_simplebar_scrollbar(oScrollable) {
+    return new SimpleBar(oScrollable);
 }

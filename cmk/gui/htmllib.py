@@ -1669,6 +1669,7 @@ class html(ABCHTMLGenerator):
                         breadcrumb=breadcrumb,
                         page_menu=page_menu or PageMenu(breadcrumb=breadcrumb),
                     )
+            self.begin_page_content()
 
     def body_start(self,
                    title: str = u'',
@@ -1723,8 +1724,17 @@ class html(ABCHTMLGenerator):
         if self.enable_debug:
             self._dump_get_vars()
 
+    def begin_page_content(self):
+        content_id = "main_page_content"
+        self.open_div(id_=content_id)
+        self.final_javascript("cmk.utils.add_simplebar_scrollbar(%s)" % content_id)
+
+    def end_page_content(self):
+        self.close_div()
+
     def footer(self, show_footer: bool = True, show_body_end: bool = True) -> None:
         if self.output_format == "html":
+            self.end_page_content()
             if show_footer:
                 self.bottom_footer()
 

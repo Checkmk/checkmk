@@ -89,7 +89,7 @@ loaded_with_language: Union[None, bool, str] = False
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
 
-screen_margin = 5  # Distance from the left border of the main-frame to the dashboard area
+screen_margin = 12  # Distance from the left border of the main-frame to the dashboard area
 dashlet_padding = 34, 4, -2, 4, 4  # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 #dashlet_padding  = 23, 2, 2, 2, 2 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 raster = 10  # Raster the dashlet coords are measured in (px)
@@ -467,7 +467,7 @@ def draw_dashboard(name: DashboardName) -> None:
     title = visuals.visual_title('dashboard', board)
 
     # Distance from top of the screen to the lower border of the heading
-    header_height = 55
+    header_height = 69
 
     if not board.get('show_title'):
         # Remove the whole header line

@@ -60,6 +60,10 @@ body {
   }
 
   &.main {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    height: 100%;
     padding: $main-body-padding;
     margin: 0;
     font-family: $font-family-default;
@@ -90,14 +94,10 @@ body {
 
     /* The content page header containing the title, user, date */
     table.header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 1000;
       width: 100%;
       height: 64px;
       max-width: 100%;
-      padding: 8px 32px;
+      padding: 8px 20px;
       margin: 0 0 5px;
       color: rgb(255, 255, 255);
       background: $bg-color-default;
@@ -185,19 +185,6 @@ body {
       }
     }
 
-    hr.header {
-      position: absolute;
-      top: 42px;
-      left: 0;
-      width: 100%;
-      height: 1px;
-      padding: 0;
-      margin: 0;
-      color: rgb(255, 255, 255);
-      background-color: rgb(255, 255, 255);
-      border: none;
-    }
-
     /* TODO: Reproduce this html element */
     div.urldebug {
       position: relative;
@@ -206,6 +193,27 @@ body {
       font-family: monospace;
       font-size: 11px;
       color: rgb(255, 255, 255);
+    }
+
+    div#main_page_content {
+      flex: 1 1 auto;
+      height: 100%;
+      padding-right: 12px;
+      padding-bottom: 20px;
+      overflow: auto;
+
+      div.simplebar-track { background-color: $headline-color; }
+
+      div.simplebar-horizontal div.simplebar-scrollbar {
+        height: 6px;
+        &::before { top: 3px; }
+      }
+
+      div.simplebar-vertical {
+        &, div.simplebar-scrollbar { width: 12px; }
+      }
+
+      body.dashboard & { padding-bottom: 0; }
     }
 
     /* The content page footer containing optional status icons */
@@ -218,6 +226,13 @@ body {
     table.footer {
       width: 100%;
       margin-top: 10px;
+      padding-right: 12px;
+      padding-bottom: 10px;
+
+      div.popup_menu {
+        bottom: -1px;
+        left: 20px;
+      }
     }
 
     table.footer td.left   { text-align: left; }

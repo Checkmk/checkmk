@@ -90,7 +90,7 @@ div#top_heading {
         width: 100%;
         padding: 0 3px;
         background-color: $navigation-bg-color;
-        border-right: 1px solid $medium-blue;
+        border-right: 1px solid $headline-color;
 
         a.disabled {
           pointer-events: none;
@@ -393,7 +393,7 @@ div#page_menu_popups {
 
         > tbody > tr > td {
           padding: 4px 16px;
-          border-bottom: 1px solid $medium-blue;
+          border-bottom: 1px solid $headline-color;
         }
       }
 
@@ -510,7 +510,7 @@ div#page_menu_popups {
         background-color: rgb(53, 63, 74);
         border-top: $primary-table-border;
         border-bottom: $primary-table-border;
-        border-color: $medium-blue;
+        border-color: $headline-color;
         border-radius: $popup-filters-border-radius;
         box-sizing: border-box;
 

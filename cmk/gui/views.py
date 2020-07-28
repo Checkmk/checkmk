@@ -515,6 +515,7 @@ class GUIViewRenderer(ViewRenderer):
 
         if display_options.enabled(display_options.T):
             html.top_heading(view_title(view_spec), self.view.breadcrumb())
+            html.begin_page_content()
 
         has_done_actions = False
         row_count = len(rows)
@@ -655,6 +656,8 @@ class GUIViewRenderer(ViewRenderer):
                 "persist",
                 _("Reused persistent livestatus connection from earlier request (PID %d)") % pid)
 
+        if display_options.enabled(display_options.T):
+            html.end_page_content()
         html.bottom_focuscode()
         if display_options.enabled(display_options.Z):
             html.bottom_footer()

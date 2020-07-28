@@ -210,28 +210,22 @@ export function snapin_stop_drag(event) {
 
 function getDivChildNodes(node) {
     const children = [];
-    const childNodes = node.childNodes;
-    for (let i = 0; i < childNodes.length; i++)
-        if(childNodes[i].tagName === "DIV")
-            children.push(childNodes[i]);
+    for (const child of node.childNodes) {
+        if(child.tagName === "DIV") {
+            children.push(child);
+        }
+    }
     return children;
 }
 
 function getSnapinList() {
-    if (g_snapin_dragging === false)
-        return true;
-
     const l = [];
-    const childs = getDivChildNodes(g_snapin_dragging.parentNode);
-    for(let i = 0; i < childs.length; i++) {
-        const child = childs[i];
-        // Skip
-        // - non snapin objects
-        // - currently dragged object
-        if (child.id && child.id.substr(0, 7) == "snapin_" && child.id != g_snapin_dragging.id)
+    for(const child of getDivChildNodes(g_snapin_dragging.parentNode)) {
+        // Skip non snapin objects and the currently dragged object
+        if (child.id && child.id.substr(0, 7) == "snapin_" && child.id != g_snapin_dragging.id) {
             l.push(child);
+        }
     }
-
     return l;
 }
 
@@ -267,9 +261,6 @@ function getSnapinTargetPos() {
     for(let i = 0; i < childs.length; i++) {
         const child = childs[i];
 
-        if (!child.id || child.id.substr(0, 7) != "snapin_" || child.id == g_snapin_dragging.id)
-            continue;
-
         // Initialize with the first snapin in the list
         if (objId === -1) {
             objId = i;
@@ -291,10 +282,9 @@ function getSnapinTargetPos() {
     }
 
     // Is the dragged snapin dragged above the first one?
-    if (objId == 0 && objCorner == 0)
-        return childs[0];
-    else
-        return childs[(parseInt(objId)+1)];
+    return objId === 0 && objCorner === 0 ?
+        childs[0] :
+        childs[objId + 1];
 }
 
 /************************************************

@@ -23,9 +23,11 @@ enum class Counter {
     overflows
 };
 
+// TODO(sp): We really need an OO version of this. :-P
+void counterReset(Counter which);
 void counterIncrement(Counter which);
-const double *counterAddress(Counter which);
-const double *counterRateAddress(Counter which);
+double counterValue(Counter which);
+double counterRate(Counter which);
 void do_statistics();
 
 #endif  // global_counters_h

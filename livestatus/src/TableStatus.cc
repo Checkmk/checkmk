@@ -15,7 +15,6 @@
 #include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "DoubleLambdaColumn.h"
-#include "DoublePointerColumn.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
@@ -230,15 +229,18 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
         g_livestatus_threads));
-    addColumn(std::make_unique<DoublePointerColumn>(
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "livestatus_usage",
         "The average usage of the livestatus connection slots, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets, &g_avg_livestatus_usage._average));
+        offsets, [](const TableStatus & /*r*/) {
+            return g_avg_livestatus_usage._average;
+        }));
 
-    addColumn(std::make_unique<DoublePointerColumn>(
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "average_latency_generic",
         "The average latency for executing active checks (i.e. the time the start of the execution is behind the schedule)",
-        offsets, &g_average_active_latency));
+        offsets,
+        [](const TableStatus & /*r*/) { return g_average_active_latency; }));
     addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "average_latency_cmk",
         "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
@@ -292,12 +294,13 @@ void TableStatus::addCounterColumns(const std::string &name,
                                     const std::string &description,
                                     const Column::Offsets &offsets,
                                     Counter which) {
-    addColumn(std::make_unique<DoublePointerColumn>(
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         name, "The number of " + description + " since program start", offsets,
-        counterAddress(which)));
-    addColumn(std::make_unique<DoublePointerColumn>(
+        [which](const TableStatus & /*r*/) { return counterValue(which); }));
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         name + "_rate", "The averaged number of " + description + " per second",
-        offsets, counterRateAddress(which)));
+        offsets,
+        [which](const TableStatus & /*r*/) { return counterRate(which); }));
 }
 
 std::string TableStatus::name() const { return "status"; }

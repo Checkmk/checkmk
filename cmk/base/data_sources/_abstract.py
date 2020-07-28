@@ -44,6 +44,8 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLooku
 
 from ._cache import FileCache, SectionStore
 
+__all__ = ["ABCHostSections", "ABCConfigurator", "ABCDataSource"]
+
 
 class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                               BoundedAbstractPersistedSections, BoundedAbstractSectionContent],

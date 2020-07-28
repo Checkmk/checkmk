@@ -13,7 +13,7 @@ from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import SectionName, SourceType
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 
@@ -222,3 +222,42 @@ class TestSNMPConfigurator_MGMT:
         assert configurator.description == (
             "Management board - SNMP "
             "(Community: 'public', Bulk walk: no, Port: 161, Inline: no)")
+
+
+class TestSNMPSummaryResult:
+    @pytest.fixture
+    def hostname(self):
+        return "testhost"
+
+    @pytest.fixture
+    def scenario(self, hostname, monkeypatch):
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
+        return ts
+
+    @pytest.fixture
+    def source(self, hostname):
+        return SNMPDataSource(configurator=SNMPConfigurator(
+            hostname,
+            "1.2.3.4",
+            source_type=SourceType.HOST,
+            id_="snmp_id",
+            cpu_tracking_id="snmp_cpu_id",
+            title="snmp title",
+        ))
+
+    @pytest.mark.usefixtures("scenario")
+    @pytest.mark.parametrize("for_checking", [True, False])
+    def test_defaults(self, source, for_checking):
+        assert source._get_summary_result(for_checking) \
+                == source._summary_result(for_checking) \
+                == (0, "Success", [])
+
+    @pytest.mark.usefixtures("scenario")
+    @pytest.mark.parametrize("for_checking", [True, False])
+    def test_with_exception(self, source, for_checking):
+        source._exception = Exception()
+        assert source.exception()
+
+        assert source._get_summary_result(for_checking) == (3, "(?)", [])

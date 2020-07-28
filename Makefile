@@ -75,8 +75,7 @@ LOCK_PATH := .venv.lock
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-linux format-python \
-	format-shell GTAGS headers help install \
+        format-python format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
         am--refresh skel openapi openapi-doc
 
@@ -545,9 +544,7 @@ format: format-python format-c format-shell
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-format-c: format-linux
-
-format-linux:
+format-c:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
 format-python:

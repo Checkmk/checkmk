@@ -149,7 +149,7 @@ function snapinAddBefore(par, o, add) {
     if (o != null) {
         par.insertBefore(add, o);
     } else {
-        par.appendChild(add);
+        par.insertBefore(add, document.getElementById("add_snapin"));
     }
 }
 

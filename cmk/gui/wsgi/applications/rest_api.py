@@ -9,13 +9,16 @@ import logging
 import sys
 import traceback
 from pathlib import Path
+from typing import AnyStr, Union
 
 import flask
 import werkzeug
 
 from connexion import FlaskApi, AbstractApp, RestyResolver, problem  # type: ignore[import]
 from connexion.apps.flask_app import FlaskJSONEncoder  # type: ignore[import]
+from connexion.decorators.validation import RequestBodyValidator  # type: ignore[import]
 from connexion.exceptions import ProblemException  # type: ignore[import]
+from connexion.lifecycle import ConnexionResponse  # type: ignore[import]
 
 from cmk.gui.wsgi.auth import with_user
 from cmk.utils import paths, crash_reporting
@@ -50,6 +53,21 @@ class APICrashReport(crash_reporting.ABCCrashReport):
         return "rest_api"
 
 
+class NopRequestBodyValidator(RequestBodyValidator):
+    """Don't validate the request body.
+    """
+    def validate_schema(self, data: dict, url: AnyStr) -> Union[ConnexionResponse, None]:
+        """Don't."""
+        return None
+
+
+# Disable connexion's Request validation completely. We implement it ourselves.
+# See the @endpoint_schema decorator
+VALIDATOR_MAP = {
+    'body': NopRequestBodyValidator,
+}
+
+
 class CheckmkApiApp(AbstractApp):
     def __init__(self, import_name, **kwargs):
         resolver = RestyResolver('cmk.gui.plugins.openapi.endpoints')
@@ -71,6 +89,7 @@ class CheckmkApiApp(AbstractApp):
         kwargs.setdefault('resolver_error', 501)  # not implemented
         kwargs.setdefault('strict_validation', False)  # 500 on invalid request params
         kwargs.setdefault('validate_responses', False)
+        kwargs['validator_map'] = VALIDATOR_MAP
         api: CheckmkApi = self.add_api(specification, **kwargs)
         api.add_swagger_ui()
         self.app.register_blueprint(api.blueprint)

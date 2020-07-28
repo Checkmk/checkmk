@@ -12,17 +12,23 @@ import itertools
 from pathlib import Path
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, SectionName
+from cmk.utils.paths import agent_based_plugins_dir
 
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 
 
-def get_plugin_module_name() -> Optional[str]:
-    """find out which module registered the plugin"""
+def get_validated_plugin_module_name() -> Optional[str]:
+    """Find out which module registered the plugin and make sure its in the right place"""
     try:
         calling_from = inspect.stack()[2].filename
     except UnicodeDecodeError:  # calling from precompiled host file
         return None
-    return Path(calling_from).stem
+
+    path = Path(calling_from)
+    if not path.parent.parts[-3:] == agent_based_plugins_dir.parts[-3:]:
+        raise ImportError("do not register from %r" % path)
+
+    return path.stem
 
 
 def rank_sections_by_supersedes(

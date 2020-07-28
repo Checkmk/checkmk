@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, List, Optional
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 from cmk.base import config  # Beware: != _config. config import supposed to be nuked
-from cmk.base.api.agent_based.register.utils import get_plugin_module_name
+from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
@@ -59,7 +59,7 @@ def agent_section(
         parse_function=parse_function,
         host_label_function=host_label_function,
         supersedes=supersedes,
-        module=get_plugin_module_name(),
+        module=get_validated_plugin_module_name(),
     )
 
     if (section_plugin.name in _config.registered_agent_sections or
@@ -111,7 +111,7 @@ def snmp_section(
         detect_spec=detect,
         trees=trees,
         supersedes=supersedes,
-        module=get_plugin_module_name(),
+        module=get_validated_plugin_module_name(),
     )
 
     if (section_plugin.name in _config.registered_agent_sections or
@@ -171,7 +171,7 @@ def check_plugin(
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_ruleset_name,
         cluster_check_function=cluster_check_function,
-        module=get_plugin_module_name(),
+        module=get_validated_plugin_module_name(),
     )
 
     if _config.is_registered_check_plugin(plugin.name):

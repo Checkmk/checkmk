@@ -11,7 +11,6 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
 
 #include "Column.h"
@@ -21,20 +20,19 @@ class Row;
 template <class T>
 class DynamicHostFileColumn : public DynamicColumn {
 public:
-    DynamicHostFileColumn(const std::string &name,
-                          const std::string &description, Column::Offsets,
-                          std::function<std::filesystem::path()> basepath,
-                          std::function<std::optional<std::filesystem::path>(
-                              const T &, const std::string &args)>
-                              filepath);
+    DynamicHostFileColumn(
+        const std::string &name, const std::string &description,
+        Column::Offsets, std::function<std::filesystem::path()> basepath,
+        std::function<std::filesystem::path(const T &, const std::string &args)>
+            filepath);
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;
     [[nodiscard]] std::filesystem::path basepath() const;
 
 private:
     const std::function<std::filesystem::path()> _basepath;
-    const std::function<std::optional<std::filesystem::path>(
-        const T &, const std::string &args)>
+    const std::function<std::filesystem::path(const T &,
+                                              const std::string &args)>
         _filepath;
 };
 

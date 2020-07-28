@@ -17,7 +17,7 @@ HostFileColumn<T>::HostFileColumn(
     const std::string& name, const std::string& description,
     const Column::Offsets& offsets,
     std::function<std::filesystem::path()> basepath,
-    std::function<std::optional<std::filesystem::path>(const T&)> filepath)
+    std::function<std::filesystem::path(const T&)> filepath)
     : BlobColumn(name, description, offsets)
     , _basepath(std::move(basepath))
     , _filepath(std::move(filepath)) {}
@@ -32,11 +32,7 @@ std::unique_ptr<std::vector<char>> HostFileColumn<T>::getValue(Row row) const {
     if (data == nullptr) {
         return nullptr;
     }
-    auto f = _filepath(*data);
-    if (!f) {
-        return nullptr;
-    }
-    std::filesystem::path path = _basepath() / *f;
+    std::filesystem::path path = _basepath() / _filepath(*data);
     if (!std::filesystem::is_regular_file(path)) {
         Warning(logger()) << path << " is not a regular file";
         return nullptr;

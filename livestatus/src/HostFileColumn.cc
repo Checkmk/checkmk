@@ -23,41 +23,25 @@ HostFileColumn::HostFileColumn(
     , _basepath(std::move(basepath))
     , _filepath(std::move(filepath)) {}
 
-[[nodiscard]] std::filesystem::path HostFileColumn::basepath() const {
-    return _basepath();
-}
-
-[[nodiscard]] std::optional<std::filesystem::path> HostFileColumn::filepath(
-    const Row& row) const {
-    return _filepath(*this, row);
-}
-
-[[nodiscard]] std::optional<std::filesystem::path> HostFileColumn::abspath(
-    const Row& row) const {
-    if (auto f = filepath(row)) {
-        return basepath() / *f;
-    }
-    return {};
-}
-
 std::unique_ptr<std::vector<char>> HostFileColumn::getValue(Row row) const {
-    if (!std::filesystem::exists(basepath())) {
+    if (!std::filesystem::exists(_basepath())) {
         // The basepath is not configured.
         return nullptr;
     }
-    auto path = abspath(row);
-    if (!path) {
+    auto f = _filepath(*this, row);
+    if (!f) {
         return nullptr;
     }
-    if (!std::filesystem::is_regular_file(*path)) {
-        Warning(logger()) << *path << " is not a regular file";
+    std::filesystem::path path = _basepath() / *f;
+    if (!std::filesystem::is_regular_file(path)) {
+        Warning(logger()) << path << " is not a regular file";
         return nullptr;
     }
-    auto file_size = std::filesystem::file_size(*path);
+    auto file_size = std::filesystem::file_size(path);
     std::ifstream ifs;
-    ifs.open(*path, std::ifstream::in | std::ifstream::binary);
+    ifs.open(path, std::ifstream::in | std::ifstream::binary);
     if (!ifs.is_open()) {
-        generic_error ge("cannot open " + path->string());
+        generic_error ge("cannot open " + path.string());
         Warning(logger()) << ge;
         return nullptr;
     }
@@ -65,7 +49,7 @@ std::unique_ptr<std::vector<char>> HostFileColumn::getValue(Row row) const {
     auto buffer = std::make_unique<std::vector<char>>(file_size);
     buffer->assign(iterator{ifs}, iterator{});
     if (buffer->size() != file_size) {
-        Warning(logger()) << "premature EOF reading " << *path;
+        Warning(logger()) << "premature EOF reading " << path;
         return nullptr;
     }
     return buffer;

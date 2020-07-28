@@ -6,7 +6,19 @@
 #  If Livestatus is configured to listen on a TCP port, you
 #  can configure the IP addresses that are allowed to
 #  connect to livestatus here. The setting "0.0.0.0 ::/0" makes the
-#  port available to all IPv4 and IPv6 clients,
+#  port available to all IPv4 and IPv6 clients. Use the following syntax:
+#  \n
+#  \n
+#  a) a numeric address in the form of %d.%d.%d.%d. If the rightmost
+#     components are 0, they are treated as wildcards (for example,
+#     128.138.12.0 matches all hosts on the 128.138.12 subnet). 0.0.0.0
+#     matches  all Internet addresses. IPv6 hosts may be specified in the
+#     form of abcd:ef01::2345:6789. The rightmost rule for IPv4 addresses
+#     does not apply to IPv6 addresses.
+#  \n
+#  \n
+#  b) an ip address/netmask range in the form of 1.2.3.4/32. IPv6
+#     address/netmask ranges in the form of 1234::/46 are also valid.
 
 case "$1" in
 default)
@@ -24,8 +36,11 @@ choices)
     #      does not apply to IPv6 addresses.
     # e)   an  ip  address/netmask  range  in the form of 1.2.3.4/32.  IPv6 ad‐
     #      dress/netmask ranges in the form of 1234::/46 are also valid.
-
-    echo "(?:(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})(/[0-9]{1,2})?\s?)+"
+    IPV4="(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})(/[0-9]{1,2})?"
+    # This may not be perfect, but seems to be good enough for the current
+    # situation (see https://stackoverflow.com/a/17871737).
+    IPV6="(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))(/[0-9]{1,2})?"
+    echo "(?:($IPV4|$IPV6)\s?)+"
     ;;
 set)
     sed -ri "s@#?([[:space:]]*only_from[[:space:]]*=[[:space:]]*)(.*)@\1$2@" "$OMD_ROOT"/etc/mk-livestatus/xinetd.conf

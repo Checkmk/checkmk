@@ -1742,7 +1742,7 @@ metric_info["connections_duration_max"] = {
 }
 
 metric_info["connections_duration_mean"] = {
-    "title": _("Connections duration max"),
+    "title": _("Connections duration mean"),
     "unit": "s",
     "color": "25/a"
 }

@@ -53,7 +53,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'veritas_vcs'),
     ('check', 'bluecat_dhcp'),
     ('check', 'bluecat_dns'),
-    ('check', 'chrony'),
     ('check', 'cisco_wlc'),
     ('check', 'diskstat'),
     ('check', 'docker_container_status'),

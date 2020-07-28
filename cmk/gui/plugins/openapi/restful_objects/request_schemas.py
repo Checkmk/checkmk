@@ -3,7 +3,15 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+
 from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
+    schedule_host_downtime,
+    schedule_hostgroup_host_downtime,
+    schedule_service_downtime,
+    schedule_servicegroup_service_downtime,
+)
 from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME_REGEXP
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import \
@@ -46,7 +54,7 @@ class CreateHost(BaseSchema):
     """
     host_name = HOST_FIELD
     folder = FOLDER_FIELD
-    attributes = fields.Dict(example={})
+    attributes = fields.Dict(example={'ipaddress': '192.168.0.123'})
     nodes = fields.List(fields.String(),
                         description="Nodes where the newly created host should be the "
                         "cluster-container of.",
@@ -132,74 +140,148 @@ class UpdateFolder(BaseSchema):
                              }])
 
 
-class CreateDowntime(BaseSchema):
-    service_description = fields.String(required=False, example="CPU utilization")
-    host_name = HOST_FIELD
-    end_time = fields.String(
+class CreateDowntimeBase(BaseSchema):
+    downtime_type = fields.String(required=True, description="The type of downtime to create.")
+    start_time = fields.DateTime(
+        format="iso8601",
         required=True,
         example="2017-07-21T17:32:28Z",
         description=
-        "The end datetime of the new downtime. The format underlies the ISO 8601 profile",
-        format="date-time")
-    start_time = fields.String(
+        "The start datetime of the new downtime. The format has to conform to the ISO 8601 profile",
+    )
+    end_time = fields.DateTime(
         required=True,
         example="2017-07-21T17:32:28Z",
         description=
-        "The start datetime of the new downtime. The format underlies the ISO 8601 profile",
-        format="date-time")
-    recurring_option = fields.String(
+        "The end datetime of the new downtime. The format has to conform to the ISO 8601 profile",
+        format="iso8601",
+    )
+    recur = fields.String(
         required=False,
-        pattern="hour|day|week|second week|fourth week|same weekday|same day of the month",
-        description=
-        "Option when want to repeat this downtime on a regular basis (This only works when using CMC)",
-        example="hour")
-    delayed_duration = fields.Integer(
+        enum=[
+            "fixed", "hour", "day", "week", "second_week", "fourth_week", "weekday_start",
+            "weekday_end", "day_of_month"
+        ],
+        description=param_description(schedule_host_downtime.__doc__, 'recur'),
+        example="hour",
+        missing="fixed",
+    )
+    duration = fields.Integer(
         required=False,
-        description="With this option the scheduled downtime does not begin automatically at a "
-        "nominated time, rather first when a real Problem status appears for the host."
-        "In consequence, the start/end time is only the time window in which the scheduled "
-        "downtime can begin. The concerning duration is specified in seconds.",
-        example=3600)
+        description=param_description(schedule_host_downtime.__doc__, 'duration'),
+        example=3600,
+        missing=0,
+    )
     comment = fields.String(required=False, example="Security updates")
 
 
-HOST_STICKY_FIELD = fields.Boolean(
+HOST_DURATION = fields.Integer(
     required=False,
-    example=False,
-    description=param_description(acknowledge_host_problem.__doc__, 'sticky'),
+    description=param_description(schedule_host_downtime.__doc__, 'duration'),
+    example=3600,
+    missing=0,
 )
 
-HOST_PERSISTENT_FIELD = fields.Boolean(
-    required=False,
-    example=False,
-    description=param_description(acknowledge_host_problem.__doc__, 'persistent'),
-)
 
-HOST_NOTIFY_FIELD = fields.Boolean(
-    required=False,
-    example=False,
-    description=param_description(acknowledge_host_problem.__doc__, 'notify'),
-)
+class CreateHostDowntime(CreateDowntimeBase):
+    host_name = HOST_FIELD
+    duration = HOST_DURATION
+    include_all_services = fields.Boolean(
+        required=False,
+        description=param_description(schedule_host_downtime.__doc__, 'include_all_services'),
+        example=False,
+        missing=False,
+    )
 
-HOST_COMMENT_FIELD = fields.String(
-    required=False,
-    example='This was expected.',
-    description=param_description(acknowledge_host_problem.__doc__, 'comment'),
-)
+
+class CreateServiceDowntime(CreateDowntimeBase):
+    host_name = HOST_FIELD
+    service_descriptions = fields.List(
+        fields.String(),
+        uniqueItems=True,
+        required=True,
+        example=["CPU utilization", "Memory"],
+        description=param_description(schedule_service_downtime.__doc__, 'service_description'),
+    )
+    duration = fields.Integer(
+        required=False,
+        description=param_description(schedule_service_downtime.__doc__, 'duration'),
+        example=3600,
+        missing=0,
+    )
+
+
+class CreateServiceGroupDowntime(CreateDowntimeBase):
+    servicegroup_name = fields.String(
+        required=True,
+        description=param_description(schedule_servicegroup_service_downtime.__doc__,
+                                      'servicegroup_name'),
+        example='Webservers',
+    )
+    include_hosts = fields.Boolean(
+        required=False,
+        description=param_description(schedule_servicegroup_service_downtime.__doc__,
+                                      'include_hosts'),
+        example=False,
+        missing=False,
+    )
+    duration = HOST_DURATION
+
+
+class CreateHostGroupDowntime(CreateDowntimeBase):
+    hostgroup_name = fields.String(
+        required=True,
+        description=param_description(schedule_hostgroup_host_downtime.__doc__, 'hostgroup_name'),
+        example='Servers',
+    )
+    include_all_services = fields.Boolean(
+        required=False,
+        description=param_description(schedule_hostgroup_host_downtime.__doc__,
+                                      'include_all_services'),
+        example=False,
+        missing=False,
+    )
+    duration = HOST_DURATION
+
+
+class CreateDowntime(OneOfSchema):
+    type_field = 'downtime_type'
+    type_field_remove = False
+    type_schemas = {
+        'host': CreateHostDowntime,
+        'hostgroup': CreateHostGroupDowntime,
+        'service': CreateServiceDowntime,
+        'servicegroup': CreateServiceGroupDowntime,
+    }
 
 
 class AcknowledgeHostProblem(BaseSchema):
-    sticky = HOST_STICKY_FIELD
-    persistent = HOST_PERSISTENT_FIELD
-    notify = HOST_NOTIFY_FIELD
-    comment = HOST_COMMENT_FIELD
+    sticky = fields.Boolean(
+        required=False,
+        example=False,
+        description=param_description(acknowledge_host_problem.__doc__, 'sticky'),
+    )
+
+    persistent = fields.Boolean(
+        required=False,
+        example=False,
+        description=param_description(acknowledge_host_problem.__doc__, 'persistent'),
+    )
+
+    notify = fields.Boolean(
+        required=False,
+        example=False,
+        description=param_description(acknowledge_host_problem.__doc__, 'notify'),
+    )
+
+    comment = fields.String(
+        required=False,
+        example='This was expected.',
+        description=param_description(acknowledge_host_problem.__doc__, 'comment'),
+    )
 
 
-class BulkAcknowledgeHostProblem(BaseSchema):
-    stick = HOST_STICKY_FIELD
-    persistent = HOST_PERSISTENT_FIELD
-    notify = HOST_NOTIFY_FIELD
-    comment = HOST_COMMENT_FIELD
+class BulkAcknowledgeHostProblem(AcknowledgeHostProblem):
     entries = fields.List(
         HOST_FIELD,
         required=True,

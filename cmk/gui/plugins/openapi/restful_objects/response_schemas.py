@@ -44,6 +44,7 @@ class UserSchema(BaseSchema):
     id = fields.Int(dump_only=True)
     name = fields.Str(description="The user's name")
     created = fields.DateTime(dump_only=True,
+                              format="iso8601",
                               default=dt.datetime.utcnow,
                               doc_default="The current datetime")
 

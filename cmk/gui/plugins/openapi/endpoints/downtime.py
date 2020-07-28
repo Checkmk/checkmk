@@ -7,40 +7,36 @@
 
 import json
 import http.client
-from datetime import datetime
-from typing import Dict
+import datetime as dt
+from typing import Dict, Literal
 
-from connexion import ProblemException  # type: ignore[import]
+from connexion import ProblemException, problem  # type: ignore[import]
 
+from cmk.gui import config, sites
 from cmk.gui.http import Response
-from cmk.gui import sites
+from cmk.gui.plugins.openapi.livestatus_helpers.commands import downtimes as downtime_commands
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
-from cmk.gui.plugins.openapi.restful_objects import ParamDict
-from cmk.gui.watolib.downtime import (execute_livestatus_command, determine_downtime_mode,
-                                      remove_downtime_command, DowntimeSchedule)
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (del_host_downtime,
-                                                                           del_service_downtime)
-from cmk.gui.plugins.openapi.restful_objects import (endpoint_schema, request_schemas, constructors,
-                                                     response_schemas)
-
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
-
-RECURRING_OPTIONS = {
-    "hour": 1,
-    "day": 2,
-    "week": 3,
-    "second week": 4,
-    "fourth week": 5,
-    "same weekday": 6,
-    "same day of the month": 7
-}
+from cmk.gui.plugins.openapi.restful_objects import (
+    endpoint_schema,
+    request_schemas,
+    constructors,
+    response_schemas,
+    ParamDict,
+)
+from cmk.gui.watolib.downtime import (
+    execute_livestatus_command,
+    remove_downtime_command,
+)
 
 DOWNTIME_ID = ParamDict.create('downtime_id',
                                'path',
                                description='The id of the downtime',
                                example='54',
                                required=True)
+
+DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup']
 
 
 @endpoint_schema(constructors.collection_href('downtime'),
@@ -50,31 +46,64 @@ DOWNTIME_ID = ParamDict.create('downtime_id',
                  output_empty=True)
 def create_downtime(params):
     """Create downtime"""
-
     body = params['body']
-    host_name = body['host_name']
-    start_dt = _time_dt(body['start_time'])
-    end_dt = _time_dt(body['end_time'])
-    delayed_duration = body.get("delayed_duration", 0)
-    if "recurring_option" not in body:
-        recurring_number = 0
+    downtime_type: DowntimeType = body['downtime_type']
+    if downtime_type == 'host':
+        downtime_commands.schedule_host_downtime(
+            sites.live(),
+            host_name=body['host_name'],
+            include_all_services=body['include_all_services'],
+            start_time=body['start_time'],
+            end_time=body['end_time'],
+            recur=body['recur'],
+            duration=body['duration'],
+            user_id=config.user.ident,
+            comment=body.get('comment', f"Downtime for host {body['host_name']!r}"),
+        )
+    elif downtime_type == 'hostgroup':
+        downtime_commands.schedule_hostgroup_host_downtime(
+            sites.live(),
+            hostgroup_name=body['hostgroup_name'],
+            include_all_services=body['include_all_services'],
+            start_time=body['start_time'],
+            end_time=body['end_time'],
+            recur=body['recur'],
+            duration=body['duration'],
+            user_id=config.user.ident,
+            comment=body.get('comment', f"Downtime for hostgroup {body['hostgroup_name']!r}"),
+        )
+    elif downtime_type == 'service':
+        downtime_commands.schedule_service_downtime(
+            sites.live(),
+            host_name=body['host_name'],
+            service_description=body['service_descriptions'],
+            start_time=body['start_time'],
+            end_time=body['end_time'],
+            recur=body['recur'],
+            duration=body['duration'],
+            user_id=config.user.ident,
+            comment=body.get(
+                'comment',
+                f"Downtime for services {', '.join(body['service_descriptions'])!r}@{body['host_name']!r}"
+            ),
+        )
+    elif downtime_type == 'servicegroup':
+        downtime_commands.schedule_servicegroup_service_downtime(
+            sites.live(),
+            servicegroup_name=body['servicegroup_name'],
+            include_hosts=body['include_hosts'],
+            start_time=body['start_time'],
+            end_time=body['end_time'],
+            recur=body['recur'],
+            duration=body['duration'],
+            user_id=config.user.ident,
+            comment=body.get('comment', f"Downtime for servicegroup {body['servicegroup_name']!r}"),
+        )
     else:
-        recurring_number = RECURRING_OPTIONS[body["recurring_option"]]
-    mode = determine_downtime_mode(recurring_number, delayed_duration)
+        return problem(status=400,
+                       title="Unhandled downtime-type.",
+                       detail=f"The downtime-type {downtime_type!r} is not supported.")
 
-    if "service_description" in body:
-        service_description = body["service_description"]
-        spec = _service_spec(service_description, host_name)
-        comment = body.get("comment", "Downtime for service: %s" % service_description)
-        downtime_tag = "SVC"
-    else:
-        spec = host_name
-        downtime_tag = "HOST"
-        comment = body.get("comment", "Downtime for host: %s" % host_name)
-    downtime = DowntimeSchedule(start_dt.timestamp(), end_dt.timestamp(), mode, delayed_duration,
-                                comment)
-    command = downtime.livestatus_command(spec, downtime_tag)
-    execute_livestatus_command(command, host_name)
     return Response(status=204)
 
 
@@ -156,12 +185,10 @@ def bulk_delete_downtimes(params):
     entries = params['entries']
     not_found = []
 
-    downtimes: Dict[str, int] = {
-        downtime_id: is_service for downtime_id, is_service in Query(  # pylint: disable=unnecessary-comprehension
-            [Downtimes.id, Downtimes.is_service],
-            And(*[Downtimes.id.equals(downtime_id) for downtime_id in entries]),
-        ).fetch_values(live)
-    }
+    downtimes: Dict[int, int] = Query(
+        [Downtimes.id, Downtimes.is_service],
+        And(*[Downtimes.id.equals(downtime_id) for downtime_id in entries]),
+    ).to_dict(live)
 
     for downtime_id in entries:
         if downtime_id not in downtimes:
@@ -173,9 +200,9 @@ def bulk_delete_downtimes(params):
 
     for downtime_id, is_service in downtimes.items():
         if is_service:
-            del_service_downtime(live, downtime_id)
+            downtime_commands.del_service_downtime(live, downtime_id)
         else:
-            del_host_downtime(live, downtime_id)
+            downtime_commands.del_host_downtime(live, downtime_id)
     return Response(status=204)
 
 
@@ -223,19 +250,11 @@ def _downtime_properties(info):
         "host_name": info['host_name'],
         "author": info['author'],
         "is_service": 'yes' if info["is_service"] else 'no',
-        "start_time": _time_utc(datetime.fromtimestamp(info['start_time'])),
-        "end_time": _time_utc(datetime.fromtimestamp(info['end_time'])),
+        "start_time": _time_utc(dt.datetime.fromtimestamp(info['start_time'])),
+        "end_time": _time_utc(dt.datetime.fromtimestamp(info['end_time'])),
         "recurring": 'yes' if info['recurring'] else 'no',
         "comment": info['comment']
     }
-
-
-def _service_spec(service_description, host_name):
-    return "%s;%s" % (service_description, host_name)
-
-
-def _time_dt(time_str):
-    return datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S%z")
 
 
 def _time_utc(time_dt):

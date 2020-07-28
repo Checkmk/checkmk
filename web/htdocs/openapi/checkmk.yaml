@@ -194,7 +194,7 @@ components:
       type: object
     BulkAcknowledgeHostProblem:
       properties:
-        stick:
+        sticky:
           description: 'If set, only a state-change of the host to an UP state will
             discard the acknowledgement.
 
@@ -364,50 +364,19 @@ components:
       - links
       type: object
     CreateDowntime:
-      properties:
-        host_name:
-          description: The hostname or IP address itself.
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-        service_description:
-          example: CPU utilization
-          type: string
-        end_time:
-          description: The end datetime of the new downtime. The format underlies
-            the ISO 8601 profile
-          example: '2017-07-21T17:32:28Z'
-          format: date-time
-          type: string
-        start_time:
-          description: The start datetime of the new downtime. The format underlies
-            the ISO 8601 profile
-          example: '2017-07-21T17:32:28Z'
-          format: date-time
-          type: string
-        recurring_option:
-          description: Option when want to repeat this downtime on a regular basis
-            (This only works when using CMC)
-          example: hour
-          pattern: hour|day|week|second week|fourth week|same weekday|same day of
-            the month
-          type: string
-        delayed_duration:
-          description: With this option the scheduled downtime does not begin automatically
-            at a nominated time, rather first when a real Problem status appears for
-            the host.In consequence, the start/end time is only the time window in
-            which the scheduled downtime can begin. The concerning duration is specified
-            in seconds.
-          example: 3600
-          format: int32
-          type: integer
-        comment:
-          example: Security updates
-          type: string
-      required:
-      - end_time
-      - host_name
-      - start_time
+      discriminator:
+        mapping:
+          host: '#/components/schemas/CreateHostDowntime'
+          hostgroup: '#/components/schemas/CreateHostGroupDowntime'
+          service: '#/components/schemas/CreateServiceDowntime'
+          servicegroup: '#/components/schemas/CreateServiceGroupDowntime'
+        propertyName: downtime_type
+      oneOf:
+      - $ref: '#/components/schemas/CreateHostDowntime'
+      - $ref: '#/components/schemas/CreateHostGroupDowntime'
+      - $ref: '#/components/schemas/CreateServiceDowntime'
+      - $ref: '#/components/schemas/CreateServiceGroupDowntime'
+      properties: {}
       type: object
     CreateFolder:
       properties:
@@ -447,7 +416,8 @@ components:
           pattern: '[a-fA-F0-9]{32}|root'
           type: string
         attributes:
-          example: {}
+          example:
+            ipaddress: 192.168.0.123
           type: object
         nodes:
           description: Nodes where the newly created host should be the cluster-container
@@ -462,6 +432,264 @@ components:
       required:
       - folder
       - host_name
+      type: object
+    CreateHostDowntime:
+      properties:
+        downtime_type:
+          description: The type of downtime to create.
+          type: string
+        start_time:
+          description: The start datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        end_time:
+          description: The end datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        recur:
+          default: fixed
+          description: "The recurring mode of the new downtime. Available modes are:\n\
+            \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
+            \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
+            \nThis only works when using CMC. Defaults to 'fixed'."
+          enum: &id001
+          - fixed
+          - hour
+          - day
+          - week
+          - second_week
+          - fourth_week
+          - weekday_start
+          - weekday_end
+          - day_of_month
+          example: hour
+          type: string
+        duration:
+          default: 0
+          description: 'Duration in seconds. When set, the downtime does not begin
+            automatically at a nominated
+
+            time, but when a real problem status appears for the host. Consequencely,
+            the
+
+            start_time/end_time is only the time window in which the scheduled downtime
+            can begin.'
+          example: 3600
+          format: int32
+          type: integer
+        comment:
+          example: Security updates
+          type: string
+        host_name:
+          description: The hostname or IP address itself.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+        include_all_services:
+          default: false
+          description: 'If set, downtimes for all services associated with the given
+            host will be scheduled.
+
+            Defaults to False.'
+          example: false
+          type: boolean
+      required:
+      - downtime_type
+      - end_time
+      - host_name
+      - start_time
+      type: object
+    CreateHostGroupDowntime:
+      properties:
+        downtime_type:
+          description: The type of downtime to create.
+          type: string
+        start_time:
+          description: The start datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        end_time:
+          description: The end datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        recur:
+          default: fixed
+          description: "The recurring mode of the new downtime. Available modes are:\n\
+            \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
+            \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
+            \nThis only works when using CMC. Defaults to 'fixed'."
+          enum: *id001
+          example: hour
+          type: string
+        duration:
+          default: 0
+          description: 'Duration in seconds. When set, the downtime does not begin
+            automatically at a nominated
+
+            time, but when a real problem status appears for the host. Consequencely,
+            the
+
+            start_time/end_time is only the time window in which the scheduled downtime
+            can begin.'
+          example: 3600
+          format: int32
+          type: integer
+        comment:
+          example: Security updates
+          type: string
+        hostgroup_name:
+          description: The name of the hostgroup. A downtime will be scheduled for
+            all hosts in this hostgroup.
+          example: Servers
+          type: string
+        include_all_services:
+          default: false
+          description: 'If set, downtimes for all services associated with the given
+            host will be scheduled.
+
+            Defaults to False.'
+          example: false
+          type: boolean
+      required:
+      - downtime_type
+      - end_time
+      - hostgroup_name
+      - start_time
+      type: object
+    CreateServiceDowntime:
+      properties:
+        downtime_type:
+          description: The type of downtime to create.
+          type: string
+        start_time:
+          description: The start datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        end_time:
+          description: The end datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        recur:
+          default: fixed
+          description: "The recurring mode of the new downtime. Available modes are:\n\
+            \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
+            \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
+            \nThis only works when using CMC. Defaults to 'fixed'."
+          enum: *id001
+          example: hour
+          type: string
+        duration:
+          default: 0
+          description: 'Duration in seconds. When set, the downtime does not begin
+            automatically at a nominated
+
+            time, but when a real problem status appears for the service. Consequencely,
+            the
+
+            start_time/end_time is only the time window in which the scheduled downtime
+            can begin.'
+          example: 3600
+          format: int32
+          type: integer
+        comment:
+          example: Security updates
+          type: string
+        host_name:
+          description: The hostname or IP address itself.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+        service_descriptions:
+          description: The service description of the service, whose problems shall
+            be acknowledged.
+          example:
+          - CPU utilization
+          - Memory
+          items:
+            type: string
+          type: array
+          uniqueItems: true
+      required:
+      - downtime_type
+      - end_time
+      - host_name
+      - service_descriptions
+      - start_time
+      type: object
+    CreateServiceGroupDowntime:
+      properties:
+        downtime_type:
+          description: The type of downtime to create.
+          type: string
+        start_time:
+          description: The start datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        end_time:
+          description: The end datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        recur:
+          default: fixed
+          description: "The recurring mode of the new downtime. Available modes are:\n\
+            \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
+            \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
+            \nThis only works when using CMC. Defaults to 'fixed'."
+          enum: *id001
+          example: hour
+          type: string
+        duration:
+          default: 0
+          description: 'Duration in seconds. When set, the downtime does not begin
+            automatically at a nominated
+
+            time, but when a real problem status appears for the host. Consequencely,
+            the
+
+            start_time/end_time is only the time window in which the scheduled downtime
+            can begin.'
+          example: 3600
+          format: int32
+          type: integer
+        comment:
+          example: Security updates
+          type: string
+        servicegroup_name:
+          description: 'The name of the service group. Any host having a service in
+            this group will be
+
+            A downtime will be scheduled for all hosts in this group.'
+          example: Webservers
+          type: string
+        include_hosts:
+          default: false
+          description: 'When set to True, all hosts will also receive a scheduled
+            downtime, not just their
+
+            services which belong to this service group.'
+          example: false
+          type: boolean
+      required:
+      - downtime_type
+      - end_time
+      - servicegroup_name
+      - start_time
       type: object
     DomainObject:
       properties:
@@ -1064,9 +1292,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/host/actions/bulk-acknowledge/invoke\"\
-          ,\n    json={\n        'stick': False,\n        'persistent': False,\n \
-          \       'notify': False,\n        'comment': 'This was expected.',\n   \
-          \     'entries': ['example.com', 'sample.com']\n    },\n)\nresp.raise_for_status()\n\
+          ,\n    json={\n        'sticky': False,\n        'persistent': False,\n\
+          \        'notify': False,\n        'comment': 'This was expected.',\n  \
+          \      'entries': ['example.com', 'sample.com']\n    },\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -1076,7 +1304,7 @@ paths:
           \    f\"{API_URL}/domain-types/host/actions/bulk-acknowledge/invoke\",\n\
           \    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        'stick': False,\n        'persistent':\
+          \    },\n    data=json.dumps({\n        'sticky': False,\n        'persistent':\
           \ False,\n        'notify': False,\n        'comment': 'This was expected.',\n\
           \        'entries': ['example.com', 'sample.com']\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
@@ -1089,7 +1317,7 @@ paths:
           \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
           \          \"entries\": [\n            \"example.com\",\n            \"\
           sample.com\"\n          ],\n          \"notify\": false,\n          \"persistent\"\
-          : false,\n          \"stick\": false\n        }' \\\n    \"$API_URL/domain-types/host/actions/bulk-acknowledge/invoke\""
+          : false,\n          \"sticky\": false\n        }' \\\n    \"$API_URL/domain-types/host/actions/bulk-acknowledge/invoke\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -1098,7 +1326,7 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='This was expected.' \\\n    entries='[\"\
           example.com\", \"sample.com\"]' \\\n    notify='False' \\\n    persistent='False'\
-          \ \\\n    stick='False' \\\n    --json"
+          \ \\\n    sticky='False' \\\n    --json"
   /domain-types/service/{service_description}/actions/acknowledge/invoke:
     post:
       description: ''
@@ -1967,11 +2195,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/downtime/collections/all\"\
-          ,\n    json={\n        'host_name': 'example.com',\n        'service_description':\
-          \ 'CPU utilization',\n        'end_time': '2017-07-21T17:32:28Z',\n    \
-          \    'start_time': '2017-07-21T17:32:28Z',\n        'recurring_option':\
-          \ 'hour',\n        'delayed_duration': 3600,\n        'comment': 'Security\
-          \ updates'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={},\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -1980,11 +2204,7 @@ paths:
           \    f\"{API_URL}/domain-types/downtime/collections/all\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({\n        'host_name': 'example.com',\n        'service_description':\
-          \ 'CPU utilization',\n        'end_time': '2017-07-21T17:32:28Z',\n    \
-          \    'start_time': '2017-07-21T17:32:28Z',\n        'recurring_option':\
-          \ 'hour',\n        'delayed_duration': 3600,\n        'comment': 'Security\
-          \ updates'\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          \ data=json.dumps({}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -1992,22 +2212,14 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"comment\": \"Security updates\",\n \
-          \         \"delayed_duration\": 3600,\n          \"end_time\": \"2017-07-21T17:32:28Z\"\
-          ,\n          \"host_name\": \"example.com\",\n          \"recurring_option\"\
-          : \"hour\",\n          \"service_description\": \"CPU utilization\",\n \
-          \         \"start_time\": \"2017-07-21T17:32:28Z\"\n        }' \\\n    \"\
-          $API_URL/domain-types/downtime/collections/all\""
+          \ \\ \\\n    --data '{}' \\\n    \"$API_URL/domain-types/downtime/collections/all\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/downtime/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='Security updates' \\\n    delayed_duration='3600'\
-          \ \\\n    end_time='2017-07-21T17:32:28Z' \\\n    host_name='example.com'\
-          \ \\\n    recurring_option='hour' \\\n    service_description='CPU utilization'\
-          \ \\\n    start_time='2017-07-21T17:32:28Z' \\\n    --json"
+          \ application/json\" \\\n    --json"
   /objects/host/{host_name}/objects/downtime/{downtime_id}:
     delete:
       description: ''
@@ -2826,8 +3038,9 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_config/collections/all\"\
           ,\n    json={\n        'host_name': 'example.com',\n        'folder': 'root',\n\
-          \        'attributes': {},\n        'nodes': ['host1', 'host2', 'host3']\n\
-          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
+          \     },\n        'nodes': ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -2837,28 +3050,29 @@ paths:
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
           \ data=json.dumps({\n        'host_name': 'example.com',\n        'folder':\
-          \ 'root',\n        'attributes': {},\n        'nodes': ['host1', 'host2',\
-          \ 'host3']\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \ 'root',\n        'attributes': {\n            'ipaddress': '192.168.0.123'\n\
+          \        },\n        'nodes': ['host1', 'host2', 'host3']\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"attributes\": {},\n          \"folder\"\
-          : \"root\",\n          \"host_name\": \"example.com\",\n          \"nodes\"\
-          : [\n            \"host1\",\n            \"host2\",\n            \"host3\"\
-          \n          ]\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/all\""
+          \ \\ \\\n    --data '{\n          \"attributes\": {\n            \"ipaddress\"\
+          : \"192.168.0.123\"\n          },\n          \"folder\": \"root\",\n   \
+          \       \"host_name\": \"example.com\",\n          \"nodes\": [\n      \
+          \      \"host1\",\n            \"host2\",\n            \"host3\"\n     \
+          \     ]\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/all\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    attributes='{}' \\\n    folder='root' \\\n\
-          \    host_name='example.com' \\\n    nodes='[\"host1\", \"host2\", \"host3\"\
-          ]' \\\n    --json"
+          \ application/json\" \\\n    attributes='{\"ipaddress\": \"192.168.0.123\"\
+          }' \\\n    folder='root' \\\n    host_name='example.com' \\\n    nodes='[\"\
+          host1\", \"host2\", \"host3\"]' \\\n    --json"
   /objects/host_config/{host_name}:
     delete:
       description: ''
@@ -4446,7 +4660,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
-          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -4455,8 +4669,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
-          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'passphrase':\
+          \ 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -4615,7 +4829,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
-          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -4625,7 +4839,7 @@ paths:
           \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
+          \ data=json.dumps({'passphrase': 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash

@@ -53,6 +53,8 @@ body.side {
 }
 
 #check_mk_sidebar {
+  display: flex;
+  flex-direction: column;
   float: right;
   width: 280px;
   height: 100%;
@@ -89,9 +91,7 @@ body.side {
   }
 
   #side_content {
-    /* NOTE: Subtract the height of div.shortcuts so that SimpleBar calculates */
-    /*       the height of the scrollable content correctly. */
-    height: calc(100% - 57px);
+    height: 100%;
     overflow: auto;
     color: rgb(0, 0, 0);
 

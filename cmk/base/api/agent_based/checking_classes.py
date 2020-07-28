@@ -6,8 +6,6 @@
 """Classes used by the API for check plugins
 """
 import enum
-from collections.abc import Mapping
-import pprint
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
@@ -19,27 +17,6 @@ from cmk.base.api.agent_based.type_defs import ABCCheckGenerated, ABCDiscoveryGe
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
-
-
-class Parameters(Mapping):
-    """Parameter objects are used to pass parameters to discover and check functions"""
-    def __init__(self, data):
-        if not isinstance(data, dict):
-            raise TypeError("Parameters expected dict, got %r" % (data,))
-        self._data = dict(data)
-
-    def __getitem__(self, key):
-        return self._data[key]
-
-    def __len__(self):
-        return len(self._data)
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __repr__(self):
-        # use pformat to be testable.
-        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._data))
 
 
 class Service(ABCDiscoveryGenerated):

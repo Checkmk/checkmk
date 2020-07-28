@@ -70,7 +70,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
     CLUSTER_LEGACY_MODE_FROM_HELL,
     wrap_parameters,
 )
-from cmk.base.api.agent_based.type_defs import CheckGenerator, CheckPlugin
+from cmk.base.api.agent_based.type_defs import CheckGenerator, CheckPlugin, Parameters
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
@@ -422,7 +422,7 @@ def get_aggregated_result(
     ipaddress: Optional[HostAddress],
     service: Service,
     plugin: Optional[CheckPlugin],
-    params_function: Callable[[], checking_classes.Parameters],
+    params_function: Callable[[], Parameters],
 ) -> Tuple[bool, bool, ServiceCheckResult]:
     """Run the check function and aggregate the subresults
 
@@ -613,7 +613,7 @@ def _legacy_determine_cache_info(multi_host_sections: MultiHostSections,
     return (min(cached_ats), max(intervals)) if cached_ats else None
 
 
-def determine_check_params(entries: LegacyCheckParameters) -> checking_classes.Parameters:
+def determine_check_params(entries: LegacyCheckParameters) -> Parameters:
     # TODO (mo): obviously, we do not want to keep legacy_determine_check_params
     # around in the long run. This needs cleaning up, once we've gotten
     # rid of tuple parameters.
@@ -621,7 +621,7 @@ def determine_check_params(entries: LegacyCheckParameters) -> checking_classes.P
     # wrap_parameters is a no-op for dictionaries.
     # For auto-migrated plugins expecting tuples, they will be
     # unwrapped by a decorator of the original check_function.
-    return checking_classes.Parameters(wrap_parameters(params))
+    return Parameters(wrap_parameters(params))
 
 
 def legacy_determine_check_params(entries: LegacyCheckParameters) -> LegacyCheckParameters:

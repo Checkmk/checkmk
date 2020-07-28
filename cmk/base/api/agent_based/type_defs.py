@@ -7,6 +7,7 @@
 
 Some of these are exposed in the API, some are not.
 """
+from collections.abc import Mapping
 from typing import (
     Any,
     Callable,
@@ -19,6 +20,7 @@ from typing import (
     Set,
     Union,
 )
+import pprint
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName, SectionName
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
@@ -32,6 +34,31 @@ class ABCCheckGenerated:
 
 class ABCDiscoveryGenerated:
     """Abstract class for everything a discovery function may yield"""
+
+
+class ABCInventoryGenerated:
+    """Abstract class for everything an inventory function may yield"""
+
+
+class Parameters(Mapping):
+    """Parameter objects are used to pass parameters to plugin functions"""
+    def __init__(self, data):
+        if not isinstance(data, dict):
+            raise TypeError("Parameters expected dict, got %r" % (data,))
+        self._data = dict(data)
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __repr__(self):
+        # use pformat to be testable.
+        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._data))
 
 
 AgentStringTable = List[List[str]]

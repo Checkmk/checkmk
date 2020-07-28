@@ -74,7 +74,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes
-from cmk.base.api.agent_based.type_defs import DiscoveryGenerator, CheckPlugin
+from cmk.base.api.agent_based.type_defs import DiscoveryGenerator, CheckPlugin, Parameters
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import FinalSectionContent, LegacyCheckParameters, Service, ServiceID
 from cmk.base.config import SelectedRawSections
@@ -1553,7 +1553,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
                     continue  # Skip not existing check silently
 
                 ruleset_name = str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
-                wrapped_params = checking_classes.Parameters(wrap_parameters(params))
+                wrapped_params = Parameters(wrap_parameters(params))
 
                 _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
                     multi_host_sections,

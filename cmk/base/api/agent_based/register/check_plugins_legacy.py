@@ -16,12 +16,11 @@ from cmk.base import item_state
 from cmk.base.api.agent_based.checking_classes import (
     Metric,
     state,
-    Parameters,
     Result,
     Service,
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
-from cmk.base.api.agent_based.type_defs import CheckPlugin
+from cmk.base.api.agent_based.type_defs import CheckPlugin, Parameters
 from cmk.base.check_api_utils import Service as LegacyService
 from cmk.base.check_utils import get_default_parameters
 from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels

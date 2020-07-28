@@ -18,6 +18,8 @@ import json
 from dataclasses import dataclass, field
 from typing import List, Iterator, Optional
 
+from cmk.gui.globals import html
+
 
 @dataclass
 class Link:
@@ -59,11 +61,11 @@ def make_form_submit_link(form_name: str, button_name: str) -> PageMenuLink:
 @dataclass
 class PageMenuEntry:
     """Representing an entry in the menu, holding the ABCPageMenuItem to be displayed"""
-    name: str
     title: str
-    description: str
     icon_name: str
     item: ABCPageMenuItem
+    name: Optional[str] = None
+    description: Optional[str] = None
     is_enabled: bool = True
     is_advanced: bool = False
     is_list_entry: bool = True
@@ -89,6 +91,10 @@ class PageMenuDropdown:
     def any_advanced_entries(self) -> bool:
         return any(entry.is_advanced for topic in self.topics for entry in topic.entries)
 
+    @property
+    def is_empty(self) -> bool:
+        return not any(entry.is_list_entry for topic in self.topics for entry in topic.entries)
+
 
 @dataclass
 class PageMenu:
@@ -112,3 +118,98 @@ class PageMenu:
     @property
     def has_suggestions(self) -> bool:
         return any(True for _s in self.suggestions)
+
+
+class PageMenuRenderer:
+    """Renders the given page menu to the page header"""
+    def show(self, menu: PageMenu) -> None:
+        html.open_table(id_="page_menu_bar", class_="menubar")
+        html.open_tr()
+        self._show_dropdowns(menu)
+        html.close_tr()
+        html.close_table()
+
+    def _show_dropdowns(self, menu: PageMenu) -> None:
+        html.open_td(class_="menues")
+
+        for dropdown in menu.dropdowns:
+            if dropdown.is_empty:
+                continue
+
+            html.open_div(class_="menucontainer")
+
+            self._show_dropdown_trigger(dropdown)
+            self._show_dropdown_area(dropdown)
+
+            html.close_div()  # menucontainer
+
+        html.close_td()
+
+    def _show_dropdown_trigger(self, dropdown: PageMenuDropdown) -> None:
+        html.open_div(class_="menutitle",
+                      onclick="cmk.page_menu.toggle(this)",
+                      onmouseenter="cmk.page_menu.switch_menu(this)")
+        html.h2(dropdown.title)
+        html.close_div()
+
+    def _show_dropdown_area(self, dropdown: PageMenuDropdown) -> None:
+        id_ = id_ = "menu_%s" % dropdown.name
+        show_more = html.foldable_container_is_open("more_buttons", id_, isopen=False)
+        html.open_div(class_=["menu", ("more" if show_more else "less")], id_=id_)
+
+        if dropdown.any_advanced_entries:
+            html.open_div(class_=["more_container"])
+            html.more_button(id_, dom_levels_up=2)
+            html.close_div()
+
+        for topic in dropdown.topics:
+            self._show_topic(topic)
+
+        html.close_div()
+
+    def _show_topic(self, topic: PageMenuTopic) -> None:
+        html.open_div(class_="topic")
+        html.div(topic.title, class_="topic_title")
+
+        for entry in topic.entries:
+            self._show_entry(entry)
+
+        html.close_div()
+
+    def _show_entry(self, entry: PageMenuEntry) -> None:
+        classes = [
+            "entry",
+            ("enabled" if entry.is_enabled else "disabled"),
+            ("advanced" if entry.is_advanced else "basic"),
+        ]
+
+        html.open_div(class_=classes, id_=entry.name)
+
+        #if self.disabled_reason:
+        #    html.open_div(class_="tooltip")
+
+        DropdownEntryRenderer().show(entry)
+
+        #if self.disabled_reason:
+        #    html.span(_("This action is currently not possible: ") + self.disabled_reason,
+        #              class_="disabled tooltiptext")
+        #    html.close_div()
+
+        html.close_div()
+
+
+class DropdownEntryRenderer:
+    """Render the different item types for the dropdown menu"""
+    def show(self, entry: PageMenuEntry):
+        if isinstance(entry.item, PageMenuLink):
+            self._show_link_item(entry.title, entry.icon_name, entry.item)
+        else:
+            raise NotImplementedError("Rendering not implemented for %s" % entry.item)
+
+    def _show_link_item(self, title: str, icon_name: str, item: PageMenuLink):
+        html.icon(title=None, icon=icon_name or "trans")
+
+        if item.link.url is not None:
+            html.a(title, href=item.link.url, target=item.link.target)
+        else:
+            html.a(title, href="javascript:void(0)", onclick=item.link.onclick)

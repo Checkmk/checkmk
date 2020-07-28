@@ -112,6 +112,7 @@ from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
+from cmk.gui.page_menu import PageMenu, PageMenuRenderer
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -1643,6 +1644,7 @@ class html(ABCHTMLGenerator):
     def header(self,
                title: str,
                breadcrumb: Breadcrumb,
+               page_menu: Optional[PageMenu] = None,
                javascripts: Optional[List[str]] = None,
                force: bool = False,
                show_body_start: bool = True,
@@ -1655,7 +1657,11 @@ class html(ABCHTMLGenerator):
                 self._header_sent = True
 
                 if self.render_headfoot and show_top_heading:
-                    self.top_heading(title, breadcrumb or Breadcrumb())
+                    self.top_heading(
+                        title,
+                        breadcrumb=breadcrumb or Breadcrumb(),
+                        page_menu=page_menu or PageMenu(),
+                    )
 
     def body_start(self,
                    title: str = u'',
@@ -1672,7 +1678,10 @@ class html(ABCHTMLGenerator):
     def html_foot(self) -> None:
         self.close_html()
 
-    def top_heading(self, title: str, breadcrumb: Breadcrumb) -> None:
+    def top_heading(self,
+                    title: str,
+                    breadcrumb: Breadcrumb,
+                    page_menu: Optional[PageMenu] = None) -> None:
         if not isinstance(config.user, config.LoggedInNobody):
             login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
             if self.enable_debug:
@@ -1682,7 +1691,7 @@ class html(ABCHTMLGenerator):
         else:
             login_text = _("not logged in")
 
-        self.top_heading_left(title, breadcrumb)
+        self.top_heading_left(title, breadcrumb, page_menu)
 
         self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; ' %
                    login_text)
@@ -1691,7 +1700,10 @@ class html(ABCHTMLGenerator):
         self.write(' <b id=headertime></b>')
         self.top_heading_right()
 
-    def top_heading_left(self, title: str, breadcrumb: Breadcrumb = None) -> None:
+    def top_heading_left(self,
+                         title: str,
+                         breadcrumb: Breadcrumb = None,
+                         page_menu: Optional[PageMenu] = None) -> None:
         self.open_table(class_="header")
         self.open_tr()
         self.open_td(width="*", class_="heading")
@@ -1706,6 +1718,9 @@ class html(ABCHTMLGenerator):
 
         if breadcrumb:
             BreadcrumbRenderer().show(breadcrumb)
+
+        if page_menu:
+            PageMenuRenderer().show(page_menu)
 
         self.close_td()
 

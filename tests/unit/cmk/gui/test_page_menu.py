@@ -77,6 +77,7 @@ def test_simple_page_menu():
         assert dropdown.title == "HALLO"
         assert len(dropdown.topics) == 1
         assert dropdown.any_advanced_entries is False
+        assert dropdown.is_empty is False
 
         for topic in dropdown.topics:
             assert topic.title == "Title"

@@ -172,12 +172,15 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
             html.add_user_error(None, reason)
 
     breadcrumb = make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
+    page_menu = mode.page_menu()
     wato_html_head(mode.title(),
                    breadcrumb=breadcrumb,
+                   page_menu=page_menu,
                    show_body_start=display_options.enabled(display_options.H),
                    show_top_heading=display_options.enabled(display_options.T))
 
-    if display_options.enabled(display_options.B):
+    # As long as we migrate the buttons to the page menu keep the buttons as fallback
+    if display_options.enabled(display_options.B) and not page_menu.dropdowns:
         # Show contexts buttons
         html.begin_context_buttons()
         mode.buttons()

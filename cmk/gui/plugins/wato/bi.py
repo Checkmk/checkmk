@@ -74,6 +74,13 @@ from cmk.gui.plugins.wato import (
 
 import cmk.gui.node_visualization
 from cmk.utils.type_defs import ContactgroupName
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 BIPack = Dict[str, Any]
 BIAggrOptions = Dict[str, Any]
@@ -1040,11 +1047,58 @@ class ModeBIPacks(ModeBI):
     def title(self):
         return _("Business Intelligence")
 
-    def buttons(self):
-        ModeBI.buttons(self)
+    def page_menu(self) -> PageMenu:
+        bi_config_entries = []
         if config.user.may("wato.bi_admin"):
-            html.context_button(_("New BI Pack"),
-                                html.makeuri_contextless([("mode", "bi_edit_pack")]), "new")
+            bi_config_entries.append(
+                PageMenuEntry(
+                    title=_("Add pack"),
+                    icon_name="new",
+                    item=make_simple_link(html.makeuri_contextless([("mode", "bi_edit_pack")])),
+                ))
+
+        return PageMenu([
+            PageMenuDropdown(
+                name="packs",
+                title=_("Packs"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("BI configuration"),
+                        entries=bi_config_entries,
+                    ),
+                ],
+            ),
+            PageMenuDropdown(
+                name="services",
+                title=_("Services"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Of aggregations"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Monitor state"),
+                                icon_name="rulesets",
+                                item=make_simple_link(
+                                    html.makeuri_contextless([
+                                        ("mode", "edit_ruleset"),
+                                        ("varname", "special_agents:bi"),
+                                    ])),
+                            ),
+                            PageMenuEntry(
+                                title=_("Monitor single state (Deprecated)"),
+                                icon_name="rulesets",
+                                item=make_simple_link(
+                                    html.makeuri_contextless([
+                                        ("mode", "edit_ruleset"),
+                                        ("varname", "active_checks:bi_aggr"),
+                                    ])),
+                                is_advanced=True,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ])
 
     def action(self):
         if config.user.may("wato.bi_admin") and html.request.has_var("_delete"):

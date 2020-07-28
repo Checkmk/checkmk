@@ -1,0 +1,785 @@
+body.main {
+  tr#suggestions {
+    display: none;
+  }
+
+  &.suggestions {
+    padding-top: 176px;
+
+    tr#suggestions {
+      display: table-row;
+    }
+
+    #suggestion_button img {
+      filter: grayscale(100%) brightness(55%);
+    }
+
+    td.shortcuts {
+      a.suggested {
+        display: none;
+      }
+    }
+  }
+}
+
+div#top_heading_spacer {
+  height: 43px;
+}
+
+div#top_heading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  width: calc(100% + 10px); /* compensate for body padding-right */
+  padding: 0;
+
+  div.titlebar {
+    height: 53px;
+    padding: 5px 10px 0;
+    background-color: $color-background;
+  }
+
+  a.title {
+    padding: 0;
+    margin: 6px 0 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #eaeaea;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      color: #fff;
+      cursor: pointer;
+    }
+  }
+
+  div.breadcrumb {
+    font-size: 11px;
+    white-space: nowrap;
+
+    span, a {
+      &:last-child:after {
+        content: "";
+      }
+      color: #ccc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: #fff;
+    }
+
+    // TODO: Check whether this selector works at all
+    :after {
+      text-decoration: none;
+      content: " > ";
+    }
+  }
+
+  table.menubar {
+    width: 100%;
+    padding: 0 0 10px 10px;
+    white-space: nowrap;
+    background-color: $color-background;
+    border-spacing: 0;
+
+    td {
+      padding: 0;
+      margin: 0;
+      vertical-align: middle;
+
+      /* Async progress stuff */
+      &#async_progress_msg {
+        width: 100%;
+        padding-left: 8px;
+        margin: 0;
+        text-align: left;
+        background-color: $navigation-bg-color;
+
+        div.success, div.error {
+          padding: 0;
+          margin: 0;
+	}
+      }
+
+      &.shortcuts {
+        padding: 0 3px;
+        background-color: $navigation-bg-color;
+        border-right: 1px solid $medium-blue;
+
+        a.disabled {
+          pointer-events: none;
+
+          img {
+            filter: grayscale(100%) brightness(50%);
+	  }
+	}
+      }
+    }
+
+    td.menues div.menucontainer {
+      position: relative;
+      display: inline-block;
+      padding: 0;
+      background-color: $navigation-bg-color;
+      border-bottom: 2px solid $navigation-bg-color;
+
+      &:focus {
+        outline: none;
+      }
+
+      &:hover {
+        border-bottom: 2px solid $success;
+      }
+
+      &:nth-child(1) {
+        border-radius: $popup-filters-border-radius 0 0 $popup-filters-border-radius;
+      }
+
+      div.menutitle {
+        width: 78px;
+        height: 100%;
+        text-align: center;
+
+        &:focus {
+          border: 10px solid #fff;
+          outline: none;
+        }
+
+        h2 {
+          padding: 6px 0 4px;
+          margin: 0;
+          font-size: 12px;
+
+          &:hover {
+            color: #fff;
+            cursor: pointer;
+	  }
+	}
+      }
+
+      div.menu {
+        position: absolute;
+        top: 27px;
+        left: 0;
+        z-index: 100;
+        display: none;
+        max-height: calc(100vh - 113px);
+        min-width: 220px;
+        padding: $spacing;
+        overflow-y: auto;
+        background-color: $navigation-bg-color;
+        scrollbar-width: none; /* Firefox */
+
+        &.active {
+          display: block;
+        }
+
+        img {
+          width: 16px;
+          height: auto;
+          margin-right: 7px;
+        }
+
+        a.more img {
+          width: auto;
+          height: 20px;
+          opacity: 0.5;
+        }
+
+        div.topic {
+          margin-top: $spacing;
+
+          &:nth-child(2) {
+            margin: 0;
+          }
+
+          &:first-child {
+            margin-top: 0;
+          }
+
+          div.topic_title {
+            display: inline-block;
+            padding-bottom: 2px;
+            margin-bottom: $spacing;
+            font-weight: normal;
+            color: $menubar-topic-title-font-color;
+            border-bottom: 1px solid $menubar-topic-title-border-color;
+          }
+
+          div.entry {
+            padding-left: 0;
+            margin: 0 0 $spacing $spacing;
+
+            &.enabled a {
+              color: #ddd;
+              text-decoration: none;
+
+              &:hover {
+                color: #fff;
+              }
+            }
+          }
+
+          /* Styling für die Filter in Views */
+          div#menu_entry_filters {
+            div.popup {
+              width: calc(100% - 50px);
+              height: calc(100% - 200px);
+              overflow-y: auto;
+            }
+          }
+
+          div.entry.invisible {
+            display: none;
+          }
+
+          div.entry.enabled .tooltiptext.disabled {
+            display: none;
+          }
+
+          div.entry.disabled .tooltiptext.enabled {
+            display: none;
+          }
+
+          div.entry.disabled {
+            cursor: not-allowed;
+
+            a {
+              color: #888;
+              pointer-events: none;
+            }
+
+            img {
+              filter: grayscale(100%) brightness(50%);
+            }
+          }
+        }
+
+        div.search {
+
+          form {
+            padding: 0;
+            margin: 0;
+          }
+
+          div.searchform {
+            display: inline-block;
+            margin: 0;
+          }
+
+          input.text {
+            position: relative;
+            left: -2px;
+            padding: 1px 5px;
+            font-size: 11px;
+          }
+
+          input.button {
+            display: none;
+          }
+        }
+
+        /* Some menus have an other width */
+        div.menu#menu_help {
+          width: 310px;
+        }
+      }
+    }
+  }
+
+  tr#suggestions {
+    /* display: none; */
+    background-color: $color-background;
+
+    td {
+      width: 100%;
+      padding: 6px 3px 3px 0;
+
+      div.suggestion {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        float: left;
+        width: 160px;
+        height: 24px;
+        margin: 2px 5px;
+        font-size: 12px;
+        font-weight: bold;
+        color: $white;
+        cursor: pointer;
+        background-color: $navigation-bg-color;
+        border: 1px solid $navigation-bg-color;
+        border-radius: 4px;
+
+        &:nth-child(1) {
+          margin-left: 0;
+        }
+
+        a {
+          text-decoration: none;
+
+          img {
+            margin-right: 6px;
+          }
+        }
+      }
+
+      @keyframes easyhoverbg {
+        from { border: 1px solid $button-bg-color-default; }
+        to { border: 1px solid $success; }
+      }
+
+      div.suggestion:hover {
+        animation-duration: 0.5s;
+        animation-name: easyhoverbg;
+        animation-fill-mode: forwards;
+
+        div.title, div.explanation {
+          animation-duration: 0.5s;
+          animation-fill-mode: forwards;
+        }
+      }
+    }
+  }
+
+  div.popup_shadow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 150;
+    display: none;
+    width: 100%;
+    height: 100%;
+
+    div.popup {
+      position: relative;
+      top: 57px;
+      left: initial;
+      float: right;
+      width: 489px;
+      padding: 0;
+      background-color: $form-bg-color;
+      border: none;
+      border-radius: $popup-filters-border-radius;
+
+      > .head, >.content {
+        border-left: $primary-table-border;
+        border-color: $medium-blue;
+      }
+
+      > .head {
+        padding: 8px 0 8px 16px;
+        background-color: $form-bg-color;
+
+        h3 {
+          padding-right: 24px;
+          margin: 0;
+          font-size: 12px;
+          font-weight: bold;
+        }
+
+        a.close_popup img {
+          position: absolute;
+          top: 7px;
+          right: 16px;
+          width: 16px;
+          height: auto;
+        }
+      }
+
+      > .content {
+        top: 0;
+        width: auto;
+        height: calc(100vh - 87px);
+        padding: 0;
+        overflow: auto;
+        white-space: initial;
+
+        form:not(#form_filter) { padding: 16px; }
+      }
+
+      form {
+        width: 456px;
+
+        span.checkbox { white-space: initial; }
+      }
+
+      #form_filter {
+        width: 488px;
+
+        table.filterform { width: inherit; }
+
+        table.filter {
+          border-spacing: 0;
+
+          > tbody > tr > td {
+            padding: 4px 16px;
+            border-bottom: 1px solid $medium-blue;
+          }
+        }
+
+        div.floatfilter, div.floatfilter.double {
+          float: none;
+          width: 423px;
+          height: auto;
+          padding: 0;
+          padding-right: 8px;
+          padding-bottom: 3px;
+          margin: 0;
+          background-color: $button-bg-color-default;
+          border-style: none;
+          border-radius: 0;
+
+          input.neg[type="text"] {
+            width: 84%;
+          }
+
+          div.legend {
+            width: 100%;
+            margin: 0;
+            margin-bottom: 4px;
+            font-size: 10px;
+            font-weight: normal;
+            color: $font-color;
+            text-align: left;
+            text-transform: uppercase;
+            border-radius: 0;
+          }
+
+          div.content {
+            height: auto;
+          }
+
+          span.select2-container--default {
+            display: inline-block;
+          }
+        }
+
+        span.add_heading {
+          padding-top: 10px;
+          margin-top: 10px;
+          margin-bottom: 0;
+          font-size: 11px;
+          font-weight: normal;
+          color: #dcdcdc;
+        }
+
+        table.filterform {
+          position: relative;
+          top: 70px;
+
+          > tbody > tr > td > span {
+            float: left;
+            margin-bottom: 2px;
+          }
+
+          input#_add  {
+            position: relative;
+            top: -8px;
+            float: left;
+            margin-right: 0;
+            margin-left: 10px;
+          }
+
+          input#search {
+            margin-bottom: 0;
+          }
+        }
+
+        text-align: left;
+
+        table.valuespec_listof.filter > tbody { padding-left: 6px; }
+      }
+
+      div.add_filter {
+        margin: 18px 0;
+        text-align: center;
+
+        a {
+          text-decoration: none;
+          cursor: pointer;
+
+          img {
+            width: 28px;
+            height: 28px;
+          }
+
+          div.description {
+            margin-top: 6px;
+            color: #5a6782;
+            text-transform: uppercase;
+	  }
+
+          &:hover, &.active {
+            img {
+              opacity: 1;
+              filter: brightness(100);
+            }
+            div.description { color: $font-color; }
+          }
+	}
+
+        &#add_filter_inline {
+          position: fixed;
+          z-index: 10;
+          display: inline-block;
+          width: inherit;
+          padding: 20px 16px 6px;
+          margin-top: 0;
+          margin-bottom: 10px;
+          text-align: initial;
+          background-color: rgb(53, 63, 74);
+          border-top: $primary-table-border;
+          border-bottom: $primary-table-border;
+          border-color: $medium-blue;
+          border-radius: $popup-filters-border-radius;
+          box-sizing: border-box;
+
+          a {
+            position: relative;
+            float: left;
+            margin-right: 10px;
+
+            img, div.description {
+              position: relative;
+              float: left;
+            }
+
+            img {
+              width: 22px;
+              height: 22px;
+            }
+
+            div.description { margin: 3px 10px 0; }
+          }
+
+          div.update_buttons {
+            float: right;
+
+            input.reset, input.apply {
+              padding: 8px 16px;
+              margin-top: -5px;
+            }
+
+            input.reset {
+              border-color: $font-color;
+            }
+          }
+	}
+
+        &#add_filter_block {
+          position: relative;
+          top: 46px;
+          padding-top: 26px;
+          margin-bottom: 82px;
+
+          a { display: inline-block; }
+        }
+      }
+
+      select, .tagify__input, span.select2 .select2-selection, input[type="checkbox"] + label::before, input:not(.reset):not([type="submit"])  {
+        background-color: $odd-tr-bg-color;
+      }
+
+      input.submit {
+        color: $black;
+        background-color: $success;
+      }
+
+      input[type=submit]:not(.submit) {
+        border: $popup-button-border;
+      }
+    }
+
+    div#popup_filter_list {
+      position: relative;
+      top: 57px;
+      float: right;
+      width: auto;
+      max-height: calc(100vh - 57px);
+      padding: 0;
+      overflow: auto;
+      background-color: rgb(53, 63, 74);
+      border: none;
+      border-radius: 4px;
+
+      input.button {
+        display: block;
+        width: 100%;
+        min-width: max-content;
+        padding: 4px 12px 4px 10px;
+        margin: 0;
+        text-align: left;
+
+        &:disabled {
+          background-color: transparent;
+          border: none;
+          opacity: .5;
+          box-shadow: none;
+        }
+
+        &.advanced {
+          display: none;
+          opacity: 0;
+        }
+      }
+
+      &.more input.button.advanced {
+        display: block;
+        animation: fadein 0s both;
+      }
+
+      div.filter_group:last-child { margin-bottom: 10px; }
+
+      a.filter_group_title {
+        display: block;
+        padding: 8px 10px;
+        font-weight: bold;
+        color: $filter-group-title-font-color;
+        cursor: pointer;
+      }
+
+      a.more {
+        position: absolute;
+        right: 4px;
+      }
+    }
+  }
+}
+
+a#helpbutton {
+  display: none;
+}
+
+/* Make "check all" thingy invisible, since it is in the menu now */
+table.data th input.checkgroup {
+  display: none;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  /* border-bottom: 1px dotted black; */
+
+  .tooltiptext {
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    z-index: 1;
+    width: 200px;
+    padding: 5px 0;
+    margin-left: -100px;
+    color: #fff;
+    text-align: center;
+    background-color: #555;
+    border-radius: 6px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s;
+
+    &::after {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-color: #555 transparent transparent;
+      border-style: solid;
+      border-width: 5px;
+      content: "";
+    }
+  }
+
+  &:hover .tooltiptext {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* Ein bisschen Styling für das Darktheme - unabhängig vom Inpage */
+.wato table.data {
+  border-style: none;
+  box-shadow: none;
+
+  &:not(.job_table) th {
+    background: transparent;
+
+    &.header_state {
+      color: #777 !important;
+      background: transparent !important;
+    }
+  }
+}
+
+div#service_container {
+  table.data {
+    tr.data > td {
+      height: auto;
+      padding: 3px 7px;
+
+      &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
+        border-top: none;
+        border-bottom: none;
+      }
+    }
+
+    tr.groupheader {
+      background-color: transparent;
+    }
+
+    th {
+      color: #777;
+    }
+
+    td h3 {
+      margin-top: 13px;
+    }
+  }
+
+  h3 {
+    margin-top: 13px;
+    font-size: 13px;
+    color: #aaa;
+    text-transform: uppercase;
+
+    img {
+      position: relative;
+      top: -1px;
+      margin-left: 5px;
+    }
+  }
+
+  tr.data td {
+    &:nth-child(1) {
+      width: 96px;
+      max-width: 96px;
+      min-width: 96px;
+    }
+
+    &:nth-child(2) {
+      width: 40px;
+      max-width: 40px;
+      min-width: 40px;
+    }
+
+    &:nth-child(3) {
+      width: 250px;
+      max-width: 250px;
+      min-width: 250px;
+      white-space: nowrap;
+    }
+  }
+}
+
+div.help {
+  text-transform: none; /* Neccessary due to help in H3 */
+}
+
+div.wato h3 {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #aaa;
+  text-transform: uppercase;
+}

@@ -38,6 +38,7 @@ import * as views from "views";
 import * as reload_pause from "reload_pause";
 import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
+import * as page_menu from "page_menu";
 
 import * as cmk_figures from "cmk_figures";
 import "cmk_figures_plugins";
@@ -125,6 +126,7 @@ export const cmk_export = {
         graph_integration: graph_integration,
         graphs: graphs,
         dashboard: dashboard,
+        page_menu: page_menu,
         // TODO: node_visualization cleanups
         node_visualization_utils: node_visualization_utils,
         node_visualization_layout_styles: node_visualization_layout_styles,

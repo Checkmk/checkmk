@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import SimpleBar from "simplebar";
+
 import * as ajax from "ajax";
 import * as selection from "selection";
 
@@ -560,4 +562,8 @@ export function toggle_more(trigger, toggle_id, dom_levels_up) {
     ajax.get_url("tree_openclose.py?tree=more_buttons"
             + "&name=" + encodeURIComponent(toggle_id)
             + "&state=" + encodeURIComponent (state));
+}
+
+export function add_simplebar_scrollbar(scrollable) {
+    new SimpleBar(scrollable);
 }

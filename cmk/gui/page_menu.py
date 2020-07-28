@@ -126,6 +126,8 @@ class PageMenuRenderer:
         html.open_table(id_="page_menu_bar", class_="menubar")
         html.open_tr()
         self._show_dropdowns(menu)
+        self._show_shortcuts(menu)
+        self._show_async_progress_msg_container()
         html.close_tr()
         html.close_table()
 
@@ -196,6 +198,15 @@ class PageMenuRenderer:
         #    html.close_div()
 
         html.close_div()
+
+    def _show_shortcuts(self, menu: PageMenu) -> None:
+        html.open_td(class_="shortcuts")
+        html.close_td()
+
+    def _show_async_progress_msg_container(self) -> None:
+        html.open_td(id_="async_progress_msg")
+        html.show_message("")
+        html.close_td()
 
 
 class DropdownEntryRenderer:

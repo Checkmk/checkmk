@@ -1682,36 +1682,20 @@ class html(ABCHTMLGenerator):
                     title: str,
                     breadcrumb: Breadcrumb,
                     page_menu: Optional[PageMenu] = None) -> None:
-        if not isinstance(config.user, config.LoggedInNobody):
-            login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
-            if self.enable_debug:
-                if config.user.language:
-                    login_text += "/%s" % config.user.language
-            login_text += ')'
-        else:
-            login_text = _("not logged in")
+        # Can be replaced by a simple CSS statement once all pages have been ported to use
+        # the page menu
+        if page_menu and page_menu.dropdowns:
+            self.div("", id_="top_heading_spacer")
 
-        self.top_heading_left(title, breadcrumb, page_menu)
+        self.open_div(id_="top_heading")
+        self.open_div(class_="titlebar")
 
-        self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; ' %
-                   login_text)
-        if config.pagetitle_date_format:
-            self.write(' &nbsp; <b id=headerdate format="%s"></b>' % config.pagetitle_date_format)
-        self.write(' <b id=headertime></b>')
-        self.top_heading_right()
-
-    def top_heading_left(self,
-                         title: str,
-                         breadcrumb: Breadcrumb = None,
-                         page_menu: Optional[PageMenu] = None) -> None:
-        self.open_table(class_="header")
-        self.open_tr()
-        self.open_td(width="*", class_="heading")
         # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
         # here and self.a() escapes the content (with permissive escaping) again. We don't want
         # to handle "title" permissive.
         html_title = HTML(escaping.escape_attribute(title))
         self.a(html_title,
+               class_="title",
                href="#",
                onfocus="if (this.blur) this.blur();",
                onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
@@ -1719,31 +1703,34 @@ class html(ABCHTMLGenerator):
         if breadcrumb:
             BreadcrumbRenderer().show(breadcrumb)
 
-        if page_menu:
+        self.close_div()  # titlebar
+
+        if page_menu and page_menu.dropdowns:
             PageMenuRenderer().show(page_menu)
 
-        self.close_td()
+        self.close_div()  # top_heading
 
-    def top_heading_right(self) -> None:
-        cssclass = "active" if config.user.show_help else "passive"
+    # TODO: Re-enable this or remove it
+    #def top_heading_right(self) -> None:
+    #    cssclass = "active" if config.user.show_help else "passive"
 
-        self.icon_button(None,
-                         _("Toggle context help texts"),
-                         "help",
-                         id_="helpbutton",
-                         onclick="cmk.help.toggle()",
-                         style="display:none",
-                         cssclass=cssclass)
-        self.open_a(href="https://checkmk.com", class_="head_logo", target="_blank")
-        self.img(src="themes/%s/images/logo_cmk_small.png" % self._theme)
-        self.close_a()
-        self.close_td()
-        self.close_tr()
-        self.close_table()
-        self.hr(class_="header")
+    #    self.icon_button(None,
+    #                     _("Toggle context help texts"),
+    #                     "help",
+    #                     id_="helpbutton",
+    #                     onclick="cmk.help.toggle()",
+    #                     style="display:none",
+    #                     cssclass=cssclass)
+    #    self.open_a(href="https://checkmk.com", class_="head_logo", target="_blank")
+    #    self.img(src="themes/%s/images/logo_cmk_small.png" % self._theme)
+    #    self.close_a()
+    #    self.close_td()
+    #    self.close_tr()
+    #    self.close_table()
+    #    self.hr(class_="header")
 
-        if self.enable_debug:
-            self._dump_get_vars()
+    #    if self.enable_debug:
+    #        self._dump_get_vars()
 
     def footer(self, show_footer: bool = True, show_body_end: bool = True) -> None:
         if self.output_format == "html":

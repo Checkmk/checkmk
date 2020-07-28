@@ -3,7 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.plugins.openapi.livestatus_helpers.types import Table, Column
+from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
 
 # yapf: disable
 
@@ -91,9 +91,9 @@ class Downtimes(Table):
     host_active_checks_enabled = Column(
         'host_active_checks_enabled',
         col_type='int',
-        description='Whether checks of the object are enabled (0/1)',
+        description='Whether active checks of the object are enabled (0/1)',
     )
-    """Whether checks of the object are enabled (0/1)"""
+    """Whether active checks of the object are enabled (0/1)"""
 
     host_address = Column(
         'host_address',
@@ -1057,9 +1057,9 @@ class Downtimes(Table):
     service_active_checks_enabled = Column(
         'service_active_checks_enabled',
         col_type='int',
-        description='Whether checks of the object are enabled (0/1)',
+        description='Whether active checks of the object are enabled (0/1)',
     )
-    """Whether checks of the object are enabled (0/1)"""
+    """Whether active checks of the object are enabled (0/1)"""
 
     service_cache_interval = Column(
         'service_cache_interval',

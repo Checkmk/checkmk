@@ -53,19 +53,6 @@ components:
   schemas:
     AcknowledgeHostProblem:
       properties:
-        comment:
-          description: If set, this comment will be stored alongside the acknowledgement.
-          example: This was expected.
-          type: string
-        notify:
-          description: If set, notifications will be sent out to the configured contacts.
-            Defaults to False.
-          example: false
-          type: boolean
-        persistent:
-          description: If set, the comment will persist a restart. Defaults to False.
-          example: false
-          type: boolean
         sticky:
           description: 'If set, only a state-change of the host to an UP state will
             discard the acknowledgement.
@@ -73,6 +60,19 @@ components:
             Otherwise it will be discarded on any state-change. Defaults to False.'
           example: false
           type: boolean
+        persistent:
+          description: If set, the comment will persist a restart. Defaults to False.
+          example: false
+          type: boolean
+        notify:
+          description: If set, notifications will be sent out to the configured contacts.
+            Defaults to False.
+          example: false
+          type: boolean
+        comment:
+          description: If set, this comment will be stored alongside the acknowledgement.
+          example: This was expected.
+          type: string
       type: object
     AcknowledgeServiceProblem:
       properties:
@@ -194,6 +194,22 @@ components:
       type: object
     BulkAcknowledgeHostProblem:
       properties:
+        stick:
+          description: 'If set, only a state-change of the host to an UP state will
+            discard the acknowledgement.
+
+            Otherwise it will be discarded on any state-change. Defaults to False.'
+          example: false
+          type: boolean
+        persistent:
+          description: If set, the comment will persist a restart. Defaults to False.
+          example: false
+          type: boolean
+        notify:
+          description: If set, notifications will be sent out to the configured contacts.
+            Defaults to False.
+          example: false
+          type: boolean
         comment:
           description: If set, this comment will be stored alongside the acknowledgement.
           example: This was expected.
@@ -208,22 +224,6 @@ components:
             pattern: '[-0-9a-zA-Z_.]+'
             type: string
           type: array
-        notify:
-          description: If set, notifications will be sent out to the configured contacts.
-            Defaults to False.
-          example: false
-          type: boolean
-        persistent:
-          description: If set, the comment will persist a restart. Defaults to False.
-          example: false
-          type: boolean
-        stick:
-          description: 'If set, only a state-change of the host to an UP state will
-            discard the acknowledgement.
-
-            Otherwise it will be discarded on any state-change. Defaults to False.'
-          example: false
-          type: boolean
       required:
       - entries
       type: object
@@ -365,8 +365,32 @@ components:
       type: object
     CreateDowntime:
       properties:
-        comment:
-          example: Security updates
+        host_name:
+          description: The hostname or IP address itself.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+        service_description:
+          example: CPU utilization
+          type: string
+        end_time:
+          description: The end datetime of the new downtime. The format underlies
+            the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        start_time:
+          description: The start datetime of the new downtime. The format underlies
+            the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        recurring_option:
+          description: Option when want to repeat this downtime on a regular basis
+            (This only works when using CMC)
+          example: hour
+          pattern: hour|day|week|second week|fourth week|same weekday|same day of
+            the month
           type: string
         delayed_duration:
           description: With this option the scheduled downtime does not begin automatically
@@ -377,32 +401,8 @@ components:
           example: 3600
           format: int32
           type: integer
-        end_time:
-          description: The end datetime of the new downtime. The format underlies
-            the ISO 8601 profile
-          example: '2017-07-21T17:32:28Z'
-          format: date-time
-          type: string
-        host_name:
-          description: The hostname or IP address itself.
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-        recurring_option:
-          description: Option when want to repeat this downtime on a regular basis
-            (This only works when using CMC)
-          example: hour
-          pattern: hour|day|week|second week|fourth week|same weekday|same day of
-            the month
-          type: string
-        service_description:
-          example: CPU utilization
-          type: string
-        start_time:
-          description: The start datetime of the new downtime. The format underlies
-            the ISO 8601 profile
-          example: '2017-07-21T17:32:28Z'
-          format: date-time
+        comment:
+          example: Security updates
           type: string
       required:
       - end_time

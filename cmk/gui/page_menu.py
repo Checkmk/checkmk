@@ -255,7 +255,6 @@ class PageMenuRenderer:
         html.open_tr()
         self._show_dropdowns(menu)
         self._show_shortcuts(menu)
-        self._show_async_progress_msg_container()
         html.close_tr()
 
         self._show_suggestions(menu)
@@ -335,11 +334,6 @@ class PageMenuRenderer:
         for entry in menu.shortcuts:
             ShortcutRenderer().show(entry)
 
-        html.close_td()
-
-    def _show_async_progress_msg_container(self) -> None:
-        html.open_td(id_="async_progress_msg")
-        html.show_message("")
         html.close_td()
 
     def _show_suggestions(self, menu: PageMenu) -> None:

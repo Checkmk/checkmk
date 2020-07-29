@@ -86,21 +86,8 @@ div#top_heading {
       margin: 0;
       vertical-align: middle;
 
-      /* Async progress stuff */
-      &#async_progress_msg {
-        width: 100%;
-        padding-left: 8px;
-        margin: 0;
-        text-align: left;
-        background-color: $navigation-bg-color;
-
-        div.success, div.error {
-          padding: 0;
-          margin: 0;
-	}
-      }
-
       &.shortcuts {
+        width: 100%;
         padding: 0 3px;
         background-color: $navigation-bg-color;
         border-right: 1px solid $medium-blue;

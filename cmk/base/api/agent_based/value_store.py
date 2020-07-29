@@ -5,12 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Implements a first shot at the "value_store". Quite literally only an AP*I*
 """
-from typing import Any, Iterator, MutableMapping, Optional
+from typing import Any, Iterator, Optional
 from contextlib import contextmanager
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
 
+from cmk.base.api.agent_based.type_defs import ValueStore
 from cmk.base.item_state import (
     set_item_state,  # for __setitem__
     clear_item_state,  # for __delitem__
@@ -20,7 +21,7 @@ from cmk.base.item_state import (
 )
 
 
-class _ValueStore(MutableMapping[str, Any]):
+class _ValueStore(ValueStore):
     """_ValueStore objects are used to persist values across check intervals"""
     @staticmethod
     def _raise_for_scope_violation():
@@ -64,7 +65,7 @@ class _ValueStore(MutableMapping[str, Any]):
 _value_store = _ValueStore()
 
 
-def get_value_store() -> _ValueStore:
+def get_value_store() -> ValueStore:
     """Get the value store for the current service from Checkmk
 
     The returned value store object can be used to persist values

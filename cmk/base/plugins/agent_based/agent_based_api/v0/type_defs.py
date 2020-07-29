@@ -33,6 +33,7 @@ from cmk.base.api.agent_based.type_defs import (
     Parameters,
     SNMPStringByteTable,
     SNMPStringTable,
+    ValueStore,
 )
 
 __all__ = [
@@ -43,4 +44,5 @@ __all__ = [
     "Parameters",
     "SNMPStringByteTable",
     "SNMPStringTable",
+    "ValueStore",
 ]

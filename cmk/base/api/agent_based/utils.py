@@ -9,7 +9,7 @@ These are meant to be exposed in the API
 """
 import itertools
 import re
-from typing import Any, Callable, Generator, MutableMapping, Optional, Tuple, Union
+from typing import Callable, Generator, Optional, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
@@ -19,6 +19,7 @@ from cmk.snmplib.type_defs import SNMPDetectSpec
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.prediction
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, state
+from cmk.base.api.agent_based.type_defs import ValueStore
 
 
 # annotating this breaks validation.
@@ -269,7 +270,7 @@ class GetRateError(IgnoreResultsError):
     pass
 
 
-def get_rate(value_store: MutableMapping[str, Any],
+def get_rate(value_store: ValueStore,
              key: str,
              time: float,
              value: float,
@@ -296,7 +297,7 @@ def get_rate(value_store: MutableMapping[str, Any],
     return rate
 
 
-def get_average(value_store: MutableMapping[str, Any], key: str, time: float, value: float,
+def get_average(value_store: ValueStore, key: str, time: float, value: float,
                 backlog_minutes: float) -> float:
     """Return new average based on current value and last average
 

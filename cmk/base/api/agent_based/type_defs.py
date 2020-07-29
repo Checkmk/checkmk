@@ -15,6 +15,7 @@ from typing import (
     Generator,
     List,
     Literal,
+    MutableMapping,
     NamedTuple,
     Optional,
     Set,
@@ -145,3 +146,5 @@ InventoryPlugin = NamedTuple(
         ("module", Optional[str]),  # not available for auto migrated plugins.
     ],
 )
+
+ValueStore = MutableMapping[str, Any]

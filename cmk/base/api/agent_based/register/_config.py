@@ -36,6 +36,13 @@ def add_check_plugin(check_plugin: CheckPlugin) -> None:
     registered_check_plugins[check_plugin.name] = check_plugin
 
 
+def add_section_plugin(section_plugin: SectionPlugin) -> None:
+    if isinstance(section_plugin, AgentSectionPlugin):
+        registered_agent_sections[section_plugin.name] = section_plugin
+    else:
+        registered_snmp_sections[section_plugin.name] = section_plugin
+
+
 def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
     """Returns the registered check plugin
 

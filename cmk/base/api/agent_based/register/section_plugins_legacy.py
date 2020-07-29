@@ -15,7 +15,6 @@ from cmk.base.api.agent_based.register.section_plugins import (
 )
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     create_detect_spec,)
-from cmk.base.api.agent_based.register import _config
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
@@ -215,7 +214,7 @@ def _create_host_label_function(discover_function: Optional[Callable],
     return host_label_function
 
 
-def _create_agent_section_plugin_from_legacy(
+def create_agent_section_plugin_from_legacy(
     check_plugin_name: str,
     check_info_dict: Dict[str, Any],
 ) -> AgentSectionPlugin:
@@ -239,17 +238,7 @@ def _create_agent_section_plugin_from_legacy(
     )
 
 
-def add_agent_section_plugin_from_legacy(
-    check_plugin_name: str,
-    check_info_dict: Dict[str, Any],
-) -> None:
-
-    agent_section = _create_agent_section_plugin_from_legacy(check_plugin_name, check_info_dict)
-
-    _config.registered_agent_sections[agent_section.name] = agent_section
-
-
-def _create_snmp_section_plugin_from_legacy(
+def create_snmp_section_plugin_from_legacy(
     check_plugin_name: str,
     check_info_dict: Dict[str, Any],
     snmp_scan_function: Callable,
@@ -286,22 +275,3 @@ def _create_snmp_section_plugin_from_legacy(
         trees=trees,
         detect_spec=detect_spec,
     )
-
-
-def add_snmp_section_plugin_from_legacy(
-    check_plugin_name: str,
-    check_info_dict: Dict[str, Any],
-    snmp_scan_function: Callable,
-    snmp_info: Any,
-    scan_function_fallback_files: Optional[List[str]] = None,
-) -> None:
-
-    snmp_section = _create_snmp_section_plugin_from_legacy(
-        check_plugin_name,
-        check_info_dict,
-        snmp_scan_function,
-        snmp_info,
-        scan_function_fallback_files,
-    )
-
-    _config.registered_snmp_sections[snmp_section.name] = snmp_section

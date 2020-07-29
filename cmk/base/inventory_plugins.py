@@ -19,7 +19,7 @@ import cmk.base.config as config
 import cmk.base.check_utils
 
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    add_snmp_section_plugin_from_legacy,)
+    create_snmp_section_plugin_from_legacy,)
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
 InventoryPluginNameStr = str
@@ -95,13 +95,14 @@ def _extract_snmp_sections() -> None:
                           [_plugin_file_lookup[plugin_name]])
 
         try:
-            add_snmp_section_plugin_from_legacy(
-                section_name,
-                {},
-                plugin_info['snmp_scan_function'],
-                plugin_info['snmp_info'],
-                scan_function_fallback_files=fallback_files,
-            )
+            agent_based_register.add_section_plugin(
+                create_snmp_section_plugin_from_legacy(
+                    section_name,
+                    {},
+                    plugin_info['snmp_scan_function'],
+                    plugin_info['snmp_info'],
+                    scan_function_fallback_files=fallback_files,
+                ))
         except (NotImplementedError, KeyError, AssertionError, ValueError):
             msg = config.AUTO_MIGRATION_ERR_MSG % ('section', plugin_name)
             if cmk.utils.debug.enabled():

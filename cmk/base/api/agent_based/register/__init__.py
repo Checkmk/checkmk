@@ -12,6 +12,7 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 from cmk.base.api.agent_based.register._config import (
     add_check_plugin,
+    add_section_plugin,
     get_check_plugin,
     get_parsed_section_creator,
     get_relevant_raw_sections,
@@ -38,6 +39,7 @@ def load_all_plugins():
 
 __all__ = [
     "add_check_plugin",
+    "add_section_plugin",
     "get_check_plugin",
     "get_parsed_section_creator",
     "get_relevant_raw_sections",

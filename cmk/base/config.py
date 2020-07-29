@@ -96,8 +96,8 @@ import cmk.base.check_utils
 import cmk.base.default_config as default_config
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    add_agent_section_plugin_from_legacy,
-    add_snmp_section_plugin_from_legacy,
+    create_agent_section_plugin_from_legacy,
+    create_snmp_section_plugin_from_legacy,
 )
 from cmk.base.api.agent_based.type_defs import (
     CheckPlugin,
@@ -1943,17 +1943,19 @@ def _extract_agent_and_snmp_sections() -> None:
         check_info_dict = check_info.get(section_name, check_info[check_plugin_name])
         try:
             if is_snmp_plugin:
-                add_snmp_section_plugin_from_legacy(
-                    section_name,
-                    check_info_dict,
-                    snmp_scan_functions[section_name],
-                    snmp_info[section_name],
-                )
+                agent_based_register.add_section_plugin(
+                    create_snmp_section_plugin_from_legacy(
+                        section_name,
+                        check_info_dict,
+                        snmp_scan_functions[section_name],
+                        snmp_info[section_name],
+                    ))
             else:
-                add_agent_section_plugin_from_legacy(
-                    section_name,
-                    check_info_dict,
-                )
+                agent_based_register.add_section_plugin(
+                    create_agent_section_plugin_from_legacy(
+                        section_name,
+                        check_info_dict,
+                    ))
         except (NotImplementedError, KeyError, AssertionError, ValueError):
             # TODO (mo): Clean this up once we have a solution for the plugins currently
             # failing here. For now we need too keep it commented out, because we can't

@@ -111,7 +111,7 @@ def test_create_host_label_function(disco_func, labels_expected):
 
 def test_create_snmp_section_plugin_from_legacy():
 
-    plugin = section_plugins_legacy._create_snmp_section_plugin_from_legacy(
+    plugin = section_plugins_legacy.create_snmp_section_plugin_from_legacy(
         "norris",
         {
             'parse_function': old_school_parse_function,

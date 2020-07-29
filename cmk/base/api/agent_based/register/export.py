@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
-from cmk.base import config  # Beware: != _config. config import supposed to be nuked
+from cmk.base import config
 from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.section_plugins import (
@@ -24,7 +24,12 @@ from cmk.base.api.agent_based.type_defs import (
     HostLabelFunction,
     SNMPParseFunction,
 )
-from cmk.base.api.agent_based.register import _config
+from cmk.base.api.agent_based.register import (
+    add_section_plugin,
+    add_check_plugin,
+    is_registered_section_plugin,
+    is_registered_check_plugin,
+)
 
 
 def agent_section(
@@ -62,11 +67,10 @@ def agent_section(
         module=get_validated_plugin_module_name(),
     )
 
-    if (section_plugin.name in _config.registered_agent_sections or
-            section_plugin.name in _config.registered_snmp_sections):
+    if is_registered_section_plugin(section_plugin.name):
         raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
-    _config.registered_agent_sections[section_plugin.name] = section_plugin
+    add_section_plugin(section_plugin)
 
 
 def snmp_section(
@@ -114,11 +118,10 @@ def snmp_section(
         module=get_validated_plugin_module_name(),
     )
 
-    if (section_plugin.name in _config.registered_agent_sections or
-            section_plugin.name in _config.registered_snmp_sections):
+    if is_registered_section_plugin(section_plugin.name):
         raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
-    _config.registered_snmp_sections[section_plugin.name] = section_plugin
+    add_section_plugin(section_plugin)
 
 
 def check_plugin(
@@ -174,10 +177,10 @@ def check_plugin(
         module=get_validated_plugin_module_name(),
     )
 
-    if _config.is_registered_check_plugin(plugin.name):
+    if is_registered_check_plugin(plugin.name):
         raise ValueError("duplicate check plugin definition: %s" % plugin.name)
 
-    _config.add_check_plugin(plugin)
+    add_check_plugin(plugin)
     if plugin.discovery_ruleset_name is not None:
         config.discovery_parameter_rulesets.setdefault(plugin.discovery_ruleset_name, [])
 

@@ -380,17 +380,7 @@ class PageMenuRenderer:
         ]
 
         html.open_div(class_=classes, id_="menu_entry_%s" % entry.name)
-
-        #if self.disabled_reason:
-        #    html.open_div(class_="tooltip")
-
         DropdownEntryRenderer().show(entry)
-
-        #if self.disabled_reason:
-        #    html.span(_("This action is currently not possible: ") + self.disabled_reason,
-        #              class_="disabled tooltiptext")
-        #    html.close_div()
-
         html.close_div()
 
     def _show_shortcuts(self, menu: PageMenu) -> None:

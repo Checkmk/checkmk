@@ -30,6 +30,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.data_sources as data_sources
@@ -341,38 +342,30 @@ def _do_inv_for_realhost(
         )
 
     section.section_step("Executing inventory plugins")
-    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     console.verbose("Plugins:")
-    for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
-        section_content = multi_host_sections.get_section_content(
+    for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
+
+        kwargs = multi_host_sections.get_section_kwargs(
             HostKey(hostname, ipaddress, SourceType.HOST),
-            check_api_utils.HOST_PRECEDENCE,
-            section_name,
-            for_discovery=False,
+            inventory_plugin.sections,
         )
-        if not section_content:  # section not present (None or [])
-            # Note: this also excludes existing sections without info..
+        if not kwargs:
             continue
 
-        if all([x in [[], {}, None] for x in section_content]):
-            # Inventory plugins which get parsed info from related
-            # check plugin may have more than one return value, eg
-            # parse function of oracle_tablespaces returns ({}, {})
-            continue
-
-        console.verbose(" %s%s%s%s" % (tty.green, tty.bold, section_name, tty.normal))
+        console.verbose(" %s%s%s%s" % (tty.green, tty.bold, inventory_plugin.name, tty.normal))
 
         # Inventory functions can optionally have a second argument: parameters.
         # These are configured via rule sets (much like check parameters).
-        inv_function = plugin["inv_function"]
-        kwargs = cmk.utils.misc.make_kwargs_for(inv_function,
-                                                inventory_tree=inventory_tree,
-                                                status_data_tree=status_data_tree)
-        non_kwargs = set(cmk.utils.misc.getfuncargs(inv_function)) - set(kwargs)
-        args = [section_content]
-        if len(non_kwargs) == 2:
-            args += [host_config.inventory_parameters(section_name)]
-        inv_function(*args, **kwargs)
+        if inventory_plugin.inventory_ruleset_name is not None:
+            kwargs["params"] = host_config.inventory_parameters(
+                str(inventory_plugin.inventory_ruleset_name))  # TODO (mo): keep type!
+
+        _aggregate_inventory_results(
+            inventory_plugin.inventory_function(**kwargs),
+            inventory_tree,
+            status_data_tree,
+        )
+
     console.verbose("\n")
 
 

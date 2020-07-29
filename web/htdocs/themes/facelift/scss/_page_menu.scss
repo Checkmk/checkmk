@@ -193,6 +193,7 @@ div#top_heading {
             margin-bottom: $spacing;
             font-weight: normal;
             color: $menubar-topic-title-font-color;
+            cursor: default;
             border-bottom: 1px solid $menubar-topic-title-border-color;
           }
 
@@ -201,11 +202,18 @@ div#top_heading {
             margin: 0 0 $spacing $spacing;
 
             &.enabled a {
+              display: flex;
+              align-items: center;
+
               color: #ddd;
               text-decoration: none;
 
               &:hover {
                 color: #fff;
+
+                img {
+                  opacity: .5;
+                }
               }
             }
           }
@@ -232,7 +240,7 @@ div#top_heading {
           }
 
           div.entry.disabled {
-            cursor: not-allowed;
+            cursor: default;
 
             a {
               color: #888;

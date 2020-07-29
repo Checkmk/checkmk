@@ -467,18 +467,22 @@ class DropdownEntryRenderer:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
 
     def _show_link_item(self, title: str, icon_name: str, item: PageMenuLink):
-        html.icon(title=None, icon=icon_name or "trans")
-
         if item.link.url is not None:
-            html.a(title, href=item.link.url, target=item.link.target)
+            html.open_a(href=item.link.url, target=item.link.target)
         else:
-            html.a(title, href="javascript:void(0)", onclick=item.link.onclick)
+            html.open_a(href="javascript:void(0)", onclick=item.link.onclick)
+
+        html.icon(title=None, icon=icon_name or "trans")
+        html.span(title)
+
+        html.close_a()
 
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
+        html.open_a(href="javascript:void(0)",
+                    onclick="cmk.page_menu.open_popup(%s)" % json.dumps("popup_%s" % entry.name))
         html.icon(title=None, icon=entry.icon_name or "trans")
-        html.a(entry.title,
-               href="javascript:void(0)",
-               onclick="cmk.page_menu.open_popup(%s)" % json.dumps("popup_%s" % entry.name))
+        html.span(entry.title)
+        html.close_a()
 
 
 class PageMenuPopupsRenderer:

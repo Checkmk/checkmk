@@ -1906,15 +1906,17 @@ class html(ABCHTMLGenerator):
                title: str,
                cssclass: Optional[str] = None,
                style: Optional[str] = None,
-               help_: Optional[str] = None) -> None:
-        self.write_html(self.render_button(varname, title, cssclass, style, help_=help_))
+               help_: Optional[str] = None,
+               form: Optional[str] = None) -> None:
+        self.write_html(self.render_button(varname, title, cssclass, style, help_=help_, form=form))
 
     def render_button(self,
                       varname: str,
                       title: str,
                       cssclass: Optional[str] = None,
                       style: Optional[str] = None,
-                      help_: Optional[str] = None) -> HTML:
+                      help_: Optional[str] = None,
+                      form: Optional[str] = None) -> HTML:
         self.add_form_var(varname)
         return self.render_input(name=varname,
                                  type_="submit",
@@ -1922,7 +1924,8 @@ class html(ABCHTMLGenerator):
                                  class_=["button", cssclass if cssclass else None],
                                  value=title,
                                  title=help_,
-                                 style=style)
+                                 style=style,
+                                 form=form)
 
     def buttonlink(self,
                    href: str,

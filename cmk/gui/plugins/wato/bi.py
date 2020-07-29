@@ -80,6 +80,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     make_simple_link,
+    make_form_submit_link,
     make_simple_back_page_menu,
     make_checkbox_selection_topic,
 )
@@ -1315,6 +1316,19 @@ class ModeBIAggregations(ModeBI):
                             title=_("In this pack"),
                             entries=aggr_entries,
                         ),
+                        PageMenuTopic(
+                            title=_("On selected aggregations"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Delete aggregations"),
+                                    icon_name="delete",
+                                    item=make_form_submit_link(
+                                        form_name="bulk_delete_form",
+                                        button_name="_bulk_delete_bi_aggregations",
+                                    ),
+                                ),
+                            ],
+                        ),
                         make_checkbox_selection_topic(),
                     ],
                 ),
@@ -1422,11 +1436,6 @@ class ModeBIAggregations(ModeBI):
         assert self._pack is not None
         if self._pack["aggregations"]:
             fieldstyle = "margin-top:10px"
-            html.button("_bulk_delete_bi_aggregations",
-                        _("Bulk delete"),
-                        "submit",
-                        style=fieldstyle)
-
             move_choices = [(pack_id, attrs["title"])
                             for pack_id, attrs in self._packs.items()
                             if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs)]
@@ -1584,6 +1593,19 @@ class ModeBIRules(ModeBI):
                             title=_("In this pack"),
                             entries=rules_entries,
                         ),
+                        PageMenuTopic(
+                            title=_("On selected rules"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Delete rules"),
+                                    icon_name="delete",
+                                    item=make_form_submit_link(
+                                        form_name="bulk_delete_form",
+                                        button_name="_bulk_delete_bi_rules",
+                                    ),
+                                ),
+                            ],
+                        ),
                         make_checkbox_selection_topic(),
                     ],
                 ),
@@ -1734,7 +1756,6 @@ class ModeBIRules(ModeBI):
         html.hidden_fields()
         if self._pack["rules"]:
             fieldstyle = "margin-top:10px"
-            html.button("_bulk_delete_bi_rules", _("Bulk delete"), "submit", style=fieldstyle)
 
             move_choices = [(pack_id, attrs["title"])
                             for pack_id, attrs in self._packs.items()

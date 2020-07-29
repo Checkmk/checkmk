@@ -344,8 +344,7 @@ class SidebarRenderer:
         html.open_body(
             class_=body_classes,
             onload='cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages(%s);' %
-            interval,
-            onunload="cmk.sidebar.store_scroll_position()")
+            interval)
 
     def _show_sidebar(self) -> None:
         if not config.user.may("general.see_sidebar"):

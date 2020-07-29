@@ -27,7 +27,13 @@ export function initialize_sidebar(update_interval, refresh, restart, static_) {
     static_snapins = static_;
 
     execute_sidebar_scheduler();
+
     g_scrollbar = new SimpleBar(document.getElementById("side_content"));
+    g_scrollbar.getScrollElement().addEventListener("scroll", function() {
+        store_scroll_position();
+        return false;
+    }, false);
+
     register_event_handlers();
     if (is_content_frame_accessible()) {
         update_content_location();
@@ -759,11 +765,11 @@ export function initialize_scroll_position() {
     let scrollPos = getCookie("sidebarScrollPos");
     if(!scrollPos)
         scrollPos = 0;
-    document.getElementById("side_content").scrollTop = scrollPos;
+    g_scrollbar.getScrollElement().scrollTop = scrollPos;
 }
 
-export function store_scroll_position() {
-    setCookie("sidebarScrollPos", document.getElementById("side_content").scrollTop, null);
+function store_scroll_position() {
+    setCookie("sidebarScrollPos", g_scrollbar.getScrollElement().scrollTop, null);
 }
 
 /************************************************

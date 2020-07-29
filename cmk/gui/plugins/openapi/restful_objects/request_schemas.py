@@ -141,7 +141,10 @@ class UpdateFolder(BaseSchema):
 
 
 class CreateDowntimeBase(BaseSchema):
-    downtime_type = fields.String(required=True, description="The type of downtime to create.")
+    downtime_type = fields.String(required=True,
+                                  description="The type of downtime to create.",
+                                  enum=['host', 'service', 'hostgroup', 'servicegroup'],
+                                  example="host")
     start_time = fields.DateTime(
         format="iso8601",
         required=True,

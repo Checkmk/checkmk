@@ -12,7 +12,7 @@ be referenced in the result of _build_code_templates.
 import json
 import re
 import threading
-from typing import Any, Dict, List, NamedTuple, Sequence
+from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Type, Union
 
 import jinja2
 import yapf.yapflib.yapf_api  # type: ignore[import]
@@ -35,6 +35,14 @@ CODE_TEMPLATES_LOCK = threading.Lock()
 
 # This is
 CODE_TEMPLATE_MACROS = """
+{%- macro comments(comment_format="# ", request_schema_multiple=False) %}
+{%- set cf = comment_format %}
+{%- if request_schema_multiple %}
+{{ (cf ~ "This schema has multiple variations. Please refer to the 'Payload' section for details.") |
+   wordwrap(60) | replace('\\n', ('\\n' ~ cf)) }}
+{%- endif %}
+{%- endmacro %}
+
 {%- macro list_params(params, indent=8) -%}
 {%- for param in params %}{% if not (param.example is defined and param.example) %}{% continue %}{% endif %}
 {{ " " * indent }}"{{ param.name }}": "{{
@@ -79,7 +87,7 @@ API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0"
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"
 
-{%- from '_macros' import list_params %}
+{%- from '_macros' import list_params, comments %}
 {%- if query_params %}
 
 query_string = urllib.parse.urlencode({
@@ -96,6 +104,7 @@ request = urllib.request.Request(
         "Accept": "application/json",
         {{- list_params(headers) }}
     },
+    {{- comments(comment_format="    # ", request_schema_multiple=request_schema_multiple) }}
     {%- if request_schema %}
     data=json.dumps({{
             request_schema |
@@ -117,6 +126,8 @@ API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
 
+{%- from '_macros' import comments %}
+{{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 curl \\
     -X {{ request_method | upper }} \\
     --header "Authorization: Bearer $USERNAME $PASSWORD" \\
@@ -150,6 +161,8 @@ API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
 
+{%- from '_macros' import comments %}
+{{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
     "Authorization: Bearer $USERNAME $PASSWORD" \\
     "Accept: application/json" \\
@@ -189,12 +202,13 @@ session.headers['Authorization'] = f"Bearer {USERNAME} {PASSWORD}"
 session.headers['Accept'] = 'application/json'
 {%- set method = request_method | lower %}
 
-{%- from '_macros' import show_params %}
+{%- from '_macros' import show_params, comments %}
 
 resp = session.{{ method }}(
     f"{API_URL}{{ request_endpoint | fill_out_parameters }}",
     {{- show_params("params", query_params, comment="goes into query string") }}
     {{- show_params("headers", headers) }}
+    {{- comments(comment_format="    # ", request_schema_multiple=request_schema_multiple) }}
     {%- if request_schema %}
     json={{
             request_schema |
@@ -225,14 +239,14 @@ TEMPLATES = {
 }
 
 
-def _to_env(value):
+def _to_env(value) -> str:
     if isinstance(value, (list, dict)):
         return json.dumps(value)
 
     return value
 
 
-def first_sentence(text):
+def first_sentence(text: str) -> str:
     """Return the first sentence in a string.
 
     Args:
@@ -362,8 +376,8 @@ def code_samples(
             password='test123',
             request_endpoint=path,
             request_method=method,
-            request_schema=(resolve_schema_instance(request_schema)
-                            if request_schema is not None else None),
+            request_schema=_get_schema(request_schema),
+            request_schema_multiple=_schema_is_multiple(request_schema),
             endpoint_parameters=_transform_params(parameters),
             headers=headers,
             query_params=query_params,
@@ -393,6 +407,42 @@ def yapf_format(obj):
     return text
 
 
+def _get_schema(schema: Optional[Union[str, Type[Schema]]]) -> Optional[Schema]:
+    """Get the schema instance of a schema name or class.
+
+    In case of OneOfSchema classes, the first dispatched schema is being returned.
+
+    Args:
+        schema:
+            Either
+
+    Returns:
+        A schema instance.
+
+    """
+    if schema is None:
+        return None
+
+    # NOTE:
+    # In case of a "OneOfSchema" instance, we don't really have any fields on this Schema
+    # as it is just there for dispatching. The real fields are on the dispatched classes.
+    # We just take the first one and go with that, as we have no way of letting the user chose
+    # the dispatching-key by himself (this is a limitation of ReDoc).
+    _schema: Schema = resolve_schema_instance(schema)
+    if _schema_is_multiple(_schema):
+        first_key = list(_schema.type_schemas.keys())[0]
+        _schema = resolve_schema_instance(_schema.type_schemas[first_key])
+
+    return _schema
+
+
+def _schema_is_multiple(schema: Optional[Union[str, Schema]]) -> bool:
+    if schema is None:
+        return False
+    _schema = resolve_schema_instance(schema)
+    return hasattr(_schema, 'type_schemas') and _schema.type_schemas
+
+
 def _jinja_environment() -> jinja2.Environment:
     """Create a map with code templates, ready to render.
 
@@ -407,7 +457,8 @@ def _jinja_environment() -> jinja2.Environment:
     ...     password='test123',
     ...     request_endpoint='foo',
     ...     request_method='get',
-    ...     request_schema=resolve_schema_instance('CreateHost'),
+    ...     request_schema=_get_schema('CreateHost'),
+    ...     request_schema_multiple=_schema_is_multiple('CreateHost'),
     ...     endpoint_parameters={},
     ...     query_params=[],
     ...     headers=[],

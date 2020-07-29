@@ -34,17 +34,6 @@ def test_create_section_plugin_from_legacy(inv_info):
         assert 'snmp_info' not in inv_info_dict
 
 
-def test_create_inventory_plugins_from_legacy(inv_info):  # pylint: disable=unused-argument
-    migrated_plugins = list(agent_based_register.iter_all_inventory_plugins())
-    assert len(migrated_plugins) > 100
-
-    for inventory_plugin in migrated_plugins:
-        assert isinstance(inventory_plugin, InventoryPlugin)
-        assert inventory_plugin.inventory_function.__name__ == "inventory_migration_wrapper"
-        assert inventory_plugin.inventory_default_parameters == {}
-        assert inventory_plugin.module is None
-
-
 def test_migrated_inventory_plugin(inv_info):  # pylint: disable=unused-argument
     # pick a plugin, any plugin
     plugin = agent_based_register.get_inventory_plugin(InventoryPluginName("aix_baselevel"))

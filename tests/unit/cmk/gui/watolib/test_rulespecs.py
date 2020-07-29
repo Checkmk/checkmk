@@ -439,7 +439,6 @@ def test_grouped_rulespecs():
             'static_checks:mailqueue_length',
             'static_checks:mail_queue_length',
             'static_checks:mail_latency',
-            'static_checks:omd_status',
             'static_checks:services',
             'static_checks:solaris_services',
             'static_checks:winperf_ts_sessions',

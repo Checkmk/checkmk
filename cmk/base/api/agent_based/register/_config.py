@@ -20,6 +20,7 @@ from cmk.utils.check_utils import is_management_name, MANAGEMENT_NAME_PREFIX
 from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     CheckPlugin,
+    InventoryPlugin,
     SectionPlugin,
     SNMPSectionPlugin,
 )
@@ -30,10 +31,15 @@ from cmk.base.api.agent_based.register.utils import rank_sections_by_supersedes
 registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
 registered_check_plugins: Dict[CheckPluginName, CheckPlugin] = {}
+registered_inventory_plugins: Dict[InventoryPluginName, InventoryPlugin] = {}
 
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
     registered_check_plugins[check_plugin.name] = check_plugin
+
+
+def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
+    registered_inventory_plugins[inventory_plugin.name] = inventory_plugin
 
 
 def add_section_plugin(section_plugin: SectionPlugin) -> None:
@@ -59,6 +65,12 @@ def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
         return management_plugin_factory(non_mgmt_plugin)
 
     return None
+
+
+def get_inventory_plugin(plugin_name: InventoryPluginName) -> Optional[InventoryPlugin]:
+    """Returns the registered inventory plugin
+    """
+    return registered_inventory_plugins.get(plugin_name)
 
 
 def get_parsed_section_creator(
@@ -137,6 +149,10 @@ def is_registered_check_plugin(check_plugin_name: CheckPluginName) -> bool:
     return check_plugin_name in registered_check_plugins
 
 
+def is_registered_inventory_plugin(inventory_plugin_name: InventoryPluginName) -> bool:
+    return inventory_plugin_name in registered_inventory_plugins
+
+
 def is_registered_section_plugin(section_name: SectionName) -> bool:
     return section_name in registered_agent_sections or section_name in registered_snmp_sections
 
@@ -147,6 +163,10 @@ def iter_all_agent_sections() -> Iterable[AgentSectionPlugin]:
 
 def iter_all_check_plugins() -> Iterable[CheckPlugin]:
     return registered_check_plugins.values()  # pylint: disable=dict-values-not-iterating
+
+
+def iter_all_inventory_plugins() -> Iterable[InventoryPlugin]:
+    return registered_inventory_plugins.values()  # pylint: disable=dict-values-not-iterating
 
 
 def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:

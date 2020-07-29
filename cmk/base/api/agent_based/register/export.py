@@ -12,6 +12,7 @@ from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 from cmk.base import config
 from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
@@ -19,16 +20,19 @@ from cmk.base.api.agent_based.register.section_plugins import (
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     CheckFunction,
+    InventoryFunction,
     DiscoveryFunction,
     DiscoveryRuleSetType,
     HostLabelFunction,
     SNMPParseFunction,
 )
 from cmk.base.api.agent_based.register import (
-    add_section_plugin,
     add_check_plugin,
-    is_registered_section_plugin,
+    add_inventory_plugin,
+    add_section_plugin,
     is_registered_check_plugin,
+    is_registered_inventory_plugin,
+    is_registered_section_plugin,
 )
 
 
@@ -185,8 +189,47 @@ def check_plugin(
         config.discovery_parameter_rulesets.setdefault(plugin.discovery_ruleset_name, [])
 
 
+def inventory_plugin(
+    *,
+    name: str,
+    sections: Optional[List[str]] = None,
+    inventory_function: InventoryFunction,
+    inventory_default_parameters: Optional[Dict[str, Any]] = None,
+    inventory_ruleset_name: Optional[str] = None,
+) -> None:
+    """Register a check plugin to checkmk.
+
+    :param name: The name of the check plugin. It must be unique. And contain only the characters
+                 A-Z, a-z, 0-9 and the underscore.
+    :param sections: An optional list of section names that this plugin subscribes to. The
+                     corresponding sections are passed to the inventory function. The
+                     functions arguments must be called 'section_<name1>, section_<name2>' ect.
+                     Default: [<name>]
+    :param inventory_function: The check_function. Arguments must be 'params' (if inventory
+                               parameters are defined) and 'section_<name1>,
+                               section_<name2>' ect. corresponding to the `sections`.
+    :param inventory_parameters: Default parameters for the inventory function. Must match the
+                             ValueSpec of the corresponding WATO ruleset.
+    :param inventory_ruleset_name: The name of the inventory ruleset.
+    """
+    plugin = create_inventory_plugin(
+        name=name,
+        sections=sections,
+        inventory_function=inventory_function,
+        inventory_default_parameters=inventory_default_parameters,
+        inventory_ruleset_name=inventory_ruleset_name,
+        module=get_validated_plugin_module_name(),
+    )
+
+    if is_registered_inventory_plugin(plugin.name):
+        raise ValueError("duplicate inventory plugin definition: %s" % plugin.name)
+
+    add_inventory_plugin(plugin)
+
+
 __all__ = [
     "agent_section",
     "check_plugin",
+    "inventory_plugin",
     "snmp_section",
 ]

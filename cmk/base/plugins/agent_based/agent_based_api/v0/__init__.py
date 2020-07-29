@@ -28,6 +28,7 @@ from cmk.base.api.agent_based.checking_classes import (
     ServiceLabel,
     state,
 )
+from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.api.agent_based.type_defs import SNMPTree
 from cmk.base.api.agent_based.utils import (
     all_of,
@@ -58,6 +59,7 @@ from . import register, render, clusterize, type_defs
 __all__ = [
     "all_of",
     "any_of",
+    "Attributes",
     "check_levels",
     "check_levels_predictive",
     "clusterize",
@@ -92,5 +94,6 @@ __all__ = [
     "SNMPTree",
     "startswith",
     "state",
+    "TableRow",
     "type_defs",
 ]

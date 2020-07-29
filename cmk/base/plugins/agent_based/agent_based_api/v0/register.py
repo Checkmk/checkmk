@@ -6,11 +6,13 @@
 from cmk.base.api.agent_based.register.export import (
     agent_section,
     check_plugin,
+    inventory_plugin,
     snmp_section,
 )
 
 __all__ = [
     'agent_section',
     'check_plugin',
+    'inventory_plugin',
     'snmp_section',
 ]

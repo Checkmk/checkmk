@@ -21,6 +21,7 @@ from typing import List, Iterator, Optional
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.htmllib import HTML
 
 
 def enable_page_menu_entry(name):
@@ -71,6 +72,12 @@ def make_javascript_link(javascript: str) -> PageMenuLink:
 def make_form_submit_link(form_name: str, button_name: str) -> PageMenuLink:
     return make_javascript_link("cmk.page_menu.form_submit(%s, %s)" %
                                 (json.dumps(form_name), json.dumps(button_name)))
+
+
+@dataclass
+class PageMenuPopup(ABCPageMenuItem):
+    """A link opening a pre-rendered hidden area (not necessarily a popup window)"""
+    content: str
 
 
 @dataclass
@@ -130,16 +137,29 @@ class PageMenu:
                 self.dropdowns.append(make_up_link(self.breadcrumb))
 
     @property
-    def shortcuts(self) -> Iterator[PageMenuEntry]:
-        has_suggestions = False
+    def _entries(self) -> Iterator[PageMenuEntry]:
         for dropdown in self.dropdowns:
             for topic in dropdown.topics:
                 for entry in topic.entries:
-                    if entry.is_shortcut:
-                        if entry.is_suggested:
-                            has_suggestions = True
+                    yield entry
 
-                        yield entry
+    @property
+    def popups(self) -> Iterator[PageMenuEntry]:
+        for entry in self._entries:
+            if isinstance(entry.item, PageMenuPopup):
+                yield entry
+
+    @property
+    def shortcuts(self) -> Iterator[PageMenuEntry]:
+        has_suggestions = False
+        for entry in self._entries:
+            if not entry.is_shortcut:
+                continue
+
+            if entry.is_suggested:
+                has_suggestions = True
+
+            yield entry
 
         if has_suggestions:
             yield PageMenuEntry(
@@ -404,7 +424,7 @@ class SuggestedEntryRenderer:
         else:
             raise NotImplementedError("Suggestion rendering not implemented for %s" % entry.item)
 
-    def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink):
+    def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink) -> None:
         html.open_a(href=item.link.url, onclick=item.link.onclick)
         html.icon(title=None, icon=entry.icon_name or "trans")
         html.write_text(entry.title)
@@ -441,6 +461,8 @@ class DropdownEntryRenderer:
     def show(self, entry: PageMenuEntry) -> None:
         if isinstance(entry.item, PageMenuLink):
             self._show_link_item(entry.title, entry.icon_name, entry.item)
+        elif isinstance(entry.item, PageMenuPopup):
+            self._show_popup_link_item(entry, entry.item)
         else:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
 
@@ -451,3 +473,40 @@ class DropdownEntryRenderer:
             html.a(title, href=item.link.url, target=item.link.target)
         else:
             html.a(title, href="javascript:void(0)", onclick=item.link.onclick)
+
+    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
+        html.icon(title=None, icon=entry.icon_name or "trans")
+        html.a(entry.title,
+               href="javascript:void(0)",
+               onclick="cmk.page_menu.open_popup(%s)" % json.dumps("popup_%s" % entry.name))
+
+
+class PageMenuPopupsRenderer:
+    """Render the contents of the popup forms referred to by PageMenuPopup entries"""
+    def show(self, menu: PageMenu) -> None:
+        html.open_div(id_="page_menu_popups")
+        for entry in menu.popups:
+            self._show_popup(entry)
+        html.close_div()
+
+    def _show_popup(self, entry: PageMenuEntry) -> None:
+        assert isinstance(entry.item, PageMenuPopup)
+
+        if entry.name is None:
+            raise ValueError("Missing \"name\" attribute on entry \"%s\"" % entry.title)
+
+        html.open_div(id_="popup_%s" % entry.name, class_="page_menu_popup")
+
+        html.open_div(class_="head")
+        html.h3(entry.title)
+        html.a(html.render_icon("close"),
+               class_="close_popup",
+               href="javascript:void(0)",
+               onclick="cmk.page_menu.close_popup(this)")
+        html.close_div()
+
+        html.open_div(class_="content")
+        html.write(HTML(entry.item.content))
+        html.close_div()
+
+        html.close_div()

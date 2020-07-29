@@ -79,6 +79,7 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
+    PageMenuPopup,
     make_simple_link,
     make_form_submit_link,
     make_simple_back_page_menu,
@@ -1323,9 +1324,10 @@ class ModeBIAggregations(ModeBI):
                                     title=_("Delete aggregations"),
                                     icon_name="delete",
                                     item=make_form_submit_link(
-                                        form_name="bulk_delete_form",
+                                        form_name="bulk_action_form",
                                         button_name="_bulk_delete_bi_aggregations",
                                     ),
+                                    is_enabled=bool(self._pack and self._pack["aggregations"]),
                                 ),
                             ],
                         ),
@@ -1430,7 +1432,7 @@ class ModeBIAggregations(ModeBI):
                 return ""
 
     def page(self):
-        html.begin_form("bulk_delete_form", method="POST")
+        html.begin_form("bulk_action_form", method="POST")
         self._render_aggregations()
         html.hidden_fields()
         assert self._pack is not None
@@ -1600,9 +1602,18 @@ class ModeBIRules(ModeBI):
                                     title=_("Delete rules"),
                                     icon_name="delete",
                                     item=make_form_submit_link(
-                                        form_name="bulk_delete_form",
+                                        form_name="bulk_action_form",
                                         button_name="_bulk_delete_bi_rules",
                                     ),
+                                    is_enabled=bool(self._pack and self._pack["rules"]),
+                                ),
+                                PageMenuEntry(
+                                    title=_("Move rules"),
+                                    icon_name="move",
+                                    name="move_rules",
+                                    item=PageMenuPopup(self._render_bulk_move_form()),
+                                    is_enabled=bool(self._pack and self._pack["rules"] and
+                                                    self._show_bulk_move_choices()),
                                 ),
                             ],
                         ),
@@ -1747,36 +1758,45 @@ class ModeBIRules(ModeBI):
             menu.show()
             return
 
-        html.begin_form("bulk_delete_form", method="POST")
+        html.begin_form("bulk_action_form", method="POST")
         if self._view_type == "list":
             self.render_rules(_("Rules"), only_unused=False)
         else:
             self.render_rules(_("Unused BI Rules"), only_unused=True)
 
         html.hidden_fields()
-        if self._pack["rules"]:
-            fieldstyle = "margin-top:10px"
-
-            move_choices = [(pack_id, attrs["title"])
-                            for pack_id, attrs in self._packs.items()
-                            if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs)]
-
-            if move_choices:
-                html.button("_bulk_move_bi_rules", _("Bulk move"), "submit", style=fieldstyle)
-
-                if html.request.has_var('bulk_moveto'):
-                    html.javascript('cmk.selection.update_bulk_moveto("%s")' %
-                                    html.request.var('bulk_moveto', ''))
-
-                html.dropdown(
-                    "bulk_moveto",
-                    move_choices,
-                    "@",
-                    onchange="cmk.selection.update_bulk_moveto(this.value)",
-                    class_='bulk_moveto',
-                    style_=fieldstyle,
-                )
         html.end_form()
+
+    def _render_bulk_move_form(self) -> str:
+        with html.plugged():
+            move_choices = self._show_bulk_move_choices()
+            if not move_choices:
+                return ""
+
+            if html.request.has_var('bulk_moveto'):
+                html.javascript('cmk.selection.update_bulk_moveto("%s")' %
+                                html.request.var('bulk_moveto', ''))
+
+            html.dropdown("bulk_moveto",
+                          move_choices,
+                          "@",
+                          onchange="cmk.selection.update_bulk_moveto(this.value)",
+                          class_='bulk_moveto',
+                          label=_("Move to pack: "),
+                          form="form_bulk_action_form")
+
+            html.button("_bulk_move_bi_rules",
+                        _("Bulk move"),
+                        "submit",
+                        form="form_bulk_action_form")
+
+            return html.drain()
+
+    def _show_bulk_move_choices(self):
+        assert self._pack is not None
+        return [(pack_id, attrs["title"])
+                for pack_id, attrs in self._packs.items()
+                if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs)]
 
     def render_rules(self, title, only_unused):
         aggregations_that_use_rule = self.find_aggregation_rule_usages()

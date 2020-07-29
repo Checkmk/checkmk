@@ -118,22 +118,15 @@ export function enable_menu_entry(id, enabled) {
         utils.change_class(oShortCut, from, to);
 }
 
-
 export function open_popup(popup_id) {
     close_active_menu();
-    var oShadow = document.getElementById(popup_id);
-    oShadow.style.display = "block";
+    var popup = document.getElementById(popup_id);
+    utils.add_class(popup, "active");
 }
 
-export function close_popup(oA) {
-    var oShadow = oA.closest(".popup_shadow");
-    oShadow.style.display = "none";
-}
-
-export function clickOnShadow(oShadow) {
-    if (oShadow == event.target) {
-        oShadow.style.display = "none";
-    }
+export function close_popup(a) {
+    var popup = a.closest(".page_menu_popup");
+    utils.remove_class(popup, "active");
 }
 
 export function toggle_suggestions() {

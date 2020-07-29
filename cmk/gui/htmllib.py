@@ -115,6 +115,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuRenderer,
+    PageMenuPopupsRenderer,
     enable_page_menu_entry,
 )
 
@@ -1715,6 +1716,9 @@ class html(ABCHTMLGenerator):
             PageMenuRenderer().show(page_menu)
 
         self.close_div()  # top_heading
+
+        if page_menu and page_menu.dropdowns:
+            PageMenuPopupsRenderer().show(page_menu)
 
         if self.enable_debug:
             self._dump_get_vars()

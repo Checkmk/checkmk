@@ -251,6 +251,8 @@ class PageMenuRenderer:
 
     def _show_shortcuts(self, menu: PageMenu) -> None:
         html.open_td(class_="shortcuts")
+        for entry in menu.shortcuts:
+            ShortcutRenderer().show(entry)
         html.close_td()
 
     def _show_async_progress_msg_container(self) -> None:
@@ -259,9 +261,34 @@ class PageMenuRenderer:
         html.close_td()
 
 
+class ShortcutRenderer:
+    """Render the different item types for the shortcut area"""
+    def show(self, entry: PageMenuEntry) -> None:
+        if isinstance(entry.item, PageMenuLink):
+            self._show_link_item(entry, entry.item)
+        else:
+            raise NotImplementedError("Shortcut rendering not implemented for %s" % entry.item)
+
+    def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink):
+        classes = ["link", "enabled" if entry.is_enabled else "disabled"]
+        if entry.is_suggested:
+            classes.append("suggested")
+
+        html.open_div(class_="tooltip")
+        html.icon_button(url=item.link.url,
+                         onclick=item.link.onclick,
+                         title=entry.title,
+                         icon=entry.icon_name,
+                         target=item.link.target,
+                         class_=" ".join(classes),
+                         id_=("menu_shortcut_%s" % entry.name if entry.name else None))
+        html.span(entry.title, class_="tooltiptext")
+        html.close_div()
+
+
 class DropdownEntryRenderer:
     """Render the different item types for the dropdown menu"""
-    def show(self, entry: PageMenuEntry):
+    def show(self, entry: PageMenuEntry) -> None:
         if isinstance(entry.item, PageMenuLink):
             self._show_link_item(entry.title, entry.icon_name, entry.item)
         else:

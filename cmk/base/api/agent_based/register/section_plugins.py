@@ -165,8 +165,6 @@ def create_agent_section_plugin(
     'register' namespace of the API.
     """
     # TODO (mo): Well, implement it, and remove pragma below!
-    if supersedes is not None:
-        raise NotImplementedError("supersedes is not yet available")
     if parsed_section_name is not None:
         raise NotImplementedError("parsed_section_name is not yet available")
 
@@ -204,8 +202,6 @@ def create_snmp_section_plugin(
     'register' namespace of the API.
     """
     # TODO (mo): Well, implement it, and remove pragma below!
-    if supersedes is not None:
-        raise NotImplementedError("supersedes is not yet available")
     if parsed_section_name is not None:
         raise NotImplementedError("parsed_section_name is not yet available")
 

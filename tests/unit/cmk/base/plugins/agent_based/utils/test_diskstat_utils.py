@@ -201,7 +201,7 @@ DISK = {
             DISK,
             [
                 Result(state=state.OK, summary='Utilization: 53.2%', details='Utilization: 53.2%'),
-                Metric('disk_utilization', 53.242, levels=(None, None), boundaries=(None, None)),
+                Metric('disk_utilization', 0.53242, levels=(None, None), boundaries=(None, None)),
                 Result(state=state.OK,
                        summary='Read throughput: 12.3 KB/s',
                        details='Read throughput: 12.3 KB/s'),
@@ -282,7 +282,7 @@ DISK = {
                 Result(state=state.CRIT,
                        summary='Utilization: 53.2% (warn/crit at 10.0%/20.0%)',
                        details='Utilization: 53.2% (warn/crit at 10.0%/20.0%)'),
-                Metric('disk_utilization', 53.242, levels=(10.0, 20.0), boundaries=(None, None)),
+                Metric('disk_utilization', 0.53242, levels=(0.1, 0.2), boundaries=(None, None)),
                 Result(state=state.CRIT,
                        summary='Read throughput: 12.3 KB/s (warn/crit at 10.0 B/s/100 B/s)',
                        details='Read throughput: 12.3 KB/s (warn/crit at 10.0 B/s/100 B/s)'),

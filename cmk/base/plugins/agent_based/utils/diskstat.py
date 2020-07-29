@@ -130,8 +130,8 @@ class MetricSpecs(TypedDict, total=False):
 
 _METRICS: Mapping[str, MetricSpecs] = {
     'utilization': {
-        'value_scale': 100,  # value comes as fraction, not in percent
-        'render_func': render.percent,
+        'levels_scale': 0.01,  # value comes as fraction, but levels are specified in percent
+        'render_func': lambda x: render.percent(x * 100),
     },
     'read_throughput': {
         'levels_key': 'read',
@@ -250,7 +250,7 @@ def check_diskstat_dict(
         metric_val = disk.get(key)
         if metric_val is not None:
             yield from check_levels(
-                metric_val * specs.get('value_scale', 1),
+                metric_val,
                 levels_upper=_scale_levels(
                     params.get(specs.get('levels_key') or key),
                     specs.get('levels_scale', 1),

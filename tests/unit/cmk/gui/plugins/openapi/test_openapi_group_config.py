@@ -69,7 +69,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     )
 
 
-@pytest.mark.parametrize("group_type", ['host'])
+@pytest.mark.parametrize("group_type", ['host', 'service'])
 def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
@@ -84,8 +84,15 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         status=200,
         content_type='application/json',
     )
-
     assert len(resp.json['value']) == 2
+
+    _resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/%s_group_config/actions/bulk-create/invoke" % (group_type,),
+        params=json.dumps({'entries': groups}),
+        status=400,
+        content_type='application/json',
+    )
 
 
 def _random_string(size):

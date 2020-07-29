@@ -123,6 +123,18 @@ class InputServiceGroup(BaseSchema):
     alias = fields.String(example="Environment Sensors")
 
 
+class BulkInputServiceGroup(BaseSchema):
+    """Bulk creating service groups"""
+    entries = fields.List(
+        fields.Nested(InputServiceGroup),
+        example=[{
+            "name": "environment",
+            "alias": "Environment Sensors",
+        }],
+        uniqueItems=True,
+    )
+
+
 class CreateFolder(BaseSchema):
     """Creating a folder
 

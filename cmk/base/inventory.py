@@ -246,7 +246,7 @@ def _do_inv_for(
 ) -> Tuple[StructuredDataTree, StructuredDataTree]:
     hostname = host_config.hostname
 
-    _initialize_inventory_tree()
+    initialize_inventory_tree()
     inventory_tree = g_inv_tree
     status_data_tree = StructuredDataTree()
 
@@ -379,9 +379,15 @@ def _do_inv_for_realhost(
 g_inv_tree = StructuredDataTree()  # TODO Remove one day. Deprecated with version 1.5.0i3??
 
 
-def _initialize_inventory_tree() -> None:  # TODO Remove one day. Deprecated with version 1.5.0i3??
+def initialize_inventory_tree(tree=None) -> None:
+    # TODO (mo):
+    # This function has been resurrected in order to facilitate the migration
+    # of legacy inventory plugins to the new API.
+    # Once the processing of the plugins switched to the new API, we can
+    # move this function and all related functionality to
+    # cmk.base.api.agent_based.register.inventory_plugins_legacy
     global g_inv_tree
-    g_inv_tree = StructuredDataTree()
+    g_inv_tree = StructuredDataTree() if tree is None else tree
 
 
 # Dict based

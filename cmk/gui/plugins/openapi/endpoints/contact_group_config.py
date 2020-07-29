@@ -14,6 +14,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     serve_group,
     serialize_group,
     serialize_group_list,
+    load_groups,
 )
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -39,6 +40,26 @@ def create(params):
     add_group(name, 'contact', {'alias': alias})
     group = _fetch_contact_group(name)
     return serve_group(group, serialize_group('contact_group_config'))
+
+
+@endpoint_schema(constructors.domain_type_action_href('contact_group_config', 'bulk-create'),
+                 'cmk/bulk_create',
+                 method='post',
+                 request_schema=request_schemas.BulkInputContactGroup,
+                 response_schema=response_schemas.DomainObjectCollection)
+def bulk_create(params):
+    """Bulk create host-groups"""
+    body = params['body']
+    entries = body['entries']
+    contact_group_details = load_groups("contact", entries)
+
+    contact_group_names = []
+    for group_name, group_alias in contact_group_details.items():
+        add_group(group_name, 'contact', {'alias': group_alias})
+        contact_group_names.append(group_name)
+
+    contact_groups = _fetch_select_contact_groups(contact_group_names)
+    return constructors.serve_json(serialize_group_list('contact_group_config', contact_groups))
 
 
 @endpoint_schema(constructors.collection_href('contact_group_config'),
@@ -119,11 +140,26 @@ def update(params):
 
 def _fetch_contact_group(ident, status=404, message=None):
     groups = load_contact_group_information()
+    group = _retrieve_group(ident, groups, status, message)
+    group['id'] = ident
+    return group
+
+
+def _fetch_select_contact_groups(idents, status=404, message=None):
+    groups = load_contact_group_information()
+    result = []
+    for ident in idents:
+        group = _retrieve_group(ident, groups, status, message)
+        group['id'] = ident
+        result.append(group)
+    return result
+
+
+def _retrieve_group(ident, groups, status, message):
     try:
         group = groups[ident].copy()
     except KeyError as exc:
         if message is None:
             message = str(exc)
         raise ProblemException(status, http.client.responses[status], message)
-    group['id'] = ident
     return group

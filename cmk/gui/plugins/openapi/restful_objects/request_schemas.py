@@ -117,6 +117,19 @@ class InputContactGroup(BaseSchema):
     alias = fields.String(example="Not on Sundays.")
 
 
+class BulkInputContactGroup(BaseSchema):
+    """Bulk creating contact groups"""
+    # TODO: add unique entries attribute
+    entries = fields.List(
+        fields.Nested(InputContactGroup),
+        example=[{
+            "name": "OnCall",
+            "alias": "Not on Sundays",
+        }],
+        uniqueItems=True,
+    )
+
+
 class InputServiceGroup(BaseSchema):
     """Creating a service group"""
     name = fields.String(required=True, example="environment")

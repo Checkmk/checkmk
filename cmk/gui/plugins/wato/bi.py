@@ -74,6 +74,7 @@ from cmk.gui.plugins.wato import (
 
 import cmk.gui.node_visualization
 from cmk.utils.type_defs import ContactgroupName
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
@@ -1047,7 +1048,7 @@ class ModeBIPacks(ModeBI):
     def title(self):
         return _("Business Intelligence")
 
-    def page_menu(self) -> PageMenu:
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         bi_config_entries = []
         if config.user.may("wato.bi_admin"):
             bi_config_entries.append(
@@ -1059,48 +1060,51 @@ class ModeBIPacks(ModeBI):
                     is_suggested=True,
                 ))
 
-        return PageMenu([
-            PageMenuDropdown(
-                name="packs",
-                title=_("Packs"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("BI configuration"),
-                        entries=bi_config_entries,
-                    ),
-                ],
-            ),
-            PageMenuDropdown(
-                name="services",
-                title=_("Services"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Of aggregations"),
-                        entries=[
-                            PageMenuEntry(
-                                title=_("Monitor state"),
-                                icon_name="rulesets",
-                                item=make_simple_link(
-                                    html.makeuri_contextless([
-                                        ("mode", "edit_ruleset"),
-                                        ("varname", "special_agents:bi"),
-                                    ])),
-                            ),
-                            PageMenuEntry(
-                                title=_("Monitor single state (Deprecated)"),
-                                icon_name="rulesets",
-                                item=make_simple_link(
-                                    html.makeuri_contextless([
-                                        ("mode", "edit_ruleset"),
-                                        ("varname", "active_checks:bi_aggr"),
-                                    ])),
-                                is_advanced=True,
-                            ),
-                        ],
-                    ),
-                ],
-            ),
-        ])
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="packs",
+                    title=_("Packs"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("BI configuration"),
+                            entries=bi_config_entries,
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="services",
+                    title=_("Services"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Of aggregations"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Monitor state"),
+                                    icon_name="rulesets",
+                                    item=make_simple_link(
+                                        html.makeuri_contextless([
+                                            ("mode", "edit_ruleset"),
+                                            ("varname", "special_agents:bi"),
+                                        ])),
+                                ),
+                                PageMenuEntry(
+                                    title=_("Monitor single state (Deprecated)"),
+                                    icon_name="rulesets",
+                                    item=make_simple_link(
+                                        html.makeuri_contextless([
+                                            ("mode", "edit_ruleset"),
+                                            ("varname", "active_checks:bi_aggr"),
+                                        ])),
+                                    is_advanced=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         if config.user.may("wato.bi_admin") and html.request.has_var("_delete"):

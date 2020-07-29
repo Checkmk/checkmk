@@ -93,9 +93,9 @@ class WatoMode(metaclass=abc.ABCMeta):
         """
         return html.makeuri_contextless([("mode", self.name())], filename="wato.py")
 
-    def page_menu(self) -> PageMenu:
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         """Returns the data structure representing the page menu for this mode"""
-        return PageMenu()
+        return PageMenu(breadcrumb=breadcrumb)
 
     def buttons(self) -> None:
         global_buttons()

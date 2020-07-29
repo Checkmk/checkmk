@@ -20,6 +20,7 @@ from typing import List, Iterator, Optional
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb
 
 
 def enable_page_menu_entry(name):
@@ -114,6 +115,7 @@ class PageMenuDropdown:
 class PageMenu:
     """Representing the whole menu of the page"""
     dropdowns: List[PageMenuDropdown] = field(default_factory=list)
+    breadcrumb: Optional[Breadcrumb] = None
 
     def __post_init__(self):
         if self.dropdowns:
@@ -122,6 +124,10 @@ class PageMenu:
 
             # Add the help dropdown, which shall be shown on all pages
             self.dropdowns.append(make_help_dropdown())
+
+            # Add the up-entry
+            if self.breadcrumb and len(self.breadcrumb) > 1 and self.breadcrumb[-2].url:
+                self.dropdowns.append(make_up_link(self.breadcrumb))
 
     @property
     def shortcuts(self) -> Iterator[PageMenuEntry]:
@@ -212,6 +218,28 @@ def make_help_dropdown() -> PageMenuDropdown:
                         title=_("Checkmk - The official guide"),
                         icon_name="manual",
                         item=make_external_link("https://checkmk.com/cms_index.html"),
+                    ),
+                ],
+            ),
+        ],
+    )
+
+
+def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
+    parent_item = breadcrumb[-2]
+    return PageMenuDropdown(
+        name="dummy",
+        title="dummy",
+        topics=[
+            PageMenuTopic(
+                title=_("Dummy"),
+                entries=[
+                    PageMenuEntry(
+                        title=parent_item.title,
+                        icon_name="up",
+                        item=make_simple_link(parent_item.url),
+                        is_list_entry=False,
+                        is_shortcut=True,
                     ),
                 ],
             ),

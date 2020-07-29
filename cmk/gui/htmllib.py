@@ -112,7 +112,11 @@ from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
-from cmk.gui.page_menu import PageMenu, PageMenuRenderer, enable_page_menu_entry
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuRenderer,
+    enable_page_menu_entry,
+)
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -1656,11 +1660,13 @@ class html(ABCHTMLGenerator):
 
                 self._header_sent = True
 
+                breadcrumb = breadcrumb or Breadcrumb()
+
                 if self.render_headfoot and show_top_heading:
                     self.top_heading(
                         title,
-                        breadcrumb=breadcrumb or Breadcrumb(),
-                        page_menu=page_menu or PageMenu(),
+                        breadcrumb=breadcrumb,
+                        page_menu=page_menu or PageMenu(breadcrumb=breadcrumb),
                     )
 
     def body_start(self,

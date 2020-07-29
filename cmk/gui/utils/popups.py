@@ -39,14 +39,14 @@ class MethodAjax(PopupMethod):
 
 @dataclass(init=False)
 class MethodInline(PopupMethod):
-    _content: Optional[str]  # used only for server side rendering
+    _content: str  # used only for server side rendering
 
     def __init__(self, content: str):
         super().__init__(type='inline')
-        self._content = content if content else None
+        self._content: str = content
 
     @property
-    def content(self):
+    def content(self) -> str:
         return self._content
 
 

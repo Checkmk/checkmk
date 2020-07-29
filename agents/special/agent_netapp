@@ -465,6 +465,9 @@ def format_config(instances,
         if node.element["content"]:
             values["%s%s" % (namespace, node.element["name"])] = node.element["content"]
 
+    if instances is None:
+        return ""
+
     for instance in instances.children_get():
         values = {}
         for node in instance.children_get():

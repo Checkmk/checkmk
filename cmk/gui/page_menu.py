@@ -117,6 +117,9 @@ class PageMenu:
 
     def __post_init__(self):
         if self.dropdowns:
+            # Add the display options dropdown
+            self.dropdowns.append(make_display_options_dropdown())
+
             # Add the help dropdown, which shall be shown on all pages
             self.dropdowns.append(make_help_dropdown())
 
@@ -149,6 +152,40 @@ class PageMenu:
     @property
     def has_suggestions(self) -> bool:
         return any(True for _s in self.suggestions)
+
+
+def make_display_options_dropdown() -> PageMenuDropdown:
+    return PageMenuDropdown(
+        name="display",
+        title=_("Display"),
+        topics=[
+            PageMenuTopic(
+                title=_("General display options"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("This page without navigation"),
+                        icon_name="frameurl",
+                        item=PageMenuLink(Link(
+                            url=html.makeuri([]),
+                            target="_top",
+                        )),
+                    ),
+                    PageMenuEntry(
+                        title=_("This page with navigation"),
+                        icon_name="pageurl",
+                        item=PageMenuLink(
+                            Link(
+                                url=html.makeuri_contextless(
+                                    [("start_url", html.makeuri([]))],
+                                    filename="index.py",
+                                ),
+                                target="_top",
+                            )),
+                    ),
+                ],
+            ),
+        ],
+    )
 
 
 def make_help_dropdown() -> PageMenuDropdown:

@@ -45,7 +45,7 @@ def test_make_form_submit_link():
     assert item.link.onclick == 'cmk.page_menu.form_submit("frm", "btn")'
 
 
-def test_simple_page_menu():
+def test_simple_page_menu(register_builtin_html):
     pm = PageMenu([
         PageMenuDropdown(
             name="hallo",
@@ -67,7 +67,7 @@ def test_simple_page_menu():
         ),
     ])
 
-    assert len(pm.dropdowns) == 2  # help-Dropdown is added automatically
+    assert len(pm.dropdowns) == 3  # help, display-options-Dropdowns are added automatically
     assert len(list(pm.shortcuts)) == 0
     assert len(list(pm.suggestions)) == 0
     assert pm.has_suggestions is False
@@ -93,6 +93,9 @@ def test_simple_page_menu():
             assert entry.item.link.target == "_blank"
             assert entry.item.link.onclick is None
 
-    help_dropdown = pm.dropdowns[1]
+    display_dropdown = pm.dropdowns[1]
+    assert display_dropdown.name == "display"
+
+    help_dropdown = pm.dropdowns[2]
     assert help_dropdown.name == "help"
     assert help_dropdown.topics[0].entries[0].name == "inline_help"

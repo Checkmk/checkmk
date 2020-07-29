@@ -2907,17 +2907,6 @@ class html(ABCHTMLGenerator):
     # TODO: Rename the status_icons because they are not only showing states. There are also actions.
     # Something like footer icons or similar seems to be better
     def _write_status_icons(self) -> None:
-        self.icon_button(self.makeuri([]),
-                         _("URL to this frame"),
-                         "frameurl",
-                         target="_top",
-                         cssclass="inline")
-        self.icon_button("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]),
-                         _("URL to this page including sidebar"),
-                         "pageurl",
-                         target="_top",
-                         cssclass="inline")
-
         # TODO: Move this away from here. Make a context button. The view should handle this
         if self.myfile == "view" and self.request.var('mode') != 'availability' and config.user.may(
                 "general.csv_export"):

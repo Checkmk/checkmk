@@ -1055,6 +1055,8 @@ class ModeBIPacks(ModeBI):
                     title=_("Add pack"),
                     icon_name="new",
                     item=make_simple_link(html.makeuri_contextless([("mode", "bi_edit_pack")])),
+                    is_shortcut=True,
+                    is_suggested=True,
                 ))
 
         return PageMenu([

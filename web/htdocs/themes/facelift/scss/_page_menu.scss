@@ -4,14 +4,10 @@ body.main {
   }
 
   &.suggestions {
-    padding-top: 176px;
+    padding-top: 86px;
 
     tr#suggestions {
       display: table-row;
-    }
-
-    #suggestion_button img {
-      filter: grayscale(100%) brightness(55%);
     }
 
     td.shortcuts {
@@ -116,6 +112,10 @@ div#top_heading {
             filter: grayscale(100%) brightness(50%);
 	  }
 	}
+
+        #menu_shortcut_toggle_suggestions img {
+          filter: grayscale(100%) brightness(55%);
+        }
       }
     }
 

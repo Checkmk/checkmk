@@ -122,11 +122,23 @@ class PageMenu:
 
     @property
     def shortcuts(self) -> Iterator[PageMenuEntry]:
+        has_suggestions = False
         for dropdown in self.dropdowns:
             for topic in dropdown.topics:
                 for entry in topic.entries:
                     if entry.is_shortcut:
+                        if entry.is_suggested:
+                            has_suggestions = True
+
                         yield entry
+
+        if has_suggestions:
+            yield PageMenuEntry(
+                title=_("Toggle suggested actions"),
+                icon_name="suggestion",
+                item=make_javascript_link("cmk.page_menu.toggle_suggestions()"),
+                name="toggle_suggestions",
+            )
 
     @property
     def suggestions(self) -> Iterator[PageMenuEntry]:
@@ -174,11 +186,14 @@ class PageMenuRenderer:
     """Renders the given page menu to the page header"""
     def show(self, menu: PageMenu) -> None:
         html.open_table(id_="page_menu_bar", class_="menubar")
+
         html.open_tr()
         self._show_dropdowns(menu)
         self._show_shortcuts(menu)
         self._show_async_progress_msg_container()
         html.close_tr()
+
+        self._show_suggestions(menu)
         html.close_table()
 
     def _show_dropdowns(self, menu: PageMenu) -> None:
@@ -251,14 +266,45 @@ class PageMenuRenderer:
 
     def _show_shortcuts(self, menu: PageMenu) -> None:
         html.open_td(class_="shortcuts")
+
         for entry in menu.shortcuts:
             ShortcutRenderer().show(entry)
+
         html.close_td()
 
     def _show_async_progress_msg_container(self) -> None:
         html.open_td(id_="async_progress_msg")
         html.show_message("")
         html.close_td()
+
+    def _show_suggestions(self, menu: PageMenu) -> None:
+        entries = menu.suggestions
+        if not entries:
+            return
+
+        html.open_tr(id_="suggestions")
+        html.open_td(colspan=3)
+        for entry in entries:
+            html.open_div(class_="suggestion")
+            SuggestedEntryRenderer().show(entry)
+            html.close_div()
+        html.close_td()
+        html.close_tr()
+
+
+class SuggestedEntryRenderer:
+    """Render the different item types for the suggestion area"""
+    def show(self, entry: PageMenuEntry) -> None:
+        if isinstance(entry.item, PageMenuLink):
+            self._show_link_item(entry, entry.item)
+        else:
+            raise NotImplementedError("Suggestion rendering not implemented for %s" % entry.item)
+
+    def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink):
+        html.open_a(href=item.link.url, onclick=item.link.onclick)
+        html.icon(title=None, icon=entry.icon_name or "trans")
+        html.write_text(entry.title)
+        html.close_a()
 
 
 class ShortcutRenderer:

@@ -196,18 +196,18 @@ class MultiHostSections(collections.abc.MutableMapping):
 
         return self._parsed_sections.setdefault(cache_key, (None, None))
 
-    def determine_available_parsed_sections(
+    def determine_applicable_sections(
         self,
         parse_sections: Set[ParsedSectionName],
         source_type: SourceType,
-    ) -> Set[ParsedSectionName]:
+    ) -> List[SectionPlugin]:
         """Try to parse all given sections and return a set of names for which the
         parsed sections value is not None.
 
         This takes into account the supersedings and permanently "dismisses" all
         superseded raw sections (by setting their parsing result to None).
         """
-        parsed_sections = set()
+        applicable_sections: List[SectionPlugin] = []
         for host_key, host_data in self.items():
             if host_key.source_type != source_type:
                 continue
@@ -220,7 +220,7 @@ class MultiHostSections(collections.abc.MutableMapping):
                 if parsed is None:
                     continue
 
-                parsed_sections.add(section.parsed_section_name)
+                applicable_sections.append(section)
                 self._parsed_sections[host_key + (section.parsed_section_name,)] = (
                     parsed,
                     host_data.cache_info.get(section.name),
@@ -229,7 +229,7 @@ class MultiHostSections(collections.abc.MutableMapping):
                 for superseded in section.supersedes:
                     self._parsing_results[host_key + (superseded,)] = None
 
-        return parsed_sections
+        return applicable_sections
 
     def _get_parsing_result(
         self,

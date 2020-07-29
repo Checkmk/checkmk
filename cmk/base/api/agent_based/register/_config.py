@@ -8,7 +8,6 @@ from typing import Dict, Iterable, List, Optional, Set
 
 import itertools
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import (
     CheckPluginName,
     InventoryPluginName,
@@ -71,28 +70,6 @@ def get_inventory_plugin(plugin_name: InventoryPluginName) -> Optional[Inventory
     """Returns the registered inventory plugin
     """
     return registered_inventory_plugins.get(plugin_name)
-
-
-def get_parsed_section_creator(
-        parsed_section_name: ParsedSectionName,
-        available_raw_sections: List[SectionName]) -> Optional[SectionPlugin]:
-    """return the section definition required to create the enquired parsed section"""
-    section_defs = (get_section_plugin(n) for n in available_raw_sections)
-    candidates = [
-        p for p in section_defs if p is not None and p.parsed_section_name == parsed_section_name
-    ]
-    if not candidates:
-        return None
-
-    # We may still have more than one. The 'supersedes' feature should deal with that:
-    # TODO (mo): CMK-4232 remove superseded ones
-    plugins = candidates
-
-    # validation should have enforced that this is exactly one.
-    if not len(plugins) == 1:
-        raise MKGeneralException("conflicting section definitions: %s" %
-                                 ','.join(str(p) for p in plugins))
-    return plugins[0]
 
 
 def get_ranked_sections(

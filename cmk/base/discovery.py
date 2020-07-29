@@ -1057,22 +1057,25 @@ def _discover_host_labels(
     try:
         # We do *not* process all available raw sections. Instead we see which *parsed*
         # sections would result from them, and then process those.
-        parsed_sections = {
+        parse_sections = {
             agent_based_register.get_section_plugin(rs).parsed_section_name
             for rs in host_data.sections
         }
+        applicable_sections = multi_host_sections.determine_applicable_sections(
+            parse_sections,
+            host_key.source_type,
+        )
 
         console.vverbose("Trying host label discovery with: %s\n" %
-                         ", ".join(str(p) for p in parsed_sections))
-        for parsed_section_name in sorted(parsed_sections):
+                         ", ".join(str(s.name) for s in applicable_sections))
+        for plugin in applicable_sections:
+            parsed = multi_host_sections.get_parsed_section(host_key, plugin.parsed_section_name)
+
+            if parsed is None:
+                # just for mypy. if parsed was None, the plugin would not have been in the list
+                continue
+
             try:
-                plugin = agent_based_register.get_parsed_section_creator(
-                    parsed_section_name,
-                    host_data.sections,
-                )
-                parsed = multi_host_sections.get_parsed_section(host_key, parsed_section_name)
-                if plugin is None or parsed is None:
-                    continue
                 for label in plugin.host_label_function(parsed):
                     label.plugin_name = str(plugin.name)
                     discovered_host_labels.add_label(label)
@@ -1084,8 +1087,7 @@ def _discover_host_labels(
                 if cmk.utils.debug.enabled() or on_error == "raise":
                     raise
                 if on_error == "warn":
-                    console.error("Host label discovery of '%s' failed: %s\n" %
-                                  (parsed_section_name, exc))
+                    console.error("Host label discovery of '%s' failed: %s\n" % (plugin.name, exc))
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
@@ -1135,10 +1137,12 @@ def _find_host_candidates(
     parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
 
-    available_parsed_sections = mhs.determine_available_parsed_sections(
-        parsed_sections_of_interest,
-        SourceType.HOST,
-    )
+    available_parsed_sections = {
+        s.parsed_section_name for s in mhs.determine_applicable_sections(
+            parsed_sections_of_interest,
+            SourceType.HOST,
+        )
+    }
 
     return {
         plugin.name
@@ -1155,10 +1159,12 @@ def _find_mgmt_candidates(
     parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
 
-    available_parsed_sections = mhs.determine_available_parsed_sections(
-        parsed_sections_of_interest,
-        SourceType.MANAGEMENT,
-    )
+    available_parsed_sections = {
+        s.parsed_section_name for s in mhs.determine_applicable_sections(
+            parsed_sections_of_interest,
+            SourceType.MANAGEMENT,
+        )
+    }
 
     return {
         # *create* all management only names of the plugins

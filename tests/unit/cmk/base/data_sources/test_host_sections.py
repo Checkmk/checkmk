@@ -330,12 +330,12 @@ def test_parse_sections_unsuperseded(monkeypatch):
         MOCK_SECTIONS.get,
     )
 
-    assert mhs.determine_available_parsed_sections(
+    assert mhs.determine_applicable_sections(
         {ParsedSectionName("parsed")},
         host_key.source_type,
-    ) == {
-        ParsedSectionName("parsed"),
-    }
+    ) == [
+        SECTION_ONE,
+    ]
     assert mhs.get_parsed_section(host_key, ParsedSectionName("parsed")) is not None
 
 
@@ -349,12 +349,12 @@ def test_parse_sections_superseded(monkeypatch):
         MOCK_SECTIONS.get,
     )
 
-    assert mhs.determine_available_parsed_sections(
+    assert mhs.determine_applicable_sections(
         {ParsedSectionName("parsed"), ParsedSectionName("parsed_four")},
         host_key.source_type,
-    ) == {
-        ParsedSectionName("parsed_four"),
-    }
+    ) == [
+        SECTION_FOUR,
+    ]
     assert mhs.get_parsed_section(host_key, ParsedSectionName("parsed")) is None
 
 

@@ -5,42 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.utils.liebert import (
-    parse_liebert_without_unit,)
+    parse_liebert_without_unit,
+    parse_liebert,
+)
 
 
-def parse_liebert(info, type_func=None):
-    if type_func is None:
-        type_func = float
-
-    parsed = {}
-    used_names = set()
-
-    def get_item_name(name):
-        counter = 2
-        new_name = name
-        while True:
-            if new_name in used_names:
-                new_name = "%s %d" % (name, counter)
-                counter += 1
-            else:
-                used_names.add(new_name)
-                break
-        return new_name
-
-    for line in info:
-        for element in zip(line[0::3], line[1::3], line[2::3]):
-            if not element[0]:
-                continue
-            name = get_item_name(element[0])
-            try:
-                parsed[name] = [type_func(element[1]), element[2]]
-            except ValueError:
-                continue
-
-    return parsed
+def parse_liebert_wrapper(info, type_func=float):
+    # This function is needed to convert the info data type
+    # to the target data type of the new check API, SNMPStringTable
+    return parse_liebert([info], type_func)
 
 
 def parse_liebert_without_unit_wrapper(info, type_func=float):
+    # This function is needed to convert the info data type
+    # to the target data type of the new check API, SNMPStringTable
     return parse_liebert_without_unit([info], type_func)
 
 

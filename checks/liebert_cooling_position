@@ -24,7 +24,7 @@ def check_liebert_cooling_position(item, params, data):
 
 
 check_info['liebert_cooling_position'] = {
-    'parse_function': parse_liebert,
+    'parse_function': parse_liebert_wrapper,
     'inventory_function': discover(lambda key, _value: key.startswith("Free Cooling")),
     'check_function': check_liebert_cooling_position,
     'service_description': '%s',

@@ -44,7 +44,7 @@ def check_liebert_temp_air(item, params, parsed):
 
 
 check_info['liebert_temp_air'] = {
-    'parse_function': lambda info: parse_liebert(info, str),
+    'parse_function': lambda info: parse_liebert_wrapper(info, str),
     'inventory_function': inventory_liebert_temp_air,
     'check_function': check_liebert_temp_air,
     'service_description': '%s Temperature',

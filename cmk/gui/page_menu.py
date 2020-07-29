@@ -247,6 +247,38 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     )
 
 
+def make_simple_back_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+    """Factory for creating a simple menu for object edit dialogs that just link back"""
+    if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
+        raise ValueError("Can not create back link for this page")
+
+    parent_item = breadcrumb[-2]
+    return PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="dummy",
+                title="dummy",
+                topics=[
+                    PageMenuTopic(
+                        title=_("Dummy"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Abort"),
+                                icon_name="abort",
+                                item=make_simple_link(parent_item.url),
+                                is_list_entry=False,
+                                is_shortcut=True,
+                                is_suggested=True,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+
+
 class PageMenuRenderer:
     """Renders the given page menu to the page header"""
     def show(self, menu: PageMenu) -> None:

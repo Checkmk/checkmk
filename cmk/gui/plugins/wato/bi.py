@@ -65,7 +65,6 @@ from cmk.gui.plugins.wato import (
     main_module_registry,
     MainModule,
     MainModuleTopicServices,
-    global_buttons,
     add_change,
     wato_confirm,
     HostTagCondition,
@@ -81,6 +80,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     make_simple_link,
+    make_simple_back_page_menu,
 )
 
 BIPack = Dict[str, Any]
@@ -528,17 +528,6 @@ class ModeBI(WatoMode, BIManagement):
 
     def title(self) -> str:
         return (self._pack["title"] + ": ") if self._pack else ""
-
-    def buttons(self):
-        global_buttons()
-        if self._pack:
-            html.context_button(_("All Packs"), html.makeuri_contextless([("mode", "bi_packs")]),
-                                "back")
-
-        if config.user.may("wato.rulesets"):
-            html.context_button(_("Rulesets"),
-                                html.makeuri_contextless([("mode", "rulesets"), ("group", "bi")]),
-                                "rulesets")
 
     def _add_change(self, action_name, text):
         site_ids = list(config.wato_slave_sites().keys()) + [config.omd_site()]
@@ -1183,6 +1172,10 @@ class ModeBIEditPack(ModeBI):
     def permissions(cls):
         return ["bi_rules", "bi_admin"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIPacks
+
     def title(self):
         if self._pack:
             return _("Edit BI pack %s") % self._pack["title"]
@@ -1208,8 +1201,8 @@ class ModeBIEditPack(ModeBI):
 
         return "bi_packs"
 
-    def buttons(self):
-        html.context_button(_("Abort"), html.makeuri([("mode", "bi_packs")]), "abort")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_back_page_menu(breadcrumb)
 
     def page(self):
         html.begin_form("bi_pack", method="POST")
@@ -1299,12 +1292,50 @@ class ModeBIAggregations(ModeBI):
     def title(self):
         return super().title() + _("Aggregations")
 
-    def buttons(self):
-        ModeBI.buttons(self)
-        html.context_button(_("Rules"), self.url_to_pack([("mode", "bi_rules")]), "aggr")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        aggr_entries = []
         if self.have_rules() and self.is_contact_for_pack(self._pack):
-            html.context_button(_("New Aggregation"),
-                                self.url_to_pack([("mode", "bi_edit_aggregation")]), "new")
+            aggr_entries.append(
+                PageMenuEntry(
+                    title=_("Add rule"),
+                    icon_name="new",
+                    item=make_simple_link(self.url_to_pack([("mode", "bi_edit_aggregation")])),
+                    is_shortcut=True,
+                    is_suggested=True,
+                ))
+
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="aggregations",
+                    title=_("Aggregations"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("In this pack"),
+                            entries=aggr_entries,
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="rules",
+                    title=_("Rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("In this pack"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Aggregations"),
+                                    icon_name="aggr",
+                                    item=make_simple_link(self.url_to_pack([("mode", "bi_rules")
+                                                                           ]),),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         self.must_be_contact_for_pack(self._pack)
@@ -1528,20 +1559,73 @@ class ModeBIRules(ModeBI):
             return super().title() + _("Rules")
         return super().title() + _("Unused rules")
 
-    def buttons(self):
-        ModeBI.buttons(self)
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        rules_entries = []
+        if self.is_contact_for_pack(self._pack):
+            rules_entries.append(
+                PageMenuEntry(
+                    title=_("Add rule"),
+                    icon_name="new",
+                    item=make_simple_link(self.url_to_pack([("mode", "bi_edit_rule")])),
+                    is_shortcut=True,
+                    is_suggested=True,
+                ))
+
         if self._view_type == "list":
-            html.context_button(_("Aggregations"), self.url_to_pack([("mode", "bi_aggregations")]),
-                                "aggr")
-            if self.is_contact_for_pack(self._pack):
-                html.context_button(
-                    _("New Rule"),
-                    self.url_to_pack([("mode", "bi_edit_rule"), ("pack", self._pack_id)]), "new")
-            html.context_button(_("Unused Rules"),
-                                self.url_to_pack([("mode", "bi_rules"), ("view", "unused")]),
-                                "unusedbirules")
+            unused_rules_title = _("Show only unused rules")
+            unused_rules_url = self.url_to_pack([("mode", "bi_rules")])
         else:
-            html.context_button(_("Back"), html.makeuri([("view", "list")]), "back")
+            unused_rules_title = _("Show all rules")
+            unused_rules_url = self.url_to_pack([("mode", "bi_rules"), ("view", "unused")])
+
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="rules",
+                    title=_("Rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("In this pack"),
+                            entries=rules_entries,
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="aggregations",
+                    title=_("Aggregations"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("In this pack"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Aggregations"),
+                                    icon_name="aggr",
+                                    item=make_simple_link(
+                                        self.url_to_pack([("mode", "bi_aggregations")]),),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="view",
+                    title=_("View"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Filter"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=unused_rules_title,
+                                    icon_name="unusedbirules",
+                                    item=make_simple_link(unused_rules_url),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         self.must_be_contact_for_pack(self._pack)
@@ -1790,9 +1874,8 @@ class ModeBIRuleTree(ModeBI):
     def title(self):
         return super().title() + _("Rule tree of") + " " + self._ruleid
 
-    def buttons(self):
-        ModeBI.buttons(self)
-        html.context_button(_("Back"), html.makeuri([("mode", "bi_rules")]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_back_page_menu(breadcrumb)
 
     def page(self):
         _aggr_refs, rule_refs, _level = self.count_rule_references(self._ruleid)
@@ -1854,8 +1937,8 @@ class ModeBIEditAggregation(ModeBI):
             return super().title() + _("Create aggregation")
         return super().title() + _("Edit aggregation")
 
-    def buttons(self):
-        html.context_button(_("Abort"), html.makeuri([("mode", "bi_aggregations")]), "abort")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_back_page_menu(breadcrumb)
 
     def _get_aggregations_by_id(self):
         ids = {}
@@ -1944,8 +2027,8 @@ class ModeBIEditRule(ModeBI):
             return super().title() + _("Create rule")
         return super().title() + _("Edit rule") + " " + escaping.escape_attribute(self._ruleid)
 
-    def buttons(self):
-        html.context_button(_("Abort"), html.makeuri([("mode", "bi_rules")]), "abort")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_back_page_menu(breadcrumb)
 
     def action(self):
         self.must_be_contact_for_pack(self._pack)

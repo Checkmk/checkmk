@@ -1100,14 +1100,14 @@ def _find_candidates(
 
     Given this mutli_host_section, there is no point in trying to discover
     any check plugins not returned by this function.  This does not
-    address the question wether or not the returned check plugins will
+    address the question whether or not the returned check plugins will
     discover something.
 
     We have to consider both the host, and the management board as source
     type. Note that the determination of the plugin names is not quite
     symmetric: For the host, we filter out all management plugins,
     for the management board we create management variants from all
-    plugins that are not allready designed for management boards.
+    plugins that are not already designed for management boards.
 
     """
     if selected_check_plugins is None:

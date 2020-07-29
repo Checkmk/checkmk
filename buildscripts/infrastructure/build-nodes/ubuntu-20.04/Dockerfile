@@ -71,6 +71,7 @@ RUN apt-get update \
     rpcbind \
     rsync \
     smbclient \
+    software-properties-common \
     texinfo \
     tk-dev \
     uuid-dev \
@@ -107,6 +108,9 @@ RUN /opt/install-freetds.sh
 # containers, ...). Scripts should be usable with other Ubuntu versions.
 RUN /opt/install-docker.sh
 RUN /opt/install-make-dist-deps.sh
+RUN /opt/install-clang.sh
+RUN /opt/install-iwyu.sh
+RUN /opt/install-cppcheck.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

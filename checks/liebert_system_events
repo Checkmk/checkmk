@@ -17,7 +17,7 @@
 
 
 def parse_liebert_system_events(info):
-    return {"events": parse_liebert_without_unit(info, str)}
+    return {"events": parse_liebert_without_unit_wrapper(info, str)}
 
 
 def check_liebert_system_events(_no_item, _no_params, parsed):

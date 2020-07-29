@@ -28,7 +28,7 @@ def check_liebert_chilled_water(item, _params, parsed):
 
 
 check_info['liebert_chilled_water'] = {
-    'parse_function': lambda info: parse_liebert_without_unit(info, str),
+    'parse_function': lambda info: parse_liebert_without_unit_wrapper(info, str),
     'inventory_function': inventory_liebert_chilled_water,
     'check_function': check_liebert_chilled_water,
     'service_description': '%s',

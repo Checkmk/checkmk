@@ -91,7 +91,7 @@ def transform_csv(table_name: str) -> None:
     Returns:
         Nothing.
     """
-    env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+    env = jinja2.Environment(undefined=jinja2.StrictUndefined, autoescape=True)
     env.globals['translate_column_name'] = translate_column_name
     template = env.from_string(TABLE_FILE_TEMPLATE)
     columns = ['description', 'name', 'table', 'type']

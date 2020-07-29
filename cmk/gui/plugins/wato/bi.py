@@ -81,6 +81,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     make_simple_link,
     make_simple_back_page_menu,
+    make_checkbox_selection_topic,
 )
 
 BIPack = Dict[str, Any]
@@ -1314,6 +1315,7 @@ class ModeBIAggregations(ModeBI):
                             title=_("In this pack"),
                             entries=aggr_entries,
                         ),
+                        make_checkbox_selection_topic(),
                     ],
                 ),
                 PageMenuDropdown(
@@ -1454,13 +1456,7 @@ class ModeBIAggregations(ModeBI):
             assert self._pack is not None
             for aggregation_id, aggregation in enumerate(self._pack["aggregations"]):
                 table.row()
-                table.cell(html.render_input("_toggle_group",
-                                             type_="button",
-                                             class_="checkgroup",
-                                             onclick="cmk.selection.toggle_all_rows();",
-                                             value='X'),
-                           sortable=False,
-                           css="checkbox")
+                table.cell("", sortable=False, css="checkbox")
                 html.checkbox("_c_aggregation_%s" % aggregation_id)
 
                 table.cell(_("Actions"), css="buttons")
@@ -1588,6 +1584,7 @@ class ModeBIRules(ModeBI):
                             title=_("In this pack"),
                             entries=rules_entries,
                         ),
+                        make_checkbox_selection_topic(),
                     ],
                 ),
                 PageMenuDropdown(
@@ -1776,13 +1773,7 @@ class ModeBIRules(ModeBI):
                 refs = aggr_refs + rule_refs
                 if not only_unused or refs == 0:
                     table.row()
-                    table.cell(html.render_input("_toggle_group",
-                                                 type_="button",
-                                                 class_="checkgroup",
-                                                 onclick="cmk.selection.toggle_all_rows();",
-                                                 value='X'),
-                               sortable=False,
-                               css="checkbox")
+                    table.cell("", sortable=False, css="checkbox")
                     html.checkbox("_c_rule_%s" % rule_id)
 
                     table.cell(_("Actions"), css="buttons")

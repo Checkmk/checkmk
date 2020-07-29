@@ -247,6 +247,19 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     )
 
 
+def make_checkbox_selection_topic() -> PageMenuTopic:
+    return PageMenuTopic(
+        title=_("Selection"),
+        entries=[
+            PageMenuEntry(
+                title=_("Toggle all checkboxes"),
+                icon_name="checkbox",
+                item=make_javascript_link("cmk.selection.toggle_all_rows();"),
+            ),
+        ],
+    )
+
+
 def make_simple_back_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     """Factory for creating a simple menu for object edit dialogs that just link back"""
     if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:

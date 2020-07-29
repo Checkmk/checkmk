@@ -133,7 +133,7 @@ def discover_winperf_phydisk(
 
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
-    value_store,
+    value_store: type_defs.ValueStore,
     value_store_suffix: str = '',
 ) -> diskstat.Disk:
 
@@ -191,31 +191,6 @@ def _compute_rates_single_disk(
     return disk_with_rates
 
 
-def _compute_rates_multiple_disks(
-    disks: diskstat.Section,
-    value_store,
-) -> Mapping[str, diskstat.Disk]:
-
-    disks_with_rates = {}
-    ignore_res_excpt = None
-
-    for disk_name, disk in disks.items():
-        try:
-            disk_w_rate = _compute_rates_single_disk(
-                disk,
-                value_store,
-                value_store_suffix='.%s' % disk_name,
-            )
-            disks_with_rates[disk_name] = disk_w_rate
-        except IgnoreResultsError as excpt:
-            ignore_res_excpt = excpt
-
-    if ignore_res_excpt:
-        raise ignore_res_excpt
-
-    return disks_with_rates
-
-
 def _averaging_to_seconds(params: type_defs.Parameters) -> type_defs.Parameters:
     key_avg = 'average'
     if key_avg in params:
@@ -237,10 +212,10 @@ def check_winperf_phydisk(
     value_store = get_value_store()
 
     if item == 'SUMMARY':
-
-        names_and_disks_with_rates = _compute_rates_multiple_disks(
+        names_and_disks_with_rates = diskstat.compute_rates_multiple_disks(
             section,
             value_store,
+            _compute_rates_single_disk,
         )
         disk_with_rates = diskstat.summarize_disks(iter(names_and_disks_with_rates.items()))
 

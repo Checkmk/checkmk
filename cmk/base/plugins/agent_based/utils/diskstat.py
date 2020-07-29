@@ -21,6 +21,7 @@ from typing import (
 from ..agent_based_api.v0 import (
     check_levels,
     get_average,
+    IgnoreResultsError,
     Metric,
     render,
     Service,
@@ -60,6 +61,30 @@ def discovery_diskstat_generic(
             # Sort of partitions with disks - typical in XEN virtual setups.
             # Eg. there are xvda1, xvda2, but no xvda...
             yield Service(item=name)
+
+
+def compute_rates_multiple_disks(
+    disks: Section,
+    value_store: type_defs.ValueStore,
+    single_disk_rate_computer: Callable[[Disk, type_defs.ValueStore, str], Disk],
+) -> Section:
+    disks_with_rates = {}
+    ignore_res_excpt = None
+
+    for disk_name, disk in disks.items():
+        try:
+            disks_with_rates[disk_name] = single_disk_rate_computer(
+                disk,
+                value_store,
+                '.%s' % disk_name,
+            )
+        except IgnoreResultsError as excpt:
+            ignore_res_excpt = excpt
+
+    if ignore_res_excpt:
+        raise ignore_res_excpt
+
+    return disks_with_rates
 
 
 def combine_disks(disks: Iterable[Disk]) -> Disk:

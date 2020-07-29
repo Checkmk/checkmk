@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+
 import pytest  # type: ignore[import]
 
-from cmk.base.api.agent_based import value_store
 from cmk.base.plugins.agent_based.agent_based_api.v0 import (
-    get_value_store,
+    get_rate,
+    IgnoreResultsError,
     Metric,
     Result,
     Service,
@@ -16,7 +18,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v0 import (
     type_defs,
 )
 from cmk.base.plugins.agent_based.utils import diskstat
-from cmk.utils.type_defs import CheckPluginName
 
 
 @pytest.mark.parametrize(
@@ -79,6 +80,80 @@ def test_discovery_diskstat_generic(params, exp_res):
                 'xsd0 disk': {},
             },
         )) == exp_res
+
+
+DISK = {
+    'utilization': 0.53242,
+    'read_throughput': 12312.4324,
+    'write_throughput': 3453.345,
+    'average_wait': 30,
+    'average_read_wait': 123,
+    'average_write_wait': 90,
+    'latency': 2,
+    'read_latency': 3,
+    'write_latency': 4,
+    'queue_length': 123,
+    'read_ql': 90,
+    'write_ql': 781,
+    'read_ios': 12379.435345,
+    'write_ios': 8707809.98289,
+    'x': 0,
+    'y': 1,
+}
+
+
+def _compute_rates_single_disk(
+    disk,
+    value_store,
+    value_store_suffix='.',
+):
+    disk_w_rates = {}
+    raise_ignore_res_error = False
+    now = time.time()
+
+    for key, value in disk.items():
+        try:
+            disk_w_rates[key] = get_rate(
+                value_store,
+                key + value_store_suffix,
+                now,
+                value,
+            )
+        except IgnoreResultsError:
+            raise_ignore_res_error = True
+
+    if raise_ignore_res_error:
+        raise IgnoreResultsError
+
+    return disk_w_rates
+
+
+def test_compute_rates_multiple_disks():
+    disks = {
+        'C:': DISK,
+        'D:': DISK,
+    }
+    value_store: type_defs.ValueStore = {}
+
+    # first call should result in IgnoreResultsError, second call should yield rates
+    with pytest.raises(IgnoreResultsError):
+        diskstat.compute_rates_multiple_disks(
+            disks,
+            value_store,
+            _compute_rates_single_disk,
+        )
+    disks_w_rates = diskstat.compute_rates_multiple_disks(
+        disks,
+        value_store,
+        _compute_rates_single_disk,
+    )
+
+    for (name_in, disk_in), (name_out, disk_out) in zip(
+            iter(disks.items()),
+            iter(disks_w_rates.items()),
+    ):
+        assert name_in == name_out
+        assert disk_out == {k: 0 for k in disk_in}
 
 
 DISKS = [
@@ -171,26 +246,6 @@ def test_scale_levels(levels, factor):
         assert scaled_levels is None
     else:
         assert scaled_levels == tuple(level * factor for level in levels)
-
-
-DISK = {
-    'utilization': 0.53242,
-    'read_throughput': 12312.4324,
-    'write_throughput': 3453.345,
-    'average_wait': 30,
-    'average_read_wait': 123,
-    'average_write_wait': 90,
-    'latency': 2,
-    'read_latency': 3,
-    'write_latency': 4,
-    'queue_length': 123,
-    'read_ql': 90,
-    'write_ql': 781,
-    'read_ios': 12379.435345,
-    'write_ios': 8707809.98289,
-    'x': 0,
-    'y': 1,
-}
 
 
 @pytest.mark.parametrize(
@@ -365,16 +420,17 @@ DISK = {
     ],
 )
 def test_check_diskstat_dict(params, disk, exp_res):
-    with value_store.context(CheckPluginName('plugin'), 'item'):
-        assert list(diskstat.check_diskstat_dict(params, disk, get_value_store())) == exp_res
+    value_store: type_defs.ValueStore = {}
 
-        if exp_res:
-            exp_res[0] = Result(
-                state=exp_res[0].state,
-                summary="5 minutes 0 seconds average: " + exp_res[0].summary,
-            )
+    assert list(diskstat.check_diskstat_dict(params, disk, value_store)) == exp_res
 
-        assert list(
-            diskstat.check_diskstat_dict(type_defs.Parameters({
-                **params, 'average': 300
-            },), disk, get_value_store()),) == exp_res
+    if exp_res:
+        exp_res[0] = Result(
+            state=exp_res[0].state,
+            summary="5 minutes 0 seconds average: " + exp_res[0].summary,
+        )
+
+    assert list(
+        diskstat.check_diskstat_dict(type_defs.Parameters({
+            **params, 'average': 300
+        },), disk, value_store),) == exp_res

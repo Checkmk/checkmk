@@ -137,31 +137,6 @@ def test_compute_rates_single_disk(value_store):
     )
 
 
-def test_compute_rates_multiple_disks(value_store):
-    disks = {
-        'C:': DISK,
-        'D:': DISK,
-    }
-
-    # first call should result in IgnoreResults, second call should yield rates
-    with pytest.raises(IgnoreResultsError):
-        winperf_phydisk._compute_rates_multiple_disks(
-            disks,
-            value_store,
-        )
-    disks_w_rates = winperf_phydisk._compute_rates_multiple_disks(
-        {disk_name: _increment_time_and_frequency(disk) for disk_name, disk in disks.items()},
-        value_store,
-    )
-
-    for (name_in, disk_in), (name_out, disk_out) in zip(
-            iter(disks.items()),
-            iter(disks_w_rates.items()),
-    ):
-        assert name_in == name_out
-        _check_disk_with_rates(disk_in, disk_out)
-
-
 def _test_check_winperf_phydisk(item, section_1, section_2, check_func):
 
     # fist call: initialize value store

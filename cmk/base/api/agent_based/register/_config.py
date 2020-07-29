@@ -32,42 +32,8 @@ registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
 registered_check_plugins: Dict[CheckPluginName, CheckPlugin] = {}
 
 
-def is_registered_section_plugin(section_name: SectionName) -> bool:
-    return section_name in registered_agent_sections or section_name in registered_snmp_sections
-
-
-def get_section_plugin(section_name: SectionName) -> SectionPlugin:
-    return (registered_agent_sections.get(section_name) or
-            registered_snmp_sections.get(section_name) or trivial_section_factory(section_name))
-
-
-def iter_all_agent_sections() -> Iterable[AgentSectionPlugin]:
-    return registered_agent_sections.values()  # pylint: disable=dict-values-not-iterating
-
-
-def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:
-    return registered_snmp_sections.values()  # pylint: disable=dict-values-not-iterating
-
-
-def get_ranked_sections(
-    available_raw_sections: Iterable[SectionName],
-    filter_parsed_section: Optional[Set[ParsedSectionName]],
-) -> List[SectionPlugin]:
-    """
-    Get the raw sections [that will be parsed into the required section] ordered by supersedings
-    """
-    return rank_sections_by_supersedes(
-        ((name, get_section_plugin(name)) for name in available_raw_sections),
-        filter_parsed_section,
-    )
-
-
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
     registered_check_plugins[check_plugin.name] = check_plugin
-
-
-def is_registered_check_plugin(check_plugin_name: CheckPluginName) -> bool:
-    return check_plugin_name in registered_check_plugins
 
 
 def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
@@ -88,8 +54,39 @@ def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
     return None
 
 
-def iter_all_check_plugins() -> Iterable[CheckPlugin]:
-    return registered_check_plugins.values()  # pylint: disable=dict-values-not-iterating
+def get_parsed_section_creator(
+        parsed_section_name: ParsedSectionName,
+        available_raw_sections: List[SectionName]) -> Optional[SectionPlugin]:
+    """return the section definition required to create the enquired parsed section"""
+    section_defs = (get_section_plugin(n) for n in available_raw_sections)
+    candidates = [
+        p for p in section_defs if p is not None and p.parsed_section_name == parsed_section_name
+    ]
+    if not candidates:
+        return None
+
+    # We may still have more than one. The 'supersedes' feature should deal with that:
+    # TODO (mo): CMK-4232 remove superseded ones
+    plugins = candidates
+
+    # validation should have enforced that this is exactly one.
+    if not len(plugins) == 1:
+        raise MKGeneralException("conflicting section definitions: %s" %
+                                 ','.join(str(p) for p in plugins))
+    return plugins[0]
+
+
+def get_ranked_sections(
+    available_raw_sections: Iterable[SectionName],
+    filter_parsed_section: Optional[Set[ParsedSectionName]],
+) -> List[SectionPlugin]:
+    """
+    Get the raw sections [that will be parsed into the required section] ordered by supersedings
+    """
+    return rank_sections_by_supersedes(
+        ((name, get_section_plugin(name)) for name in available_raw_sections),
+        filter_parsed_section,
+    )
 
 
 def get_relevant_raw_sections(
@@ -124,23 +121,26 @@ def get_relevant_raw_sections(
     }
 
 
-def get_parsed_section_creator(
-        parsed_section_name: ParsedSectionName,
-        available_raw_sections: List[SectionName]) -> Optional[SectionPlugin]:
-    """return the section definition required to create the enquired parsed section"""
-    section_defs = (get_section_plugin(n) for n in available_raw_sections)
-    candidates = [
-        p for p in section_defs if p is not None and p.parsed_section_name == parsed_section_name
-    ]
-    if not candidates:
-        return None
+def get_section_plugin(section_name: SectionName) -> SectionPlugin:
+    return (registered_agent_sections.get(section_name) or
+            registered_snmp_sections.get(section_name) or trivial_section_factory(section_name))
 
-    # We may still have more than one. The 'supersedes' feature should deal with that:
-    # TODO (mo): CMK-4232 remove superseded ones
-    plugins = candidates
 
-    # validation should have enforced that this is exactly one.
-    if not len(plugins) == 1:
-        raise MKGeneralException("conflicting section definitions: %s" %
-                                 ','.join(str(p) for p in plugins))
-    return plugins[0]
+def is_registered_check_plugin(check_plugin_name: CheckPluginName) -> bool:
+    return check_plugin_name in registered_check_plugins
+
+
+def is_registered_section_plugin(section_name: SectionName) -> bool:
+    return section_name in registered_agent_sections or section_name in registered_snmp_sections
+
+
+def iter_all_agent_sections() -> Iterable[AgentSectionPlugin]:
+    return registered_agent_sections.values()  # pylint: disable=dict-values-not-iterating
+
+
+def iter_all_check_plugins() -> Iterable[CheckPlugin]:
+    return registered_check_plugins.values()  # pylint: disable=dict-values-not-iterating
+
+
+def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:
+    return registered_snmp_sections.values()  # pylint: disable=dict-values-not-iterating

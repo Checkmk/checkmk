@@ -282,14 +282,14 @@ def test_response_set_http_cookie(register_builtin_html):
     html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg")
 
     assert html.response.headers.getlist("Set-Cookie")[-1] == \
-        "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/"
+        "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/; SameSite=Lax"
 
 
 def test_response_set_http_cookie_secure(register_builtin_html, monkeypatch):
     html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=True)
 
     assert html.response.headers.getlist("Set-Cookie")[-1] == \
-            "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/"
+            "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/; SameSite=Lax"
 
 
 def test_response_del_cookie(register_builtin_html, monkeypatch):

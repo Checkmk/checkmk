@@ -737,7 +737,7 @@ function setCookie(cookieName, value,expiredays) {
     const exdate = new Date();
     exdate.setDate(exdate.getDate() + expiredays);
     document.cookie = cookieName + "=" + encodeURIComponent(value) +
-        ((expiredays == null) ? "" : ";expires=" + exdate.toUTCString());
+        ((expiredays == null) ? "" : ";expires=" + exdate.toUTCString() + ";SameSite=Lax");
 }
 
 function getCookie(cookieName) {

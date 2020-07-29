@@ -353,7 +353,7 @@ class Response(werkzeug.wrappers.Response):
     def set_http_cookie(self, key: str, value: str, secure: Optional[bool] = None) -> None:
         if secure is None:
             secure = request.is_secure
-        super(Response, self).set_cookie(key, value, secure=secure, httponly=True)
+        super(Response, self).set_cookie(key, value, secure=secure, httponly=True, samesite="Lax")
 
     def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)

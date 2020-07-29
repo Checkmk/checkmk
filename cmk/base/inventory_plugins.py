@@ -79,10 +79,13 @@ def load_plugins(get_check_api_context: config.GetCheckApiContext,
             _plugin_contexts.setdefault(check_plugin_name, plugin_context)
             _plugin_file_lookup.setdefault(check_plugin_name, f)
 
-    _extract_snmp_sections()
+    _extract_snmp_sections(inv_info, _plugin_file_lookup)
 
 
-def _extract_snmp_sections() -> None:
+def _extract_snmp_sections(
+    inf_info: Dict[InventoryPluginNameStr, InventoryInfo],
+    plugin_file_lookup: Dict[str, str],
+) -> None:
     for plugin_name, plugin_info in sorted(inv_info.items()):
         if 'snmp_info' not in plugin_info:
             continue
@@ -92,7 +95,7 @@ def _extract_snmp_sections() -> None:
             continue
 
         fallback_files = ([_include_file_path(i) for i in plugin_info.get('includes', [])] +
-                          [_plugin_file_lookup[plugin_name]])
+                          [plugin_file_lookup[plugin_name]])
 
         try:
             agent_based_register.add_section_plugin(
@@ -107,8 +110,7 @@ def _extract_snmp_sections() -> None:
             msg = config.AUTO_MIGRATION_ERR_MSG % ('section', plugin_name)
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
-            # TODO (mo): bring this back:
-            #console.warning(msg)
+            console.warning(msg)
 
 
 def _new_inv_context(get_check_api_context: config.GetCheckApiContext,

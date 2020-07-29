@@ -33,7 +33,7 @@ import cmk.utils.tty as tty
 
 
 def is_dockerized() -> bool:
-    return os.path.exists("/.dockerenv")
+    return os.path.exists("/.dockerenv") or os.path.exists("/run/.containerenv")
 
 
 @contextlib.contextmanager

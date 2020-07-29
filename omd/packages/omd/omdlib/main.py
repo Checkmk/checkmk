@@ -1666,7 +1666,7 @@ def _mark_tmpfs_initialized(site):
 
 
 def is_dockerized():
-    return os.path.exists("/.dockerenv")
+    return os.path.exists("/.dockerenv") or os.path.exists("/run/.containerenv")
 
 
 def tmpfs_is_managed_by_node(site):

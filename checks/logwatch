@@ -719,7 +719,8 @@ def _logwatch_filter_accumulated_lines(item_data):
     for node_data in item_data.values():
         for line in node_data['lines']:
             # skip context lines and ignore lines
-            if line[0] not in ('.', 'I'):
+            # skip context lines, ignore lines and empty lines
+            if line[0] not in ['.', 'I'] and len(line) > 1:
                 yield line
 
 

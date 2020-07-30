@@ -461,6 +461,21 @@ class LoggedInUser:
         self._bi_assumptions: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int] = {}
         self._tableoptions: Dict[str, Dict[str, Any]] = {}
 
+    @property
+    def ident(self) -> str:
+        """Return the user-id as a string, or crash.
+
+        Returns:
+            The user_id as a string.
+
+        Raises:
+            ValueError: whenever there is no user_id.
+
+        """
+        if self.id is None:
+            raise AttributeError("No user_id on this instance.")
+        return self.id
+
     def _gather_roles(self, user_id: Optional[UserId]) -> List[str]:
         return roles_of_user(user_id)
 

@@ -45,218 +45,36 @@
 #         Auto-negotiation: on
 #         Link detected: yes
 
+# ==================================================================================================
+# ==================================================================================================
+# IN THE COURSE OF MIGRATING TO THE NEW CHECK API, THE CLUSTER MODE HAS BEEN TEMPORARILY DISABLED
+# FOR THIS CHECK.
+# ==================================================================================================
+# ==================================================================================================
+
 factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
 
 linux_nic_check = "lnx_if"
-
-
-def _parse_lnx_if_node_info(lines):
-    line = next(lines)
-    return line[0], line[1:]
-
-
-def _parse_lnx_if_ipaddress(lines):
-    ip_stats = {}
-    iface = None
-    while True:
-        try:
-            node, line = _parse_lnx_if_node_info(lines)
-        except StopIteration:
-            break
-
-        if line == ['[end_iplink]']:
-            break
-
-        if line[0].endswith(":") and line[1].endswith(":"):
-            # Some (docker) interfaces have suffix "@..." but ethtool does not show this suffix.
-            # 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default ...
-            # 5: veth6a06585@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue ...
-            iface = ip_stats.setdefault((node, line[1][:-1].split("@")[0]), {})
-            # The interface flags are summarized in the angle brackets.
-            iface["state_infos"] = line[2][1:-1].split(",")
-            continue
-
-        if not iface:
-            continue
-
-        if line[0].startswith('link/'):
-            # link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-            # link/none
-            try:
-                iface[line[0]] = line[1]
-                iface[line[2]] = line[3]
-            except IndexError:
-                pass
-
-        elif line[0].startswith('inet'):
-            if "temporary" in line and "dynamic" in line:
-                continue
-            # inet 127.0.0.1/8 scope host lo
-            # inet6 ::1/128 scope host
-            iface.setdefault(line[0], []).append(line[1])
-    return ip_stats
-
-
-def _parse_lnx_if_sections(info):
-    ip_stats = {}
-    ethtool_stats = {}
-    iface = None
-    lines = iter(info)
-    indices_by_node = {}
-    while True:
-        try:
-            node, line = _parse_lnx_if_node_info(lines)
-        except StopIteration:
-            break
-
-        if line[0].startswith("[start_iplink]"):
-            # Parse 'ip link/address' section (as fallback in case ethtool is missing)
-            ip_stats.update(_parse_lnx_if_ipaddress(lines))
-
-        elif len(line) == 2 and len(line[1].strip().split()) >= 16:
-            # Parse '/proc/net/dev'
-            # IFACE_NAME: VAL VAL VAL ...
-            iface = ethtool_stats.setdefault((node, line[0]), {})
-            iface.update({"counters": list(map(int, line[1].strip().split()))})
-            continue
-
-        elif line[0].startswith('[') and line[0].endswith(']'):
-            # Parse 'ethtool' output
-            # [IF_NAME]
-            #       KEY: VAL
-            #       KEY: VAL
-            #       ...
-            iface = ethtool_stats.setdefault((node, line[0][1:-1]), {})
-            indices_by_node[node] = indices_by_node.setdefault(node, 0) + 1
-            iface["ethtool_index"] = indices_by_node[node]
-            continue
-
-        if iface is not None:
-            stripped_line0 = line[0].strip()
-            if stripped_line0 == "Address":
-                iface[stripped_line0] = ":".join(line[1:]).strip()
-            else:
-                iface[stripped_line0] = " ".join(line[1:]).strip()
-
-    return ip_stats, ethtool_stats
-
-
-def parse_lnx_if(info):
-    ip_stats, ethtool_stats = _parse_lnx_if_sections(info)
-
-    nic_info = []
-    for (node_info, iface_name), iface in sorted(ethtool_stats.items(), key=lambda x: x[0][1]):
-        iface.update(ip_stats.get((node_info, iface_name), {}))
-        nic_info.append((node_info, iface_name, iface))
-
-    if_table = []
-    indices_by_node = {}
-    for node_info, nic, attr in nic_info:
-        counters = attr.get("counters", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        indices_by_node[node_info] = indices_by_node.setdefault(node_info, 0) + 1
-        ifIndex = attr.get("ethtool_index", indices_by_node[node_info])
-        ifDescr = nic
-        ifAlias = nic
-
-        # Guess type from name of interface
-        if nic == "lo":
-            ifType = 24
-        else:
-            ifType = 6
-
-        # Compute speed
-        speed_text = attr.get("Speed")
-        if speed_text is None:
-            ifSpeed = ''
-        else:
-            if speed_text == '65535Mb/s':  # unknown
-                ifSpeed = ''
-            elif speed_text.endswith("Kb/s"):
-                ifSpeed = int(float(speed_text[:-4])) * 1000
-            elif speed_text.endswith("Mb/s"):
-                ifSpeed = int(float(speed_text[:-4])) * 1000000
-            elif speed_text.endswith("Gb/s"):
-                ifSpeed = int(float(speed_text[:-4])) * 1000000000
-            else:
-                ifSpeed = ''
-
-        # Performance counters
-        ifInOctets = counters[0]
-        inucast = counters[1] + counters[7]
-        inmcast = counters[7]
-        inbcast = 0
-        ifInDiscards = counters[3]
-        ifInErrors = counters[2]
-        ifOutOctets = counters[8]
-        outucast = counters[9]
-        outmcast = 0
-        outbcast = 0
-        ifOutDiscards = counters[11]
-        ifOutErrors = counters[10]
-        ifOutQLen = counters[12]
-
-        # Link state from ethtool. If ethtool has no information about
-        # this NIC, we set the state to unknown.
-        ld = attr.get("Link detected")
-        if ld == "yes":
-            ifOperStatus = 1
-        elif ld == "no":
-            ifOperStatus = 2
-        else:
-            # No information from ethtool. We consider interfaces up
-            # if they have been used at least some time since the
-            # system boot.
-            state_infos = attr.get('state_infos')
-            if state_infos is None:
-                if ifInOctets > 0:
-                    ifOperStatus = 1  # assume up
-                else:
-                    ifOperStatus = 4  # unknown (NIC has never been used)
-            else:
-                if "UP" in state_infos:
-                    ifOperStatus = 1
-                else:
-                    ifOperStatus = 2
-
-        raw_phys_address = attr.get("Address", attr.get("link/ether", ""))
-        if ":" in raw_phys_address:
-            # We saw interface entries of tunnels for the address
-            # is an integer, eg. '1910236'; especially on OpenBSD.
-            ifPhysAddress = "".join([chr(int(x, 16)) for x in raw_phys_address.split(":")])
-        else:
-            ifPhysAddress = ''
-
-        row = [node_info] + list(
-            map(str, [
-                ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast,
-                inbcast, ifInDiscards, ifInErrors, ifOutOctets, outucast, outmcast, outbcast,
-                ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress
-            ]))
-
-        if_table.append(row)
-
-    return if_table, ip_stats
 
 
 def inventory_lnx_if(parsed):
     if linux_nic_check == "legacy":
         return []
     # Always exclude dockers veth* interfaces on docker nodes
-    if_table = [e for e in parsed[0] if not e[2].startswith("veth")]
-    return inventory_if_common(if_table, has_nodeinfo=True)
+    if_table = [e for e in parsed[0] if not e[1].startswith("veth")]
+    return inventory_if_common(if_table, has_nodeinfo=False)
 
 
 def check_lnx_if(item, params, parsed):
-    return check_if_common(item, params, parsed[0], has_nodeinfo=True)
+    return check_if_common(item, params, parsed[0], has_nodeinfo=False)
 
 
 check_info["lnx_if"] = {
-    'parse_function': parse_lnx_if,
     'inventory_function': inventory_lnx_if,
     'check_function': check_lnx_if,
     'service_description': 'Interface %s',
     'includes': ['if.include'],
-    'node_info': True,
+    # 'node_info': True,
     'has_perfdata': True,
     'group': 'if',
     'default_levels_variable': 'if_default_levels',

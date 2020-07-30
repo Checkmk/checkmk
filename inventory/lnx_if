@@ -22,7 +22,7 @@ def inv_lnx_if_ports(parsed, params, inventory_tree):
     interfaces = []
     total_ethernet_ports = 0
     available_ethernet_ports = 0
-    for _node_info, if_index, if_descr, if_type, if_speed, if_oper_status, \
+    for if_index, if_descr, if_type, if_speed, if_oper_status, \
         _if_in_octets, _inucast, _inmcast, _inbcast, _if_in_discards, \
         _if_in_errors, _if_out_octets, _outucast, _outmcast, _outbcast, \
         _if_out_discards, _if_out_errors, _if_out_qlen, if_alias, if_phys_address in parsed:
@@ -75,7 +75,7 @@ def inv_lnx_if_addresses(parsed, inventory_tree):
         }
 
     addresses = inventory_tree.get_list("networking.addresses:")
-    for (_node, if_name), attrs in parsed.items():
+    for if_name, attrs in parsed.items():
         for entry in attrs.get("inet", {}):
             addresses.append(parse_address(if_name, entry, "ipv4"))
         for entry in attrs.get("inet6", {}):

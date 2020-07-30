@@ -41,7 +41,7 @@ from cmk.gui.page_menu import (
 )
 
 
-class HostMode(WatoMode, metaclass=abc.ABCMeta):
+class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeFolder
@@ -53,7 +53,7 @@ class HostMode(WatoMode, metaclass=abc.ABCMeta):
     def __init__(self):
         self._host = self._init_host()
         self._mode = "edit"
-        super(HostMode, self).__init__()
+        super(ABCHostMode, self).__init__()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_back_page_menu(breadcrumb)
@@ -201,7 +201,7 @@ class HostMode(WatoMode, metaclass=abc.ABCMeta):
 # simply wants to link to the "host edit page". We could try to use some factory to decide this when
 # the edit_host mode is called.
 @mode_registry.register
-class ModeEditHost(HostMode):
+class ModeEditHost(ABCHostMode):
     @classmethod
     def name(cls):
         return "edit_host"
@@ -386,7 +386,7 @@ class ModeEditHost(HostMode):
         )
 
 
-class CreateHostMode(HostMode):
+class CreateHostMode(ABCHostMode):
     @classmethod
     @abc.abstractmethod
     def _init_new_host_object(cls):

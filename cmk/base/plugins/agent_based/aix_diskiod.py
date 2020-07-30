@@ -72,6 +72,7 @@ def _compute_rates(
                 key,
                 now,
                 value,
+                raise_overflow=True,
             )
         except IgnoreResultsError:
             ignore_res = True

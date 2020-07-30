@@ -165,6 +165,7 @@ def _compute_rates_single_disk(
                     key_base + value_store_suffix,
                     timestamp,
                     base,
+                    raise_overflow=True,
                 ) or 1
             except IgnoreResultsError:
                 raised_ignore_res_excpt = True
@@ -180,6 +181,7 @@ def _compute_rates_single_disk(
                 metric + value_store_suffix,
                 timestamp,
                 value,
+                raise_overflow=True,
             ) / denom
 
         except IgnoreResultsError:

@@ -7,6 +7,7 @@
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.page_menu import PageMenuEntry, make_simple_link
 
 
 def global_buttons():
@@ -35,6 +36,21 @@ def host_status_button(hostname, viewname):
             ("host", hostname),
             ("site", ""),
         ]), "status")
+
+
+def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
+    return PageMenuEntry(
+        title=_("Monitoring status"),
+        icon_name="status",
+        item=make_simple_link(
+            html.makeuri_contextless([
+                ("view_name", view_name),
+                ("filename", watolib.Folder.current().path() + "/hosts.mk"),
+                ("host", host_name),
+                ("site", ""),
+            ],
+                                     filename="view.py")),
+    )
 
 
 def service_status_button(hostname, servicedesc):

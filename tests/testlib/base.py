@@ -45,7 +45,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'site_object_status'),
     ('section', 'site_object_counts'),
     ('section', 'tsm_stagingpools'),
-    ('section', 'veritas_vcs'),
     ('check', 'cisco_wlc'),
     ('check', 'docker_container_status'),
     ('check', 'docker_container_status_health'),
@@ -102,10 +101,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'services_summary'),
     ('check', 'site_object_counts'),
     ('check', 'tsm_stagingpools'),
-    ('check', 'veritas_vcs'),
-    ('check', 'veritas_vcs_resource'),
-    ('check', 'veritas_vcs_servicegroup'),
-    ('check', 'veritas_vcs_system'),
 ]
 
 

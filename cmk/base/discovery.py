@@ -1076,6 +1076,8 @@ def _discover_host_labels(
                 for label in plugin.host_label_function(parsed):
                     label.plugin_name = str(plugin.name)
                     discovered_host_labels.add_label(label)
+                    console.vverbose("  %s: %s (%s)\n" %
+                                     (label.name, label.value, label.plugin_name))
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as exc:

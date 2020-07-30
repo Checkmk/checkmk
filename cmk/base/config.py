@@ -1933,7 +1933,8 @@ def _extract_agent_and_snmp_sections() -> None:
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
     in check_info, snmp_scan_functions and snmp_info to create API compliant section plugins.
     """
-    for check_plugin_name in sorted(check_info):
+    # start with the "main"-checks, the ones without '.' in their names:
+    for check_plugin_name in sorted(check_info, key=lambda name: ('.' in name, name)):
         section_name = section_name_of(check_plugin_name)
         is_snmp_plugin = section_name in snmp_info
 

@@ -853,13 +853,13 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
         return choices
 
 
-class FolderMode(WatoMode, metaclass=abc.ABCMeta):
+class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeFolder
 
     def __init__(self):
-        super(FolderMode, self).__init__()
+        super(ABCFolderMode, self).__init__()
         self._folder = self._init_folder()
 
     @abc.abstractmethod
@@ -952,7 +952,7 @@ class FolderMode(WatoMode, metaclass=abc.ABCMeta):
 
 
 @mode_registry.register
-class ModeEditFolder(FolderMode):
+class ModeEditFolder(ABCFolderMode):
     @classmethod
     def name(cls):
         return "editfolder"
@@ -972,7 +972,7 @@ class ModeEditFolder(FolderMode):
 
 
 @mode_registry.register
-class ModeCreateFolder(FolderMode):
+class ModeCreateFolder(ABCFolderMode):
     @classmethod
     def name(cls):
         return "newfolder"

@@ -5,6 +5,8 @@
 
 # This file is for execution by the pre-commit framework.
 #
+set -e
+
 source "$(dirname $0)/lib-precommit"
 
 # Filter out all tests/* files.
@@ -31,5 +33,3 @@ pushd $REPO_PATH > /dev/null
 
 $PIPENV run python -m doctest $FILES
 popd > /dev/null
-
-exit 0

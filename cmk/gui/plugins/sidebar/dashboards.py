@@ -9,13 +9,13 @@ from typing import List
 import cmk.gui.config as config
 import cmk.gui.dashboard as dashboard
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import TopicMenuTopic
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
-    TopicMenuTopic,
 )
 
 

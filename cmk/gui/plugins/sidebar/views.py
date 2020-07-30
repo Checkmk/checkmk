@@ -17,8 +17,8 @@ from cmk.gui.plugins.sidebar import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
-    TopicMenuTopic,
 )
+from cmk.gui.type_defs import TopicMenuTopic
 from cmk.gui.i18n import _
 
 

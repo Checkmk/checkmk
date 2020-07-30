@@ -13,6 +13,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML, Choices
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import TopicMenuTopic, TopicMenuItem
 from cmk.gui.globals import html
 
 from cmk.gui.plugins.sidebar import (
@@ -21,8 +22,6 @@ from cmk.gui.plugins.sidebar import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
-    TopicMenuTopic,
-    TopicMenuItem,
 )
 
 from cmk.gui.plugins.wato.utils.main_menu import (

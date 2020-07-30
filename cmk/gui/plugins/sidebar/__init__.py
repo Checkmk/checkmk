@@ -20,7 +20,7 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     SidebarSnapin, PageHandlers, CustomizableSidebarSnapin, snapin_registry, snapin_width,
     snapin_site_choice, make_topic_menu, render_link, heading, link, simplelink, bulletlink,
     iconlink, nagioscgilink, footnotelinks, begin_footnote_links, end_footnote_links,
-    write_snapin_exception, show_topic_menu, TopicMenuTopic, TopicMenuItem,
+    write_snapin_exception, show_topic_menu,
 )
 
 #.

@@ -194,10 +194,31 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         Raises:
             ValueError: When the row-count is not equal to 1.
 
-        """
+        Examples:
+
+            >>> class Hosts(Table):
+            ...      __tablename__ = 'hosts'
+            ...      name = Column('name', 'string', 'The host name')
+            ...      parents = Column('parents', 'list', 'The hosts parents')
+
+            >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+
+            >>> with simple_expect() as live:
+            ...    _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = heute")
+            ...    Query([Hosts.name], Hosts.name == "heute").fetchone(live)
+            {'name': 'heute'}
+
+            >>> with simple_expect() as live:
+            ...    _ = live.expect_query("GET hosts\\nColumns: name")
+            ...    Query([Hosts.name]).fetchone(live)
+            Traceback (most recent call last):
+            ...
+            ValueError: Expected one row, got 2 row(s).
+
+       """
         result = list(self.iterate(sites))
         if len(result) != 1:
-            raise ValueError(f"Expected one row, got {len(result)} row.")
+            raise ValueError(f"Expected one row, got {len(result)} row(s).")
         return result[0]
 
     def value(self, sites) -> Any:
@@ -216,11 +237,28 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         Raises:
             ValueError: When the row-count is not 1 and the column-count is not 1.
 
+        Examples:
+
+            >>> class Hosts(Table):
+            ...      __tablename__ = 'hosts'
+            ...      name = Column('name', 'string', 'The host name')
+            ...      parents = Column('parents', 'list', 'The hosts parents')
+
+            >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+            >>> with simple_expect() as live:
+            ...    _ = live.expect_query("GET hosts\\nColumns: parents\\nFilter: name = heute")
+            ...    Query([Hosts.parents], Hosts.name == "heute").value(live)
+            ['example.com']
+
+            >>> Query([Hosts.name, Hosts.name], Hosts.name == "heute").value(live)
+            Traceback (most recent call last):
+            ...
+            ValueError: Number of columns need to be exactly 1 to give a value.
+
         """
-        result = self.fetchone(sites)
-        if len(result) != 1:
-            raise ValueError(f"Expected only one column, got {len(result)} columns.")
-        return list(result.values())[0]
+        if len(self.columns) != 1:
+            raise ValueError("Number of columns need to be exactly 1 to give a value.")
+        return list(self.fetchone(sites).values())[0]
 
     def fetch_values(self, sites) -> List[List[Any]]:
         """Return the result coming from LiveStatus.
@@ -246,6 +284,19 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         Returns:
             The generator which yields one ResultRow per row.
 
+        Examples:
+
+            >>> class Hosts(Table):
+            ...      __tablename__ = 'hosts'
+            ...      name = Column('name', 'string', 'The host name')
+            ...      parents = Column('parents', 'list', 'The hosts parents')
+
+            >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+            >>> with simple_expect() as live:
+            ...    _ = live.expect_query("GET hosts\\nColumns: name parents")
+            ...    list(Query([Hosts.name, Hosts.parents]).iterate(live))
+            [{'name': 'heute', 'parents': ['example.com']}, {'name': 'example.com', 'parents': []}]
+
         """
         names = self.column_names
         for entry in self.fetch_values(sites):
@@ -264,11 +315,34 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         Returns:
             The finished dictionary.
 
+        Raises:
+            ValueError: when more than 2 columns are in the query.
+
+        Examples:
+
+            >>> class Hosts(Table):
+            ...      __tablename__ = 'hosts'
+            ...      name = Column('name', 'string', 'The host name')
+            ...      parents = Column('parents', 'list', 'The hosts parents')
+
+            >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+            >>> with simple_expect() as live:
+            ...    _ = live.expect_query("GET hosts\\nColumns: name parents")
+            ...    Query([Hosts.name, Hosts.parents]).to_dict(live)
+            {'heute': ['example.com'], 'example.com': []}
+
+            When more than 2 columns are given, an error is raised.
+
+            >>> Query([Hosts.name, Hosts.name, Hosts.parents]).to_dict(live)
+            Traceback (most recent call last):
+            ...
+            ValueError: Number of columns need to be exactly 2 to create a dict.
+
         """
         result = {}
         if len(self.columns) != 2:
             raise ValueError("Number of columns need to be exactly 2 to create a dict.")
-        for key, value in self.iterate(sites):
+        for key, value in self.fetch_values(sites):
             result[key] = value
         return result
 

@@ -145,9 +145,11 @@ program_start num_hosts num_services'
             'hosts': [
                 {
                     'name': 'heute',
+                    'parents': ['example.com'],
                 },
                 {
                     'name': 'example.com',
+                    'parents': [],
                 },
             ],
             'services': [
@@ -593,6 +595,9 @@ def match_regexp(string_: str, regexp: str) -> bool:
 
         >>> match_regexp("heute", "heu")
         True
+
+        >>> match_regexp("heute", " heu")
+        False
 
         >>> match_regexp("heute", ".*")
         True

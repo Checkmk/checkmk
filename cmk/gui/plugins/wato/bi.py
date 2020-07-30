@@ -1897,6 +1897,10 @@ class ModeBIRuleTree(ModeBI):
     def permissions(cls):
         return ["bi_rules"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIPacks
+
     def __init__(self):
         ModeBI.__init__(self)
         self._ruleid = html.request.get_ascii_input_mandatory("id")

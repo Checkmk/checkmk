@@ -44,6 +44,7 @@ class MockStructuredDataTree:
 def _create_inventory_function(
     legacy_inventory_function: Callable,
     has_params: bool,
+    extra_sections_count: int,
 ) -> InventoryFunction:
     """Create an API compliant inventory function"""
     def _inventory_generator(*args) -> InventoryGenerator:
@@ -62,18 +63,23 @@ def _create_inventory_function(
             ))
         yield from _generate_api_objects(local_status_data_tree, local_inventory_tree)
 
+    def _add_extra_info(section):
+        if extra_sections_count == 0:
+            return section
+        return [section] + [[]] * extra_sections_count
+
     if has_params:
 
         def inventory_migration_wrapper(
             params: Parameters,
             section: Any,
         ) -> InventoryGenerator:
-            yield from _inventory_generator(section, params)
+            yield from _inventory_generator(_add_extra_info(section), params)
     else:
 
         def inventory_migration_wrapper(  # type: ignore[misc] # different args on purpose!
                 section: Any,) -> InventoryGenerator:
-            yield from _inventory_generator(section)
+            yield from _inventory_generator(_add_extra_info(section))
 
     return inventory_migration_wrapper
 
@@ -153,6 +159,7 @@ def _generate_table_rows(
 def create_inventory_plugin_from_legacy(
     inventory_plugin_name: str,
     inventory_info_dict: Dict[str, Any],
+    extra_sections_count: int,
 ) -> InventoryPlugin:
 
     if inventory_info_dict.get('depends_on'):
@@ -169,6 +176,7 @@ def create_inventory_plugin_from_legacy(
     inventory_function = _create_inventory_function(
         legacy_inventory_function,
         has_parameters,
+        extra_sections_count,
     )
 
     return create_inventory_plugin(

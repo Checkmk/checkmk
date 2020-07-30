@@ -56,7 +56,48 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
         super(ABCHostMode, self).__init__()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_back_page_menu(breadcrumb)
+        menu = make_simple_back_page_menu(breadcrumb)
+        menu.dropdowns.insert(
+            0,
+            PageMenuDropdown(
+                name="save",
+                title=_("Save"),
+                topics=[
+                    self._page_menu_save_topic(),
+                ],
+            ))
+        return menu
+
+    def _page_menu_save_topic(self) -> PageMenuTopic:
+        return PageMenuTopic(
+            title=_("Save this host and go to"),
+            entries=list(self._page_menu_save_entries()),
+        )
+
+    def _page_menu_save_entries(self) -> Iterator[PageMenuEntry]:
+        if watolib.Folder.current().locked_hosts():
+            return
+
+        yield PageMenuEntry(
+            title=_("Service configuration"),
+            icon_name="save_to_services",
+            item=make_form_submit_link(form_name="edit_host", button_name="services"),
+            is_shortcut=True,
+            is_suggested=True,
+        )
+
+        yield PageMenuEntry(
+            title=_("Folder"),
+            icon_name="save_to_folder",
+            item=make_form_submit_link(form_name="edit_host", button_name="save"),
+        )
+
+        if not self._is_cluster():
+            yield PageMenuEntry(
+                title=_("Connection tests"),
+                icon_name="save_to_diagnose",
+                item=make_form_submit_link(form_name="edit_host", button_name="diag_host"),
+            )
 
     def _is_cluster(self):
         return self._host.is_cluster()
@@ -228,10 +269,7 @@ class ModeEditHost(ABCHostMode):
                     name="hosts",
                     title=_("Hosts"),
                     topics=[
-                        PageMenuTopic(
-                            title=_("Save this host and go to"),
-                            entries=list(self._page_menu_save_entries()),
-                        ),
+                        self._page_menu_save_topic(),
                         PageMenuTopic(
                             title=_("For this host"),
                             entries=list(self._page_menu_host_entries()),
@@ -252,31 +290,6 @@ class ModeEditHost(ABCHostMode):
             ],
             breadcrumb=breadcrumb,
         )
-
-    def _page_menu_save_entries(self) -> Iterator[PageMenuEntry]:
-        if watolib.Folder.current().locked_hosts():
-            return
-
-        yield PageMenuEntry(
-            title=_("Service configuration"),
-            icon_name="save_to_services",
-            item=make_form_submit_link(form_name="edit_host", button_name="services"),
-            is_shortcut=True,
-            is_suggested=True,
-        )
-
-        yield PageMenuEntry(
-            title=_("Folder"),
-            icon_name="save_to_folder",
-            item=make_form_submit_link(form_name="edit_host", button_name="save"),
-        )
-
-        if not self._is_cluster():
-            yield PageMenuEntry(
-                title=_("Connection tests"),
-                icon_name="save_to_diagnose",
-                item=make_form_submit_link(form_name="edit_host", button_name="diag_host"),
-            )
 
     def _page_menu_host_entries(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(

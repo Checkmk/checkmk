@@ -8,7 +8,7 @@
 import abc
 import json
 import operator
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional, Type
 
 from cmk.utils.type_defs import HostName
 
@@ -46,6 +46,19 @@ from cmk.gui.valuespec import (
     TextAscii,
     ValueSpec,
 )
+from cmk.gui.page_menu import (
+    PageMenu,
+    make_simple_back_page_menu,
+)
+
+
+def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:
+    return Breadcrumb([
+        BreadcrumbItem(
+            title=_("Hosts"),
+            url=watolib.Folder.root_folder().url(),
+        ),
+    ]) + folder.breadcrumb()
 
 
 @mode_registry.register
@@ -66,12 +79,7 @@ class ModeFolder(WatoMode):
         return self._folder.title()
 
     def breadcrumb(self):
-        return Breadcrumb([
-            BreadcrumbItem(
-                title="Hosts",
-                url=watolib.Folder.root_folder().url(),
-            ),
-        ]) + self._folder.breadcrumb()
+        return make_folder_breadcrumb(self._folder)
 
     def buttons(self):
         global_buttons()
@@ -846,6 +854,10 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
 
 
 class FolderMode(WatoMode, metaclass=abc.ABCMeta):
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeFolder
+
     def __init__(self):
         super(FolderMode, self).__init__()
         self._folder = self._init_folder()
@@ -860,12 +872,18 @@ class FolderMode(WatoMode, metaclass=abc.ABCMeta):
     def _save(self, title, attributes):
         raise NotImplementedError()
 
-    def buttons(self):
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        new = self._folder.name() is None
+        is_enabled = new or not watolib.Folder.current().locked()
+
         if html.request.has_var("backfolder"):
-            back_folder = watolib.Folder.folder(html.request.var("backfolder"))
-        else:
-            back_folder = self._folder
-        html.context_button(_("Back"), back_folder.url(), "back")
+            breadcrumb = make_folder_breadcrumb(
+                watolib.Folder.folder(html.request.var("backfolder")))
+
+        return make_simple_back_page_menu(breadcrumb,
+                                          form_name="edit_host",
+                                          button_name="save",
+                                          save_is_enabled=is_enabled)
 
     def action(self):
         if not html.check_transaction():
@@ -929,8 +947,6 @@ class FolderMode(WatoMode, metaclass=abc.ABCMeta):
                              basic_attributes=basic_attributes)
 
         forms.end()
-        if new or not watolib.Folder.current().locked():
-            html.button("save", _("Save & Finish"), "submit")
         html.hidden_fields()
         html.end_form()
 

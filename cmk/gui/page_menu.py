@@ -280,12 +280,40 @@ def make_checkbox_selection_topic() -> PageMenuTopic:
     )
 
 
-def make_simple_back_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+def make_simple_back_page_menu(breadcrumb: Breadcrumb,
+                               form_name: Optional[str] = None,
+                               button_name: Optional[str] = None,
+                               save_title: Optional[str] = None,
+                               save_is_enabled: bool = True) -> PageMenu:
     """Factory for creating a simple menu for object edit dialogs that just link back"""
     if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
         raise ValueError("Can not create back link for this page")
 
+    entries = []
+
+    if form_name and button_name:
+        entries.append(
+            PageMenuEntry(
+                title=save_title or _("Save"),
+                icon_name="save",
+                item=make_form_submit_link(form_name, button_name),
+                is_list_entry=False,
+                is_shortcut=True,
+                is_suggested=True,
+                is_enabled=save_is_enabled,
+            ))
+
     parent_item = breadcrumb[-2]
+    entries.append(
+        PageMenuEntry(
+            title=_("Abort"),
+            icon_name="abort",
+            item=make_simple_link(parent_item.url),
+            is_list_entry=False,
+            is_shortcut=True,
+            is_suggested=True,
+        ))
+
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -294,16 +322,7 @@ def make_simple_back_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
                 topics=[
                     PageMenuTopic(
                         title=_("Dummy"),
-                        entries=[
-                            PageMenuEntry(
-                                title=_("Abort"),
-                                icon_name="abort",
-                                item=make_simple_link(parent_item.url),
-                                is_list_entry=False,
-                                is_shortcut=True,
-                                is_suggested=True,
-                            ),
-                        ],
+                        entries=entries,
                     ),
                 ],
             ),

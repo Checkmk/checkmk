@@ -1205,14 +1205,16 @@ class ModeBIEditPack(ModeBI):
         return "bi_packs"
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_back_page_menu(breadcrumb)
+        return make_simple_back_page_menu(breadcrumb,
+                                          form_name="bi_pack",
+                                          button_name="_save",
+                                          save_title=_("Save") if self._pack else _("Create"))
 
     def page(self):
         html.begin_form("bi_pack", method="POST")
         self._vs_pack().render_input("bi_pack", self._pack)
         forms.end()
         html.hidden_fields()
-        html.button("_save", self._pack and _("Save") or _("Create"), "submit")
         if self._pack:
             html.set_focus("bi_pack_p_title")
         else:
@@ -1974,7 +1976,10 @@ class ModeBIEditAggregation(ModeBI):
         return super().title() + _("Edit aggregation")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_back_page_menu(breadcrumb)
+        return make_simple_back_page_menu(breadcrumb,
+                                          form_name="biaggr",
+                                          button_name="_save",
+                                          save_is_enabled=self.is_contact_for_pack(self._pack))
 
     def _get_aggregations_by_id(self):
         ids = {}
@@ -2019,8 +2024,6 @@ class ModeBIEditAggregation(ModeBI):
         self._vs_aggregation.render_input("aggr", self._edited_aggregation)
         forms.end()
         html.hidden_fields()
-        if self.is_contact_for_pack(self._pack):
-            html.button("_save", self._new and _("Create") or _("Save"), "submit")
         html.set_focus("aggr_p_groups_0")
         html.end_form()
 
@@ -2064,7 +2067,11 @@ class ModeBIEditRule(ModeBI):
         return super().title() + _("Edit rule") + " " + escaping.escape_attribute(self._ruleid)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_back_page_menu(breadcrumb)
+        return make_simple_back_page_menu(breadcrumb,
+                                          form_name="birule",
+                                          button_name="_save",
+                                          save_title=_("Create") if self._new else _("Save"),
+                                          save_is_enabled=self.is_contact_for_pack(self._pack))
 
     def action(self):
         self.must_be_contact_for_pack(self._pack)
@@ -2235,8 +2242,6 @@ class ModeBIEditRule(ModeBI):
         self.valuespec().render_input("rule", value)
         forms.end()
         html.hidden_fields()
-        if self.is_contact_for_pack(self._pack):
-            html.button("_save", self._new and _("Create") or _("Save"), "submit")
         if self._new:
             html.set_focus("rule_p_id")
         else:

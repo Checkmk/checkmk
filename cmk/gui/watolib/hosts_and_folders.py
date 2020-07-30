@@ -257,6 +257,9 @@ class BaseFolder:
     def hosts(self):
         raise NotImplementedError()
 
+    def breadcrumb(self) -> Breadcrumb:
+        raise NotImplementedError()
+
     def host_names(self):
         return self.hosts().keys()
 
@@ -2043,6 +2046,9 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     # .--------------------------------------------------------------------.
     # | ACCESS                                                             |
     # '--------------------------------------------------------------------'
+
+    def breadcrumb(self) -> Breadcrumb:
+        return Breadcrumb()
 
     def attributes(self):
         return {}

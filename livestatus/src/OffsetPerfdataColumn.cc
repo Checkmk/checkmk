@@ -7,6 +7,14 @@
 
 #include "Aggregator.h"
 #include "PerfdataAggregator.h"
+#include "Row.h"
+
+std::string OffsetPerfdataColumn::getValue(Row row) const {
+    if (const auto *p = columnData<char *>(row)) {
+        return *p == nullptr ? "" : *p;
+    }
+    return "";
+}
 
 std::unique_ptr<Aggregator> OffsetPerfdataColumn::createAggregator(
     AggregationFactory factory) const {

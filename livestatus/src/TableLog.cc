@@ -22,7 +22,6 @@
 #include "LogEntryStringColumn.h"
 #include "Logfile.h"
 #include "MonitoringCore.h"
-#include "OffsetStringColumn.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringLambdaColumn.h"
@@ -80,15 +79,16 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "message", "The complete message line including the timestamp", offsets,
         [](const LogEntry &r) { return r._message; }));
-    addColumn(std::make_unique<OffsetStringColumn>(
+    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
-        Column::Offsets{entry_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(LogEntry, _type)}));
-    addColumn(std::make_unique<OffsetStringColumn>(
-        "options", "The part of the message after the ':'",
-        Column::Offsets{entry_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(LogEntry, _options)}));
+        offsets,
+        [](const LogEntry &r) { return r._type == nullptr ? "" : r._type; }));
+    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+        "options", "The part of the message after the ':'", offsets,
+        [](const LogEntry &r) {
+            return r._options == nullptr ? "" : r._options;
+        }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "comment", "A comment field used in various message types", offsets,
         [](const LogEntry &r) { return r._comment; }));

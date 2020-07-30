@@ -25,7 +25,6 @@
 #include "LogEntry.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
-#include "OffsetStringColumn.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringLambdaColumn.h"
@@ -124,12 +123,10 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "Shows if the host or service is within its notification period",
         offsets,
         [](const HostServiceState &r) { return r._in_notification_period; }));
-    addColumn(std::make_unique<OffsetStringColumn>(
+    addColumn(std::make_unique<StringLambdaColumn<HostServiceState>>(
         "notification_period",
-        "The notification period of the host or service in question",
-        Column::Offsets{
-            -1, -1, -1,
-            DANGEROUS_OFFSETOF(HostServiceState, _notification_period)}));
+        "The notification period of the host or service in question", offsets,
+        [](const HostServiceState &r) { return r._notification_period; }));
     addColumn(std::make_unique<IntLambdaColumn<HostServiceState>>(
         "in_service_period",
         "Shows if the host or service is within its service period", offsets,

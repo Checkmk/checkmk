@@ -39,11 +39,11 @@
 #include "LogwatchListColumn.h"
 #include "MonitoringCore.h"
 #include "OffsetPerfdataColumn.h"
-#include "OffsetStringColumn.h"
 #include "OffsetStringHostMacroColumn.h"
 #include "Query.h"
 #include "ServiceListColumn.h"
 #include "ServiceListStateColumn.h"
+#include "StringLambdaColumn.h"
 #include "TimeLambdaColumn.h"
 #include "TimeperiodColumn.h"
 #include "auth.h"
@@ -64,126 +64,136 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                             int indirect_offset, int extra_offset) {
     Column::Offsets offsets{indirect_offset, extra_offset, 0};
     auto *mc = table->core();
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "name", "Host name",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, name)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+        prefix + "name", "Host name", offsets,
+        [](const host &r) { return r.name == nullptr ? "" : r.name; }));
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "display_name",
         "Optional display name of the host - not used by Nagios' web interface",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, display_name)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "alias", "An alias name for the host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, alias)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "address", "IP address",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, address)}));
+        offsets, [](const host &r) {
+            return r.display_name == nullptr ? "" : r.display_name;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+        prefix + "alias", "An alias name for the host", offsets,
+        [](const host &r) { return r.alias == nullptr ? "" : r.alias; }));
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+        prefix + "address", "IP address", offsets,
+        [](const host &r) { return r.address == nullptr ? "" : r.address; }));
 #ifdef NAGIOS4
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "check_command",
-        "Nagios command for active host check of this host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, check_command)}));
+        "Nagios command for active host check of this host", offsets,
+        [](const host &r) {
+            return r.check_command == nullptr ? "" : r.check_command;
+        }));
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
         Column::Offsets{indirect_offset, extra_offset, 0}, table->core(),
         DANGEROUS_OFFSETOF(host, check_command)));
 #else
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "check_command",
-        "Nagios command for active host check of this host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, host_check_command)}));
+        "Nagios command for active host check of this host", offsets,
+        [](const host &r) {
+            return r.host_check_command == nullptr ? "" : r.host_check_command;
+        }));
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
         Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(host, host_check_command)));
 #endif
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "event_handler", "Nagios command used as event handler",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, event_handler)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        offsets, [](const host &r) {
+            return r.event_handler == nullptr ? "" : r.event_handler;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "notification_period",
         "Time period in which problems of this host will be notified. If empty then notification will be always",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, notification_period)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        offsets, [](const host &r) {
+            return r.notification_period == nullptr ? ""
+                                                    : r.notification_period;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "check_period",
         "Time period in which this host will be checked. If empty then the host will always be checked.",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, check_period)}));
+        offsets, [](const host &r) {
+            return r.check_period == nullptr ? "" : r.check_period;
+        }));
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period", "The name of the service period of the host",
         Column::Offsets{indirect_offset, extra_offset, -1,
                         DANGEROUS_OFFSETOF(host, custom_variables)},
         table->core(), "SERVICE_PERIOD"));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "notes", "Optional notes for this host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, notes)}));
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+        prefix + "notes", "Optional notes for this host", offsets,
+        [](const host &r) { return r.notes == nullptr ? "" : r.notes; }));
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_expanded",
         "The same as notes, but with the most important macros expanded",
         Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(host, notes)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "notes_url",
-        "An optional URL with further information about the host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, notes_url)}));
+        "An optional URL with further information about the host", offsets,
+        [](const host &r) {
+            return r.notes_url == nullptr ? "" : r.notes_url;
+        }));
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
         Column::Offsets{indirect_offset, extra_offset, -1}, table->core(),
         DANGEROUS_OFFSETOF(host, notes_url)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "action_url",
         "An optional URL to custom actions or information about this host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, action_url)}));
+        offsets, [](const host &r) {
+            return r.action_url == nullptr ? "" : r.action_url;
+        }));
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "action_url_expanded",
         "The same as action_url, but with the most important macros expanded",
         Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(host, action_url)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "plugin_output", "Output of the last host check",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, plugin_output)}));
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+        prefix + "plugin_output", "Output of the last host check", offsets,
+        [](const host &r) {
+            return r.plugin_output == nullptr ? "" : r.plugin_output;
+        }));
     table->addColumn(std::make_unique<OffsetPerfdataColumn>(
         prefix + "perf_data",
         "Optional performance data of the last host check",
         Column::Offsets{indirect_offset, extra_offset, -1,
                         DANGEROUS_OFFSETOF(host, perf_data)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "icon_image",
-        "The name of an image file to be used in the web pages",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, icon_image)}));
+        "The name of an image file to be used in the web pages", offsets,
+        [](const host &r) {
+            return r.icon_image == nullptr ? "" : r.icon_image;
+        }));
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "icon_image_expanded",
         "The same as icon_image, but with the most important macros expanded",
         Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(host, icon_image)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "icon_image_alt", "Alternative text for the icon_image",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, icon_image_alt)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        offsets, [](const host &r) {
+            return r.icon_image_alt == nullptr ? "" : r.icon_image_alt;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "statusmap_image",
-        "The name of in image file for the status map",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, statusmap_image)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        "The name of in image file for the status map", offsets,
+        [](const host &r) {
+            return r.statusmap_image == nullptr ? "" : r.statusmap_image;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "long_plugin_output", "Complete output from check plugin",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, long_plugin_output)}));
+        offsets, [](const host &r) {
+            return r.long_plugin_output == nullptr ? "" : r.long_plugin_output;
+        }));
 
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "initial_state", "Initial host state", offsets,

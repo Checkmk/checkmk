@@ -9,14 +9,17 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <memory>
+#include <string>
 
 #include "Column.h"
-#include "OffsetStringColumn.h"
+#include "StringColumn.h"
 class Aggregator;
+class Row;
 
-class OffsetPerfdataColumn : public OffsetStringColumn {
+class OffsetPerfdataColumn : public StringColumn {
 public:
-    using OffsetStringColumn::OffsetStringColumn;
+    using StringColumn::StringColumn;
+    [[nodiscard]] std::string getValue(Row row) const override;
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 };

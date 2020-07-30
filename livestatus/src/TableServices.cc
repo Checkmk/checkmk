@@ -30,7 +30,6 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "OffsetPerfdataColumn.h"
-#include "OffsetStringColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
 #include "Query.h"
 #include "ServiceContactsColumn.h"
@@ -38,6 +37,7 @@
 #include "ServiceMetricsColumn.h"
 #include "ServiceSpecialDoubleColumn.h"
 #include "ServiceSpecialIntColumn.h"
+#include "StringLambdaColumn.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TimeLambdaColumn.h"
@@ -61,113 +61,127 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     Column::Offsets offsets{indirect_offset, 0};
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "description", "Description of the service (also used as key)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, description)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        offsets, [](const service &r) {
+            return r.description == nullptr ? "" : r.description;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "display_name",
         "An optional display name (not used by Nagios standard web pages)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, display_name)}));
+        offsets, [](const service &r) {
+            return r.display_name == nullptr ? "" : r.display_name;
+        }));
 #ifndef NAGIOS4
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "check_command", "Nagios command used for active checks",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, service_check_command)}));
+        offsets, [](const service &r) {
+            return r.service_check_command == nullptr ? ""
+                                                      : r.service_check_command;
+        }));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
         Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, service_check_command)));
 #else
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "check_command", "Nagios command used for active checks",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, check_command)}));
+        offsets, [](const service &r) {
+            return r.check_command == nullptr ? "" : r.check_command;
+        }));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
         Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, check_command)));
 #endif
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "event_handler", "Nagios command used as event handler",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, event_handler)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "plugin_output", "Output of the last check plugin",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, plugin_output)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        offsets, [](const service &r) {
+            return r.event_handler == nullptr ? "" : r.event_handler;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
+        prefix + "plugin_output", "Output of the last check plugin", offsets,
+        [](const service &r) {
+            return r.plugin_output == nullptr ? "" : r.plugin_output;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "long_plugin_output",
-        "Unabbreviated output of the last check plugin",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, long_plugin_output)}));
+        "Unabbreviated output of the last check plugin", offsets,
+        [](const service &r) {
+            return r.long_plugin_output == nullptr ? "" : r.long_plugin_output;
+        }));
     table->addColumn(std::make_unique<OffsetPerfdataColumn>(
         prefix + "perf_data", "Performance data of the last check plugin",
         Column::Offsets{indirect_offset, -1, -1,
                         DANGEROUS_OFFSETOF(service, perf_data)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "notification_period",
         "The name of the notification period of the service. It this is empty, service problems are always notified.",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, notification_period)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        offsets, [](const service &r) {
+            return r.notification_period == nullptr ? ""
+                                                    : r.notification_period;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "check_period",
         "The name of the check period of the service. It this is empty, the service is always checked.",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, check_period)}));
+        offsets, [](const service &r) {
+            return r.check_period == nullptr ? "" : r.check_period;
+        }));
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period",
         "The name of the service period of the service",
         Column::Offsets{indirect_offset, -1, -1,
                         DANGEROUS_OFFSETOF(service, custom_variables)},
         table->core(), "SERVICE_PERIOD"));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "notes", "Optional notes about the service",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, notes)}));
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
+        prefix + "notes", "Optional notes about the service", offsets,
+        [](const service &r) { return r.notes == nullptr ? "" : r.notes; }));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_expanded",
         "The notes with (the most important) macros expanded",
         Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, notes)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "notes_url",
-        "An optional URL for additional notes about the service",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, notes_url)}));
+        "An optional URL for additional notes about the service", offsets,
+        [](const service &r) {
+            return r.notes_url == nullptr ? "" : r.notes_url;
+        }));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_url_expanded",
         "The notes_url with (the most important) macros expanded",
         Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, notes_url)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "action_url",
         "An optional URL for actions or custom information about the service",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, action_url)}));
+        offsets, [](const service &r) {
+            return r.action_url == nullptr ? "" : r.action_url;
+        }));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "action_url_expanded",
         "The action_url with (the most important) macros expanded",
         Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, action_url)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "icon_image",
-        "The name of an image to be used as icon in the web interface",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, icon_image)}));
+        "The name of an image to be used as icon in the web interface", offsets,
+        [](const service &r) {
+            return r.icon_image == nullptr ? "" : r.icon_image;
+        }));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "icon_image_expanded",
         "The icon_image with (the most important) macros expanded",
         Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, icon_image)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "icon_image_alt",
         "An alternative text for the icon_image for browsers not displaying icons",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, icon_image_alt)}));
+        offsets, [](const service &r) {
+            return r.icon_image_alt == nullptr ? "" : r.icon_image_alt;
+        }));
 
     table->addColumn(std::make_unique<IntLambdaColumn<service>>(
         prefix + "initial_state", "The initial state of the service", offsets,

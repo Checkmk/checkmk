@@ -81,6 +81,14 @@ class PageMenuPopup(ABCPageMenuItem):
 
 
 @dataclass
+class PageMenuCheckbox(ABCPageMenuItem):
+    """A binary item that can be toggled in the menu directly"""
+    is_checked: bool
+    check_url: str
+    uncheck_url: str
+
+
+@dataclass
 class PageMenuEntry:
     """Representing an entry in the menu, holding the ABCPageMenuItem to be displayed"""
     title: str
@@ -135,6 +143,12 @@ class PageMenu:
             # Add the up-entry
             if self.breadcrumb and len(self.breadcrumb) > 1 and self.breadcrumb[-2].url:
                 self.dropdowns.append(make_up_link(self.breadcrumb))
+
+    def get_dropdown_by_name(self, name: str, deflt: PageMenuDropdown) -> PageMenuDropdown:
+        for dropdown in self.dropdowns:
+            if dropdown.name == name:
+                return dropdown
+        return deflt
 
     @property
     def _entries(self) -> Iterator[PageMenuEntry]:
@@ -472,25 +486,48 @@ class DropdownEntryRenderer:
             self._show_link_item(entry.title, entry.icon_name, entry.item)
         elif isinstance(entry.item, PageMenuPopup):
             self._show_popup_link_item(entry, entry.item)
+        elif isinstance(entry.item, PageMenuCheckbox):
+            self._show_checkbox_link_item(entry, entry.item)
         else:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
 
     def _show_link_item(self, title: str, icon_name: str, item: PageMenuLink):
         if item.link.url is not None:
-            html.open_a(href=item.link.url, target=item.link.target)
+            url = item.link.url
+            onclick = None
         else:
-            html.open_a(href="javascript:void(0)", onclick=item.link.onclick)
+            url = "javascript:void(0)"
+            onclick = item.link.onclick
 
-        html.icon(title=None, icon=icon_name or "trans")
-        html.span(title)
-
-        html.close_a()
+        self._show_link(url=url,
+                        onclick=onclick,
+                        target=item.link.target,
+                        icon_name=icon_name,
+                        title=title)
 
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
-        html.open_a(href="javascript:void(0)",
-                    onclick="cmk.page_menu.open_popup(%s)" % json.dumps("popup_%s" % entry.name))
-        html.icon(title=None, icon=entry.icon_name or "trans")
-        html.span(entry.title)
+        self._show_link(url="javascript:void(0)",
+                        onclick="cmk.page_menu.open_popup(%s)" %
+                        json.dumps("popup_%s" % entry.name),
+                        target=None,
+                        icon_name=entry.icon_name,
+                        title=entry.title)
+
+    def _show_checkbox_link_item(self, entry: PageMenuEntry, item: PageMenuCheckbox) -> None:
+        if item.is_checked:
+            url = item.uncheck_url
+            icon_name = "menu_item_checked"
+        else:
+            url = item.check_url
+            icon_name = "menu_item_unchecked"
+
+        self._show_link(url=url, onclick=None, target=None, icon_name=icon_name, title=entry.title)
+
+    def _show_link(self, url: str, onclick: Optional[str], target: Optional[str],
+                   icon_name: Optional[str], title: str) -> None:
+        html.open_a(href=url, onclick=onclick)
+        html.icon(title=None, icon=icon_name or "trans")
+        html.span(title)
         html.close_a()
 
 

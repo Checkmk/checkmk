@@ -27,7 +27,8 @@ class ArgumentParser(argparse.ArgumentParser):
         """fetcher output is always protocol compatible, even when arguments are bad"""
 
         sys.stdout.write(
-            controller.make_failure_answer("\n" + message + '\n' + self.format_help(), hint="main"))
+            controller.make_failure_answer("\n" + message + '\n' + self.format_help(),
+                                           severity="critical"))
         self.exit(21)
 
 
@@ -86,7 +87,8 @@ def main() -> int:
 
         # reporting to microcore
         controller.write_data(
-            controller.make_failure_answer("Exception is '" + str(e) + "'" + result, hint="main"))
+            controller.make_failure_answer("Exception is '" + str(e) + "'" + result,
+                                           severity="critical"))
         return 15
 
 

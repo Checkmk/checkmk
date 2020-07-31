@@ -42,8 +42,8 @@ class TestControllerApi:
         assert make_success_answer(data="payload") == "fetch:SUCCESS:        :7       :payload"
 
     def test_controller_failure(self):
-        assert make_failure_answer(data="payload",
-                                   hint="hint12345678") == "fetch:FAILURE:hint1234:7       :payload"
+        assert make_failure_answer(
+            data="payload", severity="crit12345678") == "fetch:FAILURE:crit1234:7       :payload"
 
     def test_controller_waiting(self):
         assert make_waiting_answer() == "fetch:WAITING:        :0       :"
@@ -123,7 +123,7 @@ class TestControllerApi:
         run_fetchers(serial=str(fetcher_config.serial), host_name=the_host, timeout=35)
         captured = capsys.readouterr()
         assert captured.out == make_success_answer("{}") + make_failure_answer(
-            data="No process", hint="failed") + make_waiting_answer()
+            data="No process", severity="critical") + make_waiting_answer()
 
     @pytest.mark.usefixtures("scenario")
     def test_run_fetchers_bad_data(self, capsys):
@@ -132,40 +132,40 @@ class TestControllerApi:
 
         run_fetchers(serial=str(FetcherConfig().serial), host_name="zzz", timeout=35)
         captured = capsys.readouterr()
-        assert captured.out == make_failure_answer("fetcher file is absent", hint="config")
+        assert captured.out == make_failure_answer("fetcher file is absent", severity="warning")
         run_fetchers(serial=str(FetcherConfig().serial + 1), host_name="heute", timeout=35)
         captured = capsys.readouterr()
-        assert captured.out == make_failure_answer("fetcher file is absent", hint="config")
+        assert captured.out == make_failure_answer("fetcher file is absent", severity="warning")
 
 
 class TestHeader:
     @pytest.mark.parametrize("state", [Header.State.SUCCESS, "SUCCESS"])
     def test_success_header(self, state):
-        header = Header("name", state, "hint", 41)
-        assert str(header) == "name :SUCCESS:hint    :41      :"
+        header = Header("name", state, "crit", 41)
+        assert str(header) == "name :SUCCESS:crit    :41      :"
 
     @pytest.mark.parametrize("state", [Header.State.FAILURE, "FAILURE"])
     def test_failure_header(self, state):
-        header = Header("fetch", state, "hint", 42)
-        assert str(header) == "fetch:FAILURE:hint    :42      :"
+        header = Header("fetch", state, "crit", 42)
+        assert str(header) == "fetch:FAILURE:crit    :42      :"
 
     def test_from_network(self):
-        header = Header("fetch", "SUCCESS", "hint", 42)
+        header = Header("fetch", "SUCCESS", "crit", 42)
         assert Header.from_network(str(header) + 42 * "*") == header
 
     def test_clone(self):
-        header = Header("name", Header.State.SUCCESS, "hint", 42)
+        header = Header("name", Header.State.SUCCESS, "crit", 42)
         other = header.clone()
         assert other is not header
         assert other == header
 
     def test_eq(self):
-        header = Header("name", Header.State.SUCCESS, "hint", 42)
+        header = Header("name", Header.State.SUCCESS, "crit", 42)
         assert header == str(header)
         assert str(header) == header
 
     def test_neq(self):
-        header = Header("name", Header.State.SUCCESS, "hint", 42)
+        header = Header("name", Header.State.SUCCESS, "crit", 42)
 
         other_name = header.clone()
         other_name.name = "toto"
@@ -175,24 +175,24 @@ class TestHeader:
         other_state.state = Header.State.FAILURE
         assert header != other_state
 
-        other_hint = header.clone()
-        other_hint.hint = "tnih"
-        assert header != other_hint
+        other_crit = header.clone()
+        other_crit.severity = "tnih"
+        assert header != other_crit
 
         other_len = header.clone()
         other_len.payload_length = 69
         assert header != other_len
 
     def test_repr(self):
-        header = Header("name", "SUCCESS", "hint", 42)
+        header = Header("name", "SUCCESS", "crit", 42)
         assert isinstance(repr(header), str)
 
     def test_hash(self):
-        header = Header("name", "SUCCESS", "hint", 42)
+        header = Header("name", "SUCCESS", "crit", 42)
         assert hash(header) == hash(str(header))
 
     def test_len(self):
-        header = Header("name", "SUCCESS", "hint", 42)
+        header = Header("name", "SUCCESS", "crit", 42)
         assert len(header) == len(str(header))
 
     def test_critical_constants(self):

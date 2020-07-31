@@ -61,11 +61,11 @@ class Header:
     fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
     length = 32
 
-    def __init__(self, name: str, state: Union['Header.State', str], hint: str,
+    def __init__(self, name: str, state: Union['Header.State', str], severity: str,
                  payload_length: int) -> None:
         self.name = name
         self.state = Header.State(state) if isinstance(state, str) else state
-        self.hint = hint
+        self.severity = severity
         self.payload_length = payload_length
 
     def __repr__(self) -> str:
@@ -73,12 +73,13 @@ class Header:
             type(self).__name__,
             self.name,
             self.state,
-            self.hint,
+            self.severity,
             self.payload_length,
         )
 
     def __str__(self) -> str:
-        return Header.fmt.format(self.name[:5], self.state[:7], self.hint[:8], self.payload_length)
+        return Header.fmt.format(self.name[:5], self.state[:7], self.severity[:8],
+                                 self.payload_length)
 
     def __eq__(self, other: Any) -> bool:
         return str(self) == str(other)
@@ -99,7 +100,7 @@ class Header:
             raise ValueError(data) from exc
 
     def clone(self) -> 'Header':
-        return Header(self.name, self.state, self.hint, self.payload_length)
+        return Header(self.name, self.state, self.severity, self.payload_length)
 
     @staticmethod
     def default_protocol_name() -> str:
@@ -110,15 +111,15 @@ def make_success_answer(data: str) -> str:
     return str(
         Header(name=Header.default_protocol_name(),
                state=Header.State.SUCCESS,
-               hint=" ",
+               severity=" ",
                payload_length=len(data))) + data
 
 
-def make_failure_answer(data: str, *, hint: str) -> str:
+def make_failure_answer(data: str, *, severity: str) -> str:
     return str(
         Header(name=Header.default_protocol_name(),
                state=Header.State.FAILURE,
-               hint=hint,
+               severity=severity,
                payload_length=len(data))) + data
 
 
@@ -126,7 +127,7 @@ def make_waiting_answer() -> str:
     return str(
         Header(name=Header.default_protocol_name(),
                state=Header.State.WAITING,
-               hint=" ",
+               severity=" ",
                payload_length=0))
 
 
@@ -136,7 +137,7 @@ def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
     json_file = build_json_file_path(serial=serial, host_name=host_name)
 
     if not json_file.exists():
-        write_data(make_failure_answer("fetcher file is absent", hint="config"))
+        write_data(make_failure_answer("fetcher file is absent", severity="warning"))
         #  we do not send waiting answer - the fetcher should be dead
         return
 
@@ -158,7 +159,7 @@ def _run_fetcher(entry: Dict[str, Any], timeout: int) -> str:
         # NOTE. The exception is too broad by design:
         # we need specs for Exception coming from fetchers
         # also (probably) we need a guard to log all exceptions in checkmk
-        return make_failure_answer(str(e), hint="failed")
+        return make_failure_answer(str(e), severity="critical")
 
 
 def _run_fetchers_from_file(file_name: Path, timeout: int) -> None:

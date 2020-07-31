@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Type
 
 import cmk.utils.paths
 from cmk.utils.diagnostics import (
@@ -44,6 +44,7 @@ from cmk.gui.watolib import (
 )
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -60,6 +61,10 @@ class ModeDiagnostics(WatoMode):
     @classmethod
     def permissions(cls) -> List[str]:
         return ["diagnostics"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditHost
 
     def _from_vars(self) -> None:
         self._start = bool(html.request.get_ascii_input("_start"))

@@ -6,7 +6,7 @@
 """Verify or find out a hosts agent related configuration"""
 
 import json
-from typing import List
+from typing import List, Optional, Type
 
 from six import ensure_str
 
@@ -19,6 +19,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
 from cmk.gui.pages import page_registry, AjaxPage
+from cmk.gui.wato.pages.hosts import ModeEditHost
 
 from cmk.gui.valuespec import DictionaryEntry
 from cmk.gui.valuespec import (
@@ -49,6 +50,10 @@ class ModeDiagHost(WatoMode):
     @classmethod
     def permissions(cls):
         return ["hosts", "diag_host"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditHost
 
     @classmethod
     def diag_host_tests(cls):

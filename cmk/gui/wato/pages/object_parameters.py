@@ -7,7 +7,7 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Type
 
 from six import ensure_str
 
@@ -24,6 +24,7 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
 )
+from cmk.gui.wato.pages.hosts import ModeEditHost
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -48,6 +49,10 @@ class ModeObjectParameters(WatoMode):
     @classmethod
     def permissions(cls):
         return ["hosts", "rulesets"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditHost
 
     def _from_vars(self):
         self._hostname = html.request.get_ascii_input_mandatory("host")

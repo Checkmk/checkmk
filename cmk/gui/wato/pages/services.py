@@ -9,7 +9,7 @@ import ast
 import json
 import traceback
 import pprint
-from typing import Any, Dict, NamedTuple, List, Optional
+from typing import Any, Dict, NamedTuple, List, Optional, Type
 
 import six
 
@@ -39,6 +39,7 @@ from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (DiscoveryState, Discovery, checkbox_id, execute_discovery_job,
                                       get_check_table, DiscoveryAction, CheckTable, CheckTableEntry,
                                       DiscoveryResult, DiscoveryOptions, StartDiscoveryRequest)
+from cmk.gui.wato.pages.hosts import ModeEditHost
 
 from cmk.gui.plugins.wato import (
     host_status_button,
@@ -75,6 +76,10 @@ class ModeDiscovery(WatoMode):
     @classmethod
     def permissions(cls):
         return ["hosts"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditHost
 
     def _from_vars(self):
         self._host = watolib.Folder.current().host(html.request.get_ascii_input_mandatory("host"))

@@ -251,6 +251,10 @@ class ModeEditHost(ABCHostMode):
     def permissions(cls):
         return ["hosts"]
 
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("host", self._host.name())],
+                                        filename="wato.py")
+
     def _init_host(self):
         hostname = html.request.get_ascii_input_mandatory("host")
 

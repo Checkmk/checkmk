@@ -6,18 +6,6 @@
 
 import datetime
 
-
-# TODO: name the next new subcheck "esx_vsphere_vm" and introduce a parse function
-def esx_vsphere_vm_convert(info):
-    data = {}
-    for line in info:
-        # Do not monitor VM templates
-        if line[0] == "config.template" and line[1] == "true":
-            return {}
-        data[line[0]] = line[1:]
-    return data
-
-
 #   .--Memory--------------------------------------------------------------.
 #   |               __  __                                                 |
 #   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
@@ -28,32 +16,31 @@ def esx_vsphere_vm_convert(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_vm_mem(info):
-    data = esx_vsphere_vm_convert(info)
-    if 'summary.quickStats.guestMemoryUsage' in data:
+def inventory_esx_vsphere_vm_mem(section):
+    if 'summary.quickStats.guestMemoryUsage' in section:
         return [(None, {})]
 
 
-def check_esx_vsphere_vm_mem(_no_item, params, info):
-    data = esx_vsphere_vm_convert(info)
-
+def check_esx_vsphere_vm_mem(_no_item, params, section):
     # If the machine is powered of, we do not get data
-    powerstate = data["runtime.powerState"][0]
+    powerstate = section["runtime.powerState"][0]
     if powerstate != "poweredOn":
         raise MKCounterWrapped("VM is %s, skipping this check" % powerstate)
 
     try:
         #consumed host memory
-        host_memory_usage = savefloat(data["summary.quickStats.hostMemoryUsage"][0]) * 1024 * 1024
+        host_memory_usage = savefloat(
+            section["summary.quickStats.hostMemoryUsage"][0]) * 1024 * 1024
         #active guest memory
-        guest_memory_usage = savefloat(data["summary.quickStats.guestMemoryUsage"][0]) * 1024 * 1024
+        guest_memory_usage = savefloat(
+            section["summary.quickStats.guestMemoryUsage"][0]) * 1024 * 1024
         #size of the balloon driver in the VM
-        ballooned_memory = savefloat(data["summary.quickStats.balloonedMemory"][0]) * 1024 * 1024
+        ballooned_memory = savefloat(section["summary.quickStats.balloonedMemory"][0]) * 1024 * 1024
         #The portion of memory, in MB, that is granted to this VM from non-shared host memor(musst not be set)
-        shared_memory = savefloat(data["summary.quickStats.sharedMemory"][0]) * 1024 * 1024
+        shared_memory = savefloat(section["summary.quickStats.sharedMemory"][0]) * 1024 * 1024
         #The portion of memory, in MB, that is granted to this VM from host memory that is shared between VMs.
-        private_memory = savefloat(data.get("summary.quickStats.privateMemory",
-                                            [0])[0]) * 1024 * 1024
+        private_memory = savefloat(section.get("summary.quickStats.privateMemory",
+                                               [0])[0]) * 1024 * 1024
     except:
         raise MKCounterWrapped(
             "Hostsystem did not provide memory information (reason may be high load)")
@@ -91,15 +78,13 @@ check_info['esx_vsphere_vm.mem_usage'] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_vm_name(info):
-    data = esx_vsphere_vm_convert(info)
-    if 'name' in data:
+def inventory_esx_vsphere_vm_name(section):
+    if 'name' in section:
         return [(None, None)]
 
 
-def check_esx_vsphere_vm_name(_no_item, _no_params, info):
-    data = esx_vsphere_vm_convert(info)
-    name = data.get('name')
+def check_esx_vsphere_vm_name(_no_item, _no_params, section):
+    name = section.get('name')
     if name:
         return 0, " ".join(name)
 
@@ -123,17 +108,13 @@ check_info['esx_vsphere_vm.name'] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_vm_running_on(info):
-    data = esx_vsphere_vm_convert(info)
-    if 'runtime.host' in data:
-        yield HostLabel(u"cmk/vsphere_object", u"vm")
+def inventory_esx_vsphere_vm_running_on(section):
+    if 'runtime.host' in section:
         yield None, None
 
 
-def check_esx_vsphere_vm_running_on(no_item, no_params, info):
-    data = esx_vsphere_vm_convert(info)
-
-    running_on = data.get("runtime.host")
+def check_esx_vsphere_vm_running_on(no_item, no_params, section):
+    running_on = section.get("runtime.host")
     if not running_on:
         return 3, "Runtime host information is missing"
 
@@ -159,17 +140,14 @@ check_info['esx_vsphere_vm.running_on'] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_vm_datastores(info):
-    data = esx_vsphere_vm_convert(info)
+def inventory_esx_vsphere_vm_datastores(section):
     # Right now we only handle one datastore per vm
-    if 'config.datastoreUrl' in data:
+    if 'config.datastoreUrl' in section:
         return [(None, None)]
 
 
-def check_esx_vsphere_vm_datastores(no_item, no_params, info):
-    data = esx_vsphere_vm_convert(info)
-
-    datastore_urls = data.get("config.datastoreUrl")
+def check_esx_vsphere_vm_datastores(no_item, no_params, section):
+    datastore_urls = section.get("config.datastoreUrl")
     if not datastore_urls:
         return 3, "Datastore information is missing"
 
@@ -223,17 +201,14 @@ check_info['esx_vsphere_vm.datastores'] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_vm_guest_tools(info):
-    data = esx_vsphere_vm_convert(info)
-    if 'guest.toolsVersionStatus' in data:
+def inventory_esx_vsphere_vm_guest_tools(section):
+    if 'guest.toolsVersionStatus' in section:
         return [(None, {})]
 
 
-def check_esx_vsphere_vm_guest_tools(_no_item, params, info):
-    data = esx_vsphere_vm_convert(info)
-
+def check_esx_vsphere_vm_guest_tools(_no_item, params, section):
     try:
-        vm_status = data['guest.toolsVersionStatus'][0]
+        vm_status = section['guest.toolsVersionStatus'][0]
     except KeyError:
         return
 
@@ -275,19 +250,16 @@ check_info['esx_vsphere_vm.guest_tools'] = {
 #    yellow - Intermittent heartbeat. May be due to guest load.
 #    green - Guest operating system is responding normally.
 #
-def inventory_esx_vsphere_vm_hb_status(info):
-    data = esx_vsphere_vm_convert(info)
-    if 'guestHeartbeatStatus' in data:
+def inventory_esx_vsphere_vm_hb_status(section):
+    if 'guestHeartbeatStatus' in section:
         return [(None, {})]
 
 
-def check_esx_vsphere_vm_hb_status(_no_item, params, info):
-    data = esx_vsphere_vm_convert(info)
-
-    if data.get('guestHeartbeatStatus') is None:
+def check_esx_vsphere_vm_hb_status(_no_item, params, section):
+    if section.get('guestHeartbeatStatus') is None:
         return
 
-    vm_status = data['guestHeartbeatStatus'][0]
+    vm_status = section['guestHeartbeatStatus'][0]
     state = 3
 
     vm_heartbeat_map = {
@@ -333,20 +305,18 @@ check_info['esx_vsphere_vm.heartbeat'] = {
 # summary.quickStats.overallCpuUsage 8
 
 
-def inventory_esx_vsphere_vm_cpu(info):
-    data = esx_vsphere_vm_convert(info)
-    if 'summary.quickStats.overallCpuUsage' in data:
+def inventory_esx_vsphere_vm_cpu(section):
+    if 'summary.quickStats.overallCpuUsage' in section:
         return [(None, None)]
 
 
-def check_esx_vsphere_vm_cpu(_no_item, _no_params, info):
-    data = esx_vsphere_vm_convert(info)
+def check_esx_vsphere_vm_cpu(_no_item, _no_params, section):
     # VMs that are currently down do not have this entry
-    if 'summary.quickStats.overallCpuUsage' not in data:
+    if 'summary.quickStats.overallCpuUsage' not in section:
         raise MKCounterWrapped("No information about CPU usage. VM is probably powered off.")
 
-    usage_mhz = int(data['summary.quickStats.overallCpuUsage'][0])
-    cpus = int(data['config.hardware.numCPU'][0])
+    usage_mhz = int(section['summary.quickStats.overallCpuUsage'][0])
+    cpus = int(section['config.hardware.numCPU'][0])
     return 0, "demand is %.3f Ghz, %d virtual CPUs" % (usage_mhz / 1000.0, cpus), [("demand",
                                                                                     usage_mhz)]
 
@@ -372,18 +342,15 @@ check_info['esx_vsphere_vm.cpu'] = {
 # snapshot.rootSnapshotList 1 1363596734 poweredOff 20130318_105600_snapshot_LinuxI|2 1413977827 poweredOn LinuxI Testsnapshot
 
 
-def inventory_esx_vsphere_vm_snapshots(info):
-    data = esx_vsphere_vm_convert(info)
-    if data:
+def inventory_esx_vsphere_vm_snapshots(section):
+    if section:
         return [(None, {})]
 
 
-def check_esx_vsphere_vm_snapshots(_no_item, params, info):
-    data = esx_vsphere_vm_convert(info)
-
+def check_esx_vsphere_vm_snapshots(_no_item, params, section):
     Snapshot = collections.namedtuple("Snapshot", ["time", "state", "name"])
 
-    raw_snapshots = " ".join(data.get("snapshot.rootSnapshotList", [])).split("|")
+    raw_snapshots = " ".join(section.get("snapshot.rootSnapshotList", [])).split("|")
     snapshots = (x.split(" ", 3) for x in raw_snapshots if x)
     snapshots = [Snapshot(int(x[1]), x[2], x[3]) for x in snapshots]
     yield 0, "Count: %d" % len(snapshots)
@@ -396,7 +363,7 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
 
     # if provided take the `time_reference` timestamp from server - otherwise
     # use a UTC-timestamp - don't use time.time() here since it's local
-    now = int(data.get("time_reference", [0])[0] or  #
+    now = int(section.get("time_reference", [0])[0] or  #
               datetime.datetime.utcnow().timestamp())
     latest_snapshot = max(snapshots, key=lambda s: s.time)
     latest_timestamp = get_timestamp_human_readable(latest_snapshot.time)
@@ -453,8 +420,8 @@ check_info['esx_vsphere_vm.snapshots'] = {
 #   '----------------------------------------------------------------------'
 
 
-def parse_esx_vsphere_vm_mounted_devices(info):
-    data = esx_vsphere_vm_convert(info).get("config.hardware.device", [])
+def parse_esx_vsphere_vm_mounted_devices(section):
+    data = section.get("config.hardware.device", [])
     parsed = {}
     for device_data in " ".join(data).split("@@"):
         if "|" not in device_data:
@@ -469,15 +436,15 @@ def parse_esx_vsphere_vm_mounted_devices(info):
     return parsed
 
 
-def inventory_esx_vsphere_vm_mounted_devices(info):
-    if parse_esx_vsphere_vm_mounted_devices(info):
+def inventory_esx_vsphere_vm_mounted_devices(section):
+    if parse_esx_vsphere_vm_mounted_devices(section):
         return [(None, None)]
 
 
-def check_esx_vsphere_vm_mounted_devices(item, params, info):
+def check_esx_vsphere_vm_mounted_devices(item, params, section):
     device_types = ['VirtualCdrom', 'VirtualFloppy']
     mounted_devices = []
-    for device_name, attrs in parse_esx_vsphere_vm_mounted_devices(info).items():
+    for device_name, attrs in parse_esx_vsphere_vm_mounted_devices(section).items():
         if attrs['virtualDeviceType'] in device_types and \
            attrs['connected'] == 'true':
             mounted_devices.append(device_name)

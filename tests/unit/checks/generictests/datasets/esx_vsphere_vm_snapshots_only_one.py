@@ -7,13 +7,16 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.esx_vsphere_vm import parse_esx_vsphere_vm
+
 checkname = 'esx_vsphere_vm'
 
 freeze_time = "2019-06-22 14:37"
 
-info = [
-    ['snapshot.rootSnapshotList', '154', '1560322675', 'poweredOn', 'VM-Snapshot', '12.06.2019', '10:56', 'UTC+02:00']
-]
+parsed = parse_esx_vsphere_vm([
+    ['snapshot.rootSnapshotList', '154', '1560322675', 'poweredOn', 'VM-Snapshot', '12.06.2019',
+     '10:56', 'UTC+02:00'],
+])
 
 discovery = {
     'cpu': [],

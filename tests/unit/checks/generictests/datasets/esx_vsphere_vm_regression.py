@@ -7,12 +7,13 @@
 # yapf: disable
 # type: ignore
 
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.plugins.agent_based.esx_vsphere_vm import parse_esx_vsphere_vm
 
 checkname = 'esx_vsphere_vm'
 
 
-info = [[u'config.datastoreUrl',
+parsed = parse_esx_vsphere_vm([
+    [u'config.datastoreUrl',
          u'maintenanceMode',
          u'normal|url',
          u'ds:///vmfs/volumes/vsan:5239d5cbf4c95b8c-5977b0e019a35313/|uncommitted',
@@ -73,7 +74,9 @@ info = [[u'config.datastoreUrl',
         [u'summary.quickStats.staticCpuEntitlement', u'5167'],
         [u'summary.quickStats.staticMemoryEntitlement', u'16532'],
         [u'summary.quickStats.swappedMemory', u'0'],
-        [u'summary.quickStats.uptimeSeconds', u'262571']]
+        [u'summary.quickStats.uptimeSeconds', u'262571'],
+    ],
+)
 
 
 discovery = {'cpu': [(None, None)],
@@ -83,9 +86,7 @@ discovery = {'cpu': [(None, None)],
              'mem_usage': [(None, {})],
              'mounted_devices': [(None, None)],
              'name': [(None, None)],
-             'running_on': [(None, None),
-                            HostLabel(u'cmk/vsphere_object', u'vm')
-                           ],
+             'running_on': [(None, None)],
              'snapshots': [(None, {})]}
 
 

@@ -7,12 +7,14 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.esx_vsphere_vm import parse_esx_vsphere_vm
+
 checkname = 'esx_vsphere_vm'
 
-info = [[
+parsed = parse_esx_vsphere_vm([[
     'snapshot.rootSnapshotList', '1', '1363596734', 'poweredOff',
     '20130318_105600_snapshot_LinuxI|2', '1413977827', 'poweredOn', 'LinuxI', 'Testsnapshot'
-]]
+]])
 
 discovery = {
     'cpu': [],

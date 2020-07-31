@@ -6,12 +6,14 @@
 
 # type: ignore
 
+from cmk.base.plugins.agent_based.esx_vsphere_vm import parse_esx_vsphere_vm
+
 checkname = 'esx_vsphere_vm'
 
-info = [
+parsed = parse_esx_vsphere_vm([
     ['snapshot.rootSnapshotList', '732', '1594041788', 'poweredOn', 'FransTeil2'],
     ['time_reference', '1594096464'],
-]
+])
 
 discovery = {
     'cpu': [],

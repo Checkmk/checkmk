@@ -713,8 +713,8 @@ components:
         method:
           description: The HTTP method to use to traverse the link (get, post, put
             or delete)
-          example: get
-          pattern: get|put|post|delete
+          example: GET
+          pattern: GET|PUT|POST|DELETE
           type: string
         rel:
           description: Indicates the nature of the relationship of the related resource

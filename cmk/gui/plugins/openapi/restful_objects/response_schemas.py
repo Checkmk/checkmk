@@ -6,10 +6,9 @@
 
 import datetime as dt
 
-from marshmallow import fields  # type: ignore[import]
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui.plugins.openapi import plugins
+from cmk.gui.plugins.openapi import fields, plugins
 from cmk.gui.plugins.openapi.utils import BaseSchema
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
@@ -69,8 +68,8 @@ class LinkSchema(BaseSchema):
     method = fields.String(
         description="The HTTP method to use to traverse the link (get, post, put or delete)",
         required=True,
-        pattern="get|put|post|delete",
-        example="get",
+        pattern="GET|PUT|POST|DELETE",
+        example="GET",
     )
     type = fields.String(
         description="The media type that the linked resource will return",

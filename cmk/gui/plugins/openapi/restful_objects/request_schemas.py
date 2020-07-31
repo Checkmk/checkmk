@@ -3,8 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from marshmallow import fields  # type: ignore[import]
-
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME_REGEXP
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import \

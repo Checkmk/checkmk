@@ -1169,8 +1169,20 @@ class PrometheusServer:
     its own status and the connected scrape targets
     """
     def __init__(self, api_client: 'PrometheusAPI') -> None:
-
         self.api_client = api_client
+
+    def build_info(self):
+        result = {"scrape_target": self._scrape_targets(), "version": self._version()}
+
+        storage_retention = self._storage_retention()
+        if storage_retention:
+            result["storage_retention"] = storage_retention
+
+        reload_config_status = self._reload_config_status()
+        if reload_config_status:
+            result["reload_config_status"] = reload_config_status
+
+        return result
 
     def scrape_targets_health(self) -> Dict[str, Dict[str, Any]]:
 
@@ -1187,6 +1199,46 @@ class PrometheusServer:
 
         response = self.api_client.query_static_endpoint("/-/healthy")
         return {"status_code": response.status_code, "status_text": response.reason}
+
+    def _version(self) -> str:
+        promql_result = self.api_client.perform_multi_result_promql('prometheus_build_info')
+
+        if promql_result is None:
+            raise ApiError("Missing Prometheus version")
+
+        if len(promql_result.promql_metrics) > 1:
+            raise ApiError("Multiple Prometheus instances connected")
+        version = promql_result.promql_metrics[0]["labels"]["version"]
+        return version
+
+    def _scrape_targets(self) -> Dict[str, Any]:
+        down_targets = []
+        promql_result = self.api_client.perform_multi_result_promql("up")
+
+        if promql_result is None:
+            raise ApiError("Missing Scrape Targets information")
+
+        scrape_targets = promql_result.promql_metrics
+        for scrape_target in scrape_targets:
+            if not scrape_target["value"]:
+                down_targets.append(scrape_target['labels']['job'])
+        return {"targets_number": len(scrape_targets), "down_targets": down_targets}
+
+    def _reload_config_status(self) -> Optional[str]:
+        runtime_details = self._runtime_info()
+        return runtime_details.get("reloadConfigSuccess")
+
+    def _storage_retention(self) -> Optional[str]:
+        runtime_details = self._runtime_info()
+        return runtime_details.get("storageRetention")
+
+    def _runtime_info(self) -> Dict[str, Any]:
+        try:
+            endpoint_result = self.api_client.query_static_endpoint("/api/v1/status/runtimeinfo")
+        except requests.exceptions.HTTPError:  # This endpoint is only available from v2.14
+            return {}
+
+        return json.loads(endpoint_result.content)['data']
 
 
 class PrometheusAPI:
@@ -1428,8 +1480,12 @@ class ApiData:
         if "node_exporter" in exporter_options:
             self.node_exporter = NodeExporter(api_client)
 
-    def promql_section(self, custom_services: List[Dict[str, Any]]) -> str:
+    def prometheus_build_section(self) -> str:
+        e = PiggybackHost()
+        e.get('prometheus_build').insert(self.prometheus_server.build_info())
+        return '\n'.join(e.output())
 
+    def promql_section(self, custom_services: List[Dict[str, Any]]) -> str:
         logging.info("Prometheus PromQl queries")
         e = PiggybackGroup()
         e.join('prometheus_custom',
@@ -1716,6 +1772,7 @@ def main(argv=None):
         # default cases always must be there
         api_client = PrometheusAPI(config_args["server_address"])
         api_data = ApiData(api_client, exporter_options)
+        print(api_data.prometheus_build_section())
         print(api_data.promql_section(config_args["custom_services"]))
         if "cadvisor" in exporter_options:
             print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])))

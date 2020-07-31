@@ -13,20 +13,19 @@
 #include <vector>
 
 #include "Column.h"
-#include "MetricsColumn.h"
+#include "ListColumn.h"
 #include "contact_fwd.h"
-
 class Row;
 class MonitoringCore;
 
-class ServiceMetricsColumn : public MetricsColumn {
+class ServiceMetricsColumn : public ListColumn {
 public:
     ServiceMetricsColumn(const std::string& name,
                          const std::string& description,
                          const Column::Offsets& offsets, MonitoringCore* mc);
 
     std::vector<std::string> getValue(
-        Row, const contact* /*auth_user*/,
+        Row row, const contact* /*auth_user*/,
         std::chrono::seconds /*timezone_offset*/) const override;
 
 private:

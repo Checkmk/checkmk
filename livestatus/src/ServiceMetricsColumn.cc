@@ -18,7 +18,7 @@ ServiceMetricsColumn::ServiceMetricsColumn(const std::string& name,
                                            const std::string& description,
                                            const Column::Offsets& offsets,
                                            MonitoringCore* mc)
-    : MetricsColumn(name, description, offsets), _mc(mc) {}
+    : ListColumn(name, description, offsets), _mc(mc) {}
 
 std::vector<std::string> ServiceMetricsColumn::getValue(
     Row row, const contact* /*auth_user*/,

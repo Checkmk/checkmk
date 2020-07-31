@@ -13,19 +13,19 @@
 #include <vector>
 
 #include "Column.h"
-#include "MetricsColumn.h"
+#include "ListColumn.h"
 #include "contact_fwd.h"
-
 class Row;
 class MonitoringCore;
 
-class HostMetricsColumn : public MetricsColumn {
+class HostMetricsColumn : public ListColumn {
 public:
     HostMetricsColumn(const std::string& name, const std::string& description,
                       const Column::Offsets& offsets, MonitoringCore* mc);
 
-    std::vector<std::string> getValue(Row, const contact*,
-                                      std::chrono::seconds) const override;
+    std::vector<std::string> getValue(
+        Row row, const contact* /*auth_user*/,
+        std::chrono::seconds /*timezone_offset*/) const override;
 
 private:
     MonitoringCore* const _mc;

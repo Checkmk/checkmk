@@ -258,7 +258,15 @@ class BaseFolder:
         raise NotImplementedError()
 
     def breadcrumb(self) -> Breadcrumb:
-        raise NotImplementedError()
+        breadcrumb = Breadcrumb()
+
+        for folder in self.parent_folder_chain() + [self]:
+            breadcrumb.append(BreadcrumbItem(
+                title=folder.title(),
+                url=folder.url(),
+            ))
+
+        return breadcrumb
 
     def host_names(self):
         return self.hosts().keys()
@@ -306,7 +314,7 @@ class BaseFolder:
     def is_root(self):
         return not self.has_parent()
 
-    def parent_folder_chain(self) -> 'List[CREFolder]':
+    def parent_folder_chain(self) -> List:
         folders = []
         folder = self.parent()
         while folder:
@@ -570,6 +578,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     @staticmethod
     def root_folder():
         return Folder.folder("")
+
+    # Need this for specifying the correct type
+    def parent_folder_chain(self) -> 'List[CREFolder]':  # pylint: disable=useless-super-delegation
+        return super().parent_folder_chain()
 
     @staticmethod
     def invalidate_caches():
@@ -1124,17 +1136,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def rules_file_path(self):
         return self.filesystem_path() + "/rules.mk"
-
-    def breadcrumb(self) -> Breadcrumb:
-        breadcrumb = Breadcrumb()
-
-        for folder in self.parent_folder_chain() + [self]:
-            breadcrumb.append(BreadcrumbItem(
-                title=folder.title(),
-                url=self.url(),
-            ))
-
-        return breadcrumb
 
     def add_to_dictionary(self, dictionary):
         dictionary[self.path()] = self
@@ -2046,9 +2047,6 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     # .--------------------------------------------------------------------.
     # | ACCESS                                                             |
     # '--------------------------------------------------------------------'
-
-    def breadcrumb(self) -> Breadcrumb:
-        return Breadcrumb()
 
     def attributes(self):
         return {}

@@ -66,7 +66,7 @@ def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:
     return Breadcrumb([
         BreadcrumbItem(
             title=_("Hosts"),
-            url=watolib.Folder.root_folder().url(),
+            url=None,
         ),
     ]) + folder.breadcrumb()
 
@@ -101,7 +101,7 @@ class ModeFolder(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._folder.is_disk_folder():
-            return self._search_folder_page_menu()
+            return self._search_folder_page_menu(breadcrumb)
 
         menu = PageMenu(
             dropdowns=[
@@ -204,11 +204,29 @@ class ModeFolder(WatoMode):
         menu.add_youtube_reference(title=_("Episode 3: Monitoring Windows"),
                                    youtube_id="iz8S9TGGklQ")
 
-    def _search_folder_page_menu(self) -> PageMenu:
-        # TODO: Will be added later
-        #html.context_button(_("Back"), self._folder.parent().url(), "back")
-        #html.context_button(_("Refine search"), self._folder.url([("mode", "search")]), "search")
-        return PageMenu()
+    def _search_folder_page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="search",
+                    title=_("Search"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Search hosts"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Refine search"),
+                                    icon_name="search",
+                                    item=make_simple_link(self._folder.url([("mode", "search")])),
+                                    is_shortcut=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def _page_menu_entries_hosts_in_folder(self) -> Iterator[PageMenuEntry]:
         if not self._folder.locked_hosts() and config.user.may(

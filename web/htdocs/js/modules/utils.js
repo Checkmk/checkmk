@@ -489,27 +489,6 @@ export function wheel_event_name()
         return "mousewheel";
 }
 
-export function count_context_button(oA)
-{
-    // Extract view name from id of parent div element
-    var handler = ajax.call_ajax("count_context_button.py?id=" + oA.parentNode.id, {
-        sync:true
-    });
-    return handler.responseText;
-}
-
-export function unhide_context_buttons(toggle_button)
-{
-    var cells = toggle_button.parentNode.parentNode;
-    var children = cells.children;
-    for (var i = 0; i < children.length; i++) {
-        var node = children[i];
-        if (node.tagName == "DIV" && !has_class(node, "togglebutton"))
-            node.style.display = "";
-    }
-    toggle_button.parentNode.style.display = "none";
-}
-
 var g_tag_groups = {
     "host": {},
     "service": {}

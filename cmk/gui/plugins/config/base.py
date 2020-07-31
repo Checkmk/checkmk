@@ -213,10 +213,6 @@ hide_languages: _List = []
 # Default timestamp format to be used in multisite
 default_ts_format = 'mixed'
 
-# Show only most used buttons, set to None if you want
-# always all buttons to be shown
-context_buttons_to_show = 5
-
 # Maximum livetime of unmodified selections
 selection_livetime = 3600
 

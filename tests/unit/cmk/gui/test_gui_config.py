@@ -997,7 +997,6 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
     assert user.get_attribute('foo') is None
 
     assert user.customer_id is None
-    assert user.button_counts == {}
     assert user.contact_groups == []
     assert user.stars == set()
     assert user.is_site_disabled('any_site') is False
@@ -1158,7 +1157,6 @@ def test_monitoring_user(monitoring_user):
 
     assert monitoring_user.language == 'de'
     assert monitoring_user.customer_id is None
-    assert monitoring_user.button_counts == MONITORING_USER_BUTTONCOUNTS
     assert monitoring_user.contact_groups == ['all']
 
     assert monitoring_user.stars == set(MONITORING_USER_FAVORITES)

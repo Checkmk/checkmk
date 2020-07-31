@@ -1984,11 +1984,7 @@ def _show_context_links(view, rows, show_filters, enable_commands, enable_checkb
             else:
                 url = _link_to_folder_by_path(
                     html.request.get_str_input_mandatory("wato_folder", ""))
-            html.context_button(_("WATO"),
-                                url,
-                                "wato",
-                                id_="wato",
-                                bestof=config.context_buttons_to_show)
+            html.context_button(_("WATO"), url, "wato", id_="wato")
 
         # Button for creating an instant report (if reporting is available)
         if config.reporting_available() and config.user.may("general.instant_reports"):
@@ -2000,11 +1996,7 @@ def _show_context_links(view, rows, show_filters, enable_commands, enable_checkb
         # Buttons to other views, dashboards, etc.
         links = collect_context_links(view, rows)
         for linktitle, uri, icon, buttonid in links:
-            html.context_button(linktitle,
-                                url=uri,
-                                icon=icon,
-                                id_=buttonid,
-                                bestof=config.context_buttons_to_show)
+            html.context_button(linktitle, url=uri, icon=icon, id_=buttonid)
 
     # Customize/Edit view button
     if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
@@ -2017,11 +2009,7 @@ def _show_context_links(view, rows, show_filters, enable_commands, enable_checkb
             url_vars.append(("load_user", thisview["owner"]))
 
         url = html.makeuri_contextless(url_vars, filename="edit_view.py")
-        html.context_button(_("Edit View"),
-                            url,
-                            "edit",
-                            id_="edit",
-                            bestof=config.context_buttons_to_show)
+        html.context_button(_("Edit View"), url, "edit", id_="edit")
 
     if display_options.enabled(display_options.E):
         if _show_availability_context_button(view):
@@ -2171,17 +2159,6 @@ def _collect_context_links_of(visual_type_name, view, rows, singlecontext_reques
             context_links.append((_u(linktitle), uri, icon, buttonid))
 
     return context_links
-
-
-@cmk.gui.pages.register("count_context_button")
-def ajax_count_button():
-    id_ = html.request.get_str_input_mandatory("id")
-    counts = config.user.button_counts
-    for i in counts:
-        counts[i] *= 0.95
-    counts.setdefault(id_, 0)
-    counts[id_] += 1
-    config.user.save_button_counts()
 
 
 def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:

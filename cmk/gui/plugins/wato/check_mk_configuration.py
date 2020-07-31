@@ -336,34 +336,6 @@ class ConfigVariableEnableSounds(ConfigVariable):
 
 
 @config_variable_registry.register
-class ConfigVariableContextButtonsToShow(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupUserInterface
-
-    def domain(self):
-        return ConfigDomainGUI
-
-    def ident(self):
-        return "context_buttons_to_show"
-
-    def valuespec(self):
-        return Optional(
-            Integer(
-                title=_("show"),
-                label=_("buttons"),
-                minvalue=1,
-                maxvalue=100,
-                size=2,
-            ),
-            title=_("Number of context buttons to show"),
-            label=_("Show only most frequently used buttons"),
-            help=_("If this option is enabled, then Multisite only show the most "
-                   "used context buttons and hides the rest. Which buttons are used "
-                   "how often is computed separately per user."),
-        )
-
-
-@config_variable_registry.register
 class ConfigVariableSoftQueryLimit(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface

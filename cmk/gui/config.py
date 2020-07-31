@@ -591,15 +591,6 @@ class LoggedInUser:
         self.save_file("bi_treestate", (value,))
 
     @property
-    def button_counts(self) -> Dict[str, float]:
-        if not self._button_counts:
-            self._button_counts = self.load_file("buttoncounts", {})
-        return self._button_counts
-
-    def save_button_counts(self) -> None:
-        self.save_file("buttoncounts", self._button_counts)
-
-    @property
     def stars(self) -> Set[str]:
         if not self._stars:
             self._stars = set(self.load_file("favorites", []))

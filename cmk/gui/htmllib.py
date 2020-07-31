@@ -2585,18 +2585,11 @@ class html(ABCHTMLGenerator):
 
     def begin_context_buttons(self) -> None:
         if not self._context_buttons_open:
-            self.context_button_hidden = False
             self.open_div(class_="contextlinks")
             self._context_buttons_open = True
 
     def end_context_buttons(self) -> None:
         if self._context_buttons_open:
-            if self.context_button_hidden:
-                self.open_div(title=_("Show all buttons"),
-                              id="toggle",
-                              class_=["contextlink", "short"])
-                self.a("...", onclick='cmk.utils.unhide_context_buttons(this);', href='#')
-                self.close_div()
             self.div("", class_="end")
             self.close_div()
         self._context_buttons_open = False
@@ -2607,7 +2600,6 @@ class html(ABCHTMLGenerator):
                        icon: Optional[str] = None,
                        hot: bool = False,
                        id_: Optional[str] = None,
-                       bestof: Optional[int] = None,
                        hover_title: Optional[str] = None,
                        class_: CSSSpec = None) -> None:
         self._context_button(title,
@@ -2615,7 +2607,6 @@ class html(ABCHTMLGenerator):
                              icon=icon,
                              hot=hot,
                              id_=id_,
-                             bestof=bestof,
                              hover_title=hover_title,
                              class_=class_)
 
@@ -2625,19 +2616,10 @@ class html(ABCHTMLGenerator):
                         icon: Optional[str] = None,
                         hot: bool = False,
                         id_: Optional[str] = None,
-                        bestof: Optional[int] = None,
                         hover_title: Optional[str] = None,
                         class_: CSSSpec = None) -> None:
         title = escaping.escape_attribute(title)
         display = "block"
-        if bestof:
-            counts = config.user.button_counts
-            weights = list(counts.items())
-            weights.sort(key=lambda x: x[1])
-            best = dict(weights[-bestof:])  # pylint: disable=invalid-unary-operand-type
-            if id_ not in best:
-                display = "none"
-                self.context_button_hidden = True
 
         if not self._context_buttons_open:
             self.begin_context_buttons()
@@ -2653,9 +2635,7 @@ class html(ABCHTMLGenerator):
 
         self.open_div(class_=css_classes, id_=id_, style="display:%s;" % display)
 
-        self.open_a(href=url,
-                    title=hover_title,
-                    onclick="cmk.utils.count_context_button(this);" if bestof else None)
+        self.open_a(href=url, title=hover_title)
 
         if icon:
             self.icon('', icon, cssclass="inline", middle=False)

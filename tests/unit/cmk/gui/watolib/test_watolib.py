@@ -86,7 +86,6 @@ def test_registered_configvars():
         'bulk_discovery_default_settings',
         'check_mk_perfdata_with_times',
         'cluster_max_cachefile_age',
-        'context_buttons_to_show',
         'crash_report_target',
         'crash_report_url',
         'custom_service_attributes',

@@ -62,7 +62,6 @@ def test_registered_pages():
         'bi_set_assumption',
         'bookmark_lists',
         'clear_failed_notifications',
-        'count_context_button',
         'create_dashboard',
         'create_view',
         'create_view_dashlet',

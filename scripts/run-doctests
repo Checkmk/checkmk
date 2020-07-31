@@ -31,5 +31,5 @@ PIPENV="$REPO_PATH/scripts/run-pipenv"
 
 pushd $REPO_PATH > /dev/null
 
-$PIPENV run python -m doctest $FILES
+$PIPENV run pytest --doctest-modules $FILES
 popd > /dev/null

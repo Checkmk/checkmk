@@ -56,7 +56,7 @@ repos:
             verbose: true
           - id: mypy
             name: Check types with mypy
-            entry: scripts/check-mypy
+            entry: scripts/run-mypy
             language: script
             types: [file, python]
           - id: licence

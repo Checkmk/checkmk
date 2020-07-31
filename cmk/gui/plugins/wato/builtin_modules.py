@@ -450,6 +450,41 @@ class MainModuleHostGroups(MainModule):
 
 
 @main_module_registry.register
+class MainModuleHostCustomAttributes(MainModule):
+    @property
+    def mode_or_url(self):
+        return "host_attrs"
+
+    @property
+    def topic(self):
+        return MainModuleTopicHosts
+
+    @property
+    def title(self):
+        return _("Custom attributes")
+
+    @property
+    def icon(self):
+        return "custom_attr"
+
+    @property
+    def permission(self):
+        return "custom_attributes"
+
+    @property
+    def description(self):
+        return _("Create your own host related attributes")
+
+    @property
+    def sort_index(self):
+        return 55
+
+    @property
+    def is_advanced(self):
+        return True
+
+
+@main_module_registry.register
 class MainModuleServiceGroups(MainModule):
     @property
     def mode_or_url(self):
@@ -583,6 +618,41 @@ class MainModuleLDAP(MainModule):
     @property
     def sort_index(self):
         return 50
+
+    @property
+    def is_advanced(self):
+        return True
+
+
+@main_module_registry.register
+class MainModuleUserCustomAttributes(MainModule):
+    @property
+    def mode_or_url(self):
+        return "user_attrs"
+
+    @property
+    def topic(self):
+        return MainModuleTopicUsers
+
+    @property
+    def title(self):
+        return _("Custom attributes")
+
+    @property
+    def icon(self):
+        return "custom_attr"
+
+    @property
+    def permission(self):
+        return "custom_attributes"
+
+    @property
+    def description(self):
+        return _("Create your own user related attributes")
+
+    @property
+    def sort_index(self):
+        return 55
 
     @property
     def is_advanced(self):

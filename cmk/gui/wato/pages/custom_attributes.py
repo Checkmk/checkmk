@@ -490,7 +490,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         _update_host_custom_attrs()
 
     def title(self):
-        return _("Custom Host Attributes")
+        return _("Custom host attributes")
 
     def buttons(self):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),

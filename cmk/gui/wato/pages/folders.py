@@ -628,8 +628,6 @@ class ModeFolder(WatoMode):
         return None  # browser reload
 
     def page(self):
-        self._folder.show_breadcrump()
-
         if not self._folder.may("read"):
             html.show_message(
                 html.render_icon("autherr", cssclass="authicon") + " " +
@@ -1211,7 +1209,6 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
     def page(self):
         new = self._folder.name() is None
 
-        watolib.Folder.current().show_breadcrump()
         watolib.Folder.current().need_permission("read")
 
         if new and watolib.Folder.current().locked():

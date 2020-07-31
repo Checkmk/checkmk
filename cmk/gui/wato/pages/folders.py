@@ -1198,9 +1198,13 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
         new = self._folder.name() is None
         is_enabled = new or not watolib.Folder.current().locked()
 
+        # TODO: Shouldn't we tell make_simple_back_page_menu() how many levels
+        # to go up instead of constructing some wrong breadcrumb here? Investigate
+        # all call sites
         if html.request.has_var("backfolder"):
             breadcrumb = make_folder_breadcrumb(
                 watolib.Folder.folder(html.request.var("backfolder")))
+            breadcrumb.append(self._breadcrumb_item())
 
         return make_simple_back_page_menu(breadcrumb,
                                           form_name="edit_host",

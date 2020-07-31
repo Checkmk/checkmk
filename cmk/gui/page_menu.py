@@ -198,6 +198,29 @@ class PageMenu:
     def has_suggestions(self) -> bool:
         return any(True for _s in self.suggestions)
 
+    def add_manual_reference(self,
+                             title: str,
+                             article_name: str,
+                             anchor_name: Optional[str] = None) -> None:
+        anchor: str = "" if anchor_name is None else ("#" + anchor_name)
+        help_dropdown = self.get_dropdown_by_name("help", make_help_dropdown())
+        help_dropdown.topics[1].entries.append(
+            PageMenuEntry(
+                title=title,
+                icon_name="manual",
+                item=make_external_link("https://checkmk.com/cms_%s.html%s" %
+                                        (article_name, anchor)),
+            ))
+
+    def add_youtube_reference(self, title: str, youtube_id: str) -> None:
+        help_dropdown = self.get_dropdown_by_name("help", make_help_dropdown())
+        help_dropdown.topics[2].entries.append(
+            PageMenuEntry(
+                title=title,
+                icon_name="video",
+                item=make_external_link("https://youtu.be/%s" % youtube_id),
+            ))
+
 
 def make_display_options_dropdown() -> PageMenuDropdown:
     return PageMenuDropdown(
@@ -259,6 +282,10 @@ def make_help_dropdown() -> PageMenuDropdown:
                         item=make_external_link("https://checkmk.com/cms_index.html"),
                     ),
                 ],
+            ),
+            PageMenuTopic(
+                title=_("Suggested tutorial videos"),
+                entries=[],
             ),
         ],
     )
@@ -532,7 +559,7 @@ class DropdownEntryRenderer:
 
     def _show_link(self, url: str, onclick: Optional[str], target: Optional[str],
                    icon_name: Optional[str], title: str) -> None:
-        html.open_a(href=url, onclick=onclick)
+        html.open_a(href=url, onclick=onclick, target=target)
         html.icon(title=None, icon=icon_name or "trans")
         html.span(title)
         html.close_a()

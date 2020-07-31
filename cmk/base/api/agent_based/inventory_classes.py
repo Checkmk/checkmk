@@ -102,12 +102,6 @@ class Attributes(ABCPathedObject):
 
 class TableRow(ABCPathedObject, ABCInventoryGenerated):
     """TableRow to be written into a Table at a node in the HW/SW inventory"""
-    @staticmethod
-    def validate_table_key_columns(path, key_columns):
-        # TODO (mo): provide a function to validate this during runtime:
-        #            if a table already exists at path, key columns must match.
-        raise NotImplementedError()
-
     def __init__(
         self,
         *,
@@ -146,7 +140,6 @@ class TableRow(ABCPathedObject, ABCInventoryGenerated):
         if not key_columns:
             raise ValueError("TableRows 'key_columns' expected non empty Dict[str, Any], got %r" %
                              (key_columns,))
-        # TODO (mo): self.validate_table_key_columns(path, key_columns)
 
         if inventory_columns is None:
             inventory_columns = {}

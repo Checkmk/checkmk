@@ -330,6 +330,7 @@ def make_simple_back_page_menu(breadcrumb: Breadcrumb,
                                form_name: Optional[str] = None,
                                button_name: Optional[str] = None,
                                save_title: Optional[str] = None,
+                               save_icon: str = "save",
                                save_is_enabled: bool = True) -> PageMenu:
     """Factory for creating a simple menu for object edit dialogs that just link back"""
     if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
@@ -341,7 +342,7 @@ def make_simple_back_page_menu(breadcrumb: Breadcrumb,
         entries.append(
             PageMenuEntry(
                 title=save_title or _("Save"),
-                icon_name="save",
+                icon_name=save_icon,
                 item=make_form_submit_link(form_name, button_name),
                 is_list_entry=False,
                 is_shortcut=True,

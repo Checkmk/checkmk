@@ -1705,11 +1705,6 @@ class html(ABCHTMLGenerator):
                     title: str,
                     breadcrumb: Breadcrumb,
                     page_menu: Optional[PageMenu] = None) -> None:
-        # Can be replaced by a simple CSS statement once all pages have been ported to use
-        # the page menu
-        if page_menu and page_menu.dropdowns:
-            self.div("", id_="top_heading_spacer")
-
         self.open_div(id_="top_heading")
         self.open_div(class_="titlebar")
 

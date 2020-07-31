@@ -1,11 +1,14 @@
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 body.main {
   tr#suggestions {
     display: none;
   }
 
   &.suggestions {
-    padding-top: 86px;
-
     tr#suggestions {
       display: table-row;
     }
@@ -18,16 +21,8 @@ body.main {
   }
 }
 
-div#top_heading_spacer {
-  height: 43px;
-}
-
 div#top_heading {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  width: calc(100% + 10px); /* compensate for body padding-right */
+  width: 100%;
   padding: 0;
 
   div.titlebar {
@@ -76,7 +71,7 @@ div#top_heading {
 
   table.menubar {
     width: 100%;
-    padding: 0 0 10px 10px;
+    padding: 0 0 $spacing;
     white-space: nowrap;
     background-color: $color-background;
     border-spacing: 0;

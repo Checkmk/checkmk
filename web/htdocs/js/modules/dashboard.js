@@ -322,8 +322,6 @@ export function calculate_dashboard() {
     g_dashboard_height = utils.page_height() - dashboard_properties.header_height;
 
     var oDash = document.getElementById("dashboard");
-    oDash.style.left     = g_dashboard_left + "px";
-    oDash.style.top      = g_dashboard_top + "px";
     oDash.style.width    = g_dashboard_width + "px";
     oDash.style.height   = g_dashboard_height + "px";
 

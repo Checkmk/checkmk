@@ -11,6 +11,7 @@ body.dashboard {
 }
 
 div#dashboard {
+  position: relative;
   padding: 0;
   margin: 0;
 }
@@ -289,7 +290,7 @@ iframe[id^=dashlet_iframe] {
  * Dashboard editing
  */
 #controls_toggle {
-  position: absolute;
+  position: fixed;
   right: 0;
   bottom: -41px;
   z-index: 150;

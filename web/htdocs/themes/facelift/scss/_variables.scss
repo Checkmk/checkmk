@@ -92,6 +92,7 @@ $button-height:                       28px;
 // General
 // -----------------------------------------------------------------------------
 $theme-border-radius:                       4px;
+$spacing:                                   10px;
 
 
 // -----------------------------------------------------------------------------
@@ -404,7 +405,7 @@ $duallist-control-a-hover-bg-color:         $wato-a-hover-bg-color;
 $side-content-top:                          66px;
 $snapin-margin:                             8px 0;
 
-$main-body-padding:                         50px 0 0 12px;
+$main-body-padding:                         0 0 0 $spacing;
 
 $snapin-cmc-table-width:                    228px;
 $snapin-list-color:                         $white;
@@ -515,5 +516,4 @@ $font-color-highlight:                      $white;
 $filter-group-title-font-color:             $black;
 $popup-filters-border-radius:               2px;
 $popup-button-border:                       1px solid $grey-2;
-$spacing:                                   10px;
 $mega-menu-min-height:                      339px

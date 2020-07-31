@@ -2798,7 +2798,10 @@ class html(ABCHTMLGenerator):
             self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
                                     class_))
 
-    def more_button(self, id_, dom_levels_up):
+    def more_button(self,
+                    id_: str,
+                    dom_levels_up: int,
+                    additional_js: Optional[str] = None) -> None:
         if config.user.get_attribute("ui_basic_advanced_mode") in ("enforce_basic",
                                                                    "enforce_advanced"):
             return
@@ -2806,8 +2809,8 @@ class html(ABCHTMLGenerator):
         self.open_a(href="javascript:void(0)",
                     class_="more",
                     onfocus="if (this.blur) this.blur();",
-                    onclick="cmk.utils.toggle_more(this, %s, %d)" %
-                    (json.dumps(id_), dom_levels_up))
+                    onclick="cmk.utils.toggle_more(this, %s, %d);%s" %
+                    (json.dumps(id_), dom_levels_up, additional_js))
         self.icon(title=_("Show more items"), icon="more_0", class_="more_0")
         self.icon(title=_(""), icon="more_1", class_="more_1")
         self.icon(title=_(""), icon="more_2", class_="more_2")

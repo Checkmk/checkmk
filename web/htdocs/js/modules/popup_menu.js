@@ -343,26 +343,45 @@ export function graph_export(page)
 export function mega_menu_show_all_items(current_topic_id)
 {
     let current_topic = document.getElementById(current_topic_id);
-    Array.prototype.slice.call(current_topic.parentNode.children).forEach(topic=>{
-        if (topic != current_topic)
-            topic.style.display = "none";
-    });
-    current_topic.className += " extended";
-    Array.prototype.slice.call(current_topic.getElementsByClassName("extended")).forEach(list_item=>{
-        list_item.style.display = "list-item";
-    });
-    current_topic.getElementsByClassName("show_all_items")[0].style.display = "none";
+    utils.remove_class(current_topic, "extendable");
+    utils.add_class(current_topic, "extended");
+    utils.add_class(current_topic.closest(".main_menu"), "extended_topic");
 }
 
 export function mega_menu_show_all_topics(current_topic_id)
 {
     let current_topic = document.getElementById(current_topic_id);
-    Array.prototype.slice.call(current_topic.parentNode.children).forEach(topic=>{
-        topic.style.display = null;
+    utils.remove_class(current_topic, "extended");
+    utils.remove_class(current_topic.closest(".main_menu"), "extended_topic");
+    mega_menu_hide_entries(current_topic.closest(".main_menu").id);
+}
+
+export function mega_menu_hide_entries(menu_id) {
+    let menu = document.getElementById(menu_id);
+    let more_is_active = menu.classList.contains("more");
+    let max_entry_number = 10;
+    let topics = menu.getElementsByClassName("topic");
+    topics.forEach(topic => {
+        if (topic.classList.contains("extended"))
+            return;
+        let entries = topic.getElementsByTagName("li");
+        let show_all_items_entry = entries[entries.length-1];
+        if (entries.length > max_entry_number + 1) { // + 1 is needed for the show_all_items entry
+            let counter = 0;
+            entries.forEach(entry => {
+                if ((!more_is_active && entry.classList.contains("advanced")) ||
+                    (entry == show_all_items_entry))
+                    return;
+                if (counter >= max_entry_number)
+                    utils.add_class(entry, "extended");
+                else
+                    utils.remove_class(entry, "extended");
+                counter++;
+            });
+            if (counter > max_entry_number)
+                utils.add_class(topic, "extendable");
+            else
+                utils.remove_class(topic, "extendable");
+        }
     });
-    current_topic.className = current_topic.className.replace(" extended", "");
-    Array.prototype.slice.call(current_topic.getElementsByClassName("extended")).forEach(list_item=>{
-        list_item.style.display = "none";
-    });
-    current_topic.getElementsByClassName("show_all_items")[0].style.display = "list-item";
 }

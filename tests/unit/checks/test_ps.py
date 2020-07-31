@@ -205,7 +205,7 @@ def test_parse_ps(check_manager, capture, result):
     assert parsed[0] == result[0]  # cpu_cores
     for out, ref in itertools.zip_longest(parsed[1], result[1]):
         assert out[0] == ref[0]
-        assert out[1] == check.context["ps_info"](*ref[1])
+        assert out[1] == ps_utils.ps_info(*ref[1])
         assert out[2:] == ref[2:]
 
 
@@ -442,9 +442,8 @@ def test_ps_match_user(attribute, pattern, result):
     ("650099", 650099),
     ("0", 0),
 ])
-def test_parse_ps_time(check_manager, text, result):
-    check = check_manager.get_check("ps")
-    assert check.context["parse_ps_time"](text) == result
+def test_parse_ps_time(text, result):
+    assert ps_utils.parse_ps_time(text) == result
 
 
 @pytest.mark.parametrize("params, result", [
@@ -640,7 +639,7 @@ check_results = [
                                                 ("pcpuavg", 0.0, None, None, 0, 15)]),
         (0, "running for: 27 h", []),
         (0,
-         "\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr><tr><td>emacs</td><td>on</td><td>1050360kB</td><td>303252kB</td><td>2018-10-23 08:02:43</td><td>9902</td><td>0.0%</td></tr></table>"
+         "\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr><tr><td>emacs</td><td>on</td><td>1050360kB</td><td>303252kB</td><td>Oct 23 2018 08:02:43</td><td>9902</td><td>0.0%</td></tr></table>"
         ),
     ]),
     CheckResult([
@@ -650,7 +649,7 @@ check_results = [
         (0, "physical: 461.18 MB", [("rss", 472252, None, None, None, None)]),
         (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]), (0, "running for: 7 h", []),
         (0,
-         "\nname /usr/lib/firefox/firefox, user on, virtual size 2924232kB, resident size 472252kB, creation time 2018-10-24 04:38:07, pid 7912, cpu usage 0.0%\r\n",
+         "\nname /usr/lib/firefox/firefox, user on, virtual size 2924232kB, resident size 472252kB, creation time Oct 24 2018 04:38:07, pid 7912, cpu usage 0.0%\r\n",
          [])
     ]),
     CheckResult([
@@ -659,7 +658,7 @@ check_results = [
         (0, "physical: 1.12 MB", [("rss", 1144, None, None, None, None)]),
         (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]),
         (0, "running for: 234 m", []),
-        (0, "\nname /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB, resident size 1144kB, creation time 2018-10-24 08:08:12, pid 10884, cpu usage 0.0%\r\n",
+        (0, "\nname /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB, resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884, cpu usage 0.0%\r\n",
          [])
     ]),
     CheckResult([
@@ -669,7 +668,7 @@ check_results = [
         (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]),
         (0, "youngest running for: 157 m", []),
         (0, "oldest running for: 234 m", []),
-        (0, "\nname /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB, resident size 1144kB, creation time 2018-10-24 08:08:12, pid 10884, cpu usage 0.0%\r\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB, resident size 1244kB, creation time 2018-10-24 09:24:43, pid 30136, cpu usage 0.0%\r\n",
+        (0, "\nname /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB, resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884, cpu usage 0.0%\r\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB, resident size 1244kB, creation time Oct 24 2018 09:24:43, pid 30136, cpu usage 0.0%\r\n",
          [])
     ]),
     CheckResult([
@@ -678,7 +677,7 @@ check_results = [
         (0, "physical: 1.21 MB", [("rss", 1244, None, None, None, None)]),
         (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]),
         (0, "running for: 157 m", []),
-        (0, "\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB, resident size 1244kB, creation time 2018-10-24 09:24:43, pid 30136, cpu usage 0.0%\r\n",
+        (0, "\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB, resident size 1244kB, creation time Oct 24 2018 09:24:43, pid 30136, cpu usage 0.0%\r\n",
          [])
     ]),
     CheckResult([
@@ -930,10 +929,10 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
         (0, 'youngest running for: 6 m', []),
         (0, 'oldest running for: 26 m', []),
         (0, "\r\n".join([
-            '\nname firefox, user on, virtual size 2275004kB, resident size 434008kB, creation time 1970-01-01 00:34:02, pid 25576, cpu usage 0.0%',
-            'name firefox, user on, virtual size 1869920kB, resident size 359836kB, creation time 1970-01-01 00:54:03, pid 25664, cpu usage 0.0%',
-            'name firefox, user on, virtual size 7962644kB, resident size 229660kB, creation time 1970-01-01 00:34:04, pid 25758, cpu usage 0.0%',
-            'name firefox, user on, virtual size 1523536kB, resident size 83064kB, creation time 1970-01-01 00:34:05, pid 25898, cpu usage %.1f%%\r\n'
+            '\nname firefox, user on, virtual size 2275004kB, resident size 434008kB, creation time Jan 01 1970 00:34:02, pid 25576, cpu usage 0.0%',
+            'name firefox, user on, virtual size 1869920kB, resident size 359836kB, creation time Jan 01 1970 00:54:03, pid 25664, cpu usage 0.0%',
+            'name firefox, user on, virtual size 7962644kB, resident size 229660kB, creation time Jan 01 1970 00:34:04, pid 25758, cpu usage 0.0%',
+            'name firefox, user on, virtual size 1523536kB, resident size 83064kB, creation time Jan 01 1970 00:34:05, pid 25898, cpu usage %.1f%%\r\n'
             % cpu_util,
         ]))
     ]

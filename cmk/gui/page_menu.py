@@ -89,6 +89,11 @@ class PageMenuCheckbox(ABCPageMenuItem):
 
 
 @dataclass
+class PageMenuSearch(ABCPageMenuItem):
+    """A text input box right in the menu, primarily for in page quick search"""
+
+
+@dataclass
 class PageMenuEntry:
     """Representing an entry in the menu, holding the ABCPageMenuItem to be displayed"""
     title: str
@@ -488,6 +493,8 @@ class DropdownEntryRenderer:
             self._show_popup_link_item(entry, entry.item)
         elif isinstance(entry.item, PageMenuCheckbox):
             self._show_checkbox_link_item(entry, entry.item)
+        elif isinstance(entry.item, PageMenuSearch):
+            self._show_search_form_item()
         else:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
 
@@ -529,6 +536,28 @@ class DropdownEntryRenderer:
         html.icon(title=None, icon=icon_name or "trans")
         html.span(title)
         html.close_a()
+
+    def _show_search_form_item(self) -> None:
+        html.open_div(class_="searchform")
+        search_form()
+        html.close_div()
+
+
+# TODO: Cleanup all calls using title and remove the argument
+def search_form(title: Optional[str] = None,
+                mode: Optional[str] = None,
+                default_value: str = "") -> None:
+    html.begin_form("search", add_transid=False)
+    if title:
+        html.write_text(title + ' ')
+    html.text_input("search", size=32, default_value=default_value)
+    html.hidden_fields()
+    if mode:
+        html.hidden_field("mode", mode, add_var=True)
+    html.set_focus("search")
+    html.write_text(" ")
+    html.button("_do_seach", _("Search"))
+    html.end_form()
 
 
 class PageMenuPopupsRenderer:

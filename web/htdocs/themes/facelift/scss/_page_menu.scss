@@ -231,14 +231,6 @@ div#top_heading {
             display: none;
           }
 
-          div.entry.enabled .tooltiptext.disabled {
-            display: none;
-          }
-
-          div.entry.disabled .tooltiptext.enabled {
-            display: none;
-          }
-
           div.entry.disabled {
             cursor: default;
 
@@ -626,45 +618,6 @@ a#helpbutton {
 /* Make "check all" thingy invisible, since it is in the menu now */
 table.data th input.checkgroup {
   display: none;
-}
-
-.tooltip {
-  position: relative;
-  display: inline-block;
-  /* border-bottom: 1px dotted black; */
-
-  .tooltiptext {
-    position: absolute;
-    bottom: 125%;
-    left: 50%;
-    z-index: 1;
-    width: 200px;
-    padding: 5px 0;
-    margin-left: -100px;
-    color: #fff;
-    text-align: center;
-    background-color: #555;
-    border-radius: 6px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.8s;
-
-    &::after {
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      margin-left: -5px;
-      border-color: #555 transparent transparent;
-      border-style: solid;
-      border-width: 5px;
-      content: "";
-    }
-  }
-
-  &:hover .tooltiptext {
-    opacity: 1;
-    visibility: visible;
-  }
 }
 
 /* Ein bisschen Styling für das Darktheme - unabhängig vom Inpage */

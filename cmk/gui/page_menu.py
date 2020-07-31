@@ -499,7 +499,6 @@ class ShortcutRenderer:
         if entry.is_suggested:
             classes.append("suggested")
 
-        html.open_div(class_="tooltip")
         html.icon_button(url=item.link.url,
                          onclick=item.link.onclick,
                          title=entry.title,
@@ -507,8 +506,6 @@ class ShortcutRenderer:
                          target=item.link.target,
                          class_=" ".join(classes),
                          id_=("menu_shortcut_%s" % entry.name if entry.name else None))
-        html.span(entry.title, class_="tooltiptext")
-        html.close_div()
 
 
 class DropdownEntryRenderer:

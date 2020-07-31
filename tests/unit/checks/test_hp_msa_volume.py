@@ -5,8 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, Tuple
+import freezegun  # type: ignore[import]
+
 import pytest  # type: ignore[import]
-from checktestlib import CheckResult, assertCheckResultsEqual
+from checktestlib import CheckResult, assertCheckResultsEqual, MockItemState
 
 # all tests in this file are hp_msa_volume check related
 pytestmark = pytest.mark.checks
@@ -100,14 +102,17 @@ def test_df_check(check_manager):
             u'raidtype': u'RAID0',
         }
     }
-    expected_result = (0, '57.81% used (1.16 of 2.00 TB), trend: 0.00 B / 24 hours', [
+    expected_result = (0, '57.81% used (1.16 of 2.00 TB), trend: +2.43 TB / 24 hours', [
         ('fs_used', 1212896, 1678313.6, 1888102.8, 0, 2097892),
         ('fs_size', 2097892),
         ('fs_used_percent', 57.81498761614039),
-        ('growth', 0.0),
-        ('trend', 0, None, None, 0, 87412.16666666667),
+        ('growth', 1329829.766497462),
+        ('trend', 2551581.1594836353, None, None, 0, 87412.16666666667),
     ])
-    _, trend_result = check.run_check(item_1st, params, parsed)
+
+    with freezegun.freeze_time("2020-07-31 07:00:00"), MockItemState((1596100000, 42)):
+        _, trend_result = check.run_check(item_1st, params, parsed)
+
     assertCheckResultsEqual(CheckResult(trend_result), CheckResult(expected_result))
 
 

@@ -66,7 +66,10 @@ def make_external_link(url: str) -> PageMenuLink:
 
 
 def make_javascript_link(javascript: str) -> PageMenuLink:
-    return PageMenuLink(Link(onclick=javascript))
+    # Make all actions close the menu, even actions on the page, like for example toggling of the
+    # bulk selection checkboxes
+    return PageMenuLink(Link(onclick=javascript.rstrip(";") +
+                             ";cmk.page_menu.close_active_menu();"))
 
 
 def make_form_submit_link(form_name: str, button_name: str) -> PageMenuLink:

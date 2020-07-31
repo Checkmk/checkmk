@@ -20,7 +20,7 @@ function page_menu_entries() {
 }
 
 
-function close_active_menu() {
+export function close_active_menu() {
     const menu = page_menu_entries().find(elem => utils.has_class(elem, "active"));
     if (menu)
         utils.remove_class(menu, "active");

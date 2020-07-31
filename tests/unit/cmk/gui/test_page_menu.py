@@ -35,14 +35,14 @@ def test_make_javascript_link():
     item = make_javascript_link("bla.blub()")
     assert item.link.url is None
     assert item.link.target is None
-    assert item.link.onclick == "bla.blub()"
+    assert item.link.onclick == "bla.blub();cmk.page_menu.close_active_menu();"
 
 
 def test_make_form_submit_link():
     item = make_form_submit_link("frm", "btn")
     assert item.link.url is None
     assert item.link.target is None
-    assert item.link.onclick == 'cmk.page_menu.form_submit("frm", "btn")'
+    assert item.link.onclick == 'cmk.page_menu.form_submit("frm", "btn");cmk.page_menu.close_active_menu();'
 
 
 def test_simple_page_menu(register_builtin_html):

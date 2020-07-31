@@ -129,19 +129,19 @@ class ModeFolder(WatoMode):
                             entries=list(self._page_menu_entries_this_folder()),
                         ),
                         PageMenuTopic(
-                            title=_("Host related settings"),
+                            title=_("Host settings"),
                             entries=list(self._page_menu_entries_host_settings()),
                         ),
                         PageMenuTopic(
-                            title=_("Service related settings"),
+                            title=_("Service settings"),
                             entries=list(self._page_menu_entries_service_settings()),
                         ),
                         PageMenuTopic(
-                            title=_("Agent related settings"),
+                            title=_("Agent settings"),
                             entries=list(self._page_menu_entries_agents()),
                         ),
                         PageMenuTopic(
-                            title=_("User interface related settings"),
+                            title=_("User interface settings"),
                             entries=list(self._page_menu_entries_user_interface()),
                         ),
                     ],

@@ -253,27 +253,21 @@ div#top_heading {
           }
         }
 
-        div.search {
+        div.searchform {
+          display: inline-block;
 
           form {
             padding: 0;
             margin: 0;
-          }
 
-          div.searchform {
-            display: inline-block;
-            margin: 0;
-          }
+            input.text {
+              position: relative;
+              font-size: 11px;
+            }
 
-          input.text {
-            position: relative;
-            left: -2px;
-            padding: 1px 5px;
-            font-size: 11px;
-          }
-
-          input.button {
-            display: none;
+            input.button {
+              display: none;
+            }
           }
         }
 

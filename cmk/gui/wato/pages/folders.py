@@ -8,7 +8,7 @@
 import abc
 import json
 import operator
-from typing import List, Tuple, Dict, Optional, Type
+from typing import List, Tuple, Dict, Optional, Type, Iterator
 
 from cmk.utils.type_defs import HostName
 
@@ -32,7 +32,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
-from cmk.gui.plugins.wato.utils.context_buttons import folder_status_button, global_buttons
+from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.pages import page_registry, AjaxPage
@@ -48,7 +48,17 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.page_menu import (
     PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuCheckbox,
+    PageMenuSearch,
+    PageMenuPopup,
+    make_simple_link,
+    make_checkbox_selection_topic,
     make_simple_back_page_menu,
+    make_display_options_dropdown,
+    make_form_submit_link,
 )
 
 
@@ -75,68 +85,452 @@ class ModeFolder(WatoMode):
         super(ModeFolder, self).__init__()
         self._folder = watolib.Folder.current()
 
+        if html.request.has_var("_show_host_tags"):
+            config.user.wato_folders_show_tags = \
+                html.request.get_ascii_input("_show_host_tags") == "1"
+
+        if html.request.has_var("_show_explicit_labels"):
+            config.user.wato_folders_show_labels = \
+                html.request.get_ascii_input("_show_explicit_labels") == "1"
+
     def title(self):
         return self._folder.title()
 
     def breadcrumb(self):
         return make_folder_breadcrumb(self._folder)
 
-    def buttons(self):
-        global_buttons()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._folder.is_disk_folder():
-            html.context_button(_("Back"), self._folder.parent().url(), "back")
-            html.context_button(_("Refine search"), self._folder.url([("mode", "search")]),
-                                "search")
-            return
+            return self._search_folder_page_menu()
 
-        if config.user.may("wato.rulesets") or config.user.may("wato.seeall"):
-            html.context_button(_("Rulesets"),
-                                watolib.folder_preserving_link([("mode", "ruleeditor")]),
-                                "rulesets")
-            html.context_button(_("Manual checks"),
-                                watolib.folder_preserving_link([("mode", "static_checks")]),
-                                "static_checks")
-        if self._folder.may("read"):
-            html.context_button(_("Folder properties"),
-                                self._folder.edit_url(backfolder=self._folder), "edit")
-        if not self._folder.locked_subfolders() and config.user.may(
-                "wato.manage_folders") and self._folder.may("write"):
-            html.context_button(_("New folder"), self._folder.url([("mode", "newfolder")]),
-                                "newfolder")
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="hosts",
+                    title=_("Hosts"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("In this folder"),
+                            entries=list(self._page_menu_entries_hosts_in_folder()),
+                        ),
+                        PageMenuTopic(
+                            title=_("On selected hosts"),
+                            entries=list(self._page_menu_entries_selected_hosts()),
+                        ),
+                        make_checkbox_selection_topic(),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="folders",
+                    title=_("Folder"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Folders"),
+                            entries=list(self._page_menu_entries_this_folder()),
+                        ),
+                        PageMenuTopic(
+                            title=_("Host related settings"),
+                            entries=list(self._page_menu_entries_host_settings()),
+                        ),
+                        PageMenuTopic(
+                            title=_("Service related settings"),
+                            entries=list(self._page_menu_entries_service_settings()),
+                        ),
+                        PageMenuTopic(
+                            title=_("Agent related settings"),
+                            entries=list(self._page_menu_entries_agents()),
+                        ),
+                        PageMenuTopic(
+                            title=_("User interface related settings"),
+                            entries=list(self._page_menu_entries_user_interface()),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
+        self._extend_display_dropdown(menu)
+        self._extend_help_dropdown(menu)
+
+        return menu
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0, PageMenuTopic(
+                title=_("Details"),
+                entries=list(self._page_menu_entries_details()),
+            ))
+
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Below this folder"),
+                entries=list(self._page_menu_entries_search()),
+            ))
+
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter hosts"),
+                entries=list(self._page_menu_entries_filter()),
+            ))
+
+    def _extend_help_dropdown(self, menu: PageMenu) -> None:
+        menu.add_manual_reference(title=_("Host administration"), article_name="wato_hosts")
+        menu.add_manual_reference(title=_("Beginner's guide: Host folder structures"),
+                                  article_name="intro",
+                                  anchor_name="folders")
+        menu.add_manual_reference(title=_("Beginner's guide: Creating folders"),
+                                  article_name="intro",
+                                  anchor_name="Creating folders")
+        menu.add_manual_reference(title=_("Beginner's guide: Adding the first hosts"),
+                                  article_name="intro",
+                                  anchor_name="linux")
+
+        menu.add_youtube_reference(title=_("Episode 1: Installing Checkmk and monitoring Linux"),
+                                   youtube_id="g1g2ztXeJbo")
+        menu.add_youtube_reference(title=_("Episode 3: Monitoring Windows"),
+                                   youtube_id="iz8S9TGGklQ")
+
+    def _search_folder_page_menu(self) -> PageMenu:
+        # TODO: Will be added later
+        #html.context_button(_("Back"), self._folder.parent().url(), "back")
+        #html.context_button(_("Refine search"), self._folder.url([("mode", "search")]), "search")
+        return PageMenu()
+
+    def _page_menu_entries_hosts_in_folder(self) -> Iterator[PageMenuEntry]:
         if not self._folder.locked_hosts() and config.user.may(
                 "wato.manage_hosts") and self._folder.may("write"):
-            html.context_button(_("New host"), self._folder.url([("mode", "newhost")]), "new")
-            html.context_button(_("New cluster"), self._folder.url([("mode", "newcluster")]),
-                                "new_cluster")
-            html.context_button(_("Bulk import"), self._folder.url([("mode", "bulk_import")]),
-                                "bulk_import")
+            yield PageMenuEntry(
+                title=_("Add host"),
+                icon_name="new",
+                item=make_simple_link(self._folder.url([("mode", "newhost")])),
+            )
+            yield PageMenuEntry(
+                title=_("Add cluster"),
+                icon_name="new_cluster",
+                item=make_simple_link(self._folder.url([("mode", "newcluster")])),
+            )
+            yield PageMenuEntry(
+                title=_("Import hosts via CSV file"),
+                icon_name="bulk_import",
+                item=make_simple_link(self._folder.url([("mode", "bulk_import")])),
+            )
+
         if config.user.may("wato.services"):
-            html.context_button(_("Bulk discovery"),
-                                self._folder.url([("mode", "bulkinventory"), ("all", "1")]),
-                                "inventory")
+            yield PageMenuEntry(
+                title=_("Discover services"),
+                icon_name="inventory",
+                item=make_simple_link(self._folder.url([("mode", "bulkinventory"), ("all", "1")])),
+            )
+
         if config.user.may("wato.rename_hosts"):
-            html.context_button(_("Bulk renaming"),
-                                self._folder.url([("mode", "bulk_rename_host")]), "rename_host")
-        if config.user.may("wato.custom_attributes"):
-            html.context_button(_("Custom attributes"),
-                                watolib.folder_preserving_link([("mode", "host_attrs")]),
-                                "custom_attr")
+            yield PageMenuEntry(
+                title=_("Rename multiple hosts"),
+                icon_name="rename_host",
+                item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
+            )
+
         if not self._folder.locked_hosts() and config.user.may(
                 "wato.parentscan") and self._folder.may("write"):
-            html.context_button(_("Parent scan"),
-                                self._folder.url([("mode", "parentscan"), ("all", "1")]),
-                                "parentscan")
-        folder_status_button()
+            yield PageMenuEntry(
+                title=_("Detect network parent hosts"),
+                icon_name="parentscan",
+                item=make_simple_link(self._folder.url([("mode", "parentscan"), ("all", "1")])),
+            )
+
         if config.user.may("wato.random_hosts"):
-            html.context_button(_("Random hosts"), self._folder.url([("mode", "random_hosts")]),
-                                "random")
-        html.context_button(_("Search"), watolib.folder_preserving_link([("mode", "search")]),
-                            "search")
+            yield PageMenuEntry(
+                title=_("Add random hosts"),
+                icon_name="random",
+                item=make_simple_link(self._folder.url([("mode", "random_hosts")])),
+            )
+
+    def _page_menu_entries_selected_hosts(self) -> Iterator[PageMenuEntry]:
+        if not config.user.may("wato.edit_hosts") and not config.user.may("wato.manage_hosts"):
+            return
+
+        hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
+        search_text = html.request.var("search")
+
+        # Remember if that host has a target folder (i.e. was imported with
+        # a folder information but not yet moved to that folder). If at least
+        # one host has a target folder, then we show an additional bulk action.
+        at_least_one_imported = False
+        for hostname in hostnames:
+            if search_text and (search_text.lower() not in hostname.lower()):
+                continue
+
+            host = self._folder.host(hostname)
+            effective = host.effective_attributes()
+
+            if effective.get("imported_folder"):
+                at_least_one_imported = True
+
+        if not self._folder.locked_hosts():
+            if config.user.may("wato.manage_hosts"):
+                yield PageMenuEntry(
+                    title=_("Delete hosts"),
+                    icon_name="delete",
+                    item=make_form_submit_link(
+                        form_name="hosts",
+                        button_name="_bulk_delete",
+                    ),
+                )
+
+            if config.user.may("wato.edit_hosts"):
+                yield PageMenuEntry(
+                    title=_("Edit attributes"),
+                    icon_name="edit",
+                    item=make_form_submit_link(
+                        form_name="hosts",
+                        button_name="_bulk_edit",
+                    ),
+                )
+
+                yield PageMenuEntry(
+                    title=_("Remove explicit attribute settings"),
+                    icon_name="cleanup",
+                    item=make_form_submit_link(
+                        form_name="hosts",
+                        button_name="_bulk_cleanup",
+                    ),
+                )
+
+        if config.user.may("wato.services"):
+            yield PageMenuEntry(
+                title=_("Discover services"),
+                icon_name="services",
+                item=make_form_submit_link(
+                    form_name="hosts",
+                    button_name="_bulk_inventory",
+                ),
+            )
+
+        if not self._folder.locked_hosts():
+            if config.user.may("wato.parentscan"):
+                yield PageMenuEntry(
+                    title=_("Detect network parent hosts"),
+                    icon_name="parentscan",
+                    item=make_form_submit_link(
+                        form_name="hosts",
+                        button_name="_parentscan",
+                    ),
+                )
+            if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
+                yield PageMenuEntry(
+                    title=_("Move to other folder"),
+                    icon_name="move",
+                    name="move_rules",
+                    item=PageMenuPopup(self._render_bulk_move_form()),
+                )
+
+                if at_least_one_imported:
+                    yield PageMenuEntry(
+                        title=_("Move to target folders"),
+                        icon_name="move",
+                        item=make_form_submit_link(
+                            form_name="hosts",
+                            button_name="_bulk_movetotarget",
+                        ),
+                    )
+
+    def _page_menu_entries_this_folder(self) -> Iterator[PageMenuEntry]:
+        if self._folder.may("read"):
+            yield PageMenuEntry(
+                title=_("Folder properties"),
+                icon_name="edit",
+                item=make_simple_link(self._folder.edit_url(backfolder=self._folder)),
+            )
+
+        if not self._folder.locked_subfolders() and not self._folder.locked():
+            if self._folder.may("write") and config.user.may("wato.manage_folders"):
+                yield PageMenuEntry(
+                    title=_("Add subfolder"),
+                    icon_name="newfolder",
+                    item=make_simple_link(self._folder.url([("mode", "newfolder")])),
+                )
+
+        yield make_folder_status_link(watolib.Folder.current(), view_name="allhosts")
+
+    def _page_menu_entries_host_settings(self) -> Iterator[PageMenuEntry]:
+        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
+            return
+
+        yield PageMenuEntry(
+            title=_("Monitoring settings"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "monconf")])),
+        )
+
+        yield PageMenuEntry(
+            title=_("HW/SW inventory"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "inventory")])),
+            is_advanced=True,
+        )
+
+    def _page_menu_entries_service_settings(self) -> Iterator[PageMenuEntry]:
+        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
+            return
+
+        yield PageMenuEntry(
+            title=_("Monitoring settings"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "monconf")])),
+        )
+
+        yield PageMenuEntry(
+            title=_("Discovery settings"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "checkparams")])),
+        )
+
+        yield PageMenuEntry(
+            title=_("Check network settings"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "activechecks")])),
+        )
+
+        yield PageMenuEntry(
+            title=_("Integrate Nagios plugins"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "custom_checks")])),
+            is_advanced=True,
+        )
+
+        yield PageMenuEntry(
+            title=_("Manual services"),
+            icon_name="rulesets",
+            item=make_simple_link(watolib.folder_preserving_link([("mode", "static_checks")])),
+            is_advanced=True,
+        )
+
+    def _page_menu_entries_agents(self) -> Iterator[PageMenuEntry]:
+        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
+            return
+
+        yield PageMenuEntry(
+            title=_("VM, Cloud, Container"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"),
+                                                ("group", "vm_cloud_container")])),
+        )
+
+        yield PageMenuEntry(
+            title=_("Other integrations"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"),
+                                                ("group", "datasource_programs")])),
+        )
+
+        yield PageMenuEntry(
+            title=_("Custom integrations"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"),
+                                                ("group", "custom_integrations")])),
+            is_advanced=True,
+        )
+
+        yield PageMenuEntry(
+            title=_("Agent access settings"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "agent")])),
+        )
+
+        yield PageMenuEntry(
+            title=_("SNMP settings"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "snmp")])),
+        )
+
+    def _page_menu_entries_user_interface(self) -> Iterator[PageMenuEntry]:
+        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
+            return
+
+        yield PageMenuEntry(
+            title=_("User interface"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"),
+                                                ("group", "user_interface")])),
+            is_advanced=True,
+        )
+
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Tags"),
+            icon_name="tag",
+            item=make_simple_link(watolib.folder_preserving_link([("mode", "tags")])),
+        )
+
+        yield PageMenuEntry(
+            title=_("Custom host attributes"),
+            icon_name="custom_attr",
+            item=make_simple_link(watolib.folder_preserving_link([("mode", "host_attrs")])),
+        )
 
         if config.user.may("wato.dcd_connections"):
-            html.context_button(_("Dynamic config"),
-                                watolib.folder_preserving_link([("mode", "dcd_connections")]),
-                                "dcd_connections")
+            yield PageMenuEntry(
+                title=_("Dynamic host management"),
+                icon_name="dcd_connections",
+                item=make_simple_link(watolib.folder_preserving_link([("mode", "dcd_connections")
+                                                                     ])),
+                is_advanced=True,
+            )
+
+    def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title="",
+            icon_name="trans",
+            item=PageMenuSearch(),
+        )
+
+    def _page_menu_entries_search(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Search hosts"),
+            icon_name="search",
+            item=make_simple_link(watolib.folder_preserving_link([("mode", "search")])),
+        )
+
+    def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
+        for toggle_id, title, setting in [
+            ("_show_host_tags", _("Show host tags"), config.user.wato_folders_show_tags),
+            ("_show_explicit_labels", _("Show explicit host labels"),
+             config.user.wato_folders_show_labels),
+        ]:
+            yield PageMenuEntry(
+                title=title,
+                icon_name="trans",
+                item=PageMenuCheckbox(
+                    is_checked=setting,
+                    check_url=html.makeuri([(toggle_id, "1")]),
+                    uncheck_url=html.makeuri([(toggle_id, "")]),
+                ),
+            )
 
     def action(self):
         if html.request.var("_search"):  # just commit to search form
@@ -179,7 +573,7 @@ class ModeFolder(WatoMode):
         if html.request.var("_hosts_reset_sorting") or html.request.var("_hosts_sort"):
             return
 
-        selected_host_names = get_hostnames_from_checkboxes()
+        selected_host_names = get_hostnames_from_checkboxes(deflt=True)
         if len(selected_host_names) == 0:
             raise MKUserError(None,
                               _("Please select some hosts before doing bulk operations on hosts."))
@@ -406,38 +800,13 @@ class ModeFolder(WatoMode):
         if not self._folder.has_hosts():
             return
 
-        show_checkboxes = html.request.var('show_checkboxes', '0') == '1'
-
         hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
         search_text = html.request.var("search")
-
-        # Helper function for showing bulk actions. This is needed at the bottom
-        # of the table of hosts and - if there are more than just a few - also
-        # at the top of the table.
-        search_shown = False
 
         # Show table of hosts in this folder
         html.begin_form("hosts", method="POST")
         with table_element("hosts", title=_("Hosts"), searchable=False,
                            omit_empty_columns=True) as table:
-
-            # Remember if that host has a target folder (i.e. was imported with
-            # a folder information but not yet moved to that folder). If at least
-            # one host has a target folder, then we show an additional bulk action.
-            at_least_one_imported = False
-            more_than_ten_items = False
-            for num, hostname in enumerate(hostnames):
-                if search_text and (search_text.lower() not in hostname.lower()):
-                    continue
-
-                host = self._folder.host(hostname)
-                effective = host.effective_attributes()
-
-                if effective.get("imported_folder"):
-                    at_least_one_imported = True
-
-                if num == 11:
-                    more_than_ten_items = True
 
             # Compute colspan for bulk actions
             colspan = 6
@@ -447,18 +816,8 @@ class ModeFolder(WatoMode):
             if not self._folder.locked_hosts() and config.user.may(
                     "wato.edit_hosts") and config.user.may("wato.move_hosts"):
                 colspan += 1
-            if show_checkboxes:
-                colspan += 1
             if self._folder.is_search_folder():
                 colspan += 1
-
-            # Add the bulk action buttons also to the top of the table when this
-            # list shows more than 10 rows
-            if more_than_ten_items and \
-                (config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts")):
-                self._bulk_actions(table, at_least_one_imported, True, True, colspan,
-                                   show_checkboxes)
-                search_shown = True
 
             contact_group_names = load_contact_group_information()
 
@@ -471,12 +830,8 @@ class ModeFolder(WatoMode):
                 if table.limit_reached:
                     table.limit_hint = max_hosts
                     continue
-                self._show_host_row(rendered_hosts, table, hostname, search_text, show_checkboxes,
-                                    colspan, host_errors, contact_group_names)
-
-            if config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts"):
-                self._bulk_actions(table, at_least_one_imported, False, not search_shown, colspan,
-                                   show_checkboxes)
+                self._show_host_row(rendered_hosts, table, hostname, search_text, colspan,
+                                    host_errors, contact_group_names)
 
         html.hidden_fields()
         html.end_form()
@@ -488,17 +843,15 @@ class ModeFolder(WatoMode):
         headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
         html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
-        if show_checkboxes:
-            selection_properties = {
-                "page_id": "wato-folder-%s" % ('/' + self._folder.path()),
-                "selection_id": weblib.selection_id(),
-                "selected_rows": selected,
-            }
-            html.javascript('cmk.selection.init_rowselect(%s);' %
-                            (json.dumps(selection_properties)))
+        selection_properties = {
+            "page_id": "wato-folder-%s" % ('/' + self._folder.path()),
+            "selection_id": weblib.selection_id(),
+            "selected_rows": selected,
+        }
+        html.javascript('cmk.selection.init_rowselect(%s);' % (json.dumps(selection_properties)))
 
-    def _show_host_row(self, rendered_hosts, table, hostname, search_text, show_checkboxes, colspan,
-                       host_errors, contact_group_names):
+    def _show_host_row(self, rendered_hosts, table, hostname, search_text, colspan, host_errors,
+                       contact_group_names):
         if search_text and (search_text.lower() not in hostname.lower()):
             return
 
@@ -510,21 +863,20 @@ class ModeFolder(WatoMode):
 
         # Column with actions (buttons)
 
-        if show_checkboxes:
-            table.cell(html.render_input("_toggle_group",
-                                         type_="button",
-                                         class_="checkgroup",
-                                         onclick="cmk.selection.toggle_all_rows();",
-                                         value='X'),
-                       sortable=False,
-                       css="checkbox")
-            # Use CSS class "failed" in order to provide information about
-            # selective toggling inventory-failed hosts for Javascript
-            html.input(name="_c_%s" % hostname,
-                       type_="checkbox",
-                       value=colspan,
-                       class_="failed" if host.discovery_failed() else None)
-            html.label("", "_c_%s" % hostname)
+        table.cell(html.render_input("_toggle_group",
+                                     type_="button",
+                                     class_="checkgroup",
+                                     onclick="cmk.selection.toggle_all_rows();",
+                                     value='X'),
+                   sortable=False,
+                   css="checkbox")
+        # Use CSS class "failed" in order to provide information about
+        # selective toggling inventory-failed hosts for Javascript
+        html.input(name="_c_%s" % hostname,
+                   type_="checkbox",
+                   value=colspan,
+                   class_="failed" if host.discovery_failed() else None)
+        html.label("", "_c_%s" % hostname)
 
         table.cell(_("Actions"), css="buttons", sortable=False)
         self._show_host_actions(host)
@@ -582,20 +934,22 @@ class ModeFolder(WatoMode):
             HTML(", ").join(
                 [self._render_contact_group(contact_group_names, g) for g in host_contact_groups]))
 
-        if not config.wato_hide_hosttags:
+        if not config.wato_hide_hosttags and config.user.wato_folders_show_tags:
             table.cell(_("Tags"), css="tag-ellipsis")
             tag_groups, show_all_code = self._limit_labels(host.tag_groups())
             html.write(cmk.gui.view_utils.render_tag_groups(tag_groups, "host", with_links=False))
             html.write(show_all_code)
 
-        table.cell(_("Explicit labels"), css="tag-ellipsis")
-        labels, show_all_code = self._limit_labels(host.labels())
-        html.write(
-            cmk.gui.view_utils.render_labels(labels,
-                                             "host",
-                                             with_links=False,
-                                             label_sources={k: "explicit" for k in labels.keys()}))
-        html.write(show_all_code)
+        if config.user.wato_folders_show_labels:
+            table.cell(_("Explicit labels"), css="tag-ellipsis")
+            labels, show_all_code = self._limit_labels(host.labels())
+            html.write(
+                cmk.gui.view_utils.render_labels(
+                    labels,
+                    "host",
+                    with_links=False,
+                    label_sources={k: "explicit" for k in labels.keys()}))
+            html.write(show_all_code)
 
         # Located in folder
         if self._folder.is_search_folder():
@@ -644,51 +998,6 @@ class ModeFolder(WatoMode):
                                                        ("_delete_host", host.name())])
                 html.icon_button(delete_url, _("Delete this host"), "delete")
 
-    def _bulk_actions(self, table, at_least_one_imported, top, withsearch, colspan,
-                      show_checkboxes):
-        table.row(collect_headers=False, fixed=True)
-        table.cell(css="bulksearch", colspan=3)
-
-        if not show_checkboxes:
-            onclick_uri = html.makeuri([('show_checkboxes', '1'),
-                                        ('selection', weblib.selection_id())])
-            checkbox_title = _('Show Checkboxes and bulk actions')
-        else:
-            onclick_uri = html.makeuri([('show_checkboxes', '0')])
-            checkbox_title = _('Hide Checkboxes and bulk actions')
-
-        html.toggle_button("checkbox_on",
-                           show_checkboxes,
-                           "checkbox",
-                           title=checkbox_title,
-                           onclick="location.href=\'%s\'" % onclick_uri,
-                           is_context_button=False)
-
-        if withsearch:
-            html.text_input("search")
-            html.button("_search", _("Search"))
-            html.set_focus("search")
-        table.cell(css="bulkactions", colspan=colspan - 3)
-        html.write_text(' ' + _("Selected hosts:\n"))
-
-        if not self._folder.locked_hosts():
-            if config.user.may("wato.manage_hosts"):
-                html.button("_bulk_delete", _("Delete"))
-            if config.user.may("wato.edit_hosts"):
-                html.button("_bulk_edit", _("Edit"))
-                html.button("_bulk_cleanup", _("Cleanup"))
-
-        if config.user.may("wato.services"):
-            html.button("_bulk_inventory", _("Discovery"))
-
-        if not self._folder.locked_hosts():
-            if config.user.may("wato.parentscan"):
-                html.button("_parentscan", _("Parentscan"))
-            if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
-                self._host_bulk_move_to_folder_combo(top)
-                if at_least_one_imported:
-                    html.button("_bulk_movetotarget", _("Move to Target Folders"))
-
     def _delete_hosts_after_confirm(self, host_names):
         c = wato_confirm(
             _("Confirm deletion of %d hosts") % len(host_names),
@@ -700,27 +1009,24 @@ class ModeFolder(WatoMode):
             return ""
         return None  # browser reload
 
-    # FIXME: Cleanup
-    def _host_bulk_move_to_folder_combo(self, top):
-        choices = self._folder.choices_for_moving_host()
-        if not choices:
-            return
+    def _render_bulk_move_form(self) -> str:
+        with html.plugged():
+            choices = self._folder.choices_for_moving_host()
+            if not choices:
+                return ""
 
-        choices.insert(0, ("@", _("(select target folder)")))
+            choices.insert(0, ("@", _("(select target folder)")))
 
-        html.button("_bulk_move", _("Move to:"))
-        html.write("&nbsp;")
-        field_name = 'bulk_moveto'
-        if top:
-            field_name = '_top_bulk_moveto'
-            if html.request.has_var('bulk_moveto'):
-                html.javascript('cmk.selection.update_bulk_moveto("%s")' %
-                                html.request.var('bulk_moveto', ''))
-        html.dropdown(field_name,
-                      choices,
-                      deflt="@",
-                      onchange="cmk.selection.update_bulk_moveto(this.value)",
-                      class_='bulk_moveto')
+            html.dropdown("bulk_moveto",
+                          choices,
+                          deflt="@",
+                          label=_("Move to folder:"),
+                          onchange="cmk.selection.update_bulk_moveto(this.value)",
+                          class_='bulk_moveto',
+                          form="form_hosts")
+            html.button("_bulk_move", _("Move"), form="form_hosts")
+
+            return html.drain()
 
     def _move_to_imported_folders(self, host_names_to_move):
         c = wato_confirm(

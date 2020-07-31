@@ -552,6 +552,22 @@ class LoggedInUser:
         self.save_file("discovery_show_plugin_names", value)
 
     @property
+    def wato_folders_show_tags(self) -> bool:
+        return self.load_file("wato_folders_show_tags", False)
+
+    @wato_folders_show_tags.setter
+    def wato_folders_show_tags(self, value: bool) -> None:
+        self.save_file("wato_folders_show_tags", value)
+
+    @property
+    def wato_folders_show_labels(self) -> bool:
+        return self.load_file("wato_folders_show_labels", False)
+
+    @wato_folders_show_labels.setter
+    def wato_folders_show_labels(self, value: bool) -> None:
+        self.save_file("wato_folders_show_labels", value)
+
+    @property
     def bi_expansion_level(self) -> int:
         return self.load_file("bi_treestate", (None,))[0]
 

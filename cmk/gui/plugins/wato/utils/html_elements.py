@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
+# TODO: Change all call sites to directly import from cmk.gui.page_menu
+from cmk.gui.page_menu import search_form  # noqa: F401 # pylint: disable=unused-import
 
 # TODO: Refactor to context handler or similar?
 _html_head_open = False
@@ -43,18 +44,3 @@ def wato_html_footer(show_footer: bool = True, show_body_end: bool = True) -> No
 
     html.close_div()
     html.footer(show_footer, show_body_end)
-
-
-# TODO: Cleanup all calls using title and remove the argument
-def search_form(title=None, mode=None, default_value=""):
-    html.begin_form("search", add_transid=False)
-    if title:
-        html.write_text(title + ' ')
-    html.text_input("search", size=32, default_value=default_value)
-    html.hidden_fields()
-    if mode:
-        html.hidden_field("mode", mode, add_var=True)
-    html.set_focus("search")
-    html.write_text(" ")
-    html.button("_do_seach", _("Search"))
-    html.end_form()

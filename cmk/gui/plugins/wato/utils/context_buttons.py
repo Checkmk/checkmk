@@ -68,3 +68,18 @@ def folder_status_button(viewname="allhosts"):
             ("view_name", viewname),
             ("wato_folder", watolib.Folder.current().path()),
         ]), "status")
+
+
+def make_folder_status_link(folder: watolib.CREFolder, view_name: str) -> PageMenuEntry:
+    return PageMenuEntry(
+        title=_("Status"),
+        icon_name="status",
+        item=make_simple_link(
+            html.makeuri_contextless(
+                [
+                    ("view_name", view_name),
+                    ("wato_folder", folder.path()),
+                ],
+                filename="view.py",
+            )),
+    )

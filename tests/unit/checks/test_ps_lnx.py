@@ -33,10 +33,10 @@ def test_parse_ps_lnx(check_manager, info, attrs, cmd):
     check = check_manager.get_check("ps")
     parse_ps_lnx = check.context["parse_ps_lnx"]
 
-    cpu_cores, data = parse_ps_lnx(info)
+    cpu_cores, data = parse_ps_lnx(info)["NODE"]
     assert cpu_cores == 1
     parsed_line = data[0]
-    ps_info, parsed_cmd = parsed_line[1], parsed_line[2:]
+    ps_info, parsed_cmd = parsed_line[0], parsed_line[1:]
 
     for key, value in attrs.items():
         assert getattr(ps_info, key) == value

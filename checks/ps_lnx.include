@@ -9,7 +9,7 @@ def parse_ps_lnx(info):
     if not info:
         return []
 
-    parsed = []
+    parsed = {}
     # info[0]: $Node [header] user ... pid command
     # we rely on the command being the last one!
     attrs = tuple(word.lower() for word in info[0][2:-1])
@@ -26,7 +26,8 @@ def parse_ps_lnx(info):
             process_id=ps_raw['pid'],
             cgroup=ps_raw.get('cgroup'),
         )
-        parsed.append([line[0], ps_info_obj] + line[cmd_idx:])
+        # cpu_cores for compatibility!
+        _cpu_cores, data = parsed.setdefault(line[0], (1, []))
+        data.append([ps_info_obj] + line[cmd_idx:])
 
-    # cpu_cores for compatibility!
-    return 1, parsed
+    return parsed

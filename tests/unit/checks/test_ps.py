@@ -202,8 +202,11 @@ def test_parse_ps(check_manager, capture, result):
     check = check_manager.get_check("ps")
 
     parsed = check.context['parse_ps'](capture)
-    assert parsed[0] == result[0]  # cpu_cores
-    for out, ref in itertools.zip_longest(parsed[1], result[1]):
+    for cpu_core, _node_data in parsed.values():
+        assert cpu_core == result[0]  # cpu_cores
+
+    lines = [[node] + line for node, (_, node_data) in parsed.items() for line in node_data]
+    for out, ref in itertools.zip_longest(lines, result[1]):
         assert out[0] == ref[0]
         assert out[1] == ps_utils.ps_info(*ref[1])
         assert out[2:] == ref[2:]
@@ -590,7 +593,10 @@ def test_inventory_common(check_manager):
     check = check_manager.get_check("ps")
     check.set_check_api_utils_globals()  # needed for host name
     info = list(itertools.chain.from_iterable(generate_inputs()))
-    parsed = check.context['parse_ps'](info)[1]
+    # nuke node info, b/c we never have node info during discovery
+    parsed_by_nodes = check.context['parse_ps']([[None] + l[1:] for l in info])  # type: ignore[operator]
+    parsed_lines = parsed_by_nodes[None][1]
+    lines_with_node_name = [[None] + line for line in parsed_lines]
 
     # Ugly contortions caused by horrible typing...
     expected: List[object] = []
@@ -599,7 +605,8 @@ def test_inventory_common(check_manager):
     for psdhl in PS_DISCOVERED_HOST_LABELS:
         expected.append(psdhl)
 
-    assert check.context["inventory_ps_common"](PS_DISCOVERY_WATO_RULES, parsed) == expected
+    assert check.context["inventory_ps_common"](
+        PS_DISCOVERY_WATO_RULES, lines_with_node_name) == expected
 
 
 @pytest.mark.parametrize("service_description, matches, result", [
@@ -717,7 +724,14 @@ check_results = [
     ids=[a[0] for a in PS_DISCOVERED_ITEMS])
 def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
     check = check_manager.get_check("ps")
-    parsed = list(itertools.chain.from_iterable(check.context['parse_ps'](info)[1] for info in generate_inputs()))
+    parsed: List = []
+    for info in generate_inputs():
+        parsed_per_node = check.context['parse_ps'](info)
+        parsed.extend(
+            [node] + line
+            for node, (_cpu_cores, node_info) in parsed_per_node.items()
+            for line in node_info
+        )
     total_ram = 1024**3 if "emacs" in inv_item[0] else None
     with on_time(1540375342, "CET"):
         factory_defaults = {"levels": (1, 1, 99999, 99999)}
@@ -764,10 +778,12 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
 
     def time_info(agent_info, check_time, cputime, cpu_cores):
         with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
-            parsed = check.context['parse_ps'](splitter(agent_info.format(cputime)))[1]
+            parsed_per_node = check.context['parse_ps'](splitter(agent_info.format(cputime)))
+            parsed_lines = parsed_per_node[None][1]
+            lines_with_node_name = [[None] + line for line in parsed_lines]
 
             return CheckResult(check.context["check_ps_common"](
-                inv_item[0], inv_item[1], parsed, cpu_cores=cpu_cores))
+                inv_item[0], inv_item[1], lines_with_node_name, cpu_cores=cpu_cores))
 
     inv_item = (
         "test",
@@ -808,7 +824,10 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
 def test_check_ps_common_count(check_manager, levels, reference):
     check = check_manager.get_check("ps")
 
-    parsed = check.context['parse_ps'](splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))[1]
+    parsed_per_node = check.context['parse_ps'](
+        splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))
+    parsed_lines = parsed_per_node[None][1]
+    lines_with_node_name = [[None] + line for line in parsed_lines]
 
     params = {
         "process": "~test",
@@ -816,7 +835,8 @@ def test_check_ps_common_count(check_manager, levels, reference):
         "levels": levels,
     }
 
-    output = CheckResult(check.context["check_ps_common"]('empty', params, parsed, cpu_cores=1))
+    output = CheckResult(check.context["check_ps_common"](
+        'empty', params, lines_with_node_name, cpu_cores=1))
     assertCheckResultsEqual(output, reference)
 
 
@@ -825,11 +845,13 @@ def test_subset_patterns(check_manager):
     check = check_manager.get_check("ps")
     check.set_check_api_utils_globals()  # needed for host name
 
-    parsed = check.context['parse_ps'](
+    parsed_per_node = check.context['parse_ps'](
         splitter("""(user,0,0,0.5) main
 (user,0,0,0.4) main_dev
 (user,0,0,0.1) main_dev
-(user,0,0,0.5) main_test"""))[1]
+(user,0,0,0.5) main_test"""))
+    parsed_lines = parsed_per_node[None][1]
+    lines_with_node_name = [[None] + line for line in parsed_lines]
 
     # Boundary in match is necessary otherwise main instance accumulates all
     wato_rule: List[Tuple[Dict, List, List, Dict]] = [({
@@ -871,7 +893,7 @@ def test_subset_patterns(check_manager):
         DiscoveredHostLabels(),
     ]
 
-    assert check.context["inventory_ps_common"](wato_rule, parsed) == discovered
+    assert check.context["inventory_ps_common"](wato_rule, lines_with_node_name) == discovered
 
     def counted_reference(count):
         return CheckResult([
@@ -881,7 +903,7 @@ def test_subset_patterns(check_manager):
         ])
 
     for (item, params), count in zip(discovered, [1, 2, 1]):
-        output = CheckResult(check.context["check_ps_common"](item, params, parsed, cpu_cores=1))
+        output = CheckResult(check.context["check_ps_common"](item, params, lines_with_node_name, cpu_cores=1))
         assertCheckResultsEqual(output, counted_reference(count))
 
 
@@ -907,10 +929,12 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
 (on,1869920,359836,00:01:23/6:57,25664) firefox
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
-            parsed = check.context['parse_ps'](splitter(agent_info.format(cputime)))[1]
+            parsed_per_node = check.context['parse_ps'](splitter(agent_info.format(cputime)))
+            parsed_lines = parsed_per_node[None][1]
+            lines_with_node_name = [[None] + line for line in parsed_lines]
 
             return CheckResult(check.context["check_ps_common"](
-            'firefox', params, parsed, cpu_cores=cpu_cores))
+            'firefox', params, lines_with_node_name, cpu_cores=cpu_cores))
 
     with value_store.context(CheckPluginName("ps"), "unit-test"):
         # CPU utilization is a counter, initialize it

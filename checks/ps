@@ -37,6 +37,8 @@
 # WINDOWSXP,16875000,lsass.exe,3964928,21,3906250,43462656,6647808^M
 # WINDOWSXP,8750000,VBoxService.exe,1056768,8,468750,26652672,3342336^M
 
+import itertools
+
 # New since 1.2.1i2: WATO compatible syntax
 #
 # Holds a list of rules which are matching hosts by names or tags and
@@ -113,8 +115,8 @@ def ps_merge_wmic_info(info):
     # Assumes line = [CLUSTER, PS_INFO, COMMAND]
     has_wmic = False
     for line in info:
-        if len(line) > 2 and line[2].lower() == "system idle process":
-            cpu_cores = int(line[1][1:-1].split(",")[9])
+        if len(line) > 1 and line[1].lower() == "system idle process":
+            cpu_cores = int(line[0][1:-1].split(",")[9])
             return cpu_cores, info
         if "wmic process" in line[-1]:
             has_wmic = True
@@ -139,7 +141,7 @@ def extract_wmic_info(info):
             line = next(lines)
             if line[-1] == '[wmic process]':
                 is_wmic = True
-                wmic_headers = ["node"] + next(lines)[1:]
+                wmic_headers = next(lines)
                 continue
             elif line[-1] == '[wmic process end]':
                 is_wmic = False
@@ -156,7 +158,7 @@ def extract_wmic_info(info):
             #
             # Node,
             if "Name" in row and "ProcessId" in row:
-                wmic_info.setdefault((row["node"], row["Name"]), []).append(row)
+                wmic_info.setdefault(row["Name"], []).append(row)
         else:
             ps_result.append(line)  # plain list of process names
 
@@ -168,7 +170,7 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
     seen_pids = set([])  # Remove duplicate entries
     cpu_cores = 1
     for line in ps_result:
-        psinfos = wmic_info.get((line[0], line[1]), [])
+        psinfos = wmic_info.get(line[0], [])
         if psinfos:
             psinfo = psinfos.pop()  # each info is used only once!
             # Get number of CPU cores from system idle process
@@ -184,7 +186,7 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
                 kernelc = int(psinfo["KernelModeTime"])  # do not resolve counter here!
                 handlec = int(psinfo.get("HandleCount", 0))  # Only in newer psperf.bat versions
                 threadc = int(psinfo["ThreadCount"])  # do not resolve counter here!
-                line[1:1] = [
+                line[0:0] = [
                     "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)" %
                     (virt, resi, pid, pagefile, userc, kernelc, handlec, threadc)
                 ]
@@ -196,20 +198,19 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
 # This mainly formats the line[1] element which contains the process info (user,...)
 def ps_parse_process_entries(pre_parsed):
     parsed = []
-    # line[0] = node
-    # line[1] = process_info OR (if no process info available) = process name
+    # line[0] = process_info OR (if no process info available) = process name
     for line in pre_parsed:
-        process_info = ps_info_tuple(line[1])
+        process_info = ps_info_tuple(line[0])
         if process_info:
-            parsed_line = [line[0], process_info] + line[2:]
+            parsed_line = [process_info] + line[1:]
         else:
             # Make number of columns in line consistent for discovery/check
-            parsed_line = [line[0], ps_info()] + line[1:]
+            parsed_line = [ps_info()] + line
 
         # Filter out any lines where no process command line is available, e.g.
         # [None, u'(<defunct>,,,)']
         # [None, u'(<defunct>,,,)', u'']
-        if len(parsed_line) > 2 and parsed_line[2]:
+        if len(parsed_line) > 1 and parsed_line[1]:
             parsed.append(parsed_line)
 
     return parsed
@@ -223,26 +224,40 @@ def ps_parse_process_entries(pre_parsed):
 # Second element: The process info tuple (see ps.include: check_ps_common() for details on the elements)
 # Third element:  The process command line
 def parse_ps(info):
-    cpu_cores, parsed = ps_merge_wmic_info(info)
-    parsed = ps_parse_process_entries(parsed)
+    parsed = {}
+    for node_name, node_info in itertools.groupby(info, key=lambda line: line[0]):
+        parsed[node_name] = parse_ps_per_node([line[1:] for line in node_info])
+    return parsed
+
+
+def parse_ps_per_node(info):
+    cpu_cores, info = ps_merge_wmic_info(info)
+    parsed = ps_parse_process_entries(info)
     return cpu_cores, parsed
 
 
 def inventory_ps(info):
     ps_info, ps_lnx_info = info[:2]
-    if ps_lnx_info:
-        _cpu_cores, parsed = parse_ps_lnx(ps_lnx_info)
-    else:
-        _cpu_cores, parsed = parse_ps(ps_info)
-    return inventory_ps_common(inventory_processes_rules, parsed)
+    parsed_per_node = parse_ps_lnx(ps_lnx_info) if ps_lnx_info else parse_ps(ps_info)
+    # during discovery, we only have one single node:
+    _cpu_cores, parsed = list(parsed_per_node.values())[0]
+    # bring back node info for now
+    return inventory_ps_common(inventory_processes_rules, [[None] + line for line in parsed])
 
 
 def check_ps(item, params, info):
     ps_info, ps_lnx_info = info[:2]
-    if ps_lnx_info:
-        cpu_cores, parsed = parse_ps_lnx(ps_lnx_info)
-    else:
-        cpu_cores, parsed = parse_ps(ps_info)
+    parsed_per_node = parse_ps_lnx(ps_lnx_info) if ps_lnx_info else parse_ps(ps_info)
+    if not parsed_per_node:
+        return
+
+    # in the cluster case, this does not really make sense.
+    # see if we can fix this upon migration
+    cpu_cores, _parsed = list(parsed_per_node.values())[0]
+    # bring back node info for now
+    parsed = [[node] + line
+              for node, (_cpu_cores, node_info) in parsed_per_node.items()
+              for line in node_info]
 
     # Cleanup counters of processes which do not exist anymore
     ps_cleanup_counters(parsed)

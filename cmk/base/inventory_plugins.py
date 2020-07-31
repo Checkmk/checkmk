@@ -5,14 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Any, Dict, Set, Iterator, Tuple, Optional
+from typing import Any, Dict, Set
 
 import cmk.utils.paths
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginNameStr, SectionName
+from cmk.utils.type_defs import SectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -178,50 +178,3 @@ def is_snmp_plugin(check_plugin_name: str) -> bool:
     section_name = section_name_of(check_plugin_name)
     plugin = agent_based_register.get_section_plugin(SectionName(section_name))
     return isinstance(plugin, SNMPSectionPlugin)
-
-
-def sorted_inventory_plugins() -> Iterator[Tuple[CheckPluginNameStr, InventoryInfo]]:
-    # First resolve *all* dependencies. This ensures that there
-    # are no cyclic dependencies, and that the 'depends on'
-    # relation is transitive.
-    resolved_dependencies: Dict[str, Set[str]] = {}
-
-    def resolve_plugin_dependencies(
-            plugin_name: CheckPluginNameStr,
-            known_dependencies: Optional[Set[CheckPluginNameStr]] = None
-    ) -> Set[CheckPluginNameStr]:
-        '''recursively aggregate all plugin dependencies'''
-        if known_dependencies is None:
-            known_dependencies = set()
-        if plugin_name in resolved_dependencies:
-            known_dependencies.update(resolved_dependencies[plugin_name])
-            return known_dependencies
-
-        try:
-            direct_dependencies = set(inv_info[plugin_name].get('depends_on', []))
-        except KeyError:
-            raise MKGeneralException("unknown plugin dependency: %r" % plugin_name)
-
-        new_dependencies = direct_dependencies - known_dependencies
-        known_dependencies.update(new_dependencies)
-        for dependency in new_dependencies:
-            known_dependencies = resolve_plugin_dependencies(dependency, known_dependencies)
-        return known_dependencies
-
-    for plugin_name in inv_info:
-        resolved_dependencies[plugin_name] = resolve_plugin_dependencies(plugin_name)
-        if plugin_name in resolved_dependencies[plugin_name]:
-            raise MKGeneralException("cyclic plugin dependencies for %r" % plugin_name)
-
-    # The plugins are now a partially ordered set with respect to
-    # the 'depends on' relation. That means we can iteratively
-    # yield the minimal elements
-    remaining_plugins = set(inv_info)
-    yielded_plugins: Set[str] = set()
-    while remaining_plugins:
-        for plugin_name in sorted(remaining_plugins):
-            dependencies = resolved_dependencies[plugin_name]
-            if dependencies <= yielded_plugins:
-                yield plugin_name, inv_info[plugin_name]
-                yielded_plugins.add(plugin_name)
-                remaining_plugins.remove(plugin_name)

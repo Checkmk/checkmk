@@ -28,4 +28,5 @@ def parse_ps_lnx(info):
         )
         parsed.append([line[0], ps_info_obj] + line[cmd_idx:])
 
-    return parsed
+    # cpu_cores for compatibility!
+    return 1, parsed

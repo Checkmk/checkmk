@@ -33,7 +33,9 @@ def test_parse_ps_lnx(check_manager, info, attrs, cmd):
     check = check_manager.get_check("ps")
     parse_ps_lnx = check.context["parse_ps_lnx"]
 
-    parsed_line = parse_ps_lnx(info)[0]
+    cpu_cores, data = parse_ps_lnx(info)
+    assert cpu_cores == 1
+    parsed_line = data[0]
     ps_info, parsed_cmd = parsed_line[1], parsed_line[2:]
 
     for key, value in attrs.items():

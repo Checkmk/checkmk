@@ -231,7 +231,7 @@ def parse_ps(info):
 def inventory_ps(info):
     ps_info, ps_lnx_info = info[:2]
     if ps_lnx_info:
-        parsed = parse_ps_lnx(ps_lnx_info)
+        _cpu_cores, parsed = parse_ps_lnx(ps_lnx_info)
     else:
         _cpu_cores, parsed = parse_ps(ps_info)
     return inventory_ps_common(inventory_processes_rules, parsed)
@@ -240,7 +240,7 @@ def inventory_ps(info):
 def check_ps(item, params, info):
     ps_info, ps_lnx_info = info[:2]
     if ps_lnx_info:
-        cpu_cores, parsed = 1, parse_ps_lnx(ps_lnx_info)
+        cpu_cores, parsed = parse_ps_lnx(ps_lnx_info)
     else:
         cpu_cores, parsed = parse_ps(ps_info)
 

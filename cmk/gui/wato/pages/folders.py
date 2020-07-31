@@ -56,7 +56,7 @@ from cmk.gui.page_menu import (
     PageMenuPopup,
     make_simple_link,
     make_checkbox_selection_topic,
-    make_simple_back_page_menu,
+    make_simple_form_page_menu,
     make_display_options_dropdown,
     make_form_submit_link,
 )
@@ -1198,7 +1198,7 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
         new = self._folder.name() is None
         is_enabled = new or not watolib.Folder.current().locked()
 
-        # TODO: Shouldn't we tell make_simple_back_page_menu() how many levels
+        # TODO: Shouldn't we tell make_simple_form_page_menu() how many levels
         # to go up instead of constructing some wrong breadcrumb here? Investigate
         # all call sites
         if html.request.has_var("backfolder"):
@@ -1206,7 +1206,7 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
                 watolib.Folder.folder(html.request.var("backfolder")))
             breadcrumb.append(self._breadcrumb_item())
 
-        return make_simple_back_page_menu(breadcrumb,
+        return make_simple_form_page_menu(breadcrumb,
                                           form_name="edit_host",
                                           button_name="save",
                                           save_is_enabled=is_enabled)

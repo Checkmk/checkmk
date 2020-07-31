@@ -327,7 +327,7 @@ def make_checkbox_selection_topic() -> PageMenuTopic:
     )
 
 
-def make_simple_back_page_menu(breadcrumb: Breadcrumb,
+def make_simple_form_page_menu(breadcrumb: Breadcrumb,
                                form_name: Optional[str] = None,
                                button_name: Optional[str] = None,
                                save_title: Optional[str] = None,

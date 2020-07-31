@@ -82,7 +82,7 @@ from cmk.gui.page_menu import (
     PageMenuPopup,
     make_simple_link,
     make_form_submit_link,
-    make_simple_back_page_menu,
+    make_simple_form_page_menu,
     make_checkbox_selection_topic,
 )
 
@@ -1205,7 +1205,7 @@ class ModeBIEditPack(ModeBI):
         return "bi_packs"
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_back_page_menu(breadcrumb,
+        return make_simple_form_page_menu(breadcrumb,
                                           form_name="bi_pack",
                                           button_name="_save",
                                           save_title=_("Save") if self._pack else _("Create"))
@@ -1913,7 +1913,7 @@ class ModeBIRuleTree(ModeBI):
         return super().title() + _("Rule tree of") + " " + self._ruleid
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_back_page_menu(breadcrumb)
+        return make_simple_form_page_menu(breadcrumb)
 
     def page(self):
         _aggr_refs, rule_refs, _level = self.count_rule_references(self._ruleid)
@@ -1976,7 +1976,7 @@ class ModeBIEditAggregation(ModeBI):
         return super().title() + _("Edit aggregation")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_back_page_menu(breadcrumb,
+        return make_simple_form_page_menu(breadcrumb,
                                           form_name="biaggr",
                                           button_name="_save",
                                           save_is_enabled=self.is_contact_for_pack(self._pack))
@@ -2067,7 +2067,7 @@ class ModeBIEditRule(ModeBI):
         return super().title() + _("Edit rule") + " " + escaping.escape_attribute(self._ruleid)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_back_page_menu(breadcrumb,
+        return make_simple_form_page_menu(breadcrumb,
                                           form_name="birule",
                                           button_name="_save",
                                           save_title=_("Create") if self._new else _("Save"),

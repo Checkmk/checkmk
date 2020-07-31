@@ -17,7 +17,7 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
-    make_simple_back_page_menu,
+    make_simple_form_page_menu,
 )
 
 from cmk.gui.globals import html
@@ -43,7 +43,7 @@ class ModeSearch(WatoMode):
         self._folder = watolib.Folder.current()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_back_page_menu(breadcrumb,
+        return make_simple_form_page_menu(breadcrumb,
                                           form_name="edit_host",
                                           button_name="_local",
                                           save_title=_("Search"),

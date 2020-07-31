@@ -37,7 +37,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     make_simple_link,
     make_form_submit_link,
-    make_simple_back_page_menu,
+    make_simple_form_page_menu,
 )
 
 
@@ -56,7 +56,7 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
         super(ABCHostMode, self).__init__()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_back_page_menu(breadcrumb)
+        menu = make_simple_form_page_menu(breadcrumb)
         menu.dropdowns.insert(
             0,
             PageMenuDropdown(

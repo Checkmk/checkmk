@@ -7,7 +7,6 @@
 from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import inspect
-import itertools
 
 from pathlib import Path
 
@@ -84,28 +83,19 @@ def validate_function_arguments(
     if not inspect.isgeneratorfunction(function):
         raise TypeError("%s function must be a generator function" % (func_type,))
 
-    parameters = enumerate(inspect.signature(function).parameters, 1)
+    expected_params = []
     if has_item:
-        pos, name = next(parameters)
-        if name != "item":
-            raise TypeError("%s function must have 'item' as %d. argument, got %s" %
-                            (func_type, pos, name))
+        expected_params.append('item')
     if has_params:
-        pos, name = next(parameters)
-        if name != "params":
-            raise TypeError("%s function must have 'params' as %d. argument, got %s" %
-                            (func_type, pos, name))
-
+        expected_params.append('params')
     if len(sections) == 1:
-        pos, name = next(parameters)
-        if name != 'section':
-            raise TypeError("%s function must have 'section' as %d. argument, got %r" %
-                            (func_type, pos, name))
+        expected_params.append('section')
     else:
-        for (pos, name), section in itertools.zip_longest(parameters, sections):
-            if name != "section_%s" % section:
-                raise TypeError("%s function must have 'section_%s' as %d. argument, got %r" %
-                                (func_type, section, pos, name))
+        expected_params.extend('section_%s' % s for s in sections)
+
+    if expected_params != list(inspect.signature(function).parameters):
+        raise TypeError("%s function: expected function arguments: %s" %
+                        (func_type, ', '.join(expected_params)))
 
 
 def validate_default_parameters(

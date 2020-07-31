@@ -14,26 +14,27 @@ connexion is disabled.
 """
 import functools
 from types import FunctionType
-from typing import Any, Dict, List, Optional, Set, Union, Sequence, cast
+from typing import Any, cast, Dict, List, Optional, Sequence, Set, Union
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
-from connexion import problem  # type: ignore[import]
+from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
+from connexion import problem, ProblemException  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
 from werkzeug.utils import import_string
 
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
-from cmk.gui.plugins.openapi.restful_objects.params import path_parameters
-from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
-from cmk.gui.plugins.openapi.restful_objects.specification import SPEC, find_all_parameters
 from cmk.gui.plugins.openapi.restful_objects.parameters import (
     ETAG_HEADER_PARAM,
     ETAG_IF_MATCH_HEADER,
 )
+from cmk.gui.plugins.openapi.restful_objects.params import path_parameters
+from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
+from cmk.gui.plugins.openapi.restful_objects.specification import find_all_parameters, SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     AnyParameterAndReference,
-    EndpointName,
     ENDPOINT_REGISTRY,
+    EndpointName,
     ETagBehaviour,
     HTTPMethod,
     OpenAPITag,
@@ -391,13 +392,7 @@ def wrap_with_validation(func, request_schema: RequestSchema, response_schema: R
     if response_schema is None and request_schema is None:
         return func
 
-    validate_request: ValidatorType
     validate_response: ValidatorType
-
-    if request_schema:
-        validate_request = request_schema().validate
-    else:
-        validate_request = _constantly(None)
 
     if response_schema:
         validate_response = response_schema().validate
@@ -406,13 +401,11 @@ def wrap_with_validation(func, request_schema: RequestSchema, response_schema: R
 
     @functools.wraps(func)
     def _validating_wrapper(param):
-        req_errors = validate_request(param.get('body', {}))
-        if req_errors:
-            return problem(status=400,
-                           title="The request could not be validated.",
-                           detail="There is an error in your submitted data.",
-                           ext={'errors': req_errors})
+        body = schema_loads(request_schema, param.get('body', {}))
+        if body is not None:
+            param['body'] = body
 
+        # FIXME ARGH
         response = func(param)
         if not hasattr(response, 'original_data'):
             return response
@@ -590,28 +583,59 @@ def _names_of(params: Sequence[AnyParameterAndReference]) -> Sequence[ParameterR
     return [p['name'] if isinstance(p, (dict, ParamDict)) else p for p in params]
 
 
-def make_endpoint_entry(
-    method: HTTPMethod,
-    path,
-    parameters: List[Union[PrimitiveParameter, ParameterReference]],
-) -> Dict[str, Any]:
-    """Create an entry necessary for the ENDPOINT_REGISTRY
+def schema_loads(schema, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Validate a schema and populate it with the defaults.
+
+    Examples:
+
+        >>> from marshmallow import Schema
+        >>> from cmk.gui.plugins.openapi import fields
+        >>> class Foo(Schema):
+        ...      integer = fields.Integer(required=True)
+        ...      hello = fields.String(enum=['World'], required=True)
+        ...      default_value = fields.String(missing='was populated')
+
+        If not all required fields are passed, a ProblemException is being raised.
+
+            >>> schema_loads(Foo, {})
+            Traceback (most recent call last):
+            ...
+            connexion.exceptions.ProblemException
+
+            >>> schema_loads(Foo, {'hello': 'Bob', 'integer': 10})
+            Traceback (most recent call last):
+            ...
+            connexion.exceptions.ProblemException
+
+        If validation passes, missing keys are populated with default values as well.
+
+            >>> expected = {
+            ...     'default_value': 'was populated',
+            ...     'hello': 'World',
+            ...     'integer': 10,
+            ... }
+            >>> res = schema_loads(Foo, {'hello': 'World', 'integer': "10"})
+            >>> assert res == expected, res
 
     Args:
-        method:
-            The HTTP method of the endpoint.
-        path:
-            The Path template the endpoint uses.
-        parameters:
-            The parameters as a list of dicts or strings.
+        schema:
+            A marshmallow schema class, schema instance or name of a schema.
+        data:
+            A dictionary with data that should be checked against the schema.
 
     Returns:
-        A dict.
+        A new dictionary with the values converted and the defaults populated.
 
     """
-    # TODO: Subclass Endpoint-Registry to have this as a method?
-    return {
-        'path': path,
-        'method': method,
-        'parameters': parameters,
-    }
+    if schema is None:
+        return None
+    schema_ = resolve_schema_instance(schema)
+    result = schema_.load(data)
+    if result.errors:
+        raise ProblemException(
+            status=400,
+            title="The request could not be validated.",
+            detail="There is an error in your submitted data.",
+            ext={'errors': result.errors},
+        )
+    return result.data

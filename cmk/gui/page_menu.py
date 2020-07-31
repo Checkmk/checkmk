@@ -106,6 +106,7 @@ class PageMenuEntry:
     is_list_entry: bool = True
     is_shortcut: bool = False
     is_suggested: bool = False
+    shortcut_title: Optional[str] = None
 
 
 @dataclass
@@ -483,7 +484,7 @@ class SuggestedEntryRenderer:
     def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink) -> None:
         html.open_a(href=item.link.url, onclick=item.link.onclick)
         html.icon(title=None, icon=entry.icon_name or "trans")
-        html.write_text(entry.title)
+        html.write_text(entry.shortcut_title or entry.title)
         html.close_a()
 
 
@@ -502,7 +503,7 @@ class ShortcutRenderer:
 
         html.icon_button(url=item.link.url,
                          onclick=item.link.onclick,
-                         title=entry.title,
+                         title=entry.shortcut_title or entry.title,
                          icon=entry.icon_name,
                          target=item.link.target,
                          class_=" ".join(classes),

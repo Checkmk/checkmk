@@ -284,15 +284,14 @@ div#top_heading {
         align-items: center;
         justify-content: center;
         float: left;
-        width: 160px;
-        height: 24px;
+        height: 34px;
+        padding: 0 11px;
         margin: 2px 5px;
         font-size: 12px;
         font-weight: bold;
         color: $white;
         cursor: pointer;
-        background-color: $navigation-bg-color;
-        border: 1px solid $navigation-bg-color;
+        background-color: $button-bg-color-secondary;
         border-radius: 4px;
 
         &:nth-child(1) {
@@ -309,8 +308,8 @@ div#top_heading {
       }
 
       @keyframes easyhoverbg {
-        from { border: 1px solid $button-bg-color-default; }
-        to { border: 1px solid $success; }
+        from { background-color: 1px solid $button-bg-color-secondary; }
+        to { background-color: 1px solid $button-bg-color-secondary-hover; }
       }
 
       div.suggestion:hover {

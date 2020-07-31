@@ -80,6 +80,7 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
 
         yield PageMenuEntry(
             title=_("Service configuration"),
+            shortcut_title=_("Save & go to service configuration"),
             icon_name="save_to_services",
             item=make_form_submit_link(form_name="edit_host", button_name="services"),
             is_shortcut=True,

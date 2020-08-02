@@ -57,18 +57,11 @@ def test_registered_layouts():
     expected = [
         'boxed',
         'boxed_graph',
-        'csv',
-        'csv_export',
         'dataset',
-        'json',
-        'json_export',
-        'jsonp',
         'matrix',
         'mobiledataset',
         'mobilelist',
         'mobiletable',
-        'python',
-        'python-raw',
         'table',
         'tiled',
     ]
@@ -89,35 +82,10 @@ def test_layout_properties():
             'hide': False,
             'title': u'Balanced graph boxes'
         },
-        'csv': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'CSV data output'
-        },
-        'csv_export': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'CSV data export'
-        },
         'dataset': {
             'checkboxes': False,
             'hide': False,
             'title': u'Single dataset'
-        },
-        'json': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'JSON data output'
-        },
-        'json_export': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'JSON data export'
-        },
-        'jsonp': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'JSONP data output'
         },
         'matrix': {
             'checkboxes': False,
@@ -140,16 +108,6 @@ def test_layout_properties():
             'checkboxes': False,
             'hide': False,
             'title': u'Mobile: Table'
-        },
-        'python': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'Python data output'
-        },
-        'python-raw': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'Python raw data output'
         },
         'table': {
             'checkboxes': True,
@@ -185,6 +143,20 @@ def test_get_layout_choices():
         ('mobiletable', u'Mobile: Table'),
         ('mobilelist', u'Mobile: List'),
     ])
+
+
+def test_registered_exporters():
+    expected = [
+        'csv',
+        'csv_export',
+        'json',
+        'json_export',
+        'jsonp',
+        'python',
+        'python-raw',
+    ]
+    names = cmk.gui.plugins.views.exporter_registry.keys()
+    assert sorted(expected) == sorted(names)
 
 
 def test_registered_command_groups():

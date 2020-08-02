@@ -380,6 +380,19 @@ class ViewLayoutRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 layout_registry = ViewLayoutRegistry()
 
+Exporter = NamedTuple("Exporter", [
+    ("name", str),
+    ("handler", Callable[["View", Rows], None]),
+])
+
+
+class ViewExporterRegistry(cmk.utils.plugin_registry.InstanceRegistry):
+    def plugin_base_class(self):
+        return Exporter
+
+
+exporter_registry = ViewExporterRegistry()
+
 
 class CommandGroup(metaclass=abc.ABCMeta):
     @abc.abstractproperty

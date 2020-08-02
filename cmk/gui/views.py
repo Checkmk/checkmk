@@ -80,6 +80,7 @@ from cmk.gui.plugins.views.icons.utils import (
 from cmk.gui.plugins.views.utils import (
     command_registry,
     layout_registry,
+    exporter_registry,
     data_source_registry,
     painter_registry,
     Painter,
@@ -612,17 +613,16 @@ class GUIViewRenderer(ABCViewRenderer):
                                                  'view-' + view_spec['name']))
                 headinfo = "%d/%s" % (len(selected), headinfo)
 
-            if html.output_format == "html":
-                html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+            html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
-                # The number of rows might have changed to enable/disable actions and checkboxes
-                if self._show_buttons:
-                    update_context_links(
-                        # don't take display_options into account here ('c' is set during reload)
-                        row_count > 0 and
-                        _should_show_command_form(self.view.datasource, ignore_display_option=True),
-                        # and not html.do_actions(),
-                        layout.can_display_checkboxes)
+            # The number of rows might have changed to enable/disable actions and checkboxes
+            if self._show_buttons:
+                update_context_links(
+                    # don't take display_options into account here ('c' is set during reload)
+                    row_count > 0 and
+                    _should_show_command_form(self.view.datasource, ignore_display_option=True),
+                    # and not html.do_actions(),
+                    layout.can_display_checkboxes)
 
             # Play alarm sounds, if critical events have been displayed
             if display_options.enabled(display_options.S) and view_spec.get("play_sounds"):
@@ -634,8 +634,7 @@ class GUIViewRenderer(ABCViewRenderer):
         # In multi site setups error messages of single sites do not block the
         # output and raise now exception. We simply print error messages here.
         # In case of the web service we show errors only on single site installations.
-        if (config.show_livestatus_errors and display_options.enabled(display_options.W) and
-                html.output_format == "html"):
+        if config.show_livestatus_errors and display_options.enabled(display_options.W):
             for info in sites.live().dead_sites().values():
                 if isinstance(info["site"], dict):
                     html.show_error(
@@ -1416,7 +1415,11 @@ def process_view(view: View, view_renderer: ABCViewRenderer) -> None:
 def _process_regular_view(view: View, view_renderer: ABCViewRenderer) -> None:
     all_active_filters = _get_view_filters(view)
     unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=False)
-    _show_view(view, view_renderer, unfiltered_amount_of_rows, rows)
+
+    if html.output_format != "html":
+        _export_view(view, rows)
+    else:
+        _show_view(view, view_renderer, unfiltered_amount_of_rows, rows)
 
 
 def _process_availability_view(view: View) -> None:
@@ -1563,36 +1566,21 @@ def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_
                                              link_filters=view.datasource.link_filters)
     show_filters = visuals.visible_filters_of_visual(view.spec, show_filters)
 
-    # The layout of the view: it can be overridden by several specifying
+    # The layout of the view: it can be overridden by specifying
     # an output format (like json or python). Note: the layout is not
     # always needed. In case of an embedded view in the reporting this
     # field is simply missing, because the rendering is done by the
     # report itself.
-    # TODO: CSV export should be handled by the layouts. It cannot
-    # be done generic in most cases
     if "layout" in view.spec:
         layout = layout_registry[view.spec["layout"]]()
     else:
         layout = None
 
-    if html.output_format != "html":
-        if layout and layout.has_individual_csv_export:
-            layout.csv_export(rows, view.spec, view.group_cells, view.row_cells)
-            return
-
-        # Generic layout of export
-        layout_class = layout_registry.get(html.output_format)
-        if not layout_class:
-            raise MKUserError("output_format",
-                              _("Output format '%s' not supported") % html.output_format)
-
-        layout = layout_class()
-
     # Set browser reload
     if browser_reload and display_options.enabled(display_options.R):
         html.set_browser_reload(browser_reload)
 
-    if config.enable_sounds and config.sounds and html.output_format == "html":
+    if config.enable_sounds and config.sounds:
         for row in rows:
             save_state_for_playing_alarm_sounds(row)
 
@@ -1619,6 +1607,25 @@ def _get_all_active_filters(view: View) -> 'List[Filter]':
             filt.derived_columns(view)  # type: ignore[attr-defined]
 
     return use_filters
+
+
+def _export_view(view: View, rows: "Rows") -> None:
+    """Shows the views data in one of the supported machine readable formats"""
+    if "layout" in view.spec:
+        layout = layout_registry[view.spec["layout"]]()
+    else:
+        layout = None
+
+    if html.output_format == "csv" and layout and layout.has_individual_csv_export:
+        layout.csv_export(rows, view.spec, view.group_cells, view.row_cells)
+        return
+
+    exporter = exporter_registry.get(html.output_format)
+    if not exporter:
+        raise MKUserError("output_format",
+                          _("Output format '%s' not supported") % html.output_format)
+
+    exporter.handler(view, rows)
 
 
 def _is_ec_unrelated_host_view(view: View) -> bool:
@@ -1665,7 +1672,6 @@ def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
     # E.g. on a "single host" page the host labels are needed for the decision.
     # This is currently realized explicitly until we need a more flexible mechanism.
     if display_options.enabled(display_options.B) \
-        and html.output_format == "html" \
         and "host" in datasource.infos:
         columns.add("host_labels")
 
@@ -1932,9 +1938,6 @@ def ajax_set_viewoption():
 
 def _show_context_links(view, rows, show_filters, enable_commands, enable_checkboxes,
                         show_checkboxes):
-    if html.output_format != "html":
-        return
-
     # TODO: Clean this up
     thisview = view.spec
 
@@ -2466,8 +2469,7 @@ def do_actions(view, what, action_rows, backurl):
 
     if not action_rows:
         message_no_rows = _("No rows selected to perform actions for.")
-        if html.output_format == "html":  # sorry for this hack
-            message_no_rows += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
+        message_no_rows += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
         html.show_error(message_no_rows)
         return False  # no actions done
 
@@ -2509,17 +2511,16 @@ def do_actions(view, what, action_rows, backurl):
         message = _("No matching data row. No command sent.")
 
     if message:
-        if html.output_format == "html":  # sorry for this hack
-            backurl += "&filled_in=filter"
-            message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
-            if html.request.var("show_checkboxes") == "1":
-                html.request.del_var("selection")
-                weblib.selection_id()
-                backurl += "&selection=" + html.request.get_str_input_mandatory("selection")
-                message += '<br><a href="%s">%s</a>' % (backurl,
-                                                        _('Back to view with checkboxes reset'))
-            if html.request.var("_show_result") == "0":
-                html.immediate_browser_redirect(0.5, backurl)
+        backurl += "&filled_in=filter"
+        message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
+        if html.request.var("show_checkboxes") == "1":
+            html.request.del_var("selection")
+            weblib.selection_id()
+            backurl += "&selection=" + html.request.get_str_input_mandatory("selection")
+            message += '<br><a href="%s">%s</a>' % (backurl,
+                                                    _('Back to view with checkboxes reset'))
+        if html.request.var("_show_result") == "0":
+            html.immediate_browser_redirect(0.5, backurl)
         html.show_message(message)
 
     return True

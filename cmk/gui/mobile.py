@@ -237,11 +237,7 @@ def page_index() -> None:
             if not view_spec.get("mustsearch"):
                 painter_options = PainterOptions.get_instance()
                 painter_options.load(view_name)
-                view_renderer = MobileViewRenderer(view)
-                # TODO: Horrible API ahead!
-                # Will be cleaned up in one of the next commits
-                count_num = views.process_view(view, view_renderer, only_count=True)  # type: ignore # pylint: disable=assignment-from-no-return
-                count = '<span class="ui-li-count">%d</span>' % count_num
+                count = '<span class="ui-li-count">%d</span>' % views.get_row_count(view)
 
             topic = view_spec.get("topic")
             if topic is None:

@@ -1405,11 +1405,26 @@ def page_view():
     process_view(view, view_renderer)
 
 
-def process_view(view: View, view_renderer: ABCViewRenderer, only_count: bool = False) -> None:
-    all_active_filters = _get_view_filters(view, only_count)
-    unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, view_renderer,
-                                                     only_count)
-    _show_view(view, view_renderer, unfiltered_amount_of_rows, rows, only_count)
+def process_view(view: View, view_renderer: ABCViewRenderer) -> None:
+    all_active_filters = _get_view_filters(view, only_count=False)
+    unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=False)
+    _show_view(view, view_renderer, unfiltered_amount_of_rows, rows)
+
+
+# TODO: Use livestatus Stats: instead of fetching rows?
+def get_row_count(view: View) -> int:
+    """Returns the number of rows shown by a view"""
+    all_active_filters = _get_view_filters(view, only_count=True)
+    _unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=True)
+
+    # TODO: Check whether or not this really needs to be done this way. Would be better to use some
+    # variable stashing (html.stashed_vars())
+    # Seems to be the counter part of _get_view_filters -> add_context_to_uri_vars
+    for filter_vars in view.spec["context"].values():
+        for varname in filter_vars:
+            html.request.del_var(varname)
+
+    return len(rows)
 
 
 # TODO: Move to View
@@ -1453,7 +1468,6 @@ def _get_view_filters(view: View, only_count: bool) -> "List[Filter]":
 
 def _get_view_rows(view: View,
                    all_active_filters: "List[Filter]",
-                   view_renderer: ABCViewRenderer,
                    only_count: bool = False) -> _Tuple[int, "Rows"]:
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
 
@@ -1543,7 +1557,7 @@ def _get_view_rows(view: View,
 
 
 def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int,
-               rows: "Rows", only_count: bool) -> None:
+               rows: "Rows") -> None:
     display_options.load_from_html()
 
     # Load from hard painter options > view > hard coded default
@@ -1565,14 +1579,6 @@ def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_
     if html.request.var("mode") == "availability":
         cmk.gui.plugins.views.availability.render_bi_availability(view, rows)
         return
-
-    # TODO: Use livestatus Stats: instead of fetching rows!
-    if only_count:
-        for filter_vars in view.spec["context"].values():
-            for varname in filter_vars:
-                html.request.del_var(varname)
-        # Add temporary suppression to make this commit pass the CI. Will clean this up next.
-        return len(rows)  # type: ignore[return-value]
 
     # The layout of the view: it can be overridden by several specifying
     # an output format (like json or python). Note: the layout is not

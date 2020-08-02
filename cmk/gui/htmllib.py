@@ -940,6 +940,7 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
 
 OUTPUT_FORMAT_MIME_TYPES = {
     "json": "application/json",
+    "json_export": "application/json",
     "jsonp": "application/javascript",
     "csv": "text/csv",
     "csv_export": "text/csv",

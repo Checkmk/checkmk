@@ -1406,9 +1406,34 @@ def page_view():
 
 
 def process_view(view: View, view_renderer: ABCViewRenderer) -> None:
+    """Rendering all kind of views"""
+    if html.request.var("mode") == "availability":
+        _process_availability_view(view)
+    else:
+        _process_regular_view(view, view_renderer)
+
+
+def _process_regular_view(view: View, view_renderer: ABCViewRenderer) -> None:
     all_active_filters = _get_view_filters(view, only_count=False)
     unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=False)
     _show_view(view, view_renderer, unfiltered_amount_of_rows, rows)
+
+
+def _process_availability_view(view: View) -> None:
+    all_active_filters = _get_view_filters(view, only_count=False)
+    filterheaders = get_livestatus_filter_headers(view, all_active_filters)
+
+    display_options.load_from_html()
+
+    # Fork to availability view. We just need the filter headers, since we do not query the normal
+    # hosts and service table, but "statehist". This is *not* true for BI availability, though (see
+    # later)
+    if "aggr" not in view.datasource.infos or html.request.var("timeline_aggr"):
+        cmk.gui.plugins.views.availability.show_availability_page(view, filterheaders)
+        return
+
+    _unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=False)
+    cmk.gui.plugins.views.availability.show_bi_availability(view, rows)
 
 
 # TODO: Use livestatus Stats: instead of fetching rows?
@@ -1470,15 +1495,6 @@ def _get_view_rows(view: View,
                    all_active_filters: "List[Filter]",
                    only_count: bool = False) -> _Tuple[int, "Rows"]:
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
-
-    # TODO: Split this function to be able to extract this hack
-    # Fork to availability view. We just need the filter headers, since we do not query the normal
-    # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
-    if html.request.var("mode") == "availability" and ("aggr" not in view.datasource.infos or
-                                                       html.request.var("timeline_aggr")):
-        cmk.gui.plugins.views.availability.show_availability_page(view, filterheaders)
-        return 0, []
-
     headers = filterheaders + view.spec.get("add_headers", "")
 
     # Sorting - use view sorters and URL supplied sorters
@@ -1574,11 +1590,6 @@ def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_
                                              view.datasource.infos,
                                              link_filters=view.datasource.link_filters)
     show_filters = visuals.visible_filters_of_visual(view.spec, show_filters)
-
-    # TODO: Split this function to be able to extract this hack
-    if html.request.var("mode") == "availability":
-        cmk.gui.plugins.views.availability.render_bi_availability(view, rows)
-        return
 
     # The layout of the view: it can be overridden by several specifying
     # an output format (like json or python). Note: the layout is not

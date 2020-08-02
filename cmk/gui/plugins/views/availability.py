@@ -603,7 +603,7 @@ def render_timeline_bar(timeline_layout, style, timeline_nr=0):
 # get the list of BI aggregates from the statehist table but use the views
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
-def render_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
+def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
     config.user.need_permission("general.see_availability")
 
     av_mode = html.request.get_ascii_input_mandatory("av_mode", "availability")

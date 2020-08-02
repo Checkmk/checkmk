@@ -1491,10 +1491,7 @@ def _get_view_filters(view: View) -> "List[Filter]":
 def _get_view_rows(view: View,
                    all_active_filters: "List[Filter]",
                    only_count: bool = False) -> _Tuple[int, "Rows"]:
-    columns = _get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters,
-                                          view.datasource)
-
-    rows = _fetch_view_rows(view, columns, all_active_filters, only_count)
+    rows = _fetch_view_rows(view, all_active_filters, only_count)
 
     # Sorting - use view sorters and URL supplied sorters
     _sort_data(view, rows, view.sorters)
@@ -1508,14 +1505,25 @@ def _get_view_rows(view: View,
     return unfiltered_amount_of_rows, rows
 
 
-def _fetch_view_rows(view: View, columns: "List[ColumnName]", all_active_filters: "List[Filter]",
-                     only_count: bool) -> "Rows":
+def _fetch_view_rows(view: View, all_active_filters: "List[Filter]", only_count: bool) -> "Rows":
+    """Fetches the view rows from livestatus
+
+    Besides gathering the information from livestatus it also joins the rows with other information.
+    For the moment this is:
+
+    - Livestatus table joining (e.g. Adding service row info to host rows (For join painters))
+    - Add HW/SW inventory data when needed
+    - Add SLA data when needed
+    """
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
     headers = filterheaders + view.spec.get("add_headers", "")
 
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
+        columns = _get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters,
+                                              view.datasource)
+
         rows: "Rows" = view.datasource.table.query(view, columns, headers, view.only_sites,
                                                    view.row_limit, all_active_filters)
 
@@ -1525,38 +1533,12 @@ def _fetch_view_rows(view: View, columns: "List[ColumnName]", all_active_filters
 
         # If any painter, sorter or filter needs the information about the host's
         # inventory, then we load it and attach it as column "host_inventory"
-        if is_inventory_data_needed(view.group_cells, view.row_cells, view.sorters,
-                                    all_active_filters):
-            corrupted_inventory_files = []
-            for row in rows:
-                if "host_name" not in row:
-                    continue
-                try:
-                    row["host_inventory"] = inventory.load_filtered_and_merged_tree(row)
-                except inventory.LoadStructuredDataError:
-                    # The inventory row may be joined with other rows (perf-o-meter, ...).
-                    # Therefore we initialize the corrupt inventory tree with an empty tree
-                    # in order to display all other rows.
-                    row["host_inventory"] = StructuredDataTree()
-                    corrupted_inventory_files.append(
-                        str(inventory.get_short_inventory_filepath(row["host_name"])))
-
-            if corrupted_inventory_files:
-                html.add_user_error(
-                    "load_structured_data_tree",
-                    _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files.") %
-                    ", ".join(sorted(corrupted_inventory_files)))
+        if _is_inventory_data_needed(view.group_cells, view.row_cells, view.sorters,
+                                     all_active_filters):
+            _add_inventory_data(rows)
 
         if not cmk_version.is_raw_edition():
-            import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module,import-outside-toplevel
-            sla_params = []
-            for cell in view.row_cells:
-                if cell.painter_name() in ["sla_specific", "sla_fixed"]:
-                    sla_params.append(cell.painter_parameters())
-            if sla_params:
-                sla_configurations_container = sla.SLAConfigurationsContainerFactory.create_from_cells(
-                    sla_params, rows)
-                sla.SLAProcessor(sla_configurations_container).add_sla_data_to_rows(rows)
+            _add_sla_data(view, rows)
 
         return rows
     return []
@@ -1727,13 +1709,9 @@ def _get_needed_join_columns(join_cells: List[JoinCell],
     return list(join_columns)
 
 
-def is_sla_data_needed(group_cells: List[Cell], cells: List[Cell], sorters: List[SorterEntry],
-                       all_active_filters: 'List[Filter]') -> bool:
-    pass
-
-
-def is_inventory_data_needed(group_cells: List[Cell], cells: List[Cell], sorters: List[SorterEntry],
-                             all_active_filters: 'List[Filter]') -> bool:
+def _is_inventory_data_needed(group_cells: List[Cell], cells: List[Cell],
+                              sorters: List[SorterEntry],
+                              all_active_filters: 'List[Filter]') -> bool:
     for cell in cells:
         if cell.has_tooltip():
             if cell.tooltip_painter_name().startswith("inv_"):
@@ -1752,6 +1730,41 @@ def is_inventory_data_needed(group_cells: List[Cell], cells: List[Cell], sorters
             return True
 
     return False
+
+
+def _add_inventory_data(rows: "Rows") -> None:
+    corrupted_inventory_files = []
+    for row in rows:
+        if "host_name" not in row:
+            continue
+
+        try:
+            row["host_inventory"] = inventory.load_filtered_and_merged_tree(row)
+        except inventory.LoadStructuredDataError:
+            # The inventory row may be joined with other rows (perf-o-meter, ...).
+            # Therefore we initialize the corrupt inventory tree with an empty tree
+            # in order to display all other rows.
+            row["host_inventory"] = StructuredDataTree()
+            corrupted_inventory_files.append(
+                str(inventory.get_short_inventory_filepath(row["host_name"])))
+
+            if corrupted_inventory_files:
+                html.add_user_error(
+                    "load_structured_data_tree",
+                    _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files.") %
+                    ", ".join(sorted(corrupted_inventory_files)))
+
+
+def _add_sla_data(view: View, rows: "Rows") -> None:
+    import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module,import-outside-toplevel
+    sla_params = []
+    for cell in view.row_cells:
+        if cell.painter_name() in ["sla_specific", "sla_fixed"]:
+            sla_params.append(cell.painter_parameters())
+    if sla_params:
+        sla_configurations_container = sla.SLAConfigurationsContainerFactory.create_from_cells(
+            sla_params, rows)
+        sla.SLAProcessor(sla_configurations_container).add_sla_data_to_rows(rows)
 
 
 def columns_of_cells(cells: Sequence[Cell]) -> 'Set[ColumnName]':

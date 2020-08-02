@@ -51,7 +51,7 @@ class ABCViewDashlet(IFrameDashlet):
         view.user_sorters = views.get_user_sorters()
 
         view_renderer = views.GUIViewRenderer(view, show_buttons=False)
-        views.show_view(view, view_renderer)
+        views.process_view(view, view_renderer)
 
     def _get_infos_from_view_spec(self, view_spec):
         ds_name = view_spec["datasource"]

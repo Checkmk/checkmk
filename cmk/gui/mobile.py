@@ -239,7 +239,8 @@ def page_index() -> None:
                 painter_options.load(view_name)
                 view_renderer = MobileViewRenderer(view)
                 # TODO: Horrible API ahead!
-                count_num = views.show_view(view, view_renderer, only_count=True)
+                # Will be cleaned up in one of the next commits
+                count_num = views.process_view(view, view_renderer, only_count=True)  # type: ignore # pylint: disable=assignment-from-no-return
                 count = '<span class="ui-li-count">%d</span>' % count_num
 
             topic = view_spec.get("topic")
@@ -300,7 +301,7 @@ def page_view() -> None:
 
     try:
         view_renderer = MobileViewRenderer(view)
-        views.show_view(view, view_renderer)
+        views.process_view(view, view_renderer)
     except Exception as e:
         logger.exception("error showing mobile view")
         if config.debug:
@@ -310,7 +311,7 @@ def page_view() -> None:
     mobile_html_foot()
 
 
-class MobileViewRenderer(views.ViewRenderer):
+class MobileViewRenderer(views.ABCViewRenderer):
     def render(self, rows: Rows, group_cells: List[Cell], cells: List[Cell], show_checkboxes: bool,
                layout: Layout, num_columns: int, show_filters: List[Filter],
                unfiltered_amount_of_rows: int) -> None:

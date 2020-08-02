@@ -177,7 +177,7 @@ def render_availability_options(what: AVObjectType) -> AVOptions:
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def render_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None:
+def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None:
     config.user.need_permission("general.see_availability")
 
     # We make reports about hosts, services or BI aggregates

@@ -1491,26 +1491,27 @@ def _get_view_filters(view: View) -> "List[Filter]":
 def _get_view_rows(view: View,
                    all_active_filters: "List[Filter]",
                    only_count: bool = False) -> _Tuple[int, "Rows"]:
-    filterheaders = get_livestatus_filter_headers(view, all_active_filters)
-    headers = filterheaders + view.spec.get("add_headers", "")
+    columns = _get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters,
+                                          view.datasource)
+
+    rows = _fetch_view_rows(view, columns, all_active_filters, only_count)
 
     # Sorting - use view sorters and URL supplied sorters
-    if only_count:
-        sorters: List[SorterEntry] = []
-    else:
-        sorters = view.sorters
+    _sort_data(view, rows, view.sorters)
 
-    # Prepare cells of the view
-    group_cells = view.group_cells
-    cells = view.row_cells
+    unfiltered_amount_of_rows = len(rows)
 
-    # Now compute the list of all columns we need to query via Livestatus.
-    # Those are: (1) columns used by the sorters in use, (2) columns use by
-    # column- and group-painters in use and - note - (3) columns used to
-    # satisfy external references (filters) of views we link to. The last bit
-    # is the trickiest. Also compute this list of view options use by the
-    # painters
-    columns = _get_needed_regular_columns(group_cells + cells, sorters, view.datasource)
+    # Apply non-Livestatus filters
+    for filter_ in all_active_filters:
+        rows = filter_.filter_table(rows)
+
+    return unfiltered_amount_of_rows, rows
+
+
+def _fetch_view_rows(view: View, columns: "List[ColumnName]", all_active_filters: "List[Filter]",
+                     only_count: bool) -> "Rows":
+    filterheaders = get_livestatus_filter_headers(view, all_active_filters)
+    headers = filterheaders + view.spec.get("add_headers", "")
 
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
@@ -1520,11 +1521,12 @@ def _get_view_rows(view: View,
 
         # Now add join information, if there are join columns
         if view.join_cells:
-            _do_table_join(view, rows, filterheaders, sorters)
+            _do_table_join(view, rows, filterheaders, view.sorters)
 
         # If any painter, sorter or filter needs the information about the host's
         # inventory, then we load it and attach it as column "host_inventory"
-        if is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
+        if is_inventory_data_needed(view.group_cells, view.row_cells, view.sorters,
+                                    all_active_filters):
             corrupted_inventory_files = []
             for row in rows:
                 if "host_name" not in row:
@@ -1548,7 +1550,7 @@ def _get_view_rows(view: View,
         if not cmk_version.is_raw_edition():
             import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module,import-outside-toplevel
             sla_params = []
-            for cell in cells:
+            for cell in view.row_cells:
                 if cell.painter_name() in ["sla_specific", "sla_fixed"]:
                     sla_params.append(cell.painter_parameters())
             if sla_params:
@@ -1556,17 +1558,8 @@ def _get_view_rows(view: View,
                     sla_params, rows)
                 sla.SLAProcessor(sla_configurations_container).add_sla_data_to_rows(rows)
 
-        _sort_data(view, rows, sorters)
-    else:
-        rows = []
-
-    unfiltered_amount_of_rows = len(rows)
-
-    # Apply non-Livestatus filters
-    for filter_ in all_active_filters:
-        rows = filter_.filter_table(rows)
-
-    return unfiltered_amount_of_rows, rows
+        return rows
+    return []
 
 
 def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int,
@@ -1654,6 +1647,12 @@ def _is_ec_unrelated_host_view(view: View) -> bool:
 
 def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
                                 datasource: ABCDataSource) -> 'List[ColumnName]':
+    """Compute the list of all columns we need to query via Livestatus
+
+    Those are: (1) columns used by the sorters in use, (2) columns use by column- and group-painters
+    in use and - note - (3) columns used to satisfy external references (filters) of views we link
+    to. The last bit is the trickiest. Also compute this list of view options use by the painters
+    """
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
     if html.request.var("mode") == "availability" and "aggr" in datasource.infos:

@@ -106,6 +106,7 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
     get_custom_var, get_perfdata_nth_value, join_row, get_view_infos, replace_action_url_macros,
     Cell, JoinCell, register_legacy_command, register_painter, register_sorter, ABCDataSource,
+    Layout,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -397,6 +398,17 @@ class View:
         self._only_sites = only_sites
 
     @property
+    def layout(self) -> Layout:
+        """Return the HTML layout of the view"""
+        if "layout" in self.spec:
+            return layout_registry[self.spec["layout"]]()
+
+        raise MKUserError(
+            None,
+            _("The view '%s' using the layout '%s' can not be rendered "
+              "because the layout does not exist.") % (self.name, self.spec.get("layout")))
+
+    @property
     def user_sorters(self) -> 'Optional[List[SorterSpec]]':
         """Optional list of sorters to use for rendering the view
 
@@ -493,7 +505,7 @@ class ABCViewRenderer(metaclass=abc.ABCMeta):
         self.view = view
 
     @abc.abstractmethod
-    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
+    def render(self, rows, group_cells, cells, show_checkboxes, num_columns, show_filters,
                unfiltered_amount_of_rows):
         raise NotImplementedError()
 
@@ -503,7 +515,7 @@ class GUIViewRenderer(ABCViewRenderer):
         super(GUIViewRenderer, self).__init__(view)
         self._show_buttons = show_buttons
 
-    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
+    def render(self, rows, group_cells, cells, show_checkboxes, num_columns, show_filters,
                unfiltered_amount_of_rows):
         view_spec = self.view.spec
 
@@ -524,6 +536,8 @@ class GUIViewRenderer(ABCViewRenderer):
         command_form = _should_show_command_form(self.view.datasource)
         if command_form:
             weblib.init_selection()
+
+        layout = self.view.layout
 
         if self._show_buttons:
             _show_context_links(
@@ -1566,16 +1580,6 @@ def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_
                                              link_filters=view.datasource.link_filters)
     show_filters = visuals.visible_filters_of_visual(view.spec, show_filters)
 
-    # The layout of the view: it can be overridden by specifying
-    # an output format (like json or python). Note: the layout is not
-    # always needed. In case of an embedded view in the reporting this
-    # field is simply missing, because the rendering is done by the
-    # report itself.
-    if "layout" in view.spec:
-        layout = layout_registry[view.spec["layout"]]()
-    else:
-        layout = None
-
     # Set browser reload
     if browser_reload and display_options.enabled(display_options.R):
         html.set_browser_reload(browser_reload)
@@ -1586,8 +1590,8 @@ def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_
 
     # Until now no single byte of HTML code has been output.
     # Now let's render the view
-    view_renderer.render(rows, view.group_cells, view.row_cells, show_checkboxes, layout,
-                         num_columns, show_filters, unfiltered_amount_of_rows)
+    view_renderer.render(rows, view.group_cells, view.row_cells, show_checkboxes, num_columns,
+                         show_filters, unfiltered_amount_of_rows)
 
 
 def _get_all_active_filters(view: View) -> 'List[Filter]':
@@ -1611,12 +1615,8 @@ def _get_all_active_filters(view: View) -> 'List[Filter]':
 
 def _export_view(view: View, rows: "Rows") -> None:
     """Shows the views data in one of the supported machine readable formats"""
-    if "layout" in view.spec:
-        layout = layout_registry[view.spec["layout"]]()
-    else:
-        layout = None
-
-    if html.output_format == "csv" and layout and layout.has_individual_csv_export:
+    layout = view.layout
+    if html.output_format == "csv" and layout.has_individual_csv_export:
         layout.csv_export(rows, view.spec, view.group_cells, view.row_cells)
         return
 

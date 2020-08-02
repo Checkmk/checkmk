@@ -15,7 +15,6 @@ from cmk.gui.plugins.views.utils import (
     PainterOptions,
     command_registry,
     data_source_registry,
-    Layout,
 )
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
@@ -309,7 +308,7 @@ def page_view() -> None:
 
 class MobileViewRenderer(views.ABCViewRenderer):
     def render(self, rows: Rows, group_cells: List[Cell], cells: List[Cell], show_checkboxes: bool,
-               layout: Layout, num_columns: int, show_filters: List[Filter],
+               num_columns: int, show_filters: List[Filter],
                unfiltered_amount_of_rows: int) -> None:
         view_spec = self.view.spec
         home = ("mobile.py", "Home", "home")
@@ -375,8 +374,8 @@ class MobileViewRenderer(views.ABCViewRenderer):
                         cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit,
                                                                      config.user)
                         del rows[self.view.row_limit:]
-                    layout.render(rows, view_spec, group_cells, cells, num_columns,
-                                  show_checkboxes and not html.do_actions())
+                    self.view.layout.render(rows, view_spec, group_cells, cells, num_columns,
+                                            show_checkboxes and not html.do_actions())
                 except Exception as e:
                     logger.exception("error rendering mobile view")
                     html.write(_("Error showing view: %s") % e)

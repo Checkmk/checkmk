@@ -87,10 +87,6 @@ class LayoutSingleDataset(Layout):
     def can_display_checkboxes(self):
         return False
 
-    @property
-    def is_hidden(self):
-        return False
-
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         html.open_table(class_="data single")
         rownum = 0
@@ -384,10 +380,6 @@ class LayoutBalancedBoxes(GroupedBoxesLayout):
     def can_display_checkboxes(self):
         return True
 
-    @property
-    def is_hidden(self):
-        return False
-
     def _css_class(self):
         return None
 
@@ -407,10 +399,6 @@ class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
     def can_display_checkboxes(self):
         return True
 
-    @property
-    def is_hidden(self):
-        return False
-
     def _css_class(self):
         return "graph"
 
@@ -429,10 +417,6 @@ class LayoutTiled(Layout):
     @property
     def can_display_checkboxes(self):
         return True
-
-    @property
-    def is_hidden(self):
-        return False
 
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         html.open_table(class_="data tiled")
@@ -562,10 +546,6 @@ class LayoutTable(Layout):
     @property
     def can_display_checkboxes(self):
         return True
-
-    @property
-    def is_hidden(self):
-        return False
 
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         repeat_heading_every = 20  # in case column_headers is "repeat"
@@ -746,10 +726,6 @@ class LayoutMatrix(Layout):
 
     @property
     def can_display_checkboxes(self):
-        return False
-
-    @property
-    def is_hidden(self):
         return False
 
     @property

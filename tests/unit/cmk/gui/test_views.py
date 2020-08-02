@@ -74,49 +74,40 @@ def test_layout_properties():
     expected = {
         'boxed': {
             'checkboxes': True,
-            'hide': False,
             'title': u'Balanced boxes'
         },
         'boxed_graph': {
             'checkboxes': True,
-            'hide': False,
             'title': u'Balanced graph boxes'
         },
         'dataset': {
             'checkboxes': False,
-            'hide': False,
             'title': u'Single dataset'
         },
         'matrix': {
             'checkboxes': False,
             'has_csv_export': True,
             'options': ['matrix_omit_uniform'],
-            'hide': False,
             'title': u'Matrix'
         },
         'mobiledataset': {
             'checkboxes': False,
-            'hide': False,
             'title': u'Mobile: Dataset'
         },
         'mobilelist': {
             'checkboxes': False,
-            'hide': False,
             'title': u'Mobile: List'
         },
         'mobiletable': {
             'checkboxes': False,
-            'hide': False,
             'title': u'Mobile: Table'
         },
         'table': {
             'checkboxes': True,
-            'hide': False,
             'title': u'Table'
         },
         'tiled': {
             'checkboxes': True,
-            'hide': False,
             'title': u'Tiles'
         },
     }
@@ -126,7 +117,6 @@ def test_layout_properties():
         assert isinstance(plugin.title, str)
         assert spec["title"] == plugin.title
         assert spec["checkboxes"] == plugin.can_display_checkboxes
-        assert spec["hide"] == plugin.is_hidden
         assert spec.get("has_csv_export", False) == plugin.has_individual_csv_export
 
 

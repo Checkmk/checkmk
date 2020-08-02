@@ -766,10 +766,6 @@ class LayoutMobileTable(Layout):
     def can_display_checkboxes(self):
         return False
 
-    @property
-    def is_hidden(self):
-        return False
-
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         # TODO: Move to class
         render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes)
@@ -831,10 +827,6 @@ class LayoutMobileList(Layout):
     def can_display_checkboxes(self):
         return False
 
-    @property
-    def is_hidden(self):
-        return False
-
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         # TODO: Move to class
         render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes)
@@ -883,10 +875,6 @@ class LayoutMobileDataset(Layout):
 
     @property
     def can_display_checkboxes(self):
-        return False
-
-    @property
-    def is_hidden(self):
         return False
 
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):

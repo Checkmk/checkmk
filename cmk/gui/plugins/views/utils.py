@@ -339,11 +339,6 @@ class Layout(metaclass=abc.ABCMeta):
         """Whether this layout can display checkboxes for selecting rows"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
-    def is_hidden(self) -> bool:
-        """Whether this should be hidden from the user (e.g. in the view editor layout choice)"""
-        raise NotImplementedError()
-
     @property
     def painter_options(self) -> List[str]:
         """Returns the painter option identities used by this layout"""
@@ -370,9 +365,6 @@ class ViewLayoutRegistry(cmk.utils.plugin_registry.ClassRegistry):
         choices = []
         for plugin_class in self.values():
             layout = plugin_class()
-            if layout.is_hidden:
-                continue
-
             choices.append((layout.ident, layout.title))
 
         return choices

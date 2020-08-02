@@ -1414,13 +1414,13 @@ def process_view(view: View, view_renderer: ABCViewRenderer) -> None:
 
 
 def _process_regular_view(view: View, view_renderer: ABCViewRenderer) -> None:
-    all_active_filters = _get_view_filters(view, only_count=False)
+    all_active_filters = _get_view_filters(view)
     unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=False)
     _show_view(view, view_renderer, unfiltered_amount_of_rows, rows)
 
 
 def _process_availability_view(view: View) -> None:
-    all_active_filters = _get_view_filters(view, only_count=False)
+    all_active_filters = _get_view_filters(view)
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
 
     display_options.load_from_html()
@@ -1439,21 +1439,18 @@ def _process_availability_view(view: View) -> None:
 # TODO: Use livestatus Stats: instead of fetching rows?
 def get_row_count(view: View) -> int:
     """Returns the number of rows shown by a view"""
-    all_active_filters = _get_view_filters(view, only_count=True)
-    _unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=True)
-
-    # TODO: Check whether or not this really needs to be done this way. Would be better to use some
-    # variable stashing (html.stashed_vars())
-    # Seems to be the counter part of _get_view_filters -> add_context_to_uri_vars
-    for filter_vars in view.spec["context"].values():
-        for varname in filter_vars:
-            html.request.del_var(varname)
-
+    all_active_filters = _get_view_filters(view)
+    # This must not modify the request variables of the view currently being processed. It would be
+    # ideal to not deal with the global request variables data structure at all, but that would
+    # first need a rewrite of the visual filter processing.
+    with html.stashed_vars():
+        _unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=True)
     return len(rows)
 
 
 # TODO: Move to View
-def _get_view_filters(view: View, only_count: bool) -> "List[Filter]":
+# TODO: Investigate and cleanup the side effect of setting the HTTP request variables.
+def _get_view_filters(view: View) -> "List[Filter]":
     # FIXME TODO HACK to make grouping single contextes possible on host/service infos
     # Is hopefully cleaned up soon.
     if view.datasource.ident in ['hosts', 'services']:
@@ -1483,7 +1480,7 @@ def _get_view_filters(view: View, only_count: bool) -> "List[Filter]":
     #
     # a) single context vars of the view are enforced
     # b) multi context vars can be overwritten by existing HTML vars
-    visuals.add_context_to_uri_vars(view.spec["context"], view.spec["single_infos"], only_count)
+    visuals.add_context_to_uri_vars(view.spec["context"], view.spec["single_infos"])
 
     # Check that all needed information for configured single contexts are available
     visuals.verify_single_infos(view.spec, view.context)

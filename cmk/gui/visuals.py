@@ -1185,10 +1185,7 @@ def visible_filters_of_visual(visual, use_filters):
     return show_filters
 
 
-# TODO: Can we drop only_count here somehow? It is a view specific feature
-def add_context_to_uri_vars(context: VisualContext,
-                            single_infos: SingleInfos,
-                            only_count: bool = False) -> None:
+def add_context_to_uri_vars(context: VisualContext, single_infos: SingleInfos) -> None:
     """Populate the HTML vars with missing context vars
 
     The context vars set in single context are enforced (can not be overwritten by URL). The normal
@@ -1208,10 +1205,11 @@ def add_context_to_uri_vars(context: VisualContext,
         # This is a multi-context filter
         # We add the filter only if *none* of its HTML variables are present on the URL. This is
         # important because checkbox variables are not present if the box is not checked.
-        skip = any(html.request.has_var(uri_varname) for uri_varname in filter_vars)
-        if not skip or only_count:
-            for uri_varname in filter_vars.keys():
-                html.request.set_var(uri_varname, "%s" % uri_vars[uri_varname])
+        if any(html.request.has_var(uri_varname) for uri_varname in filter_vars):
+            continue
+
+        for uri_varname in filter_vars.keys():
+            html.request.set_var(uri_varname, "%s" % uri_vars[uri_varname])
 
 
 def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> HTTPVariables:

@@ -520,11 +520,7 @@ class GUIViewRenderer(ViewRenderer):
         has_done_actions = False
         row_count = len(rows)
 
-        # This is a general flag which makes the command form render when the current
-        # view might be able to handle commands. When no commands are possible due missing
-        # permissions or datasources without commands, the form is not rendered
-        command_form = should_show_command_form(self.view.datasource)
-
+        command_form = _should_show_command_form(self.view.datasource)
         if command_form:
             weblib.init_selection()
 
@@ -624,7 +620,7 @@ class GUIViewRenderer(ViewRenderer):
                     update_context_links(
                         # don't take display_options into account here ('c' is set during reload)
                         row_count > 0 and
-                        should_show_command_form(self.view.datasource, ignore_display_option=True),
+                        _should_show_command_form(self.view.datasource, ignore_display_option=True),
                         # and not html.do_actions(),
                         layout.can_display_checkboxes)
 
@@ -2297,10 +2293,13 @@ def get_painter_title_for_choices(painter: Painter) -> str:
 #   '----------------------------------------------------------------------'
 
 
-# Checks whether or not this view handles commands for the current user
-# When it does not handle commands the command tab, command form, row
-# selection and processing commands is disabled.
-def should_show_command_form(datasource, ignore_display_option=False):
+def _should_show_command_form(datasource: ABCDataSource,
+                              ignore_display_option: bool = False) -> bool:
+    """Whether or not this view handles commands for the current user
+
+    When it does not handle commands the command tab, command form, row
+    selection and processing commands is disabled.
+    """
     if not ignore_display_option and display_options.disabled(display_options.C):
         return False
     if not config.user.may("general.act"):

@@ -40,12 +40,12 @@ checks = {
             ]),
         ]),
         (None, {"levels": (367217200, 1565504900)}, [
-            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit at 350.21 MB/1.46 GB used)', [
+            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit at 350 MiB/1.46 GiB used)', [
                 ('mem_used', 367217213.44, 367217200.0, 1565504900.0, 0, 1932722176),
             ]),
         ]),
         (None, {"levels": (-1717986918, -1024**2)}, [
-            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit below 1.60 GB/1.00 MB free)', [
+            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit below 1.60 GiB/1.00 MiB free)', [
                 ('mem_used', 367217213.44, 214735258.0, 1931673600.0, 0, 1932722176),
             ]),
         ]),

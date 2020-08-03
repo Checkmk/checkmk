@@ -36,7 +36,7 @@ checks = {
             }, [
                 (
                     2,
-                    'Usage: 92.81% - 3.46 GB of 3.73 GB (warn/crit below 1.95 GB/1000.00 MB free)',
+                    'Usage: 92.81% - 3.46 GB of 3.73 GB (warn/crit below 1.95 GiB/1000 MiB free)',
                     [
                         (
                             'mem_used_percent', 92.81207602536634, 47.61387331970475,

@@ -73,7 +73,7 @@ checks = {
             None, (1500, 2000), [
                 (
                     2,
-                    'Total (RAM + Swap): 126% - 19.70 GB of 15.53 GB RAM (warn/crit at 1.46 GB/1.95 GB used)',
+                    'Total (RAM + Swap): 126% - 19.70 GB of 15.53 GB RAM (warn/crit at 1.46 GiB/1.95 GiB used)',
                     [
                         ('swap_used', 7674560512, None, None, 0, 68719407104),
                         ('mem_used', 13479337984, None, None, 0, 16673652736),

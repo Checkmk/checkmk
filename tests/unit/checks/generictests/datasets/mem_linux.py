@@ -56,7 +56,7 @@ checks = {
                 (0, 'Swap: 0.44% - 72.15 MB of 16.00 GB', []),
                 (
                     2,
-                    'Hardware Corrupted: 0.00002% - 6.00 kB of 23.56 GB RAM (warn/crit at 5.00 B/10.00 B used)',
+                    'Hardware Corrupted: 0.00002% - 6.00 kB of 23.56 GB RAM (warn/crit at 5 B/10 B used)',
                     []
                 ),
                 (

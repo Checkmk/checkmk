@@ -33,9 +33,9 @@ MEGA = KILO**2
         ("Longterm", 23 * MEGA, 42 * MEGA, ("perc_free", (60, 50)), {},
          (2, "Longterm: 54.76% - 23.00 MB of 42.00 MB (warn/crit below 60.0%/50.0% free)")),
         ("Longterm", 23 * MEGA, 42 * MEGA, ("abs_used", (10 * KILO, 20 * MEGA)), {},
-         (2, "Longterm: 54.76% - 23.00 MB of 42.00 MB (warn/crit at 10.00 kB/20.00 MB used)")),
+         (2, "Longterm: 54.76% - 23.00 MB of 42.00 MB (warn/crit at 10.0 KiB/20.0 MiB used)")),
         ("Longterm", 23 * MEGA, 42 * MEGA, ("abs_free", (20 * MEGA, 5 * MEGA)), {},
-         (1, "Longterm: 54.76% - 23.00 MB of 42.00 MB (warn/crit below 20.00 MB/5.00 MB free)")),
+         (1, "Longterm: 54.76% - 23.00 MB of 42.00 MB (warn/crit below 20.0 MiB/5.00 MiB free)")),
         # see if we get a metric, and show free
         ("Longterm", 23 * MEGA, 42 * MEGA, ("perc_free", (60, 50)), {
             "metric_name": "my_memory",
@@ -153,7 +153,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
             "levels": (20, 43)
         }, MEMINFO_SWAP_ZERO, [
             (1,
-             "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit at 20.00 MB/43.00 MB used)",
+             "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit at 20.0 MiB/43.0 MiB used)",
              [
                  ('swap_used', 0, None, None, 0, 0),
                  ('mem_used', 22020096, None, None, 0, 44040192),
@@ -166,7 +166,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
             "levels": (20, 20)
         }, MEMINFO_SWAP_ZERO, [
             (2,
-             "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit at 20.00 MB/20.00 MB used)",
+             "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit at 20.0 MiB/20.0 MiB used)",
              [
                  ('swap_used', 0, None, None, 0, 0),
                  ('mem_used', 22020096, None, None, 0, 44040192),
@@ -187,7 +187,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
         ]),
         ((-43, -3), MEMINFO_SWAP_ZERO, [
             (1,
-             "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit below 43.00 MB/3.00 MB free)",
+             "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit below 43.0 MiB/3.00 MiB free)",
              [
                  ('swap_used', 0, None, None, 0, 0),
                  ('mem_used', 22020096, None, None, 0, 44040192),
@@ -198,7 +198,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
         ]),
         ((-41, -41), MEMINFO_SWAP_ZERO, [
             (2,
-             "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit below 41.00 MB/41.00 MB free)",
+             "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit below 41.0 MiB/41.0 MiB free)",
              [
                  ('swap_used', 0, None, None, 0, 0),
                  ('mem_used', 22020096, None, None, 0, 44040192),
@@ -287,7 +287,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
             "levels": (23, 43)
         }, MEMINFO_SWAP, [
             (1,
-             "Total (RAM + Swap): 100% - 42.00 MB of 42.00 MB RAM (warn/crit at 23.00 MB/43.00 MB used)",
+             "Total (RAM + Swap): 100% - 42.00 MB of 42.00 MB RAM (warn/crit at 23.0 MiB/43.0 MiB used)",
              [
                  ('swap_used', 22020096, None, None, 0, 44040192),
                  ('mem_used', 22020096, None, None, 0, 44040192),
@@ -301,7 +301,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
             "levels": (23, 23)
         }, MEMINFO_SWAP, [
             (2,
-             "Total (RAM + Swap): 100% - 42.00 MB of 42.00 MB RAM (warn/crit at 23.00 MB/23.00 MB used)",
+             "Total (RAM + Swap): 100% - 42.00 MB of 42.00 MB RAM (warn/crit at 23.0 MiB/23.0 MiB used)",
              [
                  ('swap_used', 22020096, None, None, 0, 44040192),
                  ('mem_used', 22020096, None, None, 0, 44040192),

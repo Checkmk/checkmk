@@ -41,7 +41,7 @@ checks = {
                 (0, 'Swap: 15.23% - 194.90 MB of 1.25 GB', []),
                 (
                     2,
-                    'Largest Free VMalloc Chunk: 0% free - 2.00 kB of 32.00 TB VMalloc Area (warn/crit below 50.00 MB/30.00 MB free)',
+                    'Largest Free VMalloc Chunk: 0% free - 2.00 kB of 32.00 TB VMalloc Area (warn/crit below 50.0 MiB/30.0 MiB free)',
                     []
                 ),
                 (

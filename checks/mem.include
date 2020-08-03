@@ -8,6 +8,7 @@ from typing import NamedTuple
 
 from cmk.base.plugins.agent_based.utils.memory import (
     compute_state,
+    get_levels_mode_from_value,
     normalize_levels as normalize_mem_levels,
 )
 
@@ -38,20 +39,6 @@ class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', flo
 
     def render(self):
         return get_bytes_human_readable(self.bytes, base=1024)
-
-
-def get_levels_mode_from_value(warn):
-    """get levels mode by looking at the value
-
-    Levels may be given either as
-     * positive int -> absolute levels on used
-     * negative int -> absolute levels on free
-     * positive float -> percentages on used
-     * negative float -> percentages on free
-    """
-    type_ = "perc" if isinstance(warn, float) else "abs"
-    reference = "used" if warn is not None and warn > 0 else "free"
-    return "%s_%s" % (type_, reference)
 
 
 def _compute_state(value, warn, crit):

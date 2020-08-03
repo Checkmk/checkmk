@@ -14,6 +14,26 @@ def is_linux_section(section: Dict[str, int]) -> bool:
     return {"PageTables", "Writeback", "Committed_AS"} <= section.keys()
 
 
+def get_levels_mode_from_value(warn: Optional[float]) -> str:
+    """get levels mode by looking at the value
+
+    Levels may be given either as
+     * positive int -> absolute levels on used
+     * negative int -> absolute levels on free
+     * positive float -> percentages on used
+     * negative float -> percentages on free
+
+        >>> get_levels_mode_from_value(-23.)
+        'perc_free'
+        >>> get_levels_mode_from_value(23)
+        'abs_used'
+
+    """
+    type_ = "perc" if isinstance(warn, float) else "abs"
+    reference = "used" if warn is not None and warn > 0 else "free"
+    return "%s_%s" % (type_, reference)
+
+
 def normalize_levels(
     mode: str,
     warn: Optional[float],

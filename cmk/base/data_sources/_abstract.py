@@ -112,9 +112,9 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def add_cached_section(
         self,
         section_name: SectionName,
-        section: BoundedAbstractSectionContent,
         persisted_from: int,
         persisted_until: int,
+        section: BoundedAbstractSectionContent,
     ) -> None:
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
         # TODO: Find out why mypy complains about this
@@ -333,9 +333,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                 section_store.store(persisted_sections)
 
             # Add information from previous persisted infos
-            host_sections = self._update_info_with_persisted_sections(
-                persisted_sections,
+            self._update_info_with_persisted_sections(
                 host_sections,
+                persisted_sections,
+                logger=self._logger,
             )
 
             return host_sections
@@ -513,33 +514,27 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         """Provides exceptions happened during last self.run() call or None"""
         return self._exception
 
+    @staticmethod
     def _update_info_with_persisted_sections(
-        self,
-        persisted_sections: BoundedAbstractPersistedSections,
         host_sections: BoundedAbstractHostSections,
-    ) -> BoundedAbstractHostSections:
+        persisted_sections: BoundedAbstractPersistedSections,
+        *,
+        logger: logging.Logger,
+    ) -> None:
         if not persisted_sections:
-            return host_sections
+            return
 
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:
                 continue  # Skip entries of "old" format
 
-            persisted_from, persisted_until, section_info = entry
-
             # Don't overwrite sections that have been received from the source with this call
             if section_name in host_sections.sections:
-                self._logger.debug("Skipping persisted section %r, live data available",
-                                   section_name)
-            else:
-                self._logger.debug("Using persisted section %r", section_name)
-                host_sections.add_cached_section(
-                    section_name,
-                    section_info,
-                    persisted_from,
-                    persisted_until,
-                )
-        return host_sections
+                logger.debug("Skipping persisted section %r, live data available", section_name)
+                continue
+
+            logger.debug("Using persisted section %r", section_name)
+            host_sections.add_cached_section(section_name, *entry)
 
     @classmethod
     def use_outdated_persisted_sections(cls) -> None:

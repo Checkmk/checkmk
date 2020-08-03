@@ -2762,7 +2762,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'sap.dialog',
         'sap.value',
         'sap.value_groups',
-        'sap_hana_backup',
         'sap_hana_connect',
         'sap_hana_data_volume',
         'sap_hana_diskusage',

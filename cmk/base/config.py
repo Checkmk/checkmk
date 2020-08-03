@@ -443,7 +443,10 @@ def _transform_plugin_names_from_160_to_170(global_dict: Dict[str, Any]) -> None
 def _collect_discovery_parameter_rulesets_from_globals(global_dict: Dict[str, Any],) -> None:
     # list of discovery ruleset names which are used in migrated AND in legacy code; can be removed
     # once we have no such cases any more
-    partially_migrated = ["diskstat_inventory"]
+    partially_migrated = [
+        "diskstat_inventory",
+        "inventory_if_rules",
+    ]
     for ruleset_name in agent_based_register.iter_all_discovery_rulesets():
         var_name = str(ruleset_name)
         if var_name in global_dict:

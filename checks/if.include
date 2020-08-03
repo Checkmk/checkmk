@@ -14,9 +14,7 @@ import cmk.base.plugins.agent_based.utils.interfaces as interfaces
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-IF_CHECK_DEFAULT_PARAMETERS = {
-    "errors": (0.01, 0.1),
-}
+IF_CHECK_DEFAULT_PARAMETERS = interfaces.CHECK_DEFAULT_PARAMETERS
 
 # ==================================================================================================
 # THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
@@ -27,15 +25,16 @@ IF_CHECK_DEFAULT_PARAMETERS = {
 # ANYTHING ELSE.
 # ==================================================================================================
 # Functions and definitions used by if and if64
-if_inventory_porttypes = [
-    '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'
-]
-if_inventory_portstates = ['1']
+if_inventory_porttypes = interfaces.DISCOVERY_DEFAULT_PARAMETERS['matching_conditions'][1][
+    'porttypes']
+if_inventory_portstates = interfaces.DISCOVERY_DEFAULT_PARAMETERS['matching_conditions'][1][
+    'portstates']
 if_inventory_uses_description = False
 if_inventory_uses_alias = False
-if_inventory_pad_portnumbers = True
-if_inventory_monitor_speed = True
-if_inventory_monitor_state = True
+if_inventory_pad_portnumbers = interfaces.DISCOVERY_DEFAULT_PARAMETERS['discovery_single'][1][
+    'pad_portnumbers']
+if_inventory_monitor_speed = interfaces.discovery_monitor_speed
+if_inventory_monitor_state = interfaces.discovery_monitor_state
 inventory_if_rules = []
 
 # Grouping of if ports
@@ -220,11 +219,7 @@ def fix_if_64_highspeed(info):
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-def cleanup_if_strings(s):
-    if s and s != '':
-        return "".join([c for c in s if c != chr(0)]).strip()
-    return s
-
+cleanup_if_strings = interfaces.cleanup_if_strings
 
 # This variant of int() lets the string if its not
 # convertable. Useful for parsing dict-like things, where
@@ -237,12 +232,7 @@ def cleanup_if_strings(s):
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-def tryint(x):
-    try:
-        return int(x)
-    except (TypeError, ValueError):
-        return x
-
+tryint = interfaces.tryint
 
 # Name of state (lookup SNMP enum)
 # ==================================================================================================
@@ -253,19 +243,7 @@ def tryint(x):
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-def if_statename(st):
-    names = {
-        '1': 'up',
-        '2': 'down',
-        '3': 'testing',
-        '4': 'unknown',
-        '5': 'dormant',
-        '6': 'not present',
-        '7': 'lower layer down',
-        '8': 'degraded',
-        '9': 'admin down',
-    }
-    return names.get(st, st)
+if_statename = interfaces.statename
 
 
 # ==================================================================================================
@@ -292,7 +270,6 @@ def if_extract_node(line, has_nodeinfo):
 # ==================================================================================================
 if_render_mac_address = interfaces.render_mac_address
 
-
 # ==================================================================================================
 # THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FILE ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
@@ -301,13 +278,7 @@ if_render_mac_address = interfaces.render_mac_address
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-def if_item_matches(item, ifIndex, ifAlias, ifDescr):
-    return item.lstrip("0") == ifIndex \
-            or (item == "0" * len(item) and saveint(ifIndex) == 0) \
-            or item == ifAlias \
-            or item == ifDescr \
-            or item == "%s %s" % (ifAlias, ifIndex) \
-            or item == "%s %s" % (ifDescr, ifIndex)
+if_item_matches = interfaces.item_matches
 
 
 # Pads port numbers with zeroes, so that items
@@ -346,53 +317,7 @@ def if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers):
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-def if_get_traffic_levels(params):
-    # Transform old style traffic parameters to new CascadingDropdown based data format
-    new_traffic = []
-    if 'traffic' in params and not isinstance(params['traffic'], list):
-        warn, crit = params['traffic']
-        if warn is None:
-            new_traffic.append(('both', ('upper', (None, (None, None)))))
-        elif isinstance(warn, int):
-            new_traffic.append(('both', ('upper', ('abs', (warn, crit)))))
-        elif isinstance(warn, float):
-            new_traffic.append(('both', ('upper', ('perc', (warn, crit)))))
-
-    if 'traffic_minimum' in params:
-        warn, crit = params['traffic_minimum']
-        if isinstance(warn, int):
-            new_traffic.append(('both', ('lower', ('abs', (warn, crit)))))
-        elif isinstance(warn, float):
-            new_traffic.append(('both', ('lower', ('perc', (warn, crit)))))
-        del params['traffic_minimum']
-
-    if new_traffic:
-        traffic_levels = new_traffic
-    else:
-        traffic_levels = params.get('traffic', [])
-
-    # Now bring the levels in a structure which is easily usable for the check
-    # and also convert direction="both" to single in/out entries
-    levels = {
-        ('in', 'upper'): (None, (None, None)),
-        ('out', 'upper'): (None, (None, None)),
-        ('in', 'lower'): (None, (None, None)),
-        ('out', 'lower'): (None, (None, None)),
-    }
-    for level in traffic_levels:
-        traffic_dir = level[0]
-        up_or_low = level[1][0]
-        level_type = level[1][1][0]
-        level_value = level[1][1][1]
-
-        if traffic_dir == 'both':
-            levels[('in', up_or_low)] = (level_type, level_value)
-            levels[('out', up_or_low)] = (level_type, level_value)
-        else:
-            levels[(traffic_dir, up_or_low)] = (level_type, level_value)
-
-    return levels
-
+if_get_traffic_levels = interfaces.get_traffic_levels
 
 # ==================================================================================================
 # THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
@@ -402,39 +327,7 @@ def if_get_traffic_levels(params):
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-def get_specific_traffic_levels(general_traffic_levels, unit, ref_speed, assumed_speed_in,
-                                assumed_speed_out):
-    traffic_levels = {}
-    for (traffic_dir, up_or_low), (level_type, levels) in general_traffic_levels.items():
-        if not isinstance(levels, tuple):
-            traffic_levels[(traffic_dir, 'predictive')] = levels
-            traffic_levels[(traffic_dir, up_or_low, 'warn')] = None
-            traffic_levels[(traffic_dir, up_or_low, 'crit')] = None
-            continue  # don't convert predictive levels config
-        else:
-            warn, crit = levels
-
-        for what, level_value in [('warn', warn), ('crit', crit)]:
-            # If the measurement unit is set to bit and the bw levels
-            # are of type absolute, convert these 'bit' entries to byte
-            # still reported as bytes to stay compatible with older rrd data
-            if unit == 'Bit' and level_type == 'abs':
-                level_value = level_value // 8
-            elif level_type == 'perc':
-                # convert percentages to absolute values. Use either the assumed speed
-                # or the reference speed. When none of both are available, ignore
-                # the percentual levels
-                if traffic_dir == 'in' and assumed_speed_in:
-                    level_value = level_value / 100.0 * assumed_speed_in / 8
-                elif traffic_dir == 'out' and assumed_speed_out:
-                    level_value = level_value / 100.0 * assumed_speed_out / 8
-                elif ref_speed:
-                    level_value = level_value / 100.0 * ref_speed
-                else:
-                    level_value = None
-
-            traffic_levels[(traffic_dir, up_or_low, what)] = level_value  # bytes
-    return traffic_levels
+get_specific_traffic_levels = interfaces.get_specific_traffic_levels
 
 
 # ==================================================================================================
@@ -546,6 +439,26 @@ def _group_pattern_matches(host_name, item, if_type, group_attributes):
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
+def _transform_discovery_params_backwards(params):
+    single_interface_discovery = params.get('discovery_single', (None, {}))[1]
+    for key in ["item_appearance", "pad_portnumbers"]:
+        if key in single_interface_discovery:
+            params[key] = single_interface_discovery[key]
+
+    matching_conditions = params.get('matching_conditions', (None, {}))[1]
+    for key in ['match_alias', 'match_desc', 'portstates', 'porttypes']:
+        if key in matching_conditions:
+            params[key] = matching_conditions[key]
+
+
+# ==================================================================================================
+# THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
+# THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FILE ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
+# RESIDING IN
+# cmk/base/plugins/agent_based/utils/if.py
+# IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
+# ANYTHING ELSE.
+# ==================================================================================================
 def inventory_if_common(info, has_nodeinfo=False):
     if has_nodeinfo:
         length = 21
@@ -574,6 +487,7 @@ def inventory_if_common(info, has_nodeinfo=False):
     current_host_name = host_name()
     group_patterns = _prepare_if_group_patterns_from_conf()
     for settings in settings_sets:
+        _transform_discovery_params_backwards(settings)
         global_seen_items = set()
         uses_description, uses_alias = _uses_description_and_alias(settings)
         # Need to copy porttypes as the discovery function appends to the list below.

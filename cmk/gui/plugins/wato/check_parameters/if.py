@@ -6,6 +6,7 @@
 
 from typing import Any, List, Tuple as _Tuple, Union
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -14,6 +15,7 @@ from cmk.gui.valuespec import (
     DictionaryEntry,
     DropdownChoice,
     DualListChoice,
+    FixedValue,
     Integer,
     ListChoice,
     ListOf,
@@ -85,7 +87,209 @@ def transform_if_groups_forth(params):
     return params
 
 
+def _vs_item_appearance(title, help_txt):
+    return DropdownChoice(
+        title=title,
+        choices=[
+            ('index', _('Use index')),
+            ('descr', _('Use description')),
+            ('alias', _('Use alias')),
+        ],
+        default_value='index',
+        help=help_txt,
+    )
+
+
+def _vs_single_discovery():
+    return CascadingDropdown(
+        title=_("Configure discovery of single interfaces"),
+        choices=[
+            (
+                True,
+                _("Discover single interfaces"),
+                Dictionary(
+                    elements=[
+                        (
+                            'item_appearance',
+                            _vs_item_appearance(
+                                _("Appearance of network interface"),
+                                _("This option makes checkmk use either the interface description, "
+                                  "alias or port number as item."),
+                            ),
+                        ),
+                        (
+                            "pad_portnumbers",
+                            DropdownChoice(
+                                choices=[
+                                    (True, _('Pad port numbers with zeros')),
+                                    (False, _('Do not pad')),
+                                ],
+                                title=_("Port numbers"),
+                                help=_(
+                                    "If this option is activated, checkmk will pad port numbers of "
+                                    "network interfaces with zeroes so that the descriptions of all "
+                                    "ports of a host or switch have the same length and thus are "
+                                    "sorted correctly in the GUI."),
+                            ),
+                        ),
+                    ],
+                    optional_keys=False,
+                ),
+            ),
+            (
+                False,
+                _("Do not discover single interfaces"),
+                FixedValue(
+                    {},
+                    totext="",
+                ),
+            ),
+        ],
+        sorted=False,
+    )
+
+
+def _vs_grouping():
+    return CascadingDropdown(
+        title=_("Configure grouping of interfaces"),
+        help=_(
+            'Normally, the interface checks create a single service for each interface. By defining '
+            'interface groups, multiple interfaces can be combined together. For each group, a '
+            'single service is created. This services reports the total traffic amount summed over '
+            'all group members.'),
+        choices=[
+            (
+                False,
+                _("Do not group interfaces"),
+                FixedValue(
+                    [],
+                    totext="",
+                ),
+            ),
+            (
+                True,
+                _("Create the following interface groups"),
+                ListOf(
+                    title=_("Interface groups"),
+                    add_label=_("Add pattern"),
+                    valuespec=Dictionary(
+                        elements=[
+                            (
+                                "group_name",
+                                TextAscii(
+                                    title=_("Group name"),
+                                    help=_("Name of group in service description"),
+                                    allow_empty=False,
+                                ),
+                            ),
+                            (
+                                'member_appearance',
+                                _vs_item_appearance(
+                                    _("Appearance of group members in service output"),
+                                    _("When listing the group members in the output of the service "
+                                      "monitoring the group, this option makes checkmk use either "
+                                      "the interface description, alias or port number."),
+                                ),
+                            ),
+                        ],
+                        optional_keys=False,
+                    ),
+                    allow_empty=False,
+                ),
+            ),
+        ],
+        sorted=False,
+    )
+
+
+def _vs_regex_matching(match_obj):
+    return ListOfStrings(
+        title=_("Match interface %s (regex)" % match_obj),
+        help=_("Apply this rule only to interfaces whose %s matches one of the configured regular "
+               "expressions. The match is done on the beginning of the %s." %
+               (match_obj, match_obj)),
+        orientation="horizontal",
+        valuespec=RegExp(
+            size=32,
+            mode=RegExp.prefix,
+        ),
+    )
+
+
+def _vs_matching_conditions():
+    return CascadingDropdown(
+        title=_("Conditions for this rule to apply"),
+        help=_(
+            "Here, you can define conditions for applying this rule. These conditions are evaluated "
+            "on a per-interface basis. When discovering an interface, checkmk will first find all "
+            "rules whose conditions match this interface. Then, these rules are merged together, "
+            "whereby rules from subfolders overwrite rules from the main directory. Within a "
+            "directory, the order of the rules matters, i.e., rules further below in the list are "
+            "overwritten by rules further up."),
+        choices=[
+            (
+                True,
+                _("Match all interfaces"),
+                FixedValue(
+                    {},
+                    totext="",
+                ),
+            ),
+            (
+                False,
+                _("Specify matching conditions"),
+                Dictionary(elements=[
+                    (
+                        "porttypes",
+                        DualListChoice(
+                            title=_("Match port types"),
+                            help=_("Apply this rule only to interfaces whose port type is listed "
+                                   "below."),
+                            choices=defines.interface_port_types(),
+                            rows=40,
+                            default_value=[
+                                '6', '32', '62', '117', '127', '128', '129', '180', '181', '182',
+                                '205', '229'
+                            ],
+                        ),
+                    ),
+                    (
+                        "portstates",
+                        ListChoice(
+                            title=_("Match port states"),
+                            help=_(
+                                "Apply this rule only to interfaces whose port state is listed "
+                                "below. Note: the state <i>admin down</i> is in fact not a port "
+                                "state but represents an <tt>ifAdminStatus</tt> (SNMP only) of "
+                                "<tt>down</tt> - a port administratively switched off. If you check "
+                                "this option, <tt>ifAdminState</tt> will be fetched in addition, "
+                                "adding approximately 5% of additional SNMP traffic."),
+                            choices=defines.interface_oper_states(),
+                            toggle_all=True,
+                            default_value=['1'],
+                        ),
+                    ),
+                    (
+                        "match_index",
+                        _vs_regex_matching("index"),
+                    ),
+                    (
+                        "match_alias",
+                        _vs_regex_matching("alias"),
+                    ),
+                    (
+                        "match_desc",
+                        _vs_regex_matching("description"),
+                    ),
+                ],),
+            ),
+        ],
+        sorted=False,
+    )
+
+
 def _transform_discovery_if_rules(params):
+
     use_alias = params.pop('use_alias', None)
     if use_alias:
         params['item_appearance'] = 'alias'
@@ -99,102 +303,67 @@ def _transform_discovery_if_rules(params):
     # rmon_stats has been moved to a separate host rulespec (rmon_discovery).
     params.pop('rmon', None)
 
+    single_interface_discovery_settings = {}
+    for key in ["item_appearance", "pad_portnumbers"]:
+        if key in params:
+            single_interface_discovery_settings[key] = params.pop(key)
+    if single_interface_discovery_settings:
+        single_interface_discovery_settings.setdefault("item_appearance", "index")
+        single_interface_discovery_settings.setdefault("pad_portnumbers", True)
+        params['discovery_single'] = (True, single_interface_discovery_settings)
+
+    if 'matching_conditions' not in params:
+        params['matching_conditions'] = (True, {})
+    for key in ['match_alias', 'match_desc', 'portstates', 'porttypes']:
+        if key in params:
+            params['matching_conditions'][1][key] = params.pop(key)
+            params['matching_conditions'] = (False, params['matching_conditions'][1])
+
     return params
+
+
+def _validate_valuespec_inventory_if_rules(value, varprefix):
+    if 'grouping' not in value and 'discovery_single' not in value:
+        raise MKUserError(
+            varprefix,
+            _("Please configure at least either the discovery of single interfaces or the grouping"
+             ),
+        )
 
 
 def _valuespec_inventory_if_rules():
     return Transform(
         Dictionary(
             title=_("Network Interface and Switch Port Discovery"),
+            help=_(
+                "Configure the discovery of services monitoring network interfaces and switch "
+                "ports. Note that this rule is a somewhat special case compared to most other "
+                "rules in checkmk. Usually, the conditions for applying a rule are configured "
+                "exclusively below in the section 'Conditions'. However, here, you can define "
+                "additional conditions using the options offered by 'Conditions for this rule to "
+                "apply'. These conditions are evaluated on a per-interface basis and allow for "
+                "configuring the discovery of the corresponding services very finely. For example, "
+                "you can make checkmk discover only interfaces whose alias matches the regex 'eth' "
+                "or exclude certain port types or states from being discoverd. Note that saving a "
+                "rule which has only conditions specified is not allowed and will result in an "
+                "error. The reason is that such a rule would have no effect."),
             elements=[
-                ('item_appearance',
-                 DropdownChoice(
-                     title=_("Appearance of network interface"),
-                     help=_(
-                         "This option lets Check_MK use either the interface description, alias or "
-                         " port number as item. The port number is the fallback/default."
-                         "used anyway."),
-                     choices=[
-                         ('descr', _('Use description')),
-                         ('alias', _('Use alias')),
-                         ('index', _('Use index')),
-                     ],
-                     default_value='index',
-                 )),
-                ("pad_portnumbers",
-                 DropdownChoice(
-                     choices=[
-                         (True, _('Pad port numbers with zeros')),
-                         (False, _('Do not pad')),
-                     ],
-                     title=_("Port numbers"),
-                     help=_("If this option is activated then Check_MK will pad port numbers of "
-                            "network interfaces with zeroes so that all port descriptions from "
-                            "all ports of a host or switch have the same length and thus sort "
-                            "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
-                            "padding. You can switch back to the old behaviour by disabling this "
-                            "option. This will retain the old service descriptions and the old "
-                            "performance data."),
-                 )),
-                ("match_alias",
-                 ListOfStrings(
-                     title=_("Match interface alias (regex)"),
-                     help=_(
-                         "Only discover interfaces whose alias matches one of the configured "
-                         "regular expressions. The match is done on the beginning of the alias. "
-                         "This allows you to select interfaces based on the alias without having "
-                         "the alias be part of the service description."),
-                     orientation="horizontal",
-                     valuespec=RegExp(
-                         size=32,
-                         mode=RegExp.prefix,
-                     ),
-                 )),
-                ("match_desc",
-                 ListOfStrings(
-                     title=_("Match interface description (regex)"),
-                     help=
-                     _("Only discover interfaces whose the description matches one of the configured "
-                       "regular expressions. The match is done on the beginning of the description. "
-                       "This allows you to select interfaces based on the description without having "
-                       "the alias be part of the service description."),
-                     orientation="horizontal",
-                     valuespec=RegExp(
-                         size=32,
-                         mode=RegExp.prefix,
-                     ),
-                 )),
-                ("portstates",
-                 ListChoice(
-                     title=_("Network interface port states to discover"),
-                     help=
-                     _("When doing discovery on switches or other devices with network interfaces "
-                       "then only ports found in one of the configured port states will be added to the monitoring. "
-                       "Note: the state <i>admin down</i> is in fact not an <tt>ifOperStatus</tt> but represents the "
-                       "<tt>ifAdminStatus</tt> of <tt>down</tt> - a port administratively switched off. If you check this option "
-                       "then an alternate version of the check is being used that fetches the <tt>ifAdminState</tt> in addition. "
-                       "This will add about 5% of additional SNMP traffic."),
-                     choices=defines.interface_oper_states(),
-                     toggle_all=True,
-                     default_value=['1'],
-                 )),
-                ("porttypes",
-                 DualListChoice(
-                     title=_("Network interface port types to discover"),
-                     help=_(
-                         "When doing discovery on switches or other devices with network interfaces "
-                         "then only ports of the specified types will be created services for."),
-                     choices=defines.interface_port_types(),
-                     rows=40,
-                     default_value=[
-                         '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205',
-                         '229'
-                     ],
-                 )),
+                (
+                    "discovery_single",
+                    _vs_single_discovery(),
+                ),
+                (
+                    "grouping",
+                    _vs_grouping(),
+                ),
+                (
+                    "matching_conditions",
+                    _vs_matching_conditions(),
+                ),
             ],
-            help=_('This rule can be used to control the inventory for network ports. '
-                   'You can configure the port types and port states for inventory '
-                   'and the use of alias or description as service name.'),
+            optional_keys=['discovery_single', 'grouping'],
+            default_keys=['discovery_single'],
+            validate=_validate_valuespec_inventory_if_rules,
         ),
         forth=_transform_discovery_if_rules,
     )
@@ -291,6 +460,7 @@ def _valuespec_if_groups():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersNetworking,
+        is_deprecated=True,
         match_type="all",
         name="if_groups",
         valuespec=_valuespec_if_groups,
@@ -350,7 +520,11 @@ def _parameter_valuespec_if():
     # keys where each was configured with an Alternative valuespec
     return Transform(
         Dictionary(
-            ignored_keys=["aggregate"],  # Created by discovery when using interface grouping
+            ignored_keys=[
+                "aggregate",
+                "discovered_state",
+                "discovered_speed",
+            ],  # Created by discovery
             elements=[
                 ("errors_in", _vs_if_errors("IN")),
                 ("errors_out", _vs_if_errors("OUT")),

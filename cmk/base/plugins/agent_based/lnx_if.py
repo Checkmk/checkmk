@@ -4,12 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import asdict
 from typing import (
     Dict,
+    Iterable,
+    Mapping,
     Sequence,
+    Tuple,
     Union,
 )
-from .agent_based_api.v0 import register
+from .agent_based_api.v0 import (
+    register,
+    type_defs,
+)
+from .utils import interfaces
 
 # Example output from agent:
 
@@ -52,9 +60,12 @@ from .agent_based_api.v0 import register
 #         Auto-negotiation: on
 #         Link detected: yes
 
+SectionInventory = Dict[str, Dict[str, Union[str, Sequence[str]]]]
+Section = Tuple[interfaces.Section, SectionInventory]
 
-def _parse_lnx_if_ipaddress(lines):
-    ip_stats: Dict[str, Dict[str, Union[str, Sequence[str]]]] = {}
+
+def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
+    ip_stats: SectionInventory = {}
     iface = None
     for line in lines:
         if line == ['[end_iplink]']:
@@ -92,7 +103,7 @@ def _parse_lnx_if_ipaddress(lines):
     return ip_stats
 
 
-def _parse_lnx_if_sections(string_table):
+def _parse_lnx_if_sections(string_table: type_defs.AgentStringTable):
     ip_stats = {}
     ethtool_stats: Dict[str, Dict[str, Union[str, int, Sequence[int]]]] = {}
     iface = None
@@ -130,7 +141,7 @@ def _parse_lnx_if_sections(string_table):
     return ip_stats, ethtool_stats
 
 
-def parse_lnx_if(string_table):
+def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
     ip_stats, ethtool_stats = _parse_lnx_if_sections(string_table)
 
     nic_info = []
@@ -213,32 +224,29 @@ def parse_lnx_if(string_table):
         else:
             ifPhysAddress = ''
 
-        row = [
-            str(i) for i in (
-                ifIndex,
-                ifDescr,
-                ifType,
-                ifSpeed,
-                ifOperStatus,
-                ifInOctets,
-                inucast,
-                inmcast,
-                inbcast,
-                ifInDiscards,
-                ifInErrors,
-                ifOutOctets,
-                outucast,
-                outmcast,
-                outbcast,
-                ifOutDiscards,
-                ifOutErrors,
-                ifOutQLen,
-                ifAlias,
-                ifPhysAddress,
-            )
-        ]
-
-        if_table.append(row)
+        interface = interfaces.PreInterface(
+            index=str(ifIndex),
+            descr=str(ifDescr),
+            type=str(ifType),
+            speed=ifSpeed,
+            oper_status=str(ifOperStatus),
+            in_octets=ifInOctets,
+            in_ucast=inucast,
+            in_mcast=inmcast,
+            in_bcast=inbcast,
+            in_discards=ifInDiscards,
+            in_errors=ifInErrors,
+            out_octets=ifOutOctets,
+            out_ucast=outucast,
+            out_mcast=outmcast,
+            out_bcast=outbcast,
+            out_discards=ifOutDiscards,
+            out_errors=ifOutErrors,
+            out_qlen=ifOutQLen,
+            alias=ifAlias,
+            phys_address=ifPhysAddress,
+        )
+        if_table.append(interfaces.finalize_interface(interface))
 
     return if_table, ip_stats
 
@@ -246,4 +254,61 @@ def parse_lnx_if(string_table):
 register.agent_section(
     name="lnx_if",
     parse_function=parse_lnx_if,
+)
+
+
+def discover_lnx_if(
+    params: Sequence[type_defs.Parameters],
+    section: Section,
+) -> type_defs.DiscoveryGenerator:
+    # Always exclude dockers veth* interfaces on docker nodes
+    if_table = [iface for iface in section[0] if not iface.descr.startswith("veth")]
+    yield from interfaces.discover_interfaces(
+        params,
+        if_table,
+    )
+
+
+def check_lnx_if(
+    item: str,
+    params: type_defs.Parameters,
+    section: Section,
+) -> type_defs.CheckGenerator:
+    yield from interfaces.check_multiple_interfaces(
+        item,
+        params,
+        section[0],
+    )
+
+
+def cluster_check_lnx_if(
+    item: str,
+    params: type_defs.Parameters,
+    section: Mapping[str, Section],
+) -> type_defs.CheckGenerator:
+
+    ifaces = [
+        interfaces.Interface(**{  # type: ignore[arg-type]
+            **asdict(iface), "node": node
+        }) for node, (node_ifaces, _) in section.items() for iface in node_ifaces
+    ]
+
+    yield from interfaces.check_multiple_interfaces(
+        item,
+        params,
+        ifaces,
+    )
+
+
+register.check_plugin(
+    name="lnx_if",
+    service_name="Interface %s",
+    discovery_ruleset_name="inventory_if_rules",
+    discovery_ruleset_type="all",
+    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+    discovery_function=discover_lnx_if,
+    check_ruleset_name="if",
+    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
+    check_function=check_lnx_if,
+    cluster_check_function=cluster_check_lnx_if,
 )

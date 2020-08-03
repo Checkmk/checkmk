@@ -93,7 +93,7 @@ try:
 
     sys.exit(exit_status)
 
-except MKTerminate as e:
+except MKTerminate:
     sys.stderr.write("<Interrupted>\n")
     sys.exit(1)
 

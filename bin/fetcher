@@ -13,12 +13,8 @@ from typing import NoReturn
 from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
 from cmk.utils.type_defs import HostName
 
-try:
-    import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
-    import cmk.fetchers.controller as controller  # pylint: disable=cmk-module-layer-violation
-except ImportError as e:
-    sys.stderr.write("Fetcher can be used only as site user.\n")
-    sys.exit(1)
+import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
+import cmk.fetchers.controller as controller  # pylint: disable=cmk-module-layer-violation
 
 opt_debug = False
 

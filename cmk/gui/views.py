@@ -564,7 +564,7 @@ class GUIViewRenderer(ABCViewRenderer):
             breadcrumb = self.view.breadcrumb()
             html.top_heading(view_title(view_spec),
                              breadcrumb,
-                             page_menu=self._page_menu(breadcrumb, rows))
+                             page_menu=self._page_menu(breadcrumb, rows, show_filters))
             html.begin_page_content()
 
         has_done_actions = False
@@ -586,10 +586,9 @@ class GUIViewRenderer(ABCViewRenderer):
         # User errors in filters
         html.show_user_errors()
 
-        # Filter form
-        filter_isopen = view_spec.get("mustsearch") and not html.request.var("filled_in")
-        if display_options.enabled(display_options.F) and len(show_filters) > 0:
-            show_filter_form(filter_isopen, show_filters)
+        # Display the filter form on page rendering in some cases
+        if view_spec.get("mustsearch") and not html.request.var("filled_in"):
+            html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
 
         # Actions
         if command_form:
@@ -698,7 +697,8 @@ class GUIViewRenderer(ABCViewRenderer):
         if display_options.enabled(display_options.H):
             html.body_end()
 
-    def _page_menu(self, breadcrumb: Breadcrumb, rows: "Rows") -> PageMenu:
+    def _page_menu(self, breadcrumb: Breadcrumb, rows: "Rows",
+                   show_filters: "List[Filter]") -> PageMenu:
         if not display_options.enabled(display_options.B):
             return PageMenu()  # No buttons -> no menu
 
@@ -725,7 +725,7 @@ class GUIViewRenderer(ABCViewRenderer):
             breadcrumb=breadcrumb,
         )
 
-        self._extend_display_dropdown(menu)
+        self._extend_display_dropdown(menu, show_filters)
         self._extend_help_dropdown(menu)
 
         return menu
@@ -867,7 +867,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 name=buttonid,
             )
 
-    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+    def _extend_display_dropdown(self, menu: PageMenu, show_filters: "List[Filter]") -> None:
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
         display_dropdown.topics.insert(
@@ -887,18 +887,19 @@ class GUIViewRenderer(ABCViewRenderer):
 
         if display_options.enabled(display_options.F):
             display_dropdown.topics.insert(
-                0, PageMenuTopic(
+                0,
+                PageMenuTopic(
                     title=_("Filter"),
-                    entries=list(self._page_menu_entries_filter()),
+                    entries=list(self._page_menu_entries_filter(show_filters)),
                 ))
 
-    def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_filter(self, show_filters: "List[Filter]") -> Iterator[PageMenuEntry]:
         is_filter_set = html.request.var("filled_in") == "filter"
 
         yield PageMenuEntry(
             title=_("Filter view"),
             icon_name="filters_set" if is_filter_set else "filters",
-            item=PageMenuPopup(self._render_filter_form()),
+            item=PageMenuPopup(self._render_filter_form(show_filters)),
             name="filters",
         )
 
@@ -943,9 +944,11 @@ class GUIViewRenderer(ABCViewRenderer):
     def _page_menu_dropdown_add_to(self) -> List[PageMenuDropdown]:
         return visuals.page_menu_dropdown_add_to_visual(add_type="view")
 
-    def _render_filter_form(self) -> str:
-        # TODO: Filter not working at the moment
+    def _render_filter_form(self, show_filters: "List[Filter]") -> str:
         with html.plugged():
+            if display_options.enabled(display_options.F) and len(show_filters) > 0:
+                show_filter_form(show_filters)
+
             return html.drain()
 
     def _render_painter_options_form(self) -> str:
@@ -1694,12 +1697,7 @@ def show_filter(f):
         visuals.show_filter(f)
 
 
-def show_filter_form(is_open, filters):
-    # Table muss einen anderen Namen, als das Formular
-    html.open_div(id_="filters",
-                  class_=["view_form"],
-                  style="display: none;" if not is_open else None)
-
+def show_filter_form(filters):
     html.begin_form("filter")
     html.open_table(class_=["filterform"], cellpadding="0", cellspacing="0", border="0")
     html.open_tr()
@@ -1738,7 +1736,6 @@ def show_filter_form(is_open, filters):
 
     html.hidden_fields()
     html.end_form()
-    html.close_div()
 
 
 @cmk.gui.pages.register("view")

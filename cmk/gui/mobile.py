@@ -340,7 +340,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
 
         if page == "filter":
             jqm_page_header(_("Filter / Search"), left_button=home, id_="filter")
-            show_filter_form(show_filters)
+            _show_filter_form(show_filters)
             jqm_page_navfooter(navbar, 'filter', page_id)
 
         elif page == "commands":
@@ -392,7 +392,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
             jqm_page_navfooter(navbar, 'context', page_id)
 
 
-def show_filter_form(show_filters: List[Filter]) -> None:
+def _show_filter_form(show_filters: List[Filter]) -> None:
     # Sort filters
     s = sorted([(f.sort_index, f.title, f) for f in show_filters if f.available()])
 

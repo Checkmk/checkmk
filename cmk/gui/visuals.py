@@ -1178,8 +1178,7 @@ def get_ubiquitary_filters() -> List[FilterName]:
 # which are really presented to the user later.
 # For the moment we only remove the single context filters which have a
 # hard coded default value which is treated as enforced value.
-def visible_filters_of_visual(visual, use_filters):
-    # type; (Visual, List[Filter]) -> List[Filter]
+def visible_filters_of_visual(visual: Visual, use_filters: List[Filter]) -> List[Filter]:
     show_filters = []
 
     single_keys = get_single_info_keys(visual["single_infos"])

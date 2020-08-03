@@ -114,6 +114,13 @@ export function change_class(o, a, b) {
     add_class(o, b);
 }
 
+export function toggle_class(o, a, b) {
+    if (has_class(o, a))
+        change_class(o, a, b);
+    else
+        change_class(o, b, a);
+}
+
 // Adds document/window global event handlers
 // TODO: Move the window fallback to the call sites (when necessary) and nuke this function
 export function add_event_handler(type, func, obj) {
@@ -543,6 +550,6 @@ export function toggle_more(trigger, toggle_id, dom_levels_up) {
             + "&state=" + encodeURIComponent (state));
 }
 
-export function add_simplebar_scrollbar(oScrollable) {
-    return new SimpleBar(oScrollable);
+export function add_simplebar_scrollbar(scrollable_id) {
+    return new SimpleBar(document.getElementById(scrollable_id));
 }

@@ -1388,15 +1388,6 @@ form.confirm {
 |                                                                          |
 '-------------------------------------------------------------------------*/
 
-body.main table.header td.right a#helpbutton img {
-  margin: 1px 5px;
-}
-
-a#helpbutton.passive {
-  filter: rgb(128, 128, 128);
-  -webkit-filter: grayscale(1);
-}
-
 div.help {
   display: inline-block;
   width: auto;

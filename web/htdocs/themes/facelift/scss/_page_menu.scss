@@ -217,32 +217,6 @@ div#top_heading {
               }
             }
           }
-
-          /* Styling für die Filter in Views */
-          div#menu_entry_filters {
-            div.popup {
-              width: calc(100% - 50px);
-              height: calc(100% - 200px);
-              overflow-y: auto;
-            }
-          }
-
-          div.entry.invisible {
-            display: none;
-          }
-
-          div.entry.disabled {
-            cursor: default;
-
-            a {
-              color: #888;
-              pointer-events: none;
-            }
-
-            img {
-              filter: grayscale(100%) brightness(50%);
-            }
-          }
         }
 
         div.searchform {
@@ -262,17 +236,11 @@ div#top_heading {
             }
           }
         }
-
-        /* Some menus have an other width */
-        div.menu#menu_help {
-          width: 310px;
-        }
       }
     }
   }
 
   tr#suggestions {
-    /* display: none; */
     background-color: $color-background;
 
     td {
@@ -340,9 +308,11 @@ div#page_menu_popups {
     }
 
     > .head {
+      padding: 0;
+
       h3 {
-        padding: 0 0 4px;
-        margin: 0;
+        padding: 0;
+        margin: 8px 10px;
         font-size: 14px;
         font-weight: bold;
         color: $font-color-highlight;
@@ -351,15 +321,15 @@ div#page_menu_popups {
 
       a.close_popup img {
         position: absolute;
-        top: 2px;
-        right: 0;
+        top: 1px;
+        right: 6px;
         width: 16px;
         height: auto;
       }
     }
 
     > .content {
-      padding: 0 10px;
+      padding: 0;
     }
 
     form {
@@ -368,178 +338,6 @@ div#page_menu_popups {
       span.checkbox { white-space: initial; }
     }
 
-    #form_filter {
-      width: 488px;
-
-      table.filterform { width: inherit; }
-
-      table.filter {
-        border-spacing: 0;
-
-        > tbody > tr > td {
-          padding: 4px 16px;
-          border-bottom: 1px solid $headline-color;
-        }
-      }
-
-      div.floatfilter, div.floatfilter.double {
-        float: none;
-        width: 423px;
-        height: auto;
-        padding: 0;
-        padding-right: 8px;
-        padding-bottom: 3px;
-        margin: 0;
-        background-color: $button-bg-color-default;
-        border-style: none;
-        border-radius: 0;
-
-        input.neg[type="text"] {
-          width: 84%;
-        }
-
-        div.legend {
-          width: 100%;
-          margin: 0;
-          margin-bottom: 4px;
-          font-size: 10px;
-          font-weight: normal;
-          color: $font-color;
-          text-align: left;
-          text-transform: uppercase;
-          border-radius: 0;
-        }
-
-        div.content {
-          height: auto;
-        }
-
-        span.select2-container--default {
-          display: inline-block;
-        }
-      }
-
-      span.add_heading {
-        padding-top: 10px;
-        margin-top: 10px;
-        margin-bottom: 0;
-        font-size: 11px;
-        font-weight: normal;
-        color: #dcdcdc;
-      }
-
-      table.filterform {
-        position: relative;
-        top: 70px;
-
-        > tbody > tr > td > span {
-          float: left;
-          margin-bottom: 2px;
-        }
-
-        input#_add  {
-          position: relative;
-          top: -8px;
-          float: left;
-          margin-right: 0;
-          margin-left: 10px;
-        }
-
-        input#search {
-          margin-bottom: 0;
-        }
-      }
-
-      text-align: left;
-
-      table.valuespec_listof.filter > tbody { padding-left: 6px; }
-    }
-
-    div.add_filter {
-      margin: 18px 0;
-      text-align: center;
-
-      a {
-        text-decoration: none;
-        cursor: pointer;
-
-        img {
-          width: 28px;
-          height: 28px;
-        }
-
-        div.description {
-          margin-top: 6px;
-          color: #5a6782;
-          text-transform: uppercase;
-        }
-
-        &:hover, &.active {
-          img {
-            opacity: 1;
-            filter: brightness(100);
-          }
-          div.description { color: $font-color; }
-        }
-      }
-
-      &#add_filter_inline {
-        position: fixed;
-        z-index: 10;
-        display: inline-block;
-        width: inherit;
-        padding: 20px 16px 6px;
-        margin-top: 0;
-        margin-bottom: 10px;
-        text-align: initial;
-        background-color: rgb(53, 63, 74);
-        border-top: $primary-table-border;
-        border-bottom: $primary-table-border;
-        border-color: $headline-color;
-        border-radius: $popup-filters-border-radius;
-        box-sizing: border-box;
-
-        a {
-          position: relative;
-          float: left;
-          margin-right: 10px;
-
-          img, div.description {
-            position: relative;
-            float: left;
-          }
-
-          img {
-            width: 22px;
-            height: 22px;
-          }
-
-          div.description { margin: 3px 10px 0; }
-        }
-
-        div.update_buttons {
-          float: right;
-
-          input.reset, input.apply {
-            padding: 8px 16px;
-            margin-top: -5px;
-          }
-
-          input.reset {
-            border-color: $font-color;
-          }
-        }
-      }
-
-      &#add_filter_block {
-        position: relative;
-        top: 46px;
-        padding-top: 26px;
-        margin-bottom: 82px;
-
-        a { display: inline-block; }
-      }
-    }
 
     select, .tagify__input, span.select2 .select2-selection, input[type="checkbox"] + label::before, input:not(.reset):not([type="submit"])  {
       background-color: $odd-tr-bg-color;
@@ -554,43 +352,142 @@ div#page_menu_popups {
       border: $popup-button-border;
     }
   }
+}
+
+/* Filter popup specific styling */
+div#page_menu_popups div#popup_filters {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+  width: 375px;
+  height: 100vh;
+  padding: 0;
+
+  #form_filter {
+    width: inherit;
+    text-align: left;
+
+    table.filterform { width: inherit; }
+
+    table.filter {
+      border-spacing: 0;
+
+      > tbody > tr > td {
+        padding: 4px 16px;
+        border-bottom: 1px solid $headline-color;
+      }
+    }
+
+    div.floatfilter, div.floatfilter.double {
+      float: none;
+      width: 423px;
+      height: auto;
+      padding: 0;
+      padding-right: 8px;
+      padding-bottom: 3px;
+      margin: 0;
+      background-color: $button-bg-color-default;
+      border-style: none;
+      border-radius: 0;
+
+      input.neg[type="text"] {
+        width: 84%;
+      }
+
+      div.legend {
+        width: 100%;
+        margin: 0;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: normal;
+        color: $font-color;
+        text-align: left;
+        text-transform: uppercase;
+        border-radius: 0;
+      }
+
+      div.content {
+        height: auto;
+      }
+
+      span.select2-container--default {
+        display: inline-block;
+      }
+    }
+
+    table.filterform {
+      > tbody > tr > td > span {
+        float: left;
+        margin-bottom: 2px;
+      }
+    }
+
+    table.valuespec_listof.filter > tbody { padding-left: 6px; }
+
+    div.filter_controls {
+      padding: 10px;
+      margin: 0;
+      border-top: $primary-table-border;
+      border-bottom: $primary-table-border;
+      border-color: $headline-color;
+
+      a.add {
+        display: inline-block;
+        padding: 4px 0;
+        text-decoration: none;
+        cursor: pointer;
+
+        img {
+          width: 22px;
+          height: 22px;
+        }
+
+        div.description {
+          display: inline-block;
+          margin: 5px 10px 0;
+          color: #5a6782;
+          text-transform: uppercase;
+        }
+
+        &:hover, &.active {
+          img {
+            opacity: 1;
+            filter: brightness(100);
+          }
+          div.description { color: $font-color; }
+        }
+      }
+
+      div.update_buttons {
+        float: right;
+
+        input.reset, input.apply {
+          padding: 8px 16px;
+          margin: 0;
+        }
+
+        input.reset {
+          border-color: $font-color;
+        }
+      }
+    }
+  }
 
   div#popup_filter_list {
-    position: relative;
-    top: 57px;
-    float: right;
-    width: auto;
-    max-height: calc(100vh - 57px);
+    position: fixed;
+    top: 0;
+    right: 375px;
+    display: none;
+    width: 288px;
+    height: 100vh;
     padding: 0;
     overflow: auto;
     background-color: rgb(53, 63, 74);
     border: none;
-    border-radius: 4px;
 
-    input.button {
+    &.active {
       display: block;
-      width: 100%;
-      min-width: max-content;
-      padding: 4px 12px 4px 10px;
-      margin: 0;
-      text-align: left;
-
-      &:disabled {
-        background-color: transparent;
-        border: none;
-        opacity: .5;
-        box-shadow: none;
-      }
-
-      &.advanced {
-        display: none;
-        opacity: 0;
-      }
-    }
-
-    &.more input.button.advanced {
-      display: block;
-      animation: fadein 0s both;
     }
 
     div.filter_group:last-child { margin-bottom: 10px; }
@@ -607,11 +504,34 @@ div#page_menu_popups {
       position: absolute;
       right: 4px;
     }
-  }
-}
 
-a#helpbutton {
-  display: none;
+    ul {
+      padding: 0 20px;
+
+      li {
+        list-style: none;
+
+        a {
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+
+        a.disabled {
+          text-decoration: none;
+          pointer-events: none;
+          cursor: default;
+          opacity: .5;
+        }
+      }
+    }
+
+    ul.inactive {
+      display: none;
+    }
+  }
 }
 
 /* Make "check all" thingy invisible, since it is in the menu now */

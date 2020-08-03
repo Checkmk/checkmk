@@ -33,7 +33,7 @@ import socket
 import time
 import uuid
 import urllib.parse
-from typing import Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Text, Tuple as _Tuple, Type, TypeVar, Union, Sequence, NamedTuple, Protocol
+from typing import Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Tuple as _Tuple, Type, TypeVar, Union, Sequence, NamedTuple, Protocol
 
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
@@ -2013,7 +2013,7 @@ class ListOf(ValueSpec):
 ListOfMultipleChoices = List[_Tuple[str, ValueSpec]]
 
 ListOfMultipleChoiceGroup = NamedTuple("ListOfMultipleChoiceGroup", [
-    ("title", Text),
+    ("title", str),
     ("choices", ListOfMultipleChoices),
 ])
 
@@ -2101,6 +2101,9 @@ class ListOfMultiple(ValueSpec):
         html.close_tbody()
         html.close_table()
 
+        self._show_add_elements(varprefix)
+
+    def _show_add_elements(self, varprefix: str) -> None:
         choices: GroupedChoices = [ChoiceGroup(title="", choices=[("", "")])]
         for group in self._grouped_choices:
             choices.append(
@@ -2123,12 +2126,8 @@ class ListOfMultiple(ValueSpec):
     def show_choice_row(self, varprefix: str, ident: str, value: Dict[str, Any]) -> None:
         prefix = varprefix + '_' + ident
         html.open_tr(id_="%s_row" % prefix)
-        if self._delete_style == "filter":
-            self._show_del_button(varprefix, ident)
-            self._show_content(varprefix, ident, value)
-        else:
-            self._show_del_button(varprefix, ident)
-            self._show_content(varprefix, ident, value)
+        self._show_del_button(varprefix, ident)
+        self._show_content(varprefix, ident, value)
         html.close_tr()
 
     def _show_content(self, varprefix: str, ident: str, value: Dict[str, Any]) -> None:

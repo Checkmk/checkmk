@@ -583,9 +583,6 @@ class GUIViewRenderer(ABCViewRenderer):
 
         layout = self.view.layout
 
-        # User errors in filters
-        html.show_user_errors()
-
         # Display the filter form on page rendering in some cases
         if view_spec.get("mustsearch") and not html.request.var("filled_in"):
             html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
@@ -945,9 +942,12 @@ class GUIViewRenderer(ABCViewRenderer):
         return visuals.page_menu_dropdown_add_to_visual(add_type="view")
 
     def _render_filter_form(self, show_filters: "List[Filter]") -> str:
+        if not display_options.enabled(display_options.F) or not show_filters:
+            return ""
+
         with html.plugged():
             if display_options.enabled(display_options.F) and len(show_filters) > 0:
-                show_filter_form(show_filters)
+                show_filter_form(self.view, show_filters)
 
             return html.drain()
 
@@ -982,6 +982,55 @@ class GUIViewRenderer(ABCViewRenderer):
         #menu.add_youtube_reference(title=_("Episode 3: Monitoring Windows"),
         #                           youtube_id="iz8S9TGGklQ")
         pass
+
+
+class ViewFilterList(visuals.VisualFilterList):
+    """Special form of the visual filter list to be used in the views"""
+    def filter_list_id(self, varprefix: str) -> str:
+        return "%spopup_filter_list" % varprefix
+
+    def _show_add_elements(self, varprefix: str) -> None:
+        filter_list_id = self.filter_list_id(varprefix)
+
+        html.open_div(id_=filter_list_id, class_="filter_list")
+        html.more_button(filter_list_id, 1)
+        for group in self._grouped_choices:
+            if not group.choices:
+                continue
+
+            group_id = "filter_group_" + "".join(group.title.split()).lower()
+
+            html.open_div(id_=group_id, class_="filter_group")
+            # Show / hide all entries of this group
+            html.a(group.title,
+                   href="",
+                   class_="filter_group_title",
+                   onclick="cmk.page_menu.toggle_filter_group_display(this.nextSibling)")
+
+            # Display all entries of this group
+            html.open_ul()
+            for choice in group.choices:
+                filter_name = choice[0]
+
+                # TODO: Add is_advanced attribute to filters
+                #filter_obj = filter_registry[name]()
+                #html.open_li(class_="advanced" if filter_obj.is_advanced else "basic")
+
+                html.open_li()
+                html.a(choice[1].title() or filter_name,
+                       href="javascript:void(0)",
+                       onclick="cmk.valuespecs.listofmultiple_add(%s, %s, %s, this);"
+                       "cmk.page_menu.add_filter_scroll_update()" %
+                       (json.dumps(varprefix), json.dumps(
+                           self._choice_page_name), json.dumps(self._page_request_vars)),
+                       id_="%s_add_%s" % (varprefix, filter_name))
+                html.close_li()
+            html.close_ul()
+
+            html.close_div()
+        html.close_div()
+        html.javascript('cmk.valuespecs.listofmultiple_init(%s);' % json.dumps(varprefix))
+        html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 
 
 # TODO
@@ -1688,54 +1737,52 @@ def create_view_from_valuespec(old_view, view):
 #   '----------------------------------------------------------------------'
 
 
-def show_filter(f):
-    if not f.visible():
-        html.open_div(style="display:none;")
-        f.display()
-        html.close_div()
-    else:
-        visuals.show_filter(f)
+def show_filter_form(view: View, show_filters: "List[Filter]") -> None:
+    html.show_user_errors()
 
-
-def show_filter_form(filters):
     html.begin_form("filter")
+
+    vs_filters = ViewFilterList(info_list=view.datasource.infos)
+    varprefix = ""
+    filter_list_id = vs_filters.filter_list_id(varprefix)
+
+    _show_filter_form_buttons(filter_list_id)
+
     html.open_table(class_=["filterform"], cellpadding="0", cellspacing="0", border="0")
     html.open_tr()
     html.open_td()
 
-    # sort filters according to title
-    # NOTE: We can't compare Filters themselves!
-    s = sorted(
-        (
-            (f.sort_index, f.title, f)  #
-            for f in filters
-            if f.available()),
-        key=lambda x: (x[0], x[1]))
-
-    # First show filters with double height (due to better floating
-    # layout)
-    for _sort_index, _title, f in s:
-        if f.double_height():
-            show_filter(f)
-
-    # Now single height filters
-    for _sort_index, _title, f in s:
-        if not f.double_height():
-            show_filter(f)
+    vs_filters.render_input(varprefix, {f.ident: {} for f in show_filters if f.available()})
 
     html.close_td()
     html.close_tr()
-
-    html.open_tr()
-    html.open_td()
-    html.button("search", _("Search"), "submit")
-    html.close_td()
-    html.close_tr()
-
     html.close_table()
 
     html.hidden_fields()
     html.end_form()
+
+
+def _show_filter_form_buttons(filter_list_id: str) -> None:
+    html.open_div(class_="filter_controls")
+
+    html.open_a(href="javascript:void(0);",
+                onclick="cmk.page_menu.toggle_popup_filter_list(this, %s)" %
+                json.dumps(filter_list_id),
+                class_="add")
+    html.icon(title=_("Add search filters"), icon="add")
+    html.div(html.render_text("Add filter"), class_="description")
+    html.close_a()
+
+    html.open_div(class_="update_buttons")
+    # TODO: This is currently broken. It is unclear to which state exactly to reset to
+    #html.jsbutton("reset",
+    #              _("Reset"),
+    #              cssclass="reset",
+    #              onclick="cmk.valuespecs.listofmultiple_reset('')")
+    html.button("apply", _("Apply filters"), cssclass="apply submit")
+    html.close_div()
+
+    html.close_div()
 
 
 @cmk.gui.pages.register("view")

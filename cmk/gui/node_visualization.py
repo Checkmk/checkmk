@@ -143,10 +143,10 @@ class ParentChildTopologyPage(Page):
 
         # Filters
         html.open_div(id="topology_filters")
-        _view, filters = self._get_topology_view_and_filters()
+        view, filters = self._get_topology_view_and_filters()
         html.request.set_var("topology_mesh_depth", str(mesh_depth))
         html.request.set_var("topology_max_nodes", str(max_nodes))
-        cmk.gui.views.show_filter_form(filters=filters)
+        cmk.gui.views.show_filter_form(view, filters)
         html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
         html.close_div()
 

@@ -155,43 +155,27 @@ export function form_submit(form_name, button_name)
     oForm.submit();
 }
 
-export function position_popup_filter_list(oList)
+// Show / hide all entries of this group
+export function toggle_popup_filter_list(trigger, filter_list_id)
 {
-    let par = oList.parentNode;
-    par.removeChild(oList);
-    par.parentNode.parentNode.appendChild(oList);
-    utils.add_simplebar_scrollbar(oList);
+    utils.toggle_class(trigger, "active", "inactive");
+    utils.toggle_class(document.getElementById(filter_list_id), "active", "inactive");
 }
 
-export function toggle_popup_filter_list(oList)
+export function toggle_filter_group_display(filter_group)
 {
-    let oTogglers = document.getElementsByClassName("add_filter");
-    if (oList.style.display == "none") {
-        oList.style.display = "block";
-        oTogglers.forEach(oToggler=>oToggler.className += " active");
-    }
-    else {
-        oList.style.display = "none";
-        oTogglers.forEach(oToggler=>oToggler.className = oToggler.className.replace(" active", ""));
-    }
+    utils.toggle_class(filter_group, "active", "inactive");
 }
 
-export function toggle_filter_group_display(oFilterGroup)
-{
-    if (oFilterGroup.style.display == "none")
-        oFilterGroup.style.display = "block";
-    else
-        oFilterGroup.style.display = "none";
-}
-
+// Scroll to the top after adding new filters
 export function add_filter_scroll_update()
 {
-    let oScrollable = document.getElementById("popup_filters_content").getElementsByClassName("simplebar-content-wrapper")[0];
+    let scrollable = document.getElementById("popup_filter_list").getElementsByClassName("simplebar-content-wrapper")[0];
     try { // scrollTo() is not supported in IE
-        oScrollable.scrollTo({top: 0, left: 0, behavior: "smooth"});
+        scrollable.scrollTo({top: 0, left: 0, behavior: "smooth"});
     }
     catch (e) {
-        oScrollable.scrollTop = 0;
+        scrollable.scrollTop = 0;
     }
 }
 

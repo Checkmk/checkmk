@@ -7,8 +7,8 @@
 import abc
 import json
 import logging
-import os
 import sys
+from pathlib import Path
 from typing import Any, cast, Dict, Final, Generic, Optional, Sequence, Tuple, TypeVar, Union
 
 import cmk.utils
@@ -205,9 +205,21 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self,
         *,
         configurator: ABCConfigurator,
+        cache_dir: Optional[Path] = None,
+        persisted_section_dir: Optional[Path] = None,
     ) -> None:
         super(ABCDataSource, self).__init__()
         self.configurator = configurator
+        if not cache_dir:
+            cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.configurator.id
+        if not persisted_section_dir:
+            persisted_section_dir = Path(
+                cmk.utils.paths.var_dir) / "persisted_sections" / self.configurator.id
+
+        self._cache_file_path: Final[Path] = cache_dir / self.configurator.hostname
+        self._persisted_sections_file_path: Final[
+            Path] = persisted_section_dir / self.configurator.hostname
+
         self._max_cachefile_age: Optional[int] = None
         self._logger = self.configurator._logger
 
@@ -299,7 +311,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
         self._exception = None
         self._host_sections = None
-        section_store = SectionStore(self._persisted_sections_file_path(), self._logger)
+        section_store = SectionStore(self._persisted_sections_file_path, self._logger)
 
         try:
             persisted_sections: BoundedAbstractPersistedSections = section_store.load(
@@ -344,7 +356,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
     def _make_file_cache(self) -> FileCache:
         return FileCache(
-            self._cache_file_path(),
+            self._cache_file_path,
             self._max_cachefile_age,
             self.is_agent_cache_disabled(),
             self.get_may_use_cache_file(),
@@ -428,20 +440,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     ) -> BoundedAbstractHostSections:
         """See _execute() for details"""
         raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _cache_dir(self) -> str:
-        return os.path.join(cmk.utils.paths.data_source_cache_dir, self.configurator.id)
-
-    def _cache_file_path(self) -> str:
-        return os.path.join(self._cache_dir(), self.configurator.hostname)
-
-    @abc.abstractmethod
-    def _persisted_sections_dir(self) -> str:
-        return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.configurator.id)
-
-    def _persisted_sections_file_path(self) -> str:
-        return os.path.join(self._persisted_sections_dir(), self.configurator.hostname)
 
     def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
         self._max_cachefile_age = max_cachefile_age

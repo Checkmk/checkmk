@@ -269,12 +269,6 @@ class SNMPConfigurator(ABCConfigurator):
 
 class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                    SNMPHostSections]):
-    def _cache_dir(self) -> str:  # pylint: disable=useless-super-delegation
-        return super()._cache_dir()
-
-    def _persisted_sections_dir(self) -> str:  # pylint: disable=useless-super-delegation
-        return super()._persisted_sections_dir()
-
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         return 0, "Success", []
 

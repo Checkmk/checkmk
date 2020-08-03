@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Cache implementations for the data sources."""
 
-import errno
 import logging
-import os
 import time
 from pathlib import Path
 from typing import Optional, Union
@@ -23,23 +21,16 @@ from cmk.base.check_utils import BoundedAbstractPersistedSections, BoundedAbstra
 
 
 class SectionStore:
-    def __init__(self, path: str, logger: logging.Logger) -> None:
+    def __init__(self, path: Union[str, Path], logger: logging.Logger) -> None:
         super(SectionStore, self).__init__()
-        self.path = path
+        self.path = Path(path)
         self._logger = logger
 
     def store(self, sections: BoundedAbstractPersistedSections) -> None:
         if not sections:
             return
 
-        try:
-            os.makedirs(os.path.dirname(self.path))
-        except OSError as e:
-            if e.errno == errno.EEXIST:
-                pass
-            else:
-                raise
-
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         store.save_object_to_file(self.path, {str(k): v for k, v in sections.items()}, pretty=False)
         self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
 
@@ -56,10 +47,7 @@ class SectionStore:
 
         if not sections:
             self._logger.debug("No persisted sections loaded")
-            try:
-                os.remove(self.path)
-            except OSError:
-                pass
+            self.path.unlink(missing_ok=True)
 
         return sections
 

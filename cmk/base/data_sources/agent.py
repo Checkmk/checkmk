@@ -6,8 +6,8 @@
 
 import abc
 import logging
-import os
 import time
+from pathlib import Path
 from typing import cast, Dict, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
@@ -402,7 +402,13 @@ class Parser:
 class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentSections,
                                     AgentHostSections],
                       metaclass=abc.ABCMeta):
-    """Base for agent-based checkers."""
+    """Base for agent-based checkers.
+
+    Args:
+        main_data_source: The main agent has other cache directories for
+            compatibility with older Check MK.
+
+    """
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
@@ -416,7 +422,12 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         configurator: ABCConfigurator,
         main_data_source: bool = False,
     ) -> None:
-        super(AgentDataSource, self).__init__(configurator=configurator)
+        super().__init__(
+            configurator=configurator,
+            cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
+            persisted_section_dir=(Path(cmk.utils.paths.var_dir) /
+                                   "persisted") if main_data_source else None,
+        )
         self._is_main_agent_data_source = main_data_source
         """Tell the data source that it's the main agent based data source
 
@@ -426,20 +437,6 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         directories.
         """
         # TODO: We should cleanup these old directories one day. Then we can remove this special case
-
-    def _cache_dir(self) -> str:
-        # The main agent has another cache directory to be compatible with older Check_MK
-        if self._is_main_agent_data_source:
-            return cmk.utils.paths.tcp_cache_dir
-
-        return super(AgentDataSource, self)._cache_dir()
-
-    def _persisted_sections_dir(self) -> str:
-        # The main agent has another cache directory to be compatible with older Check_MK
-        if self._is_main_agent_data_source:
-            return os.path.join(cmk.utils.paths.var_dir, "persisted")
-
-        return super(AgentDataSource, self)._persisted_sections_dir()
 
     def _empty_raw_data(self) -> RawAgentData:
         return b""

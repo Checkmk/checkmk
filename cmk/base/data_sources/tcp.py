@@ -68,7 +68,7 @@ class TCPDataSource(AgentDataSource):
     ) -> RawAgentData:
         if TCPConfigurator._use_only_cache:
             raise MKAgentError("Got no data: No usable cache file present at %s" %
-                               self._cache_file_path())
+                               self._cache_file_path)
 
         with TCPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()

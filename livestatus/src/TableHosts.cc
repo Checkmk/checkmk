@@ -776,9 +776,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets, [mc](const host &r) {
             std::vector<std::string> metrics;
             if (r.name != nullptr) {
-                Metric::Names names;
-                scan_rrd(mc->pnpPath() / r.name, dummy_service_description(),
-                         names, mc->loggerRRD());
+                auto names =
+                    scan_rrd(mc->pnpPath() / r.name,
+                             dummy_service_description(), mc->loggerRRD());
                 std::transform(std::begin(names), std::end(names),
                                std::begin(metrics),
                                [](auto &&m) { return m.string(); });

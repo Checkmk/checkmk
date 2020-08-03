@@ -569,9 +569,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             if (r.host_name == nullptr || r.description == nullptr) {
                 return metrics;
             }
-            Metric::Names names;
-            scan_rrd(mc->pnpPath() / r.host_name, r.description, names,
-                     mc->loggerRRD());
+            auto names = scan_rrd(mc->pnpPath() / r.host_name, r.description,
+                                  mc->loggerRRD());
             std::transform(std::begin(names), std::end(names),
                            std::begin(metrics),
                            [](auto &&m) { return m.string(); });

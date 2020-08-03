@@ -10,11 +10,12 @@
 #include "Logger.h"
 #include "StringUtils.h"
 
-void scan_rrd(const std::filesystem::path& basedir, const std::string& desc,
-              Metric::Names& names, Logger* logger) {
+Metric::Names scan_rrd(const std::filesystem::path& basedir,
+                       const std::string& desc, Logger* logger) {
     Informational(logger) << "scanning for metrics of " << desc << " in "
                           << basedir;
     std::string base = pnp_cleanup(desc + " ");
+    Metric::Names names;
     try {
         for (const auto& entry : std::filesystem::directory_iterator(basedir)) {
             if (entry.path().extension() == ".rrd") {
@@ -34,4 +35,5 @@ void scan_rrd(const std::filesystem::path& basedir, const std::string& desc,
             Warning(logger) << "scanning directory for metrics: " << e.what();
         }
     }
+    return names;
 }

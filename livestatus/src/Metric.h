@@ -102,8 +102,8 @@ struct hash<Metric::MangledName> {
 };
 }  // namespace std
 
-/// Scan rrd in `basedir` and fill `Metric::Names` with metrics matching `desc`.
-void scan_rrd(const std::filesystem::path &basedir, const std::string &desc,
-              Metric::Names &, Logger *);
+/// Scan rrd in `basedir` and return metrics matching `desc`.
+Metric::Names scan_rrd(const std::filesystem::path &basedir,
+                       const std::string &desc, Logger *);
 
 #endif  // Metric_h

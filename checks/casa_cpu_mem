@@ -35,7 +35,6 @@ def check_casa_cpu_mem(item, params, data):
         data["mem_total"],
         (mode, (warn, crit)),
         metric_name="memused",
-        render_base=1000,
     )
 
 

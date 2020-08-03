@@ -1151,7 +1151,9 @@ components:
           - host2
           - host3
           items:
-            pattern: foo
+            description: The hostname or IP address itself.
+            example: example.com
+            pattern: '[-0-9a-zA-Z_.]+'
             type: string
           type: array
       type: object

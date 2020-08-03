@@ -77,7 +77,7 @@ class UpdateHost(BaseSchema):
       * `nodes`
     """
     attributes = fields.Dict(example={})
-    nodes = fields.List(fields.String(pattern="foo"), example=["host1", "host2", "host3"])
+    nodes = fields.List(HOST_FIELD, example=["host1", "host2", "host3"])
 
 
 class InputHostGroup(BaseSchema):

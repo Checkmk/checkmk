@@ -391,7 +391,11 @@ def mode_dump_agent(hostname: HostName) -> None:
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        for source in data_sources.make_sources(host_config, ipaddress):
+        for source in data_sources.make_sources(
+                host_config,
+                ipaddress,
+                mode=data_sources.Mode.CHECKING,
+        ):
             source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source, data_sources.agent.AgentDataSource):
                 output.append(source.run_raw(
@@ -399,7 +403,7 @@ def mode_dump_agent(hostname: HostName) -> None:
                     prefetched_sections=(),
                 ))
 
-            source_state, source_output, _source_perfdata = source.get_summary_result_for_checking()
+            source_state, source_output, _source_perfdata = source.get_summary_result()
             if source_state != 0:
                 console.error(
                     "ERROR [%s]: %s\n",

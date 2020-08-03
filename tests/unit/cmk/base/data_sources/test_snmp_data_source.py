@@ -19,11 +19,17 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.data_sources import Mode
 from cmk.base.data_sources.snmp import (
     SNMPConfigurator,
     SNMPDataSource,
 )
 from cmk.base.exceptions import MKIPAddressLookupError
+
+
+@pytest.fixture(name="mode", params=Mode)
+def mode_fixture(request):
+    return request.param
 
 
 @pytest.fixture(name="hostname")
@@ -37,9 +43,13 @@ def ipaddress_fixture():
 
 
 @pytest.fixture(name="source")
-def source_fixture(hostname, ipaddress, monkeypatch):
+def source_fixture(hostname, ipaddress, mode, monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
-    return SNMPDataSource(configurator=SNMPConfigurator.snmp(hostname, ipaddress),)
+    return SNMPDataSource(configurator=SNMPConfigurator.snmp(
+        hostname,
+        ipaddress,
+        mode=mode,
+    ),)
 
 
 def test_data_source_cache_default(source):
@@ -187,10 +197,10 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert source.exception() is None
 
 
-def test_source_requires_ipaddress(hostname, monkeypatch):
+def test_source_requires_ipaddress(hostname, mode, monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
     with pytest.raises(TypeError):
-        SNMPConfigurator.snmp(hostname, None)
+        SNMPConfigurator.snmp(hostname, None, mode=mode)
 
 
 def test_description_with_ipaddress(source, monkeypatch):
@@ -199,19 +209,19 @@ def test_description_with_ipaddress(source, monkeypatch):
 
 
 class TestSNMPConfigurator_SNMP:
-    def test_attribute_defaults(self, monkeypatch):
+    def test_attribute_defaults(self, mode, monkeypatch):
         hostname = "testhost"
         ipaddress = "1.2.3.4"
 
         Scenario().add_host(hostname).apply(monkeypatch)
 
-        configurator = SNMPConfigurator.snmp(hostname, ipaddress)
+        configurator = SNMPConfigurator.snmp(hostname, ipaddress, mode=mode)
         assert configurator.description == (
             "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)")
 
 
 class TestSNMPConfigurator_MGMT:
-    def test_attribute_defaults(self, monkeypatch):
+    def test_attribute_defaults(self, mode, monkeypatch):
         hostname = "testhost"
         ipaddress = "1.2.3.4"
 
@@ -228,13 +238,21 @@ class TestSNMPConfigurator_MGMT:
         )
         ts.apply(monkeypatch)
 
-        configurator = SNMPConfigurator.management_board(hostname, ipaddress)
+        configurator = SNMPConfigurator.management_board(
+            hostname,
+            ipaddress,
+            mode=mode,
+        )
         assert configurator.description == (
             "Management board - SNMP "
             "(Community: 'public', Bulk walk: no, Port: 161, Inline: no)")
 
 
 class TestSNMPSummaryResult:
+    @pytest.fixture(params=(mode for mode in Mode if mode is not Mode.NONE))
+    def mode(self, request):
+        return request.param
+
     @pytest.fixture
     def hostname(self):
         return "testhost"
@@ -247,10 +265,11 @@ class TestSNMPSummaryResult:
         return ts
 
     @pytest.fixture
-    def source(self, hostname):
+    def source(self, hostname, mode):
         return SNMPDataSource(configurator=SNMPConfigurator(
             hostname,
             "1.2.3.4",
+            mode=mode,
             source_type=SourceType.HOST,
             id_="snmp_id",
             cpu_tracking_id="snmp_cpu_id",
@@ -258,16 +277,14 @@ class TestSNMPSummaryResult:
         ))
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.parametrize("for_checking", [True, False])
-    def test_defaults(self, source, for_checking):
-        assert source._get_summary_result(for_checking) \
-                == source._summary_result(for_checking) \
+    def test_defaults(self, source):
+        assert source.get_summary_result() \
+                == source._summary_result() \
                 == (0, "Success", [])
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.parametrize("for_checking", [True, False])
-    def test_with_exception(self, source, for_checking):
+    def test_with_exception(self, source):
         source._exception = Exception()
         assert source.exception()
 
-        assert source._get_summary_result(for_checking) == (3, "(?)", [])
+        assert source.get_summary_result() == (3, "(?)", [])

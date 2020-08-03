@@ -16,21 +16,24 @@ from cmk.base.check_utils import RawAgentData
 from cmk.base.config import HostConfig, SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
-from ._abstract import ABCConfigurator
-from .agent import AgentDataSource
+from ._abstract import Mode
+from .agent import AgentConfigurator, AgentDataSource
 
 
-class TCPConfigurator(ABCConfigurator):
+class TCPConfigurator(AgentConfigurator):
     _use_only_cache = False
 
     def __init__(
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
+        *,
+        mode: Mode,
     ) -> None:
         super().__init__(
             hostname,
             ipaddress,
+            mode=mode,
             source_type=SourceType.HOST,
             description=TCPConfigurator._make_description(hostname, ipaddress),
             id_="agent",

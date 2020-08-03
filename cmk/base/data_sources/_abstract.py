@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import enum
 import json
 import logging
 import sys
@@ -44,7 +45,15 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLooku
 
 from ._cache import FileCache, SectionStore
 
-__all__ = ["ABCHostSections", "ABCConfigurator", "ABCDataSource"]
+__all__ = ["ABCHostSections", "ABCConfigurator", "ABCDataSource", "Mode"]
+
+
+class Mode(enum.Enum):
+    NONE = enum.auto()
+    CHECKING = enum.auto()
+    DISCOVERY = enum.auto()
+    INVENTORY = enum.auto()
+    RTC = enum.auto()
 
 
 class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
@@ -152,6 +161,7 @@ class ABCConfigurator(abc.ABC):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        mode: Mode,
         source_type: SourceType,
         description: str,
         id_: str,
@@ -159,6 +169,7 @@ class ABCConfigurator(abc.ABC):
     ) -> None:
         self.hostname: Final[str] = hostname
         self.ipaddress: Final[Optional[str]] = ipaddress
+        self.mode: Final[Mode] = mode
         self.source_type: Final[SourceType] = source_type
         self.description: Final[str] = description
         self.id: Final[str] = id_
@@ -167,10 +178,11 @@ class ABCConfigurator(abc.ABC):
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
 
     def __repr__(self) -> str:
-        return "%s(%r, %r, description=%r, id=%r)" % (
+        return "%s(%r, %r, mode=%r, description=%r, id=%r)" % (
             type(self).__name__,
             self.hostname,
             self.ipaddress,
+            self.mode,
             self.description,
             self.id,
         )
@@ -467,27 +479,16 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def set_may_use_cache_file(state: bool = True) -> None:
         ABCDataSource._may_use_cache_file = state
 
-    def get_summary_result_for_discovery(self) -> ServiceCheckResult:
-        return self._get_summary_result(for_checking=False)
-
-    def get_summary_result_for_inventory(self) -> ServiceCheckResult:
-        return self._get_summary_result(for_checking=False)
-
-    def get_summary_result_for_checking(self) -> ServiceCheckResult:
-        return self._get_summary_result()
-
-    def _get_summary_result(
-        self,
-        for_checking: bool = True,
-    ) -> ServiceCheckResult:
+    def get_summary_result(self) -> ServiceCheckResult:
         """Returns a three element tuple of state, output and perfdata (list) that summarizes
         the execution result of this data source.
 
         This is e.g. used for the output of the "Check_MK", "Check_MK Discovery" or
         "Check_MK HW/SW Inventory" services."""
+        assert self.configurator.mode is not Mode.NONE
 
         if not self._exception:
-            return self._summary_result(for_checking)
+            return self._summary_result()
 
         exc_msg = "%s" % self._exception
 
@@ -507,7 +508,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return status, exc_msg + check_api_utils.state_markers[status], []
 
     @abc.abstractmethod
-    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
+    def _summary_result(self) -> ServiceCheckResult:
         """Produce a source specific summary result in case no exception occured.
 
         When an exception occured while processing a data source, the generic

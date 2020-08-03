@@ -83,7 +83,11 @@ def dump_host(hostname: HostName) -> None:
                ", ".join(host_config.contactgroups) + "\n")
 
     agenttypes = []
-    for source in data_sources.make_sources(host_config, ipaddress):
+    for source in data_sources.make_sources(
+            host_config,
+            ipaddress,
+            mode=data_sources.Mode.NONE,
+    ):
         agenttypes.append(source.description)
 
     if host_config.is_ping_host:

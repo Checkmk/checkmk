@@ -22,12 +22,17 @@ from cmk.base import check_table, config
 from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.utils import parse_to_string_table
-from cmk.base.data_sources import make_sources
+from cmk.base.data_sources import make_sources, Mode
 from cmk.base.data_sources._data_sources import _make_host_sections, _make_piggybacked_sections
 from cmk.base.data_sources.piggyback import PiggyBackDataSource
 from cmk.base.data_sources.programs import ProgramDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource
 from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
+
+
+@pytest.fixture(name="mode", params=Mode)
+def mode_fixture(request):
+    return request.param
 
 
 def make_scenario(hostname, tags):
@@ -69,17 +74,21 @@ def make_scenario(hostname, tags):
         "agent": "special-agents"
     }, [ProgramDataSource, PiggyBackDataSource]),
 ])
-def test_get_sources(monkeypatch, hostname, tags, sources):
+def test_get_sources(monkeypatch, hostname, mode, tags, sources):
     ts = make_scenario(hostname, tags)
     ts.apply(monkeypatch)
 
     host_config = config.HostConfig.make_host_config(hostname)
     ipaddress = "127.0.0.1"
 
-    assert [type(source) for source in make_sources(host_config, ipaddress)] == sources
+    assert [type(source) for source in make_sources(
+        host_config,
+        ipaddress,
+        mode=mode,
+    )] == sources
 
 
-def test_piggyback_storage(monkeypatch, mocker):
+def test_piggyback_storage(mode, monkeypatch, mocker):
     hostname = "testhost"
     ipaddress = "1.2.3.4"
     raw_data = b"\n".join((
@@ -94,7 +103,11 @@ def test_piggyback_storage(monkeypatch, mocker):
     ts.add_host(hostname)
     ts.apply(monkeypatch)
 
-    source = TCPDataSource(configurator=TCPConfigurator(hostname, ipaddress),)
+    source = TCPDataSource(configurator=TCPConfigurator(
+        hostname,
+        ipaddress,
+        mode=mode,
+    ),)
     monkeypatch.setattr(time, "time", lambda: 0)
     mhs = agent.AgentParser(hostname, logging.getLogger("test")).parse(raw_data)
     monkeypatch.setattr(

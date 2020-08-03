@@ -24,7 +24,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
 
-from ._abstract import ABCDataSource
+from ._abstract import ABCDataSource, Mode
 from .agent import AgentDataSource, AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMIConfigurator, IPMIManagementBoardDataSource
@@ -48,11 +48,14 @@ class SourceBuilder:
         self,
         host_config: HostConfig,
         ipaddress: Optional[HostAddress],
+        *,
+        mode: Mode,
     ) -> None:
-        super(SourceBuilder, self).__init__()
+        super().__init__()
         self._host_config = host_config
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
+        self._mode = mode
         self._sources: Dict[str, ABCDataSource] = {}
 
         self._initialize_data_sources()
@@ -97,6 +100,7 @@ class SourceBuilder:
                 PiggyBackDataSource(configurator=PiggyBackConfigurator(
                     self._hostname,
                     self._ipaddress,
+                    mode=self._mode,
                 ),))
 
     def _initialize_snmp_data_sources(self,) -> None:
@@ -106,6 +110,7 @@ class SourceBuilder:
             SNMPDataSource(configurator=SNMPConfigurator.snmp(
                 self._hostname,
                 self._ipaddress,
+                mode=self._mode,
             ),))
 
     def _initialize_management_board_data_sources(self) -> None:
@@ -119,11 +124,15 @@ class SourceBuilder:
                 SNMPDataSource(configurator=SNMPConfigurator.management_board(
                     self._hostname,
                     ip_address,
+                    mode=self._mode,
                 ),))
         elif protocol == "ipmi":
             self._add_source(
                 IPMIManagementBoardDataSource(configurator=IPMIConfigurator(
-                    self._hostname, ip_address),))
+                    self._hostname,
+                    ip_address,
+                    mode=self._mode,
+                ),),)
         else:
             raise NotImplementedError()
 
@@ -150,13 +159,14 @@ class SourceBuilder:
                 configurator=DSProgramConfigurator(
                     self._hostname,
                     self._ipaddress,
+                    mode=self._mode,
                     template=datasource_program,
                 ),
                 main_data_source=main_data_source,
             )
 
         return TCPDataSource(
-            configurator=TCPConfigurator(self._hostname, self._ipaddress),
+            configurator=TCPConfigurator(self._hostname, self._ipaddress, mode=self._mode),
             main_data_source=main_data_source,
         )
 
@@ -165,6 +175,7 @@ class SourceBuilder:
             ProgramDataSource(configurator=SpecialAgentConfigurator(
                 self._hostname,
                 self._ipaddress,
+                mode=self._mode,
                 special_agent_id=agentname,
                 params=params,
             ),) for agentname, params in self._host_config.special_agents
@@ -174,6 +185,8 @@ class SourceBuilder:
 def make_sources(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
+    *,
+    mode: Mode,
 ) -> DataSources:
     """Return a list of sources for DataSources.
 
@@ -182,13 +195,14 @@ def make_sources(
         ipaddress: The host address.
 
     """
-    return SourceBuilder(host_config, ipaddress).sources
+    return SourceBuilder(host_config, ipaddress, mode=mode).sources
 
 
 def make_host_sections(
     config_cache: config.ConfigCache,
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
+    mode: Mode,
     sources: DataSources,
     *,
     max_cachefile_age: int,
@@ -202,7 +216,7 @@ def make_host_sections(
         )
 
     return _make_host_sections(
-        _make_piggyback_nodes(config_cache, host_config),
+        _make_piggyback_nodes(mode, config_cache, host_config),
         max_cachefile_age=max_cachefile_age,
         selected_raw_sections=_make_piggybacked_sections(host_config),
     )
@@ -269,7 +283,7 @@ def _make_host_sections(
 
 
 def _make_piggyback_nodes(
-        config_cache: config.ConfigCache,
+        mode: Mode, config_cache: config.ConfigCache,
         host_config: HostConfig) -> Iterable[Tuple[HostName, Optional[HostAddress], DataSources]]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
@@ -281,6 +295,7 @@ def _make_piggyback_nodes(
         sources = make_sources(
             HostConfig.make_host_config(hostname),
             ipaddress,
+            mode=mode,
         )
         nodes.append((hostname, ipaddress, sources))
     return nodes

@@ -8,15 +8,27 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
+from cmk.base.data_sources import Mode
 from cmk.base.data_sources.piggyback import PiggyBackConfigurator, PiggyBackDataSource
 
 
+@pytest.fixture(name="mode", params=(mode for mode in Mode if mode is not Mode.NONE))
+def mode_fixture(request):
+    return request.param
+
+
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-def test_attribute_defaults(monkeypatch, ipaddress):
+def test_attribute_defaults(monkeypatch, ipaddress, mode):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    source = PiggyBackDataSource(configurator=PiggyBackConfigurator(hostname, ipaddress),)
 
+    configurator = PiggyBackConfigurator(hostname, ipaddress, mode=mode)
+    assert configurator.hostname == hostname
+    assert configurator.ipaddress == ipaddress
+    assert configurator.mode is mode
+    assert configurator.description.startswith("Process piggyback data from")
+
+    source = PiggyBackDataSource(configurator=configurator)
+    assert source.configurator is configurator
     assert source.id == "piggyback"
-    assert source.configurator.description.startswith("Process piggyback data from")
-    assert source._summary_result(False) == (0, "", [])
+    assert source.get_summary_result() == (0, "", [])

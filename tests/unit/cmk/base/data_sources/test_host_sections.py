@@ -26,6 +26,7 @@ from cmk.base.data_sources import (
     _data_sources,
     make_host_sections,
     make_sources,
+    Mode,
 )
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
@@ -95,6 +96,11 @@ NODE_2 = [
     ["node2", "data 1"],
     ["node2", "data 2"],
 ]
+
+
+@pytest.fixture(name="mode", params=Mode)
+def mode_fixture(request):
+    return request.param
 
 
 def _set_up(monkeypatch, hostname, nodes, cluster_mapping) -> None:
@@ -503,11 +509,12 @@ class TestMakeHostSectionsHosts:
         ts = Scenario().add_host(hostname)
         return ts.apply(monkeypatch)
 
-    def test_no_sources(self, hostname, ipaddress, config_cache, host_config):
+    def test_no_sources(self, hostname, ipaddress, mode, config_cache, host_config):
         mhs = make_host_sections(
             config_cache,
             host_config,
             ipaddress,
+            mode=mode,
             sources=[],
             max_cachefile_age=0,
             selected_raw_sections=None,
@@ -528,12 +535,19 @@ class TestMakeHostSectionsHosts:
         assert not section.piggybacked_raw_data
         assert not section.persisted_sections
 
-    def test_one_snmp_source(self, hostname, ipaddress, config_cache, host_config):
+    def test_one_snmp_source(self, hostname, ipaddress, mode, config_cache, host_config):
         mhs = make_host_sections(
             config_cache,
             host_config,
             ipaddress,
-            sources=[SNMPDataSource(configurator=SNMPConfigurator.snmp(hostname, ipaddress),)],
+            mode=mode,
+            sources=[
+                SNMPDataSource(configurator=SNMPConfigurator.snmp(
+                    hostname,
+                    ipaddress,
+                    mode=mode,
+                ),),
+            ],
             max_cachefile_age=0,
             selected_raw_sections=None,
         )
@@ -548,22 +562,38 @@ class TestMakeHostSectionsHosts:
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
 
-    @pytest.mark.parametrize("source", [
-        lambda hostname, ipaddress: PiggyBackDataSource(configurator=PiggyBackConfigurator(
-            hostname, ipaddress),),
-        lambda hostname, ipaddress: ProgramDataSource(configurator=ProgramConfigurator.ds(
-            hostname, ipaddress, template=""),),
-        lambda hostname, ipaddress: TCPDataSource(configurator=TCPConfigurator(hostname, ipaddress),
-                                                 ),
-    ])
-    def test_one_nonsnmp_source(self, hostname, ipaddress, config_cache, host_config, source):
-        source = source(hostname, ipaddress)
+    @pytest.mark.parametrize(
+        "source",
+        [
+            lambda hostname, ipaddress, *, mode: PiggyBackDataSource(configurator=
+                                                                     PiggyBackConfigurator(
+                                                                         hostname,
+                                                                         ipaddress,
+                                                                         mode=mode,
+                                                                     ),),
+            lambda hostname, ipaddress, *, mode: ProgramDataSource(configurator=ProgramConfigurator.
+                                                                   ds(
+                                                                       hostname,
+                                                                       ipaddress,
+                                                                       mode=mode,
+                                                                       template="",
+                                                                   ),),
+            lambda hostname, ipaddress, *, mode: TCPDataSource(configurator=TCPConfigurator(
+                hostname,
+                ipaddress,
+                mode=mode,
+            ),),
+        ],
+    )
+    def test_one_nonsnmp_source(self, hostname, ipaddress, mode, config_cache, host_config, source):
+        source = source(hostname, ipaddress, mode=mode)
         assert source.configurator.source_type is SourceType.HOST
 
         mhs = make_host_sections(
             config_cache,
             host_config,
             ipaddress,
+            mode=mode,
             sources=[source],
             max_cachefile_age=0,
             selected_raw_sections=None,
@@ -583,19 +613,29 @@ class TestMakeHostSectionsHosts:
         self,
         hostname,
         ipaddress,
+        mode,
         config_cache,
         host_config,
     ):
         sources = [
-            ProgramDataSource(configurator=ProgramConfigurator.ds(hostname, ipaddress,
-                                                                  template=""),),
-            TCPDataSource(configurator=TCPConfigurator(hostname, ipaddress),),
+            ProgramDataSource(configurator=ProgramConfigurator.ds(
+                hostname,
+                ipaddress,
+                mode=mode,
+                template="",
+            ),),
+            TCPDataSource(configurator=TCPConfigurator(
+                hostname,
+                ipaddress,
+                mode=mode,
+            ),),
         ]
 
         mhs = make_host_sections(
             config_cache,
             host_config,
             ipaddress,
+            mode=mode,
             sources=sources,
             max_cachefile_age=0,
             selected_raw_sections=None,
@@ -613,14 +653,15 @@ class TestMakeHostSectionsHosts:
         assert (section.sections[SectionName("section_name_%s" % hostname)]
                 == len(sources) * [["section_content"]])
 
-    def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, config_cache, host_config):
+    def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, mode, config_cache, host_config):
         sources = [
             ProgramDataSource(
                 configurator=ProgramConfigurator.ds(hostname + "0", ipaddress,
+                                                    mode=mode,
                                                    template="",),),
-            TCPDataSource(configurator=TCPConfigurator(hostname + "1", ipaddress),),
+            TCPDataSource(configurator=TCPConfigurator(hostname + "1", ipaddress, mode=mode,),),
             TCPDataSource(
-                configurator=TCPConfigurator(hostname + "2", ipaddress),
+                configurator=TCPConfigurator(hostname + "2", ipaddress, mode=mode),
             ),
         ]
 
@@ -628,6 +669,7 @@ class TestMakeHostSectionsHosts:
             config_cache,
             host_config,
             ipaddress,
+            mode=mode,
             sources=sources,
             max_cachefile_age=0,
             selected_raw_sections=None,
@@ -705,11 +747,12 @@ class TestMakeHostSectionsClusters:
         assert host_config.is_cluster is True
         assert host_config.nodes
 
-    def test_no_sources(self, cluster, nodes, config_cache, host_config):
+    def test_no_sources(self, cluster, nodes, config_cache, host_config, mode):
         mhs = make_host_sections(
             config_cache,
             host_config,
             None,
+            mode=mode,
             sources=[],
             max_cachefile_age=0,
             selected_raw_sections=None,
@@ -732,7 +775,7 @@ class TestMakeHostSectionsClusters:
             assert not section.persisted_sections
 
 
-def test_get_host_sections_cluster(monkeypatch, mocker):
+def test_get_host_sections_cluster(mode, monkeypatch, mocker):
     hostname = "testhost"
     hosts = {
         "host0": "10.0.0.0",
@@ -792,7 +835,8 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
         config_cache,
         host_config,
         address,
-        make_sources(host_config, address),
+        mode=mode,
+        sources=make_sources(host_config, address, mode=mode),
         max_cachefile_age=host_config.max_cachefile_age,
         selected_raw_sections=None,
     )

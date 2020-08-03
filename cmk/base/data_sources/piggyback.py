@@ -25,19 +25,22 @@ import cmk.base.config as config
 from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
-from ._abstract import ABCConfigurator
-from .agent import AgentDataSource
+from ._abstract import Mode
+from .agent import AgentConfigurator, AgentDataSource
 
 
-class PiggyBackConfigurator(ABCConfigurator):
+class PiggyBackConfigurator(AgentConfigurator):
     def __init__(
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
+        *,
+        mode: Mode,
     ) -> None:
         super().__init__(
             hostname,
             ipaddress,
+            mode=mode,
             source_type=SourceType.HOST,
             description=PiggyBackConfigurator._make_description(hostname),
             id_="piggyback",
@@ -113,12 +116,12 @@ class PiggyBackDataSource(AgentDataSource):
             prefetched_sections=prefetched_sections,
         ), False
 
-    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
+    def _summary_result(self) -> ServiceCheckResult:
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""
 
-        if not for_checking:
+        if self.configurator.mode is not Mode.CHECKING:
             # Check_MK Discovery: Do not display information about piggyback files
             # and source status file
             return 0, '', []

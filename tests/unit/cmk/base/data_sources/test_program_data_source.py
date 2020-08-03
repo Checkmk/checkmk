@@ -15,6 +15,7 @@ import cmk.utils.paths
 
 import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
+from cmk.base.data_sources import Mode
 from cmk.base.data_sources.programs import (
     DSProgramConfigurator,
     SpecialAgentConfigurator,
@@ -42,9 +43,14 @@ fun_args_stdin: Tuple[  #
 )  # type: ignore[assignment]
 
 
+@pytest.fixture(name="mode", params=Mode)
+def mode_fixture(request):
+    return request.param
+
+
 class TestDSProgramDataSource:
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_attribute_defaults(self, monkeypatch, ipaddress):
+    def test_attribute_defaults(self, ipaddress, mode, monkeypatch):
         template = ""
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
@@ -52,8 +58,12 @@ class TestDSProgramDataSource:
         configurator = DSProgramConfigurator(
             hostname,
             ipaddress,
+            mode=mode,
             template=template,
         )
+        assert configurator.hostname == hostname
+        assert configurator.ipaddress == ipaddress
+        assert configurator.mode is mode
         assert configurator.cmdline == ""
         assert configurator.stdin is None
         assert configurator.description == "Program: "
@@ -64,11 +74,16 @@ class TestDSProgramDataSource:
         assert source._cpu_tracking_id == "ds"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_template_translation(self, monkeypatch, ipaddress):
+    def test_template_translation(self, ipaddress, mode, monkeypatch):
         template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
-        configurator = DSProgramConfigurator(hostname, ipaddress, template=template)
+        configurator = DSProgramConfigurator(
+            hostname,
+            ipaddress,
+            mode=mode,
+            template=template,
+        )
 
         assert configurator.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
             ipaddress if ipaddress is not None else "",
@@ -111,6 +126,7 @@ class TestSpecialAgentDataSource:
         self,
         special_agent_id,
         ipaddress,
+        mode,
         agent_dir,
         expected_args,
         expected_stdin,
@@ -125,9 +141,13 @@ class TestSpecialAgentDataSource:
         configurator = SpecialAgentConfigurator(
             hostname,
             ipaddress,
+            mode=mode,
             special_agent_id=special_agent_id,
             params=params,
         )
+        assert configurator.hostname == hostname
+        assert configurator.ipaddress == ipaddress
+        assert configurator.mode is mode
         assert configurator.cmdline == (  #
             str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
         assert configurator.stdin == expected_stdin

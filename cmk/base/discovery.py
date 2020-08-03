@@ -331,6 +331,7 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                 config_cache,
                 host_config,
                 ipaddress,
+                data_sources.Mode.DISCOVERY,
                 _get_sources_for_discovery(
                     host_config,
                     ipaddress,
@@ -523,6 +524,7 @@ def discover_on_host(
             config_cache,
             host_config,
             ipaddress,
+            data_sources.Mode.DISCOVERY,
             _get_sources_for_discovery(
                 host_config,
                 ipaddress,
@@ -683,6 +685,7 @@ def check_discovery(
         config_cache,
         host_config,
         ipaddress,
+        data_sources.Mode.DISCOVERY,
         sources,
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
         selected_raw_sections=None,
@@ -724,7 +727,7 @@ def check_discovery(
 
     # Add data source information to check results
     for source in sources:
-        source_state, source_output, _source_perfdata = source.get_summary_result_for_discovery()
+        source_state, source_output, _source_perfdata = source.get_summary_result()
         # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
         if source_state != 0:
             status = max(status, source_state)
@@ -1243,6 +1246,7 @@ def _get_sources_for_discovery(
     sources = data_sources.make_sources(
         host_config,
         ipaddress,
+        mode=data_sources.Mode.DISCOVERY,
     )
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
@@ -1554,6 +1558,7 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
         config_cache,
         host_config,
         ip_address,
+        data_sources.Mode.DISCOVERY,
         _get_sources_for_discovery(
             host_config,
             ip_address,

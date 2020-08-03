@@ -37,7 +37,7 @@ from cmk.base.check_utils import (
 from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
-from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections, ABCParser
+from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections, ABCParser, Mode
 
 __all__ = ["AgentHostSections", "AgentDataSource"]
 
@@ -384,6 +384,10 @@ class AgentParser(ABCParser[RawAgentData, AgentHostSections]):
         )
 
 
+class AgentConfigurator(ABCConfigurator):
+    pass
+
+
 class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentSections,
                                     AgentHostSections],
                       metaclass=abc.ABCMeta):
@@ -441,11 +445,11 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         # TODO: This does not seem to be needed
         return ensure_binary(raw_data)
 
-    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
+    def _summary_result(self) -> ServiceCheckResult:
         if not isinstance(self._host_sections, AgentHostSections):
             raise TypeError(self._host_sections)
 
         return Summarizer(self.configurator.host_config).summarize(
             self._host_sections,
-            for_checking,
+            self.configurator.mode is Mode.CHECKING,
         )

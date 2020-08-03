@@ -19,16 +19,17 @@ import cmk.base.core_config as core_config
 from cmk.base.config import SelectedRawSections, SpecialAgentConfiguration
 from cmk.base.exceptions import MKAgentError
 
-from ._abstract import ABCConfigurator
-from .agent import AgentDataSource
+from ._abstract import Mode
+from .agent import AgentConfigurator, AgentDataSource
 
 
-class ProgramConfigurator(ABCConfigurator):
+class ProgramConfigurator(AgentConfigurator):
     def __init__(
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        mode: Mode,
         id_: str,
         cpu_tracking_id: str,
         cmdline: str,
@@ -37,6 +38,7 @@ class ProgramConfigurator(ABCConfigurator):
         super().__init__(
             hostname,
             ipaddress,
+            mode=mode,
             source_type=SourceType.HOST,
             description=ProgramConfigurator._make_description(
                 cmdline,
@@ -53,12 +55,14 @@ class ProgramConfigurator(ABCConfigurator):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        mode: Mode,
         special_agent_id: str,
         params: Dict,
     ) -> "SpecialAgentConfigurator":
         return SpecialAgentConfigurator(
             hostname,
             ipaddress,
+            mode=mode,
             special_agent_id=special_agent_id,
             params=params,
         )
@@ -68,9 +72,10 @@ class ProgramConfigurator(ABCConfigurator):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        mode: Mode,
         template: str,
     ) -> "DSProgramConfigurator":
-        return DSProgramConfigurator(hostname, ipaddress, template=template)
+        return DSProgramConfigurator(hostname, ipaddress, mode=mode, template=template)
 
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
@@ -93,11 +98,13 @@ class DSProgramConfigurator(ProgramConfigurator):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        mode: Mode,
         template: str,
     ) -> None:
         super().__init__(
             hostname,
             ipaddress,
+            mode=mode,
             id_="agent",
             cpu_tracking_id="ds",
             cmdline=DSProgramConfigurator._translate(
@@ -156,12 +163,14 @@ class SpecialAgentConfigurator(ProgramConfigurator):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        mode: Mode,
         special_agent_id: str,
         params: Dict,
     ) -> None:
         super().__init__(
             hostname,
             ipaddress,
+            mode=mode,
             id_="special_%s" % special_agent_id,
             cpu_tracking_id="ds",
             cmdline=SpecialAgentConfigurator._make_cmdline(

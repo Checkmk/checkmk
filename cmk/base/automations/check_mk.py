@@ -1221,13 +1221,18 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, u""
-        for source in data_sources.make_sources(host_config, ipaddress):
+        for source in data_sources.make_sources(
+                host_config,
+                ipaddress,
+                mode=data_sources.Mode.CHECKING,
+        ):
             source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source.configurator, data_sources.programs.DSProgramConfigurator) and cmd:
                 source = data_sources.programs.ProgramDataSource(
                     configurator=data_sources.programs.DSProgramConfigurator(
                         host_config.hostname,
                         ipaddress,
+                        mode=data_sources.Mode.CHECKING,
                         template=cmd,
                     ),)
             elif isinstance(source, data_sources.tcp.TCPDataSource):
@@ -1517,7 +1522,11 @@ class AutomationGetAgentOutput(Automation):
                     not data_sources.ABCDataSource.is_agent_cache_disabled())
 
                 agent_output = b""
-                sources = data_sources.make_sources(host_config, ipaddress)
+                sources = data_sources.make_sources(
+                    host_config,
+                    ipaddress,
+                    mode=data_sources.Mode.CHECKING,
+                )
                 for source in sources:
                     source.set_max_cachefile_age(config.check_max_cachefile_age)
                     if isinstance(source, data_sources.agent.AgentDataSource):
@@ -1529,8 +1538,7 @@ class AutomationGetAgentOutput(Automation):
 
                 # Optionally show errors of problematic data sources
                 for source in sources:
-                    source_state, source_output, _source_perfdata = source.get_summary_result_for_checking(
-                    )
+                    source_state, source_output, _source_perfdata = source.get_summary_result()
                     if source_state != 0:
                         success = False
                         output += "[%s] %s\n" % (source.id, source_output)

@@ -154,11 +154,13 @@ def do_check(
         sources = data_sources.make_sources(
             host_config,
             ipaddress,
+            mode=data_sources.Mode.CHECKING,
         )
         mhs = data_sources.make_host_sections(
             config_cache,
             host_config,
             ipaddress,
+            data_sources.Mode.CHECKING,
             sources=sources,
             selected_raw_sections=selected_raw_sections,
             max_cachefile_age=host_config.max_cachefile_age,
@@ -183,7 +185,7 @@ def do_check(
             item_state.save(hostname)
 
         for source in sources:
-            source_state, source_output, source_perfdata = source.get_summary_result_for_checking()
+            source_state, source_output, source_perfdata = source.get_summary_result()
             if source_output != "":
                 status = max(status, source_state)
                 infotexts.append("[%s] %s" % (source.id, source_output))

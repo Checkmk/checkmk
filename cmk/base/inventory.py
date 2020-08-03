@@ -75,7 +75,11 @@ def do_inv(hostnames: List[HostName]) -> None:
                 config_cache,
                 host_config,
                 ipaddress,
-                sources=data_sources.make_sources(host_config, ipaddress),
+                sources=data_sources.make_sources(
+                    host_config,
+                    ipaddress,
+                    mode=data_sources.Mode.INVENTORY,
+                ),
                 multi_host_sections=None,
             )
             _run_inventory_export_hooks(host_config, inventory_tree)
@@ -120,7 +124,7 @@ def do_inv_check(
     long_infotexts: List[str] = []
     perfdata: List[Tuple] = []
 
-    sources = data_sources.make_sources(host_config, ipaddress)
+    sources = data_sources.make_sources(host_config, ipaddress, mode=data_sources.Mode.INVENTORY)
     inventory_tree, status_data_tree = _do_inv_for(
         config_cache,
         host_config,
@@ -172,7 +176,7 @@ def do_inv_check(
             infotexts.append("Found %s status entries" % status_data_tree.count_entries())
 
     for source in sources:
-        source_state, source_output, _source_perfdata = source.get_summary_result_for_inventory()
+        source_state, source_output, _source_perfdata = source.get_summary_result()
         if source_state != 0:
             # Do not output informational things (state == 0). Also do not use source states
             # which would overwrite "State when inventory fails" in the ruleset
@@ -197,8 +201,11 @@ def _all_sources_fail(
         return False
 
     exceptions_by_source = {
-        source.configurator.id: source.exception()
-        for source in data_sources.make_sources(host_config, ipaddress)
+        source.configurator.id: source.exception() for source in data_sources.make_sources(
+            host_config,
+            ipaddress,
+            mode=data_sources.Mode.INVENTORY,
+        )
     }
     if "piggyback" in exceptions_by_source and not len(exceptions_by_source) == 1\
        and not host_config.has_piggyback_data:
@@ -327,6 +334,7 @@ def _do_inv_for_realhost(
             config_cache,
             host_config,
             ipaddress,
+            data_sources.Mode.INVENTORY,
             sources,
             max_cachefile_age=host_config.max_cachefile_age,
             selected_raw_sections=None,

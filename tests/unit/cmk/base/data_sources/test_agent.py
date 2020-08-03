@@ -18,7 +18,7 @@ from cmk.utils.type_defs import SectionName, SourceType
 
 import cmk.base.config as config
 import cmk.base.data_sources.agent as agent
-from cmk.base.data_sources import ABCConfigurator
+from cmk.base.data_sources import ABCConfigurator, Mode
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 
@@ -158,6 +158,10 @@ class TestAgentSummaryResult:
     def hostname(self):
         return "testhost"
 
+    @pytest.fixture(params=(mode for mode in Mode if mode is not Mode.NONE))
+    def mode(self, request):
+        return request.param
+
     @pytest.fixture
     def scenario(self, hostname, monkeypatch):
         ts = Scenario()
@@ -166,10 +170,11 @@ class TestAgentSummaryResult:
         return ts
 
     @pytest.fixture
-    def source(self, hostname):
+    def source(self, hostname, mode):
         return StubAgent(configurator=StubConfigurator(
             hostname,
             "1.2.3.4",
+            mode=mode,
             source_type=SourceType.HOST,
             id_="agent_id",
             cpu_tracking_id="agent_cpu_id",
@@ -177,43 +182,38 @@ class TestAgentSummaryResult:
         ))
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.parametrize("for_checking", [True, False])
-    def test_defaults(self, source, for_checking):
+    def test_defaults(self, source, mode):
         source._host_sections = source._empty_host_sections()
-        assert source._get_summary_result(for_checking) == (
+        assert source.get_summary_result() == (
             0,
             "Version: unknown, OS: unknown",
             [],
         )
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.parametrize("for_checking", [True, False])
-    def test_with_exception(self, source, for_checking):
+    def test_with_exception(self, source):
         source._exception = Exception()
         assert source.exception()
 
-        assert source._get_summary_result(for_checking) == (3, "(?)", [])
+        assert source.get_summary_result() == (3, "(?)", [])
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.parametrize("for_checking", [True, False])
-    def test_with_MKEmptyAgentData_exception(self, source, for_checking):
+    def test_with_MKEmptyAgentData_exception(self, source):
         source._exception = MKEmptyAgentData()
         assert source.exception()
 
-        assert source._get_summary_result(for_checking) == (2, "(!!)", [])
+        assert source.get_summary_result() == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.parametrize("for_checking", [True, False])
-    def test_with_MKAgentError_exception(self, source, for_checking):
+    def test_with_MKAgentError_exception(self, source):
         source._exception = MKAgentError()
         assert source.exception()
 
-        assert source._get_summary_result(for_checking) == (2, "(!!)", [])
+        assert source.get_summary_result() == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.parametrize("for_checking", [True, False])
-    def test_with_MKTimeout_exception(self, source, for_checking):
+    def test_with_MKTimeout_exception(self, source):
         source._exception = MKTimeout()
         assert source.exception()
 
-        assert source._get_summary_result(for_checking) == (2, "(!!)", [])
+        assert source.get_summary_result() == (2, "(!!)", [])

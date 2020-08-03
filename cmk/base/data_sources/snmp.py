@@ -29,7 +29,7 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
-from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections, ABCParser
+from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections, ABCParser, Mode
 
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
@@ -89,6 +89,7 @@ class SNMPConfigurator(ABCConfigurator):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
+        mode: Mode,
         source_type: SourceType,
         id_: str,
         cpu_tracking_id: str,
@@ -97,6 +98,7 @@ class SNMPConfigurator(ABCConfigurator):
         super().__init__(
             hostname,
             ipaddress,
+            mode=mode,
             source_type=source_type,
             description=SNMPConfigurator._make_description(hostname, ipaddress, title=title),
             id_=id_,
@@ -128,12 +130,15 @@ class SNMPConfigurator(ABCConfigurator):
         cls,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
+        *,
+        mode: Mode,
     ) -> "SNMPConfigurator":
         if ipaddress is None:
             raise TypeError(ipaddress)
         return cls(
             hostname,
             ipaddress,
+            mode=mode,
             source_type=SourceType.HOST,
             id_="snmp",
             cpu_tracking_id="snmp",
@@ -145,12 +150,15 @@ class SNMPConfigurator(ABCConfigurator):
         cls,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
+        *,
+        mode: Mode,
     ) -> "SNMPConfigurator":
         if ipaddress is None:
             raise TypeError(ipaddress)
         return cls(
             hostname,
             ipaddress,
+            mode=mode,
             source_type=SourceType.MANAGEMENT,
             id_="mgmt_snmp",
             cpu_tracking_id="snmp",
@@ -295,7 +303,7 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
     def _parser(self) -> ABCParser:
         return SNMPParser(self.hostname, self._logger)
 
-    def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
+    def _summary_result(self) -> ServiceCheckResult:
         return 0, "Success", []
 
     def _empty_raw_data(self) -> SNMPRawData:
@@ -320,8 +328,8 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         configurator = cast(SNMPConfigurator, self.configurator)
         configurator.persisted_sections = self._section_store.load(
             self._use_outdated_persisted_sections,)
-        configurator.selected_raw_sections = selected_raw_sections
-        configurator.prefetched_sections = prefetched_sections
+        configurator.selected_raw_sections = selected_raw_sections  # checking only
+        configurator.prefetched_sections = prefetched_sections  # inventory only
         # End of wrong
         ip_lookup.verify_ipaddress(self.configurator.ipaddress)
         with SNMPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:

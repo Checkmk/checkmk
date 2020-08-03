@@ -4,24 +4,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# No stub
+import pytest  # type: ignore[import]
+
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import SourceType
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.data_sources import Mode
 from cmk.base.data_sources.ipmi import IPMIConfigurator, IPMIManagementBoardDataSource
 
 
-def test_attribute_defaults(monkeypatch):
+@pytest.fixture(name="mode", params=(mode for mode in Mode if mode is not Mode.NONE))
+def mode_fixture(request):
+    return request.param
+
+
+def test_attribute_defaults(mode, monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
 
     host_config = config.get_config_cache().get_host_config(hostname)
     ipaddress = ip_lookup.lookup_mgmt_board_ip_address(host_config)
 
-    configurator = IPMIConfigurator(hostname, ipaddress)
+    configurator = IPMIConfigurator(hostname, ipaddress, mode=mode)
+    assert configurator.hostname == hostname
+    assert configurator.ipaddress == ipaddress
+    assert configurator.mode is mode
     assert configurator.description == "Management board - IPMI"
     assert configurator.source_type is SourceType.MANAGEMENT
 
@@ -31,11 +41,11 @@ def test_attribute_defaults(monkeypatch):
     assert source.ipaddress is None
     assert source.id == "mgmt_ipmi"
     assert source._cpu_tracking_id == source.id
-    assert source._summary_result(True) == (0, "Version: unknown", [])
+    assert source.get_summary_result() == (0, "Version: unknown", [])
     assert source._get_ipmi_version(None) == "unknown"
 
 
-def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
+def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):
     hostname = "testhost"
     ipaddress = "127.0.0.1"
 
@@ -50,7 +60,7 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
         },
     })
 
-    configurator = IPMIConfigurator(hostname, ipaddress)
+    configurator = IPMIConfigurator(hostname, ipaddress, mode=mode)
     assert configurator.host_config.management_address == ipaddress
 
     source = IPMIManagementBoardDataSource(configurator=configurator)

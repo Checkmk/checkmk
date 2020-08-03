@@ -270,13 +270,13 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
     def _execute(
         self,
         *,
-        persisted_sections: SNMPPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
         prefetched_sections: Sequence[SectionName],
     ) -> SNMPRawData:
         # This is wrong
         configurator = cast(SNMPConfigurator, self.configurator)
-        configurator.persisted_sections = persisted_sections
+        configurator.persisted_sections = self._section_store.load(
+            self._use_outdated_persisted_sections,)
         configurator.selected_raw_sections = selected_raw_sections
         configurator.prefetched_sections = prefetched_sections
         # End of wrong

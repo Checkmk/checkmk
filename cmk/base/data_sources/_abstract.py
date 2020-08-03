@@ -207,8 +207,9 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
     ) -> None:
-        super(ABCDataSource, self).__init__()
+        super().__init__()
         self.configurator = configurator
+        self._logger = self.configurator._logger
         if not cache_dir:
             cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.configurator.id
         if not persisted_section_dir:
@@ -218,9 +219,9 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self._cache_file_path: Final[Path] = cache_dir / self.configurator.hostname
         self._persisted_sections_file_path: Final[
             Path] = persisted_section_dir / self.configurator.hostname
+        self._section_store = SectionStore(self._persisted_sections_file_path, self._logger)
 
         self._max_cachefile_age: Optional[int] = None
-        self._logger = self.configurator._logger
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self._exception: Optional[Exception] = None
@@ -310,14 +311,12 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
         self._exception = None
         self._host_sections = None
-        section_store = SectionStore(self._persisted_sections_file_path, self._logger)
 
         try:
-            persisted_sections: BoundedAbstractPersistedSections = section_store.load(
+            persisted_sections: BoundedAbstractPersistedSections = self._section_store.load(
                 self._use_outdated_persisted_sections)
 
             raw_data, is_cached_data = self._get_raw_data(
-                persisted_sections=persisted_sections,
                 selected_raw_sections=selected_raw_sections,
                 prefetched_sections=prefetched_sections,
             )
@@ -330,7 +329,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
             if host_sections.persisted_sections and not is_cached_data:
                 persisted_sections.update(host_sections.persisted_sections)
-                section_store.store(persisted_sections)
+                self._section_store.store(persisted_sections)
 
             # Add information from previous persisted infos
             self._update_info_with_persisted_sections(
@@ -369,7 +368,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _get_raw_data(
         self,
         *,
-        persisted_sections: BoundedAbstractPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
         prefetched_sections: Sequence[SectionName],
     ) -> Tuple[BoundedAbstractRawData, bool]:
@@ -393,7 +391,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
         self._logger.log(VERBOSE, "Execute data source")
         raw_data = self._execute(
-            persisted_sections=persisted_sections,
             selected_raw_sections=selected_raw_sections,
             prefetched_sections=prefetched_sections,
         )
@@ -404,7 +401,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _execute(
         self,
         *,
-        persisted_sections: BoundedAbstractPersistedSections,
         selected_raw_sections: Optional[SelectedRawSections],
         prefetched_sections: Sequence[SectionName],
     ) -> BoundedAbstractRawData:

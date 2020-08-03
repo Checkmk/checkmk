@@ -330,8 +330,12 @@ class Parser:
 
                 section_content.append(decoded_line.split(separator))
 
-        return AgentHostSections(sections, agent_cache_info, piggybacked_raw_data,
-                                 persisted_sections)
+        return AgentHostSections(
+            sections,
+            agent_cache_info,
+            piggybacked_raw_data,
+            persisted_sections,
+        )
 
     @staticmethod
     def _parse_section_header(

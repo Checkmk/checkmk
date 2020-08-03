@@ -22,7 +22,6 @@ from cmk.utils.type_defs import (
 from cmk.fetchers import PiggyBackDataFetcher
 
 import cmk.base.config as config
-from cmk.base.check_utils import PersistedAgentSections
 from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
@@ -75,7 +74,6 @@ class PiggyBackDataSource(AgentDataSource):
     def _execute(
         self,
         *,
-        persisted_sections: PersistedAgentSections,
         selected_raw_sections: Optional[SelectedRawSections],
         prefetched_sections: Sequence[SectionName],
     ) -> RawAgentData:
@@ -102,7 +100,6 @@ class PiggyBackDataSource(AgentDataSource):
     def _get_raw_data(
         self,
         *,
-        persisted_sections: PersistedAgentSections,
         selected_raw_sections: Optional[SelectedRawSections],
         prefetched_sections: Sequence[SectionName],
     ) -> Tuple[RawAgentData, bool]:
@@ -112,7 +109,6 @@ class PiggyBackDataSource(AgentDataSource):
         """
         self._logger.log(VERBOSE, "Execute data source")
         return self._execute(
-            persisted_sections=persisted_sections,
             selected_raw_sections=selected_raw_sections,
             prefetched_sections=prefetched_sections,
         ), False

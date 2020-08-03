@@ -2223,57 +2223,6 @@ def get_limit() -> Optional[int]:
     return config.soft_query_limit
 
 
-def view_optiondial(view, option, choices, help_txt):
-    # Darn: The option "refresh" has the name "browser_reload" in the
-    # view definition
-    if option == "refresh":
-        name = "browser_reload"
-    else:
-        name = option
-
-    # Take either the first option of the choices, the view value or the
-    # configured painter option.
-    painter_options = PainterOptions.get_instance()
-    value = painter_options.get(option, dflt=view.get(name, choices[0][0]))
-
-    title = dict(choices).get(value, value)
-    html.begin_context_buttons()  # just to be sure
-    html.open_div(id_="optiondial_%s" % option,
-                  class_=["optiondial", option, "val_%s" % value],
-                  title=help_txt,
-                  onclick="cmk.views.dial_option(this, %s, %s, %s)" %
-                  (json.dumps(view["name"]), json.dumps(option), json.dumps(choices)))
-    html.div(title)
-    html.close_div()
-    html.final_javascript("cmk.views.init_optiondial('optiondial_%s');" % option)
-
-
-def view_optiondial_off(option):
-    html.div('', class_=["optiondial", "off", option])
-
-
-# Will be called when the user presses the upper button, in order
-# to persist the new setting - and to make it active before the
-# browser reload of the DIV containing the actual status data is done.
-@cmk.gui.pages.register("ajax_set_viewoption")
-def ajax_set_viewoption():
-    view_name = html.request.get_str_input_mandatory("view_name")
-    option = html.request.get_str_input_mandatory("option")
-    value_str = html.request.var("value")
-    value_mapping: Dict[Optional[str], bool] = {'true': True, 'false': False}
-    value: Union[None, str, bool, int] = value_mapping.get(value_str, value_str)
-    if isinstance(value, str) and value[0].isdigit():
-        try:
-            value = int(value)
-        except ValueError:
-            pass
-
-    painter_options = PainterOptions.get_instance()
-    painter_options.load(view_name)
-    painter_options.set(option, value)
-    painter_options.save_to_config(view_name)
-
-
 def _link_to_folder_by_path(path: str) -> str:
     """Return an URL to a certain WATO folder when we just know its path"""
     return html.makeuri_contextless([("mode", "folder"), ("folder", path)], filename="wato.py")

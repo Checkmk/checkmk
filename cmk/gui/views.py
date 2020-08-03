@@ -501,7 +501,7 @@ class View:
 
 class ABCViewRenderer(metaclass=abc.ABCMeta):
     def __init__(self, view: View) -> None:
-        super(ABCViewRenderer, self).__init__()
+        super().__init__()
         self.view = view
 
     @abc.abstractmethod

@@ -124,6 +124,20 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=ABCHostSections)
 
 
+class ABCParser(Generic[BoundedAbstractRawData, BoundedAbstractHostSections],
+                metaclass=abc.ABCMeta):
+    """Parse raw data into host sections."""
+    def __init__(self, hostname: HostName, logger: logging.Logger) -> None:
+        super().__init__()
+        self.hostname: Final[HostName] = hostname
+        self.host_config = config.HostConfig.make_host_config(self.hostname)
+        self._logger = logger
+
+    @abc.abstractmethod
+    def parse(self, raw_data: BoundedAbstractRawData) -> BoundedAbstractHostSections:
+        raise NotImplementedError
+
+
 class ABCConfigurator(abc.ABC):
     """Hold the configuration to fetchers and checkers.
 
@@ -321,7 +335,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                 prefetched_sections=prefetched_sections,
             )
 
-            self._host_sections = host_sections = self._parse(raw_data)
+            self._host_sections = host_sections = self._parser.parse(raw_data)
             assert isinstance(host_sections, ABCHostSections)
 
             if get_raw_data:
@@ -429,13 +443,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _to_cache_file(self, raw_data: BoundedAbstractRawData) -> bytes:
         raise NotImplementedError()
 
+    @property
     @abc.abstractmethod
-    def _parse(
-        self,
-        raw_data: BoundedAbstractRawData,
-    ) -> BoundedAbstractHostSections:
-        """See _execute() for details"""
-        raise NotImplementedError()
+    def _parser(self) -> ABCParser[BoundedAbstractRawData, BoundedAbstractHostSections]:
+        raise NotImplementedError
 
     def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
         self._max_cachefile_age = max_cachefile_age

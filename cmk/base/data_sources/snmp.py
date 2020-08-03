@@ -29,7 +29,7 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
-from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections
+from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections, ABCParser
 
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
@@ -252,8 +252,49 @@ class SNMPConfigurator(ABCConfigurator):
         )
 
 
+class SNMPParser(ABCParser[SNMPRawData, SNMPHostSections]):
+    """A parser for SNMP data."""
+    def parse(
+        self,
+        raw_data: SNMPRawData,
+    ) -> SNMPHostSections:
+        persisted_sections = SNMPParser._extract_persisted_sections(
+            raw_data,
+            self.host_config,
+        )
+        return SNMPHostSections(raw_data, persisted_sections=persisted_sections)
+
+    @staticmethod
+    def _extract_persisted_sections(
+        raw_data: SNMPRawData,
+        host_config: config.HostConfig,
+    ) -> SNMPPersistedSections:
+        """Extract the sections to be persisted from the raw_data and return it
+
+        Gather the check types to be persisted, extract the related data from
+        the raw data, calculate the times and store the persisted info for
+        later use.
+        """
+        persisted_sections: SNMPPersistedSections = {}
+
+        for section_name, section_content in raw_data.items():
+            fetch_interval = host_config.snmp_fetch_interval(section_name)
+            if fetch_interval is None:
+                continue
+
+            cached_at = int(time.time())
+            until = cached_at + (fetch_interval * 60)
+            persisted_sections[section_name] = (cached_at, until, section_content)
+
+        return persisted_sections
+
+
 class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                    SNMPHostSections]):
+    @property
+    def _parser(self) -> ABCParser:
+        return SNMPParser(self.hostname, self._logger)
+
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         return 0, "Success", []
 
@@ -286,34 +327,3 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         with SNMPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
-
-    def _parse(self, raw_data: SNMPRawData) -> SNMPHostSections:
-        persisted_sections = self._extract_persisted_sections(
-            raw_data,
-            self.configurator.host_config,
-        )
-        return SNMPHostSections(raw_data, persisted_sections=persisted_sections)
-
-    @staticmethod
-    def _extract_persisted_sections(
-        raw_data: SNMPRawData,
-        host_config: config.HostConfig,
-    ) -> SNMPPersistedSections:
-        """Extract the sections to be persisted from the raw_data and return it
-
-        Gather the check types to be persisted, extract the related data from
-        the raw data, calculate the times and store the persisted info for
-        later use.
-        """
-        persisted_sections: SNMPPersistedSections = {}
-
-        for section_name, section_content in raw_data.items():
-            fetch_interval = host_config.snmp_fetch_interval(section_name)
-            if fetch_interval is None:
-                continue
-
-            cached_at = int(time.time())
-            until = cached_at + (fetch_interval * 60)
-            persisted_sections[section_name] = (cached_at, until, section_content)
-
-        return persisted_sections

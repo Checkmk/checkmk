@@ -16,9 +16,10 @@ from testlib.base import Scenario
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import SectionName, SourceType
 
+import cmk.base.config as config
+import cmk.base.data_sources.agent as agent
 from cmk.base.data_sources import ABCConfigurator
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
-import cmk.base.data_sources.agent as agent
 
 
 class TestSummarizer:
@@ -40,6 +41,7 @@ class TestParser:
         ts.add_host(hostname)
         ts.apply(monkeypatch)
 
+    @pytest.mark.usefixtures("scenario")
     def test_raw_section_populates_sections(self, hostname, logger):
         raw_data = b"\n".join((
             b"<<<a_section>>>",
@@ -50,7 +52,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = agent.Parser(logger).parse(hostname, raw_data, check_interval=10)
+        ahs = agent.AgentParser(hostname, logger).parse(raw_data)
 
         assert ahs.sections == {
             SectionName("a_section"): [["first", "line"], ["second", "line"]],
@@ -64,6 +66,7 @@ class TestParser:
     def test_piggyback_populates_piggyback_raw_data(self, hostname, logger, monkeypatch):
         time_time = 1000
         monkeypatch.setattr(time, "time", lambda: time_time)
+        monkeypatch.setattr(config.HostConfig, "check_mk_check_interval", 10)
 
         raw_data = b"\n".join((
             b"<<<<piggyback header>>>>",  # <- space is OK
@@ -78,7 +81,7 @@ class TestParser:
             b"<<<<>>>>",
         ))
 
-        ahs = agent.Parser(logger).parse(hostname, raw_data, check_interval=10)
+        ahs = agent.AgentParser(hostname, logger).parse(raw_data)
 
         assert ahs.sections == {}
         assert ahs.cache_info == {}
@@ -96,6 +99,7 @@ class TestParser:
         }
         assert ahs.persisted_sections == {}
 
+    @pytest.mark.usefixtures("scenario")
     def test_persist_option_populates_cache_info_and_persisted_sections(
         self,
         hostname,
@@ -112,7 +116,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = agent.Parser(logger).parse(hostname, raw_data, check_interval=10)
+        ahs = agent.AgentParser(hostname, logger).parse(raw_data)
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
         assert ahs.piggybacked_raw_data == {}
@@ -134,7 +138,7 @@ class TestParser:
         ],
     )  # yapf: disable
     def test_section_header_options(self, headerline, section_name, section_options):
-        parsed_name, parsed_options = agent.Parser._parse_section_header(headerline)
+        parsed_name, parsed_options = agent.AgentParser._parse_section_header(headerline)
         assert parsed_name == section_name
         assert parsed_options == section_options
 

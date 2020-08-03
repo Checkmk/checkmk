@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import logging
 import time
 from pathlib import Path
 from typing import cast, Dict, List, Optional, Tuple
@@ -38,7 +37,7 @@ from cmk.base.check_utils import (
 from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
-from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections
+from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections, ABCParser
 
 __all__ = ["AgentHostSections", "AgentDataSource"]
 
@@ -220,33 +219,27 @@ class Summarizer:
                 (agent_version, expected_version, e))
 
 
-class Parser:
+class AgentParser(ABCParser[RawAgentData, AgentHostSections]):
+    """A parser for agent data."""
+
     # TODO(ml): Refactor, we should structure the code so that we have one
     #   function per attribute in AgentHostSections (AgentHostSections.sections,
     #   AgentHostSections.cache_info, AgentHostSections.piggybacked_raw_data,
     #   and AgentHostSections.persisted_sections) and a few simple helper functions.
     #   Moreover, the main loop of the parser (at `for line in raw_data.split(b"\n")`)
     #   is an FSM and shoule be written as such.  (See CMK-5004)
-    def __init__(self, logger: logging.Logger) -> None:
-        super().__init__()
-        self._logger = logger
-
     def parse(
         self,
-        hostname: HostName,
         raw_data: RawAgentData,
-        *,
-        check_interval: int,
     ) -> AgentHostSections:
         raw_data = cast(RawAgentData, raw_data)
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
-        return self._parse_host_section(hostname, raw_data, check_interval)
+        return self._parse_host_section(raw_data, self.host_config.check_mk_check_interval)
 
     def _parse_host_section(
         self,
-        hostname: HostName,
         raw_data: RawAgentData,
         check_interval: int,
     ) -> AgentHostSections:
@@ -254,6 +247,7 @@ class Parser:
 
         Returns a HostSections() object.
         """
+        hostname = self.hostname
         sections: AgentSections = {}
         # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
         # The value is a list of lines which were received for this host.
@@ -275,18 +269,19 @@ class Parser:
             stripped_line = line.strip()
             if stripped_line[:4] == b'<<<<' and stripped_line[-4:] == b'>>>>':
                 piggybacked_hostname =\
-                    Parser._get_sanitized_and_translated_piggybacked_hostname(stripped_line, hostname)
+                    AgentParser._get_sanitized_and_translated_piggybacked_hostname(stripped_line, hostname)
 
             elif piggybacked_hostname:  # processing data for an other host
                 if stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
-                    line = Parser._add_cached_info_to_piggybacked_section_header(
+                    line = AgentParser._add_cached_info_to_piggybacked_section_header(
                         stripped_line, piggybacked_cached_at, piggybacked_cache_age)
                 piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
             # Found normal section header
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
             elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
-                section_name, section_options = Parser._parse_section_header(stripped_line[3:-3])
+                section_name, section_options = AgentParser._parse_section_header(
+                    stripped_line[3:-3])
 
                 if section_name is None:
                     self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
@@ -428,6 +423,10 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         """
         # TODO: We should cleanup these old directories one day. Then we can remove this special case
 
+    @property
+    def _parser(self) -> ABCParser:
+        return AgentParser(self.hostname, self._logger)
+
     def _empty_raw_data(self) -> RawAgentData:
         return b""
 
@@ -441,13 +440,6 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
         raw_data = cast(RawAgentData, raw_data)
         # TODO: This does not seem to be needed
         return ensure_binary(raw_data)
-
-    def _parse(self, raw_data: RawAgentData) -> AgentHostSections:
-        return Parser(self._logger).parse(
-            self.configurator.hostname,
-            raw_data,
-            check_interval=self.configurator.host_config.check_mk_check_interval,
-        )
 
     def _summary_result(self, for_checking: bool) -> ServiceCheckResult:
         if not isinstance(self._host_sections, AgentHostSections):

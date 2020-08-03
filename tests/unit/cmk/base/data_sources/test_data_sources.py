@@ -96,7 +96,7 @@ def test_piggyback_storage(monkeypatch, mocker):
 
     source = TCPDataSource(configurator=TCPConfigurator(hostname, ipaddress),)
     monkeypatch.setattr(time, "time", lambda: 0)
-    mhs = agent.Parser(logging.getLogger("test")).parse(hostname, raw_data, check_interval=0)
+    mhs = agent.AgentParser(hostname, logging.getLogger("test")).parse(raw_data)
     monkeypatch.setattr(
         type(source),
         "run",

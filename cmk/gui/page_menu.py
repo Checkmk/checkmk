@@ -429,6 +429,9 @@ class PageMenuRenderer:
             html.close_div()
 
         for topic in dropdown.topics:
+            if not topic.entries:
+                continue  # Do not display empty topics
+
             self._show_topic(topic)
 
         html.close_div()

@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Optional, Tuple
+from ..agent_based_api.v0.type_defs import CheckGenerator
 
-from ..agent_based_api.v0 import render
+from ..agent_based_api.v0 import Metric, render, Result, state
 
 
 def normalize_levels(
@@ -60,3 +61,87 @@ def normalize_levels(
         levels_text = "warn/crit at %s used" % levels_text
 
     return warn_used, crit_used, levels_text
+
+
+def compute_state(value: float, warn: Optional[float], crit: Optional[float]) -> state:
+    """get state according to levels
+
+        >>> print(compute_state(23., 12, 42))
+        state.WARN
+
+    """
+    if crit is not None and value >= crit:
+        return state.CRIT
+    if warn is not None and value >= warn:
+        return state.WARN
+    return state.OK
+
+
+def check_element(
+    label: str,
+    used: float,
+    total: float,
+    levels: Tuple[str, Tuple[Optional[float], Optional[float]]],  # we can deal with Any, though
+    label_total: str = "",
+    show_free: bool = False,
+    metric_name: Optional[str] = None,
+    create_percent_metric: bool = False,
+) -> CheckGenerator:
+    """Yield a check result and metric for one memory element
+
+        >>> result, metric = check_element(
+        ...     label="Short term memory",
+        ...     used=46,
+        ...     total=200.,
+        ...     levels=("perc_used", (12, 42)),
+        ...     create_percent_metric=True,
+        ... )
+        >>> print(result.summary)
+        Short term memory: 23.0% - 46 B of 200 B (warn/crit at 12.0%/42.0% used)
+        >>> print(result.state)
+        state.WARN
+        >>> print(metric)
+        Metric('mem_used_percent', 23.0, levels=(12.0, 42.0), boundaries=(0.0, None))
+
+    """
+    if show_free:
+        show_value = total - used
+        show_text = " free"
+    else:
+        show_value = used
+        show_text = ""
+
+    infotext = "%s: %s%s - %s of %s%s" % (
+        label,
+        render.percent(100.0 * show_value / total),
+        show_text,
+        render.bytes(show_value),
+        render.bytes(total),
+        (" %s" % label_total).rstrip(),
+    )
+
+    try:
+        mode, (warn, crit) = levels  # type: ignore
+    except (ValueError, TypeError):  # handle None, "ignore"
+        mode, (warn, crit) = "ignore", (None, None)
+
+    warn, crit, levels_text = normalize_levels(mode, warn, crit, total)
+    my_state = compute_state(used, warn, crit)
+    if my_state != state.OK and levels_text:
+        infotext = "%s (%s)" % (infotext, levels_text)
+    yield Result(state=my_state, summary=infotext)
+
+    if metric_name:
+        yield Metric(metric_name, used, levels=(warn, crit), boundaries=(0, total))
+
+    if create_percent_metric:
+        scale_to_perc = 100.0 / total
+        yield Metric(
+            "mem_used_percent",
+            used * scale_to_perc,
+            levels=(
+                warn * scale_to_perc if warn is not None else None,
+                crit * scale_to_perc if crit is not None else None,
+            ),
+            boundaries=(0.0, None),  # some times over 100%!
+        )

@@ -6,7 +6,10 @@
 
 from typing import NamedTuple
 
-from cmk.base.plugins.agent_based.utils.memory import normalize_levels as normalize_mem_levels
+from cmk.base.plugins.agent_based.utils.memory import (
+    compute_state,
+    normalize_levels as normalize_mem_levels,
+)
 
 memused_default_levels = (150.0, 200.0)
 
@@ -52,13 +55,12 @@ def get_levels_mode_from_value(warn):
 
 
 def _compute_state(value, warn, crit):
-    if crit is not None and value >= crit:
-        return 2
-    if warn is not None and value >= warn:
-        return 1
-    return 0
+    return int(compute_state(value, warn, crit))
 
 
+#############################################################################
+#    This function is already migrated and available in utils/memory.py !   #
+#############################################################################
 def check_memory_element(label,
                          used,
                          total,

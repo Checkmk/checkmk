@@ -16,6 +16,8 @@
 #   |  all of its specific information in /proc/meminfo.                   |
 #   '----------------------------------------------------------------------'
 
+import cmk.base.plugins.agent_based.utils.memory as memory
+
 factory_settings["mem_linux_default_levels"] = {
     "levels_virtual": ("perc_used", (80.0, 90.0)),
     "levels_total": ("perc_used", (120.0, 150.0)),
@@ -28,12 +30,8 @@ factory_settings["mem_linux_default_levels"] = {
 }
 
 
-def is_linux_meminfo(meminfo):
-    return "PageTables" in meminfo and "Writeback" in meminfo and "Committed_AS" in meminfo
-
-
 def inventory_mem_linux(section):
-    if is_linux_meminfo(section):
+    if memory.is_linux_section(section):
         yield None, {}
 
 
@@ -152,7 +150,7 @@ mem_extended_perfdata = None
 
 def inventory_mem_used(section):
     if ("MemTotal" in section and "PageTotal" not in section and
-            not is_linux_meminfo(section)  # handled by more modern check
+            not memory.is_linux_section(section)  # handled by more modern check
        ):
         yield None, {}
 
@@ -330,7 +328,7 @@ mem_vmalloc_default_levels = (80.0, 90.0, 64, 32)
 
 
 def inventory_mem_vmalloc(section):
-    if is_linux_meminfo(section):
+    if memory.is_linux_section(section):
         return  # handled by new Linux memory check
 
     # newer kernel version report wrong data,

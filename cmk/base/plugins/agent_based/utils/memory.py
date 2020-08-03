@@ -4,10 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 from ..agent_based_api.v0.type_defs import CheckGenerator
 
 from ..agent_based_api.v0 import Metric, render, Result, state
+
+
+def is_linux_section(section: Dict[str, int]) -> bool:
+    return {"PageTables", "Writeback", "Committed_AS"} <= section.keys()
 
 
 def normalize_levels(

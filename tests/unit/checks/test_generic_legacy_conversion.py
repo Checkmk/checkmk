@@ -2767,7 +2767,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'sap_hana_proc',
         'sap_hana_process_list',
         'sap_hana_replication_status',
-        'sap_hana_status',
         'sap_hana_version',
         'sap_state',
         'saprouter_cert',

@@ -7,6 +7,8 @@
 from typing import Dict, List, Any, Tuple
 from ..agent_based_api.v0.type_defs import AgentStringTable
 
+ParsedSection = Dict[str, Dict]
+
 
 def parse_sap_hana(info: AgentStringTable):
     parsed: Dict[str, List[Any]] = {}

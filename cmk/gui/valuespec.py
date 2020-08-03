@@ -2353,8 +2353,8 @@ class DropdownChoice(ValueSpec):
         no_preselect: bool = False,
         no_preselect_value: Any = None,
         no_preselect_title: str = "",
-        no_preselect_error: str = None,
-        on_change: str = None,
+        no_preselect_error: _Optional[str] = None,
+        on_change: _Optional[str] = None,
         read_only: bool = False,
         encode_value: bool = True,
         # ValueSpec

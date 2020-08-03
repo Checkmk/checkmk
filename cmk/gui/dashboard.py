@@ -7,7 +7,7 @@
 import time
 import copy
 import json
-from typing import Set, Dict, Optional, NamedTuple, Tuple, Type, List, Union, Callable
+from typing import Set, Dict, Optional, NamedTuple, Tuple, Type, List, Union, Callable, Iterator
 
 from six import ensure_str
 
@@ -38,6 +38,7 @@ from cmk.gui.log import logger
 from cmk.gui.globals import html
 from cmk.gui.main_menu import MegaMenuMonitoring
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
+from cmk.gui.page_menu import PageMenuEntry, make_javascript_link
 
 from cmk.gui.exceptions import (
     HTTPRedirect,
@@ -121,14 +122,20 @@ class VisualTypeDashboards(VisualType):
     def show_url(self):
         return "dashboard.py"
 
-    def popup_add_handler(self, add_type):
+    def page_menu_add_to_entries(self, add_type: str) -> Iterator[PageMenuEntry]:
         if not config.user.may("general.edit_dashboards"):
-            return []
+            return
 
         if add_type in ["availability", "graph_collection"]:
             return
 
-        return [(name, board["title"]) for (name, board) in get_permitted_dashboards().items()]
+        for name, board in get_permitted_dashboards().items():
+            yield PageMenuEntry(
+                title=board["title"],
+                icon_name="dashboard",
+                item=make_javascript_link("cmk.popup_menu.add_to_visual('dashboards', %s)" %
+                                          json.dumps(name)),
+            )
 
     def add_visual_handler(self, target_visual_name, add_type, context, parameters):
         if not config.user.may("general.edit_dashboards"):

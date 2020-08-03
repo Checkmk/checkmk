@@ -2914,38 +2914,8 @@ class html(ABCHTMLGenerator):
     # TODO: Rename the status_icons because they are not only showing states. There are also actions.
     # Something like footer icons or similar seems to be better
     def _write_status_icons(self) -> None:
-        # TODO: Move this away from here. Make a context button. The view should handle this
-        if self.myfile == "view" and self.request.var('mode') != 'availability' and config.user.may(
-                "general.csv_export"):
-            self.icon_button(self.makeuri([("output_format", "csv_export")]),
-                             _("Export as CSV"),
-                             "download_csv",
-                             target="_top",
-                             cssclass="inline")
-
-        # TODO: This needs to be realized as plugin mechanism
-        if self.myfile == "view":
-            mode_name = "availability" if self.request.var("mode") == "availability" else "view"
-
-            encoded_vars = {}
-            for k, v in self.page_context.items():
-                if v is None:
-                    v = ''
-                elif isinstance(v, str):
-                    v = ensure_str(v)
-                encoded_vars[k] = v
-
-            self.popup_trigger(
-                self.render_icon("menu", _("Add this view to..."), cssclass="iconbutton inline"),
-                'add_visual',
-                MethodAjax(endpoint='add_visual', url_vars=[("add_type", mode_name)]),
-                data=[mode_name, encoded_vars, {
-                    'name': self.request.var('view_name')
-                }])
-
         # TODO: This should be handled by pagetypes.py
-        elif self.myfile == "graph_collection":
-
+        if self.myfile == "graph_collection":
             self.popup_trigger(
                 self.render_icon("menu",
                                  _("Add this graph collection to..."),

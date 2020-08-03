@@ -41,7 +41,7 @@ import cmk.gui.utils
 import cmk.gui.view_utils
 import cmk.gui.valuespec as valuespec
 from cmk.gui.permissions import Permission
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import ValueSpec, DropdownChoice
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
@@ -120,6 +120,15 @@ class PainterOptions:
             layout_class = layout_registry.get(layout_name)
             if layout_class:
                 options.update(layout_class().painter_options)
+
+        # Mandatory options for all views (if permitted)
+        if display_options.enabled(display_options.O):
+            if display_options.enabled(
+                    display_options.R) and config.user.may("general.view_option_refresh"):
+                options.add("refresh")
+
+            if config.user.may("general.view_option_columns"):
+                options.add("num_columns")
 
         # TODO: Improve sorting. Add a sort index?
         self._used_option_names = sorted(options)
@@ -238,9 +247,8 @@ class PainterOptions:
         if not display_options.enabled(display_options.D) or not self.painter_option_form_enabled():
             return
 
-        html.open_div(id_="painteroptions", class_=["view_form"], style="display: none;")
         html.begin_form("painteroptions")
-        forms.header(_("Display Options"))
+        forms.header(_("Display options"))
         for name in self._used_option_names:
             vs = self.get_valuespec_of(name)
             forms.section(vs.title())
@@ -256,7 +264,6 @@ class PainterOptions:
 
         html.hidden_fields()
         html.end_form()
-        html.close_div()
 
 
 def row_id(view_spec: Dict[str, Any], row: LivestatusRow) -> str:
@@ -315,6 +322,35 @@ class ViewPainterOptionRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 
 painter_option_registry = ViewPainterOptionRegistry()
+
+
+@painter_option_registry.register
+class PainterOptionRefresh(PainterOption):
+    @property
+    def ident(self):
+        return "refresh"
+
+    @property
+    def valuespec(self):
+        choices = [(x, {0: _("off")}.get(x, str(x) + "s")) for x in config.view_option_refreshes]
+        return DropdownChoice(
+            title=_("Refresh interval"),
+            choices=choices,
+        )
+
+
+@painter_option_registry.register
+class PainterOptionNumColumns(PainterOption):
+    @property
+    def ident(self):
+        return "num_columns"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Number of columns"),
+            choices=[(x, str(x)) for x in config.view_option_columns],
+        )
 
 
 class Layout(metaclass=abc.ABCMeta):

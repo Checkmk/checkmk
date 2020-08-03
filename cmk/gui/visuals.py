@@ -58,6 +58,13 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
+from cmk.gui.page_menu import (
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuLink,
+    make_javascript_link,
+)
 from cmk.gui.pagetypes import MegaMenuConfigure
 
 from cmk.gui.plugins.visuals.utils import (
@@ -1648,60 +1655,90 @@ def may_add_site_hint(visual_name: str, info_keys: List[InfoName], single_info_k
 #   |         |_|   \___/| .__/ \__,_| .__/  /_/   \_\__,_|\__,_|          |
 #   |                    |_|         |_|                                   |
 #   +----------------------------------------------------------------------+
-#   |  Handling of popup for adding a visual element to a dashboard, etc.  |
+#   |  Handling of adding a visual element to a dashboard, etc.            |
 #   '----------------------------------------------------------------------'
 
 
-# TODO: Remove this code as soon as everything is moved over to pagetypes.py
 @cmk.gui.pages.register("ajax_popup_add_visual")
 def ajax_popup_add() -> None:
-    add_type = html.request.var("add_type")
+    page_menu_dropdown = page_menu_dropdown_add_to_visual(
+        html.request.get_ascii_input_mandatory("add_type"))[0]
 
     html.open_ul()
 
-    pagetypes.render_addto_popup(add_type)
-
-    for visual_type_name, visual_type_class in visual_type_registry.items():
-        visual_type = visual_type_class()
-        visuals = visual_type.popup_add_handler(add_type)
-        if not visuals:
-            continue
-
+    for topic in page_menu_dropdown.topics:
         html.open_li()
         html.open_span()
-        html.write("%s %s:" % (_('Add to'), visual_type.title))
+        html.write(topic.title)
         html.close_span()
         html.close_li()
 
-        for name, title in sorted(visuals, key=lambda x: x[1]):
+        for entry in topic.entries:
             html.open_li()
-            html.open_a(href="javascript:void(0)",
-                        onclick="cmk.popup_menu.add_to_visual(\'%s\', \'%s\')" %
-                        (visual_type_name, name))
-            html.icon(None, visual_type_name.rstrip('s'))
-            html.write(title)
+
+            if not isinstance(entry.item, PageMenuLink):
+                html.write_text("Unhandled entry type '%s': %s" % (type(entry.item), entry.name))
+                continue
+
+            html.open_a(href=entry.item.link.url,
+                        onclick=entry.item.link.onclick,
+                        target=entry.item.link.target)
+            html.icon(None, entry.icon_name or "trans")
+            html.write(entry.title)
             html.close_a()
             html.close_li()
 
-    if add_type == "pnpgraph" and not cmk_version.is_raw_edition():
-        html.open_li()
-        html.open_span()
-        html.write("%s:" % _("Export"))
-        html.close_span()
-        html.close_li()
-
-        html.open_li()
-        html.open_a(href="javascript:cmk.popup_menu.graph_export(\'graph_export\')")
-        html.icon(None, "download")
-        html.write(_("Export as JSON"))
-        html.close_a()
-        html.open_a(href="javascript:cmk.popup_menu.graph_export(\'graph_image\')")
-        html.icon(None, "download")
-        html.write(_("Export as PNG"))
-        html.close_a()
-        html.close_li()
-
     html.close_ul()
+
+
+def page_menu_dropdown_add_to_visual(add_type: str) -> List[PageMenuDropdown]:
+    """Create the dropdown menu for adding a visual to other visuals / pagetypes
+
+    Please not that this data structure is not only used for rendering the dropdown
+    in the page menu. There is also the case of graphs which open a popup menu to
+    show these entries.
+    """
+
+    visual_topics = []
+
+    for visual_type_class in visual_type_registry.values():
+        visual_type = visual_type_class()
+
+        entries = list(visual_type.page_menu_add_to_entries(add_type))
+        if not entries:
+            continue
+
+        visual_topics.append(
+            PageMenuTopic(
+                title=_("Add to %s") % visual_type.title,
+                entries=entries,
+            ))
+
+    if add_type == "pnpgraph" and not cmk_version.is_raw_edition():
+        visual_topics.append(
+            PageMenuTopic(
+                title=_("Export"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Export as JSON"),
+                        icon_name="download",
+                        item=make_javascript_link("cmk.popup_menu.graph_export('graph_export')"),
+                    ),
+                    PageMenuEntry(
+                        title=_("Export as PNG"),
+                        icon_name="download",
+                        item=make_javascript_link("cmk.popup_menu.graph_export('graph_image')"),
+                    ),
+                ],
+            ))
+
+    return [
+        PageMenuDropdown(
+            name="add_to",
+            title=_("Add to"),
+            topics=pagetypes.page_menu_add_to_topics(add_type) + visual_topics,
+        )
+    ]
 
 
 @cmk.gui.pages.register("ajax_add_visual")

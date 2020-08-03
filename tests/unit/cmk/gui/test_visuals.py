@@ -49,7 +49,6 @@ def _expected_visual_types():
         'ident_attr': 'name',
         'multicontext_links': False,
         'plural_title': u'dashboards',
-        'popup_add_handler': 'popup_list_dashboards',
         'show_url': 'dashboard.py',
         'title': u'dashboard',
     },
@@ -58,7 +57,6 @@ def _expected_visual_types():
         'ident_attr': 'view_name',
         'multicontext_links': False,
         'plural_title': u'views',
-        'popup_add_handler': None,
         'show_url': 'view.py',
         'title': u'view',
     },
@@ -71,7 +69,6 @@ def _expected_visual_types():
         'ident_attr': 'name',
         'multicontext_links': True,
         'plural_title': u'reports',
-        'popup_add_handler': 'popup_list_reports',
         'show_url': 'report.py',
         'title': u'report',
         },
@@ -93,7 +90,6 @@ def test_registered_visual_type_attributes():
 
         # TODO: Add tests for the results of these functions
         #assert plugin.add_visual_handler == spec["add_visual_handler"]
-        #assert plugin.popup_add_handler == spec["popup_add_handler"]
         assert plugin.ident_attr == spec["ident_attr"]
         assert plugin.multicontext_links == spec["multicontext_links"]
         assert plugin.plural_title == spec["plural_title"]

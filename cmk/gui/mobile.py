@@ -230,6 +230,7 @@ def page_index() -> None:
             view.row_limit = views.get_limit()
             view.only_sites = views.get_only_sites()
             view.user_sorters = views.get_user_sorters()
+            view.want_checkboxes = views.get_want_checkboxes()
 
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
@@ -287,6 +288,7 @@ def page_view() -> None:
     view.row_limit = views.get_limit()
     view.only_sites = views.get_only_sites()
     view.user_sorters = views.get_user_sorters()
+    view.want_checkboxes = views.get_want_checkboxes()
 
     title = views.view_title(view_spec)
     mobile_html_head(title)

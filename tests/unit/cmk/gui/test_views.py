@@ -43,6 +43,8 @@ def test_registered_painter_options():
         'ts_date',
         'ts_format',
         'graph_render_options',
+        "refresh",
+        "num_columns",
     ]
 
     names = cmk.gui.plugins.views.painter_option_registry.keys()
@@ -5767,6 +5769,7 @@ def test_create_view_basics():
     assert isinstance(view.datasource.table, cmk.gui.plugins.views.utils.RowTable)
     assert view.row_limit is None
     assert view.user_sorters is None
+    assert view.want_checkboxes is False
     assert view.only_sites is None
 
 
@@ -5811,6 +5814,12 @@ def test_view_user_sorters(view):
     assert view.user_sorters is None
     view.user_sorters = [("abc", True)]
     assert view.user_sorters == [("abc", True)]
+
+
+def test_view_want_checkboxes(view):
+    assert view.want_checkboxes is False
+    view.want_checkboxes = True
+    assert view.want_checkboxes is True
 
 
 def test_registered_display_hints():

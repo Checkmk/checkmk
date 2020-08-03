@@ -19,7 +19,7 @@
 
 import os
 import json
-from typing import Dict, Any, List, Tuple, Optional as _Optional
+from typing import Dict, Any, List, Tuple, Optional as _Optional, Iterator
 
 from six import ensure_str
 
@@ -49,6 +49,11 @@ from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _l, _u, _
 from cmk.gui.globals import html
 from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.page_menu import (
+    PageMenuTopic,
+    PageMenuEntry,
+    make_javascript_link,
+)
 
 from cmk.gui.exceptions import (
     MKUserError,
@@ -1312,40 +1317,32 @@ class Container(Base):
 
 
 class OverridableContainer(Overridable, Container):
-    # The popup for "Add to ...", e.g. for adding a graph to a report
-    # or dashboard. This is needed for page types with the aspect "ElementContainer".
     @classmethod
-    def render_addto_popup(cls, added_type):
+    def page_menu_add_to_topics(cls, added_type: str) -> List[PageMenuTopic]:
         if not cls.may_contain(added_type):
-            return
+            return []
 
         pages = cls.pages()
-        if pages:
-            cls.render_addto_popup_title(cls.phrase("add_to"))
-            for page in pages:
-                cls.render_addto_popup_entry(cls.type_name(), page.name(), page.title())
+        if not pages:
+            return []
 
-    # Helper functions for layouting the add-to popup
-    @classmethod
-    def render_addto_popup_title(cls, title):
-        html.open_li()
-        html.open_span()
-        html.write("%s:" % title)
-        html.close_span()
-        html.close_li()
+        return [
+            PageMenuTopic(
+                title=cls.phrase("add_to"),
+                entries=list(cls._page_menu_add_to_entries()),
+            )
+        ]
 
     @classmethod
-    def render_addto_popup_entry(cls, type_name, name, title):
-        html.open_li()
-        html.open_a(
-            href="javascript:void(0)",
-            onclick=
-            "cmk.popup_menu.pagetype_add_to_container('%s', '%s');cmk.utils.reload_sidebar();" %
-            (type_name, name))
-        html.render_icon(type_name)
-        html.write_text(title)
-        html.close_a()
-        html.close_li()
+    def _page_menu_add_to_entries(cls) -> Iterator[PageMenuEntry]:
+        for page in cls.pages():
+            yield PageMenuEntry(
+                title=page.title(),
+                icon_name=cls.type_name(),
+                item=make_javascript_link(
+                    "cmk.popup_menu.pagetype_add_to_container(%s, %s);cmk.utils.reload_sidebar();" %
+                    (cls.type_name(), page.name())),
+            )
 
     @classmethod
     def page_handlers(cls):
@@ -1437,10 +1434,12 @@ def all_page_types():
 # Global module functions for the integration into the rest of the code
 
 
-def render_addto_popup(added_type):
+def page_menu_add_to_topics(added_type: str) -> List[PageMenuTopic]:
+    topics = []
     for page_ty in page_types.values():
         if issubclass(page_ty, Container):
-            page_ty.render_addto_popup(added_type)
+            topics += page_ty.page_menu_add_to_topics(added_type)
+    return topics
 
 
 #   .--Topics--------------------------------------------------------------.

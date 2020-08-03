@@ -12,7 +12,8 @@ import pprint
 import traceback
 import json
 import functools
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as _Tuple, Union
+from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as
+                    _Tuple, Union, Iterator)
 
 import livestatus
 from livestatus import SiteId, LivestatusRow
@@ -35,6 +36,16 @@ import cmk.gui.pages
 import cmk.gui.view_utils
 from cmk.gui.main_menu import MegaMenuMonitoring
 from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuPopup,
+    make_display_options_dropdown,
+    make_simple_link,
+    make_checkbox_selection_topic,
+)
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
     Alternative,
@@ -171,8 +182,8 @@ class VisualTypeViews(VisualType):
     def show_url(self):
         return "view.py"
 
-    def popup_add_handler(self, add_type):
-        return []
+    def page_menu_add_to_entries(self, add_type: str) -> Iterator[PageMenuEntry]:
+        return iter(())
 
     def add_visual_handler(self, target_visual_name, add_type, context, parameters):
         return None
@@ -302,6 +313,7 @@ class View:
         self._row_limit: Optional[int] = None
         self._only_sites: Optional[List[SiteId]] = None
         self._user_sorters: 'Optional[List[SorterSpec]]' = None
+        self._want_checkboxes: bool = False
 
     @property
     def datasource(self) -> ABCDataSource:
@@ -421,6 +433,26 @@ class View:
     def user_sorters(self, user_sorters: 'Optional[List[SorterSpec]]') -> None:
         self._user_sorters = user_sorters
 
+    @property
+    def want_checkboxes(self) -> bool:
+        """Whether or not the user that displays this view requests to show the checkboxes"""
+        return self._want_checkboxes
+
+    @want_checkboxes.setter
+    def want_checkboxes(self, want_checkboxes: bool) -> None:
+        self._want_checkboxes = want_checkboxes
+
+    @property
+    def checkboxes_enforced(self) -> bool:
+        """Whether or not the view is configured to always show checkboxes"""
+        return self.spec.get("force_checkboxes", False)
+
+    @property
+    def checkboxes_displayed(self) -> bool:
+        """Whether or not to display the checkboxes in the current view"""
+        return self.layout.can_display_checkboxes and (self.checkboxes_enforced or
+                                                       self.want_checkboxes)
+
     def breadcrumb(self) -> Breadcrumb:
         """Render the breadcrumb for the current view
 
@@ -527,7 +559,10 @@ class GUIViewRenderer(ABCViewRenderer):
             html.body_start(view_title(view_spec))
 
         if display_options.enabled(display_options.T):
-            html.top_heading(view_title(view_spec), self.view.breadcrumb())
+            breadcrumb = self.view.breadcrumb()
+            html.top_heading(view_title(view_spec),
+                             breadcrumb,
+                             page_menu=self._page_menu(breadcrumb, rows))
             html.begin_page_content()
 
         has_done_actions = False
@@ -537,19 +572,15 @@ class GUIViewRenderer(ABCViewRenderer):
         if command_form:
             weblib.init_selection()
 
+        # Used this before. This does not looked like it's correct, replaced the logic
+        #enable_commands = painter_options.painter_option_form_enabled()
+        #enable_checkboxes = view.layout.can_display_checkboxes and not checkboxes_enforced
+        #selection_enabled = enable_checkboxes if enable_commands else checkboxes_enforced
+        html.javascript('cmk.selection.set_selection_enabled(%s);' %
+                        json.dumps(self.view.checkboxes_displayed))
+
         layout = self.view.layout
 
-        if self._show_buttons:
-            _show_context_links(
-                self.view,
-                rows,
-                show_filters,
-                # Take into account: permissions, display_options
-                row_count > 0 and command_form,
-                # Take into account: layout capabilities
-                layout.can_display_checkboxes and not view_spec.get("force_checkboxes"),
-                show_checkboxes,
-            )
         # User errors in filters
         html.show_user_errors()
 
@@ -603,9 +634,6 @@ class GUIViewRenderer(ABCViewRenderer):
                 do_actions(view_spec, self.view.datasource.infos[0], rows, '')
             except Exception:
                 pass  # currently no feed back on webservice
-
-        painter_options = PainterOptions.get_instance()
-        painter_options.show_form(self.view)
 
         # The refreshing content container
         if display_options.enabled(display_options.R):
@@ -673,6 +701,310 @@ class GUIViewRenderer(ABCViewRenderer):
 
         if display_options.enabled(display_options.H):
             html.body_end()
+
+    def _page_menu(self, breadcrumb: Breadcrumb, rows: "Rows") -> PageMenu:
+        if not display_options.enabled(display_options.B):
+            return PageMenu()  # No buttons -> no menu
+
+        export_dropdown = [
+            PageMenuDropdown(
+                name="export",
+                title=_("Export"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Data"),
+                        entries=list(self._page_menu_entries_export_data()),
+                    ),
+                    PageMenuTopic(
+                        title=_("Reports"),
+                        entries=list(self._page_menu_entries_export_reporting(rows)),
+                    ),
+                ],
+            ),
+        ]
+
+        menu = PageMenu(
+            dropdowns=self._page_menu_dropdown_commands() + self._page_menu_dropdown_host() +
+            self._page_menu_dropdown_add_to() + export_dropdown,
+            breadcrumb=breadcrumb,
+        )
+
+        self._extend_display_dropdown(menu)
+        self._extend_help_dropdown(menu)
+
+        return menu
+
+    def _page_menu_dropdown_commands(self) -> List[PageMenuDropdown]:
+        if display_options.enabled(display_options.C):
+            return []
+
+        return [
+            PageMenuDropdown(
+                name="commands",
+                title=_("Commands"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("On selected objects"),
+                        entries=list(self._page_menu_entries_selected_objects()),
+                    ),
+                    make_checkbox_selection_topic(),
+                ],
+            )
+        ]
+
+    def _page_menu_entries_selected_objects(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Execute command"),
+            icon_name="commands",
+            item=PageMenuPopup(self._render_command_form()),
+            is_enabled=_should_show_command_form(self.view.datasource),
+        )
+
+    def _page_menu_dropdown_host(self) -> List[PageMenuDropdown]:
+        if "host" not in self.view.spec['single_infos']:
+            return []
+
+        return [
+            PageMenuDropdown(
+                name="host",
+                title=_("Host"),
+                topics=self._page_menu_host_topic(),
+            )
+        ]
+
+    def _page_menu_host_topic(self) -> List[PageMenuTopic]:
+        if not config.wato_enabled:
+            return []
+
+        if not config.user.may("wato.use"):
+            return []
+
+        if not config.user.may("wato.hosts") and not config.user.may("wato.seeall"):
+            return []
+
+        return [
+            PageMenuTopic(
+                title=_("Setup"),
+                entries=list(self._page_menu_entries_host_setup()),
+            )
+        ]
+
+    def _page_menu_entries_host_setup(self) -> Iterator[PageMenuEntry]:
+        host_name = html.request.get_ascii_input_mandatory("host")
+
+        yield PageMenuEntry(
+            title=_("Configuration"),
+            icon_name="wato",
+            item=make_simple_link(_link_to_host_by_name(host_name)),
+        )
+
+        yield PageMenuEntry(
+            title=_("Service configuration"),
+            icon_name="services",
+            item=make_simple_link(
+                html.makeuri_contextless([("mode", "inventory"), ("host", host_name)],
+                                         filename="wato.py")),
+        )
+
+        is_cluster = False
+        if is_cluster:
+            yield PageMenuEntry(
+                title=_("Connection tests"),
+                icon_name="diagnose",
+                item=make_simple_link(
+                    html.makeuri_contextless([("mode", "diag_host"), ("host", host_name)],
+                                             filename="wato.py")),
+            )
+
+        if config.user.may('wato.rulesets'):
+            yield PageMenuEntry(
+                title=_("Effective parameters"),
+                icon_name="rulesets",
+                item=make_simple_link(
+                    html.makeuri_contextless([("mode", "object_parameters"), ("host", host_name)],
+                                             filename="wato.py")),
+            )
+
+    def _page_menu_entries_export_data(self) -> Iterator[PageMenuEntry]:
+        if not config.user.may("general.csv_export"):
+            return
+
+        yield PageMenuEntry(
+            title=_("Export CSV"),
+            icon_name="download_csv",
+            item=make_simple_link(html.makeuri([("output_format", "csv_export")])),
+        )
+
+        yield PageMenuEntry(
+            title=_("Export JSON"),
+            icon_name="download_json",
+            item=make_simple_link(html.makeuri([("output_format", "json_export")])),
+        )
+
+    def _page_menu_entries_export_reporting(self, rows: "Rows") -> Iterator[PageMenuEntry]:
+        if not config.reporting_available():
+            return
+
+        if not config.user.may("general.instant_reports"):
+            return
+
+        yield PageMenuEntry(
+            title=_("This view as PDF"),
+            icon_name="report",
+            item=make_simple_link(html.makeuri([], filename="report_instant.py")),
+        )
+
+        # Link related reports
+        links = collect_context_links(self.view, rows, only_types=["reports"])
+        for linktitle, uri, icon, buttonid in links:
+            yield PageMenuEntry(
+                title=linktitle,
+                icon_name=icon,
+                item=make_simple_link(uri),
+                name=buttonid,
+            )
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("View layout"),
+                entries=list(self._page_menu_entries_view_layout()),
+            ))
+
+        if display_options.enabled(display_options.D):
+            display_dropdown.topics.insert(
+                0,
+                PageMenuTopic(
+                    title=_("Format"),
+                    entries=list(self._page_menu_entries_view_format()),
+                ))
+
+        if display_options.enabled(display_options.F):
+            display_dropdown.topics.insert(
+                0, PageMenuTopic(
+                    title=_("Filter"),
+                    entries=list(self._page_menu_entries_filter()),
+                ))
+
+    def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:
+        is_filter_set = html.request.var("filled_in") == "filter"
+
+        yield PageMenuEntry(
+            title=_("Filter view"),
+            icon_name="filters_set" if is_filter_set else "filters",
+            item=PageMenuPopup(self._render_filter_form()),
+            name="filters",
+        )
+
+    def _page_menu_entries_view_format(self) -> Iterator[PageMenuEntry]:
+        painter_options = PainterOptions.get_instance()
+        yield PageMenuEntry(
+            title=_("Modify display options"),
+            icon_name="painteroptions",
+            item=PageMenuPopup(self._render_painter_options_form()),
+            name="display_painter_options",
+            is_enabled=painter_options.painter_option_form_enabled(),
+        )
+
+    def _page_menu_entries_view_layout(self) -> Iterator[PageMenuEntry]:
+        checkboxes_toggleable = self.view.layout.can_display_checkboxes and not self.view.checkboxes_enforced
+        yield PageMenuEntry(
+            title=_("Toggle checkboxes"),
+            icon_name="checkbox",
+            item=make_simple_link(
+                html.makeuri([("show_checkboxes", "0" if self.view.checkboxes_displayed else "1")
+                             ])),
+            is_enabled=checkboxes_toggleable,
+        )
+
+        if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
+            url_vars: HTTPVariables = [
+                ("back", html.request.requested_url),
+                ("load_name", self.view.name),
+            ]
+
+            if self.view.spec["owner"] != config.user.id:
+                url_vars.append(("load_user", self.view.spec["owner"]))
+
+            url = html.makeuri_contextless(url_vars, filename="edit_view.py")
+
+            yield PageMenuEntry(
+                title=_("Customize view"),
+                icon_name="edit",
+                item=make_simple_link(url),
+            )
+
+    def _page_menu_dropdown_add_to(self) -> List[PageMenuDropdown]:
+        return visuals.page_menu_dropdown_add_to_visual(add_type="view")
+
+    def _render_filter_form(self) -> str:
+        # TODO: Filter not working at the moment
+        with html.plugged():
+            return html.drain()
+
+    def _render_painter_options_form(self) -> str:
+        with html.plugged():
+            painter_options = PainterOptions.get_instance()
+            painter_options.show_form(self.view)
+            return html.drain()
+
+    def _render_command_form(self) -> str:
+        # TODO: Commands not working at the moment
+        with html.plugged():
+            return html.drain()
+
+    def _extend_help_dropdown(self, menu: PageMenu) -> None:
+        # TODO
+        #menu.add_manual_reference(title=_("Host administration"), article_name="wato_hosts")
+        #menu.add_youtube_reference(title=_("Episode 3: Monitoring Windows"),
+        #                           youtube_id="iz8S9TGGklQ")
+        pass
+
+
+# TODO
+#def _show_context_links(view, rows, show_filters, enable_commands, enable_checkboxes,
+#                        show_checkboxes):
+#    # Buttons to other views, dashboards, etc.
+#    links = collect_context_links(view, rows)
+#    for linktitle, uri, icon, buttonid in links:
+#        html.context_button(linktitle, url=uri, icon=icon, id_=buttonid)
+#
+#    if display_options.enabled(display_options.E):
+#        if _show_availability_context_button(view):
+#            html.context_button(_("Availability"), html.makeuri([("mode", "availability")]),
+#                                "availability")
+#
+#        if _show_combined_graphs_context_button(view):
+#            html.context_button(
+#                _("Combined graphs"),
+#                html.makeuri(
+#                    [
+#                        ("single_infos", ",".join(thisview["single_infos"])),
+#                        ("datasource", thisview["datasource"]),
+#                        ("view_title", view_title(thisview)),
+#                    ],
+#                    filename="combined_graphs.py",
+#                ), "pnp")
+
+
+def _show_availability_context_button(view):
+    if not config.user.may("general.see_availability"):
+        return False
+
+    if "aggr" in view.datasource.infos:
+        return True
+
+    return view.datasource.ident in ["hosts", "services"]
+
+
+def _show_combined_graphs_context_button(view):
+    if not config.combined_graphs_available():
+        return False
+
+    return view.datasource.ident in ["hosts", "services", "hostsbygroup", "servicesbygroup"]
 
 
 # Load all view plugins
@@ -1406,6 +1738,7 @@ def page_view():
     view.row_limit = get_limit()
     view.only_sites = get_only_sites()
     view.user_sorters = get_user_sorters()
+    view.want_checkboxes = get_want_checkboxes()
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
@@ -1875,6 +2208,11 @@ def get_user_sorters() -> 'List[SorterSpec]':
     return _parse_url_sorters(html.request.var("sort"))
 
 
+def get_want_checkboxes() -> bool:
+    """Whether or not the user requested checkboxes to be shown"""
+    return html.request.get_integer_input_mandatory("show_checkboxes", 0) == 1
+
+
 def get_limit() -> Optional[int]:
     """How many data rows may the user query?"""
     limitvar = html.request.var("limit", "soft")
@@ -1934,164 +2272,6 @@ def ajax_set_viewoption():
     painter_options.load(view_name)
     painter_options.set(option, value)
     painter_options.save_to_config(view_name)
-
-
-def _show_context_links(view, rows, show_filters, enable_commands, enable_checkboxes,
-                        show_checkboxes):
-    # TODO: Clean this up
-    thisview = view.spec
-
-    html.begin_context_buttons()
-
-    # That way if no button is painted we avoid the empty container
-    if display_options.enabled(display_options.B):
-        execute_hooks('buttons-begin')
-
-    # Small buttons
-    html.open_div(class_="context_buttons_small")
-    filter_isopen = html.request.var("filled_in") != "filter" and thisview.get("mustsearch")
-    if display_options.enabled(display_options.F):
-        if html.request.var("filled_in") == "filter":
-            icon = "filters_set"
-            help_txt = _("The current data is being filtered")
-        else:
-            icon = "filters"
-            help_txt = _("Set a filter for refining the shown data")
-        html.toggle_button("filters", filter_isopen, icon, help_txt, disabled=not show_filters)
-
-    if display_options.enabled(display_options.D):
-        painter_options = PainterOptions.get_instance()
-        html.toggle_button("painteroptions",
-                           False,
-                           "painteroptions",
-                           _("Modify display options"),
-                           disabled=not painter_options.painter_option_form_enabled())
-
-    if display_options.enabled(display_options.C):
-        html.toggle_button("commands",
-                           False,
-                           "commands",
-                           _("Execute commands on hosts, services and other objects"),
-                           hidden=not enable_commands)
-        html.toggle_button("commands", False, "commands", "", hidden=enable_commands, disabled=True)
-
-        selection_enabled = enable_checkboxes if enable_commands else thisview.get(
-            'force_checkboxes')
-        if not thisview.get("force_checkboxes"):
-            html.toggle_button(
-                id_="checkbox",
-                icon="checkbox",
-                title=_("Enable/Disable checkboxes for selecting rows for commands"),
-                onclick="location.href='%s';" %
-                html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
-                isopen=show_checkboxes,
-                hidden=True,
-            )
-        html.toggle_button("checkbox",
-                           False,
-                           "checkbox",
-                           "",
-                           hidden=not thisview.get("force_checkboxes"),
-                           disabled=True)
-        html.javascript('cmk.selection.set_selection_enabled(%s);' % json.dumps(selection_enabled))
-
-    if display_options.enabled(display_options.O):
-        if config.user.may("general.view_option_columns"):
-            choices = [[x, "%s" % x] for x in config.view_option_columns]
-            view_optiondial(thisview, "num_columns", choices,
-                            _("Change the number of display columns"))
-        else:
-            view_optiondial_off("num_columns")
-
-        if display_options.enabled(
-                display_options.R) and config.user.may("general.view_option_refresh"):
-            choices = [[x, {
-                0: _("off")
-            }.get(x,
-                  str(x) + "s")] for x in config.view_option_refreshes]
-            view_optiondial(thisview, "refresh", choices, _("Change the refresh rate"))
-        else:
-            view_optiondial_off("refresh")
-    html.close_div()
-
-    # Large buttons
-    if display_options.enabled(display_options.B):
-        # WATO: If we have a host context, then show button to WATO, if permissions allow this
-        if html.request.has_var("host") \
-           and config.wato_enabled \
-           and config.user.may("wato.use") \
-           and (config.user.may("wato.hosts") or config.user.may("wato.seeall")):
-            host = html.request.var("host")
-            if host:
-                url = _link_to_host_by_name(host)
-            else:
-                url = _link_to_folder_by_path(
-                    html.request.get_str_input_mandatory("wato_folder", ""))
-            html.context_button(_("WATO"), url, "wato", id_="wato")
-
-        # Button for creating an instant report (if reporting is available)
-        if config.reporting_available() and config.user.may("general.instant_reports"):
-            html.context_button(_("Export as PDF"),
-                                html.makeuri([], filename="report_instant.py"),
-                                "report",
-                                class_="context_pdf_export")
-
-        # Buttons to other views, dashboards, etc.
-        links = collect_context_links(view, rows)
-        for linktitle, uri, icon, buttonid in links:
-            html.context_button(linktitle, url=uri, icon=icon, id_=buttonid)
-
-    # Customize/Edit view button
-    if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
-        url_vars = [
-            ("back", html.request.requested_url),
-            ("load_name", thisview["name"]),
-        ]
-
-        if thisview["owner"] != config.user.id:
-            url_vars.append(("load_user", thisview["owner"]))
-
-        url = html.makeuri_contextless(url_vars, filename="edit_view.py")
-        html.context_button(_("Edit View"), url, "edit", id_="edit")
-
-    if display_options.enabled(display_options.E):
-        if _show_availability_context_button(view):
-            html.context_button(_("Availability"), html.makeuri([("mode", "availability")]),
-                                "availability")
-
-        if _show_combined_graphs_context_button(view):
-            html.context_button(
-                _("Combined graphs"),
-                html.makeuri(
-                    [
-                        ("single_infos", ",".join(thisview["single_infos"])),
-                        ("datasource", thisview["datasource"]),
-                        ("view_title", view_title(thisview)),
-                    ],
-                    filename="combined_graphs.py",
-                ), "pnp")
-
-    if display_options.enabled(display_options.B):
-        execute_hooks('buttons-end')
-
-    html.end_context_buttons()
-
-
-def _show_availability_context_button(view):
-    if not config.user.may("general.see_availability"):
-        return False
-
-    if "aggr" in view.datasource.infos:
-        return True
-
-    return view.datasource.ident in ["hosts", "services"]
-
-
-def _show_combined_graphs_context_button(view):
-    if not config.combined_graphs_available():
-        return False
-
-    return view.datasource.ident in ["hosts", "services", "hostsbygroup", "servicesbygroup"]
 
 
 def _link_to_folder_by_path(path: str) -> str:

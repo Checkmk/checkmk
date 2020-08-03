@@ -30,7 +30,6 @@ def _output_single_memory_stat(memory_value, output_text, metric_name=None):
 
 
 def check_cadvisor_memory(_item, _params, parsed):
-    render_base = 1024
     # Checking for Container
     if "memory_usage_container" in parsed:
         memory_used = parsed["memory_usage_container"]
@@ -49,8 +48,7 @@ def check_cadvisor_memory(_item, _params, parsed):
     status, infotext, perfdata = check_memory_element("Usage",
                                                       memory_used,
                                                       memory_total, (None, None),
-                                                      metric_name="mem_used",
-                                                      render_base=render_base)
+                                                      metric_name="mem_used")
     infotext += infotext_extra
     yield status, infotext, perfdata
 

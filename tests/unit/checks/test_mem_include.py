@@ -43,10 +43,9 @@ MEGA = KILO**2
         }, (2, "Longterm: 45.24% free - 19.00 MB of 42.00 MB (warn/crit below 60.0%/50.0% free)", [
             ("my_memory", 23 * MEGA, 17616076.8, 22020096.0, 0, 42 * MEGA)
         ])),
-        # different total label and render SI
-        ("Longterm", 23000000, 42000000, ("perc_free", (60, 50)), {
+        # different total label
+        ("Longterm", 23 * 1024**2, 42 * 1024**2, ("perc_free", (60, 50)), {
             "label_total": "Hirn",
-            "render_base": 1000
         }, (2, "Longterm: 54.76% - 23.00 MB of 42.00 MB Hirn (warn/crit below 60.0%/50.0% free)")),
     ],
 )

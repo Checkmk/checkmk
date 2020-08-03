@@ -6,7 +6,7 @@
 
 import json
 import time
-from typing import List, Optional, Tuple, Dict, Any, Union, Set
+from typing import List, Optional, Tuple, Dict, Any, Union, Set, Type
 from pathlib import Path
 
 import livestatus
@@ -799,12 +799,9 @@ class Topology:
             self._depth_info[hostname] = self._current_iteration
 
 
-class TopologyRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return Topology
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.ident()
+class TopologyRegistry(cmk.utils.plugin_registry.Registry[Type[Topology]]):
+    def plugin_name(self, instance):
+        return instance.ident()
 
 
 topology_registry = TopologyRegistry()

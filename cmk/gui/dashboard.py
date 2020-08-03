@@ -7,7 +7,7 @@
 import time
 import copy
 import json
-from typing import Set, Dict, Optional, Tuple, Type, List, Union, Callable, Iterator
+from typing import cast, Set, Dict, Optional, Tuple, Type, List, Union, Callable, Iterator
 
 from six import ensure_str
 
@@ -322,9 +322,9 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
         return cls._spec.get("parameters", None)
 
     @classmethod
-    def opt_parameters(cls) -> Optional[List[DictionaryEntry]]:
+    def opt_parameters(cls) -> Union[bool, List[str]]:
         """List of optional parameters in case vs_parameters() returns a list"""
-        return cls._spec.get("opt_params")
+        return cls._spec.get("opt_params", False)
 
     @classmethod
     def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc]:
@@ -1353,9 +1353,9 @@ def page_edit_dashlet() -> None:
         except IndexError:
             raise MKUserError("id", _('The dashlet does not exist.'))
 
-        ty = dashlet_spec['type']
+        ty = cast(str, dashlet_spec['type'])
         dashlet_type = dashlet_registry[ty]
-        single_infos = dashlet_spec['single_infos']
+        single_infos = cast(List[str], dashlet_spec['single_infos'])
 
     html.header(title, breadcrumb=visuals.visual_page_breadcrumb("dashboards", title, mode))
 
@@ -1410,6 +1410,8 @@ def page_edit_dashlet() -> None:
     )
 
     def dashlet_info_handler(dashlet_spec: DashletConfig) -> List[str]:
+        assert board is not None
+        assert isinstance(ident, int)
         dashlet_type = dashlet_registry[dashlet_spec['type']]
         dashlet = dashlet_type(board, dashboard, ident, dashlet_spec)
         return dashlet.infos()

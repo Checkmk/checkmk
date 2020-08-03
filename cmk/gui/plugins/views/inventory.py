@@ -6,7 +6,7 @@
 
 import time
 import abc
-from typing import Dict, Tuple, Union, Callable, Any
+from typing import Dict, List, Tuple, Union, Callable, Any
 from functools import partial
 
 from six import ensure_str
@@ -830,13 +830,19 @@ class RowTableInventory(ABCRowTable):
         return entries
 
 
+class ABCDataSourceInventory(ABCDataSource):
+    @abc.abstractproperty
+    def inventory_path(self) -> str:
+        raise NotImplementedError()
+
+
 # One master function that does all
 def declare_invtable_view(infoname, invpath, title_singular, title_plural):
     _register_info_class(infoname, title_singular, title_plural)
 
     # Create the datasource (like a database view)
     ds_class = type(
-        "DataSourceInventory%s" % infoname.title(), (ABCDataSource,), {
+        "DataSourceInventory%s" % infoname.title(), (ABCDataSourceInventory,), {
             "_ident": infoname,
             "_inventory_path": invpath,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
@@ -847,6 +853,7 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
             "infos": property(lambda s: s._infos),
             "keys": property(lambda s: []),
             "id_keys": property(lambda s: []),
+            "inventory_path": property(lambda s: s._inventory_path),
         })
     data_source_registry.register(ds_class)
 
@@ -910,9 +917,9 @@ def declare_joined_inventory_table_view(tablename, title_singular, title_plural,
 
     _register_info_class(tablename, title_singular, title_plural)
 
-    info_names = []
-    invpaths = []
-    titles = []
+    info_names: List[str] = []
+    invpaths: List[str] = []
+    titles: List[str] = []
     errors = []
     for this_tablename in tables:
         vi = visual_info_registry.get(this_tablename)
@@ -921,9 +928,10 @@ def declare_joined_inventory_table_view(tablename, title_singular, title_plural,
             errors.append("Missing declare_invtable_view for inventory table view '%s'" %
                           this_tablename)
             continue
-        info_names.append(ds._ident)
-        invpaths.append(ds._inventory_path)
-        titles.append(vi._title)
+        assert isinstance(ds, ABCDataSourceInventory)
+        info_names.append(ds.ident)
+        invpaths.append(ds.inventory_path)
+        titles.append(vi.title)
 
     # Create the datasource (like a database view)
     ds_class = type(

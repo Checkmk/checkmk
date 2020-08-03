@@ -12,7 +12,7 @@ import pprint
 import tarfile
 import time
 import traceback
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping, Optional, Type
 
 from six import ensure_str
 
@@ -382,12 +382,9 @@ class ABCReportRenderer(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class ReportRendererRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return ABCReportRenderer
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.type()
+class ReportRendererRegistry(cmk.utils.plugin_registry.Registry[Type[ABCReportRenderer]]):
+    def plugin_name(self, instance):
+        return instance.type()
 
 
 report_renderer_registry = ReportRendererRegistry()

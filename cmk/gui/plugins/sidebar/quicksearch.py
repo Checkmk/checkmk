@@ -7,7 +7,7 @@
 import abc
 import re
 import traceback
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple, Type
 
 import livestatus
 
@@ -150,7 +150,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
     def _get_plugin_with_shortname(self, shortname):
         for plugin_class in match_plugin_registry.values():
-            plugin = plugin_class()
+            # FIXME: register instances in match_plugin_registry (CMK-5149)
+            plugin = plugin_class()  # type: ignore[call-arg]
             if plugin.get_filter_shortname() == shortname:
                 return plugin
         raise NotImplementedError()
@@ -218,7 +219,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
     def _get_used_search_plugins(self):
         return [
             plugin for plugin_class in match_plugin_registry.values()
-            for plugin in [plugin_class()]
+            # FIXME: register instances in match_plugin_registry (CMK-5149)
+            for plugin in [plugin_class()]  # type: ignore[call-arg]
             if plugin.is_used_for_table(self._livestatus_table, self._used_filters)
         ]
 
@@ -420,7 +422,11 @@ class LivestatusQuicksearch(LivestatusSearchBase):
         self._conduct_search()
 
     def _determine_search_objects(self):
-        filter_names = {"%s" % x().get_filter_shortname() for x in match_plugin_registry.values()}
+        filter_names = {
+            # FIXME: register instances in match_plugin_registry (CMK-5149)
+            "%s" % x().get_filter_shortname()  # type: ignore[call-arg]
+            for x in match_plugin_registry.values()
+        }
         filter_regex = "|".join(filter_names)
 
         # Goal: "((^| )(hg|h|sg|s|al|tg|ad):)"
@@ -582,12 +588,9 @@ class QuicksearchMatchPlugin(metaclass=abc.ABCMeta):
         return patterns[0]
 
 
-class MatchPluginRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return QuicksearchMatchPlugin
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.__name__
+class MatchPluginRegistry(cmk.utils.plugin_registry.Registry[Type[QuicksearchMatchPlugin]]):
+    def plugin_name(self, instance):
+        return instance.__name__
 
 
 match_plugin_registry = MatchPluginRegistry()

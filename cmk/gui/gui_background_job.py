@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Type
 from six import ensure_str
 
 import cmk
@@ -278,6 +279,12 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
 
         super(GUIBackgroundJob, self).__init__(job_id, logger=logger, **kwargs)
 
+    @classmethod
+    def gui_title(cls) -> str:
+        # FIXME: This method cannot be made abstract since GUIBackgroundJob is
+        # instantiated in various places.
+        raise NotImplementedError()
+
     def get_status_snapshot(self):
         return GUIBackgroundStatusSnapshot(self)
 
@@ -300,12 +307,9 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
         return None
 
 
-class GUIBackgroundJobRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return GUIBackgroundJob
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.__name__
+class GUIBackgroundJobRegistry(cmk.utils.plugin_registry.Registry[Type[GUIBackgroundJob]]):
+    def plugin_name(self, instance):
+        return instance.__name__
 
 
 job_registry = GUIBackgroundJobRegistry()

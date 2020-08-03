@@ -42,12 +42,9 @@ class HostAttributeTopic(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class HostAttributeTopicRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return HostAttributeTopic
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().ident
+class HostAttributeTopicRegistry(cmk.utils.plugin_registry.Registry[Type[HostAttributeTopic]]):
+    def plugin_name(self, instance: Type[HostAttributeTopic]):
+        return instance().ident
 
     def get_choices(self):
         return [
@@ -358,28 +355,27 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
         return False
 
 
-class HostAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
+class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[ABCHostAttribute]]):
     _index = 0
 
-    def plugin_base_class(self):
-        return ABCHostAttribute
+    def plugin_name(self, instance: Type[ABCHostAttribute]) -> str:
+        return instance().name()
 
-    def plugin_name(self, plugin_class):
-        return plugin_class().name()
-
-    def registration_hook(self, plugin_class):
+    def registration_hook(self, instance: Type[ABCHostAttribute]) -> None:
         """Add missing sort indizes
 
         Internally defined attributes have a defined sort index. Attributes defined by the users
         configuration, like tag based attributes or custom host attributes automatically get
         a sort index based on the last index used.
         """
-        if plugin_class.sort_index.__code__ is ABCHostAttribute.sort_index.__code__:
-            plugin_class._sort_index = self.__class__._index
-            plugin_class.sort_index = classmethod(lambda c: c._sort_index)
+        # FIXME: Replace this automatic implementation of sort_index in derived classes without
+        # an own implementation by something more sane.
+        if instance.sort_index.__code__ is ABCHostAttribute.sort_index.__code__:
+            instance._sort_index = self.__class__._index  # type: ignore[attr-defined]
+            instance.sort_index = classmethod(lambda c: c._sort_index)  # type: ignore[assignment]
             self.__class__._index += 1
         else:
-            self.__class__._index = max(plugin_class.sort_index(), self.__class__._index)
+            self.__class__._index = max(instance.sort_index(), self.__class__._index)
 
     def attributes(self):
         return [cls() for cls in self.values()]

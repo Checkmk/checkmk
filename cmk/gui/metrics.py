@@ -18,7 +18,7 @@ import abc
 import math
 import string
 import json
-from typing import Any, List, Tuple, Union, Dict, Set, Optional
+from typing import Any, List, Tuple, Union, Dict, Set, Optional, Type
 
 import cmk.utils
 import cmk.utils.version as cmk_version
@@ -394,12 +394,9 @@ class MetricometerRenderer(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class MetricometerRendererRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return MetricometerRenderer
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.type_name()
+class MetricometerRendererRegistry(cmk.utils.plugin_registry.Registry[Type[MetricometerRenderer]]):
+    def plugin_name(self, instance):
+        return instance.type_name()
 
     def get_renderer(self, perfometer, translated_metrics):
         subclass = self[perfometer["type"]]

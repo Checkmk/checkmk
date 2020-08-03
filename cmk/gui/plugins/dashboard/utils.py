@@ -9,7 +9,7 @@ import time
 import abc
 import json
 import copy
-from typing import Set, Optional, Any, Dict, Union, Tuple, List, Callable, cast
+from typing import Set, Optional, Any, Dict, Union, Tuple, List, Callable, cast, Type
 import urllib.parse
 
 import cmk.utils.plugin_registry
@@ -45,8 +45,8 @@ DashletRefreshInterval = Union[bool, int]
 DashletRefreshAction = Optional[str]
 DashletSize = Tuple[int, int]
 DashletPosition = Tuple[int, int]
-DashletInputFunc = Callable[["Dashlet"], None]
-DashletHandleInputFunc = Callable[[DashletId, DashletConfig], None]
+DashletInputFunc = Callable[[DashletType], None]
+DashletHandleInputFunc = Callable[[DashletId, DashletConfig], DashletType]
 
 builtin_dashboards: Dict[DashboardName, DashboardConfig] = {}
 # Keep this for legacy reasons until we drop the legacy plugin mechanic
@@ -132,9 +132,9 @@ class Dashlet(metaclass=abc.ABCMeta):
         return None
 
     @classmethod
-    def opt_parameters(cls) -> Optional[List[DictionaryEntry]]:
+    def opt_parameters(cls) -> Union[bool, List[str]]:
         """List of optional parameters in case vs_parameters() returns a list"""
-        return None
+        return False
 
     @classmethod
     def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc]:
@@ -404,13 +404,10 @@ class IFrameDashlet(Dashlet, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class DashletRegistry(cmk.utils.plugin_registry.ClassRegistry):
+class DashletRegistry(cmk.utils.plugin_registry.Registry[Type[Dashlet]]):
     """The management object for all available plugins."""
-    def plugin_base_class(self):
-        return Dashlet
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.type_name()
+    def plugin_name(self, instance):
+        return instance.type_name()
 
 
 dashlet_registry = DashletRegistry()

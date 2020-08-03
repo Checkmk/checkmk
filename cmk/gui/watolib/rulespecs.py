@@ -49,10 +49,6 @@ class RulespecBaseGroup(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def is_sub_group(self) -> bool:
-        raise NotImplementedError()
-
-    @abc.abstractproperty
     def choice_title(self) -> str:
         raise NotImplementedError()
 
@@ -72,10 +68,6 @@ class RulespecGroup(RulespecBaseGroup):
     def help(self) -> str:
         """Helpful description of this group"""
         raise NotImplementedError()
-
-    @property
-    def is_sub_group(self) -> bool:
-        return False
 
     @property
     def choice_title(self) -> str:
@@ -105,32 +97,23 @@ class RulespecSubGroup(RulespecBaseGroup, metaclass=abc.ABCMeta):
     def help(self) -> None:
         return None  # Sub groups currently have no help text
 
-    @property
-    def is_sub_group(self) -> bool:
-        return True
 
-
-class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
+class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBaseGroup]]):
     def __init__(self):
         super(RulespecGroupRegistry, self).__init__()
         self._main_groups: List[Type[RulespecGroup]] = []
         self._sub_groups_by_main_group: Dict[Type[RulespecGroup], List[Type[RulespecSubGroup]]] = {}
 
-    def plugin_base_class(self) -> Type[RulespecBaseGroup]:
-        return RulespecBaseGroup
+    def plugin_name(self, instance: Type[RulespecBaseGroup]) -> str:
+        return instance().name
 
-    def plugin_name(self, plugin_class: Type[RulespecBaseGroup]) -> str:
-        return plugin_class().name
-
-    def registration_hook(self, plugin_class: Type[RulespecBaseGroup]) -> None:
-        group = plugin_class()
-        if not group.is_sub_group:
-            assert issubclass(plugin_class, RulespecGroup)
-            self._main_groups.append(plugin_class)
+    def registration_hook(self, instance: Type[RulespecBaseGroup]) -> None:
+        if issubclass(instance, RulespecSubGroup):
+            self._sub_groups_by_main_group.setdefault(instance().main_group, []).append(instance)
+        elif issubclass(instance, RulespecGroup):
+            self._main_groups.append(instance)
         else:
-            assert issubclass(plugin_class, RulespecSubGroup)
-            assert isinstance(group, RulespecSubGroup)
-            self._sub_groups_by_main_group.setdefault(group.main_group, []).append(plugin_class)
+            raise TypeError("Got invalid type \"%s\"" % instance.__name__)
 
     def get_group_choices(self, mode: str) -> List[_Tuple[str, str]]:
         """Returns all available ruleset groups to be used in dropdown choices"""
@@ -173,10 +156,11 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
         hidden_main_groups = ("monconf", "agents", "agent")
         for g_class in self.values():
             group = g_class()
-            if group.is_sub_group and group.main_group().name in hidden_groups:
+            if isinstance(group, RulespecSubGroup) and group.main_group().name in hidden_groups:
                 continue
 
-            if not group.is_sub_group and group.name in hidden_groups or group.name in hidden_main_groups:
+            if not isinstance(group, RulespecSubGroup
+                             ) and group.name in hidden_groups or group.name in hidden_main_groups:
                 continue
 
             names.append(group.name)
@@ -1029,13 +1013,13 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
     return BinaryHostRulespec
 
 
-class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
+class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
     def __init__(self, group_registry):
         super(RulespecRegistry, self).__init__()
         self._group_registry = group_registry
 
-    def plugin_base_class(self):
-        return Rulespec
+    def plugin_name(self, instance: Rulespec) -> str:
+        return instance.name
 
     def get_by_group(self, group_name: str) -> List[Rulespec]:
         rulespecs = []

@@ -36,12 +36,9 @@ class PermissionSection(metaclass=abc.ABCMeta):
         return False
 
 
-class PermissionSectionRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return PermissionSection
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().name
+class PermissionSectionRegistry(cmk.utils.plugin_registry.Registry[Type[PermissionSection]]):
+    def plugin_name(self, instance):
+        return instance().name
 
     def get_sorted_sections(self):
         return sorted([s() for s in self.values()], key=lambda s: (s.sort_index, s.title))
@@ -89,7 +86,7 @@ class Permission(metaclass=abc.ABCMeta):
         return self._sort_index
 
 
-class PermissionRegistry(cmk.utils.plugin_registry.ClassRegistry):
+class PermissionRegistry(cmk.utils.plugin_registry.Registry[Type[Permission]]):
     def __init__(self):
         super(PermissionRegistry, self).__init__()
         # TODO: Better make the sorting explicit in the future
@@ -97,14 +94,11 @@ class PermissionRegistry(cmk.utils.plugin_registry.ClassRegistry):
         # the order they have been added.
         self._index_counter = 0
 
-    def plugin_base_class(self):
-        return Permission
+    def plugin_name(self, instance):
+        return instance().name
 
-    def plugin_name(self, plugin_class):
-        return plugin_class().name
-
-    def registration_hook(self, plugin_class):
-        plugin_class._sort_index = self._index_counter
+    def registration_hook(self, instance):
+        instance._sort_index = self._index_counter
         self._index_counter += 1
 
     def get_sorted_permissions(self, section):

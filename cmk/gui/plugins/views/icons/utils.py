@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
@@ -97,15 +97,12 @@ class Icon(metaclass=abc.ABCMeta):
         return self.default_sort_index()
 
 
-class IconRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return Icon
+class IconRegistry(cmk.utils.plugin_registry.Registry[Type[Icon]]):
+    def plugin_name(self, instance):
+        return instance.ident()
 
-    def plugin_name(self, plugin_class):
-        return plugin_class.ident()
-
-    def registration_hook(self, plugin_class):
-        ident = self.plugin_name(plugin_class)
+    def registration_hook(self, instance):
+        ident = self.plugin_name(instance)
         declare_permission("icons_and_actions.%s" % ident, ident,
                            _("Allow to see the icon %s in the host and service views") % ident,
                            config.builtin_role_ids)

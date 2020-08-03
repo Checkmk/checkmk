@@ -6,7 +6,7 @@
 
 import abc
 import os
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any, Tuple, Type
 
 from livestatus import SiteId
 
@@ -419,31 +419,25 @@ class UserAttribute(metaclass=abc.ABCMeta):
 #   '----------------------------------------------------------------------'
 
 
-class UserConnectorRegistry(cmk.utils.plugin_registry.ClassRegistry):
+class UserConnectorRegistry(cmk.utils.plugin_registry.Registry[Type[UserConnector]]):
     """The management object for all available user connector classes.
 
     Have a look at the base class for details."""
-    def plugin_base_class(self):
-        return UserConnector
+    def plugin_name(self, instance):
+        return instance.type()
 
-    def plugin_name(self, plugin_class):
-        return plugin_class.type()
-
-    def registration_hook(self, plugin_class):
-        plugin_class.migrate_config()
+    def registration_hook(self, instance):
+        instance.migrate_config()
 
 
 user_connector_registry = UserConnectorRegistry()
 
 
-class UserAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
+class UserAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[UserAttribute]]):
     """The management object for all available user attributes.
     Have a look at the base class for details."""
-    def plugin_base_class(self):
-        return UserAttribute
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.name()
+    def plugin_name(self, instance):
+        return instance.name()
 
 
 user_attribute_registry = UserAttributeRegistry()

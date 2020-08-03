@@ -31,12 +31,9 @@ class AutomationCommand(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class AutomationCommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[AutomationCommand]:
-        return AutomationCommand
-
-    def plugin_name(self, plugin_class: Type[AutomationCommand]) -> str:
-        return plugin_class().command_name()
+class AutomationCommandRegistry(cmk.utils.plugin_registry.Registry[Type[AutomationCommand]]):
+    def plugin_name(self, instance: Type[AutomationCommand]) -> str:
+        return instance().command_name()
 
 
 automation_command_registry = AutomationCommandRegistry()

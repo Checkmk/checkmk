@@ -41,7 +41,7 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
 
     @classmethod
     def get_always_activate_domain_idents(cls) -> List[ConfigDomainName]:
-        return [d.ident for d in config_domain_registry.values() if d.always_activate]
+        return [d().ident for d in config_domain_registry.values() if d.always_activate]
 
     @classmethod
     def get_class(cls, ident):
@@ -128,12 +128,9 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
         ]
 
 
-class ConfigDomainRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return ABCConfigDomain
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.ident
+class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[Type[ABCConfigDomain]]):
+    def plugin_name(self, instance):
+        return instance.ident
 
 
 config_domain_registry = ConfigDomainRegistry()
@@ -157,12 +154,10 @@ class SampleConfigGenerator(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class SampleConfigGeneratorRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return SampleConfigGenerator
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.ident()
+class SampleConfigGeneratorRegistry(cmk.utils.plugin_registry.Registry[Type[SampleConfigGenerator]]
+                                   ):
+    def plugin_name(self, instance):
+        return instance.ident()
 
     def get_generators(self) -> List[SampleConfigGenerator]:
         """Return the generators in the order they are expected to be executed"""
@@ -205,17 +200,14 @@ class ConfigVariableGroup:
         """Returns an integer to control the sorting of the groups in lists"""
         raise NotImplementedError()
 
-    def config_variables(self) -> 'List[ConfigVariable]':
+    def config_variables(self) -> 'List[Type[ConfigVariable]]':
         """Returns a list of configuration variable classes that belong to this group"""
         return [v for v in config_variable_registry.values() if v().group() == self.__class__]
 
 
-class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return ConfigVariableGroup
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().ident()
+class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVariableGroup]]):
+    def plugin_name(self, instance):
+        return instance().ident()
 
 
 config_variable_group_registry = ConfigVariableGroupRegistry()
@@ -258,12 +250,9 @@ class ConfigVariable:
         return True
 
 
-class ConfigVariableRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return ConfigVariable
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().ident()
+class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVariable]]):
+    def plugin_name(self, instance):
+        return instance().ident()
 
 
 config_variable_registry = ConfigVariableRegistry()

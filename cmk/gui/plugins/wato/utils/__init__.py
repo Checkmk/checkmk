@@ -12,7 +12,7 @@ import abc
 import json
 import re
 import subprocess
-from typing import Callable, List, Optional as _Optional, Tuple as _Tuple
+from typing import Callable, List, Type, Optional as _Optional, Tuple as _Tuple
 
 from six import ensure_str
 
@@ -1358,12 +1358,9 @@ def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfigurati
                   (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]))
 
 
-class ModeRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return WatoMode
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.name()
+class ModeRegistry(cmk.utils.plugin_registry.Registry[Type[WatoMode]]):
+    def plugin_name(self, instance):
+        return instance.name()
 
 
 mode_registry = ModeRegistry()
@@ -1721,15 +1718,13 @@ class NotificationParameter(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class NotificationParameterRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return NotificationParameter
+class NotificationParameterRegistry(cmk.utils.plugin_registry.Registry[Type[NotificationParameter]]
+                                   ):
+    def plugin_name(self, instance):
+        return instance().ident
 
-    def plugin_name(self, plugin_class):
-        return plugin_class().ident
-
-    def registration_hook(self, plugin_class):
-        plugin = plugin_class()
+    def registration_hook(self, instance):
+        plugin = instance()
 
         script_title = notification_script_title(plugin.ident)
 

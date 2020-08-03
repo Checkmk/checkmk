@@ -3485,7 +3485,8 @@ def test_registered_filters(load_plugins):
     assert sorted(expected_filters.keys()) == sorted(names)
 
     for filter_class in cmk.gui.plugins.visuals.utils.filter_registry.values():
-        filt = filter_class()
+        # FIXME: register instances in filter_registry (CMK-5137)
+        filt = filter_class()  # type: ignore[call-arg]
         spec = expected_filters[filt.ident]
 
         assert filt.title == spec["title"]
@@ -3495,7 +3496,9 @@ def test_registered_filters(load_plugins):
         assert sorted(filt.link_columns) == sorted(spec["link_columns"])
         assert sorted(filt.htmlvars) == sorted(spec["htmlvars"])
         if "column" in spec:
-            assert filt.column == spec["column"]
+            # FIXME: ugly getattr so that mypy doesn't complain about missing attribute column
+            column = getattr(filt, "column")
+            assert column == spec["column"]
 
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases

@@ -37,7 +37,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Optional, IO, Union, Dict, List, Set
+from typing import Optional, IO, Union, Dict, List, Set, Type
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
@@ -1949,12 +1949,9 @@ class LDAPAttributePlugin(metaclass=abc.ABCMeta):
         return []
 
 
-class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return LDAPAttributePlugin
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().ident
+class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.Registry[Type[LDAPAttributePlugin]]):
+    def plugin_name(self, instance):
+        return instance().ident
 
 
 class LDAPBuiltinAttributePlugin(LDAPAttributePlugin):

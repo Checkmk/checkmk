@@ -7,7 +7,7 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import List, Tuple, Optional, Type
+from typing import List, Tuple as _Tuple, Optional, Type
 
 from six import ensure_str
 
@@ -18,6 +18,7 @@ import cmk.gui.view_utils
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.valuespec import Tuple
 from cmk.gui.watolib.rulesets import Ruleset, Rule
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulespecs import (
@@ -188,20 +189,18 @@ class ModeObjectParameters(WatoMode):
                     try:
                         rulespec = rulespec_registry["static_checks:" + checkgroup]
                     except KeyError:
-                        rulespec = None
-
-                    if rulespec:
-                        url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
-                                                              ('varname',
-                                                               "static_checks:" + checkgroup),
-                                                              ('host', self._hostname)])
-                        self._render_rule_reason(
-                            _("Parameters"), url, _("Determined by discovery"), None, False,
-                            rulespec.valuespec._elements[2].value_to_text(
-                                serviceinfo["parameters"]))
-                    else:
                         self._render_rule_reason(_("Parameters"), None, "", "", True,
                                                  _("This check is not configurable via WATO"))
+                        return
+
+                    url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
+                                                          ('varname',
+                                                           "static_checks:" + checkgroup),
+                                                          ('host', self._hostname)])
+                    assert isinstance(rulespec.valuespec, Tuple)
+                    self._render_rule_reason(
+                        _("Parameters"), url, _("Determined by discovery"), None, False,
+                        rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
 
                 else:
                     rulespec = rulespec_registry[grouprule]
@@ -221,6 +220,7 @@ class ModeObjectParameters(WatoMode):
                 itemspec = rulespec.item_spec
                 if itemspec:
                     item_text = itemspec.value_to_text(serviceinfo["item"])
+                    assert rulespec.item_spec is not None
                     title = rulespec.item_spec.title()
                 else:
                     item_text = serviceinfo["item"]
@@ -231,6 +231,7 @@ class ModeObjectParameters(WatoMode):
                                               svc_desc_or_item=serviceinfo["item"],
                                               svc_desc=self._service,
                                               known_settings=self._PARAMETERS_OMIT)
+                assert isinstance(rulespec.valuespec, Tuple)
                 html.write(rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
                 html.close_td()
                 html.close_tr()
@@ -286,7 +287,7 @@ class ModeObjectParameters(WatoMode):
                           serviceinfo.get("label_sources", {}))
 
     def _get_custom_check_origin_rule(self, ruleset: Ruleset, hostname: str,
-                                      svc_desc: str) -> Optional[Tuple[CREFolder, int, Rule]]:
+                                      svc_desc: str) -> Optional[_Tuple[CREFolder, int, Rule]]:
         # We could use the outcome of _setting instead of the outcome of
         # the automation call in the future
         _setting, rules = ruleset.analyse_ruleset(self._hostname,

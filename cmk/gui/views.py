@@ -16,7 +16,7 @@ from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple as
                     Iterator, Type)
 
 import livestatus
-from livestatus import SiteId, LivestatusRow
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -111,8 +111,9 @@ from cmk.gui.plugins.views.utils import (
     SorterEntry,
     make_host_breadcrumb,
     make_service_breadcrumb,
-    Sorter,
     SorterSpec,
+    Sorter,
+    DerivedColumnsSorter,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -383,11 +384,12 @@ class View:
             if sorter is None:
                 continue  # Skip removed sorters
 
-            sorter = sorter()
-            if hasattr(sorter, 'derived_columns'):
-                sorter.derived_columns(self, uuid)
+            sorter_instance = sorter()
+            if isinstance(sorter_instance, DerivedColumnsSorter):
+                sorter_instance.derived_columns(self, uuid)
 
-            sorters.append(SorterEntry(sorter=sorter, negate=entry.negate, join_key=entry.join_key))
+            sorters.append(
+                SorterEntry(sorter=sorter_instance, negate=entry.negate, join_key=entry.join_key))
         return sorters
 
     @property
@@ -948,7 +950,8 @@ class ViewFilterList(visuals.VisualFilterList):
             for choice in group.choices:
                 filter_name = choice[0]
 
-                filter_obj = filter_registry[filter_name]()
+                # FIXME: register instances in filter_registry (CMK-5137)
+                filter_obj = filter_registry[filter_name]()  # type: ignore[call-arg]
                 html.open_li(class_="advanced" if filter_obj.is_advanced else "basic")
 
                 html.a(choice[1].title() or filter_name,
@@ -2074,6 +2077,7 @@ def _do_table_join(view: View, master_rows: Rows, master_filters: str,
     assert view.datasource.join is not None
     join_table, join_master_column = view.datasource.join
     slave_ds = data_source_registry[join_table]()
+    assert slave_ds.join_key is not None
     join_slave_column = slave_ds.join_key
     join_cells = view.join_cells
     join_columns = _get_needed_join_columns(join_cells, sorters)
@@ -2091,11 +2095,11 @@ def _do_table_join(view: View, master_rows: Rows, master_filters: str,
                                 headers=headers,
                                 only_sites=view.only_sites,
                                 limit=None,
-                                all_active_filters=None)
+                                all_active_filters=[])
 
-    per_master_entry: Dict[JoinMasterKey, Dict[JoinSlaveKey, LivestatusRow]] = {}
+    per_master_entry: Dict[JoinMasterKey, Dict[JoinSlaveKey, Row]] = {}
     current_key: Optional[JoinMasterKey] = None
-    current_entry: Optional[Dict[JoinSlaveKey, LivestatusRow]] = None
+    current_entry: Optional[Dict[JoinSlaveKey, Row]] = None
     for row in rows:
         master_key = (row["site"], row[join_master_column])
         if master_key != current_key:
@@ -2772,8 +2776,7 @@ def core_command(what, row, row_nr, total_rows):
         else:
             cmdtag = "HOST"
 
-    commands = None
-    title = None
+    commands, title = None, None
     # Call all command actions. The first one that detects
     # itself to be executed (by examining the HTML variables)
     # will return a command to execute and a title for the
@@ -2787,10 +2790,7 @@ def core_command(what, row, row_nr, total_rows):
                 commands, title = result
                 break
 
-    # Use the title attribute to determine if a command exists, since the list
-    # of commands might be empty (e.g. in case of "remove all downtimes" where)
-    # no downtime exists in a selection of rows.
-    if not title:
+    if commands is None or title is None:
         raise MKUserError(None, _("Sorry. This command is not implemented."))
 
     # Some commands return lists of commands, others

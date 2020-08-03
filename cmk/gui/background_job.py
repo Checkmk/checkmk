@@ -17,7 +17,7 @@ import time
 import traceback
 from types import FrameType
 import io
-from typing import Tuple, Callable, Type, List, Optional, Dict, Any
+from typing import Tuple, Callable, Type, List, Optional, Dict, Any, Sequence
 
 import psutil  # type: ignore[import]
 from six import ensure_binary, ensure_str
@@ -617,7 +617,7 @@ class BackgroundJobManager:
 
         return job_ids
 
-    def do_housekeeping(self, job_classes: List[Type[BackgroundJob]]) -> None:
+    def do_housekeeping(self, job_classes: Sequence[Type[BackgroundJob]]) -> None:
         try:
             for job_class in job_classes:
                 job_ids = self.get_all_job_ids(job_class)

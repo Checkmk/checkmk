@@ -218,12 +218,9 @@ class ACTest:
         return default_values[varname]
 
 
-class ACTestRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[ACTest]:
-        return ACTest
-
-    def plugin_name(self, plugin_class: Type[ACTest]) -> str:
-        return plugin_class.__name__
+class ACTestRegistry(cmk.utils.plugin_registry.Registry[Type[ACTest]]):
+    def plugin_name(self, instance: Type[ACTest]) -> str:
+        return instance.__name__
 
 
 ac_test_registry = ACTestRegistry()

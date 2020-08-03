@@ -10,6 +10,7 @@
 import abc
 from hashlib import md5
 import json
+from typing import Type
 
 from six import ensure_binary
 
@@ -31,12 +32,9 @@ class APICallCollection(metaclass=abc.ABCMeta):
         raise NotImplementedError("This API collection does not register any API call")
 
 
-class APICallCollectionRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return APICallCollection
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.__name__
+class APICallCollectionRegistry(cmk.utils.plugin_registry.Registry[Type[APICallCollection]]):
+    def plugin_name(self, instance):
+        return instance.__name__
 
 
 api_call_collection_registry = APICallCollectionRegistry()

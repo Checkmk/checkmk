@@ -87,12 +87,9 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
         html.write(json.dumps(response))
 
 
-class PageRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[Page]:
-        return Page
-
-    def plugin_name(self, plugin_class: Type[Page]) -> str:
-        return plugin_class.ident()
+class PageRegistry(cmk.utils.plugin_registry.Registry[Type[Page]]):
+    def plugin_name(self, instance: Type[Page]) -> str:
+        return instance.ident()
 
     def register_page(self, path: str) -> Callable[[Type[Page]], Type[Page]]:
         def wrap(plugin_class: Type[Page]) -> Type[Page]:

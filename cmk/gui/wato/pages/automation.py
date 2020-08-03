@@ -78,7 +78,7 @@ class ModeAutomation(AjaxPage):
 
     def _from_vars(self):
         self._authenticate()
-        self._command = html.request.var("command")
+        self._command = html.request.get_str_input_mandatory("command")
 
     def _authenticate(self):
         secret = html.request.var("secret")

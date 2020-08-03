@@ -1092,14 +1092,16 @@ def show_filter(f: Filter) -> None:
 def get_filter(name: str) -> Filter:
     """Returns the filter object identified by the given name
     Raises a KeyError in case a not existing filter is requested."""
-    return filter_registry[name]()
+    # FIXME: register instances in filter_registry (CMK-5137)
+    return filter_registry[name]()  # type: ignore[call-arg]
 
 
 def filters_allowed_for_info(info: str) -> Dict[str, Filter]:
     """Returns a map of filter names and filter objects that are registered for the given info"""
     allowed = {}
     for fname, filter_class in filter_registry.items():
-        filt = filter_class()
+        # FIXME: register instances in filter_registry (CMK-5137)
+        filt = filter_class()  # type: ignore[call-arg]
         if filt.info is None or info == filt.info:
             allowed[fname] = filt
     return allowed
@@ -1260,7 +1262,8 @@ def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
 
     context: VisualContext = {}
     for filter_name, filter_class in filter_registry.items():
-        filter_object = filter_class()
+        # FIXME: register instances in filter_registry (CMK-5137)
+        filter_object = filter_class()  # type: ignore[call-arg]
 
         if only_infos is not None and filter_object.info not in only_infos:
             continue  # Skip filters related to not relevant infos
@@ -1327,7 +1330,8 @@ def get_only_sites() -> Optional[List[SiteId]]:
 def collect_filter_headers(info_keys, table):
     # Collect all available filters for these infos
     for filter_class in filter_registry.values():
-        filter_obj = filter_class()
+        # FIXME: register instances in filter_registry (CMK-5137)
+        filter_obj = filter_class()  # type: ignore[call-arg]
         if filter_obj.info in info_keys and filter_obj.available():
             yield filter_obj.filter(table)
 
@@ -1420,7 +1424,8 @@ class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
 class VisualFilter(ValueSpec):
     def __init__(self, name, **kwargs):
         self._name = name
-        self._filter = filter_registry[name]()
+        # FIXME: register instances in filter_registry (CMK-5137)
+        self._filter = filter_registry[name]()  # type: ignore[call-arg]
 
         ValueSpec.__init__(self, **kwargs)
 

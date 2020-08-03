@@ -7,7 +7,7 @@
 
 from typing import List
 
-from cmk.utils.plugin_registry import InstanceRegistry
+from cmk.utils.plugin_registry import Registry
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _, _l
@@ -23,9 +23,9 @@ def any_advanced_items(topics: List[TopicMenuTopic]) -> bool:
     return any(item.is_advanced for topic in topics for item in topic.items)
 
 
-class MegaMenuRegistry(InstanceRegistry):
-    def plugin_base_class(self):
-        return MegaMenu
+class MegaMenuRegistry(Registry[MegaMenu]):
+    def plugin_name(self, instance: MegaMenu) -> str:
+        return instance.name
 
 
 mega_menu_registry = MegaMenuRegistry()

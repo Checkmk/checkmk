@@ -661,7 +661,9 @@ def test_registered_datasources():
         spec = expected[ds.ident]
         assert ds.title == spec["title"]
         if hasattr(ds.table, '__call__'):
-            assert ("func", ds.table.__name__) == spec["table"]
+            # FIXME: ugly getattr so that mypy doesn't complain about missing attribute __name__
+            name = getattr(ds.table, '__name__')
+            assert ("func", name) == spec["table"]
         elif isinstance(ds.table, tuple):
             assert spec["table"][0] == "tuple"
             assert spec["table"][1][0] == ds.table[0].__name__

@@ -15,6 +15,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
 if TYPE_CHECKING:
+    from typing import Sequence
     from cmk.gui.valuespec import Dictionary, ValueSpec, Transform
 
 g_header_open = False
@@ -35,7 +36,7 @@ def get_input(valuespec: 'ValueSpec', varprefix: str) -> Any:
 # several dictionaries at once.
 # TODO: Remove all call sites and clean this up! The mechanic of this
 # is very uncommon compared to the other usages of valuespecs.
-def edit_dictionaries(dictionaries: 'List[Tuple[str, Union[Transform, Dictionary]]]',
+def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictionary]]]',
                       value: Dict[str, Any],
                       focus: Optional[str] = None,
                       hover_help: bool = True,

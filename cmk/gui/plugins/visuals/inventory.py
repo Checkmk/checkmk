@@ -643,5 +643,5 @@ class VisualInfoHost(VisualInfo):
         return _("Inventory Historys")
 
     @property
-    def single_spec(self) -> Optional[Tuple[str, ValueSpec]]:
-        return None
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return []

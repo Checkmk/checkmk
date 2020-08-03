@@ -130,28 +130,25 @@ class CustomizableSidebarSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-# TODO: We should really use the InstanceRegistry here... :-/ Using the
-# ClassRegistry obfuscates the code and makes typing a nightmare.
-class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
+# TODO: We should really register instances instead of classes here... :-/ Using
+# classes obfuscates the code and makes typing a nightmare.
+class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
     """The management object for all available plugins."""
-    def plugin_base_class(self):
-        return SidebarSnapin
+    def plugin_name(self, instance):
+        return instance.type_name()
 
-    def plugin_name(self, plugin_class):
-        return plugin_class.type_name()
-
-    def registration_hook(self, plugin_class: Type[SidebarSnapin]) -> None:
+    def registration_hook(self, instance: Type[SidebarSnapin]) -> None:
         declare_permission(
-            "sidesnap.%s" % self.plugin_name(plugin_class),
-            plugin_class.title(),
-            plugin_class.description(),
-            plugin_class.allowed_roles(),
+            "sidesnap.%s" % self.plugin_name(instance),
+            instance.title(),
+            instance.description(),
+            instance.allowed_roles(),
         )
 
-        for path, page_func in plugin_class().page_handlers().items():
+        for path, page_func in instance().page_handlers().items():
             cmk.gui.pages.register_page_handler(path, page_func)
 
-    def get_customizable_snapin_types(self) -> List[Tuple[str, CustomizableSidebarSnapin]]:
+    def get_customizable_snapin_types(self) -> List[Tuple[str, Type[CustomizableSidebarSnapin]]]:
         return [(snapin_type_id, snapin_type)
                 for snapin_type_id, snapin_type in self.items()
                 if (issubclass(snapin_type, CustomizableSidebarSnapin) and

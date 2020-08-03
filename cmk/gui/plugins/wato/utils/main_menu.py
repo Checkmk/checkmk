@@ -6,7 +6,7 @@
 
 import abc
 import re
-from typing import Optional, NamedTuple, List
+from typing import Optional, NamedTuple, List, Type
 
 from cmk.gui.i18n import _l
 import cmk.gui.config as config
@@ -109,9 +109,9 @@ MainModuleTopic = NamedTuple("MainModuleTopic", [
 ])
 
 
-class MainModuleTopicRegistry(cmk.utils.plugin_registry.InstanceRegistry):
-    def plugin_base_class(self):
-        return MainModuleTopic
+class MainModuleTopicRegistry(cmk.utils.plugin_registry.Registry[MainModuleTopic]):
+    def plugin_name(self, instance: MainModuleTopic) -> str:
+        return instance.name
 
 
 main_module_topic_registry = MainModuleTopicRegistry()
@@ -161,12 +161,9 @@ class MainModule(MenuItem, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class ModuleRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return MainModule
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().mode_or_url
+class ModuleRegistry(cmk.utils.plugin_registry.Registry[Type[MainModule]]):
+    def plugin_name(self, instance):
+        return instance().mode_or_url
 
 
 main_module_registry = ModuleRegistry()

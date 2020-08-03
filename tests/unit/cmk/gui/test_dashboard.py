@@ -142,7 +142,7 @@ _attr_map = [
     ("resizable", "is_resizable", True),
     ("size", "initial_size", dashboard.Dashlet.minimum_size),
     ("parameters", "vs_parameters", None),
-    ("opt_params", "opt_parameters", None),
+    ("opt_params", "opt_parameters", False),
     ("validate_params", "validate_parameters_func", None),
     ("refresh", "initial_refresh_interval", False),
     ("allowed", "allowed_roles", config.builtin_role_ids),
@@ -290,7 +290,7 @@ def test_dashlet_type_defaults(register_builtin_html):
     assert dashboard.Dashlet.initial_position() == (1, 1)
     assert dashboard.Dashlet.initial_refresh_interval() is False
     assert dashboard.Dashlet.vs_parameters() is None
-    assert dashboard.Dashlet.opt_parameters() is None
+    assert dashboard.Dashlet.opt_parameters() is False
     assert dashboard.Dashlet.validate_parameters_func() is None
     assert dashboard.Dashlet.styles() is None
     assert dashboard.Dashlet.script() is None

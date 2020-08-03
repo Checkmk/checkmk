@@ -24,6 +24,7 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
     CheckTypeGroupSelection,
     RulespecGroupManualChecks,
+    ManualCheckParameterRulespec,
 )
 from cmk.gui.valuespec import (
     Dictionary,
@@ -1601,6 +1602,7 @@ def test_register_check_parameters(patch_rulespec_registries):
     assert "static_checks:bla_params" in rulespec_names
     assert len(rulespec_names) == 1
     rulespec = cmk.gui.watolib.rulespecs.rulespec_registry["static_checks:bla_params"]
+    assert isinstance(rulespec, ManualCheckParameterRulespec)
 
     # Static checks rulespecs are always
     # a) host rulespecs

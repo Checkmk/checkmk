@@ -266,7 +266,7 @@ class PainterOptions:
         html.end_form()
 
 
-def row_id(view_spec: Dict[str, Any], row: LivestatusRow) -> str:
+def row_id(view_spec: Dict[str, Any], row: Row) -> str:
     """Calculates a uniq id for each data row which identifies the current
     row accross different page loadings."""
     key = u''
@@ -313,12 +313,9 @@ class PainterOption(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class ViewPainterOptionRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[PainterOption]:
-        return PainterOption
-
-    def plugin_name(self, plugin_class: Type[PainterOption]) -> str:
-        return plugin_class().ident
+class ViewPainterOptionRegistry(cmk.utils.plugin_registry.Registry[Type[PainterOption]]):
+    def plugin_name(self, instance: Type[PainterOption]) -> str:
+        return instance().ident
 
 
 painter_option_registry = ViewPainterOptionRegistry()
@@ -390,12 +387,9 @@ class Layout(metaclass=abc.ABCMeta):
         """Render the given data using this layout for CSV"""
 
 
-class ViewLayoutRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[Layout]:
-        return Layout
-
-    def plugin_name(self, plugin_class: Type[Layout]) -> str:
-        return plugin_class().ident
+class ViewLayoutRegistry(cmk.utils.plugin_registry.Registry[Type[Layout]]):
+    def plugin_name(self, instance: Type[Layout]) -> str:
+        return instance().ident
 
     def get_choices(self) -> List[Tuple[str, str]]:
         choices = []
@@ -414,9 +408,9 @@ Exporter = NamedTuple("Exporter", [
 ])
 
 
-class ViewExporterRegistry(cmk.utils.plugin_registry.InstanceRegistry):
-    def plugin_base_class(self):
-        return Exporter
+class ViewExporterRegistry(cmk.utils.plugin_registry.Registry[Exporter]):
+    def plugin_name(self, instance):
+        return instance.name
 
 
 exporter_registry = ViewExporterRegistry()
@@ -437,12 +431,9 @@ class CommandGroup(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class CommandGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[CommandGroup]:
-        return CommandGroup
-
-    def plugin_name(self, plugin_class: Type[CommandGroup]) -> str:
-        return plugin_class().ident
+class CommandGroupRegistry(cmk.utils.plugin_registry.Registry[Type[CommandGroup]]):
+    def plugin_name(self, instance: Type[CommandGroup]) -> str:
+        return instance().ident
 
 
 command_group_registry = CommandGroupRegistry()
@@ -486,7 +477,7 @@ class Command(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def action(self, cmdtag: str, spec: str, row: dict, row_index: int,
-               num_rows: int) -> Optional[Tuple[List[str], str]]:
+               num_rows: int) -> Optional[Tuple[Union[str, List[str]], str]]:
         raise NotImplementedError()
 
     @property
@@ -512,12 +503,9 @@ class Command(metaclass=abc.ABCMeta):
         sites.live().command("[%d] %s" % (int(time.time()), command), SiteId(site))
 
 
-class CommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[Command]:
-        return Command
-
-    def plugin_name(self, plugin_class: Type[Command]) -> str:
-        return plugin_class().ident
+class CommandRegistry(cmk.utils.plugin_registry.Registry[Type[Command]]):
+    def plugin_name(self, instance: Type[Command]) -> str:
+        return instance().ident
 
 
 command_registry = CommandRegistry()
@@ -664,12 +652,9 @@ class DataSourceLivestatus(ABCDataSource):
         return RowTableLivestatus(self.ident)
 
 
-class DataSourceRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[ABCDataSource]:
-        return ABCDataSource
-
-    def plugin_name(self, plugin_class: Type[ABCDataSource]) -> str:
-        return plugin_class().ident
+class DataSourceRegistry(cmk.utils.plugin_registry.Registry[Type[ABCDataSource]]):
+    def plugin_name(self, instance: Type[ABCDataSource]) -> str:
+        return instance().ident
 
     # TODO: Sort the datasources by (assumed) common usage
     def data_source_choices(self) -> List[Tuple[str, str]]:
@@ -909,12 +894,9 @@ class Painter(metaclass=abc.ABCMeta):
         return False
 
 
-class PainterRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[Painter]:
-        return Painter
-
-    def plugin_name(self, plugin_class: Type[Painter]) -> str:
-        return plugin_class().ident
+class PainterRegistry(cmk.utils.plugin_registry.Registry[Type[Painter]]):
+    def plugin_name(self, instance: Type[Painter]) -> str:
+        return instance().ident
 
 
 painter_registry = PainterRegistry()
@@ -987,12 +969,15 @@ class Sorter(metaclass=abc.ABCMeta):
         return False
 
 
-class SorterRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self) -> Type[Sorter]:
-        return Sorter
+class DerivedColumnsSorter(Sorter):
+    @abc.abstractmethod
+    def derived_columns(self, view: 'View', uuid: Optional[str]) -> List[str]:
+        raise NotImplementedError()
 
-    def plugin_name(self, plugin_class: Type[Sorter]) -> str:
-        return plugin_class().ident
+
+class SorterRegistry(cmk.utils.plugin_registry.Registry[Type[Sorter]]):
+    def plugin_name(self, instance: Type[Sorter]) -> str:
+        return instance().ident
 
 
 sorter_registry = SorterRegistry()

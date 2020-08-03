@@ -270,7 +270,9 @@ class EditGlobalSettingMode(WatoMode):
                                            self._global_settings.get(self._varname, defvalue))
 
         html.begin_form("value_editor", method="POST")
-        forms.header(self._valuespec.title())
+        title = self._valuespec.title()
+        assert isinstance(title, str)
+        forms.header(title)
         if not config.wato_hide_varnames:
             forms.section(_("Configuration variable:"))
             html.tt(self._varname)
@@ -284,7 +286,7 @@ class EditGlobalSettingMode(WatoMode):
             self._show_global_setting()
 
         forms.section(_("Factory setting"))
-        html.write_html(self._valuespec.value_to_text(defvalue))
+        html.write_html(HTML(self._valuespec.value_to_text(defvalue)))
 
         forms.section(_("Current state"))
         if is_configured_globally:
@@ -458,7 +460,7 @@ class ModeEditSiteGlobalSetting(EditGlobalSettingMode):
 
     def _show_global_setting(self):
         forms.section(_("Global setting"))
-        html.write_html(self._valuespec.value_to_text(self._global_settings[self._varname]))
+        html.write_html(HTML(self._valuespec.value_to_text(self._global_settings[self._varname])))
 
 
 def is_a_checkbox(vs):

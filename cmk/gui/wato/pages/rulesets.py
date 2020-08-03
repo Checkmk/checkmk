@@ -567,7 +567,8 @@ class ModeEditRuleset(WatoMode):
         except KeyError:
             pass
 
-    def title(self):
+    def title(self) -> str:
+        assert self._rulespec.title is not None
         title = self._rulespec.title
 
         if self._hostname:
@@ -853,7 +854,7 @@ class ModeEditRuleset(WatoMode):
         # Value
         table.cell(_("Value"))
         try:
-            value_html = self._valuespec.value_to_text(value)
+            value_html = HTML(self._valuespec.value_to_text(value))
         except Exception as e:
             try:
                 reason = "%s" % e
@@ -864,7 +865,7 @@ class ModeEditRuleset(WatoMode):
             value_html = html.render_icon("alert") \
                        + _("The value of this rule is not valid. ") \
                        + reason
-        html.write(value_html)
+        html.write_html(value_html)
 
         # Comment
         table.cell(_("Description"))
@@ -902,6 +903,7 @@ class ModeEditRuleset(WatoMode):
             label = _("Host %s") % self._hostname
             ty = _('Host')
             if self._item is not None and self._rulespec.item_type:
+                assert self._rulespec.item_name is not None
                 label += _(" and %s '%s'") % (self._rulespec.item_name, self._item)
                 ty = self._rulespec.item_name
 

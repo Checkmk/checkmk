@@ -9,7 +9,7 @@
 
 import abc
 import time
-from typing import Dict, List, Optional, Tuple, Union, Iterator
+from typing import Dict, List, Optional, Tuple, Union, Type, Iterator
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.valuespec import ValueSpec
@@ -44,7 +44,7 @@ class VisualInfo(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def single_spec(self) -> Optional[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         """The key / valuespec pairs (choices) to identify a single row"""
         raise NotImplementedError()
 
@@ -69,18 +69,15 @@ class VisualInfo(metaclass=abc.ABCMeta):
         return 30
 
 
-class VisualInfoRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return VisualInfo
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().ident
+class VisualInfoRegistry(cmk.utils.plugin_registry.Registry[Type[VisualInfo]]):
+    def plugin_name(self, instance):
+        return instance().ident
 
     # At least painter <> info matching extracts the info name from the name of the painter by
     # splitting at first "_" and use the text before it as info name. See
     # cmk.gui.views.infos_needed_by_painter().
-    def registration_hook(self, plugin_class):
-        ident = plugin_class().ident
+    def registration_hook(self, instance):
+        ident = instance().ident
         if ident == "aggr_group":
             return  # TODO: Allow this broken thing for the moment
         if "_" in ident:
@@ -196,12 +193,9 @@ class VisualType(metaclass=abc.ABCMeta):
         return True
 
 
-class VisualTypeRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return VisualType
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().ident
+class VisualTypeRegistry(cmk.utils.plugin_registry.Registry[Type[VisualType]]):
+    def plugin_name(self, instance):
+        return instance().ident
 
 
 visual_type_registry = VisualTypeRegistry()
@@ -449,12 +443,9 @@ def filter_cre_heading_info():
     return config.site(current_value)["alias"] if current_value else None
 
 
-class FilterRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return Filter
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().ident
+class FilterRegistry(cmk.utils.plugin_registry.Registry[Type[Filter]]):
+    def plugin_name(self, instance):
+        return instance().ident
 
 
 filter_registry = FilterRegistry()

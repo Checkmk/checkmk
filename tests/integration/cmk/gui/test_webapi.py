@@ -680,7 +680,7 @@ def test_bulk_discovery_start_with_defaults(web, local_test_hosts):  # noqa: F81
     #   There are supposed to be 63 services to be discovered. Due to the ongoing migration
     #   however, the services in testlib.base:KNOWN_AUTO_MIGRATION_FAILURES can't be detected
     #   right now. Please add the 63 in here once KNOWN_AUTO_MIGRATION_FAILURES is empty.
-    assert "48 added" in status["job"]["output"]
+    assert "50 added" in status["job"]["output"]
     assert "discovery successful" in status["job"]["output"]
 
 

@@ -63,16 +63,16 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     """
     def __init__(
         self,
-        sections: BoundedAbstractSections,
-        cache_info: SectionCacheInfo,
-        piggybacked_raw_data: PiggybackRawData,
-        persisted_sections: BoundedAbstractPersistedSections,
+        sections: Optional[BoundedAbstractSections] = None,
+        cache_info: Optional[SectionCacheInfo] = None,
+        piggybacked_raw_data: Optional[PiggybackRawData] = None,
+        persisted_sections: Optional[BoundedAbstractPersistedSections] = None,
     ) -> None:
-        super(ABCHostSections, self).__init__()
-        self.sections = sections
-        self.cache_info = cache_info
-        self.piggybacked_raw_data = piggybacked_raw_data
-        self.persisted_sections = persisted_sections
+        super().__init__()
+        self.sections = sections if sections else {}
+        self.cache_info = cache_info if cache_info else {}
+        self.piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data else {}
+        self.persisted_sections = persisted_sections if persisted_sections else {}
 
     def __repr__(self):
         return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r, persisted_sections=%r)" % (
@@ -102,13 +102,12 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         if host_sections.persisted_sections:
             self.persisted_sections.update(host_sections.persisted_sections)
 
-    @abc.abstractmethod
     def _extend_section(
         self,
         section_name: SectionName,
         section_content: BoundedAbstractSectionContent,
     ) -> None:
-        raise NotImplementedError()
+        self.sections.setdefault(section_name, []).extend(section_content)
 
     def add_cached_section(
         self,

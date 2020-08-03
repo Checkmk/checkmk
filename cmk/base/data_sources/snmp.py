@@ -26,7 +26,6 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
@@ -35,23 +34,7 @@ from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                        SNMPSectionContent]):
-    def __init__(
-        self,
-        sections: Optional[SNMPSections] = None,
-        cache_info: Optional[SectionCacheInfo] = None,
-        piggybacked_raw_data: Optional[PiggybackRawData] = None,
-        persisted_sections: Optional[SNMPPersistedSections] = None,
-    ) -> None:
-        super(SNMPHostSections, self).__init__(
-            sections=sections if sections is not None else {},
-            cache_info=cache_info if cache_info is not None else {},
-            piggybacked_raw_data=piggybacked_raw_data if piggybacked_raw_data is not None else {},
-            persisted_sections=persisted_sections if persisted_sections is not None else {},
-        )
-
-    def _extend_section(self, section_name: SectionName,
-                        section_content: SNMPSectionContent) -> None:
-        self.sections.setdefault(section_name, []).extend(section_content)  # type: ignore
+    pass
 
 
 class CachedSNMPDetector:

@@ -142,7 +142,7 @@ def test_postgres_factory_linux_with_instance(mock_Popen, monkeypatch, mk_postgr
         'communicate.side_effect': [
             ('/usr/lib/postgres/psql', None),
             ('postgres\ndb1', None),
-            ('12.3', None),
+            ('12.3.6', None),
         ]
     }
     process_mock.configure_mock(**attrs)
@@ -182,7 +182,7 @@ def test_postgres_factory_windows_with_instance(mock_Popen, mock_isfile, monkeyp
         'pg_passfile': 'c:\\User\\.pgpass',
     }
     process_mock = Mock()
-    attrs = {'communicate.side_effect': [(b'postgres\ndb1', b'ok'), (b'12.1', b'ok')]}
+    attrs = {'communicate.side_effect': [(b'postgres\ndb1', b'ok'), (b'12.1.5', b'ok')]}
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
 

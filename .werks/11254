@@ -1,0 +1,12 @@
+Title: Improve validation of host diagnostic page
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p15
+Date: 1596438334
+Class: fix
+
+The AJAX page creating the result for the single diagnostic tests of the host
+diagnostic page was not properly validating the inputs received with the HTTP
+request variables.

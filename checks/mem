@@ -143,14 +143,14 @@ def is_linux_meminfo(meminfo):
 
 
 def inventory_mem_linux(info):
-    meminfo = parse_proc_meminfo_bytes(info)
-    if is_linux_meminfo(meminfo):
+    section = parse_proc_meminfo_bytes(info)
+    if is_linux_meminfo(section):
         yield None, {}
 
 
 def check_mem_linux(_no_item, params, info):
-    meminfo = parse_proc_meminfo_bytes(info)
-    if not meminfo:
+    section = parse_proc_meminfo_bytes(info)
+    if not section:
         return
 
     # TODO: Currently some of these values are just set to generate the metrics later
@@ -158,51 +158,51 @@ def check_mem_linux(_no_item, params, info):
 
     # SReclaimable is not available for older kernels
     # Compute memory used by caches, that can be considered "free"
-    meminfo["Caches"] = meminfo["Cached"] + meminfo["Buffers"] \
-                      + meminfo["SwapCached"] + meminfo.get("SReclaimable", 0)
+    section["Caches"] = section["Cached"] + section["Buffers"] \
+                      + section["SwapCached"] + section.get("SReclaimable", 0)
 
-    meminfo["MemUsed"] = meminfo["MemTotal"] - meminfo["MemFree"] - meminfo["Caches"]
-    meminfo["SwapUsed"] = meminfo["SwapTotal"] - meminfo["SwapFree"]
-    meminfo["TotalTotal"] = meminfo["MemTotal"] + meminfo["SwapTotal"]
-    meminfo["TotalUsed"] = meminfo["MemUsed"] + meminfo["SwapUsed"]
+    section["MemUsed"] = section["MemTotal"] - section["MemFree"] - section["Caches"]
+    section["SwapUsed"] = section["SwapTotal"] - section["SwapFree"]
+    section["TotalTotal"] = section["MemTotal"] + section["SwapTotal"]
+    section["TotalUsed"] = section["MemUsed"] + section["SwapUsed"]
 
     # Disk Writeback
-    meminfo["Pending"] = \
-         meminfo["Dirty"] \
-       + meminfo.get("Writeback", 0) \
-       + meminfo.get("NFS_Unstable", 0) \
-       + meminfo.get("Bounce", 0) \
-       + meminfo.get("WritebackTmp", 0)
+    section["Pending"] = \
+         section["Dirty"] \
+       + section.get("Writeback", 0) \
+       + section.get("NFS_Unstable", 0) \
+       + section.get("Bounce", 0) \
+       + section.get("WritebackTmp", 0)
 
-    results = check_memory_dict(meminfo, params)
+    results = check_memory_dict(section, params)
 
     # show these always:
     yield results.pop("virtual", (0, ""))[:2]
     state, info, perfdata = results.pop("ram", (0, ""))
     yield state, info
-    meminfo["MemUsedPercent"] = perfdata[-1][1]
+    section["MemUsedPercent"] = perfdata[-1][1]
     yield results.pop("swap", (0, ""))[:2]
     # show rest only if not OK:
     for state, infotext, _perf in results.values():
         if state:
             yield state, infotext
 
-    # Now send performance data. We simply output *all* fields of meminfo
+    # Now send performance data. We simply output *all* fields of section
     # except for a few really useless values
     perfdata = []
-    items = sorted(meminfo.items())
+    items = sorted(section.items())
     for name, value in items:
         if name.startswith("DirectMap"):
             continue
         if name.startswith(
-                "Vmalloc") and meminfo["VmallocTotal"] > 2**40:  # useless on 64 Bit system
+                "Vmalloc") and section["VmallocTotal"] > 2**40:  # useless on 64 Bit system
             continue
         if name.startswith("Huge"):
-            if meminfo["HugePages_Total"] == 0:  # omit useless data
+            if section["HugePages_Total"] == 0:  # omit useless data
                 continue
             if name == "Hugepagesize":
                 continue  # not needed
-            value = value * meminfo["Hugepagesize"]  # convert number to actual memory size
+            value = value * section["Hugepagesize"]  # convert number to actual memory size
         perfdata.append((camelcase_to_underscored(name.replace("(", "_").replace(")", "")), value))
     yield 0, "", perfdata
 
@@ -254,33 +254,24 @@ check_info["mem.linux"] = {
 #   | used for unixoide operating systems.                                 |
 #   '----------------------------------------------------------------------'
 
-
-def parse_proc_meminfo(info):
-    parsed = {}
-    for line in info:
-        try:
-            parsed[line[0][:-1]] = int(line[1])
-        except (ValueError, IndexError) as _exc:
-            pass
-    return parsed
-
-
 # The following variable is obsolete. It is kept here so that Check_MK
 # won't fail if it's found in main.mk
 mem_extended_perfdata = None
 
 
 def inventory_mem_used(info):
-    meminfo = parse_proc_meminfo(info)
-    if "MemTotal" in meminfo \
-        and "PageTotal" not in meminfo \
-        and not is_linux_meminfo(meminfo): # handled by more modern check
+    section = parse_proc_meminfo_bytes(info)
+    if ("MemTotal" in section and "PageTotal" not in section and
+            not is_linux_meminfo(section)  # handled by more modern check
+       ):
         yield None, {}
 
 
 def check_mem_used(_no_item, params, info):
-    meminfo = parse_proc_meminfo(info)
-    for subresult in check_memory(params, meminfo):
+    section = parse_proc_meminfo_bytes(info)
+    # we have used the parse function that creates bytes, but this function
+    # still expects kB:
+    for subresult in check_memory(params, {k: v / 1024.0 for k, v in section.items()}):
         yield subresult
 
 
@@ -316,13 +307,13 @@ factory_settings["memory_win_default_levels"] = {
 
 
 def inventory_mem_win(info):
-    meminfo = parse_proc_meminfo(info)
-    if "MemTotal" in meminfo and "PageTotal" in meminfo:
+    section = parse_proc_meminfo_bytes(info)
+    if "MemTotal" in section and "PageTotal" in section:
         yield None, {}
 
 
 def check_mem_windows(_no_item, params, info):
-    meminfo = parse_proc_meminfo(info)
+    section = parse_proc_meminfo_bytes(info)
     now = time.time()
 
     def _get_levels_on_used_mb(param_key, total_mb):
@@ -347,23 +338,23 @@ def check_mem_windows(_no_item, params, info):
                                                   ("Commit charge", "Page", "pagefile",
                                                    "pagefile_used")]:
 
-        total_kb = meminfo.get("%sTotal" % prefix)
-        free_kb = meminfo.get("%sFree" % prefix)
-        if None in (total_kb, free_kb):
+        total = section.get("%sTotal" % prefix)
+        free = section.get("%sFree" % prefix)
+        if None in (total, free):
             continue
+        used = total - free
 
-        total_mb = total_kb / 1024.0
-        free_mb = free_kb / 1024.0
-        used_kb = total_kb - free_kb
+        total_mb = total / 1024.0**2
+        free_mb = free / 1024.0**2
         used_mb = total_mb - free_mb
-        perc = 100.0 * used_kb / total_kb
+        perc = 100.0 * used / total
 
         warn, crit = _get_levels_on_used_mb(paramname, total_mb)
 
         status, infotext, perfdata = check_memory_element(
             title,
-            used_kb * 1024,
-            total_kb * 1024,
+            used,
+            total,
             None,
             metric_name=metric_name,
             create_percent_metric=title == "RAM",
@@ -377,13 +368,14 @@ def check_mem_windows(_no_item, params, info):
         # Do averaging, if configured, just for matching the levels
         if "average" in params:
             average_min = params["average"]
-            used_kb = get_average("mem.win.%s" % paramname,
-                                  now,
-                                  used_kb,
-                                  average_min,
-                                  initialize_zero=False)
+            used_kb = get_average(
+                "mem.win.%s" % paramname,
+                now,
+                used / 1024.0,  # use kB for compatibility
+                average_min,
+                initialize_zero=False)
             used_mb = used_kb / 1024.0
-            perc = 100.0 * used_kb / total_kb
+            perc = 100.0 * used_mb / total_mb
             infotext += ", %d min average: %s (%s)" % (average_min,
                                                        get_percent_human_readable(perc),
                                                        get_bytes_human_readable(used_kb * 1024))
@@ -451,26 +443,25 @@ mem_vmalloc_default_levels = (80.0, 90.0, 64, 32)
 
 
 def inventory_mem_vmalloc(info):
-    meminfo = parse_proc_meminfo(info)
-    if is_linux_meminfo(meminfo):
+    section = parse_proc_meminfo_bytes(info)
+    if is_linux_meminfo(section):
         return  # handled by new Linux memory check
 
     # newer kernel version report wrong data,
     # i.d. both VmallocUsed and Chunk equal zero
-    if "VmallocTotal" in meminfo and \
-        not (meminfo["VmallocUsed"] == 0 and meminfo["VmallocChunk"] == 0):
+    if "VmallocTotal" in section and not (section["VmallocUsed"] == 0 and
+                                          section["VmallocChunk"] == 0):
         # Do not checks this on 64 Bit systems. They have almost
         # infinitive vmalloc
-        vmalloc = meminfo["VmallocTotal"] / 1024.4
-        if vmalloc < 4096:
+        if section["VmallocTotal"] < 4 * 1024**2:
             yield None, "mem_vmalloc_default_levels"
 
 
 def check_mem_vmalloc(_item, params, info):
-    meminfo = parse_proc_meminfo(info)
-    total_mb = meminfo["VmallocTotal"] / 1024.0
-    used_mb = meminfo["VmallocUsed"] / 1024.0
-    chunk_mb = meminfo["VmallocChunk"] / 1024.0
+    section = parse_proc_meminfo_bytes(info)
+    total_mb = section["VmallocTotal"] / 1024.0**2
+    used_mb = section["VmallocUsed"] / 1024.0**2
+    chunk_mb = section["VmallocChunk"] / 1024.0**2
     warn, crit, warn_chunk, crit_chunk = params
 
     state = 0

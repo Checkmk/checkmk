@@ -308,13 +308,17 @@ def _valuespec_special_agents_kubernetes():
             ],
             optional_keys=["port", "url-prefix", "path-prefix"],
             title=_("Kubernetes"),
-            help=_(
-                "This rule selects the Kubenetes special agent for an existing Checkmk host. "
-                "If you want to monitor multiple Kubernetes clusters "
-                "we strongly recommend to set up "
-                "<a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation\">Piggyback translation rules</a> "
-                "to avoid name collisions. Otherwise e.g. Pods with the same name in "
-                "different Kubernetes clusters cannot be distinguished."),
+            help=
+            _("This rule selects the Kubenetes special agent for an existing Checkmk host. "
+              "If you want to monitor multiple Kubernetes clusters "
+              "we strongly recommend to set up "
+              "<a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation\">Piggyback translation rules</a> "
+              "to avoid name collisions. Otherwise e.g. Pods with the same name in "
+              "different Kubernetes clusters cannot be distinguished.<br>"
+              "Please additionally keep in mind, that not every Kubernetes API is compatible with "
+              "every version of the official Kubernetes Python client. E.g. client v11 is only "
+              "with the API v1.15 fully compatible. Please check if the latest client version "
+              "supports your Kubernetes API version."),
         ),
         forth=_special_agents_kubernetes_transform,
     )

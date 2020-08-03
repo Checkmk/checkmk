@@ -167,7 +167,6 @@ liblivestatus_a_SOURCES = \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
         ServiceListStateColumn.cc \
-        ServiceMetricsColumn.cc \
         ServiceRRDColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \

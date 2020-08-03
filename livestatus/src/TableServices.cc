@@ -5,12 +5,16 @@
 
 #include "TableServices.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <filesystem>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <ostream>
 #include <utility>
+#include <vector>
 
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
@@ -27,14 +31,15 @@
 #include "DynamicColumn.h"
 #include "DynamicServiceRRDColumn.h"
 #include "IntLambdaColumn.h"
+#include "ListLambdaColumn.h"
 #include "Logger.h"
+#include "Metric.h"
 #include "MonitoringCore.h"
 #include "OffsetPerfdataColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
 #include "Query.h"
 #include "ServiceContactsColumn.h"
 #include "ServiceGroupsColumn.h"
-#include "ServiceMetricsColumn.h"
 #include "ServiceSpecialDoubleColumn.h"
 #include "ServiceSpecialIntColumn.h"
 #include "StringLambdaColumn.h"
@@ -59,6 +64,7 @@ std::string TableServices::namePrefix() const { return "service_"; }
 void TableServices::addColumns(Table *table, const std::string &prefix,
                                int indirect_offset, bool add_hosts) {
     Column::Offsets offsets{indirect_offset, 0};
+    auto *mc = table->core();
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
@@ -555,10 +561,22 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         Column::Offsets{indirect_offset, -1, -1,
                         DANGEROUS_OFFSETOF(service, contact_groups)}));
 
-    table->addColumn(std::make_unique<ServiceMetricsColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<service>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
-        Column::Offsets{indirect_offset, -1, -1, 0}, table->core()));
+        offsets, [mc](const service &r) {
+            std::vector<std::string> metrics;
+            if (r.host_name == nullptr || r.description == nullptr) {
+                return metrics;
+            }
+            Metric::Names names;
+            scan_rrd(mc->pnpPath() / r.host_name, r.description, names,
+                     mc->loggerRRD());
+            std::transform(std::begin(names), std::end(names),
+                           std::begin(metrics),
+                           [](auto &&m) { return m.string(); });
+            return metrics;
+        }));
     table->addDynamicColumn(std::make_unique<DynamicServiceRRDColumn>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",

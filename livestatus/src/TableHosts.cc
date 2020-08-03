@@ -5,12 +5,15 @@
 
 #include "TableHosts.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <filesystem>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <vector>
 
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
@@ -31,12 +34,13 @@
 #include "HostFileColumn.h"
 #include "HostGroupsColumn.h"
 #include "HostListColumn.h"
-#include "HostMetricsColumn.h"
 #include "HostSpecialDoubleColumn.h"
 #include "HostSpecialIntColumn.h"
 #include "IntLambdaColumn.h"
+#include "ListLambdaColumn.h"
 #include "Logger.h"
 #include "LogwatchListColumn.h"
+#include "Metric.h"
 #include "MonitoringCore.h"
 #include "OffsetPerfdataColumn.h"
 #include "OffsetStringHostMacroColumn.h"
@@ -48,6 +52,7 @@
 #include "TimeperiodColumn.h"
 #include "auth.h"
 #include "nagios.h"
+#include "pnp4nagios.h"
 
 extern host *host_list;
 
@@ -765,10 +770,21 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                         DANGEROUS_OFFSETOF(host, services)},
         table->core(), 3));
 
-    table->addColumn(std::make_unique<HostMetricsColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<host>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core()));
+        offsets, [mc](const host &r) {
+            std::vector<std::string> metrics;
+            if (r.name != nullptr) {
+                Metric::Names names;
+                scan_rrd(mc->pnpPath() / r.name, dummy_service_description(),
+                         names, mc->loggerRRD());
+                std::transform(std::begin(names), std::end(names),
+                               std::begin(metrics),
+                               [](auto &&m) { return m.string(); });
+            }
+            return metrics;
+        }));
 }
 
 void TableHosts::answerQuery(Query *query) {

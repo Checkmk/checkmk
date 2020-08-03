@@ -128,7 +128,6 @@ liblivestatus_a_SOURCES = \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \
-        HostMetricsColumn.cc \
         HostRRDColumn.cc \
         HostServiceState.cc \
         HostSpecialDoubleColumn.cc \

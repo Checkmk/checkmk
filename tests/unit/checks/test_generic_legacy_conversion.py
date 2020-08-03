@@ -2384,7 +2384,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'megaraid_ldisks',
         'megaraid_pdisks',
         'mem.linux',
-        'mem.used',
         'mem.win',
         'mem.vmalloc',
         'mgmt_dell_poweredge_amperage.power',

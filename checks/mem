@@ -147,32 +147,6 @@ check_info["mem.linux"] = {
 # won't fail if it's found in main.mk
 mem_extended_perfdata = None
 
-
-def inventory_mem_used(section):
-    if ("MemTotal" in section and "PageTotal" not in section and
-            not memory.is_linux_section(section)  # handled by more modern check
-       ):
-        yield None, {}
-
-
-def check_mem_used(_no_item, params, section):
-    # we have used the parse function that creates bytes, but this function
-    # still expects kB:
-    for subresult in check_memory(params, {k: v / 1024.0 for k, v in section.items()}):
-        yield subresult
-
-
-check_info['mem.used'] = {
-    "check_function": check_mem_used,
-    "inventory_function": inventory_mem_used,
-    "service_description": "Memory",
-    "has_perfdata": True,
-    "group": "memory",
-    "default_levels_variable": "memory_default_levels",
-    "includes": ["mem.include"],
-    "handle_real_time_checks": True,
-}
-
 #.
 #   .--mem.win-------------------------------------------------------------.
 #   |                                                _                     |

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 from ..agent_based_api.v0.type_defs import CheckGenerator
 
 from ..agent_based_api.v0 import Metric, render, Result, state
@@ -41,7 +41,7 @@ def normalize_levels(
     total: float,
     _perc_total: Optional[float] = None,
     render_unit: int = 1,
-) -> Tuple[Optional[float], Optional[float], str]:
+) -> Union[Tuple[float, float, str], Tuple[None, None, str]]:
     """get normalized levels and formatter
 
     Levels may be given either as

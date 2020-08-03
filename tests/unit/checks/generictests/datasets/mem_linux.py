@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.mem_section import parse_proc_meminfo_bytes
+
 # yapf: disable
 # type: ignore
 checkname = 'mem'
 
-info = [
+parsed = parse_proc_meminfo_bytes([
     ['MemTotal:', '24707592', 'kB'], ['MemFree:', '441224', 'kB'],
     ['Buffers:', '320672', 'kB'], ['Cached:', '19981008', 'kB'],
     ['SwapCached:', '6172', 'kB'], ['Active:', '8756876', 'kB'],
@@ -31,7 +33,8 @@ info = [
     ['HugePages_Surp:', '0'], ['Hugepagesize:', '2048', 'kB'],
     ['DirectMap4k:', '268288', 'kB'], ['DirectMap2M:', '8112128', 'kB'],
     ['DirectMap1G:', '16777216', 'kB']
-]
+])
+
 
 discovery = {'win': [], 'used': [], 'vmalloc': [], 'linux': [(None, {})]}
 

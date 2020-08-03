@@ -13,8 +13,10 @@ factory_settings["memory_default_levels"] = {
 }
 
 
-# Parse /proc/meminfo into the canonical form: into bytes, not kB
-# This function is also used by the ps check
+##############################################################################
+# This function is mid-migration and only called in the ps check. It won't be
+# after ps is migrated!
+##############################################################################
 def parse_proc_meminfo_bytes(info):
     meminfo = {}
     for line in info:

@@ -13,7 +13,7 @@ import traceback
 import json
 import functools
 from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as
-                    _Tuple, Union, Iterator)
+                    _Tuple, Union, Iterator, Type)
 
 import livestatus
 from livestatus import SiteId, LivestatusRow
@@ -90,6 +90,8 @@ from cmk.gui.plugins.views.icons.utils import (
 )
 from cmk.gui.plugins.views.utils import (
     command_registry,
+    CommandGroup,
+    Command,
     layout_registry,
     exporter_registry,
     data_source_registry,
@@ -136,7 +138,7 @@ if not cmk_version.is_raw_edition():
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
-from cmk.gui.type_defs import PainterSpec, HTTPVariables
+from cmk.gui.type_defs import PainterSpec, HTTPVariables, InfoName
 if TYPE_CHECKING:
     from cmk.gui.plugins.views.utils import Sorter, SorterSpec
     from cmk.gui.plugins.visuals.utils import Filter
@@ -613,12 +615,6 @@ class GUIViewRenderer(ABCViewRenderer):
                 except MKUserError as e:
                     html.show_error("%s" % e)
                     html.add_user_error(e.varname, e)
-                    if display_options.enabled(display_options.C):
-                        show_command_form(True, self.view.datasource)
-
-            elif display_options.enabled(
-                    display_options.C):  # (*not* display open, if checkboxes are currently shown)
-                show_command_form(False, self.view.datasource)
 
         # Also execute commands in cases without command form (needed for Python-
         # web service e.g. for NagStaMon)
@@ -735,7 +731,7 @@ class GUIViewRenderer(ABCViewRenderer):
         return menu
 
     def _page_menu_dropdown_commands(self) -> List[PageMenuDropdown]:
-        if display_options.enabled(display_options.C):
+        if not display_options.enabled(display_options.C):
             return []
 
         return [
@@ -753,12 +749,19 @@ class GUIViewRenderer(ABCViewRenderer):
         ]
 
     def _page_menu_entries_selected_objects(self) -> Iterator[PageMenuEntry]:
-        yield PageMenuEntry(
-            title=_("Execute command"),
-            icon_name="commands",
-            item=PageMenuPopup(self._render_command_form()),
-            is_enabled=_should_show_command_form(self.view.datasource),
-        )
+        info_name: InfoName = self.view.datasource.infos[0]
+        by_group = _get_command_groups(info_name)
+
+        for _group_class, commands in sorted(by_group.items(), key=lambda x: x[0]().sort_index):
+            for command in commands:
+                yield PageMenuEntry(
+                    title=command.title,
+                    icon_name=command.icon_name,
+                    item=PageMenuPopup(self._render_command_form(info_name, command)),
+                    name="command_%s" % command.ident,
+                    is_enabled=_should_show_command_form(self.view.datasource),
+                    is_advanced=command.is_advanced,
+                )
 
     def _page_menu_dropdown_host(self) -> List[PageMenuDropdown]:
         if "host" not in self.view.spec['single_infos']:
@@ -951,9 +954,23 @@ class GUIViewRenderer(ABCViewRenderer):
             painter_options.show_form(self.view)
             return html.drain()
 
-    def _render_command_form(self) -> str:
-        # TODO: Commands not working at the moment
+    def _render_command_form(self, info_name: InfoName, command: Command) -> str:
         with html.plugged():
+            if not _should_show_command_form(self.view.datasource):
+                return ""
+
+            # TODO: Make unique form names (object IDs), investigate whether or not something
+            # depends on the form name "actions"
+            html.begin_form("actions")
+            # TODO: Are these variables still needed
+            html.hidden_field("_do_actions", "yes")
+            html.hidden_field("actions", "yes")
+
+            command.render(info_name)
+
+            html.hidden_fields()
+            html.end_form()
+
             return html.drain()
 
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
@@ -2495,42 +2512,19 @@ def _should_show_command_form(datasource: ABCDataSource,
     return False
 
 
-def show_command_form(is_open, datasource):
-    # What commands are available depends on the Livestatus table we
-    # deal with. If a data source provides information about more
-    # than one table, (like services datasource also provide host
-    # information) then the first info is the primary table. So 'what'
-    # will be one of "host", "service", "command" or "downtime".
-    what = datasource.infos[0]
+def _get_command_groups(info_name: InfoName) -> Dict[Type[CommandGroup], List[Command]]:
+    by_group: Dict[Type[CommandGroup], List[Command]] = {}
 
-    html.open_div(id_="commands",
-                  class_=["view_form"],
-                  style="display:none;" if not is_open else None)
-    html.begin_form("actions")
-    html.hidden_field("_do_actions", "yes")
-    html.hidden_field("actions", "yes")
-    html.hidden_fields()  # set all current variables, exception action vars
-
-    # Show command forms, grouped by (optional) command group
-    by_group: Dict[Any, List[Any]] = {}
     for command_class in command_registry.values():
         command = command_class()
-        if what in command.tables and config.user.may(command.permission().name):
-            # Some special commands can be shown on special views using this option.
-            # It is currently only used in custom views, not shipped with check_mk.
+        if info_name in command.tables and config.user.may(command.permission().name):
+            # Some special commands can be shown on special views using this option.  It is
+            # currently only used by custom commands, not shipped with Checkmk.
             if command.only_view and html.request.var('view_name') != command.only_view:
                 continue
             by_group.setdefault(command.group, []).append(command)
 
-    for group_class, group_commands in sorted(by_group.items(), key=lambda x: x[0]().sort_index):
-        forms.header(group_class().title, narrow=True)
-        for command in group_commands:
-            forms.section(command.title)
-            command.render(what)
-
-    forms.end()
-    html.end_form()
-    html.close_div()
+    return by_group
 
 
 # Examine the current HTML variables in order determine, which

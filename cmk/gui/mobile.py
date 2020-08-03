@@ -356,7 +356,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
                         html.add_user_error(e.varname, e)
                         show_commands = True
                 if show_commands:
-                    show_command_form(self.view.datasource, rows)
+                    _show_command_form(self.view.datasource, rows)
                 jqm_page_navfooter(navbar, 'commands', page_id)
 
         elif page == "data":
@@ -416,7 +416,7 @@ def show_filter_form(show_filters: List[Filter]) -> None:
     """)
 
 
-def show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
+def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
     what = datasource.infos[0]
     html.javascript("""
     $(document).ready(function() {

@@ -4,13 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.cpu import parse_cpu
+
 # yapf: disable
 # type: ignore
 
 
 checkname = 'cpu'
 
-info = [[u'0.88', u'0.83', u'0.87', u'2/1748', u'21050', u'8'], [u'124069']]
+parsed = parse_cpu([[u'0.88', u'0.83', u'0.87', u'2/1748', u'21050', u'8'], [u'124069']])
 
 discovery = {
     'loads': [(None, 'cpuload_default_levels')],

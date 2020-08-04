@@ -19,33 +19,16 @@
 cpuload_default_levels = (5.0, 10.0)
 
 
-def inventory_cpu_load(info):
-    if len(info) >= 1 and len(info[0]) >= 5:
+def inventory_cpu_load(section):
+    if section:
         return [(None, "cpuload_default_levels")]
 
 
-def check_cpu_load(item, params, info):
-    if not info:
+def check_cpu_load(item, params, section):
+    if not section:
         return None
 
-    if len(info[0]) >= 6:
-        # There have been broken AIX agents for a long time which produced data like follows.
-        # Newer agents deal with this, but to be nice to old agents: deal with it.
-        # <<<cpu>>>
-        # 0.00 0.00 0.00 1/97 8913088 aixxyz configuration: @lcpu=8 @mem=24576MB @ent=0.20
-        line = " ".join(info[0])
-        if "lcpu=" in line:
-            for part in info[0]:
-                if "lcpu=" in part:
-                    num_cpus = int(part.split("=", 1)[1])
-                    break
-        else:
-            num_cpus = int(info[0][5])
-    else:
-        num_cpus = 1
-
-    load = list(map(float, info[0][0:3]))
-    return check_cpu_load_generic(params, load, num_cpus)
+    return check_cpu_load_generic(params, section['load'], section['num_cpus'])
 
 
 check_info["cpu.loads"] = {
@@ -75,19 +58,18 @@ factory_settings["cpu_threads_default_levels"] = {
 }
 
 
-def inventory_cpu_threads(info):
-    if len(info) >= 1 and len(info[0]) >= 5:
+def inventory_cpu_threads(section):
+    if section:
         return [(None, {})]
 
 
-def check_cpu_threads(item, params, info):
+def check_cpu_threads(item, params, section):
     if isinstance(params, tuple):
         params = {'levels': params}
 
     try:
-        num_threads = int(info[0][3].split('/')[1])
+        num_threads = section['num_threads']
     except Exception:
-        yield (3, "invalid output from plugin")
         return
 
     absolute_levels = params.get("levels", (None, None))
@@ -98,9 +80,8 @@ def check_cpu_threads(item, params, info):
                        human_readable_func=lambda x: "%.f" % x,
                        infoname="Count")
 
-    if len(info) > 1:
-        max_threads = int(info[1][0])
-        thread_usage = 100.0 * num_threads / max_threads
+    if 'max_threads' in section:
+        thread_usage = 100.0 * num_threads / section['max_threads']
         relative_levels = params.get("levels_percent", (None, None))
         yield check_levels(thread_usage,
                            'thread_usage',

@@ -197,3 +197,22 @@ register.check_plugin(
     },
     check_ruleset_name="memory",
 )
+
+
+def deprecate(section: Dict[str, int]) -> DiscoveryGenerator:
+    return
+    yield  # pylint: disable=unreachable
+
+
+for legacy_plugin_name in ("aix_memory",):
+    register.check_plugin(
+        name=legacy_plugin_name,
+        service_name="Memory",
+        sections=["mem"],
+        discovery_function=deprecate,
+        check_function=check_mem_used,
+        check_default_parameters={
+            "levels": (150.0, 200.0),
+        },
+        check_ruleset_name="memory",
+    )

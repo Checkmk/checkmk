@@ -1163,7 +1163,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'aix_hacmp_services',
         'aix_if',
         'aix_lvm',
-        'aix_memory',
         'aix_multipath',
         'aix_paging',
         'aix_sap_processlist',

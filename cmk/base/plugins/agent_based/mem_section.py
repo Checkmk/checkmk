@@ -152,3 +152,67 @@ register.agent_section(
     name="mem",
     parse_function=parse_proc_meminfo_bytes,
 )
+
+
+def parse_aix_memory(string_table: type_defs.AgentStringTable) -> Optional[Dict[str, int]]:
+    """Parse AIX vmstat output into something compatible with the Linux output of /proc/meminfo
+
+    AIX speaks of 4k pages while Linux of kilobytes.
+
+        >>> import pprint
+        >>> section = parse_aix_memory([
+        ...   ['32702464', 'memory', 'pages'],
+        ...   ['31736528', 'lruable', 'pages'],
+        ...   ['858141', 'free', 'pages'],
+        ...   ['4', 'memory', 'pools'],
+        ...   ['6821312', 'pinned', 'pages'],
+        ...   ['80.0', 'maxpin', 'percentage'],
+        ...   ['3.0', 'minperm', 'percentage'],
+        ...   ['90.0', 'maxperm', 'percentage'],
+        ...   ['8.8', 'numperm', 'percentage'],
+        ...   ['2808524', 'file', 'pages'],
+        ...   ['0.0', 'compressed', 'percentage'],
+        ...   ['0', 'compressed', 'pages'],
+        ...   ['8.8', 'numclient', 'percentage'],
+        ...   ['90.0', 'maxclient', 'percentage'],
+        ...   ['2808524', 'client', 'pages'],
+        ...   ['0', 'remote', 'pageouts', 'scheduled'],
+        ...   ['354', 'pending', 'disk', 'I/Os', 'blocked', 'with', 'no', 'pbuf'],
+        ...   ['860832', 'paging', 'space', 'I/Os', 'blocked', 'with', 'no', 'psbuf'],
+        ...   ['2228', 'filesystem', 'I/Os', 'blocked', 'with', 'no', 'fsbuf'],
+        ...   ['508', 'client', 'filesystem', 'I/Os', 'blocked', 'with', 'no', 'fsbuf'],
+        ...   ['1372', 'external', 'pager', 'filesystem', 'I/Os', 'blocked', 'with', 'no', 'fsbuf'],
+        ...   ['88.8', 'percentage', 'of', 'memory', 'used', 'for', 'computational', 'pages'],
+        ...   ['allocated', '=', '8257536', 'blocks', 'used', '=', '1820821', 'blocks', 'free',
+        ...    '=', '6436715', 'blocks'],
+        ... ])
+        >>> pprint.pprint(section)
+        {'Cached': 11503714304,
+         'MemFree': 3514945536,
+         'MemTotal': 133949292544,
+         'SwapFree': 26364784640,
+         'SwapTotal': 33822867456}
+
+    """
+    k4 = 4 * 1024
+    section = {}
+    for line in string_table:
+        if line[0] == "allocated":  # Swap space
+            section["SwapTotal"] = int(line[2]) * k4
+            section["SwapFree"] = int(line[10]) * k4
+        else:
+            varname = " ".join(line[1:])
+            if varname == "memory pages":
+                section["MemTotal"] = int(line[0]) * k4
+            elif varname == "free pages":
+                section["MemFree"] = int(line[0]) * k4
+            elif varname == "file pages":
+                section["Cached"] = int(line[0]) * k4
+    return section
+
+
+register.agent_section(
+    name="aix_memory",
+    parsed_section_name="mem",
+    parse_function=parse_aix_memory,
+)

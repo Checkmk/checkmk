@@ -898,6 +898,7 @@ class GUIViewRenderer(ABCViewRenderer):
             icon_name="filters_set" if is_filter_set else "filters",
             item=PageMenuPopup(self._render_filter_form(show_filters)),
             name="filters",
+            is_shortcut=True,
         )
 
     def _page_menu_entries_view_format(self) -> Iterator[PageMenuEntry]:

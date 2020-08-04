@@ -119,6 +119,19 @@ export function enable_menu_entry(id, enabled) {
         utils.change_class(oShortCut, from, to);
 }
 
+export function toggle_popup(popup_id) {
+    let popup = document.getElementById(popup_id);
+    let was_open = utils.has_class(popup, "active");
+
+    close_active_menu();
+    close_active_popups();
+
+    if (was_open)
+        utils.remove_class(popup, "active");
+    else
+        utils.add_class(popup, "active");
+}
+
 export function open_popup(popup_id) {
     close_active_menu();
     close_active_popups();

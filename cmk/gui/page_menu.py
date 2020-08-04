@@ -499,19 +499,35 @@ class ShortcutRenderer:
     def show(self, entry: PageMenuEntry) -> None:
         if isinstance(entry.item, PageMenuLink):
             self._show_link_item(entry, entry.item)
+        elif isinstance(entry.item, PageMenuPopup):
+            self._show_popup_link_item(entry, entry.item)
         else:
             raise NotImplementedError("Shortcut rendering not implemented for %s" % entry.item)
 
     def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink):
+        self._show_link(entry=entry,
+                        url=item.link.url,
+                        onclick=item.link.onclick,
+                        target=item.link.target)
+
+    def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
+        self._show_link(entry,
+                        url="javascript:void(0)",
+                        onclick="cmk.page_menu.toggle_popup(%s)" %
+                        json.dumps("popup_%s" % entry.name),
+                        target=None)
+
+    def _show_link(self, entry: PageMenuEntry, url: Optional[str], onclick: Optional[str],
+                   target: Optional[str]) -> None:
         classes = ["link", "enabled" if entry.is_enabled else "disabled"]
         if entry.is_suggested:
             classes.append("suggested")
 
-        html.icon_button(url=item.link.url,
-                         onclick=item.link.onclick,
+        html.icon_button(url=url,
+                         onclick=onclick,
                          title=entry.shortcut_title or entry.title,
                          icon=entry.icon_name,
-                         target=item.link.target,
+                         target=target,
                          class_=" ".join(classes),
                          id_=("menu_shortcut_%s" % entry.name if entry.name else None))
 
@@ -546,7 +562,7 @@ class DropdownEntryRenderer:
 
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
         self._show_link(url="javascript:void(0)",
-                        onclick="cmk.page_menu.open_popup(%s)" %
+                        onclick="cmk.page_menu.toggle_popup(%s)" %
                         json.dumps("popup_%s" % entry.name),
                         target=None,
                         icon_name=entry.icon_name,

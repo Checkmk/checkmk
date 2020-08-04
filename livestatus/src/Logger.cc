@@ -178,9 +178,3 @@ std::ostream &operator<<(std::ostream &os,
                          const std::chrono::system_clock::time_point &tp) {
     return os << FormattedTimePoint(tp);
 }
-
-namespace cmc {
-std::ostream &operator<<(std::ostream &os, const cmc::core_error &ce) {
-    return os << ce.what();
-}
-}  // namespace cmc

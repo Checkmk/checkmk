@@ -23,7 +23,7 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.base.config as config
-from cmk.base.check_utils import RawAgentData
+from cmk.base.check_utils import AgentRawData
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -147,7 +147,7 @@ def _read_snmp_info(hostname: str) -> Optional[bytes]:
     return None
 
 
-def _read_agent_output(hostname: str) -> Optional[RawAgentData]:
+def _read_agent_output(hostname: str) -> Optional[AgentRawData]:
     try:
         from cmk.base.cee.keepalive import rtc  # pylint: disable=import-outside-toplevel
     except ImportError:

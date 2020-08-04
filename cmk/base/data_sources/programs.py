@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, AgentRawData, SourceType
 
 from cmk.fetchers import ProgramDataFetcher
 
@@ -244,7 +244,7 @@ class ProgramDataSource(AgentDataSource):
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-    ) -> RawAgentData:
+    ) -> AgentRawData:
         # TODO(ml): Do something with the selection.
         with ProgramDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()

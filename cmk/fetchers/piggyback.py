@@ -14,7 +14,7 @@ from cmk.utils.piggyback import (
     PiggybackRawDataInfo,
     PiggybackTimeSettings,
 )
-from cmk.utils.type_defs import HostAddress, HostName, RawAgentData
+from cmk.utils.type_defs import HostAddress, HostName, AgentRawData
 
 from ._base import AbstractDataFetcher
 
@@ -38,13 +38,13 @@ class PiggyBackDataFetcher(AbstractDataFetcher):
                  traceback: Optional[TracebackType]) -> None:
         self._sources.clear()
 
-    def data(self) -> RawAgentData:
+    def data(self) -> AgentRawData:
         raw_data = b""
         raw_data += self._get_main_section()
         raw_data += self._get_source_labels_section()
         return raw_data
 
-    def _get_main_section(self) -> RawAgentData:
+    def _get_main_section(self) -> AgentRawData:
         raw_data = b""
         for src in self._sources:
             if src.successfully_processed:
@@ -58,7 +58,7 @@ class PiggyBackDataFetcher(AbstractDataFetcher):
                 raw_data += src.raw_data
         return raw_data
 
-    def _get_source_labels_section(self) -> RawAgentData:
+    def _get_source_labels_section(self) -> AgentRawData:
         """Return a <<<labels>>> agent section which adds the piggyback sources
         to the labels of the current host"""
         if not self._sources:

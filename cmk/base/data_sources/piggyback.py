@@ -13,7 +13,7 @@ from cmk.utils.piggyback import get_piggyback_raw_data
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
-    RawAgentData,
+    AgentRawData,
     ServiceCheckResult,
     SourceType,
 )
@@ -77,7 +77,7 @@ class PiggyBackDataSource(AgentDataSource):
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-    ) -> RawAgentData:
+    ) -> AgentRawData:
         self._summary = self._summarize()
         with PiggyBackDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
@@ -102,7 +102,7 @@ class PiggyBackDataSource(AgentDataSource):
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-    ) -> Tuple[RawAgentData, bool]:
+    ) -> Tuple[AgentRawData, bool]:
         """Returns the current raw data of this data source
 
         Special for piggyback: No caching of raw data

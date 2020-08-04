@@ -9,7 +9,7 @@ from typing import Any, cast, Dict, Final, Optional
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
-    RawAgentData,
+    AgentRawData,
     SectionName,
     ServiceCheckResult,
     ServiceDetails,
@@ -82,7 +82,7 @@ class IPMIManagementBoardDataSource(AgentDataSource):
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-    ) -> RawAgentData:
+    ) -> AgentRawData:
         if selected_raw_sections is None:
             # pylint: disable=unused-variable
             # TODO(ml): Should we pass that to the fetcher?

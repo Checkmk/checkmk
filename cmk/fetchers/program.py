@@ -14,7 +14,7 @@ from typing import Optional, Type, Union
 from six import ensure_binary, ensure_str
 
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.type_defs import RawAgentData
+from cmk.utils.type_defs import AgentRawData
 
 from ._base import AbstractDataFetcher, MKFetcherError
 
@@ -85,7 +85,7 @@ class ProgramDataFetcher(AbstractDataFetcher):
         self._process.stderr.close()
         self._process = None
 
-    def data(self) -> RawAgentData:
+    def data(self) -> AgentRawData:
         if self._process is None:
             raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(

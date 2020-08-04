@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Tuple, Type
 from Cryptodome.Cipher import AES
 
 import cmk.utils.debug
-from cmk.utils.type_defs import HostAddress, RawAgentData
+from cmk.utils.type_defs import HostAddress, AgentRawData
 
 from ._base import AbstractDataFetcher, MKFetcherError
 
@@ -55,13 +55,13 @@ class TCPDataFetcher(AbstractDataFetcher):
             self._socket.close()
         self._socket = None
 
-    def data(self) -> RawAgentData:
+    def data(self) -> AgentRawData:
         if self._socket is None:
             raise MKFetcherError("Not connected")
 
         return self._decrypt(self._raw_data())
 
-    def _raw_data(self) -> RawAgentData:
+    def _raw_data(self) -> AgentRawData:
         self._logger.debug("Reading data from agent")
         if not self._socket:
             return b""
@@ -82,7 +82,7 @@ class TCPDataFetcher(AbstractDataFetcher):
                 raise
             raise MKFetcherError("Communication failed: %s" % e)
 
-    def _decrypt(self, output: RawAgentData) -> RawAgentData:
+    def _decrypt(self, output: AgentRawData) -> AgentRawData:
         if output.startswith(b"<<<"):
             self._logger.debug("Output is not encrypted")
             if self._encryption_settings["use_regular"] == "enforce":
@@ -114,7 +114,7 @@ class TCPDataFetcher(AbstractDataFetcher):
         return output
 
     # TODO: Sync with real_type_checks._decrypt_rtc_package
-    def _real_decrypt(self, output: RawAgentData) -> RawAgentData:
+    def _real_decrypt(self, output: AgentRawData) -> AgentRawData:
         try:
             # simply check if the protocol is an actual number
             protocol = int(output[:2])

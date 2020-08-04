@@ -8,7 +8,7 @@ import math
 from typing import List, Optional
 
 import cmk.utils.debug
-from cmk.utils.type_defs import RawAgentData
+from cmk.utils.type_defs import AgentRawData
 
 
 def our_uptime() -> float:
@@ -16,7 +16,7 @@ def our_uptime() -> float:
 
 
 # replace simulator tags in output
-def process(output: RawAgentData) -> RawAgentData:
+def process(output: AgentRawData) -> AgentRawData:
     try:
         while True:
             i = output.find(b'%{')

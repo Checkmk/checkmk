@@ -9,7 +9,7 @@ from types import TracebackType
 from typing import Any, Dict, Optional, Type
 
 from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import RawAgentData
+from cmk.utils.type_defs import AgentRawData
 
 
 class MKFetcherError(MKException):
@@ -33,5 +33,5 @@ class AbstractDataFetcher(metaclass=abc.ABCMeta):
         """Destroy the data source."""
 
     @abc.abstractmethod
-    def data(self) -> RawAgentData:
+    def data(self) -> AgentRawData:
         """Return the data from the source."""

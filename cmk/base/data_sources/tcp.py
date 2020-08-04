@@ -12,7 +12,7 @@ from cmk.utils.type_defs import HostAddress, HostName, SourceType
 from cmk.fetchers import TCPDataFetcher
 
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.check_utils import RawAgentData
+from cmk.base.check_utils import AgentRawData
 from cmk.base.config import HostConfig, SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
@@ -66,7 +66,7 @@ class TCPDataSource(AgentDataSource):
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-    ) -> RawAgentData:
+    ) -> AgentRawData:
         if TCPConfigurator._use_only_cache:
             raise MKAgentError("Got no data: No usable cache file present at %s" %
                                self._cache_file_path)

@@ -17,7 +17,7 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.type_defs import (
     HostName,
     Metric,
-    RawAgentData,
+    AgentRawData,
     SectionName,
     ServiceCheckResult,
     ServiceDetails,
@@ -30,7 +30,7 @@ from cmk.base.check_api_utils import state_markers
 from cmk.base.check_utils import (
     AgentSectionContent,
     AgentSections,
-    PersistedAgentSections,
+    AgentPersistedSections,
     PiggybackRawData,
     SectionCacheInfo,
 )
@@ -42,7 +42,7 @@ from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections, ABCParse
 __all__ = ["AgentHostSections", "AgentDataSource"]
 
 
-class AgentHostSections(ABCHostSections[RawAgentData, AgentSections, PersistedAgentSections,
+class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersistedSections,
                                         AgentSectionContent]):
     pass
 
@@ -219,7 +219,7 @@ class Summarizer:
                 (agent_version, expected_version, e))
 
 
-class AgentParser(ABCParser[RawAgentData, AgentHostSections]):
+class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
     """A parser for agent data."""
 
     # TODO(ml): Refactor, we should structure the code so that we have one
@@ -230,9 +230,9 @@ class AgentParser(ABCParser[RawAgentData, AgentHostSections]):
     #   is an FSM and shoule be written as such.  (See CMK-5004)
     def parse(
         self,
-        raw_data: RawAgentData,
+        raw_data: AgentRawData,
     ) -> AgentHostSections:
-        raw_data = cast(RawAgentData, raw_data)
+        raw_data = cast(AgentRawData, raw_data)
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
@@ -240,7 +240,7 @@ class AgentParser(ABCParser[RawAgentData, AgentHostSections]):
 
     def _parse_host_section(
         self,
-        raw_data: RawAgentData,
+        raw_data: AgentRawData,
         check_interval: int,
     ) -> AgentHostSections:
         """Split agent output in chunks, splits lines by whitespaces.
@@ -258,7 +258,7 @@ class AgentParser(ABCParser[RawAgentData, AgentHostSections]):
         piggybacked_cache_age = int(1.5 * 60 * check_interval)
 
         # handle sections with option persist(...)
-        persisted_sections: PersistedAgentSections = {}
+        persisted_sections: AgentPersistedSections = {}
         section_content: Optional[AgentSectionContent] = None
         section_options: Dict[str, Optional[str]] = {}
         agent_cache_info: SectionCacheInfo = {}
@@ -388,7 +388,7 @@ class AgentConfigurator(ABCConfigurator):
     pass
 
 
-class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentSections,
+class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedSections,
                                     AgentHostSections],
                       metaclass=abc.ABCMeta):
     """Base for agent-based checkers.
@@ -431,17 +431,17 @@ class AgentDataSource(ABCDataSource[RawAgentData, AgentSections, PersistedAgentS
     def _parser(self) -> ABCParser:
         return AgentParser(self.hostname, self._logger)
 
-    def _empty_raw_data(self) -> RawAgentData:
+    def _empty_raw_data(self) -> AgentRawData:
         return b""
 
     def _empty_host_sections(self) -> AgentHostSections:
         return AgentHostSections()
 
-    def _from_cache_file(self, raw_data: bytes) -> RawAgentData:
+    def _from_cache_file(self, raw_data: bytes) -> AgentRawData:
         return raw_data
 
-    def _to_cache_file(self, raw_data: RawAgentData) -> bytes:
-        raw_data = cast(RawAgentData, raw_data)
+    def _to_cache_file(self, raw_data: AgentRawData) -> bytes:
+        raw_data = cast(AgentRawData, raw_data)
         # TODO: This does not seem to be needed
         return ensure_binary(raw_data)
 

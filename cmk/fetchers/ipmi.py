@@ -16,7 +16,7 @@ from six import ensure_binary
 
 import cmk.utils.debug
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostAddress, RawAgentData
+from cmk.utils.type_defs import HostAddress, AgentRawData
 
 from ._base import AbstractDataFetcher, MKFetcherError
 
@@ -49,7 +49,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
             return False
         return True
 
-    def data(self) -> RawAgentData:
+    def data(self) -> AgentRawData:
         if self._command is None:
             raise MKFetcherError("Not connected")
 
@@ -73,7 +73,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
         self._logger.debug("Closing connection to %s:623", self._command.bmc)
         self._command.ipmi_session.logout()
 
-    def _sensors_section(self) -> RawAgentData:
+    def _sensors_section(self) -> AgentRawData:
         if self._command is None:
             raise MKFetcherError("Not connected")
 
@@ -104,7 +104,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
         return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
             [b"|".join(sensor) + b"\n" for sensor in sensors])
 
-    def _firmware_section(self) -> RawAgentData:
+    def _firmware_section(self) -> AgentRawData:
         if self._command is None:
             raise MKFetcherError("Not connected")
 
@@ -142,7 +142,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
         return any("GPU" in line for line in inventory_entries)
 
     @staticmethod
-    def _parse_sensor_reading(number: int, reading: ipmi_sdr.SensorReading) -> List[RawAgentData]:
+    def _parse_sensor_reading(number: int, reading: ipmi_sdr.SensorReading) -> List[AgentRawData]:
         # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
         #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
         #  'value': 25.0, 'unavailable': 0}]]
@@ -167,7 +167,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
         ]
 
     @staticmethod
-    def _handle_false_positive_warnings(reading: ipmi_sdr.SensorReading) -> RawAgentData:
+    def _handle_false_positive_warnings(reading: ipmi_sdr.SensorReading) -> AgentRawData:
         """This is a workaround for a pyghmi bug
         (bug report: https://bugs.launchpad.net/pyghmi/+bug/1790120)
 

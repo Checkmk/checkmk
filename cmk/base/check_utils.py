@@ -11,7 +11,7 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     HostName,
     Item,
-    RawAgentData,
+    AgentRawData,
     SectionName,
 )
 from cmk.snmplib.type_defs import (
@@ -31,7 +31,7 @@ SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
 
 AgentSectionContent = List[List[str]]
 PersistedAgentSection = Tuple[int, int, AgentSectionContent]
-PersistedAgentSections = Dict[SectionName, PersistedAgentSection]
+AgentPersistedSections = Dict[SectionName, PersistedAgentSection]
 AgentSections = Dict[SectionName, AgentSectionContent]
 
 PiggybackRawData = Dict[HostName, List[bytes]]
@@ -39,9 +39,9 @@ ParsedSectionContent = Any
 FinalSectionContent = Union[None, ParsedSectionContent, List[ParsedSectionContent]]
 
 AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
-AbstractRawData = Union[RawAgentData, SNMPRawData]
+AbstractRawData = Union[AgentRawData, SNMPRawData]
 AbstractSections = Union[AgentSections, SNMPSections]
-AbstractPersistedSections = Union[PersistedAgentSections, SNMPPersistedSections]
+AbstractPersistedSections = Union[AgentPersistedSections, SNMPPersistedSections]
 
 BoundedAbstractRawData = TypeVar("BoundedAbstractRawData", bound=AbstractRawData)
 BoundedAbstractSectionContent = TypeVar("BoundedAbstractSectionContent",

@@ -164,10 +164,6 @@ def create_agent_section_plugin(
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    # TODO (mo): Well, implement it, and remove pragma below!
-    if parsed_section_name is not None:
-        raise NotImplementedError("parsed_section_name is not yet available")
-
     section_name = SectionName(name)
 
     _validate_parse_function(
@@ -201,10 +197,6 @@ def create_snmp_section_plugin(
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    # TODO (mo): Well, implement it, and remove pragma below!
-    if parsed_section_name is not None:
-        raise NotImplementedError("parsed_section_name is not yet available")
-
     section_name = SectionName(name)
 
     if any(isinstance(oid, OIDBytes) for tree in trees for oid in tree.oids):

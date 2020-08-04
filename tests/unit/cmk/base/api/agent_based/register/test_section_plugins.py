@@ -107,17 +107,9 @@ def test_validate_supersedings_raise_self_superseding():
 
 
 def test_create_agent_section_plugin():
-    with pytest.raises(NotImplementedError):
-        plugin = section_plugins.create_agent_section_plugin(
-            name="norris",
-            parsed_section_name="chuck",
-            parse_function=_parse_dummy,
-            supersedes=None,
-        )
-
     plugin = section_plugins.create_agent_section_plugin(
         name="norris",
-        parsed_section_name=None,  # "chuck"
+        parsed_section_name="chuck",
         parse_function=_parse_dummy,
         supersedes=["foo", "bar"],
     )
@@ -125,7 +117,7 @@ def test_create_agent_section_plugin():
     assert isinstance(plugin, AgentSectionPlugin)
     assert len(plugin) == 6
     assert plugin.name == SectionName("norris")
-    assert plugin.parsed_section_name == ParsedSectionName("norris")  # "chuck")
+    assert plugin.parsed_section_name == ParsedSectionName("chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
     assert plugin.supersedes == {SectionName("bar"), SectionName("foo")}
@@ -144,19 +136,9 @@ def test_create_snmp_section_plugin():
         [('.1.2.3.4.5', 'Foo.*', True)],
     ]
 
-    with pytest.raises(NotImplementedError):
-        plugin = section_plugins.create_snmp_section_plugin(
-            name="norris",
-            parsed_section_name="chuck",
-            parse_function=_parse_dummy,
-            trees=trees,
-            detect_spec=detect,
-            supersedes=None,
-        )
-
     plugin = section_plugins.create_snmp_section_plugin(
         name="norris",
-        parsed_section_name=None,  # "chuck",
+        parsed_section_name="chuck",
         parse_function=_parse_dummy,
         trees=trees,
         detect_spec=detect,
@@ -166,7 +148,7 @@ def test_create_snmp_section_plugin():
     assert isinstance(plugin, SNMPSectionPlugin)
     assert len(plugin) == 8
     assert plugin.name == SectionName("norris")
-    assert plugin.parsed_section_name == ParsedSectionName("norris")  # "chuck")
+    assert plugin.parsed_section_name == ParsedSectionName("chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
     assert plugin.detect_spec == detect

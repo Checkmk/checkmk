@@ -248,6 +248,11 @@ class Filter(metaclass=abc.ABCMeta):
     def description(self) -> Optional[str]:
         return None
 
+    @property
+    def is_advanced(self) -> bool:
+        """Whether or not treat this as advanced GUI element"""
+        return False
+
     def available(self) -> bool:
         """Some filters can be unavailable due to the configuration
         (e.g. the WATO Folder filter is only available if WATO is enabled."""

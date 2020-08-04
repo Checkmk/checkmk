@@ -83,6 +83,7 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     visual_type_registry,
     VisualType,
+    filter_registry,
 )
 from cmk.gui.plugins.views.icons.utils import (
     icon_and_action_registry,
@@ -1013,11 +1014,9 @@ class ViewFilterList(visuals.VisualFilterList):
             for choice in group.choices:
                 filter_name = choice[0]
 
-                # TODO: Add is_advanced attribute to filters
-                #filter_obj = filter_registry[name]()
-                #html.open_li(class_="advanced" if filter_obj.is_advanced else "basic")
+                filter_obj = filter_registry[filter_name]()
+                html.open_li(class_="advanced" if filter_obj.is_advanced else "basic")
 
-                html.open_li()
                 html.a(choice[1].title() or filter_name,
                        href="javascript:void(0)",
                        onclick="cmk.valuespecs.listofmultiple_add(%s, %s, %s, this);"
@@ -1025,6 +1024,7 @@ class ViewFilterList(visuals.VisualFilterList):
                        (json.dumps(varprefix), json.dumps(
                            self._choice_page_name), json.dumps(self._page_request_vars)),
                        id_="%s_add_%s" % (varprefix, filter_name))
+
                 html.close_li()
             html.close_ul()
 

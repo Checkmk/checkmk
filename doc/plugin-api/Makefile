@@ -31,6 +31,7 @@ apidoc-clean:
 apidoc:
 	$(SPHINXAPIDOC) \
 	    --follow-links \
+	    --implicit-namespaces \
 	    --no-toc \
 	    --templatedir "$(TEMPDIR)" \
 	    --output-dir "$(SOURCEDIR)/apidoc/cmk" \

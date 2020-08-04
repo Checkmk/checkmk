@@ -3,17 +3,18 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.docker as docker
 
 
 def parse_docker_network(info):
     # pylint: disable=undefined-variable
-    version = docker_get_version(info)
+    version = docker.get_version(info)
 
     if version is None:
         networks = parse_legacy_docker_network_inspect(info)
         return DeprecatedDict((n["Id"], n) for n in networks)
 
-    networks = (docker_json_get_obj(line) for line in info[1:])
+    networks = (docker.json_get_obj(line) for line in info[1:])
     return {n["Id"]: n for n in networks if n is not None}
 
 
@@ -61,6 +62,6 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
 
 inv_info["docker_node_network.networks"] = {  # pylint: disable=undefined-variable
-    "includes": ['docker.include', 'legacy_docker.include'],
+    "includes": ['legacy_docker.include'],
     "inv_function": inv_docker_node_network_networks,
 }

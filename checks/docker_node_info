@@ -3,10 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.docker as docker
 
 
 def parse_docker_node_info(info):
-    version = docker_get_version(info)  # pylint: disable=undefined-variable
+    version = docker.get_version(info)
     if version is None:
         return parse_legacy_docker_node_info(info)  # pylint: disable=undefined-variable
 
@@ -15,7 +16,7 @@ def parse_docker_node_info(info):
 
     loaded = {}
     for line in info[1:]:
-        loaded.update(docker_json_get_obj(line) or {})  # pylint: disable=undefined-variable
+        loaded.update(docker.json_get_obj(line) or {})
     return loaded
 
 
@@ -35,7 +36,7 @@ def check_docker_node_info(_no_item, _no_params, parsed):
 
 
 check_info['docker_node_info'] = {
-    'includes': ['docker.include', 'legacy_docker.include'],
+    'includes': ['legacy_docker.include'],
     'parse_function': parse_docker_node_info,
     'inventory_function': discover_docker_node_info,
     'check_function': check_docker_node_info,
@@ -73,5 +74,5 @@ check_info["docker_node_info.containers"] = {
     "service_description": "Docker containers",
     "has_perfdata": True,
     "group": "docker_node_containers",
-    'includes': ['docker.include', 'legacy_docker.include'],
+    'includes': ['legacy_docker.include'],
 }

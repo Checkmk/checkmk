@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.docker as docker
+
 
 def parse_docker_container_diskstat(info):
-    version = docker_get_version(info)  # pylint: disable=undefined-variable
+    version = docker.get_version(info)
     if version is None:
         pre_parsed = _parse_docker_container_diskstat_agent(info)
     else:
@@ -30,7 +32,7 @@ def parse_docker_container_diskstat(info):
 
 
 def _parse_docker_container_diskstat_plugin(info):
-    raw = docker_json_get_obj(info[1])
+    raw = docker.json_get_obj(info[1])
 
     devices = {}
     for major_minor, name in raw["names"].items():
@@ -145,5 +147,5 @@ check_info["docker_container_diskstat"] = {
     "service_description": "Disk IO %s",
     "has_perfdata": True,
     "group": "diskstat",
-    "includes": ["docker.include", "diskstat.include"],
+    "includes": ["diskstat.include"],
 }

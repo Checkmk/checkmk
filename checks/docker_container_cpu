@@ -3,11 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.docker as docker
 
 
 def parse_docker_container_cpu(info):
     parsed = {}
-    version = docker_get_version(info)
+    version = docker.get_version(info)
     if version is None:
         for line in info:
             if line[0] == "cpu":
@@ -18,7 +19,7 @@ def parse_docker_container_cpu(info):
             parsed["container_ticks"] = parsed["user"] + parsed["system"]
         return parsed
 
-    raw = docker_json_get_obj(info[1])
+    raw = docker.json_get_obj(info[1])
     parsed["num_cpus"] = len(raw['cpu_usage']['percpu_usage'])
     parsed["system_ticks"] = raw['system_cpu_usage']
     parsed["container_ticks"] = raw['cpu_usage']['total_usage']
@@ -31,6 +32,6 @@ check_info["docker_container_cpu"] = {
     "check_function": check_cpu_util_linux_container,
     "service_description": "CPU utilization",
     "has_perfdata": True,
-    "includes": ["docker.include", "cpu_util.include"],
+    "includes": ["cpu_util.include"],
     "group": "cpu_utilization_os",
 }

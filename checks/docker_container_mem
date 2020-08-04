@@ -3,10 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.docker as docker
 
 
 def _parse_docker_container_mem_plugin(info):
-    parsed = docker_json_get_obj(info[1])
+    parsed = docker.json_get_obj(info[1])
     # flatten nested stats
     parsed.update(parsed.pop('stats'))
     # rename for compatibility with section produced by linux agent
@@ -21,7 +22,7 @@ def _parse_docker_container_mem_plugin(info):
 
 
 def parse_docker_container_mem(info):
-    version = docker_get_version(info)  # pylint: disable=undefined-variable
+    version = docker.get_version(info)  # pylint: disable=undefined-variable
 
     if version is None:
         # parsed contains memory usages in bytes
@@ -63,5 +64,5 @@ check_info["docker_container_mem"] = {
     "has_perfdata": True,
     "group": "memory",
     "default_levels_variable": "memory_default_levels",
-    "includes": ["docker.include", "mem.include"],
+    "includes": ["mem.include"],
 }

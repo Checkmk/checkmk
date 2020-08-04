@@ -9,6 +9,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "Column.h"
@@ -17,31 +18,34 @@
 class Filter;
 class MonitoringCore;
 
+struct RRDColumnArgs {
+    RRDColumnArgs(const std::string &arguments, const std::string &column_name);
+    std::string rpn;
+    long int start_time;
+    long int end_time;
+    int resolution;
+    int max_entries;
+};
+
 class DynamicRRDColumn : public DynamicColumn {
 public:
     DynamicRRDColumn(const std::string &name, const std::string &description,
-                     MonitoringCore *mc, const Column::Offsets &);
+                     MonitoringCore *mc, const Column::Offsets &offsets)
+        : DynamicColumn(name, description, offsets), _mc(mc) {}
+
+    MonitoringCore *core() { return _mc; }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
-        RelationalOperator relOp, const std::string &value) const;
+        RelationalOperator /*unused*/, const std::string & /*unused*/) const {
+        throw std::runtime_error("filtering on dynamic RRD column '" + name() +
+                                 "' not supported");
+    }
 
     std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) override = 0;
-    MonitoringCore *core();
-
-protected:
-    struct Args {
-        std::string rpn;
-        long int start_time;
-        long int end_time;
-        int resolution;
-        int max_entries;
-    };
-    [[nodiscard]] Args parse_args(const std::string &arguments) const;
 
 private:
     MonitoringCore *_mc;
-    void invalid(const std::string &message) const;
 };
 
 #endif  // DynamicRRDColumn_h

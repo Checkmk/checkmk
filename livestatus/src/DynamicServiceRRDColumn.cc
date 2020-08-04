@@ -6,11 +6,12 @@
 #include "DynamicServiceRRDColumn.h"
 
 #include "Column.h"
+#include "DynamicRRDColumn.h"
 #include "ServiceRRDColumn.h"
 
 std::unique_ptr<Column> DynamicServiceRRDColumn::createColumn(
     const std::string &name, const std::string &arguments) {
-    const auto args = parse_args(arguments);
+    const auto args = RRDColumnArgs{arguments, _name};
     return std::make_unique<ServiceRRDColumn>(
         name, "dynamic column", _offsets, core(), args.rpn, args.start_time,
         args.end_time, args.resolution, args.max_entries);

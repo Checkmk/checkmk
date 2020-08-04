@@ -61,4 +61,4 @@ import cmk.base.plugins.agent_based.hr_mem as hr_mem
     }),
 ])
 def test_hr_mem(string_table, expected_parsed_data):
-    assert hr_mem.parse_hr_mem(string_table) == expected_parsed_data
+    assert hr_mem.pre_parse_hr_mem(string_table) == expected_parsed_data

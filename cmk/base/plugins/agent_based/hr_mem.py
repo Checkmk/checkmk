@@ -3,13 +3,16 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
+from .agent_based_api.v0.type_defs import SNMPStringTable
 
 from .agent_based_api.v0 import register, SNMPTree
 from .utils import ucd_hr_detection
 
+PreParsed = Dict[str, List[Tuple[str, int, int]]]
 
-def parse_hr_mem(string_table):
+
+def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
     info = string_table[0]
 
     map_types = {
@@ -32,7 +35,7 @@ def parse_hr_mem(string_table):
         factor = 1 if len(components) == 1 or components[1] != "KBytes" else 1024
         return int(components[0]) * factor
 
-    parsed: Dict[str, List[Tuple[str, int, int]]] = {}
+    parsed: PreParsed = {}
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         units = to_bytes(hrunits)
         size = int(hrsize) * units
@@ -40,6 +43,50 @@ def parse_hr_mem(string_table):
         parsed.setdefault(map_types[hrtype], []).append((hrdescr.lower(), size, used))
 
     return parsed
+
+
+def aggregate_meminfo(parsed: PreParsed) -> Dict[str, float]:
+    """return a meminfo dict as expected by check_memory from mem.include"""
+    meminfo = {'Cached': 0., 'Buffers': 0.}
+
+    for type_readable, entries in parsed.items():
+        for descr, size, used in entries:
+            if type_readable in ['RAM', 'virtual memory'] and descr != "virtual memory":
+                # We use only the first entry of each type. We have
+                # seen devices (pfSense), that have lots of additional
+                # entries that are not useful.
+                if type_readable == 'RAM':
+                    meminfo.setdefault("MemTotal", size / 1024.0)
+                    meminfo.setdefault("MemFree", (size - used) / 1024.0)
+                else:
+                    # Strictly speaking, swap space is a part of the hard
+                    # disk drive that is used for virtual memory.
+                    # We use the name "Swap" here for consistency.
+                    meminfo.setdefault("SwapTotal", size / 1024.0)
+                    meminfo.setdefault("SwapFree", (size - used) / 1024.0)
+
+            if descr in ["cached memory", "memory buffers"] and used > 0:
+                # Account for cached memory (this works at least for systems using
+                # the UCD snmpd (such as Linux based applicances)
+                # some devices report negative used cache values...
+                if descr == "cached memory":
+                    meminfo["Cached"] += used / 1024.0
+                else:
+                    meminfo["Buffers"] += used / 1024.0
+
+    return meminfo
+
+
+def parse_hr_mem(string_table: SNMPStringTable) -> Optional[Dict[str, float]]:
+    pre_parsed = pre_parse_hr_mem(string_table)
+
+    # Do we find at least one entry concerning memory?
+    # some device have zero (broken) values
+    if not any(size > 0 for _, size, __ in pre_parsed.get('RAM', [])):
+        return None
+
+    section = aggregate_meminfo(pre_parsed)
+    return section if section.get('MemTotal') else None
 
 
 register.snmp_section(

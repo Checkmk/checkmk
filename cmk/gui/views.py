@@ -31,6 +31,7 @@ import cmk.gui.inventory as inventory
 import cmk.gui.visuals as visuals
 from cmk.gui.visuals import get_only_sites
 import cmk.gui.sites as sites
+import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
@@ -81,6 +82,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
+    VisualInfo,
     visual_type_registry,
     VisualType,
     filter_registry,
@@ -718,8 +720,9 @@ class GUIViewRenderer(ABCViewRenderer):
         ]
 
         menu = PageMenu(
-            dropdowns=self._page_menu_dropdown_commands() + self._page_menu_dropdown_host() +
-            self._page_menu_dropdown_add_to() + export_dropdown,
+            dropdowns=self._page_menu_dropdown_commands() +
+            self._page_menu_dropdowns_context(rows) + self._page_menu_dropdown_add_to() +
+            export_dropdown,
             breadcrumb=breadcrumb,
         )
 
@@ -761,70 +764,8 @@ class GUIViewRenderer(ABCViewRenderer):
                     is_advanced=command.is_advanced,
                 )
 
-    def _page_menu_dropdown_host(self) -> List[PageMenuDropdown]:
-        if "host" not in self.view.spec['single_infos']:
-            return []
-
-        return [
-            PageMenuDropdown(
-                name="host",
-                title=_("Host"),
-                topics=self._page_menu_host_topic(),
-            )
-        ]
-
-    def _page_menu_host_topic(self) -> List[PageMenuTopic]:
-        if not config.wato_enabled:
-            return []
-
-        if not config.user.may("wato.use"):
-            return []
-
-        if not config.user.may("wato.hosts") and not config.user.may("wato.seeall"):
-            return []
-
-        return [
-            PageMenuTopic(
-                title=_("Setup"),
-                entries=list(self._page_menu_entries_host_setup()),
-            )
-        ]
-
-    def _page_menu_entries_host_setup(self) -> Iterator[PageMenuEntry]:
-        host_name = html.request.get_ascii_input_mandatory("host")
-
-        yield PageMenuEntry(
-            title=_("Configuration"),
-            icon_name="wato",
-            item=make_simple_link(_link_to_host_by_name(host_name)),
-        )
-
-        yield PageMenuEntry(
-            title=_("Service configuration"),
-            icon_name="services",
-            item=make_simple_link(
-                html.makeuri_contextless([("mode", "inventory"), ("host", host_name)],
-                                         filename="wato.py")),
-        )
-
-        is_cluster = False
-        if is_cluster:
-            yield PageMenuEntry(
-                title=_("Connection tests"),
-                icon_name="diagnose",
-                item=make_simple_link(
-                    html.makeuri_contextless([("mode", "diag_host"), ("host", host_name)],
-                                             filename="wato.py")),
-            )
-
-        if config.user.may('wato.rulesets'):
-            yield PageMenuEntry(
-                title=_("Effective parameters"),
-                icon_name="rulesets",
-                item=make_simple_link(
-                    html.makeuri_contextless([("mode", "object_parameters"), ("host", host_name)],
-                                             filename="wato.py")),
-            )
+    def _page_menu_dropdowns_context(self, rows: Rows) -> List[PageMenuDropdown]:
+        return _get_context_page_menu_dropdowns(self.view, rows, mobile=False)
 
     def _page_menu_entries_export_data(self) -> Iterator[PageMenuEntry]:
         if not config.user.may("general.csv_export"):
@@ -1030,11 +971,6 @@ class ViewFilterList(visuals.VisualFilterList):
 # TODO
 #def _show_context_links(view, rows, show_filters, enable_commands, enable_checkboxes,
 #                        show_checkboxes):
-#    # Buttons to other views, dashboards, etc.
-#    links = collect_context_links(view, rows)
-#    for linktitle, uri, icon, buttonid in links:
-#        html.context_button(linktitle, url=uri, icon=icon, id_=buttonid)
-#
 #    if display_options.enabled(display_options.E):
 #        if _show_availability_context_button(view):
 #            html.context_button(_("Availability"), html.makeuri([("mode", "availability")]),
@@ -2295,6 +2231,99 @@ def update_context_links(enable_command_toggle, enable_checkbox_toggle):
                     (enable_command_toggle and enable_checkbox_toggle and 1 or 0,))
 
 
+def _get_context_page_menu_dropdowns(view: View, rows: Rows,
+                                     mobile: bool) -> List[PageMenuDropdown]:
+    """For the given visual find other visuals to link to
+
+    Based on the (single_infos and infos of the data source) we have different categories,
+    for example a single host view has the following categories:
+
+    - Single host
+    - Multiple hosts
+
+    Each of these gets a dedicated dropdown which contain entries to the visuals that
+    share this context. The entries are grouped by the topics defined by the visuals.
+    """
+    dropdowns = []
+
+    pagetypes.PagetypeTopics.load()
+    topics = pagetypes.PagetypeTopics.get_permitted_instances()
+
+    # First gather a flat list of all visuals to be linked to
+    singlecontext_request_vars = visuals.get_singlecontext_html_vars(view.spec["context"],
+                                                                     view.spec["single_infos"])
+    linked_visuals = list(_collect_linked_visuals(view, rows, singlecontext_request_vars, mobile))
+
+    # Now get the "info+single object" combinations to show dropdown menus for
+    for info_name, is_single_info in _get_relevant_infos(view):
+        ident = "%s_%s" % (info_name, "single" if is_single_info else "multiple")
+        info = visual_info_registry[info_name]()
+
+        dropdown_visuals = _get_visuals_for_page_menu_dropdown(linked_visuals, info, is_single_info)
+
+        # Special hack for host setup links
+        if info_name == "host" and is_single_info:
+            host_setup_topic = _page_menu_host_setup_topic(view)
+        else:
+            host_setup_topic = []
+
+        dropdowns.append(
+            PageMenuDropdown(
+                name=ident,
+                title=info.title if is_single_info else info.title_plural,
+                topics=list(
+                    _get_context_page_menu_topics(topics, dropdown_visuals,
+                                                  singlecontext_request_vars, mobile)) +
+                host_setup_topic,
+            ))
+
+    return dropdowns
+
+
+def _get_context_page_menu_topics(topics: Dict[str, pagetypes.PagetypeTopics],
+                                  dropdown_visuals: Iterator[_Tuple[VisualType, Visual]],
+                                  singlecontext_request_vars: Dict[str, str],
+                                  mobile: bool) -> Iterator[PageMenuTopic]:
+    """Create the page menu topics for the given dropdown from the flat linked visuals list"""
+    by_topic: Dict[pagetypes.PagetypeTopics, List[PageMenuEntry]] = {}
+
+    for visual_type, visual in sorted(dropdown_visuals,
+                                      key=lambda i: (i[1]["sort_index"], i[1]["title"])):
+        try:
+            topic = topics[visual["topic"]]
+        except KeyError:
+            topic = topics["other"]
+
+        entry = _make_page_menu_entry_for_visual(visual_type, visual, singlecontext_request_vars,
+                                                 mobile)
+
+        by_topic.setdefault(topic, []).append(entry)
+
+    # Return the sorted topics
+    for topic, entries in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title())):
+        yield PageMenuTopic(
+            title=topic.title(),
+            entries=entries,
+        )
+
+
+def _get_visuals_for_page_menu_dropdown(
+        linked_visuals: List[_Tuple[VisualType, Visual]], info: VisualInfo,
+        is_single_info: bool) -> Iterator[_Tuple[VisualType, Visual]]:
+    """Extract the visuals for the given dropdown from the flat linked visuals list"""
+    for visual_type, visual in linked_visuals:
+        if is_single_info and info.ident in visual["single_infos"]:
+            yield visual_type, visual
+            continue
+
+
+def _get_relevant_infos(view: View) -> List[_Tuple[InfoName, bool]]:
+    """Gather the infos that are relevant for this view"""
+    dropdowns = [(info_name, True) for info_name in view.spec["single_infos"]]
+    dropdowns += [(info_name, False) for info_name in view.datasource.infos]
+    return dropdowns
+
+
 def collect_context_links(view: View,
                           rows: Rows,
                           mobile: bool = False,
@@ -2308,27 +2337,27 @@ def collect_context_links(view: View,
     singlecontext_request_vars = visuals.get_singlecontext_html_vars(view.spec["context"],
                                                                      view.spec["single_infos"])
 
-    for what in visual_type_registry.keys():
-        if not only_types or what in only_types:
-            yield from _collect_context_links_of(what, view, rows, singlecontext_request_vars,
-                                                 mobile)
+    for visual_type, visual in _collect_linked_visuals(view, rows, singlecontext_request_vars,
+                                                       mobile):
+        if only_types and visual_type.ident not in only_types:
+            continue
 
-
-def _collect_context_links_of(visual_type_name: str, view: View, rows: Rows,
-                              singlecontext_request_vars: Dict[str, str],
-                              mobile: bool) -> Iterator[PageMenuEntry]:
-    visual_type = visual_type_registry[visual_type_name]()
-    visual_type.load_handler()
-
-    for visual in _collect_linked_visuals(visual_type, view, rows, singlecontext_request_vars,
-                                          mobile):
         yield _make_page_menu_entry_for_visual(visual_type, visual, singlecontext_request_vars,
                                                mobile)
 
 
-def _collect_linked_visuals(visual_type: VisualType, view: View, rows: Rows,
-                            singlecontext_request_vars: Dict[str, str],
-                            mobile: bool) -> Iterator[Visual]:
+def _collect_linked_visuals(view: View, rows: Rows, singlecontext_request_vars: Dict[str, str],
+                            mobile: bool) -> Iterator[_Tuple[VisualType, Visual]]:
+    for type_name in visual_type_registry.keys():
+        yield from _collect_linked_visuals_of_type(type_name, view, rows,
+                                                   singlecontext_request_vars, mobile)
+
+
+def _collect_linked_visuals_of_type(type_name: str, view: View, rows: Rows,
+                                    singlecontext_request_vars: Dict[str, str],
+                                    mobile: bool) -> Iterator[_Tuple[VisualType, Visual]]:
+    visual_type = visual_type_registry[type_name]()
+    visual_type.load_handler()
     available_visuals = visual_type.permitted_visuals
 
     for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon') or ""):
@@ -2362,7 +2391,7 @@ def _collect_linked_visuals(visual_type: VisualType, view: View, rows: Rows,
         if not visual_type.link_from(view, rows, visual, vars_values):
             continue
 
-        yield visual
+        yield visual_type, visual
 
 
 def _get_linked_visual_request_vars(visual: Visual,
@@ -2406,6 +2435,62 @@ def _make_page_menu_entry_for_visual(visual_type: VisualType, visual: Visual,
                          icon_name=visual.get("icon") or "trans",
                          item=make_simple_link(uri),
                          name="cb_" + name)
+
+
+def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:
+    if "host" not in view.spec['single_infos']:
+        return []
+
+    if not config.wato_enabled:
+        return []
+
+    if not config.user.may("wato.use"):
+        return []
+
+    if not config.user.may("wato.hosts") and not config.user.may("wato.seeall"):
+        return []
+
+    return [PageMenuTopic(
+        title=_("Setup"),
+        entries=list(_page_menu_entries_host_setup()),
+    )]
+
+
+def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
+    host_name = html.request.get_ascii_input_mandatory("host")
+
+    yield PageMenuEntry(
+        title=_("Configuration"),
+        icon_name="wato",
+        item=make_simple_link(_link_to_host_by_name(host_name)),
+    )
+
+    yield PageMenuEntry(
+        title=_("Service configuration"),
+        icon_name="services",
+        item=make_simple_link(
+            html.makeuri_contextless([("mode", "inventory"), ("host", host_name)],
+                                     filename="wato.py")),
+    )
+
+    is_cluster = False
+    if is_cluster:
+        yield PageMenuEntry(
+            title=_("Connection tests"),
+            icon_name="diagnose",
+            item=make_simple_link(
+                html.makeuri_contextless([("mode", "diag_host"), ("host", host_name)],
+                                         filename="wato.py")),
+        )
+
+    if config.user.may('wato.rulesets'):
+        yield PageMenuEntry(
+            title=_("Effective parameters"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                html.makeuri_contextless([("mode", "object_parameters"), ("host", host_name)],
+                                         filename="wato.py")),
+        )
 
 
 def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:

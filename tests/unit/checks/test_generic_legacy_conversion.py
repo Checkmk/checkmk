@@ -2549,7 +2549,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'nvidia.temp_core',
         'nvidia.errors',
         'omd_apache',
-        'omd_info',
         'openbsd_sensors',
         'openbsd_sensors.fan',
         'openbsd_sensors.voltage',

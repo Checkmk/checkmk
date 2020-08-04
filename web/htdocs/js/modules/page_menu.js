@@ -20,6 +20,7 @@ function page_menu_entries() {
 }
 
 
+// Closes the active page menu dropdown
 export function close_active_menu() {
     const menu = page_menu_entries().find(elem => utils.has_class(elem, "active"));
     if (menu)
@@ -120,8 +121,16 @@ export function enable_menu_entry(id, enabled) {
 
 export function open_popup(popup_id) {
     close_active_menu();
+    close_active_popups();
+
     var popup = document.getElementById(popup_id);
     utils.add_class(popup, "active");
+}
+
+function close_active_popups() {
+    document.querySelectorAll(".page_menu_popup").forEach((popup) => {
+        utils.remove_class(popup, "active");
+    });
 }
 
 export function close_popup(a) {

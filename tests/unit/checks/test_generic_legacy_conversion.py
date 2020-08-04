@@ -1692,7 +1692,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'dmraid.pdisks',
         'docker_container_cpu',
         'docker_container_diskstat',
-        'docker_container_mem',
         'docker_container_status.health',
         'docker_container_status',
         'docker_container_status.uptime',

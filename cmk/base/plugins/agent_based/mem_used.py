@@ -206,6 +206,7 @@ def deprecate(section: Dict[str, int]) -> DiscoveryGenerator:
 
 for legacy_plugin_name in (
         "aix_memory",
+        "docker_container_mem",
         "hr_mem",
         "solaris_mem",
         "statgrab_mem",

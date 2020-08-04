@@ -422,6 +422,16 @@ components:
           type: array
           uniqueItems: true
       type: object
+    BulkUpdateHost:
+      properties:
+        entries:
+          example:
+          - attributes: {}
+            host_name: example.com
+          items:
+            $ref: '#/components/schemas/UpdateHostEntry'
+          type: array
+      type: object
     ConcreteFolder:
       discriminator:
         mapping:
@@ -1266,6 +1276,41 @@ components:
             pattern: '[-0-9a-zA-Z_.]+'
             type: string
           type: array
+      type: object
+    UpdateHostEntry:
+      properties:
+        attributes:
+          description: Replace all currently set attributes on the host, with these
+            attributes. Any previously set attributes which are not given here will
+            be removed.
+          example:
+            ipaddress: 192.168.0.123
+          type: object
+        host_name:
+          description: The hostname or IP address itself.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+        nodes:
+          description: Nodes where the host should be the cluster-container of.
+          example:
+          - host1
+          - host2
+          - host3
+          items:
+            description: The hostname or IP address itself.
+            example: example.com
+            pattern: '[-0-9a-zA-Z_.]+'
+            type: string
+          type: array
+        update_attributes:
+          description: Just update the hosts attributes with these attributes. The
+            previously set attributes will not be touched.
+          example:
+            ipaddress: 192.168.0.123
+          type: object
+      required:
+      - host_name
       type: object
   securitySchemes:
     BearerAuth:
@@ -3854,6 +3899,72 @@ paths:
           ipaddress\": \"192.168.0.123\"}' \\\n    nodes='[\"host1\", \"host2\", \"\
           host3\"]' \\\n    update_attributes='{\"ipaddress\": \"192.168.0.123\"}'\
           \ \\\n    --json"
+  /domain-types/host_config/actions/bulk-update/invoke:
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_config.bulk_update_hosts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkUpdateHost'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostCollection'
+          description: ''
+          headers: {}
+      summary: Bulk update hosts
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/domain-types/host_config/actions/bulk-update/invoke\"\
+          ,\n    json={\n        'entries': [{\n            'host_name': 'example.com',\n\
+          \            'attributes': {}\n        }]\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/host_config/actions/bulk-update/invoke\"\
+          ,\n    method=\"PUT\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        'entries': [{\n            'host_name':\
+          \ 'example.com',\n            'attributes': {}\n        }]\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"entries\": [\n            {\n      \
+          \        \"attributes\": {},\n              \"host_name\": \"example.com\"\
+          \n            }\n          ]\n        }' \\\n    \"$API_URL/domain-types/host_config/actions/bulk-update/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/domain-types/host_config/actions/bulk-update/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    entries='[{\"host_name\": \"example.com\",\
+          \ \"attributes\": {}}]' \\\n    --json"
   /domain-types/host_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -6327,6 +6438,9 @@ tags:
     \ showReadOnly={true} showWriteOnly={true} />"
   name: UpdateHost
   x-displayName: Updating of a host
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkUpdateHost" showReadOnly={true}
+    showWriteOnly={true} />
+  name: BulkUpdateHost
 - description: <SchemaDefinition schemaRef="#/components/schemas/BulkDeleteHost" showReadOnly={true}
     showWriteOnly={true} />
   name: BulkDeleteHost
@@ -6410,6 +6524,7 @@ x-tagGroups:
   - CreateHost
   - BulkCreateHost
   - UpdateHost
+  - BulkUpdateHost
   - BulkDeleteHost
   - InputHostGroup
   - BulkInputHostGroup

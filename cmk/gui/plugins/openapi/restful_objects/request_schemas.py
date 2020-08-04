@@ -69,6 +69,7 @@ class Hostname(fields.String):
 
 EXISTING_HOST_NAME = Hostname(
     description="The hostname or IP address itself.",
+    required=True,
     should_exist=True,
 )
 
@@ -210,6 +211,41 @@ class UpdateHost(BaseSchema):
         example=["host1", "host2", "host3"],
         missing=list,
         required=False,
+    )
+
+
+class UpdateHostEntry(BaseSchema):
+    host_name = EXISTING_HOST_NAME
+    attributes = AttributesField(
+        description=("Replace all currently set attributes on the host, with these attributes. "
+                     "Any previously set attributes which are not given here will be removed."),
+        example={'ipaddress': '192.168.0.123'},
+        missing=dict,
+        required=False,
+    )
+    update_attributes = AttributesField(
+        description=("Just update the hosts attributes with these attributes. The previously set "
+                     "attributes will not be touched."),
+        example={'ipaddress': '192.168.0.123'},
+        missing=dict,
+        required=False,
+    )
+    nodes = fields.List(
+        EXISTING_HOST_NAME,
+        description="Nodes where the host should be the cluster-container of.",
+        example=["host1", "host2", "host3"],
+        missing=list,
+        required=False,
+    )
+
+
+class BulkUpdateHost(BaseSchema):
+    entries = fields.List(
+        fields.Nested(UpdateHostEntry),
+        example=[{
+            "host_name": "example.com",
+            "attributes": {}
+        }],
     )
 
 

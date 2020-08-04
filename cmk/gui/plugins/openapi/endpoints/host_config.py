@@ -125,6 +125,34 @@ def update_host(params):
     return _serve_host(host)
 
 
+@endpoint_schema(constructors.domain_type_action_href('host_config', 'bulk-update'),
+                 'cmk/bulk_update',
+                 method='put',
+                 request_schema=request_schemas.BulkUpdateHost,
+                 response_schema=response_schemas.HostCollection)
+def bulk_update_hosts(params):
+    """Bulk update hosts"""
+    body = params['body']
+    entries = body['entries']
+
+    hosts = []
+    for update_detail in entries:
+        host_name = update_detail['host_name']
+        nodes = update_detail['nodes']
+        new_attributes = update_detail['attributes']
+        update_attributes = update_detail['attributes']
+        check_hostname(host_name)
+        host: watolib.CREHost = watolib.Host.host(host_name)
+        if new_attributes:
+            host.edit(new_attributes, nodes)
+
+        if update_attributes:
+            host.update_attributes(update_attributes)
+        hosts.append(host)
+
+    return _host_collection(hosts)
+
+
 @endpoint_schema(constructors.object_href('host_config', '{host_name}'),
                  '.../delete',
                  method='delete',

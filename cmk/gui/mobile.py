@@ -29,6 +29,7 @@ from cmk.gui.plugins.views.utils import (
     ABCDataSource,
 )
 from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 
 HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]
 Items = List[Tuple[str, str, str]]
@@ -329,10 +330,8 @@ class MobileViewRenderer(views.ABCViewRenderer):
             navbar.append(("commands", _("Commands"), "gear", ''))
 
         # Should we show a page with context links?
-        context_links = views.collect_context_links(self.view,
-                                                    rows,
-                                                    mobile=True,
-                                                    only_types=['views'])
+        context_links = list(
+            views.collect_context_links(self.view, rows, mobile=True, only_types=['views']))
 
         if context_links:
             navbar.append(("context", _("Context"), "arrow-r", ''))
@@ -385,10 +384,9 @@ class MobileViewRenderer(views.ABCViewRenderer):
             jqm_page_navfooter(navbar, 'data', page_id)
 
         # Page: Context buttons
-        #if context_links:
         elif page == "context":
             jqm_page_header(_("Context"), left_button=home, id_="context")
-            show_context_links(context_links)
+            _show_context_links(context_links)
             jqm_page_navfooter(navbar, 'context', page_id)
 
 
@@ -475,8 +473,10 @@ def do_commands(what: str, rows: Rows) -> bool:
     return True  # Show commands again
 
 
-def show_context_links(context_links: List[Tuple[str, str, str, str]]) -> None:
+def _show_context_links(context_links: List[PageMenuEntry]) -> None:
     items = []
-    for title, uri, _icon, _buttonid in context_links:
-        items.append(('Context', uri, title))
+    for entry in context_links:
+        if not isinstance(entry.item, PageMenuLink):
+            continue
+        items.append(('Context', entry.item.link.url or "", entry.title))
     jqm_page_index(_("Related Views"), items)

@@ -856,14 +856,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
         # Link related reports
-        links = collect_context_links(self.view, rows, only_types=["reports"])
-        for linktitle, uri, icon, buttonid in links:
-            yield PageMenuEntry(
-                title=linktitle,
-                icon_name=icon,
-                item=make_simple_link(uri),
-                name=buttonid,
-            )
+        yield from collect_context_links(self.view, rows, only_types=["reports"])
 
     def _extend_display_dropdown(self, menu: PageMenu, show_filters: List[Filter]) -> None:
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
@@ -2302,7 +2295,10 @@ def update_context_links(enable_command_toggle, enable_checkbox_toggle):
                     (enable_command_toggle and enable_checkbox_toggle and 1 or 0,))
 
 
-def collect_context_links(view, rows, mobile=False, only_types=None):
+def collect_context_links(view: View,
+                          rows: Rows,
+                          mobile: bool = False,
+                          only_types: Optional[List[InfoName]] = None) -> Iterator[PageMenuEntry]:
     """Collect all visuals that share a context with visual. For example
     if a visual has a host context, get all relevant visuals."""
     if only_types is None:
@@ -2312,17 +2308,15 @@ def collect_context_links(view, rows, mobile=False, only_types=None):
     singlecontext_request_vars = visuals.get_singlecontext_html_vars(view.spec["context"],
                                                                      view.spec["single_infos"])
 
-    context_links = []
     for what in visual_type_registry.keys():
         if not only_types or what in only_types:
-            context_links += _collect_context_links_of(what, view, rows, singlecontext_request_vars,
-                                                       mobile)
-    return context_links
+            yield from _collect_context_links_of(what, view, rows, singlecontext_request_vars,
+                                                 mobile)
 
 
-def _collect_context_links_of(visual_type_name, view, rows, singlecontext_request_vars, mobile):
-    context_links = []
-
+def _collect_context_links_of(visual_type_name: str, view: View, rows: Rows,
+                              singlecontext_request_vars: Dict[str, str],
+                              mobile: bool) -> Iterator[PageMenuEntry]:
     visual_type = visual_type_registry[visual_type_name]()
     visual_type.load_handler()
     available_visuals = visual_type.permitted_visuals
@@ -2350,7 +2344,7 @@ def _collect_context_links_of(visual_type_name, view, rows, singlecontext_reques
         # We can show a button only if all single contexts of the
         # target visual are known currently
         skip = False
-        vars_values = []
+        vars_values: HTTPVariables = []
         for var in visuals.get_single_info_keys(visual["single_infos"]):
             if var not in singlecontext_request_vars:
                 skip = True  # At least one single context missing
@@ -2363,7 +2357,7 @@ def _collect_context_links_of(visual_type_name, view, rows, singlecontext_reques
                                                   filter_names=list(dict(vars_values).keys()))
 
         if add_site_hint and html.request.var('site'):
-            vars_values.append(('site', html.request.var('site')))
+            vars_values.append(('site', html.request.get_ascii_input_mandatory('site')))
 
         # Optional feature of visuals: Make them dynamically available as links or not.
         # This has been implemented for HW/SW inventory views which are often useless when a host
@@ -2389,9 +2383,10 @@ def _collect_context_links_of(visual_type_name, view, rows, singlecontext_reques
                                                filename=filename)
             icon = visual.get("icon")
             buttonid = "cb_" + name
-            context_links.append((_u(linktitle), uri, icon, buttonid))
-
-    return context_links
+            yield PageMenuEntry(title=_u(linktitle),
+                                icon_name=icon,
+                                item=make_simple_link(uri),
+                                name=buttonid)
 
 
 def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:

@@ -35,7 +35,6 @@
 #include "Logger.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
-#include "OffsetPerfdataColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
 #include "Query.h"
 #include "ServiceContactsColumn.h"
@@ -43,6 +42,7 @@
 #include "ServiceSpecialDoubleColumn.h"
 #include "ServiceSpecialIntColumn.h"
 #include "StringLambdaColumn.h"
+#include "StringPerfdataColumn.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TimeLambdaColumn.h"
@@ -118,10 +118,11 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         [](const service &r) {
             return r.long_plugin_output == nullptr ? "" : r.long_plugin_output;
         }));
-    table->addColumn(std::make_unique<OffsetPerfdataColumn>(
+    table->addColumn(std::make_unique<StringPerfdataColumn<service>>(
         prefix + "perf_data", "Performance data of the last check plugin",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(service, perf_data)}));
+        offsets, [](const service &r) {
+            return r.perf_data == nullptr ? "" : r.perf_data;
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "notification_period",
         "The name of the notification period of the service. It this is empty, service problems are always notified.",

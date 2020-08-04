@@ -42,12 +42,12 @@
 #include "LogwatchListColumn.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
-#include "OffsetPerfdataColumn.h"
 #include "OffsetStringHostMacroColumn.h"
 #include "Query.h"
 #include "ServiceListColumn.h"
 #include "ServiceListStateColumn.h"
 #include "StringLambdaColumn.h"
+#include "StringPerfdataColumn.h"
 #include "TimeLambdaColumn.h"
 #include "TimeperiodColumn.h"
 #include "auth.h"
@@ -167,11 +167,12 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [](const host &r) {
             return r.plugin_output == nullptr ? "" : r.plugin_output;
         }));
-    table->addColumn(std::make_unique<OffsetPerfdataColumn>(
+    table->addColumn(std::make_unique<StringPerfdataColumn<host>>(
         prefix + "perf_data",
-        "Optional performance data of the last host check",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, perf_data)}));
+        "Optional performance data of the last host check", offsets,
+        [](const host &r) {
+            return r.perf_data == nullptr ? "" : r.perf_data;
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "icon_image",
         "The name of an image file to be used in the web pages", offsets,

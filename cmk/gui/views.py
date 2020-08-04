@@ -2323,16 +2323,13 @@ def _collect_context_links_of(visual_type_name: str, view: View, rows: Rows,
 
     for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon') or ""):
         name = visual["name"]
-        linktitle = visual.get("linktitle")
-        if not linktitle:
-            linktitle = visual["title"]
         if visual == view.spec:
             continue
+
         if visual.get("hidebutton", False):
             continue  # this visual does not want a button to be displayed
 
-        if not mobile and visual.get('mobile') \
-           or mobile and not visual.get('mobile'):
+        if not mobile and visual.get('mobile') or mobile and not visual.get('mobile'):
             continue
 
         # For dashboards and views we currently only show a link button,
@@ -2351,6 +2348,9 @@ def _collect_context_links_of(visual_type_name: str, view: View, rows: Rows,
                 break
             vars_values.append((var, singlecontext_request_vars[var]))
 
+        if skip:
+            continue
+
         add_site_hint = visuals.may_add_site_hint(name,
                                                   info_keys=list(visual_info_registry.keys()),
                                                   single_info_keys=visual["single_infos"],
@@ -2363,30 +2363,31 @@ def _collect_context_links_of(visual_type_name: str, view: View, rows: Rows,
         # This has been implemented for HW/SW inventory views which are often useless when a host
         # has no such information available. For example the "Oracle Tablespaces" inventory view
         # is useless on hosts that don't host Oracle databases.
-        if not skip:
-            skip = not visual_type.link_from(view, rows, visual, vars_values)
+        if not visual_type.link_from(view, rows, visual, vars_values):
+            continue
 
-        if not skip:
-            filename = visual_type.show_url
-            if mobile and visual_type.show_url == 'view.py':
-                filename = 'mobile_' + visual_type.show_url
+        filename = visual_type.show_url
+        if mobile and visual_type.show_url == 'view.py':
+            filename = 'mobile_' + visual_type.show_url
 
-            # add context link to this visual. For reports we put in
-            # the *complete* context, even the non-single one.
-            if visual_type.multicontext_links:
-                uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
+        # add context link to this visual. For reports we put in
+        # the *complete* context, even the non-single one.
+        if visual_type.multicontext_links:
+            uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
 
-            # For views and dashboards currently the current filter
-            # settings
-            else:
-                uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
-                                               filename=filename)
-            icon = visual.get("icon")
-            buttonid = "cb_" + name
-            yield PageMenuEntry(title=_u(linktitle),
-                                icon_name=icon,
-                                item=make_simple_link(uri),
-                                name=buttonid)
+        # For views and dashboards currently the current filter
+        # settings
+        else:
+            uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
+                                           filename=filename)
+
+        linktitle = visual.get("linktitle") or visual["title"]
+        icon = visual.get("icon")
+        buttonid = "cb_" + name
+        yield PageMenuEntry(title=_u(linktitle),
+                            icon_name=icon,
+                            item=make_simple_link(uri),
+                            name=buttonid)
 
 
 def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:

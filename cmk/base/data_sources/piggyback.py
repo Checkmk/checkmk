@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Any, cast, Dict, Final, Optional, Sequence, Tuple
+from typing import Any, cast, Dict, Final, Optional, Tuple
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
@@ -14,7 +14,6 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     RawAgentData,
-    SectionName,
     ServiceCheckResult,
     SourceType,
 )
@@ -78,7 +77,6 @@ class PiggyBackDataSource(AgentDataSource):
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-        prefetched_sections: Sequence[SectionName],
     ) -> RawAgentData:
         self._summary = self._summarize()
         with PiggyBackDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
@@ -104,17 +102,13 @@ class PiggyBackDataSource(AgentDataSource):
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-        prefetched_sections: Sequence[SectionName],
     ) -> Tuple[RawAgentData, bool]:
         """Returns the current raw data of this data source
 
         Special for piggyback: No caching of raw data
         """
         self._logger.log(VERBOSE, "Execute data source")
-        return self._execute(
-            selected_raw_sections=selected_raw_sections,
-            prefetched_sections=prefetched_sections,
-        ), False
+        return self._execute(selected_raw_sections=selected_raw_sections), False
 
     def _summary_result(self) -> ServiceCheckResult:
         """Returns useful information about the data source execution

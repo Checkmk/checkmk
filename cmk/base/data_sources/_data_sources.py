@@ -263,10 +263,7 @@ def _make_host_sections(
             )
             host_sections.update(
                 # TODO: Select agent / snmp sources before passing
-                source.run(
-                    selected_raw_sections=selected_raw_sections,
-                    prefetched_sections=(),
-                ))
+                source.run(selected_raw_sections=selected_raw_sections))
 
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.

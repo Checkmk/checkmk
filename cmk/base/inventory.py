@@ -305,6 +305,7 @@ def _do_inv_for_realhost(
 ) -> None:
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
+            # TODO(ml): This modifies the SNMP fetcher config dynamically.
             configurator = cast(data_sources.snmp.SNMPConfigurator, source.configurator)
             configurator.detector.on_error = "raise"  # default
             configurator.detector.do_snmp_scan = True
@@ -323,11 +324,10 @@ def _do_inv_for_realhost(
                     HostKey(hostname, ipaddress, source.configurator.source_type),
                     SNMPHostSections(),
                 )
-                host_sections.update(
-                    source.run(
-                        prefetched_sections=host_sections.sections,
-                        selected_raw_sections=None,
-                    ))
+                # TODO(ml): This modifies the SNMP fetcher config dynamically.
+                #           Can the fetcher handle that on its own?
+                configurator.prefetched_sections = host_sections.sections
+                host_sections.update(source.run(selected_raw_sections=None))
 
     if multi_host_sections is None:
         multi_host_sections = data_sources.make_host_sections(

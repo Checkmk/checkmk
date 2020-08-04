@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Optional
 
 from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, SectionName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, SourceType
 
 from cmk.fetchers import ProgramDataFetcher
 
@@ -244,7 +244,6 @@ class ProgramDataSource(AgentDataSource):
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-        prefetched_sections: Sequence[SectionName],
     ) -> RawAgentData:
         # TODO(ml): Do something with the selection.
         with ProgramDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:

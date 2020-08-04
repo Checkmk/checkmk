@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, cast, Dict, Final, Optional, Sequence
+from typing import Any, cast, Dict, Final, Optional
 
 from cmk.utils.type_defs import (
     HostAddress,
@@ -82,7 +82,6 @@ class IPMIManagementBoardDataSource(AgentDataSource):
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-        prefetched_sections: Sequence[SectionName],
     ) -> RawAgentData:
         if selected_raw_sections is None:
             # pylint: disable=unused-variable

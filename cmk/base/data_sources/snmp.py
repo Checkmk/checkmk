@@ -123,6 +123,8 @@ class SNMPConfigurator(ABCConfigurator):
         self.ignore_check_interval = False
         self.persisted_sections: SNMPPersistedSections = {}
         self.selected_raw_sections: Optional[SelectedRawSections] = None
+        # TODO(ml): `prefetched_sections` cannot be `Final`.
+        #           It is set in `cmk.base.inventory` only.
         self.prefetched_sections: Sequence[SectionName] = ()
 
     @classmethod
@@ -322,14 +324,12 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-        prefetched_sections: Sequence[SectionName],
     ) -> SNMPRawData:
         # This is wrong
         configurator = cast(SNMPConfigurator, self.configurator)
         configurator.persisted_sections = self._section_store.load(
             self._use_outdated_persisted_sections,)
         configurator.selected_raw_sections = selected_raw_sections  # checking only
-        configurator.prefetched_sections = prefetched_sections  # inventory only
         # End of wrong
         ip_lookup.verify_ipaddress(self.configurator.ipaddress)
         with SNMPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:

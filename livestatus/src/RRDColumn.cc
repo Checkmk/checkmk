@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "DynamicRRDColumn.h"
 #include "Logger.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
@@ -34,15 +35,14 @@
 
 RRDColumn::RRDColumn(const std::string &name, const std::string &description,
                      const Column::Offsets &offsets, MonitoringCore *mc,
-                     std::string rpn, time_t start_time, time_t end_time,
-                     int resolution, int max_entries)
+                     const RRDColumnArgs &args)
     : ListColumn(name, description, offsets)
     , _mc(mc)
-    , _rpn(std::move(rpn))
-    , _start_time(start_time)
-    , _end_time(end_time)
-    , _resolution(resolution)
-    , _max_entries(max_entries) {}
+    , _rpn(args.rpn)
+    , _start_time(args.start_time)
+    , _end_time(args.end_time)
+    , _resolution(args.resolution)
+    , _max_entries(args.max_entries) {}
 
 void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
                        std::chrono::seconds /*timezone_offset*/) const {

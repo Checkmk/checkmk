@@ -19,13 +19,13 @@
 class MonitoringCore;
 class Row;
 class RowRenderer;
+struct RRDColumnArgs;
 
 class RRDColumn : public ListColumn {
 public:
     RRDColumn(const std::string &name, const std::string &description,
-              const Column::Offsets &, MonitoringCore *mc, std::string rpn,
-              time_t start_time, time_t end_time, int resolution,
-              int max_entries);
+              const Column::Offsets &, MonitoringCore *mc,
+              const RRDColumnArgs &args);
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;

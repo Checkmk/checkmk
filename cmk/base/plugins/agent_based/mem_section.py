@@ -258,3 +258,57 @@ register.agent_section(
     parsed_section_name="mem",
     parse_function=parse_solaris_mem,
 )
+
+
+def parse_statgrab_mem(string_table: type_defs.AgentStringTable) -> Optional[Dict[str, int]]:
+    """
+        >>> import pprint
+        >>> pprint.pprint(parse_statgrab_mem([
+        ...     ['mem.cache', '0'],
+        ...     ['mem.total', '4294967296'],
+        ...     ['mem.free', '677666816'],
+        ...     ['mem.used', '3617300480'],
+        ...     ['swap.total', '8589934592'],
+        ...     ['swap.free', '4976402432'],
+        ...     ['swap.used', '3613532160']
+        ... ]))
+        {'Cached': 0,
+         'MemFree': 677666816,
+         'MemTotal': 4294967296,
+         'SwapFree': 4976402432,
+         'SwapTotal': 8589934592}
+
+    """
+    parsed: Dict[str, int] = {}
+    for var, value in string_table:
+        try:
+            parsed.setdefault(var, int(value))
+        except ValueError:
+            pass
+
+    try:
+        totalmem = parsed['mem.total']
+        memused = parsed['mem.used']
+        totalswap = parsed['swap.total']
+        swapused = parsed['swap.used']
+    except KeyError:
+        return None
+
+    instance = {
+        "MemTotal": totalmem,
+        "MemFree": totalmem - memused,
+        "SwapTotal": totalswap,
+        "SwapFree": totalswap - swapused,
+    }
+
+    if 'mem.cache' in parsed:
+        instance["Cached"] = parsed['mem.cache']
+
+    return instance
+
+
+register.agent_section(
+    name="statgrab_mem",
+    parsed_section_name="mem",
+    parse_function=parse_statgrab_mem,
+)

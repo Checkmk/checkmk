@@ -5,6 +5,61 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Union, Tuple, Optional, TypedDict
+import time
+from cmk.base.api.agent_based.utils import (
+    check_levels,
+    get_rate,
+    get_average,
+)
+from cmk.base.api.agent_based.render import (
+    timespan,)
+from ..agent_based_api.v0.type_defs import (
+    CheckGenerator,)
+
+# TODO: Just for documentation purposes for now, add typing_extensions and use this.
+#
+# StatusType = Union[Literal[0], Literal[1], Literal[2], Literal[3]]
+# TempUnitType = Union[Literal['c'],  # celsius
+#                      Literal['k'],  # kelvin = celsius starting at absolute 0
+#                      Literal['f'],  # fahrenheit
+#                     ]
+# LevelModes = Union[Literal['worst'], Literal['best'], Literal['dev'], Literal['devdefault'],
+#                    Literal['usr'], Literal['usrdefault']]
+
+StatusType = int
+TempUnitType = str
+LevelModes = str
+
+Number = Union[int, float]
+
+# Generic Check Type. Can be used elsewhere too.
+
+TwoLevelsType = Tuple[Optional[Number], Optional[Number]]
+FourLevelsType = Tuple[Optional[Number], Optional[Number], Optional[Number], Optional[Number]]
+LevelsType = Union[TwoLevelsType, FourLevelsType]
+TrendComputeDict = TypedDict(
+    'TrendComputeDict',
+    {
+        'period': int,
+        'trend_levels': TwoLevelsType,
+        'trend_levels_lower': TwoLevelsType,
+        'trend_timeleft': TwoLevelsType,
+    },
+    total=False,
+)
+TempParamDict = TypedDict(
+    'TempParamDict',
+    {
+        'input_unit': TempUnitType,
+        'output_unit': TempUnitType,
+        'levels': TwoLevelsType,
+        'levels_lower': TwoLevelsType,
+        'device_levels_handling': LevelModes,
+        'trend_compute': TrendComputeDict,
+    },
+    total=False,
+)
+TempParamType = Union[None, TwoLevelsType, FourLevelsType, TempParamDict]
 
 
 def minn(a, b):
@@ -145,6 +200,84 @@ def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, 
     return warn, crit, warn_lower, crit_lower
 
 
+def _check_trend(
+    value_store,
+    temp: float,
+    params: TrendComputeDict,
+    output_unit: str,
+    crit_temp: float,
+    crit_temp_lower: float,
+    unique_name: str,
+) -> CheckGenerator:
+    trend_range_min = params["period"]
+    this_time = time.time()
+
+    # current rate since last check
+    rate = get_rate(
+        value_store=value_store,
+        key="temp.%s.delta" % unique_name,
+        time=this_time,
+        value=temp,
+    )
+
+    # average trend, initialized with initial temperature value on first check
+    rate_avg = get_average(
+        value_store=value_store,
+        key="temp.%s.trend" % unique_name,
+        time=this_time,
+        value=rate,
+        backlog_minutes=trend_range_min,
+    )
+
+    trend = rate_avg * trend_range_min * 60.0
+    warn_upper_trend, crit_upper_trend = params.get('trend_levels', (None, None))
+
+    warn_lower_trend, crit_lower_trend = params.get("trend_levels_lower", (None, None))
+    if warn_lower_trend is None or crit_lower_trend is None:
+        warn_lower_trend, crit_lower_trend = None, None
+    else:
+        # GUI representation of this parameter is labelled 'temperature decrease'; the user may input this
+        # as a positive or negative value
+        warn_lower_trend = abs(warn_lower_trend) * -1
+        crit_lower_trend = abs(crit_lower_trend) * -1
+
+    yield from check_levels(
+        value=trend,
+        levels_upper=(warn_upper_trend, crit_upper_trend),
+        levels_lower=(warn_lower_trend, crit_lower_trend),
+        label='Temperature trend',
+        render_func=lambda trend: render_temp(
+            trend,
+            output_unit,
+            relative=True,
+            sign=True,
+        ) + temp_unitsym[output_unit] + ' per ' + str(trend_range_min) + ' min',
+    )
+
+    if "trend_timeleft" not in params:
+        return
+
+    limit = crit_temp if trend > 0 else crit_temp_lower
+    if limit is None:
+        # crit levels may not be set
+        return
+
+    # compute time until temperature limit is reached
+    warn_timeleft_min, crit_timeleft_min = params["trend_timeleft"]
+    diff_to_limit = limit - temp
+    seconds_left = float(diff_to_limit / rate_avg)
+
+    yield from check_levels(
+        value=seconds_left,
+        levels_lower=(
+            None if warn_timeleft_min is None else warn_timeleft_min * 60.0,
+            None if crit_timeleft_min is None else crit_timeleft_min * 60.0,
+        ),
+        render_func=timespan,
+        label='Time until temperature limit reached',
+    )
+
+
 # Checks Celsius temperature against crit/warn levels defined in params. temp must
 # be int or float. Parameters:
 # reading:           temperature reading of the device (per default interpreted as Celsius)
@@ -174,52 +307,6 @@ def _normalize_level(entry):
     if isinstance(entry, tuple) and set(entry) <= {None}:
         return None
     return entry
-
-
-# TODO: Just for documentation purposes for now, add typing_extensions and use this.
-#
-# StatusType = Union[Literal[0], Literal[1], Literal[2], Literal[3]]
-# TempUnitType = Union[Literal['c'],  # celsius
-#                      Literal['k'],  # kelvin = celsius starting at absolute 0
-#                      Literal['f'],  # fahrenheit
-#                     ]
-# LevelModes = Union[Literal['worst'], Literal['best'], Literal['dev'], Literal['devdefault'],
-#                    Literal['usr'], Literal['usrdefault']]
-
-StatusType = int
-TempUnitType = str
-LevelModes = str
-
-Number = Union[int, float]
-
-# Generic Check Type. Can be used elsewhere too.
-
-TwoLevelsType = Tuple[Optional[Number], Optional[Number]]
-FourLevelsType = Tuple[Optional[Number], Optional[Number], Optional[Number], Optional[Number]]
-LevelsType = Union[TwoLevelsType, FourLevelsType]
-TrendComputeDict = TypedDict(
-    'TrendComputeDict',
-    {
-        'period': int,
-        'trend_levels': TwoLevelsType,
-        'trend_levels_lower': TwoLevelsType,
-        'trend_timeleft': TwoLevelsType,
-    },
-    total=False,
-)
-TempParamDict = TypedDict(
-    'TempParamDict',
-    {
-        'input_unit': TempUnitType,
-        'output_unit': TempUnitType,
-        'levels': TwoLevelsType,
-        'levels_lower': TwoLevelsType,
-        'device_levels_handling': LevelModes,
-        'trend_compute': TrendComputeDict,
-    },
-    total=False,
-)
-TempParamType = Union[None, TwoLevelsType, FourLevelsType, TempParamDict]
 
 
 def _migrate_params(params: TempParamType) -> TempParamDict:

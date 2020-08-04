@@ -26,6 +26,17 @@ PerfDataType = List[PerfDataEntryType]
 # Generic Check Type. Can be used elsewhere too.
 CheckType = Tuple[StatusType, AnyStr, PerfDataType]
 
+#################################################################################################
+#
+#                                 NOTE
+#                           !! PLEASE READ !!
+#
+#       check_temperature_trend has been migrated to the new check API. The function
+#       below must be decomissioned (i.e. deleted) once all checks using temperature
+#       have been migrated.
+#
+##################################################################################################
+
 
 # determine temperature trends. This is a private function, not to be called by checks
 def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_name):

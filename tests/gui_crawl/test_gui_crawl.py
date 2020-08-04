@@ -130,6 +130,7 @@ class Worker(threading.Thread):
                 "application/x-redhat-package-manager",
                 "application/x-pkg",
                 "application/x-tar",
+                "application/json",
                 "text/x-chdr",
                 "text/x-c++src",
                 "text/x-sh",

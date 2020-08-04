@@ -117,9 +117,7 @@ liblivestatus_a_SOURCES = \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicHostFileColumn-impl.cc \
-        DynamicHostRRDColumn.cc \
         DynamicRRDColumn.cc \
-        DynamicServiceRRDColumn.cc \
         EventConsoleConnection.cc \
         FileSystemHelper.cc \
         Filter.cc \

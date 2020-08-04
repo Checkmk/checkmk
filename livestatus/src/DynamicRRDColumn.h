@@ -27,6 +27,7 @@ struct RRDColumnArgs {
     int max_entries;
 };
 
+template <class T>
 class DynamicRRDColumn : public DynamicColumn {
 public:
     DynamicRRDColumn(const std::string &name, const std::string &description,
@@ -42,7 +43,10 @@ public:
     }
 
     std::unique_ptr<Column> createColumn(
-        const std::string &name, const std::string &arguments) override = 0;
+        const std::string &name, const std::string &arguments) override {
+        return std::make_unique<T>(name, "dynamic column", _offsets, core(),
+                                   RRDColumnArgs{arguments, _name});
+    }
 
 private:
     MonitoringCore *_mc;

@@ -29,7 +29,7 @@
 #include "DoubleLambdaColumn.h"
 #include "DowntimeColumn.h"
 #include "DynamicColumn.h"
-#include "DynamicServiceRRDColumn.h"
+#include "DynamicRRDColumn.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
@@ -39,6 +39,7 @@
 #include "Query.h"
 #include "ServiceContactsColumn.h"
 #include "ServiceGroupsColumn.h"
+#include "ServiceRRDColumn.h"
 #include "ServiceSpecialDoubleColumn.h"
 #include "ServiceSpecialIntColumn.h"
 #include "StringLambdaColumn.h"
@@ -577,10 +578,11 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
                            [](auto &&m) { return m.string(); });
             return metrics;
         }));
-    table->addDynamicColumn(std::make_unique<DynamicServiceRRDColumn>(
+    table->addDynamicColumn(std::make_unique<
+                            DynamicRRDColumn<ServiceRRDColumn>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
-        table->core(), Column::Offsets{indirect_offset, -1, -1, 0}));
+        table->core(), offsets));
     table->addColumn(std::make_unique<TimeLambdaColumn<service>::Constant>(
         prefix + "cached_at",
         "A dummy column in order to be compatible with Check_MK Multisite",

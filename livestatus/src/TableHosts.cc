@@ -29,11 +29,12 @@
 #include "DowntimeColumn.h"
 #include "DynamicColumn.h"
 #include "DynamicHostFileColumn.h"
-#include "DynamicHostRRDColumn.h"
+#include "DynamicRRDColumn.h"
 #include "HostContactsColumn.h"
 #include "HostFileColumn.h"
 #include "HostGroupsColumn.h"
 #include "HostListColumn.h"
+#include "HostRRDColumn.h"
 #include "HostSpecialDoubleColumn.h"
 #include "HostSpecialIntColumn.h"
 #include "IntLambdaColumn.h"
@@ -596,10 +597,10 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         Column::Offsets{indirect_offset, extra_offset, -1,
                         DANGEROUS_OFFSETOF(host, child_hosts)},
         table->core(), false));
-    table->addDynamicColumn(std::make_unique<DynamicHostRRDColumn>(
+    table->addDynamicColumn(std::make_unique<DynamicRRDColumn<HostRRDColumn>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
-        table->core(), Column::Offsets{indirect_offset, extra_offset, -1, 0}));
+        table->core(), offsets));
 
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services of the host",

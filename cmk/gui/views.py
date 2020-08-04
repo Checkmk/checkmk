@@ -143,7 +143,7 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
 from cmk.gui.type_defs import (PainterSpec, HTTPVariables, InfoName, FilterHeaders, Row, Rows,
-                               ColumnName)
+                               ColumnName, Visual)
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -2319,10 +2319,19 @@ def _collect_context_links_of(visual_type_name: str, view: View, rows: Rows,
                               mobile: bool) -> Iterator[PageMenuEntry]:
     visual_type = visual_type_registry[visual_type_name]()
     visual_type.load_handler()
+
+    for visual in _collect_linked_visuals(visual_type, view, rows, singlecontext_request_vars,
+                                          mobile):
+        yield _make_page_menu_entry_for_visual(visual_type, visual, singlecontext_request_vars,
+                                               mobile)
+
+
+def _collect_linked_visuals(visual_type: VisualType, view: View, rows: Rows,
+                            singlecontext_request_vars: Dict[str, str],
+                            mobile: bool) -> Iterator[Visual]:
     available_visuals = visual_type.permitted_visuals
 
     for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon') or ""):
-        name = visual["name"]
         if visual == view.spec:
             continue
 
@@ -2340,54 +2349,63 @@ def _collect_context_links_of(visual_type_name: str, view: View, rows: Rows,
 
         # We can show a button only if all single contexts of the
         # target visual are known currently
-        skip = False
-        vars_values: HTTPVariables = []
-        for var in visuals.get_single_info_keys(visual["single_infos"]):
-            if var not in singlecontext_request_vars:
-                skip = True  # At least one single context missing
-                break
-            vars_values.append((var, singlecontext_request_vars[var]))
-
-        if skip:
+        has_single_contexts = all(var in singlecontext_request_vars
+                                  for var in visuals.get_single_info_keys(visual["single_infos"]))
+        if not has_single_contexts:
             continue
-
-        add_site_hint = visuals.may_add_site_hint(name,
-                                                  info_keys=list(visual_info_registry.keys()),
-                                                  single_info_keys=visual["single_infos"],
-                                                  filter_names=list(dict(vars_values).keys()))
-
-        if add_site_hint and html.request.var('site'):
-            vars_values.append(('site', html.request.get_ascii_input_mandatory('site')))
 
         # Optional feature of visuals: Make them dynamically available as links or not.
         # This has been implemented for HW/SW inventory views which are often useless when a host
         # has no such information available. For example the "Oracle Tablespaces" inventory view
         # is useless on hosts that don't host Oracle databases.
+        vars_values = _get_linked_visual_request_vars(visual, singlecontext_request_vars)
         if not visual_type.link_from(view, rows, visual, vars_values):
             continue
 
-        filename = visual_type.show_url
-        if mobile and visual_type.show_url == 'view.py':
-            filename = 'mobile_' + visual_type.show_url
+        yield visual
 
-        # add context link to this visual. For reports we put in
-        # the *complete* context, even the non-single one.
-        if visual_type.multicontext_links:
-            uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
 
-        # For views and dashboards currently the current filter
-        # settings
-        else:
-            uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
-                                           filename=filename)
+def _get_linked_visual_request_vars(visual: Visual,
+                                    singlecontext_request_vars: Dict[str, str]) -> HTTPVariables:
+    vars_values: HTTPVariables = []
+    for var in visuals.get_single_info_keys(visual["single_infos"]):
+        vars_values.append((var, singlecontext_request_vars[var]))
 
-        linktitle = visual.get("linktitle") or visual["title"]
-        icon = visual.get("icon")
-        buttonid = "cb_" + name
-        yield PageMenuEntry(title=_u(linktitle),
-                            icon_name=icon,
-                            item=make_simple_link(uri),
-                            name=buttonid)
+    add_site_hint = visuals.may_add_site_hint(visual["name"],
+                                              info_keys=list(visual_info_registry.keys()),
+                                              single_info_keys=visual["single_infos"],
+                                              filter_names=list(dict(vars_values).keys()))
+
+    if add_site_hint and html.request.var('site'):
+        vars_values.append(('site', html.request.get_ascii_input_mandatory('site')))
+    return vars_values
+
+
+def _make_page_menu_entry_for_visual(visual_type: VisualType, visual: Visual,
+                                     singlecontext_request_vars: Dict[str, str],
+                                     mobile: bool) -> PageMenuEntry:
+    name = visual["name"]
+    vars_values = _get_linked_visual_request_vars(visual, singlecontext_request_vars)
+
+    filename = visual_type.show_url
+    if mobile and visual_type.show_url == 'view.py':
+        filename = 'mobile_' + visual_type.show_url
+
+    # add context link to this visual. For reports we put in
+    # the *complete* context, even the non-single one.
+    if visual_type.multicontext_links:
+        uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
+
+    else:
+        # For views and dashboards currently the current filter settings
+        uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
+                                       filename=filename)
+
+    linktitle = visual.get("linktitle") or visual["title"]
+    return PageMenuEntry(title=_u(linktitle),
+                         icon_name=visual.get("icon") or "trans",
+                         item=make_simple_link(uri),
+                         name="cb_" + name)
 
 
 def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:

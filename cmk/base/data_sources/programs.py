@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostAddress, HostName, AgentRawData, SourceType
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
 from cmk.fetchers import ProgramDataFetcher
 
@@ -20,7 +20,7 @@ from cmk.base.config import SelectedRawSections, SpecialAgentConfiguration
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentDataSource
+from .agent import AgentConfigurator, AgentDataSource, AgentSummarizerDefault
 
 
 class ProgramConfigurator(AgentConfigurator):
@@ -240,6 +240,18 @@ class SpecialAgentConfigurator(ProgramConfigurator):
 
 class ProgramDataSource(AgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
+    def __init__(
+        self,
+        *,
+        configurator: ProgramConfigurator,
+        main_data_source: bool = False,
+    ) -> None:
+        super().__init__(
+            configurator=configurator,
+            summarizer=AgentSummarizerDefault(configurator),
+            main_data_source=main_data_source,
+        )
+
     def _execute(
         self,
         *,

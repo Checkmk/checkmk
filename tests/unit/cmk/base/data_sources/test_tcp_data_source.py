@@ -10,10 +10,8 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import ServiceCheckResult
-
 from cmk.base.data_sources._abstract import Mode
-from cmk.base.data_sources.agent import AgentHostSections, Summarizer
+from cmk.base.data_sources.agent import AgentHostSections, AgentSummarizerDefault
 from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
 
 
@@ -39,7 +37,7 @@ def test_tcpdatasource_only_from(mode, monkeypatch, result, reported, rule):
     configurator = TCPConfigurator("hostname", "ipaddress", mode=mode)
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
-    summarizer = Summarizer(configurator.host_config)
+    summarizer = AgentSummarizerDefault(configurator)
     assert summarizer._sub_result_only_from({"onlyfrom": reported}) == result
 
 
@@ -77,7 +75,7 @@ class TestSummaryResult:
         return request.param
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_requires_host_sections(self, ipaddress, mode, monkeypatch):
+    def test_defaults(self, ipaddress, mode, monkeypatch):
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
         source = TCPDataSource(configurator=TCPConfigurator(
@@ -86,10 +84,5 @@ class TestSummaryResult:
             mode=mode,
         ))
 
-        with pytest.raises(TypeError):
-            source.get_summary_result()
-
-        source._host_sections = AgentHostSections()
-
-        defaults: ServiceCheckResult = (0, "Version: unknown, OS: unknown", [])
-        assert source.get_summary_result() == defaults
+        summarizer = source.summarizer
+        assert summarizer.summarize(AgentHostSections()) == (0, "Version: unknown, OS: unknown", [])

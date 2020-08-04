@@ -17,7 +17,7 @@ from cmk.base.config import HostConfig, SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentDataSource
+from .agent import AgentConfigurator, AgentDataSource, AgentSummarizerDefault
 
 
 class TCPConfigurator(AgentConfigurator):
@@ -62,6 +62,18 @@ class TCPConfigurator(AgentConfigurator):
 
 
 class TCPDataSource(AgentDataSource):
+    def __init__(
+        self,
+        *,
+        configurator: TCPConfigurator,
+        main_data_source: bool = False,
+    ) -> None:
+        super().__init__(
+            configurator=configurator,
+            summarizer=AgentSummarizerDefault(configurator),
+            main_data_source=main_data_source,
+        )
+
     def _execute(
         self,
         *,

@@ -15,9 +15,9 @@ import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.misc
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.type_defs import (
+    AgentRawData,
     HostName,
     Metric,
-    AgentRawData,
     SectionName,
     ServiceCheckResult,
     ServiceDetails,
@@ -28,16 +28,23 @@ from cmk.utils.werks import parse_check_mk_version
 import cmk.base.config as config
 from cmk.base.check_api_utils import state_markers
 from cmk.base.check_utils import (
+    AgentPersistedSections,
     AgentSectionContent,
     AgentSections,
-    AgentPersistedSections,
     PiggybackRawData,
     SectionCacheInfo,
 )
 from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
-from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections, ABCParser, Mode
+from ._abstract import (
+    ABCConfigurator,
+    ABCDataSource,
+    ABCHostSections,
+    ABCParser,
+    ABCSummarizer,
+    Mode,
+)
 
 __all__ = ["AgentHostSections", "AgentDataSource"]
 
@@ -47,20 +54,28 @@ class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersis
     pass
 
 
-class Summarizer:
+class AgentConfigurator(ABCConfigurator):
+    pass
+
+
+class AgentSummarizer(ABCSummarizer[AgentHostSections]):
+    pass
+
+
+class AgentSummarizerDefault(AgentSummarizer):
     # TODO: refactor
-    def __init__(self, host_config: config.HostConfig):
+    def __init__(self, configurator: AgentConfigurator) -> None:
         super().__init__()
-        self._host_config = host_config
+        self.configurator = configurator
+        self._host_config = self.configurator.host_config
 
     def summarize(
         self,
         host_sections: AgentHostSections,
-        for_checking: bool,
     ) -> ServiceCheckResult:
         return self._summarize(
             host_sections.sections.get(SectionName("check_mk")),
-            for_checking,
+            self.configurator.mode is Mode.CHECKING,
         )
 
     def _summarize(
@@ -115,7 +130,7 @@ class Summarizer:
         expected_version = self._host_config.agent_target_version
 
         if expected_version and agent_version \
-             and not Summarizer._is_expected_agent_version(agent_version, expected_version):
+             and not AgentSummarizerDefault._is_expected_agent_version(agent_version, expected_version):
             expected = u""
             # expected version can either be:
             # a) a single version string
@@ -384,10 +399,6 @@ class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
         )
 
 
-class AgentConfigurator(ABCConfigurator):
-    pass
-
-
 class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedSections,
                                     AgentHostSections],
                       metaclass=abc.ABCMeta):
@@ -409,10 +420,12 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
         self,
         *,
         configurator: ABCConfigurator,
-        main_data_source: bool = False,
+        summarizer: AgentSummarizer,
+        main_data_source: bool,
     ) -> None:
         super().__init__(
             configurator=configurator,
+            summarizer=summarizer,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
             persisted_section_dir=(Path(cmk.utils.paths.var_dir) /
                                    "persisted") if main_data_source else None,
@@ -444,12 +457,3 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
         raw_data = cast(AgentRawData, raw_data)
         # TODO: This does not seem to be needed
         return ensure_binary(raw_data)
-
-    def _summary_result(self) -> ServiceCheckResult:
-        if not isinstance(self._host_sections, AgentHostSections):
-            raise TypeError(self._host_sections)
-
-        return Summarizer(self.configurator.host_config).summarize(
-            self._host_sections,
-            self.configurator.mode is Mode.CHECKING,
-        )

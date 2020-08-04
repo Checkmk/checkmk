@@ -9,6 +9,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 from cmk.base.data_sources import Mode
+from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.piggyback import PiggyBackConfigurator, PiggyBackDataSource
 
 
@@ -31,4 +32,6 @@ def test_attribute_defaults(monkeypatch, ipaddress, mode):
     source = PiggyBackDataSource(configurator=configurator)
     assert source.configurator is configurator
     assert source.id == "piggyback"
-    assert source.get_summary_result() == (0, "", [])
+
+    summarizer = source.summarizer
+    assert summarizer.summarize(AgentHostSections()) == (0, "", [])

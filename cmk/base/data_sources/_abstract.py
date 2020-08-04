@@ -204,6 +204,12 @@ class ABCConfigurator(abc.ABC):
         return json.dumps(self.configure_fetcher())
 
 
+class ABCSummarizer(Generic[BoundedAbstractHostSections], metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def summarize(self, host_sections: BoundedAbstractHostSections) -> ServiceCheckResult:
+        raise NotImplementedError
+
+
 class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                             BoundedAbstractPersistedSections, BoundedAbstractHostSections],
                     metaclass=abc.ABCMeta):
@@ -230,11 +236,13 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self,
         *,
         configurator: ABCConfigurator,
+        summarizer: ABCSummarizer,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
     ) -> None:
         super().__init__()
         self.configurator = configurator
+        self.summarizer = summarizer
         self._logger = self.configurator._logger
         if not cache_dir:
             cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.configurator.id
@@ -476,7 +484,8 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         assert self.configurator.mode is not Mode.NONE
 
         if not self._exception:
-            return self._summary_result()
+            assert self._host_sections is not None
+            return self.summarizer.summarize(self._host_sections)
 
         exc_msg = "%s" % self._exception
 
@@ -494,17 +503,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         status = cast(int, status)
 
         return status, exc_msg + check_api_utils.state_markers[status], []
-
-    @abc.abstractmethod
-    def _summary_result(self) -> ServiceCheckResult:
-        """Produce a source specific summary result in case no exception occured.
-
-        When an exception occured while processing a data source, the generic
-        self.get_summary_result() will handle this.
-
-        The default is to return empty summary information, which will then be
-        ignored by the code that processes the summary result."""
-        raise NotImplementedError()
 
     def exception(self) -> Optional[Exception]:
         """Provides exceptions happened during last self.run() call or None"""

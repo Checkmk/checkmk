@@ -6,6 +6,7 @@
 
 import ast
 import time
+from pathlib import Path
 from typing import Any, cast, Dict, Final, Iterable, List, Optional, Sequence, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
@@ -29,7 +30,14 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
-from ._abstract import ABCConfigurator, ABCDataSource, ABCHostSections, ABCParser, Mode
+from ._abstract import (
+    ABCConfigurator,
+    ABCDataSource,
+    ABCHostSections,
+    ABCParser,
+    ABCSummarizer,
+    Mode,
+)
 
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
@@ -299,14 +307,30 @@ class SNMPParser(ABCParser[SNMPRawData, SNMPHostSections]):
         return persisted_sections
 
 
+class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
+    def summarize(self, host_sections: SNMPHostSections) -> ServiceCheckResult:
+        return 0, "Success", []
+
+
 class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                    SNMPHostSections]):
+    def __init__(
+        self,
+        *,
+        configurator: SNMPConfigurator,
+        cache_dir: Optional[Path] = None,
+        persisted_section_dir: Optional[Path] = None,
+    ) -> None:
+        super().__init__(
+            configurator=configurator,
+            summarizer=SNMPSummarizer(),
+            cache_dir=cache_dir,
+            persisted_section_dir=persisted_section_dir,
+        )
+
     @property
     def _parser(self) -> ABCParser:
         return SNMPParser(self.hostname, self._logger)
-
-    def _summary_result(self) -> ServiceCheckResult:
-        return 0, "Success", []
 
     def _empty_raw_data(self) -> SNMPRawData:
         return {}

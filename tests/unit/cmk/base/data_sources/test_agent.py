@@ -17,8 +17,14 @@ from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import SectionName, SourceType
 
 import cmk.base.config as config
-import cmk.base.data_sources.agent as agent
-from cmk.base.data_sources import ABCConfigurator, Mode
+from cmk.base.data_sources import Mode
+from cmk.base.data_sources.agent import (
+    AgentConfigurator,
+    AgentDataSource,
+    AgentParser,
+    AgentSummarizer,
+    AgentSummarizerDefault,
+)
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 
@@ -52,7 +58,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = agent.AgentParser(hostname, logger).parse(raw_data)
+        ahs = AgentParser(hostname, logger).parse(raw_data)
 
         assert ahs.sections == {
             SectionName("a_section"): [["first", "line"], ["second", "line"]],
@@ -81,7 +87,7 @@ class TestParser:
             b"<<<<>>>>",
         ))
 
-        ahs = agent.AgentParser(hostname, logger).parse(raw_data)
+        ahs = AgentParser(hostname, logger).parse(raw_data)
 
         assert ahs.sections == {}
         assert ahs.cache_info == {}
@@ -116,7 +122,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = agent.AgentParser(hostname, logger).parse(raw_data)
+        ahs = AgentParser(hostname, logger).parse(raw_data)
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
         assert ahs.piggybacked_raw_data == {}
@@ -138,17 +144,22 @@ class TestParser:
         ],
     )  # yapf: disable
     def test_section_header_options(self, headerline, section_name, section_options):
-        parsed_name, parsed_options = agent.AgentParser._parse_section_header(headerline)
+        parsed_name, parsed_options = AgentParser._parse_section_header(headerline)
         assert parsed_name == section_name
         assert parsed_options == section_options
 
 
-class StubConfigurator(ABCConfigurator):
+class StubConfigurator(AgentConfigurator):
     def configure_fetcher(self):
         return {}
 
 
-class StubAgent(agent.AgentDataSource):
+class StubSummarizer(AgentSummarizer):
+    def summarize(self, host_sections):
+        return 0, "", []
+
+
+class StubAgent(AgentDataSource):
     def _execute(self, *args, **kwargs):
         return self._empty_host_sections()
 
@@ -171,7 +182,7 @@ class TestAgentSummaryResult:
 
     @pytest.fixture
     def source(self, hostname, mode):
-        return StubAgent(configurator=StubConfigurator(
+        configurator = StubConfigurator(
             hostname,
             "1.2.3.4",
             mode=mode,
@@ -179,7 +190,12 @@ class TestAgentSummaryResult:
             id_="agent_id",
             cpu_tracking_id="agent_cpu_id",
             description="agent description",
-        ))
+        )
+        return StubAgent(
+            configurator=configurator,
+            summarizer=AgentSummarizerDefault(configurator),
+            main_data_source=False,
+        )
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source, mode):

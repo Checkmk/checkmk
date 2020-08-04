@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Any, cast, Dict, Final, Optional, Tuple
+from typing import Any, Dict, Final, Optional, Tuple
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import get_piggyback_raw_data
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostName,
-    AgentRawData,
-    ServiceCheckResult,
-    SourceType,
-)
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, ServiceCheckResult, SourceType
 
 from cmk.fetchers import PiggyBackDataFetcher
 
@@ -25,7 +19,7 @@ from cmk.base.config import SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentDataSource
+from .agent import AgentConfigurator, AgentDataSource, AgentHostSections, AgentSummarizer
 
 
 class PiggyBackConfigurator(AgentConfigurator):
@@ -60,43 +54,64 @@ class PiggyBackConfigurator(AgentConfigurator):
         return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / hostname)
 
 
+class PiggyBackSummarizer(AgentSummarizer):
+    def __init__(self, configurator: PiggyBackConfigurator):
+        super().__init__()
+        self.configurator = configurator
+
+    def summarize(self, host_sections: AgentHostSections) -> ServiceCheckResult:
+        """Returns useful information about the data source execution
+
+        Return only summary information in case there is piggyback data"""
+
+        if self.configurator.mode is not Mode.CHECKING:
+            # Check_MK Discovery: Do not display information about piggyback files
+            # and source status file
+            return 0, '', []
+
+        summary = self._summarize()
+        if 'piggyback' in self.configurator.host_config.tags and not summary:
+            # Tag: 'Always use and expect piggback data'
+            return 1, 'Missing data', []
+
+        if not host_sections:
+            return 0, "", []
+
+        return summary
+
+    def _summarize(self) -> ServiceCheckResult:
+        states = [0]
+        infotexts = set()
+        for origin in (self.configurator.hostname, self.configurator.ipaddress):
+            for src in get_piggyback_raw_data(
+                    origin if origin else "",
+                    self.configurator.time_settings,
+            ):
+                states.append(src.reason_status)
+                infotexts.add(src.reason)
+        return max(states), ", ".join(infotexts), []
+
+
 class PiggyBackDataSource(AgentDataSource):
     def __init__(
         self,
         *,
         configurator: PiggyBackConfigurator,
-        main_data_source: bool = False,
     ) -> None:
-        super(PiggyBackDataSource, self).__init__(
+        super().__init__(
             configurator=configurator,
-            main_data_source=main_data_source,
+            summarizer=PiggyBackSummarizer(configurator),
+            main_data_source=False,
         )
-        self._summary: Optional[ServiceCheckResult] = None
 
     def _execute(
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> AgentRawData:
-        self._summary = self._summarize()
         with PiggyBackDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
-
-    def _summarize(self) -> ServiceCheckResult:
-        states = [0]
-        infotexts = set()
-        # TODO(ml): Get rid of cast-the code is doubled with the fetcher
-        #           so that this could actually go the the configurator.
-        configurator = cast(PiggyBackConfigurator, self.configurator)
-        for origin in (self.configurator.hostname, self.configurator.ipaddress):
-            for src in get_piggyback_raw_data(
-                    origin if origin else "",
-                    configurator.time_settings,
-            ):
-                states.append(src.reason_status)
-                infotexts.add(src.reason)
-        return max(states), ", ".join(infotexts), []
 
     def _get_raw_data(
         self,
@@ -109,22 +124,3 @@ class PiggyBackDataSource(AgentDataSource):
         """
         self._logger.log(VERBOSE, "Execute data source")
         return self._execute(selected_raw_sections=selected_raw_sections), False
-
-    def _summary_result(self) -> ServiceCheckResult:
-        """Returns useful information about the data source execution
-
-        Return only summary information in case there is piggyback data"""
-
-        if self.configurator.mode is not Mode.CHECKING:
-            # Check_MK Discovery: Do not display information about piggyback files
-            # and source status file
-            return 0, '', []
-
-        if 'piggyback' in self.configurator.host_config.tags and not self._summary:
-            # Tag: 'Always use and expect piggback data'
-            return 1, 'Missing data', []
-
-        if not self._summary:
-            return 0, "", []
-
-        return self._summary

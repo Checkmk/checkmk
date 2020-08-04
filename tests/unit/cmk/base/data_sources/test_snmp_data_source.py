@@ -20,10 +20,8 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources import Mode
-from cmk.base.data_sources.snmp import (
-    SNMPConfigurator,
-    SNMPDataSource,
-)
+from cmk.base.data_sources.agent import AgentHostSections
+from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
 
 
@@ -278,9 +276,8 @@ class TestSNMPSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source):
-        assert source.get_summary_result() \
-                == source._summary_result() \
-                == (0, "Success", [])
+        summarizer = source.summarizer
+        assert summarizer.summarize(AgentHostSections()) == (0, "Success", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):

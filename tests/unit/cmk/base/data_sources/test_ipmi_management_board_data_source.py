@@ -13,7 +13,12 @@ from cmk.utils.type_defs import SourceType
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources import Mode
-from cmk.base.data_sources.ipmi import IPMIConfigurator, IPMIManagementBoardDataSource
+from cmk.base.data_sources.agent import AgentHostSections
+from cmk.base.data_sources.ipmi import (
+    IPMIConfigurator,
+    IPMIManagementBoardDataSource,
+    IPMISummarizer,
+)
 
 
 @pytest.fixture(name="mode", params=(mode for mode in Mode if mode is not Mode.NONE))
@@ -41,8 +46,13 @@ def test_attribute_defaults(mode, monkeypatch):
     assert source.ipaddress is None
     assert source.id == "mgmt_ipmi"
     assert source._cpu_tracking_id == source.id
-    assert source.get_summary_result() == (0, "Version: unknown", [])
-    assert source._get_ipmi_version(None) == "unknown"
+
+    summarizer = source.summarizer
+    assert summarizer.summarize(AgentHostSections()) == (0, "Version: unknown", [])
+
+
+def test_summarizer():
+    assert IPMISummarizer._get_ipmi_version(None) == "unknown"
 
 
 def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):

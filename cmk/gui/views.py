@@ -971,11 +971,6 @@ class ViewFilterList(visuals.VisualFilterList):
 # TODO
 #def _show_context_links(view, rows, show_filters, enable_commands, enable_checkboxes,
 #                        show_checkboxes):
-#    if display_options.enabled(display_options.E):
-#        if _show_availability_context_button(view):
-#            html.context_button(_("Availability"), html.makeuri([("mode", "availability")]),
-#                                "availability")
-#
 #        if _show_combined_graphs_context_button(view):
 #            html.context_button(
 #                _("Combined graphs"),
@@ -989,17 +984,7 @@ class ViewFilterList(visuals.VisualFilterList):
 #                ), "pnp")
 
 
-def _show_availability_context_button(view):
-    if not config.user.may("general.see_availability"):
-        return False
-
-    if "aggr" in view.datasource.infos:
-        return True
-
-    return view.datasource.ident in ["hosts", "services"]
-
-
-def _show_combined_graphs_context_button(view):
+def _show_combined_graphs_context_button(view: View) -> bool:
     if not config.combined_graphs_available():
         return False
 
@@ -2272,15 +2257,16 @@ def _get_context_page_menu_dropdowns(view: View, rows: Rows,
                 name=ident,
                 title=info.title if is_single_info else info.title_plural,
                 topics=list(
-                    _get_context_page_menu_topics(topics, dropdown_visuals,
-                                                  singlecontext_request_vars, mobile)) +
-                host_setup_topic,
+                    _get_context_page_menu_topics(view, info, is_single_info, topics,
+                                                  dropdown_visuals, singlecontext_request_vars,
+                                                  mobile)) + host_setup_topic,
             ))
 
     return dropdowns
 
 
-def _get_context_page_menu_topics(topics: Dict[str, pagetypes.PagetypeTopics],
+def _get_context_page_menu_topics(view: View, info: VisualInfo, is_single_info: bool,
+                                  topics: Dict[str, pagetypes.PagetypeTopics],
                                   dropdown_visuals: Iterator[_Tuple[VisualType, Visual]],
                                   singlecontext_request_vars: Dict[str, str],
                                   mobile: bool) -> Iterator[PageMenuTopic]:
@@ -2298,6 +2284,10 @@ def _get_context_page_menu_topics(topics: Dict[str, pagetypes.PagetypeTopics],
                                                  mobile)
 
         by_topic.setdefault(topic, []).append(entry)
+
+    availability_entry = _get_availability_entry(view, info, is_single_info)
+    if availability_entry:
+        by_topic.setdefault(topics["history"], []).append(availability_entry)
 
     # Return the sorted topics
     for topic, entries in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title())):
@@ -2435,6 +2425,65 @@ def _make_page_menu_entry_for_visual(visual_type: VisualType, visual: Visual,
                          icon_name=visual.get("icon") or "trans",
                          item=make_simple_link(uri),
                          name="cb_" + name)
+
+
+def _get_availability_entry(view: View, info: VisualInfo,
+                            is_single_info: bool) -> Optional[PageMenuEntry]:
+    """Detect whether or not to add an availability link to the dropdown currently being rendered
+
+    In which dropdown to expect the "show availability for current view" link?
+
+    host, service -> service
+    host, services -> services
+    hosts, services -> services
+    hosts, service -> services
+
+    host -> host
+    hosts -> hosts
+
+    aggr -> aggr
+    aggrs -> aggrs
+    """
+    if not _show_current_view_availability_context_button(view):
+        return None
+
+    show = False
+    if info.ident == "service" and is_single_info:
+        show = sorted(view.spec["single_infos"]) == ["host", "service"]
+
+    elif info.ident == "service" and not is_single_info:
+        show = "service" not in view.spec["single_infos"] and view.datasource.ident == "services"
+
+    elif info.ident == "host" and is_single_info:
+        show = view.spec["single_infos"] == ["host"] and view.datasource.ident == "hosts"
+
+    elif info.ident == "host" and not is_single_info:
+        show = "host" not in view.spec["single_infos"] and view.datasource.ident == "hosts"
+
+    elif info.ident == "aggr" and is_single_info:
+        show = view.spec["single_infos"] == ["aggr"] and "aggr" in view.datasource.infos
+
+    elif info.ident == "aggr" and not is_single_info:
+        show = "aggr" not in view.spec["single_infos"] and "aggr" in view.datasource.infos
+
+    if not show:
+        return None
+
+    return PageMenuEntry(
+        title=_("Availability"),
+        icon_name="availability",
+        item=make_simple_link(html.makeuri([("mode", "availability")])),
+    )
+
+
+def _show_current_view_availability_context_button(view: View) -> bool:
+    if not config.user.may("general.see_availability"):
+        return False
+
+    if "aggr" in view.datasource.infos:
+        return True
+
+    return view.datasource.ident in ["hosts", "services"]
 
 
 def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:

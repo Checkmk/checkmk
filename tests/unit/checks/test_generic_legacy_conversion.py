@@ -2822,7 +2822,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'snmp_info',
         'snmp_uptime',
         'solaris_fmadm',
-        'solaris_mem',
         'solaris_multipath',
         'solaris_prtdiag_status',
         'solaris_services',

@@ -216,3 +216,45 @@ register.agent_section(
     parsed_section_name="mem",
     parse_function=parse_aix_memory,
 )
+
+
+def parse_solaris_mem(string_table: type_defs.AgentStringTable) -> Optional[Dict[str, int]]:
+    """
+        >>> import pprint
+        >>> test = 'Memory: 512M phys mem, 353M free mem, 2000M total swap, 2000M free swap'
+        >>> section = parse_solaris_mem([test.split()])
+        >>> pprint.pprint(section)
+        {'MemFree': 370147328,
+         'MemTotal': 536870912,
+         'SwapFree': 2097152000,
+         'SwapTotal': 2097152000}
+
+    """
+    # The 1.2.4 agent seems to create an empty section under some circumstances
+    if not string_table:
+        return None
+
+    units = {'G': 1024**3, 'M': 1024**2, 'K': 1024}
+
+    values = []
+    mem_tokens = " ".join(string_table[0][1:]).split(",")
+    is_total_swap = False
+    for token in mem_tokens:
+        if "total swap" in token:
+            is_total_swap = True
+        raw_value = token.split()[0]
+        values.append(int(raw_value[:-1]) * units[raw_value[-1]])
+
+    # convert swap-in-use to swap-total, as expected by check_memory()
+    if not is_total_swap:
+        values[2] = values[2] + values[3]
+
+    keys = ['MemTotal', 'MemFree', 'SwapTotal', 'SwapFree']
+    return dict(zip(keys, values))
+
+
+register.agent_section(
+    name="solaris_mem",
+    parsed_section_name="mem",
+    parse_function=parse_solaris_mem,
+)

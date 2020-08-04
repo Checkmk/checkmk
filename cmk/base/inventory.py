@@ -419,7 +419,7 @@ def _integrate_table_row(
 ) -> None:
     def _find_matching_row_index(rows, key_columns):
         for index, row in enumerate(rows):
-            if all(row[k] == v for k, v in key_columns.items()):
+            if all(k in row and row[k] == v for k, v in key_columns.items()):
                 return index
         return None
 

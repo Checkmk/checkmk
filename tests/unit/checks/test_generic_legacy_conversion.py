@@ -2087,7 +2087,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'hpux_tunables.semmns',
         'hr_cpu',
         'hr_fs',
-        'hr_mem',
         'hr_ps',
         'huawei_osn_fan',
         'huawei_osn_if',

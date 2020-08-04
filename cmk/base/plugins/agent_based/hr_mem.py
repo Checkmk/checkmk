@@ -56,23 +56,23 @@ def aggregate_meminfo(parsed: PreParsed) -> Dict[str, float]:
                 # seen devices (pfSense), that have lots of additional
                 # entries that are not useful.
                 if type_readable == 'RAM':
-                    meminfo.setdefault("MemTotal", size / 1024.0)
-                    meminfo.setdefault("MemFree", (size - used) / 1024.0)
+                    meminfo.setdefault("MemTotal", size)
+                    meminfo.setdefault("MemFree", (size - used))
                 else:
                     # Strictly speaking, swap space is a part of the hard
                     # disk drive that is used for virtual memory.
                     # We use the name "Swap" here for consistency.
-                    meminfo.setdefault("SwapTotal", size / 1024.0)
-                    meminfo.setdefault("SwapFree", (size - used) / 1024.0)
+                    meminfo.setdefault("SwapTotal", size)
+                    meminfo.setdefault("SwapFree", (size - used))
 
             if descr in ["cached memory", "memory buffers"] and used > 0:
                 # Account for cached memory (this works at least for systems using
                 # the UCD snmpd (such as Linux based applicances)
                 # some devices report negative used cache values...
                 if descr == "cached memory":
-                    meminfo["Cached"] += used / 1024.0
+                    meminfo["Cached"] += used
                 else:
-                    meminfo["Buffers"] += used / 1024.0
+                    meminfo["Buffers"] += used
 
     return meminfo
 
@@ -91,6 +91,7 @@ def parse_hr_mem(string_table: SNMPStringTable) -> Optional[Dict[str, float]]:
 
 register.snmp_section(
     name="hr_mem",
+    parsed_section_name="mem",
     parse_function=parse_hr_mem,
     trees=[
         SNMPTree(

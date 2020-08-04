@@ -22,3 +22,6 @@ icom_ps_volt_default_levels = (13.5, 13.2, 14.1, 14.4)
 
 # chrony:
 ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
+
+# hr_mem (amongst others)
+memused_default_levels = (150.0, 200.0)

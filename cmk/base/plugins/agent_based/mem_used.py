@@ -204,7 +204,7 @@ def deprecate(section: Dict[str, int]) -> DiscoveryGenerator:
     yield  # pylint: disable=unreachable
 
 
-for legacy_plugin_name in ("aix_memory", "solaris_mem"):
+for legacy_plugin_name in ("aix_memory", "solaris_mem", "hr_mem"):
     register.check_plugin(
         name=legacy_plugin_name,
         service_name="Memory",

@@ -588,10 +588,11 @@ class ActivateChangesManager(ActivateChanges):
             True if completed, False if still running.
         """
         start = time.time()
-        while self.is_running():
-            time.sleep(0.5)
-            if timeout and start + timeout >= time.time():
-                break
+        if timeout is not None:
+            while self.is_running():
+                time.sleep(0.5)
+                if timeout and start + timeout >= time.time():
+                    break
 
         completed = not self.is_running()
         return completed

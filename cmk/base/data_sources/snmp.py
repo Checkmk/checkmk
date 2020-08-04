@@ -159,12 +159,14 @@ class SNMPConfigurator(ABCConfigurator):
 
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
-            "oid_infos": self._make_oid_infos(
-                persisted_sections=self.persisted_sections,
-                selected_raw_sections=self.selected_raw_sections,
-                prefetched_sections=self.prefetched_sections,
-            ),
-            "usesnmpwalk_cache": self.use_snmpwalk_cache,
+            "oid_infos": {
+                name: [tree.to_json() for tree in trees] for name, trees in self._make_oid_infos(
+                    persisted_sections=self.persisted_sections,
+                    selected_raw_sections=self.selected_raw_sections,
+                    prefetched_sections=self.prefetched_sections,
+                ).items()
+            },
+            "use_snmpwalk_cache": self.use_snmpwalk_cache,
             "snmp_config": self.snmp_config._asdict(),
         }
 

@@ -12,8 +12,8 @@ import pprint
 import traceback
 import json
 import functools
-from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Tuple as
-                    _Tuple, Union, Iterator, Type)
+from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple as _Tuple, Union,
+                    Iterator, Type)
 
 import livestatus
 from livestatus import SiteId, LivestatusRow
@@ -84,6 +84,7 @@ from cmk.gui.plugins.visuals.utils import (
     visual_type_registry,
     VisualType,
     filter_registry,
+    Filter,
 )
 from cmk.gui.plugins.views.icons.utils import (
     icon_and_action_registry,
@@ -108,6 +109,8 @@ from cmk.gui.plugins.views.utils import (
     SorterEntry,
     make_host_breadcrumb,
     make_service_breadcrumb,
+    Sorter,
+    SorterSpec,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -139,11 +142,8 @@ if not cmk_version.is_raw_edition():
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
-from cmk.gui.type_defs import PainterSpec, HTTPVariables, InfoName
-if TYPE_CHECKING:
-    from cmk.gui.plugins.views.utils import Sorter, SorterSpec
-    from cmk.gui.plugins.visuals.utils import Filter
-    from cmk.gui.type_defs import FilterHeaders, Row, Rows, ColumnName
+from cmk.gui.type_defs import (PainterSpec, HTTPVariables, InfoName, FilterHeaders, Row, Rows,
+                               ColumnName)
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -315,7 +315,7 @@ class View:
         self.context = context
         self._row_limit: Optional[int] = None
         self._only_sites: Optional[List[SiteId]] = None
-        self._user_sorters: 'Optional[List[SorterSpec]]' = None
+        self._user_sorters: Optional[List[SorterSpec]] = None
         self._want_checkboxes: bool = False
 
     @property
@@ -424,7 +424,7 @@ class View:
               "because the layout does not exist.") % (self.name, self.spec.get("layout")))
 
     @property
-    def user_sorters(self) -> 'Optional[List[SorterSpec]]':
+    def user_sorters(self) -> Optional[List[SorterSpec]]:
         """Optional list of sorters to use for rendering the view
 
         The user may click on the headers of tables to change the default view sorting. In the
@@ -433,7 +433,7 @@ class View:
         return self._user_sorters
 
     @user_sorters.setter
-    def user_sorters(self, user_sorters: 'Optional[List[SorterSpec]]') -> None:
+    def user_sorters(self, user_sorters: Optional[List[SorterSpec]]) -> None:
         self._user_sorters = user_sorters
 
     @property
@@ -695,8 +695,8 @@ class GUIViewRenderer(ABCViewRenderer):
         if display_options.enabled(display_options.H):
             html.body_end()
 
-    def _page_menu(self, breadcrumb: Breadcrumb, rows: "Rows",
-                   show_filters: "List[Filter]") -> PageMenu:
+    def _page_menu(self, breadcrumb: Breadcrumb, rows: Rows,
+                   show_filters: List[Filter]) -> PageMenu:
         if not display_options.enabled(display_options.B):
             return PageMenu()  # No buttons -> no menu
 
@@ -842,7 +842,7 @@ class GUIViewRenderer(ABCViewRenderer):
             item=make_simple_link(html.makeuri([("output_format", "json_export")])),
         )
 
-    def _page_menu_entries_export_reporting(self, rows: "Rows") -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
         if not config.reporting_available():
             return
 
@@ -865,7 +865,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 name=buttonid,
             )
 
-    def _extend_display_dropdown(self, menu: PageMenu, show_filters: "List[Filter]") -> None:
+    def _extend_display_dropdown(self, menu: PageMenu, show_filters: List[Filter]) -> None:
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
         display_dropdown.topics.insert(
@@ -891,7 +891,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     entries=list(self._page_menu_entries_filter(show_filters)),
                 ))
 
-    def _page_menu_entries_filter(self, show_filters: "List[Filter]") -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_filter(self, show_filters: List[Filter]) -> Iterator[PageMenuEntry]:
         is_filter_set = html.request.var("filled_in") == "filter"
 
         yield PageMenuEntry(
@@ -943,7 +943,7 @@ class GUIViewRenderer(ABCViewRenderer):
     def _page_menu_dropdown_add_to(self) -> List[PageMenuDropdown]:
         return visuals.page_menu_dropdown_add_to_visual(add_type="view")
 
-    def _render_filter_form(self, show_filters: "List[Filter]") -> str:
+    def _render_filter_form(self, show_filters: List[Filter]) -> str:
         if not display_options.enabled(display_options.F) or not show_filters:
             return ""
 
@@ -1738,7 +1738,7 @@ def create_view_from_valuespec(old_view, view):
 #   '----------------------------------------------------------------------'
 
 
-def show_filter_form(view: View, show_filters: "List[Filter]") -> None:
+def show_filter_form(view: View, show_filters: List[Filter]) -> None:
     html.show_user_errors()
 
     html.begin_form("filter")
@@ -1862,7 +1862,7 @@ def get_row_count(view: View) -> int:
 
 # TODO: Move to View
 # TODO: Investigate and cleanup the side effect of setting the HTTP request variables.
-def _get_view_filters(view: View) -> "List[Filter]":
+def _get_view_filters(view: View) -> List[Filter]:
     # FIXME TODO HACK to make grouping single contextes possible on host/service infos
     # Is hopefully cleaned up soon.
     if view.datasource.ident in ['hosts', 'services']:
@@ -1901,8 +1901,8 @@ def _get_view_filters(view: View) -> "List[Filter]":
 
 
 def _get_view_rows(view: View,
-                   all_active_filters: "List[Filter]",
-                   only_count: bool = False) -> _Tuple[int, "Rows"]:
+                   all_active_filters: List[Filter],
+                   only_count: bool = False) -> _Tuple[int, Rows]:
     rows = _fetch_view_rows(view, all_active_filters, only_count)
 
     # Sorting - use view sorters and URL supplied sorters
@@ -1917,7 +1917,7 @@ def _get_view_rows(view: View,
     return unfiltered_amount_of_rows, rows
 
 
-def _fetch_view_rows(view: View, all_active_filters: "List[Filter]", only_count: bool) -> "Rows":
+def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: bool) -> Rows:
     """Fetches the view rows from livestatus
 
     Besides gathering the information from livestatus it also joins the rows with other information.
@@ -1936,8 +1936,8 @@ def _fetch_view_rows(view: View, all_active_filters: "List[Filter]", only_count:
         columns = _get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters,
                                               view.datasource)
 
-        rows: "Rows" = view.datasource.table.query(view, columns, headers, view.only_sites,
-                                                   view.row_limit, all_active_filters)
+        rows: Rows = view.datasource.table.query(view, columns, headers, view.only_sites,
+                                                 view.row_limit, all_active_filters)
 
         # Now add join information, if there are join columns
         if view.join_cells:
@@ -1957,7 +1957,7 @@ def _fetch_view_rows(view: View, all_active_filters: "List[Filter]", only_count:
 
 
 def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int,
-               rows: "Rows") -> None:
+               rows: Rows) -> None:
     display_options.load_from_html()
 
     # Load from hard painter options > view > hard coded default
@@ -2008,7 +2008,7 @@ def _get_all_active_filters(view: View) -> 'List[Filter]':
     return use_filters
 
 
-def _export_view(view: View, rows: "Rows") -> None:
+def _export_view(view: View, rows: Rows) -> None:
     """Shows the views data in one of the supported machine readable formats"""
     layout = view.layout
     if html.output_format == "csv" and layout.has_individual_csv_export:
@@ -2030,7 +2030,7 @@ def _is_ec_unrelated_host_view(view: View) -> bool:
 
 
 def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
-                                datasource: ABCDataSource) -> 'List[ColumnName]':
+                                datasource: ABCDataSource) -> List[ColumnName]:
     """Compute the list of all columns we need to query via Livestatus
 
     Those are: (1) columns used by the sorters in use, (2) columns use by column- and group-painters
@@ -2076,8 +2076,7 @@ def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
 # TODO: When this is used by the reporting then *all* filters are active.
 # That way the inventory data will always be loaded. When we convert this to the
 # visuals principle the we need to optimize this.
-def get_livestatus_filter_headers(view: View,
-                                  all_active_filters: 'List[Filter]') -> 'FilterHeaders':
+def get_livestatus_filter_headers(view: View, all_active_filters: 'List[Filter]') -> FilterHeaders:
     """Prepare Filter headers for Livestatus"""
     filterheaders = ""
     for filt in all_active_filters:
@@ -2093,7 +2092,7 @@ def get_livestatus_filter_headers(view: View,
 
 
 def _get_needed_join_columns(join_cells: List[JoinCell],
-                             sorters: List[SorterEntry]) -> 'List[ColumnName]':
+                             sorters: List[SorterEntry]) -> List[ColumnName]:
     join_columns = columns_of_cells(join_cells)
 
     # Columns needed for sorters
@@ -2133,7 +2132,7 @@ def _is_inventory_data_needed(group_cells: List[Cell], cells: List[Cell],
     return False
 
 
-def _add_inventory_data(rows: "Rows") -> None:
+def _add_inventory_data(rows: Rows) -> None:
     corrupted_inventory_files = []
     for row in rows:
         if "host_name" not in row:
@@ -2156,7 +2155,7 @@ def _add_inventory_data(rows: "Rows") -> None:
                     ", ".join(sorted(corrupted_inventory_files)))
 
 
-def _add_sla_data(view: View, rows: "Rows") -> None:
+def _add_sla_data(view: View, rows: Rows) -> None:
     import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module,import-outside-toplevel
     sla_params = []
     for cell in view.row_cells:
@@ -2168,8 +2167,8 @@ def _add_sla_data(view: View, rows: "Rows") -> None:
         sla.SLAProcessor(sla_configurations_container).add_sla_data_to_rows(rows)
 
 
-def columns_of_cells(cells: Sequence[Cell]) -> 'Set[ColumnName]':
-    columns: 'Set[ColumnName]' = set()
+def columns_of_cells(cells: Sequence[Cell]) -> Set[ColumnName]:
+    columns: Set[ColumnName] = set()
     for cell in cells:
         columns.update(cell.needed_columns())
     return columns
@@ -2179,7 +2178,7 @@ JoinMasterKey = _Tuple[SiteId, str]
 JoinSlaveKey = str
 
 
-def _do_table_join(view: View, master_rows: "Rows", master_filters: str,
+def _do_table_join(view: View, master_rows: Rows, master_filters: str,
                    sorters: List[SorterEntry]) -> None:
     assert view.datasource.join is not None
     join_table, join_master_column = view.datasource.join
@@ -2265,7 +2264,7 @@ def play_alarm_sounds() -> None:
             break  # only one sound at one time
 
 
-def get_user_sorters() -> 'List[SorterSpec]':
+def get_user_sorters() -> List[SorterSpec]:
     """Returns a list of optionally set sort parameters from HTTP request"""
     return _parse_url_sorters(html.request.var("sort"))
 
@@ -2401,7 +2400,7 @@ def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:
         return
 
     # Handle case where join columns are not present for all rows
-    def safe_compare(compfunc: Callable[['Row', 'Row'], int], row1: 'Row', row2: 'Row') -> int:
+    def safe_compare(compfunc: Callable[[Row, Row], int], row1: Row, row2: Row) -> int:
         if row1 is None and row2 is None:
             return 0
         if row1 is None:
@@ -2410,7 +2409,7 @@ def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:
             return 1
         return compfunc(row1, row2)
 
-    def multisort(e1: 'Row', e2: 'Row') -> int:
+    def multisort(e1: Row, e2: Row) -> int:
         for entry in sorters:
             neg = -1 if entry.negate else 1
 
@@ -2487,7 +2486,7 @@ def painter_choices_with_params(painters: Dict[str, Painter]) -> List[CascadingD
                   key=lambda x: x[1])
 
 
-def get_sorter_title_for_choices(sorter: 'Sorter') -> str:
+def get_sorter_title_for_choices(sorter: Sorter) -> str:
     info_title = "/".join([
         visual_info_registry[info_name]().title_plural
         for info_name in sorted(infos_needed_by_painter(sorter))

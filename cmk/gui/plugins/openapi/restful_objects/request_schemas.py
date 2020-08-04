@@ -498,6 +498,37 @@ class UpdateFolder(BaseSchema):
     )
 
 
+class UpdateFolderEntry(UpdateFolder):
+    folder = EXISTING_FOLDER
+    title = fields.String(required=True, example="Virtual Servers")
+    attributes = AttributesField(
+        description=("Replace all attributes with the ones given in this field. Already set"
+                     "attributes, not given here, will be removed."),
+        example={},
+        missing=dict,
+        required=False,
+    )
+    update_attributes = AttributesField(
+        description=("Only set the attributes which are given in this field. Already set "
+                     "attributes will not be touched."),
+        example={},
+        missing=dict,
+        required=False,
+    )
+
+
+class BulkUpdateFolder(BaseSchema):
+    entries = fields.Nested(UpdateFolderEntry,
+                            many=True,
+                            example=[{
+                                'ident': 'root',
+                                'title': 'Virtual Servers',
+                                'attributes': {
+                                    'key': 'foo'
+                                }
+                            }])
+
+
 class CreateDowntimeBase(BaseSchema):
     downtime_type = fields.String(
         required=True,

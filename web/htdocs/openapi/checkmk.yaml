@@ -434,6 +434,18 @@ components:
             $ref: '#/components/schemas/UpdateContactGroup'
           type: array
       type: object
+    BulkUpdateFolder:
+      properties:
+        entries:
+          example:
+          - attributes:
+              key: foo
+            ident: root
+            title: Virtual Servers
+          items:
+            $ref: '#/components/schemas/UpdateFolderEntry'
+          type: array
+      type: object
     BulkUpdateHost:
       properties:
         entries:
@@ -1296,6 +1308,31 @@ components:
           example: {}
           type: object
       required:
+      - title
+      type: object
+    UpdateFolderEntry:
+      properties:
+        title:
+          example: Virtual Servers
+          type: string
+        attributes:
+          description: Replace all attributes with the ones given in this field. Already
+            setattributes, not given here, will be removed.
+          example: {}
+          type: object
+        update_attributes:
+          description: Only set the attributes which are given in this field. Already
+            set attributes will not be touched.
+          example: {}
+          type: object
+        folder:
+          description: The folder-id of the folder under which this folder shall be
+            created. May be 'root' for the root-folder.
+          example: root
+          pattern: '[a-fA-F0-9]{32}|root'
+          type: string
+      required:
+      - folder
       - title
       type: object
     UpdateHost:
@@ -3225,6 +3262,75 @@ paths:
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{}'\
           \ \\\n    title='Virtual Servers.' \\\n    update_attributes='{}' \\\n \
           \   --json"
+  /domain-types/folder_config/actions/bulk-update/invoke:
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.folder_config.bulk_update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkUpdateFolder'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderCollection'
+          description: ''
+          headers: {}
+      summary: Bulk update folders
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.folder_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/domain-types/folder_config/actions/bulk-update/invoke\"\
+          ,\n    json={\n        'entries': [{\n            'ident': 'root',\n   \
+          \         'title': 'Virtual Servers',\n            'attributes': {\n   \
+          \             'key': 'foo'\n            }\n        }]\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/folder_config/actions/bulk-update/invoke\"\
+          ,\n    method=\"PUT\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        'entries': [{\n            'ident':\
+          \ 'root',\n            'title': 'Virtual Servers',\n            'attributes':\
+          \ {\n                'key': 'foo'\n            }\n        }]\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"entries\": [\n            {\n      \
+          \        \"attributes\": {\n                \"key\": \"foo\"\n         \
+          \     },\n              \"ident\": \"root\",\n              \"title\": \"\
+          Virtual Servers\"\n            }\n          ]\n        }' \\\n    \"$API_URL/domain-types/folder_config/actions/bulk-update/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/domain-types/folder_config/actions/bulk-update/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    entries='[{\"ident\": \"root\", \"title\":\
+          \ \"Virtual Servers\", \"attributes\": {\"key\": \"foo\"}}]' \\\n    --json"
   /domain-types/folder_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -6703,6 +6809,9 @@ tags:
     showWriteOnly={true} />
   name: UpdateFolder
   x-displayName: Updating a folder
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkUpdateFolder"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BulkUpdateFolder
 - description: <SchemaDefinition schemaRef="#/components/schemas/BulkDeleteFolder"
     showReadOnly={true} showWriteOnly={true} />
   name: BulkDeleteFolder
@@ -6820,6 +6929,7 @@ x-tagGroups:
   - CreateFolder
   - BulkCreateFolder
   - UpdateFolder
+  - BulkUpdateFolder
   - BulkDeleteFolder
   - CreateHost
   - BulkCreateHost

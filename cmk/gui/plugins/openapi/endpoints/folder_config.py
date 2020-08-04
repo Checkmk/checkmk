@@ -105,6 +105,39 @@ def update(params):
     return _serve_folder(folder)
 
 
+@endpoint_schema(constructors.domain_type_action_href('folder_config', 'bulk-update'),
+                 'cmk/bulk_update',
+                 method='put',
+                 response_schema=response_schemas.FolderCollection,
+                 request_schema=request_schemas.BulkUpdateFolder)
+def bulk_update(params):
+    """Bulk update folders"""
+    body = params['body']
+    entries = body['entries']
+    folders = []
+
+    for update_details in entries:
+        folder = update_details['folder']
+        title = update_details['title']
+        replace_attributes = update_details.get('attributes')
+        update_attributes = update_details.get('update_attributes')
+        attributes = folder.attributes().copy()
+
+        if replace_attributes:
+            attributes = replace_attributes
+
+        if update_attributes:
+            attributes.update(update_attributes)
+
+        # FIXME: see above in update
+        # You can't update the attributes without updating the title, so the title is mandatory.
+        # This shouldn't be the case though.
+        folder.edit(title, attributes)
+        folders.append(folder)
+
+    return _folders_collection(folders)
+
+
 @endpoint_schema(constructors.object_href('folder_config', '{ident}'),
                  '.../delete',
                  method='delete',

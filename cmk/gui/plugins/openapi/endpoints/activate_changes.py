@@ -39,7 +39,9 @@ def activate_changes(params):
 def _serve_activation_run(activation_id, is_running=False):
     """Serialize the activation response."""
     links = []
+    action = "has completed"
     if is_running:
+        action = "was started"
         links.append(
             constructors.link_endpoint('cmk.gui.plugins.openapi.endpoints.activate_changes',
                                        'cmk/wait-for-completion',
@@ -47,17 +49,11 @@ def _serve_activation_run(activation_id, is_running=False):
     return constructors.domain_object(
         domain_type='activation_run',
         identifier=activation_id,
-        title='Activation %s was started.' % (activation_id,),
+        title=f'Activation {activation_id} {action}.',
         deletable=False,
         editable=False,
         links=links,
     )
-
-
-# POST /domain-types/activation/actions/activate
-#      -> redir to activation_id
-# GET /objects/activation/{activation_id}/
-# GET /objects/activation/{activation_id}/actions/wait-for-completion
 
 
 @endpoint_schema(constructors.object_action_href('activation_run', '{activation_id}',

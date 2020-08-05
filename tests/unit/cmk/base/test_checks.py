@@ -88,7 +88,6 @@ def test_is_snmp_check():
     assert cmk.base.check_utils.is_snmp_check("xxx") is False
     assert cmk.base.check_utils.is_snmp_check("uptime") is False
     assert cmk.base.check_utils.is_snmp_check("uptime") is False
-    assert cmk.base.check_utils.is_snmp_check("snmp_uptime") is True
     assert cmk.base.check_utils.is_snmp_check("mem") is False
     assert cmk.base.check_utils.is_snmp_check("mem.linux") is False
     assert cmk.base.check_utils.is_snmp_check("mem.ding") is False

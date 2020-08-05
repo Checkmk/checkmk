@@ -255,7 +255,7 @@ def check_levels_predictive(
     yield Result(state=value_state, summary=info_text + levels_text)
     yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
     if ref_value:
-        Metric("predict_%s" % metric_name, ref_value)
+        yield Metric("predict_%s" % metric_name, ref_value)
 
 
 #    __     __    _            ____  _                   _   _ _   _ _

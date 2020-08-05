@@ -23,6 +23,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import 
     acknowledge_service_problem,
 )
 from cmk.gui.plugins.webapi import validate_host_attributes
+from cmk.gui.plugins.openapi.endpoints.utils import verify_group_exist
 
 
 class InputAttribute(BaseSchema):
@@ -128,6 +129,12 @@ EXISTING_FOLDER = FolderField(
     pattern="[a-fA-F0-9]{32}|root",
     example="root",
     required=True,
+)
+
+NAME_FIELD = fields.String(
+    required=True,
+    description="A name used as identifier",
+    example='windows',
 )
 
 
@@ -249,9 +256,55 @@ class BulkUpdateHost(BaseSchema):
     )
 
 
+class Group(fields.String):
+    """A field representing a group.
+
+    """
+    default_error_messages = {
+        'should_exist': 'Group missing: {name!r}',
+        'should_not_exist': 'Group {name!r} already exists.',
+    }
+
+    def __init__(
+        self,
+        group_type,
+        example,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        **kwargs,
+    ):
+        self._group_type = group_type
+        self._should_exist = should_exist
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        group_exists = verify_group_exist(self._group_type, value)
+        if self._should_exist and not group_exists:
+            self.fail("should_exist", name=value)
+        elif not self._should_exist and group_exists:
+            self.fail("should_not_exist", name=value)
+
+
+EXISTING_HOST_GROUP_NAME = Group(
+    group_type="host",
+    example="windows",
+    required=True,
+    description="The name of the host group.",
+    should_exist=True,
+)
+
+
 class InputHostGroup(BaseSchema):
     """Creating a host group"""
-    name = fields.String(required=True, example="windows")
+    name = NAME_FIELD
     alias = fields.String(example="Windows Servers")
 
 
@@ -265,6 +318,24 @@ class BulkInputHostGroup(BaseSchema):
         }],
         uniqueItems=True,
     )
+
+
+class UpdateHostGroup(BaseSchema):
+    """Updating a host group"""
+    name = EXISTING_HOST_GROUP_NAME
+    attributes = fields.Nested(InputHostGroup)
+
+
+class BulkUpdateHostGroup(BaseSchema):
+    """Bulk update host groups"""
+    entries = fields.List(fields.Nested(UpdateHostGroup),
+                          example=[{
+                              'name': 'windows',
+                              'attributes': {
+                                  'name': 'windows updated',
+                                  'alias': 'Windows Servers',
+                              },
+                          }])
 
 
 class InputContactGroup(BaseSchema):

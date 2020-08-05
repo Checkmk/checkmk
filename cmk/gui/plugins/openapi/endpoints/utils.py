@@ -13,8 +13,9 @@ from connexion import ProblemException  # type: ignore[import]
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
 from cmk.gui.plugins.openapi.restful_objects import constructors
+
 from cmk.gui.groups import load_group_information, GroupSpecs, GroupSpec
-from cmk.gui.watolib.groups import GroupType
+from cmk.gui.watolib.groups import edit_group, GroupType
 
 
 GroupName = Literal[
@@ -72,6 +73,36 @@ def serialize_group(name: GroupName) -> Any:
         )
 
     return _serializer
+
+
+def update_groups(group_type: GroupType, entries: List[Dict[str, Any]]):
+    groups = []
+    for details in entries:
+        name = details['name']
+        edit_group(name, group_type, details['attributes'])
+        groups.append(name)
+
+    return fetch_specific_groups(groups, group_type)
+
+
+def _verify_groups_exist(group_type: str, entries: List[Dict[str, Any]]):
+    specific_existing_groups = load_group_information()[group_type]
+    missing_groups = []
+    for details in entries:
+        name = details['name']
+        if name not in specific_existing_groups:
+            missing_groups.append(name)
+
+    if missing_groups:
+        raise ProblemException(
+            status=400,
+            title=f"Some {group_type} groups do not exist",
+            detail=f"The following {group_type} groups do not exist: {', '.join(missing_groups)}")
+
+
+def verify_group_exist(group_type: str, name):
+    specific_existing_groups = load_group_information()[group_type]
+    return name in specific_existing_groups
 
 
 def load_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Optional[str]]:

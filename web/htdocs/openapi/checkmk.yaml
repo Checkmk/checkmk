@@ -432,6 +432,18 @@ components:
             $ref: '#/components/schemas/UpdateHostEntry'
           type: array
       type: object
+    BulkUpdateHostGroup:
+      properties:
+        entries:
+          example:
+          - attributes:
+              alias: Windows Servers
+              name: windows updated
+            name: windows
+          items:
+            $ref: '#/components/schemas/UpdateHostGroup'
+          type: array
+      type: object
     ConcreteFolder:
       discriminator:
         mapping:
@@ -998,6 +1010,7 @@ components:
     InputHostGroup:
       properties:
         name:
+          description: A name used as identifier
           example: windows
           type: string
         alias:
@@ -1311,6 +1324,17 @@ components:
           type: object
       required:
       - host_name
+      type: object
+    UpdateHostGroup:
+      properties:
+        attributes:
+          $ref: '#/components/schemas/InputHostGroup'
+        name:
+          description: The name of the host group.
+          example: windows
+          type: string
+      required:
+      - name
       type: object
   securitySchemes:
     BearerAuth:
@@ -4489,6 +4513,78 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[\"windows\", \"panels\"]' \\\n  \
           \  --json"
+  /domain-types/host_group_config/actions/bulk-update/invoke:
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_group_config.bulk_update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkUpdateHostGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+          headers: {}
+      summary: Bulk update host-groups
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_group_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/domain-types/host_group_config/actions/bulk-update/invoke\"\
+          ,\n    json={\n        'entries': [{\n            'name': 'windows',\n \
+          \           'attributes': {\n                'name': 'windows updated',\n\
+          \                'alias': 'Windows Servers'\n            }\n        }]\n\
+          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/host_group_config/actions/bulk-update/invoke\"\
+          ,\n    method=\"PUT\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        'entries': [{\n            'name':\
+          \ 'windows',\n            'attributes': {\n                'name': 'windows\
+          \ updated',\n                'alias': 'Windows Servers'\n            }\n\
+          \        }]\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"entries\": [\n            {\n      \
+          \        \"attributes\": {\n                \"alias\": \"Windows Servers\"\
+          ,\n                \"name\": \"windows updated\"\n              },\n   \
+          \           \"name\": \"windows\"\n            }\n          ]\n        }'\
+          \ \\\n    \"$API_URL/domain-types/host_group_config/actions/bulk-update/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/domain-types/host_group_config/actions/bulk-update/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    entries='[{\"name\": \"windows\", \"attributes\"\
+          : {\"name\": \"windows updated\", \"alias\": \"Windows Servers\"}}]' \\\n\
+          \    --json"
   /objects/host/{host_name}/collections/services:
     get:
       description: ''
@@ -5959,7 +6055,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
-          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -5968,8 +6064,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'passphrase':\
-          \ 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
+          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -6128,7 +6224,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
-          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -6138,7 +6234,7 @@ paths:
           \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({'passphrase': 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n\
+          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -6457,6 +6553,10 @@ tags:
 - description: <SchemaDefinition schemaRef="#/components/schemas/BulkDeleteHostGroup"
     showReadOnly={true} showWriteOnly={true} />
   name: BulkDeleteHostGroup
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkUpdateHostGroup"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BulkUpdateHostGroup
+  x-displayName: Bulk update host groups
 - name: cmk.gui.plugins.openapi.endpoints.service
   x-displayName: Service status endpoints
 - name: cmk.gui.plugins.openapi.endpoints.service_discovery
@@ -6529,6 +6629,7 @@ x-tagGroups:
   - InputHostGroup
   - BulkInputHostGroup
   - BulkDeleteHostGroup
+  - BulkUpdateHostGroup
   - InputServiceGroup
   - BulkInputServiceGroup
   - BulkDeleteServiceGroup

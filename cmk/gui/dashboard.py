@@ -493,9 +493,14 @@ def draw_dashboard(name: DashboardName) -> None:
     # In case we have a dashboard / dashlet that requires context information that is not available
     # yet, display a message to the user to insert the missing information.
     missing_single_infos: Set[InfoName] = set()
-    unconfigured_single_infos: Set[InfoName] = set()
     missing_mandatory_context_filters = not set(board_context.keys()).issuperset(
         set(board["mandatory_context_filters"]))
+
+    dashlet_instances = _get_dashlets(name, board)
+
+    unconfigured_single_infos: Set[InfoName] = set()
+    for dashlet_instance in dashlet_instances:
+        unconfigured_single_infos.update(dashlet_instance.unconfigured_single_infos())
 
     html.add_body_css_class("dashboard")
     breadcrumb = _dashboard_breadcrumb(name, title)
@@ -512,15 +517,10 @@ def draw_dashboard(name: DashboardName) -> None:
     refresh_dashlets = []  # Dashlets with automatic refresh, for Javascript
     dashlet_coords = []  # Dimensions and positions of dashlet
     on_resize_dashlets = {}  # javascript function to execute after ressizing the dashlet
-    for nr, dashlet in enumerate(board["dashlets"]):
+    for dashlet_instance in dashlet_instances:
         dashlet_content_html = u""
         dashlet_title_html = u""
-        dashlet_instance = None
         try:
-            dashlet_type = get_dashlet_type(dashlet)
-            dashlet_instance = dashlet_type(name, board, nr, dashlet)
-
-            unconfigured_single_infos.update(dashlet_instance.unconfigured_single_infos())
             missing_single_infos.update(dashlet_instance.missing_single_infos())
 
             if missing_single_infos or missing_mandatory_context_filters:
@@ -532,7 +532,7 @@ def draw_dashboard(name: DashboardName) -> None:
 
             on_resize = get_dashlet_on_resize(dashlet_instance)
             if on_resize:
-                on_resize_dashlets[nr] = on_resize
+                on_resize_dashlets[dashlet_instance.dashlet_id] = on_resize
 
             dashlet_title_html = render_dashlet_title_html(dashlet_instance)
             dashlet_content_html = _render_dashlet_content(board,
@@ -541,12 +541,10 @@ def draw_dashboard(name: DashboardName) -> None:
                                                            mtime=board["mtime"])
 
         except Exception as e:
-            if dashlet_instance is None:
-                dashlet_instance = _fallback_dashlet_instance(name, board, dashlet, nr)
-            dashlet_content_html = render_dashlet_exception_content(dashlet, nr, e)
+            dashlet_content_html = render_dashlet_exception_content(dashlet_instance, e)
 
         # Now after the dashlet content has been calculated render the whole dashlet
-        dashlet_container_begin(nr, dashlet)
+        dashlet_container_begin(dashlet_instance)
         draw_dashlet(dashlet_instance, dashlet_content_html, dashlet_title_html)
         dashlet_container_end()
         dashlet_coords.append(get_dashlet_dimensions(dashlet_instance))
@@ -586,6 +584,21 @@ cmk.dashboard.register_event_handlers();
     html.body_end()  # omit regular footer with status icons, etc.
 
 
+def _get_dashlets(name: DashboardName, board: DashboardConfig) -> List[Dashlet]:
+    """Return dashlet instances of the dashboard"""
+    dashlets: List[Dashlet] = []
+    for nr, dashlet in enumerate(board["dashlets"]):
+        try:
+            dashlet_type = get_dashlet_type(dashlet)
+            dashlet = dashlet_type(name, board, nr, dashlet)
+        except Exception:
+            dashlet = _fallback_dashlet_instance(name, board, dashlet, nr)
+
+        dashlets.append(dashlet)
+
+    return dashlets
+
+
 def _dashboard_breadcrumb(name: str, title: str) -> Breadcrumb:
     breadcrumb = make_main_menu_breadcrumb(MegaMenuMonitoring)
 
@@ -597,14 +610,12 @@ def _dashboard_breadcrumb(name: str, title: str) -> Breadcrumb:
     return breadcrumb
 
 
-def dashlet_container_begin(nr: DashletId, dashlet: DashletConfig) -> None:
-    dashlet_type = get_dashlet_type(dashlet)
-
-    classes = ['dashlet', dashlet['type']]
-    if dashlet_type.is_resizable():
+def dashlet_container_begin(dashlet: Dashlet) -> None:
+    classes = ['dashlet', dashlet.type_name()]
+    if dashlet.is_resizable():
         classes.append('resizable')
 
-    html.open_div(id_="dashlet_%d" % nr, class_=classes)
+    html.open_div(id_="dashlet_%d" % dashlet.dashlet_id, class_=classes)
 
 
 def dashlet_container_end() -> None:
@@ -655,14 +666,13 @@ def _update_or_show(board: DashboardConfig, dashlet_instance: Dashlet, is_update
         return html.drain()
 
 
-def render_dashlet_exception_content(dashlet_spec: DashletConfig, dashlet_id: int,
-                                     e: Exception) -> str:
+def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> str:
 
     if not isinstance(e, MKUserError):
         # Do not write regular error messages related to normal user interaction and validation to
         # the web.log
-        logger.exception("Problem while rendering dashlet %d of type %s", dashlet_id,
-                         dashlet_spec["type"])
+        logger.exception("Problem while rendering dashlet %d of type %s", dashlet.dashlet_id,
+                         dashlet.type_name())
 
     with html.plugged():
         if isinstance(e, MKException):
@@ -675,14 +685,14 @@ def render_dashlet_exception_content(dashlet_spec: DashletConfig, dashlet_id: in
             html.show_error(
                 _("Problem while rendering dashlet %d of type %s: %s. Have a look at "
                   "<tt>var/log/web.log</tt> for further information.") %
-                (dashlet_id, dashlet_spec["type"], exc_txt))
+                (dashlet.dashlet_id, dashlet.type_name(), exc_txt))
             return html.drain()
 
         crash_reporting.handle_exception_as_gui_crash_report(
             details={
-                "dashlet_id": dashlet_id,
-                "dashlet_type": dashlet_spec["type"],
-                "dashlet_spec": dashlet_spec,
+                "dashlet_id": dashlet.dashlet_id,
+                "dashlet_type": dashlet.type_name(),
+                "dashlet_spec": dashlet.dashlet_spec,
             })
         return html.drain()
 
@@ -1012,7 +1022,7 @@ def ajax_dashlet() -> None:
     except Exception as e:
         if dashlet_instance is None:
             dashlet_instance = _fallback_dashlet_instance(name, board, the_dashlet, ident)
-        dashlet_content_html = render_dashlet_exception_content(the_dashlet, ident, e)
+        dashlet_content_html = render_dashlet_exception_content(dashlet_instance, e)
 
     html.write_html(HTML(dashlet_content_html))
 

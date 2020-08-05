@@ -26,7 +26,7 @@ export function initialize_sidebar(update_interval, refresh, restart, static_) {
 
     execute_sidebar_scheduler();
 
-    g_scrollbar = utils.add_simplebar_scrollbar(document.getElementById("side_content"));
+    g_scrollbar = utils.add_simplebar_scrollbar("side_content");
     g_scrollbar.getScrollElement().addEventListener("scroll", function() {
         store_scroll_position();
         return false;

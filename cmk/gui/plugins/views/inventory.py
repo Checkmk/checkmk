@@ -1229,7 +1229,7 @@ declare_invtable_view(
 multisite_builtin_views["inv_host"] = {
     # General options
     'datasource': 'hosts',
-    'topic': _('Inventory'),
+    'topic': 'inventory',
     'title': _('Inventory of host'),
     'linktitle': _('Inventory'),
     'description': _('The complete hardware- and software inventory of a host'),
@@ -1546,7 +1546,7 @@ declare_1to1_sorter("invhist_changed", cmp_simple_number)
 multisite_builtin_views["inv_host_history"] = {
     # General options
     'datasource': 'invhist',
-    'topic': _('Inventory'),
+    'topic': 'inventory',
     'title': _('Inventory history of host'),
     'linktitle': _('Inventory History'),
     'description': _('The history for changes in hardware- and software inventory of a host'),

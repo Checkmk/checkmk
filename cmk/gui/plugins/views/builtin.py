@@ -353,6 +353,7 @@ multisite_builtin_views.update({
         'sorters': [],
         'linktitle': _('Host comments'),
         'title': _('Comments of host'),
+        "topic": "monitoring",
     },
     'comments_of_service': {
         'column_headers': 'pergroup',
@@ -381,6 +382,7 @@ multisite_builtin_views.update({
         'sorters': [],
         'linktitle': _('Comments'),
         'title': _('Comments of service'),
+        "topic": "monitoring",
     },
     'downtimes': {
         'column_headers': 'pergroup',
@@ -544,7 +546,8 @@ multisite_builtin_views.update({
         'show_filters': [],
         'sorters': [],
         'linktitle': _('Host downtimes'),
-        'title': _('Downtimes of host')
+        'title': _('Downtimes of host'),
+        'topic': "history",
     },
     'downtimes_of_service': {
         'column_headers': 'pergroup',
@@ -576,7 +579,8 @@ multisite_builtin_views.update({
         'show_filters': [],
         'sorters': [],
         'linktitle': _('Downtimes'),
-        'title': _('Downtimes of service')
+        'title': _('Downtimes of service'),
+        'topic': "history",
     },
     'host': {
         'browser_reload': 30,
@@ -605,7 +609,8 @@ multisite_builtin_views.update({
             ('svcdescr', False),
         ],
         'linktitle': _('Services'),
-        'title': _('Services of Host')
+        'title': _('Services of Host'),
+        'topic': 'monitoring',
     },
     'host_export': {
         'browser_reload': 30,
@@ -1593,7 +1598,8 @@ multisite_builtin_views.update({
         'show_filters': [],
         'sorters': [],
         'linktitle': _('Host status'),
-        'title': _('Status of Host')
+        'title': _('Status of Host'),
+        'topic': 'monitoring',
     },
     'pendingsvc': {
         'browser_reload': 30,
@@ -1884,6 +1890,7 @@ multisite_builtin_views.update({
             ('site_host', False),
         ],
         'title': _('Graphs of services with description:'),
+        "topic": "history",
     },
     'servicegroup': {
         'browser_reload': 30,
@@ -2119,6 +2126,7 @@ multisite_builtin_views.update({
         ],
         'linktitle': _('Service graphs'),
         'title': _('Service graphs of host'),
+        "topic": "history",
     },
     'recentsvc': {
         'browser_reload': 30,
@@ -2314,7 +2322,8 @@ multisite_builtin_views.update({
             ('log_time', True),
             ('log_lineno', True),
         ],
-        'title': _('Events of host')
+        'title': _('Events of host'),
+        'topic': "history",
     },
     'host_dt_hist': {
         'browser_reload': 0,
@@ -2348,7 +2357,8 @@ multisite_builtin_views.update({
             ('log_time', True),
             ('log_lineno', True),
         ],
-        'title': _('Historic downtimes of host')
+        'title': _('Historic downtimes of host'),
+        "topic": "history",
     },
     'svcevents': {
         'browser_reload': 0,
@@ -2384,7 +2394,8 @@ multisite_builtin_views.update({
             ('log_time', True),
             ('log_lineno', True),
         ],
-        'title': _('Events of service')
+        'title': _('Events of service'),
+        'topic': "history",
     },
     'svc_dt_hist': {
         'browser_reload': 0,
@@ -2418,7 +2429,8 @@ multisite_builtin_views.update({
             ('log_time', True),
             ('log_lineno', True),
         ],
-        'title': _('Historic downtimes of service')
+        'title': _('Historic downtimes of service'),
+        "topic": "history",
     },
     'hostsvcevents': {
         'browser_reload': 0,
@@ -2457,7 +2469,8 @@ multisite_builtin_views.update({
             ('log_time', True),
             ('log_lineno', True),
         ],
-        'title': _('Events of host & services')
+        'title': _('Events of host & services'),
+        'topic': "history",
     },
     'logfile': {
         'browser_reload': 0,
@@ -3904,6 +3917,7 @@ multisite_builtin_views.update({
             ('log_lineno', True),
         ],
         'title': _('Notifications of host'),
+        'topic': "history",
     },
     'hostsvcnotifications': {
         'browser_reload': 0,
@@ -3963,6 +3977,7 @@ multisite_builtin_views.update({
             ('log_lineno', True),
         ],
         'title': _('Notifications of host & services'),
+        'topic': "history",
     },
     'notifications': {
         'browser_reload': 0,
@@ -4149,6 +4164,7 @@ multisite_builtin_views.update({
             ('log_lineno', True),
         ],
         'title': _('Service Notifications'),
+        'topic': "history",
     },
     'contactnotifications': {
         'browser_reload': 0,
@@ -4206,6 +4222,7 @@ multisite_builtin_views.update({
             ('log_lineno', True),
         ],
         'title': _('Notifications of contact'),
+        'topic': "history",
     },
     #   +----------------------------------------------------------------------+
     #   |     _    _           _     _                     _ _                 |

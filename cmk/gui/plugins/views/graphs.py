@@ -57,6 +57,7 @@ multisite_builtin_views.update({
         'linktitle': _('Graphs'),
         'icon': 'pnp',
         'title': _('Service Graphs'),
+        "topic": "history",
     },
     'host_graphs': {
         'browser_reload': 30,
@@ -84,6 +85,7 @@ multisite_builtin_views.update({
         'linktitle': _('Graphs'),
         'icon': 'pnp',
         'title': _('Host Graphs'),
+        "topic": "history",
     },
 })
 

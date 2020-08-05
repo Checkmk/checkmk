@@ -1512,6 +1512,12 @@ class PagetypeTopics(Overridable):
                 "description": "",
                 "sort_index": 10,
             },
+            "monitoring": {
+                "title": _("Monitoring"),
+                "icon_name": "topic_monitoring",
+                "description": "",
+                "sort_index": 10,
+            },
             "problems": {
                 "title": _("Problems"),
                 "icon_name": "topic_problems",

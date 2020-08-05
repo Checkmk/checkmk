@@ -17,7 +17,6 @@ from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.data_sources.agent as agent
-
 from cmk.base import check_table, config
 from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.api.agent_based.type_defs import CheckPlugin
@@ -52,27 +51,51 @@ def make_scenario(hostname, tags):
 
 @pytest.mark.parametrize("hostname, tags, sources", [
     ("agent-host", {}, [TCPDataSource, PiggyBackDataSource]),
-    ("ping-host", {
-        "agent": "no-agent"
-    }, [PiggyBackDataSource]),
-    ("snmp-host", {
-        "agent": "no-agent",
-        "snmp_ds": "snmp-v2"
-    }, [SNMPDataSource, PiggyBackDataSource]),
-    ("snmp-host", {
-        "agent": "no-agent",
-        "snmp_ds": "snmp-v1"
-    }, [SNMPDataSource, PiggyBackDataSource]),
-    ("dual-host", {
-        "agent": "cmk-agent",
-        "snmp_ds": "snmp-v2"
-    }, [TCPDataSource, SNMPDataSource, PiggyBackDataSource]),
-    ("all-agents-host", {
-        "agent": "all-agents"
-    }, [ProgramDataSource, ProgramDataSource, PiggyBackDataSource]),
-    ("all-special-host", {
-        "agent": "special-agents"
-    }, [ProgramDataSource, PiggyBackDataSource]),
+    (
+        "ping-host",
+        {
+            "agent": "no-agent"
+        },
+        [PiggyBackDataSource],
+    ),
+    (
+        "snmp-host",
+        {
+            "agent": "no-agent",
+            "snmp_ds": "snmp-v2"
+        },
+        [SNMPDataSource, PiggyBackDataSource],
+    ),
+    (
+        "snmp-host",
+        {
+            "agent": "no-agent",
+            "snmp_ds": "snmp-v1"
+        },
+        [SNMPDataSource, PiggyBackDataSource],
+    ),
+    (
+        "dual-host",
+        {
+            "agent": "cmk-agent",
+            "snmp_ds": "snmp-v2"
+        },
+        [TCPDataSource, SNMPDataSource, PiggyBackDataSource],
+    ),
+    (
+        "all-agents-host",
+        {
+            "agent": "all-agents"
+        },
+        [ProgramDataSource, ProgramDataSource, PiggyBackDataSource],
+    ),
+    (
+        "all-special-host",
+        {
+            "agent": "special-agents"
+        },
+        [ProgramDataSource, PiggyBackDataSource],
+    ),
 ])
 def test_get_sources(monkeypatch, hostname, mode, tags, sources):
     ts = make_scenario(hostname, tags)

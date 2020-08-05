@@ -6,7 +6,6 @@
 
 import sys
 from pathlib import Path
-import socket
 
 import importlib
 
@@ -15,18 +14,12 @@ import pytest  # type: ignore[import]
 import cmk.fetchers.controller
 
 from cmk.fetchers.controller import (
-    FetcherFactory,
     Header,
     make_failure_answer,
     make_success_answer,
     make_waiting_answer,
     build_json_file_path,
     run_fetchers,
-)
-from cmk.fetchers import (
-    SNMPDataFetcher,
-    TCPDataFetcher,
-    ProgramDataFetcher,
 )
 
 from cmk.base.fetcher_config import FetcherConfig
@@ -70,52 +63,8 @@ class TestControllerApi:
         # More complicated method of testing may be written in the future
         monkeypatch.setattr(cmk.fetchers.controller, "write_data", write_to_stdout)
 
-    # TODO (sk): rework this test - simplify parametrize and make individual tests
-    @pytest.mark.parametrize("fetcher_name, fetcher_params, fetcher_class", [
-        ("snmp", {
-            "oid_infos": {},
-            "use_snmpwalk_cache": False,
-            "snmp_config": {
-                "is_ipv6_primary": False,
-                "hostname": "heute",
-                "ipaddress": "127.0.0.1",
-                "credentials": "public",
-                "port": 161,
-                "is_bulkwalk_host": False,
-                "is_snmpv2or3_without_bulkwalk_host": False,
-                "bulk_walk_size_of": 10,
-                "timing": {},
-                "oid_range_limits": [],
-                "snmpv3_contexts": [],
-                "character_encoding": None,
-                "is_usewalk_host": False,
-                "is_inline_snmp_host": False,
-                "record_stats": False
-            },
-        }, SNMPDataFetcher),
-        ("program", {
-            "cmdline": "/bin/true",
-            "stdin": None,
-            "is_cmc": False,
-        }, ProgramDataFetcher),
-        ("tcp", {
-            "family": socket.AF_INET,
-            "address": "1.2.3.4",
-            "timeout": 0.1,
-            "encryption_settings": {
-                "encryption": "settings"
-            }
-        }, TCPDataFetcher),
-    ])
-    @pytest.mark.usefixtures("scenario")
-    def test_fetcher_factory(self, fetcher_name, fetcher_params, fetcher_class):
-        ff = FetcherFactory()
-        assert isinstance(ff.make(fetcher_name, fetcher_params), fetcher_class)
-
-    @pytest.mark.parametrize("the_host", [
-        "heute",
-        "rrd_host",
-    ])
+    @pytest.mark.skip("TODO(ml,sk)")
+    @pytest.mark.parametrize("the_host", ["heute", "rrd_host"])
     @pytest.mark.usefixtures("scenario")
     def test_run_fetchers(self, the_host, capsys):
         fetcher_config = FetcherConfig()

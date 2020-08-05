@@ -9,7 +9,7 @@ from typing import Optional
 
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
-from cmk.fetchers import TCPDataFetcher
+from cmk.fetchers import FetcherType, TCPDataFetcher
 
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.check_utils import AgentRawData
@@ -35,6 +35,7 @@ class TCPConfigurator(AgentConfigurator):
             ipaddress,
             mode=mode,
             source_type=SourceType.HOST,
+            fetcher_type=FetcherType.TCP,
             description=TCPConfigurator._make_description(hostname, ipaddress),
             id_="agent",
             cpu_tracking_id="agent",

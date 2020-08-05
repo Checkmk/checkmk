@@ -16,6 +16,8 @@ from testlib.base import Scenario
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import SectionName, SourceType
 
+from cmk.fetchers import FetcherType
+
 import cmk.base.config as config
 from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import (
@@ -150,6 +152,10 @@ class TestParser:
 
 
 class StubConfigurator(AgentConfigurator):
+    def __init__(self, *args, **kwargs):
+        kwargs["fetcher_type"] = FetcherType.NONE
+        super().__init__(*args, **kwargs)
+
     def configure_fetcher(self):
         return {}
 

@@ -12,7 +12,7 @@ from six import ensure_str
 import cmk.utils.paths
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
-from cmk.fetchers import ProgramDataFetcher
+from cmk.fetchers import FetcherType, ProgramDataFetcher
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -40,6 +40,7 @@ class ProgramConfigurator(AgentConfigurator):
             ipaddress,
             mode=mode,
             source_type=SourceType.HOST,
+            fetcher_type=FetcherType.PROGRAM,
             description=ProgramConfigurator._make_description(
                 cmdline,
                 stdin,

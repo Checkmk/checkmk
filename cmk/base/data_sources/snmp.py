@@ -21,7 +21,7 @@ from cmk.snmplib.type_defs import (
     SNMPTree,
 )
 
-from cmk.fetchers import factory, SNMPDataFetcher
+from cmk.fetchers import factory, FetcherType, SNMPDataFetcher
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -109,6 +109,7 @@ class SNMPConfigurator(ABCConfigurator):
             ipaddress,
             mode=mode,
             source_type=source_type,
+            fetcher_type=FetcherType.SNMP,
             description=SNMPConfigurator._make_description(hostname, ipaddress, title=title),
             id_=id_,
             cpu_tracking_id=cpu_tracking_id,

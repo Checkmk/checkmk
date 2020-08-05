@@ -16,7 +16,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.fetchers import IPMIDataFetcher
+from cmk.fetchers import FetcherType, IPMIDataFetcher
 
 from cmk.base.config import HostConfig, IPMICredentials, SelectedRawSections
 from cmk.base.exceptions import MKAgentError
@@ -38,6 +38,7 @@ class IPMIConfigurator(AgentConfigurator):
             ipaddress,
             mode=mode,
             source_type=SourceType.MANAGEMENT,
+            fetcher_type=FetcherType.IPMI,
             description=IPMIConfigurator._make_description(
                 ipaddress,
                 cast(IPMICredentials,

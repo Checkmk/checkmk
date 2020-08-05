@@ -12,7 +12,7 @@ from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import get_piggyback_raw_data
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, ServiceCheckResult, SourceType
 
-from cmk.fetchers import PiggyBackDataFetcher
+from cmk.fetchers import FetcherType, PiggyBackDataFetcher
 
 import cmk.base.config as config
 from cmk.base.config import SelectedRawSections
@@ -35,6 +35,7 @@ class PiggyBackConfigurator(AgentConfigurator):
             ipaddress,
             mode=mode,
             source_type=SourceType.HOST,
+            fetcher_type=FetcherType.PIGGYBACK,
             description=PiggyBackConfigurator._make_description(hostname),
             id_="piggyback",
             cpu_tracking_id="agent",

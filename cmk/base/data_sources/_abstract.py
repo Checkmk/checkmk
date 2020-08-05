@@ -6,7 +6,6 @@
 
 import abc
 import enum
-import json
 import logging
 import sys
 from pathlib import Path
@@ -20,13 +19,9 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKSNMPError, MKTerminate, MKTimeout
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostName,
-    SectionName,
-    ServiceCheckResult,
-    SourceType,
-)
+from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
+
+from cmk.fetchers.controller import FetcherType
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -183,6 +178,7 @@ class ABCConfigurator(abc.ABC):
         *,
         mode: Mode,
         source_type: SourceType,
+        fetcher_type: FetcherType,
         description: str,
         id_: str,
         cpu_tracking_id: str,
@@ -191,6 +187,7 @@ class ABCConfigurator(abc.ABC):
         self.ipaddress: Final[Optional[str]] = ipaddress
         self.mode: Final[Mode] = mode
         self.source_type: Final[SourceType] = source_type
+        self.fetcher_type: Final[FetcherType] = fetcher_type
         self.description: Final[str] = description
         self.id: Final[str] = id_
         self.cpu_tracking_id: Final[str] = cpu_tracking_id
@@ -219,9 +216,6 @@ class ABCConfigurator(abc.ABC):
     @abc.abstractmethod
     def configure_fetcher(self) -> Dict[str, Any]:
         raise NotImplementedError
-
-    def configure_fetcher_json(self) -> str:
-        return json.dumps(self.configure_fetcher())
 
 
 class ABCSummarizer(Generic[BoundedAbstractHostSections], metaclass=abc.ABCMeta):

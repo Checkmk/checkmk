@@ -78,7 +78,7 @@ def inv_if(info, params, inventory_tree, status_data_tree):
         except ValueError:
             if_index_nr = ""
 
-        interfaces.append({
+        interface_row = {
             "index": if_index_nr,
             "description": if_descr,
             "alias": if_alias,
@@ -87,23 +87,22 @@ def inv_if(info, params, inventory_tree, status_data_tree):
             "oper_status": int(if_oper_status),
             "admin_status": int(if_admin_status),  # 1(up) or 2(down)
             "port_type": int(if_type),
-        })
+        }
 
+        if if_type in usage_port_types:
+            total_ethernet_ports += 1
+            if_available = if_oper_status == '2' and state_age > unused_duration
+            if if_available:
+                available_ethernet_ports += 1
+            interface_row["available"] = if_available
+
+        interfaces.append(interface_row)
         status_data.append({
             "index": if_index_nr,
             "description": if_descr,
             "alias": if_alias,
             "last_change": int(last_change_timestamp),
         })
-
-        if if_type in usage_port_types:
-            if_available = if_oper_status == '2' and state_age > unused_duration
-            total_ethernet_ports += 1
-            if if_available:
-                available_ethernet_ports += 1
-            interfaces[-1]["available"] = if_available
-        else:
-            if_available = None
 
     node = inventory_tree.get_list("networking.interfaces:")
     node.extend(sorted(interfaces, key=lambda r: r.get('index')))

@@ -108,6 +108,10 @@ div#top_heading {
       background-color: $navigation-bg-color;
       border-bottom: 2px solid $navigation-bg-color;
 
+      &.disabled {
+        display: none;
+      }
+
       &:focus {
         outline: none;
       }

@@ -125,6 +125,7 @@ class PageMenuDropdown:
     name: str
     title: str
     topics: List[PageMenuTopic] = field(default_factory=list)
+    is_enabled: bool = True
 
     @property
     def any_advanced_entries(self) -> bool:
@@ -402,7 +403,8 @@ class PageMenuRenderer:
             if dropdown.is_empty:
                 continue
 
-            html.open_div(class_="menucontainer")
+            html.open_div(id_="page_menu_dropdown_%s" % dropdown.name,
+                          class_=["menucontainer", "disabled" if not dropdown.is_enabled else None])
 
             self._show_dropdown_trigger(dropdown)
             self._show_dropdown_area(dropdown)

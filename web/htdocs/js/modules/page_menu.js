@@ -101,6 +101,24 @@ export function set_checkbox_entry(id_stem, checked) {
     }
 }
 
+export function enable_dropdown(id) {
+    toggle_dropdown(id, true);
+}
+
+export function disable_dropdown(id) {
+    toggle_dropdown(id, false);
+}
+
+function toggle_dropdown(id, enabled) {
+    var dropdown = document.getElementById("page_menu_dropdown_" + id);
+    if (enabled) {
+        utils.remove_class(dropdown, "disabled");
+    }
+    else {
+        utils.add_class(dropdown, "disabled");
+    }
+}
+
 export function enable_menu_entry(id, enabled) {
     var from, to;
     if (enabled) {

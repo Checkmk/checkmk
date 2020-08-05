@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple, Any
 
 import psutil  # type: ignore[import]
+import werkzeug.urls
 from six import ensure_binary, ensure_str
 
 from livestatus import (
@@ -48,7 +49,7 @@ from cmk.utils.werks import parse_check_mk_version
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.type_defs import ConfigDomainName
+from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
 from cmk.gui.sites import (
@@ -60,7 +61,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, request as _request
 from cmk.gui.log import logger
 from cmk.gui.exceptions import (
     MKGeneralException,
@@ -606,7 +607,7 @@ class ActivateChangesManager(ActivateChanges):
         # However, if the file is still missing after a considerable amount
         # of time, we consider this site activation as dead
         seconds_since_start = time.time() - self._time_started
-        if site_state == {} and seconds_since_start > html.request.request_timeout - 10:
+        if site_state == {} and seconds_since_start > _request.request_timeout - 10:
             return False
 
         if site_state == {} or site_state["_phase"] == PHASE_INITIALIZED:
@@ -1578,14 +1579,14 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         """Calls a remote automation call push-snapshot which is handled by AutomationPushSnapshot()"""
         site = config.site(self._site_id)
 
-        url = html.makeuri_contextless(
+        url = append_query_string(
+            site["multisiteurl"] + "automation.py",
             [
                 ("command", "push-snapshot"),
                 ("secret", site["secret"]),
                 ("siteid", site["id"]),
                 ("debug", config.debug and "1" or ""),
             ],
-            filename=site["multisiteurl"] + "automation.py",
         )
 
         response_text = self._upload_file(url, site.get('insecure', False))
@@ -1814,7 +1815,7 @@ def verify_remote_site_config(site_id: SiteId) -> None:
 
 
 def _save_pre_17_site_globals_on_slave_site(tarcontent: bytes) -> None:
-    tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(html)
+    tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(object)
     try:
         if not os.path.exists(tmp_dir):
             store.mkdir(tmp_dir)
@@ -2085,7 +2086,7 @@ class AutomationGetConfigSyncState(AutomationCommand):
     def get_request(self) -> List[ReplicationPath]:
         return [
             ReplicationPath(*e)
-            for e in ast.literal_eval(html.request.get_ascii_input_mandatory("replication_paths"))
+            for e in ast.literal_eval(_request.get_ascii_input_mandatory("replication_paths"))
         ]
 
     def execute(self, request: List[ReplicationPath]) -> GetConfigSyncStateResponse:
@@ -2191,14 +2192,14 @@ class AutomationReceiveConfigSync(AutomationCommand):
         return "receive-config-sync"
 
     def get_request(self) -> ReceiveConfigSyncRequest:
-        site_id = SiteId(html.request.get_ascii_input_mandatory("site_id"))
+        site_id = SiteId(_request.get_ascii_input_mandatory("site_id"))
         verify_remote_site_config(site_id)
 
         return ReceiveConfigSyncRequest(
             site_id,
-            html.request.uploaded_file("sync_archive")[2],
-            ast.literal_eval(html.request.get_ascii_input_mandatory("to_delete")),
-            html.request.get_integer_input_mandatory("config_generation"),
+            _request.uploaded_file("sync_archive")[2],
+            ast.literal_eval(_request.get_ascii_input_mandatory("to_delete")),
+            _request.get_integer_input_mandatory("config_generation"),
         )
 
     def execute(self, request: ReceiveConfigSyncRequest) -> bool:
@@ -2305,3 +2306,38 @@ def activate_changes_wait(activation_id: ActivationId,
     if manager.wait_for_completion(timeout=timeout):
         return manager.get_state()
     return None
+
+
+def append_query_string(url: str, variables: HTTPVariables) -> str:
+    """Append a query string to an URL.
+
+    Non-str values are converted to str, None values are omitted in the result.
+
+    Examples:
+
+        None values are filtered out:
+
+            >>> append_query_string("foo", [('b', 2), ('c', None), ('a', '1'),])
+            'foo?a=1&b=2'
+
+        Empty values are kept:
+
+            >>> append_query_string("foo", [('c', ''), ('a', 1), ('b', '2'),])
+            'foo?a=1&b=2&c='
+
+    Args:
+        url:
+            The url to append the query string to.
+        variables:
+            The query string variables as a list of tuples.
+
+    Returns:
+        The url with the query string appended.
+
+    """
+    if variables:
+        # Encoding would work even with byte-string keys, yet these are
+        # excluded via our type signature.
+        url += "?" + werkzeug.urls.url_encode(variables, sort=True)
+
+    return url

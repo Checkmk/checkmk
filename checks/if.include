@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.interfaces as interfaces
+
 # ==================================================================================================
 # THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FILE ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
@@ -288,12 +290,7 @@ def if_extract_node(line, has_nodeinfo):
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-def if_render_mac_address(ifPhysAddress):
-    if not isinstance(ifPhysAddress, list):
-        mac_bytes = [ord(x) for x in ifPhysAddress]
-    else:
-        mac_bytes = ifPhysAddress
-    return (":".join(["%02s" % hex(m)[2:] for m in mac_bytes]).replace(' ', '0')).upper()
+if_render_mac_address = interfaces.render_mac_address
 
 
 # ==================================================================================================

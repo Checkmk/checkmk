@@ -25,9 +25,10 @@ from cmk.base.api.agent_based.type_defs import ValueStore
 # annotating this breaks validation.
 # yet another reason to not use this.
 def parse_to_string_table(string_table):
-    """Identity function
+    """A function that returns its argument unchanged.
 
-    Provided for developers who don't want to implement a parse function (which they should).
+    Provided for developers who don't want to implement a parse function
+    in their section definition (which they should).
     """
     return string_table
 
@@ -42,6 +43,20 @@ def parse_to_string_table(string_table):
 
 def all_of(spec_0: SNMPDetectSpec, spec_1: SNMPDetectSpec,
            *specs: SNMPDetectSpec) -> SNMPDetectSpec:
+    """Detect the device if all passed specifications are met
+
+    Args:
+        spec_0: A valid specification for SNMP device detection
+        spec_1: A valid specification for SNMP device detection
+
+    Returns:
+        A valid specification for SNMP device detection
+
+    Example:
+
+        >>> DETECT = all_of(exists("1.2.3.4"), contains("1.2.3.5", "foo"))
+
+    """
     reduced = SNMPDetectSpec(l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1))
     if not specs:
         return reduced
@@ -49,6 +64,19 @@ def all_of(spec_0: SNMPDetectSpec, spec_1: SNMPDetectSpec,
 
 
 def any_of(*specs: SNMPDetectSpec) -> SNMPDetectSpec:
+    """Detect the device if any of the passed specifications are met
+
+    Args:
+        spec: A valid specification for SNMP device detection
+
+    Returns:
+        A valid specification for SNMP device detection
+
+    Example:
+
+        >>> DETECT = any_of(exists("1.2.3.4"), exists("1.2.3.5"))
+
+    """
     return SNMPDetectSpec(sum(specs, []))
 
 
@@ -59,50 +87,139 @@ def _negate(spec: SNMPDetectSpec) -> SNMPDetectSpec:
 
 
 def matches(oidstr: str, value: str) -> SNMPDetectSpec:
+    """Detect the device if the value of the OID matches the expression
+
+    Args:
+        oidstr: The OID to match the value against
+        value: The regular expression that the value of the OID should match
+
+    Returns:
+        A valid specification for SNMP device detection
+
+    Example:
+
+        >>> DETECT = match("1.2.3.4", ".* Server")
+
+    """
     return SNMPDetectSpec([[(oidstr, value, True)]])
 
 
 def contains(oidstr: str, value: str) -> SNMPDetectSpec:
+    """Detect the device if the value of the OID contains the given string
+
+    Args:
+        oidstr: The OID to match the value against
+        value: The substring expected to be in the OIDs value
+
+    Returns:
+        A valid specification for SNMP device detection
+
+    Example:
+
+        >>> DETECT = contains("1.2.3", "isco")
+
+    """
     return SNMPDetectSpec([[(oidstr, '.*%s.*' % re.escape(value), True)]])
 
 
 def startswith(oidstr: str, value: str) -> SNMPDetectSpec:
+    """Detect the device if the value of the OID starts with the given string
+
+    Args:
+        oidstr: The OID to match the value against
+        value: The expected start of the OIDs value
+
+    Returns:
+        A valid specification for SNMP device detection
+
+    Example:
+
+        >>> DETECT = startswith("1.2.3", "Sol")
+
+    """
     return SNMPDetectSpec([[(oidstr, '%s.*' % re.escape(value), True)]])
 
 
 def endswith(oidstr: str, value: str) -> SNMPDetectSpec:
+    """Detect the device if the value of the OID ends with the given string
+
+    Args:
+        oidstr: The OID to match the value against
+        value: The expected end of the OIDs value
+
+    Returns:
+        A valid specification for SNMP device detection
+
+    Example:
+
+        >>> DETECT = endswith("1.2.3", "nix")
+
+    """
     return SNMPDetectSpec([[(oidstr, '.*%s' % re.escape(value), True)]])
 
 
 def equals(oidstr: str, value: str) -> SNMPDetectSpec:
+    """Detect the device if the value of the OID equals the given string
+
+    Args:
+        oidstr: The OID to match the value against
+        value: The expected value of the OID
+
+    Returns:
+        A valid specification for SNMP device detection
+
+    Example:
+
+        >>> DETECT = equals("1.2.3", "MySwitch")
+
+    """
     return SNMPDetectSpec([[(oidstr, '%s' % re.escape(value), True)]])
 
 
 def exists(oidstr: str) -> SNMPDetectSpec:
+    """Detect the device if the OID exists at all
+
+    Args:
+        oidstr: The OID that is required to exist
+
+    Returns:
+        A valid specification for SNMP device detection
+
+    Example:
+
+        >>> DETECT = exists("1.2.3")
+
+    """
     return SNMPDetectSpec([[(oidstr, '.*', True)]])
 
 
 def not_matches(oidstr: str, value: str) -> SNMPDetectSpec:
+    """The negation of :func:`matches`"""
     return _negate(matches(oidstr, value))
 
 
 def not_contains(oidstr: str, value: str) -> SNMPDetectSpec:
+    """The negation of :func:`contains`"""
     return _negate(contains(oidstr, value))
 
 
 def not_startswith(oidstr: str, value: str) -> SNMPDetectSpec:
+    """The negation of :func:`startswith`"""
     return _negate(startswith(oidstr, value))
 
 
 def not_endswith(oidstr: str, value: str) -> SNMPDetectSpec:
+    """The negation of :func:`endswith`"""
     return _negate(endswith(oidstr, value))
 
 
 def not_equals(oidstr: str, value: str) -> SNMPDetectSpec:
+    """The negation of :func:`equals`"""
     return _negate(equals(oidstr, value))
 
 
 def not_exists(oidstr: str) -> SNMPDetectSpec:
+    """The negation of :func:`exists`"""
     return _negate(exists(oidstr))
 
 
@@ -185,18 +302,31 @@ def check_levels(
 ) -> Generator[Union[Result, Metric], None, None]:
     """Generic function for checking a value against levels.
 
-    :param value:        Currently measured value
-    :param levels_upper: Pair of upper thresholds. If value is larger than these, the
-                         service goes to **WARN** or **CRIT**, respecively.
-    :param levels_lower: Pair of lower thresholds. If value is smaller than these, the
-                         service goes to **WARN** or **CRIT**, respecively.
-    :param metric_name:  Name of the datasource in the RRD that corresponds to this value
-                         or None in order to skip perfdata
-    :param render_func:  Single argument function to convert the value from float into a
-                         human readable string.
-                         readable fashion
-    :param label:        Label to prepend to the output.
-    :param boundaries:   Minimum and maximum to add to the metric.
+    Args:
+
+        value:        The currently measured value
+        levels_upper: A pair of upper thresholds. If value is larger than these, the
+                      service goes to **WARN** or **CRIT**, respecively.
+        levels_lower: A pair of lower thresholds. If value is smaller than these, the
+                      service goes to **WARN** or **CRIT**, respecively.
+        metric_name:  The name of the datasource in the RRD that corresponds to this value
+                      or None in order not to generate a metric.
+        render_func:  A single argument function to convert the value from float into a
+                      human readable string.
+        label:        The label to prepend to the output.
+        boundaries:   Minimum and maximum to add to the metric.
+
+    Example:
+
+        >>> result, = check_levels(
+        ...     23.0,
+        ...     levels_upper=(12., 42.),
+        ...     label="Fridge",
+        ...      render_func=lambda v: "%.1f°",
+        ... )
+        >>> print(result.summary)
+        'Fridge: 23.0° (warn/crit at 12.0°/42.0°)'
+
     """
     if render_func is None:
         render_func = lambda f: "%.2f" % f
@@ -223,19 +353,22 @@ def check_levels_predictive(
 ) -> Generator[Union[Result, Metric], None, None]:
     """Generic function for checking a value against levels.
 
-    :param value:        Currently measured value
-    :param levels:       Predictive levels. These are used automatically.
-                         Lower levels are imposed if the passed dictionary contains "lower"
-                         as key, upper levels are imposed if it contains "upper" or
-                         "levels_upper_min" as key.
-                         If value is lower/higher than these, the service goes to **WARN**
-                         or **CRIT**, respecively.
-    :param metric_name:  Name of the datasource in the RRD that corresponds to this value
-    :param render_func:  Single argument function to convert the value from float into a
-                         human readable string.
-                         readable fashion
-    :param label:        Label to prepend to the output.
-    :param boundaries:   Minimum and maximum to add to the metric.
+    Args:
+
+        value:        Currently measured value
+        levels:       Predictive levels. These are used automatically.
+                      Lower levels are imposed if the passed dictionary contains "lower"
+                      as key, upper levels are imposed if it contains "upper" or
+                      "levels_upper_min" as key.
+                      If value is lower/higher than these, the service goes to **WARN**
+                      or **CRIT**, respecively.
+        metric_name:  Name of the datasource in the RRD that corresponds to this value
+        render_func:  Single argument function to convert the value from float into a
+                      human readable string.
+                      readable fashion
+        label:        Label to prepend to the output.
+        boundaries:   Minimum and maximum to add to the metric.
+
     """
     if render_func is None:
         render_func = "%.2f".format
@@ -329,12 +462,14 @@ def get_average(value_store: ValueStore, key: str, time: float, value: float,
                 backlog_minutes: float) -> float:
     """Return new average based on current value and last average
 
-    :param value_store:     The Mapping that holds the last value. Usually this will
-                            be the value store provided by the API.
-    :param key:             Unique ID for storing this average until the next check
-    :param time:            Timestamp of new value
-    :param value:           The new value
-    :param backlog_minutes: Averaging horizon in minutes
+    Args:
+
+        value_store:     The Mapping that holds the last value. Usually this will
+                         be the value store provided by the API.
+        key:             Unique ID for storing this average until the next check
+        time:            Timestamp of new value
+        value:           The new value
+        backlog_minutes: Averaging horizon in minutes
 
     This function returns the new average value aₙ as the weighted sum of the
     current value xₙ and the last average:
@@ -359,6 +494,10 @@ def get_average(value_store: ValueStore, key: str, time: float, value: float,
 
         * the initial value becomes irrelevant, and
         * for beginning timeseries we reach a meaningful value more quickly.
+
+    Returns:
+
+        The computed average
 
     """
     stored_value = value_store.get(key, ())

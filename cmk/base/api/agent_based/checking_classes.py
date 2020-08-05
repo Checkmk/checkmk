@@ -20,13 +20,20 @@ _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
 
 
 class Service(ABCDiscoveryGenerated):
-    """This class represents services that the discover function yields
+    """Class representing services that the discover function yields
 
-    my_drive_service = Service(
-        item="disc_name",
-        parameters={...},
-        labels=[ServiceLabel(...)],
-    )
+    Args:
+        item (str): The item of the service
+        parameters (dict): The determined discovery parameters for this service
+        labels (List[ServiceLabel]): A list of labels attached to this service
+
+    Example:
+        my_drive_service = Service(
+            item="disc_name",
+            parameters={...},
+            labels=[ServiceLabel(...)],
+        )
+
     """
     def __init__(self,
                  *,

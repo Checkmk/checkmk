@@ -518,27 +518,32 @@ def draw_dashboard(name: DashboardName) -> None:
     dashlet_coords = []  # Dimensions and positions of dashlet
     on_resize_dashlets = {}  # javascript function to execute after ressizing the dashlet
     for dashlet_instance in dashlet_instances:
-        dashlet_content_html = u""
-        dashlet_title_html = u""
+        dashlet_content_html = ""
+        dashlet_title_html = ""
         try:
             missing_single_infos.update(dashlet_instance.missing_single_infos())
-
             if missing_single_infos or missing_mandatory_context_filters:
-                continue  # Do not render in case required context information is missing
+                dashlet_title_html = _("Filter context missing")
+                dashlet_content_html = str(
+                    html.render_warning(
+                        _("Unable to render this dashlet, "
+                          "because we miss some required context information (%s). Please update the "
+                          "form on the right to make this dashlet render.") %
+                        ", ".join(sorted(missing_single_infos))))
+            else:
+                refresh = get_dashlet_refresh(dashlet_instance)
+                if refresh:
+                    refresh_dashlets.append(refresh)
 
-            refresh = get_dashlet_refresh(dashlet_instance)
-            if refresh:
-                refresh_dashlets.append(refresh)
+                on_resize = get_dashlet_on_resize(dashlet_instance)
+                if on_resize:
+                    on_resize_dashlets[dashlet_instance.dashlet_id] = on_resize
 
-            on_resize = get_dashlet_on_resize(dashlet_instance)
-            if on_resize:
-                on_resize_dashlets[dashlet_instance.dashlet_id] = on_resize
-
-            dashlet_title_html = render_dashlet_title_html(dashlet_instance)
-            dashlet_content_html = _render_dashlet_content(board,
-                                                           dashlet_instance,
-                                                           is_update=False,
-                                                           mtime=board["mtime"])
+                dashlet_title_html = render_dashlet_title_html(dashlet_instance)
+                dashlet_content_html = _render_dashlet_content(board,
+                                                               dashlet_instance,
+                                                               is_update=False,
+                                                               mtime=board["mtime"])
 
         except Exception as e:
             dashlet_content_html = render_dashlet_exception_content(dashlet_instance, e)

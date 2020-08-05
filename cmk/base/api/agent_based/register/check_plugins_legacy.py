@@ -27,8 +27,6 @@ from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
 
 DUMMY_RULESET_NAME = "non_existent_auto_migration_dummy_rule"
 
-CLUSTER_LEGACY_MODE_FROM_HELL = "cluster_legacy_mode_from_hell"
-
 # There are so many check_info keys, make sure we didn't miss one.
 CONSIDERED_KEYS = {
     "check_function",
@@ -248,12 +246,12 @@ def _create_wrapped_parameters(
 
 
 def _create_cluster_legacy_mode_from_hell(check_function: Callable) -> Callable:
-    @functools.wraps(check_function)
+    # copy signature of check function:
+    @functools.wraps(check_function, ('__attributes__',))
     def cluster_legacy_mode_from_hell(*args, **kwargs):
-        raise NotImplementedError("This just a dummy to pass validation.")
+        raise NotImplementedError("This just a dummy to pass validation is.")
         yield  # pylint: disable=unreachable
 
-    cluster_legacy_mode_from_hell.__name__ = CLUSTER_LEGACY_MODE_FROM_HELL
     return cluster_legacy_mode_from_hell
 
 

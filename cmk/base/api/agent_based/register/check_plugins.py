@@ -125,7 +125,8 @@ def _validate_check_ruleset(ruleset_name: Optional[str],
 
 def unfit_for_clustering_wrapper(check_function):
     """Return a cluster_check_function that displays a generic warning"""
-    @functools.wraps(check_function)
+    # copy signature of check_function
+    @functools.wraps(check_function, ("__attributes__",))
     def unfit_for_clustering(*args, **kwargs):
         yield Result(
             state=state.UNKNOWN,

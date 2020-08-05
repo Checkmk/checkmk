@@ -66,10 +66,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes, value_store
-from cmk.base.api.agent_based.register.check_plugins_legacy import (
-    CLUSTER_LEGACY_MODE_FROM_HELL,
-    wrap_parameters,
-)
+from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import CheckGenerator, CheckPlugin, Parameters
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
@@ -388,7 +385,7 @@ def execute_check(multi_host_sections: MultiHostSections, host_config: config.Ho
 
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
-            plugin.cluster_check_function.__name__ == CLUSTER_LEGACY_MODE_FROM_HELL):
+            plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
         return _execute_check_legacy_mode(
             multi_host_sections,
             host_config.hostname,

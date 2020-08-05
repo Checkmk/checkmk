@@ -505,13 +505,13 @@ def _evaluate_literal(
     if percent:
         varname = varname[:-3]
 
-    color = None
     if ":" in varname:
         varname, scalarname = varname.split(":")
         value = translated_metrics[varname]["scalar"].get(scalarname)
-        color = scalar_colors.get(scalarname)
+        color = scalar_colors.get(scalarname, "#808080")
     else:
         value = translated_metrics[varname]["value"]
+        color = translated_metrics[varname]["color"]
 
     if percent:
         maxvalue = translated_metrics[varname]["scalar"]["max"]
@@ -520,12 +520,9 @@ def _evaluate_literal(
         else:
             value = 0.0
         unit = unit_info["%"]
-
     else:
         unit = translated_metrics[varname]["unit"]
 
-    if color is None:
-        color = parse_color_into_hexrgb(metric_info.get(varname, {}).get("color", "#808080"))
     return value, unit, color
 
 

@@ -173,7 +173,7 @@ def recreate_openapi_spec(mocker, _cache=[]):  # pylint: disable=dangerous-defau
 
 
 @pytest.fixture()
-def suppress_automation_calls(mocker, inline_background_jobs):
+def suppress_automation_calls(mocker):
     """Stub out calls to the "automation" system
 
     This is needed because in order for automation calls to work, the site needs to be set up

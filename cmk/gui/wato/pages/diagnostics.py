@@ -251,9 +251,6 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
                    job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
 
-        job_interface.send_progress_update(repr(diagnostics_parameters))
-        job_interface.send_progress_update(repr(serialize_wato_parameters(diagnostics_parameters)))
-
         site = diagnostics_parameters["site"]
         timeout = html.request.request_timeout - 2
         result = check_mk_automation(site,

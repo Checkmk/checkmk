@@ -96,9 +96,9 @@ public:
     std::filesystem::path logArchivePath() const override;
     std::filesystem::path rrdcachedSocketPath() const override;
 
-    MetricLocation metricLocation(const void *object,
-                                  const Metric::MangledName &name,
-                                  const RRDColumn::Table &table) const override;
+    MetricLocation metricLocation(
+        const RRDColumn::ObjectPointer &object,
+        const Metric::MangledName &name) const override;
 
     Encoding dataEncoding() override;
     size_t maxResponseSize() override;

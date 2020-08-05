@@ -9,7 +9,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include "RRDColumn.h"
-
 class Row;
 
 class ServiceRRDColumn : public RRDColumn {
@@ -17,8 +16,7 @@ public:
     using RRDColumn::RRDColumn;
 
 private:
-    [[nodiscard]] Table table() const override;
-    [[nodiscard]] const void *getObject(Row row) const override;
+    [[nodiscard]] ObjectPointer getObjectPointer(Row row) const override;
 };
 
 #endif

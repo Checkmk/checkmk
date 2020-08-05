@@ -45,7 +45,7 @@ void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
     // JSON we could output nested lists. In CSV mode this is not possible and
     // we rather stay compatible with CSV mode.
     ListRenderer l(r);
-    auto data = getData(_mc, _args, getObject(row), table());
+    auto data = getData(_mc, _args, getObjectPointer(row));
     l.output(data.start);
     l.output(data.end);
     l.output(data.step);
@@ -57,7 +57,7 @@ void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
 std::vector<std::string> RRDColumn::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds timezone_offset) const {
-    auto data = getData(_mc, _args, getObject(row), table());
+    auto data = getData(_mc, _args, getObjectPointer(row));
     std::vector<std::string> strings;
     strings.push_back(std::to_string(
         std::chrono::system_clock::to_time_t(data.start + timezone_offset)));
@@ -119,9 +119,9 @@ std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
 // static
 RRDColumn::Data RRDColumn::getData(MonitoringCore *mc,
                                    const RRDColumnArgs &args,
-                                   const void *object, Table table) {
+                                   const ObjectPointer &object) {
     Logger *logger = mc->loggerRRD();
-    if (object == nullptr) {
+    if (object.ptr == nullptr) {
         Warning(logger) << "Missing object pointer for RRDColumn";
         return {};
     }
@@ -182,8 +182,7 @@ RRDColumn::Data RRDColumn::getData(MonitoringCore *mc,
         std::string cf;
         tie(var, cf) = getVarAndCF(token);
 
-        auto location =
-            mc->metricLocation(object, Metric::MangledName(var), table);
+        auto location = mc->metricLocation(object, Metric::MangledName(var));
         std::string rrd_varname;
         if (location.path_.empty() || location.data_source_name_.empty()) {
             rrd_varname = replace_all(var.string(), ".", '_');

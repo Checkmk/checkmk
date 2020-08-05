@@ -32,11 +32,15 @@ public:
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const override;
 
-    enum class Table { objects, services, hosts };
+    // HACK
+    struct ObjectPointer {
+        enum class Kind { objects, services, hosts };
+        const void *ptr;
+        Kind kind;
+    };
 
 private:
-    [[nodiscard]] virtual const void *getObject(Row row) const = 0;
-    [[nodiscard]] virtual Table table() const = 0;
+    [[nodiscard]] virtual ObjectPointer getObjectPointer(Row row) const = 0;
 
     MonitoringCore *_mc;
     RRDColumnArgs _args;
@@ -49,7 +53,7 @@ private:
     };
 
     static Data getData(MonitoringCore *mc, const RRDColumnArgs &args,
-                        const void *object, Table table);
+                        const ObjectPointer &object);
 };
 
 #endif  // RRDColumn_h

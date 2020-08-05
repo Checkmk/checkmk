@@ -17,6 +17,7 @@
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
 #include "Logger.h"
+#include "RRDColumn.h"
 #include "StringUtils.h"
 #include "contact_fwd.h"
 #include "pnp4nagios.h"
@@ -183,25 +184,25 @@ std::filesystem::path NagiosCore::logArchivePath() const {
 std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     return _paths._rrdcached_socket;
 }
-[[nodiscard]] MetricLocation NagiosCore::metricLocation(
-    const void *object, const Metric::MangledName &name,
-    const RRDColumn::Table &table) const {
-    switch (table) {
-        case RRDColumn::Table::services: {
-            const auto *svc = static_cast<const service *>(object);
+MetricLocation NagiosCore::metricLocation(
+    const RRDColumn::ObjectPointer &object,
+    const Metric::MangledName &name) const {
+    switch (object.kind) {
+        case RRDColumn::ObjectPointer::Kind::services: {
+            const auto *svc = static_cast<const service *>(object.ptr);
             return {rrdPath() / svc->host_name /
                         pnp_cleanup(std::string{svc->description} + "_" +
                                     name.string() + ".rrd"),
                     "1"};
         }
-        case RRDColumn::Table::hosts: {
-            const auto *hst = static_cast<const host *>(object);
+        case RRDColumn::ObjectPointer::Kind::hosts: {
+            const auto *hst = static_cast<const host *>(object.ptr);
             return {rrdPath() / hst->name /
                         pnp_cleanup(std::string{"_HOST_"} + "_" +
                                     name.string() + ".rrd"),
                     "1"};
         }
-        case RRDColumn::Table::objects:
+        case RRDColumn::ObjectPointer::Kind::objects:
             throw std::runtime_error("invalid parameter");
     }
     return {};  // make GCC happy :-)

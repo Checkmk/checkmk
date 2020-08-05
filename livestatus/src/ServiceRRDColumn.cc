@@ -6,13 +6,8 @@
 #include "ServiceRRDColumn.h"
 
 #include "Row.h"
-
 class service;
 
-[[nodiscard]] RRDColumn::Table ServiceRRDColumn::table() const {
-    return RRDColumn::Table::services;
-}
-
-const void *ServiceRRDColumn::getObject(Row row) const {
-    return columnData<service>(row);
+RRDColumn::ObjectPointer ServiceRRDColumn::getObjectPointer(Row row) const {
+    return {columnData<service>(row), RRDColumn::ObjectPointer::Kind::services};
 }

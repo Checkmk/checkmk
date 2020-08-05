@@ -118,9 +118,9 @@ public:
     [[nodiscard]] virtual std::filesystem::path logArchivePath() const = 0;
     [[nodiscard]] virtual std::filesystem::path rrdcachedSocketPath() const = 0;
 
-    virtual MetricLocation metricLocation(
-        const void *object, const Metric::MangledName &name,
-        const RRDColumn::Table &table) const = 0;
+    [[nodiscard]] virtual MetricLocation metricLocation(
+        const RRDColumn::ObjectPointer &object,
+        const Metric::MangledName &name) const = 0;
 
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;

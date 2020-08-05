@@ -75,24 +75,21 @@ def test_disable_read_to_file_cache(source, monkeypatch, fs):
         lambda path, contents: fs.create_file(path, contents=contents),
     )
 
-    file_cache = source._make_file_cache()
     table: SNMPTable = []
     raw_data: SNMPRawData = {SectionName("X"): table}
     # End of setup.
 
     assert not source.is_agent_cache_disabled()
 
-    file_cache = source._make_file_cache()
-    file_cache.write(raw_data)
+    source._file_cache.write(raw_data)
 
-    assert file_cache.path.exists()
-    assert file_cache.read() == raw_data
+    assert source._file_cache.path.exists()
+    assert source._file_cache.read() == raw_data
 
     source.disable_data_source_cache()
     assert source.is_agent_cache_disabled()
 
-    file_cache = source._make_file_cache()
-    assert file_cache.read() is None
+    assert source._file_cache.read() is None
 
 
 @patchfs
@@ -109,7 +106,6 @@ def test_disable_write_to_file_cache(source, monkeypatch, fs):
         lambda path, contents: fs.create_file(path, contents=contents),
     )
 
-    file_cache = source._make_file_cache()
     table: SNMPTable = []
     raw_data: SNMPRawData = {SectionName("X"): table}
     # End of setup.
@@ -118,11 +114,10 @@ def test_disable_write_to_file_cache(source, monkeypatch, fs):
     assert source.is_agent_cache_disabled()
 
     # Another one bites the dust.
-    file_cache = source._make_file_cache()
-    file_cache.write(raw_data)
+    source._file_cache.write(raw_data)
 
-    assert not file_cache.path.exists()
-    assert file_cache.read() is None
+    assert not source._file_cache.path.exists()
+    assert source._file_cache.read() is None
 
 
 @patchfs
@@ -139,23 +134,20 @@ def test_write_and_read_file_cache(source, monkeypatch, fs):
         lambda path, contents: fs.create_file(path, contents=contents),
     )
 
-    file_cache = source._make_file_cache()
-
     table: SNMPTable = []
     raw_data: SNMPRawData = {SectionName("X"): table}
     # End of setup.
 
     assert not source.is_agent_cache_disabled()
-    assert not file_cache.path.exists()
+    assert not source._file_cache.path.exists()
 
-    file_cache.write(raw_data)
+    source._file_cache.write(raw_data)
 
-    assert file_cache.path.exists()
-    assert file_cache.read() == raw_data
+    assert source._file_cache.path.exists()
+    assert source._file_cache.read() == raw_data
 
     # Another one bites the dust.
-    file_cache = source._make_file_cache()
-    assert file_cache.read() == raw_data
+    assert source._file_cache.read() == raw_data
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):

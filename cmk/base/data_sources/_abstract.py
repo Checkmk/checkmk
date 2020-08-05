@@ -380,18 +380,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             return self._empty_raw_data()
         return self._empty_host_sections()
 
-    def _make_file_cache(self) -> FileCache:
-        return FileCache(
-            self._cache_file_path,
-            self._max_cachefile_age,
-            self.is_agent_cache_disabled(),
-            self.get_may_use_cache_file(),
-            self._use_outdated_cache_file,
-            self._from_cache_file,
-            self._to_cache_file,
-            self._logger,
-        )
-
     def _get_raw_data(
         self,
         *,
@@ -406,8 +394,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         AgentDataSource sources. The SNMPDataSource source already
         return the final info data structure.
         """
-        file_cache = self._make_file_cache()
-        raw_data = file_cache.read()
+        raw_data = self._file_cache.read()
         if raw_data:
             self._logger.log(VERBOSE, "Use cached data")
             return raw_data, True
@@ -417,7 +404,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
         self._logger.log(VERBOSE, "Execute data source")
         raw_data = self._execute(selected_raw_sections=selected_raw_sections,)
-        file_cache.write(raw_data)
+        self._file_cache.write(raw_data)
         return raw_data, False
 
     @abc.abstractmethod
@@ -443,17 +430,14 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _empty_host_sections(self) -> BoundedAbstractHostSections:
         raise NotImplementedError()
 
-    @abc.abstractmethod
-    def _from_cache_file(self, raw_data: bytes) -> BoundedAbstractRawData:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _to_cache_file(self, raw_data: BoundedAbstractRawData) -> bytes:
-        raise NotImplementedError()
-
     @property
     @abc.abstractmethod
     def _parser(self) -> ABCParser[BoundedAbstractRawData, BoundedAbstractHostSections]:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def _file_cache(self) -> FileCache:
         raise NotImplementedError
 
     def set_max_cachefile_age(self, max_cachefile_age: int) -> None:

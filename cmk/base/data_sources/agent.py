@@ -45,6 +45,7 @@ from ._abstract import (
     ABCSummarizer,
     Mode,
 )
+from ._cache import FileCache
 
 __all__ = ["AgentHostSections", "AgentDataSource"]
 
@@ -444,16 +445,29 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
     def _parser(self) -> ABCParser:
         return AgentParser(self.hostname, self._logger)
 
+    @property
+    def _file_cache(self) -> FileCache:
+        def from_cache(raw_data: bytes) -> AgentRawData:
+            return raw_data
+
+        def to_cache(raw_data: AgentRawData) -> bytes:
+            raw_data = cast(AgentRawData, raw_data)
+            # TODO: This does not seem to be needed
+            return ensure_binary(raw_data)
+
+        return FileCache(
+            self._cache_file_path,
+            self._max_cachefile_age,
+            self.is_agent_cache_disabled(),
+            self.get_may_use_cache_file(),
+            self._use_outdated_cache_file,
+            from_cache,
+            to_cache,
+            self._logger,
+        )
+
     def _empty_raw_data(self) -> AgentRawData:
         return b""
 
     def _empty_host_sections(self) -> AgentHostSections:
         return AgentHostSections()
-
-    def _from_cache_file(self, raw_data: bytes) -> AgentRawData:
-        return raw_data
-
-    def _to_cache_file(self, raw_data: AgentRawData) -> bytes:
-        raw_data = cast(AgentRawData, raw_data)
-        # TODO: This does not seem to be needed
-        return ensure_binary(raw_data)

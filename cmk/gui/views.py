@@ -968,29 +968,6 @@ class ViewFilterList(visuals.VisualFilterList):
         html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 
 
-# TODO
-#def _show_context_links(view, rows, show_filters, enable_commands, enable_checkboxes,
-#                        show_checkboxes):
-#        if _show_combined_graphs_context_button(view):
-#            html.context_button(
-#                _("Combined graphs"),
-#                html.makeuri(
-#                    [
-#                        ("single_infos", ",".join(thisview["single_infos"])),
-#                        ("datasource", thisview["datasource"]),
-#                        ("view_title", view_title(thisview)),
-#                    ],
-#                    filename="combined_graphs.py",
-#                ), "pnp")
-
-
-def _show_combined_graphs_context_button(view: View) -> bool:
-    if not config.combined_graphs_available():
-        return False
-
-    return view.datasource.ident in ["hosts", "services", "hostsbygroup", "servicesbygroup"]
-
-
 # Load all view plugins
 def load_plugins(force):
     global loaded_with_language
@@ -2289,6 +2266,10 @@ def _get_context_page_menu_topics(view: View, info: VisualInfo, is_single_info: 
     if availability_entry:
         by_topic.setdefault(topics["history"], []).append(availability_entry)
 
+    combined_graphs_entry = _get_combined_graphs_entry(view, info, is_single_info)
+    if combined_graphs_entry:
+        by_topic.setdefault(topics["history"], []).append(combined_graphs_entry)
+
     # Return the sorted topics
     for topic, entries in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title())):
         yield PageMenuTopic(
@@ -2447,26 +2428,7 @@ def _get_availability_entry(view: View, info: VisualInfo,
     if not _show_current_view_availability_context_button(view):
         return None
 
-    show = False
-    if info.ident == "service" and is_single_info:
-        show = sorted(view.spec["single_infos"]) == ["host", "service"]
-
-    elif info.ident == "service" and not is_single_info:
-        show = "service" not in view.spec["single_infos"] and view.datasource.ident == "services"
-
-    elif info.ident == "host" and is_single_info:
-        show = view.spec["single_infos"] == ["host"] and view.datasource.ident == "hosts"
-
-    elif info.ident == "host" and not is_single_info:
-        show = "host" not in view.spec["single_infos"] and view.datasource.ident == "hosts"
-
-    elif info.ident == "aggr" and is_single_info:
-        show = view.spec["single_infos"] == ["aggr"] and "aggr" in view.datasource.infos
-
-    elif info.ident == "aggr" and not is_single_info:
-        show = "aggr" not in view.spec["single_infos"] and "aggr" in view.datasource.infos
-
-    if not show:
+    if not _show_in_current_dropdown(view, info.ident, is_single_info):
         return None
 
     return PageMenuEntry(
@@ -2484,6 +2446,72 @@ def _show_current_view_availability_context_button(view: View) -> bool:
         return True
 
     return view.datasource.ident in ["hosts", "services"]
+
+
+def _get_combined_graphs_entry(view: View, info: VisualInfo,
+                               is_single_info: bool) -> Optional[PageMenuEntry]:
+    """Detect whether or not to add a combined graphs link to the dropdown currently being rendered
+
+    In which dropdown to expect the "All metrics of same type in one graph" link?
+
+    """
+    if not _show_combined_graphs_context_button(view):
+        return None
+
+    if not _show_in_current_dropdown(view, info.ident, is_single_info):
+        return None
+
+    url = html.makeuri(
+        [
+            ("single_infos", ",".join(view.spec["single_infos"])),
+            ("datasource", view.datasource.ident),
+            ("view_title", view_title(view.spec)),
+        ],
+        filename="combined_graphs.py",
+    )
+    return PageMenuEntry(
+        title=_("All metrics of same type in one graph"),
+        icon_name="pnp",
+        item=make_simple_link(url),
+    )
+
+
+def _show_combined_graphs_context_button(view: View) -> bool:
+    if not config.combined_graphs_available():
+        return False
+
+    return view.datasource.ident in ["hosts", "services", "hostsbygroup", "servicesbygroup"]
+
+
+def _show_in_current_dropdown(view: View, info_name: InfoName, is_single_info: bool) -> bool:
+    if info_name == "aggr_group":
+        return False  # Not showing for groups
+
+    if info_name == "service" and is_single_info:
+        return sorted(view.spec["single_infos"]) == ["host", "service"]
+
+    matches_datasource = _dropdown_matches_datasource(info_name, view.datasource)
+
+    if info_name == "service" and not is_single_info:
+        return "service" not in view.spec["single_infos"] and matches_datasource
+
+    if is_single_info:
+        return view.spec["single_infos"] == [info_name] and matches_datasource
+
+    return info_name not in view.spec["single_infos"] and matches_datasource
+
+
+def _dropdown_matches_datasource(info_name: InfoName, datasource: ABCDataSource) -> bool:
+    if info_name == "host":
+        return datasource.ident == "hosts"
+    if info_name == "service":
+        return datasource.ident == "services"
+    if info_name == "aggr":
+        return "aggr" in datasource.infos
+
+    # This is not generic enough. Generalize once we hit this
+    raise ValueError("Can not decide whether or not to show this button: %s, %s" %
+                     (info_name, datasource.ident))
 
 
 def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:

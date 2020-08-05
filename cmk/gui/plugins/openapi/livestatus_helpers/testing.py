@@ -121,7 +121,9 @@ program_start num_hosts num_services'
         self._expect_status_query: Optional[bool] = None
 
         # We store some default values for some tables. May be expanded in the future.
-        _today = str(dt.datetime.utcnow().date())
+
+        # Just that parse_check_mk_version is happy we replace the dashes with dots.
+        _today = str(dt.datetime.utcnow().date()).replace("-", ".")
         _program_start_timestamp = int(time.time())
         self._tables: Dict[str, List[Dict[str, Any]]] = {
             'status': [{

@@ -258,12 +258,16 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         *,
         configurator: ABCConfigurator,
         summarizer: ABCSummarizer,
+        default_raw_data: BoundedAbstractRawData,
+        default_host_sections: BoundedAbstractHostSections,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
     ) -> None:
         super().__init__()
         self.configurator = configurator
         self.summarizer = summarizer
+        self.default_raw_data: Final[BoundedAbstractRawData] = default_raw_data
+        self.default_host_sections: Final[BoundedAbstractHostSections] = default_host_sections
         self._logger = self.configurator._logger
         if not cache_dir:
             cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.configurator.id
@@ -397,8 +401,8 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             self._exception = e
 
         if get_raw_data:
-            return self._empty_raw_data()
-        return self._empty_host_sections()
+            return self.default_raw_data
+        return self.default_host_sections
 
     def _get_raw_data(
         self,
@@ -440,14 +444,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         The "raw data" is the raw byte string returned by the source for
         AgentDataSource sources. The SNMPDataSource source already
         return the final data structure to be wrapped into HostSections()."""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _empty_raw_data(self) -> BoundedAbstractRawData:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _empty_host_sections(self) -> BoundedAbstractHostSections:
         raise NotImplementedError()
 
     @property

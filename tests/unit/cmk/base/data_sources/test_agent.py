@@ -161,7 +161,7 @@ class StubSummarizer(AgentSummarizer):
 
 class StubAgent(AgentDataSource):
     def _execute(self, *args, **kwargs):
-        return self._empty_host_sections()
+        return self.default_host_sections
 
 
 class TestAgentSummaryResult:
@@ -199,7 +199,7 @@ class TestAgentSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source, mode):
-        source._host_sections = source._empty_host_sections()
+        source._host_sections = source.default_host_sections
         assert source.get_summary_result() == (
             0,
             "Version: unknown, OS: unknown",

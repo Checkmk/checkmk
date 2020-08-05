@@ -325,6 +325,8 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         super().__init__(
             configurator=configurator,
             summarizer=SNMPSummarizer(),
+            default_raw_data={},
+            default_host_sections=SNMPHostSections(),
             cache_dir=cache_dir,
             persisted_section_dir=persisted_section_dir,
         )
@@ -353,12 +355,6 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
             to_cache,
             self._logger,
         )
-
-    def _empty_raw_data(self) -> SNMPRawData:
-        return {}
-
-    def _empty_host_sections(self) -> SNMPHostSections:
-        return SNMPHostSections()
 
     def _execute(
         self,

@@ -259,7 +259,7 @@ def _make_host_sections(
             source.set_max_cachefile_age(max_cachefile_age)
             host_sections = multi_host_sections.setdefault(
                 HostKey(hostname, ipaddress, source.configurator.source_type),
-                source._empty_host_sections(),
+                source.default_host_sections,
             )
             host_sections.update(
                 # TODO: Select agent / snmp sources before passing

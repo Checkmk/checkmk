@@ -427,6 +427,8 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
         super().__init__(
             configurator=configurator,
             summarizer=summarizer,
+            default_raw_data=b"",
+            default_host_sections=AgentHostSections(),
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
             persisted_section_dir=(Path(cmk.utils.paths.var_dir) /
                                    "persisted") if main_data_source else None,
@@ -465,9 +467,3 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
             to_cache,
             self._logger,
         )
-
-    def _empty_raw_data(self) -> AgentRawData:
-        return b""
-
-    def _empty_host_sections(self) -> AgentHostSections:
-        return AgentHostSections()

@@ -8,6 +8,25 @@ body.dashboard {
   overflow: hidden;
 
   &.main div#main_page_content { padding-bottom: 0; }
+
+  #menu_entry_toggle_edit img.icon {
+    background-size: 16px;
+  }
+
+  #menu_shortcut_toggle_edit img.icon {
+    background-size: 20px;
+  }
+
+  #menu_shortcut_toggle_edit, #menu_entry_toggle_edit {
+    img.icon {
+      background-image: url("images/icon_dashboard_edit.png");
+      background-repeat: no-repeat;
+    }
+
+    &.edit img.icon {
+      background-image: url("images/icon_dashboard_edit_set.png");
+    }
+  }
 }
 
 div#dashboard {
@@ -289,85 +308,6 @@ iframe[id^=dashlet_iframe] {
 /*
  * Dashboard editing
  */
-#controls_toggle {
-  position: fixed;
-  right: 0;
-  bottom: -41px;
-  z-index: 150;
-  padding: 6px 3px;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 5px;
-  /* IE < 9 */
-  filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#7f000000', endColorstr='#7f000000');
-
-  &:hover {
-    bottom: -10px;
-  }
-
-  .iconbutton {
-    width: 33px;
-    height: 31px;
-  }
-}
-
-#controls, ul.sub {
-  position: absolute;
-  z-index: 180;
-  display: block;
-  width: 200px;
-  padding: 8px;
-  margin: 0;
-  color: $lightgrey;
-  list-style: none;
-  background-color: $navigation-bg-color;
-  border: 1px solid $color-table-border-dark;
-  border-radius: $theme-border-radius;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-
-  li, {
-    padding: 4px 0;
-    color: $lightgrey;
-  }
-}
-
-#controls {
-  right: 40px;
-  bottom: 12px;
-
-  a {
-    display: block;
-    padding: 1px 15px 1px 2px;
-    line-height: 14px;
-    text-align: left;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
-  /* submenu */
-  ul.sub {
-    right: 212px;
-    bottom: 5px;
-  }
-
-  > li > a > img, ul.menu > li > a > img {
-    width: 12px;
-    height: 12px;
-    margin-right: 4px;
-    vertical-align: middle;
-  }
-}
-
-#controls li a,
-#controls li body.main .popup_menu span,
-body.main .popup_menu #controls li span,
-ul.sub li a,
-ul.sub li body.main .popup_menu span,
-body.main .popup_menu ul.sub li span {
-  color: inherit;
-}
 
 /* dashlet controls */
 div.dashlet.edit {

@@ -5,6 +5,7 @@
 import * as utils from "utils";
 import * as ajax from "ajax";
 import * as forms from "forms";
+import * as page_menu from "page_menu";
 
 var reload_on_resize = {};
 export var dashboard_properties = {};
@@ -379,64 +380,23 @@ function dashboard_update_contents(id, response_text) {
 // DASHBOARD EDITING
 //
 
-function toggle_dashboard_menu(show, event) {
-    var controls = document.getElementById("controls");
-    if (!controls)
-        return; // maybe not permitted -> skip
-
-    if (typeof show === "undefined")
-        show = controls.style.display == "none";
-
-    if (show) {
-        controls.style.display = "block";
-        hide_submenus();
-
-        // Gather and update the position of the menu
-        if (event) {
-            var target = utils.get_target(event);
-            var dashboard = document.getElementById("dashboard");
-
-            // When menu is out of screen on the right, move to left
-            if (controls.offsetLeft + controls.clientWidth > dashboard.clientWidth)
-                controls.style.left = (controls.offsetLeft - controls.clientWidth - 15) + "px";
-
-            // When menu is out of screen on the bottom, move to top
-            if (controls.offsetTop + controls.clientHeight > dashboard.clientHeight) {
-                var new_top = controls.offsetTop - controls.clientHeight - 5;
-                if (target != dashboard)
-                    new_top -= dashboard.offsetTop;
-
-                controls.style.top = new_top + "px";
-            }
-        }
-    }
-    else {
-        controls.style.display = "none";
-    }
-}
-
-export function hide_submenus() {
-    // hide all submenus
-    var subs = document.getElementsByClassName("sub");
-    for (var i = 0; i < subs.length; i++)
-        subs[i].style.display = "none";
-}
-
-export function show_submenu(id) {
-    document.getElementById(id + "_sub").style.display = "block";
-}
-
 var g_editing = false;
 
 export function toggle_dashboard_edit() {
-    // First hide the controls menu
-    toggle_dashboard_menu(false);
-
     g_editing = !g_editing;
 
-    document.getElementById("control_edit").style.display = !g_editing ? "block" : "none";
-    document.getElementById("control_add").style.display = g_editing ? "block" : "none";
-    document.getElementById("control_view").style.display = g_editing ? "block" : "none";
+    // Toggle the page menu elements
+    let toggle_shortcut = document.getElementById("menu_shortcut_toggle_edit");
+    let toggle_entry = document.getElementById("menu_entry_toggle_edit");
+    if (g_editing) {
+        utils.add_class(toggle_shortcut, "edit");
+        utils.add_class(toggle_entry, "edit");
+        page_menu.enable_dropdown("add_dashlets");
+    } else {
+        utils.remove_class(toggle_shortcut, "edit");
+        utils.remove_class(toggle_entry, "edit");
+        page_menu.disable_dropdown("add_dashlets");
+    }
 
     var dashlet_divs = document.getElementsByClassName("dashlet");
     for (var i = 0; i < dashlet_divs.length; i++)
@@ -792,35 +752,6 @@ function calculate_relative_dashlet_coords(nr, anchor_id) {
 function rerender_dashlet_controls(dashlet_obj) {
     dashlet_toggle_edit(dashlet_obj, false);
     dashlet_toggle_edit(dashlet_obj, true);
-}
-
-// Handle misc events when in editing mode and clicks have made on general elements
-function body_click_handler(event) {
-    if (!event)
-        event = window.event;
-
-    var target = utils.get_target(event);
-    var button = utils.get_button(event);
-
-    if (target.id == "dashboard" && button == "RIGHT") {
-        // right click on the empty dashboard area
-        toggle_dashboard_menu(undefined, event);
-        utils.prevent_default_events(event);
-        return false;
-    }
-    else if (target.parentNode.id == "controls_toggle" && button == "LEFT") {
-        // left click on the controls menu
-        toggle_dashboard_menu(undefined, event);
-        utils.prevent_default_events(event);
-        return false;
-    }
-    else if (target.parentNode.id != "controls_toggle"
-             && (!target.parentNode.parentNode || !utils.has_class(target.parentNode.parentNode, "menu"))) {
-        // Hide the controls menu when clicked somewhere else
-        toggle_dashboard_menu(false);
-    }
-
-    return true;
 }
 
 /**
@@ -1224,22 +1155,10 @@ export function register_event_handlers() {
     utils.add_event_handler("mouseup", function(e) {
         return drag_dashlet_stop(e) && resize_dashlet_stop(e);
     });
-    utils.add_event_handler("click", function(e) {
-        return body_click_handler(e);
-    });
 
     // Totally disable the context menu for all dashboards
     utils.add_event_handler("contextmenu", function(e) {
         utils.prevent_default_events(e);
         return false;
     });
-}
-
-export function show_dashboard_context_dialog() {
-    document.getElementById("dashboard_context_dialog_container").style.display = "block";
-    toggle_dashboard_menu(false);
-}
-
-export function close_dashboard_context_dialog() {
-    document.getElementById("dashboard_context_dialog_container").style.display = "none";
 }

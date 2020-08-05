@@ -7,7 +7,7 @@
 import time
 import copy
 import json
-from typing import Set, Dict, Optional, NamedTuple, Tuple, Type, List, Union, Callable, Iterator
+from typing import Set, Dict, Optional, Tuple, Type, List, Union, Callable, Iterator
 
 from six import ensure_str
 
@@ -38,7 +38,16 @@ from cmk.gui.log import logger
 from cmk.gui.globals import html
 from cmk.gui.main_menu import MegaMenuMonitoring
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
-from cmk.gui.page_menu import PageMenuEntry, make_javascript_link
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuPopup,
+    make_simple_link,
+    make_javascript_link,
+    make_display_options_dropdown,
+)
 
 from cmk.gui.exceptions import (
     HTTPRedirect,
@@ -481,20 +490,24 @@ def draw_dashboard(name: DashboardName) -> None:
         html.set_render_headfoot(False)
         header_height = 0
 
+    # In case we have a dashboard / dashlet that requires context information that is not available
+    # yet, display a message to the user to insert the missing information.
+    missing_single_infos: Set[InfoName] = set()
+    unconfigured_single_infos: Set[InfoName] = set()
+    missing_mandatory_context_filters = not set(board_context.keys()).issuperset(
+        set(board["mandatory_context_filters"]))
+
     html.add_body_css_class("dashboard")
-    html.header(title, breadcrumb=_dashboard_breadcrumb(name, title))
+    breadcrumb = _dashboard_breadcrumb(name, title)
+    html.header(title,
+                breadcrumb=breadcrumb,
+                page_menu=_page_menu(breadcrumb, name, board, board_context,
+                                     unconfigured_single_infos, mode))
 
     html.open_div(class_=["dashboard_%s" % name], id_="dashboard")  # Container of all dashlets
 
     dashlet_javascripts(board)
     dashlet_styles(board)
-
-    # In case we have a dashboard / dashlet that requires context information that is not available
-    # yet, display a message to the user to insert the missing information.
-    missing_single_infos = set()
-    unconfigured_single_infos = set()
-    missing_mandatory_context_filters = not set(board_context.keys()).issuperset(
-        set(board["mandatory_context_filters"]))
 
     refresh_dashlets = []  # Dashlets with automatic refresh, for Javascript
     dashlet_coords = []  # Dimensions and positions of dashlet
@@ -538,12 +551,11 @@ def draw_dashboard(name: DashboardName) -> None:
         dashlet_container_end()
         dashlet_coords.append(get_dashlet_dimensions(dashlet_instance))
 
-    _dashboard_menu(name, board)
+    # Display the dialog during initial rendering when required context information is missing.
+    if missing_single_infos or missing_mandatory_context_filters:
+        html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
 
     html.close_div()
-
-    _dashboard_context_dialog(board, board_context, missing_mandatory_context_filters,
-                              missing_single_infos, unconfigured_single_infos)
 
     dashboard_properties = {
         "MAX": MAX,
@@ -569,7 +581,7 @@ cmk.dashboard.register_event_handlers();
     """ % json.dumps(dashboard_properties))
 
     if mode == 'edit':
-        html.javascript('cmk.dashboard.toggle_dashboard_edit(true)')
+        html.javascript('cmk.dashboard.toggle_dashboard_edit()')
 
     html.body_end()  # omit regular footer with status icons, etc.
 
@@ -687,192 +699,170 @@ def _fallback_dashlet_instance(name: DashboardName, board: DashboardConfig,
 
 
 # TODO: Use new generic popup dialogs once they are merged from the current UX rework
-def _dashboard_context_dialog(board: DashboardConfig, board_context: VisualContext,
-                              missing_mandatory_context_filters: bool,
-                              missing_single_infos: Set[str],
-                              unconfigured_single_infos: Set[str]) -> None:
-    html.open_div(id_="dashboard_context_dialog_container", style="display:none")
-    html.open_div(id_="dashboard_context_dialog")
-    html.begin_form("dashboard_context_dialog", method="GET", add_transid=False)
+# TODO: Synchronize this with the view mechanic
+def _render_filter_form(board: DashboardConfig, board_context: VisualContext,
+                        unconfigured_single_infos: Set[str]) -> str:
+    with html.plugged():
+        html.begin_form("dashboard_context_dialog", method="GET", add_transid=False)
 
-    html.a("x",
-           href="javascript:void(0)",
-           onclick="cmk.dashboard.close_dashboard_context_dialog()",
-           class_="close")
+        forms.header(_("Dashboard context"))
 
-    forms.header(_("Dashboard context"))
+        try:
+            # Configure required single info keys (the ones that are not set by the config)
+            single_context_filters = []
+            for info_key in unconfigured_single_infos:
+                info = visuals.visual_info_registry[info_key]()
 
-    try:
-        # Configure required single info keys (the ones that are not set by the config)
-        single_context_filters = []
-        for info_key in unconfigured_single_infos:
-            info = visuals.visual_info_registry[info_key]()
+                for filter_name, valuespec in info.single_spec:
+                    single_context_filters.append(filter_name)
+                    forms.section(valuespec.title())
+                    valuespec.render_input(filter_name, None)
+            forms.section_close()
 
-            for filter_name, valuespec in info.single_spec:
-                single_context_filters.append(filter_name)
-                forms.section(valuespec.title())
-                valuespec.render_input(filter_name, None)
-        forms.section_close()
+            # Configure required context filters set in the dashboard config
+            if board["mandatory_context_filters"]:
+                forms.section(_("Required context"))
+                for filter_key in board["mandatory_context_filters"]:
+                    valuespec = visuals.VisualFilter(filter_key)
+                    valuespec.render_input(filter_key, board_context.get(filter_key))
 
-        # Configure required context filters set in the dashboard config
-        if board["mandatory_context_filters"]:
-            forms.section(_("Required context"))
-            for filter_key in board["mandatory_context_filters"]:
-                valuespec = visuals.VisualFilter(filter_key)
-                valuespec.render_input(filter_key, board_context.get(filter_key))
+            # Give the user the option to redefine filters configured in the dashboard config
+            # and also give the option to add some additional filters
+            forms.section(_("Additional context"))
+            # Like _dashboard_info_handler we assume that only host / service filters are relevant
+            vs_filters = visuals.VisualFilterList(info_list=["host", "service"],
+                                                  ignore=board["mandatory_context_filters"] +
+                                                  single_context_filters)
+            vs_filters.render_input("", board_context)
+        except Exception:
+            crash_reporting.handle_exception_as_gui_crash_report()
 
-        # Give the user the option to redefine filters configured in the dashboard config
-        # and also give the option to add some additional filters
-        forms.section(_("Additional context"))
-        # Like _dashboard_info_handler we assume that only host / service filters are relevant
-        vs_filters = visuals.VisualFilterList(info_list=["host", "service"],
-                                              ignore=board["mandatory_context_filters"] +
-                                              single_context_filters)
-        vs_filters.render_input("", board_context)
-    except Exception:
-        crash_reporting.handle_exception_as_gui_crash_report()
+        html.open_tr()
+        html.open_td(colspan=2)
+        html.button("_submit", _("Update"))
+        html.close_td()
+        html.close_tr()
 
-    html.open_tr()
-    html.open_td(colspan=2)
-    html.button("_submit", _("Update"))
-    html.close_td()
-    html.close_tr()
+        forms.end()
 
-    forms.end()
+        html.hidden_fields()
+        html.end_form()
 
-    html.hidden_fields()
-    html.end_form()
-    html.close_div()
-    html.close_div()
-
-    # Display the dialog during initial rendering when required context information is missing.
-    if missing_single_infos or missing_mandatory_context_filters:
-        html.javascript("cmk.dashboard.show_dashboard_context_dialog()")
+        return html.drain()
 
 
-def _dashboard_menu(name: DashboardName, board: DashboardConfig) -> None:
-
-    # Show the menu handle
-    html.icon_button(None,
-                     _('Open dashboard controls'),
-                     'dashboard_controls',
-                     'controls_toggle',
-                     onclick='void(0)')
-
-    html.open_ul(style="display:none;", class_=["menu"], id_="controls")
-
-    html.open_li()
-    html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.show_dashboard_context_dialog()")
-    html.icon(title=_("Update context"), icon="trans")
-    html.write_text(_("Update context"))
-    html.close_a()
-    html.close_li()
-
-    if config.user.may("general.edit_dashboards"):
-        # Show the edit menu to all users which are allowed to edit dashboards
-        _show_edit_entries(name, board)
+def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConfig,
+               board_context: VisualContext, unconfigured_single_infos: Set[str],
+               mode: str) -> PageMenu:
 
     html.close_ul()
+    menu = PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="dashboard",
+                title=_("Dashboard"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Edit"),
+                        entries=list(_dashboard_edit_entries(name, board, mode)),
+                    ),
+                ],
+            ),
+            PageMenuDropdown(
+                name="add_dashlets",
+                title=_("Add dashlets"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Dashlets"),
+                        entries=list(_dashboard_add_dashlet_entries(name, board, mode)),
+                    ),
+                ],
+                is_enabled=mode == "edit",
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+
+    _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
+
+    return menu
 
 
-def _show_edit_entries(name: DashboardName, board: DashboardConfig) -> None:
+def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
+                            mode: str) -> Iterator[PageMenuEntry]:
+    if not config.user.may("general.edit_dashboards"):
+        return
+
     if board['owner'] != config.user.id:
         # Not owned dashboards must be cloned before being able to edit. Do not switch to
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,
         # the dashboard will be cloned for this user
-        html.li(html.render_a(_("Edit Dashboard"), href=html.makeuri([("edit", 1)])))
+        yield PageMenuEntry(
+            title=_("Edit dashboard"),
+            icon_name="edit",
+            item=make_simple_link(html.makeuri([("edit", 1)])),
+        )
         return
 
-    #
-    # Add dashlet menu
-    #
-    html.open_li(class_=["sublink"],
-                 id_="control_add",
-                 style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
-                 onmouseover="cmk.dashboard.show_submenu(\'control_add\');")
-    html.open_a(href="javascript:void(0)")
-    html.icon(title=_("Add dashlet"), icon="dashboard_menuarrow")
-    html.write_text(_("Add dashlet"))
-    html.close_a()
+    yield PageMenuEntry(
+        title=_("Toggle edit mode"),
+        icon_name="trans",
+        item=make_javascript_link("cmk.dashboard.toggle_dashboard_edit()"),
+        is_shortcut=True,
+        name="toggle_edit",
+    )
 
-    # The dashlet types which can be added to the view
-    html.open_ul(style="display:none", class_=["menu", "sub"], id_="control_add_sub")
-
-    for menu_entry in _get_add_menu_entries(name):
-        html.open_li()
-        html.open_a(href=menu_entry.url)
-        html.icon(title=menu_entry.title, icon=menu_entry.icon_name)
-        html.write_text(menu_entry.title)
-        html.close_a()
-        html.close_li()
-    html.close_ul()
-
-    html.close_li()
-
-    #
-    # Properties link
-    #
-    html.open_li()
-    html.open_a(href="edit_dashboard.py?load_name=%s&back=%s" %
-                (name, html.urlencode(html.makeuri([]))),
-                onmouseover="cmk.dashboard.hide_submenus();")
-    html.icon(title="", icon="trans")
-    html.write_text(_('Properties'))
-    html.close_a()
-    html.close_li()
-
-    #
-    # Stop editing
-    #
-    html.open_li(style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
-                 id_="control_view")
-    html.open_a(href="javascript:void(0)",
-                onclick="cmk.dashboard.toggle_dashboard_edit(false)",
-                onmouseover="cmk.dashboard.hide_submenus();")
-    html.icon(title="", icon="trans")
-    html.write(_('Stop Editing'))
-    html.close_a()
-    html.close_li()
-
-    #
-    # Enable editing link
-    #
-    html.open_li(style="display:%s;" % ("none" if html.request.var("edit") == '1' else "block"),
-                 id_="control_edit")
-    html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.toggle_dashboard_edit(true);")
-    html.icon(title="", icon="trans")
-    html.write(_('Edit Dashboard'))
-    html.close_a()
-    html.close_li()
+    yield PageMenuEntry(
+        title=_("Properties"),
+        icon_name="properties",
+        item=make_simple_link(
+            html.makeuri_contextless(
+                [
+                    ("load_name", name),
+                    ("back", html.urlencode(html.makeuri([]))),
+                ],
+                filename="edit_dashboard.py",
+            )),
+    )
 
 
-MenuEntry = NamedTuple("MenuEntry", [
-    ("title", str),
-    ("url", str),
-    ("icon_name", str),
-])
+def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_context: VisualContext,
+                             unconfigured_single_infos: Set[str]) -> None:
+    display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+
+    display_dropdown.topics.insert(
+        0,
+        PageMenuTopic(title=_("Filter"),
+                      entries=[
+                          PageMenuEntry(
+                              title=_("Filter"),
+                              icon_name="filters",
+                              item=PageMenuPopup(
+                                  _render_filter_form(board, board_context,
+                                                      unconfigured_single_infos)),
+                              name="filters",
+                              is_shortcut=True,
+                          ),
+                      ]))
 
 
-def _get_add_menu_entries(name):
-    entries = [
-        MenuEntry(
-            title=_('Copy existing view'),
-            url='create_view_dashlet.py?name=%s&create=0&back=%s' %
-            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')]))),
-            icon_name="dashlet_view",
-        ),
-    ]
+def _dashboard_add_dashlet_entries(name: DashboardName, board: DashboardConfig,
+                                   mode: str) -> Iterator[PageMenuEntry]:
+    yield PageMenuEntry(
+        title=_('Copy existing view'),
+        icon_name="dashlet_view",
+        item=make_simple_link(
+            'create_view_dashlet.py?name=%s&create=0&back=%s' %
+            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))),
+    )
 
     for ty, dashlet_type in sorted(dashlet_registry.items(), key=lambda x: x[1].sort_index()):
         if dashlet_type.is_selectable():
-            entries.append(
-                MenuEntry(
-                    url=dashlet_type.add_url(),
-                    title=dashlet_type.title(),
-                    icon_name="dashlet_%s" % ty,
-                ))
-
-    return entries
+            yield PageMenuEntry(
+                title=dashlet_type.title(),
+                icon_name="dashlet_%s" % ty,
+                item=make_simple_link(dashlet_type.add_url()),
+            )
 
 
 # Render dashlet custom scripts

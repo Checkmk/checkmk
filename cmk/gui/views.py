@@ -2320,6 +2320,9 @@ def collect_context_links(view: View,
 def _collect_linked_visuals(view: View, rows: Rows, singlecontext_request_vars: Dict[str, str],
                             mobile: bool) -> Iterator[_Tuple[VisualType, Visual]]:
     for type_name in visual_type_registry.keys():
+        if type_name == "reports":
+            continue  # Reports are displayed by separate dropdown (Export > Report)
+
         yield from _collect_linked_visuals_of_type(type_name, view, rows,
                                                    singlecontext_request_vars, mobile)
 

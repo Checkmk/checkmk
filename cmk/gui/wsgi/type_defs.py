@@ -4,36 +4,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Union, Any, Dict
+from typing import Any, Dict, List, Literal, TypedDict, Union
 
 Scope = List[str]
 UnixTimeStamp = int  # restrict to positive numbers
 Audience = Union[str, List[str]]
-
-# TODO: Re-enable once we are using Python >= 3.8
-TokenType = str
-RFC7662 = Dict[str, Any]
-HostGroup = Dict[str, str]
 DomainObject = Dict[str, Any]
-#TokenType = Union[Literal["access_token"], Literal["refresh_token"]]
-#RFC7662 = TypedDict(
-#    'RFC7662',
-#    {
-#        'active': bool,
-#        'scope': str,
-#        'client_id': str,
-#        'username': str,
-#        'token_type': TokenType,
-#        'exp': UnixTimeStamp,  # expires
-#        'iat': UnixTimeStamp,  # issued
-#        'nbf': UnixTimeStamp,  # not before
-#        'sub': str,  # subject
-#        'aud': Audience,
-#        'iss': str,  # issuer
-#        'jti': str,  # json web token-identifier
-#    },
-#    total=False,
-#)
-#HostGroup = TypedDict('HostGroup', {
-#    'alias': str,
-#})
+TokenType = Union[Literal["access_token"], Literal["refresh_token"]]
+RFC7662 = TypedDict(
+    'RFC7662',
+    {
+        'active': bool,
+        'scope': str,
+        'client_id': str,
+        'username': str,
+        'token_type': TokenType,
+        'exp': UnixTimeStamp,  # expires
+        'iat': UnixTimeStamp,  # issued
+        'nbf': UnixTimeStamp,  # not before
+        'sub': str,  # subject
+        'aud': Audience,
+        'iss': str,  # issuer
+        'jti': str,  # json web token-identifier
+    },
+    total=False,
+)
+HostGroup = TypedDict('HostGroup', {
+    'alias': str,
+})

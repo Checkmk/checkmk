@@ -126,8 +126,8 @@ div#top_heading {
       }
 
       div.menutitle {
-        width: 78px;
         height: 100%;
+        min-width: 78px;
         text-align: center;
 
         &:focus {
@@ -136,7 +136,7 @@ div#top_heading {
         }
 
         h2 {
-          padding: 6px 0 4px;
+          padding: 6px 5px 4px;
           margin: 0;
           font-size: 12px;
 

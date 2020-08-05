@@ -4,16 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Host-groups"""
-import http.client
-
-from connexion import ProblemException  # type: ignore[import]
-
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (
     serve_group,
     serialize_group,
     serialize_group_list,
+    fetch_group,
+    fetch_specific_groups,
     load_groups,
 )
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -39,7 +37,7 @@ def create(params):
     name = body['name']
     alias = body.get('alias')
     add_group(name, 'host', {'alias': alias})
-    group = _fetch_host_group(name)
+    group = fetch_group(name, "host")
     return serve_group(group, serialize_group('host_group_config'))
 
 
@@ -59,7 +57,7 @@ def bulk_create(params):
         add_group(group_name, 'host', {'alias': group_alias})
         host_group_names.append(group_name)
 
-    host_groups = _fetch_select_host_groups(host_group_names)
+    host_groups = fetch_specific_groups(host_group_names, "host")
     return constructors.serve_json(serialize_group_list('host_group_config', host_groups))
 
 
@@ -82,7 +80,7 @@ def list_groups(params):
 def delete(params):
     """Delete a host-group"""
     name = params['name']
-    group = _fetch_host_group(name)
+    group = fetch_group(name, "host")
     constructors.require_etag(constructors.etag_of_dict(group))
     watolib.delete_group(name, 'host')
     return Response(status=204)
@@ -99,8 +97,9 @@ def bulk_delete(params):
     entries = params['entries']
     for group_name in entries:
         message = "host group %s was not found" % group_name
-        _group = _fetch_host_group(
+        _group = fetch_group(
             group_name,
+            "host",
             status=400,
             message=message,
         )  # TODO: etag check should be done here
@@ -121,10 +120,10 @@ def bulk_delete(params):
 def update(params):
     """Update a host-group"""
     name = params['name']
-    group = _fetch_host_group(name)
+    group = fetch_group(name, "host")
     constructors.require_etag(constructors.etag_of_dict(group))
     edit_group(name, 'host', params['body'])
-    group = _fetch_host_group(name)
+    group = fetch_group(name, "host")
     return serve_group(group, serialize_group('host_group_config'))
 
 
@@ -137,32 +136,5 @@ def update(params):
 def get(params):
     """Show a host-group"""
     name = params['name']
-    group = _fetch_host_group(name)
+    group = fetch_group(name, "host")
     return serve_group(group, serialize_group('host_group_config'))
-
-
-def _fetch_host_group(ident, status=404, message=None):
-    groups = load_host_group_information()
-    group = _retrieve_group(ident, groups, status, message)
-    group['id'] = ident
-    return group
-
-
-def _fetch_select_host_groups(idents, status=404, message=None):
-    groups = load_host_group_information()
-    result = []
-    for ident in idents:
-        group = _retrieve_group(ident, groups, status, message)
-        group['id'] = ident
-        result.append(group)
-    return result
-
-
-def _retrieve_group(ident, groups, status, message):
-    try:
-        group = groups[ident].copy()
-    except KeyError as exc:
-        if message is None:
-            message = str(exc)
-        raise ProblemException(status, http.client.responses[status], message)
-    return group

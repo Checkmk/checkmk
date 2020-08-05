@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
+import http.client
+
 from typing import Any, Dict, Literal, Sequence, List, Optional, Type
 
 from connexion import ProblemException  # type: ignore[import]
@@ -11,7 +13,9 @@ from connexion import ProblemException  # type: ignore[import]
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
 from cmk.gui.plugins.openapi.restful_objects import constructors
-from cmk.gui.groups import load_group_information
+from cmk.gui.groups import load_group_information, GroupSpecs, GroupSpec
+from cmk.gui.watolib.groups import GroupType
+
 
 GroupName = Literal[
     'host_group_config',
@@ -111,3 +115,45 @@ def add_if_missing(columns: List[str], mandatory=List[str]) -> List[str]:
         if required not in ret:
             ret.append(required)
     return ret
+
+
+def fetch_group(
+    ident: str,
+    group_type: GroupType,
+    status: int = 404,
+    message: Optional[str] = None,
+) -> GroupSpec:
+    groups = load_group_information()[group_type]
+    group = _retrieve_group(ident, groups, status, message)
+    group['id'] = ident
+    return group
+
+
+def fetch_specific_groups(
+    idents: List[str],
+    group_type: GroupType,
+    status: int = 404,
+    message: Optional[str] = None,
+) -> List[GroupSpec]:
+    groups = load_group_information()[group_type]
+    result = []
+    for ident in idents:
+        group = _retrieve_group(ident, groups, status, message)
+        group['id'] = ident
+        result.append(group)
+    return result
+
+
+def _retrieve_group(
+    ident: str,
+    groups: GroupSpecs,
+    status: int,
+    message: Optional[str],
+) -> GroupSpec:
+    try:
+        group = groups[ident].copy()
+    except KeyError as exc:
+        if message is None:
+            message = str(exc)
+        raise ProblemException(status, http.client.responses[status], message)
+    return group

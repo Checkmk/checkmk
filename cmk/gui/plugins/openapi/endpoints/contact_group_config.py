@@ -4,10 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Contact-groups"""
-import http.client
-
-from connexion import ProblemException  # type: ignore[import]
-
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (
@@ -15,6 +11,8 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     serialize_group,
     serialize_group_list,
     load_groups,
+    fetch_group,
+    fetch_specific_groups,
 )
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -38,7 +36,7 @@ def create(params):
     name = body['name']
     alias = body.get('alias')
     add_group(name, 'contact', {'alias': alias})
-    group = _fetch_contact_group(name)
+    group = fetch_group(name, "contact")
     return serve_group(group, serialize_group('contact_group_config'))
 
 
@@ -58,7 +56,7 @@ def bulk_create(params):
         add_group(group_name, 'contact', {'alias': group_alias})
         contact_group_names.append(group_name)
 
-    contact_groups = _fetch_select_contact_groups(contact_group_names)
+    contact_groups = fetch_specific_groups(contact_group_names, "contact")
     return constructors.serve_json(serialize_group_list('contact_group_config', contact_groups))
 
 
@@ -82,7 +80,7 @@ def list_group(params):
 def show(params):
     """Show a contact-group"""
     name = params['name']
-    group = _fetch_contact_group(name)
+    group = fetch_group(name, "contact")
     return serve_group(group, serialize_group('contact_group_config'))
 
 
@@ -95,7 +93,7 @@ def show(params):
 def delete(params):
     """Delete a contact-group"""
     name = params['name']
-    group = _fetch_contact_group(name)
+    group = fetch_group(name, "contact")
     constructors.require_etag(constructors.etag_of_dict(group))
     watolib.delete_group(name, 'contact')
     return Response(status=204)
@@ -110,8 +108,9 @@ def bulk_delete(params):
     """Bulk delete contact group configs"""
     entries = params['entries']
     for group_name in entries:
-        _group = _fetch_contact_group(
+        _group = fetch_group(
             group_name,
+            "contact",
             status=400,
             message=f"contact group {group_name} was not found",
         )
@@ -131,35 +130,8 @@ def bulk_delete(params):
 def update(params):
     """Update a contact-group"""
     name = params['name']
-    group = _fetch_contact_group(name)
+    group = fetch_group(name, "contact")
     constructors.require_etag(constructors.etag_of_dict(group))
     edit_group(name, 'contact', params['body'])
-    group = _fetch_contact_group(name)
+    group = fetch_group(name, "contact")
     return serve_group(group, serialize_group('contact_group_config'))
-
-
-def _fetch_contact_group(ident, status=404, message=None):
-    groups = load_contact_group_information()
-    group = _retrieve_group(ident, groups, status, message)
-    group['id'] = ident
-    return group
-
-
-def _fetch_select_contact_groups(idents, status=404, message=None):
-    groups = load_contact_group_information()
-    result = []
-    for ident in idents:
-        group = _retrieve_group(ident, groups, status, message)
-        group['id'] = ident
-        result.append(group)
-    return result
-
-
-def _retrieve_group(ident, groups, status, message):
-    try:
-        group = groups[ident].copy()
-    except KeyError as exc:
-        if message is None:
-            message = str(exc)
-        raise ProblemException(status, http.client.responses[status], message)
-    return group

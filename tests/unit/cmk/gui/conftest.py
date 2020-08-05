@@ -254,6 +254,14 @@ def get_link(resp, rel):
     raise KeyError("%r not found" % (rel,))
 
 
+def _expand_rel(rel):
+    if rel.startswith(".../"):
+        rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
+    if rel.startswith("cmk/"):
+        rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
+    return rel
+
+
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
     def __init__(self, *args, **kw):
@@ -268,12 +276,18 @@ class WebTestAppForCMK(webtest.TestApp):
     def call_method(self, method: HTTPMethod, url, *args, **kw) -> webtest.TestResponse:
         return getattr(self, method.lower())(url, *args, **kw)
 
+    def has_link(self, resp: webtest.TestResponse, rel) -> bool:
+        if resp.status_code == 204:
+            return False
+        try:
+            _ = get_link(resp.json, _expand_rel(rel))
+            return True
+        except KeyError:
+            return False
+
     def follow_link(self, resp: webtest.TestResponse, rel, base='', **kw) -> webtest.TestResponse:
         """Follow a link description as defined in a restful-objects entity"""
-        if rel.startswith(".../"):
-            rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
-        if rel.startswith("cmk/"):
-            rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
+        rel = _expand_rel(rel)
         if resp.status.startswith("2") and resp.content_type.endswith("json"):
             link = get_link(resp.json, rel)
             return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)

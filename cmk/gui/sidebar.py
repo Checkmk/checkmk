@@ -546,7 +546,10 @@ class SidebarRenderer:
 
         self._show_main_menu()
 
-        html.div('', id_="side_fold")
+        html.div('',
+                 id_="side_fold",
+                 title=_("Toggle the sidebar"),
+                 onclick="cmk.sidebar.toggle_sidebar()")
 
         if config.sidebar_show_version_in_sidebar:
             html.open_div(id_="side_version")

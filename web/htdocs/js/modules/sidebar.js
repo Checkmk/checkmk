@@ -7,7 +7,6 @@ import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
 
 var g_content_loc   = null;
-var g_sidebar_folded = false;
 var g_scrollbar = null;
 
 
@@ -41,11 +40,8 @@ export function initialize_sidebar(update_interval, refresh, restart, static_) {
 export function register_event_handlers() {
     window.addEventListener("mousemove", function(e) {
         snapinDrag(e);
-        dragScroll(e);
         return false;
     }, false);
-    window.addEventListener("mousedown", startDragScroll, false);
-    window.addEventListener("mouseup", stopDragScroll,  false);
 }
 
 // This ends drag scrolling when moving the mouse out of the sidebar
@@ -72,7 +68,6 @@ function on_mouse_leave(e) {
 }
 
 function stop_snapin_dragging(e) {
-    stopDragScroll(e);
     snapinTerminateDrag(e);
     return false;
 }
@@ -351,83 +346,17 @@ export function scroll_window(speed){
     }
 }
 
-/************************************************
- * drag/drop scrollen
- *************************************************/
-
-var g_dragging = false;
-var g_start_y = 0;
-
-function startDragScroll(event) {
-    if (!event)
-        event = window.event;
-
-    const target = utils.get_target(event);
-    const button = utils.get_button(event);
-
-    if (button != "LEFT")
-        return true; // only care about left clicks!
-
-    if (target.id === "side_fold" && target.tagName != "OPTION") {
-        // When clicking on an <option> of the "core performance" snapins, an event
-        // with event.clientX equal 0 is triggered, don"t know why. Filter out clicks
-        // on OPTION tags.
-        if (g_sidebar_folded) {
-            unfold_sidebar();
-        } else {
-            fold_sidebar();
-        }
-        return utils.prevent_default_events(event);
-    }
-
-    if (g_dragging === false
-        && target.tagName != "A"
-        && target.tagName != "INPUT"
-        && target.tagName != "SELECT"
-        && target.tagName != "OPTION"
-        && !(target.tagName == "DIV" && target.className == "heading")) {
-
-        g_dragging = event;
-        g_start_y = event.clientY;
-
-        return utils.prevent_default_events(event);
-    }
-
-    return true;
-}
-
-function stopDragScroll(){
-    g_dragging = false;
-}
-
-function dragScroll(event) {
-    if (!event)
-        event = window.event;
-
-    if (g_dragging === false)
-        return true;
-
-    event.cancelBubble = true;
-
-    const inhalt = document.getElementById("side_content");
-    const diff = g_start_y - event.clientY;
-
-    inhalt.scrollTop += diff;
-
-    // Opera does not fire onunload event which is used to store the scroll
-    // position. So call the store function manually here.
-    if (utils.browser.is_opera())
-        store_scroll_position();
-
-    g_start_y = event.clientY;
-
-    g_dragging = event;
-    return utils.prevent_default_events(event);
+export function toggle_sidebar()
+{
+    const sidebar = document.getElementById("check_mk_sidebar");
+    if (utils.has_class(sidebar, "folded"))
+        unfold_sidebar();
+    else
+        fold_sidebar();
 }
 
 export function fold_sidebar()
 {
-    g_sidebar_folded = true;
     const sidebar = document.getElementById("check_mk_sidebar");
     utils.add_class(sidebar, "folded");
     const button = document.getElementById("side_fold");
@@ -439,7 +368,6 @@ export function fold_sidebar()
 
 function unfold_sidebar()
 {
-    g_sidebar_folded = false;
     const sidebar = document.getElementById("check_mk_sidebar");
     utils.remove_class(sidebar, "folded");
     const button = document.getElementById("side_fold");

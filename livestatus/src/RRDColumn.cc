@@ -11,6 +11,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <filesystem>
 #include <iterator>
 #include <ostream>
@@ -35,14 +36,8 @@
 
 RRDColumn::RRDColumn(const std::string &name, const std::string &description,
                      const Column::Offsets &offsets, MonitoringCore *mc,
-                     const RRDColumnArgs &args)
-    : ListColumn(name, description, offsets)
-    , _mc(mc)
-    , _rpn(args.rpn)
-    , _start_time(args.start_time)
-    , _end_time(args.end_time)
-    , _resolution(args.resolution)
-    , _max_entries(args.max_entries) {}
+                     RRDColumnArgs args)
+    : ListColumn(name, description, offsets), _mc(mc), _args(std::move(args)) {}
 
 void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
                        std::chrono::seconds /*timezone_offset*/) const {
@@ -135,15 +130,15 @@ RRDColumn::Data RRDColumn::getData(Row row) const {
     std::vector<std::string> argv_s{
         "rrdtool xport",  // name of program (ignored)
         "-s",
-        std::to_string(_start_time),
+        std::to_string(_args.start_time),
         "-e",
-        std::to_string(_end_time),
+        std::to_string(_args.end_time),
         "--step",
-        std::to_string(_resolution)};
+        std::to_string(_args.resolution)};
 
-    if (_max_entries > 0) {
+    if (_args.max_entries > 0) {
         argv_s.emplace_back("-m");
-        argv_s.emplace_back(std::to_string(_max_entries));
+        argv_s.emplace_back(std::to_string(_args.max_entries));
     }
 
     // We have an RPN like fs_used,1024,*. In order for that to work, we need to
@@ -155,7 +150,7 @@ RRDColumn::Data RRDColumn::getData(Row row) const {
     // faster) way is to look for the names of variables within our RPN
     // expressions and create DEFs just for them - if the according RRD exists.
     std::string converted_rpn;  // convert foo.max -> foo-max
-    std::vector<char> rpn_copy(_rpn.begin(), _rpn.end());
+    std::vector<char> rpn_copy(_args.rpn.begin(), _args.rpn.end());
     rpn_copy.push_back('\0');
     char *scan = &rpn_copy[0];
 

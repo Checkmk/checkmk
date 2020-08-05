@@ -9,23 +9,21 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
-#include <ctime>
 #include <string>
 #include <vector>
 
 #include "Column.h"
+#include "DynamicRRDColumn.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
 class Row;
 class RowRenderer;
-struct RRDColumnArgs;
 
 class RRDColumn : public ListColumn {
 public:
     RRDColumn(const std::string &name, const std::string &description,
-              const Column::Offsets &, MonitoringCore *mc,
-              const RRDColumnArgs &args);
+              const Column::Offsets &, MonitoringCore *mc, RRDColumnArgs args);
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
@@ -41,11 +39,7 @@ private:
     [[nodiscard]] virtual Table table() const = 0;
 
     MonitoringCore *_mc;
-    std::string _rpn;
-    time_t _start_time;
-    time_t _end_time;
-    int _resolution;
-    int _max_entries;
+    RRDColumnArgs _args;
 
     struct Data {
         std::chrono::system_clock::time_point start;

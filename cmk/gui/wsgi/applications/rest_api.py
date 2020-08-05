@@ -69,16 +69,19 @@ VALIDATOR_MAP = {
 
 
 class CheckmkApiApp(AbstractApp):
-    def __init__(self, import_name, **kwargs):
+    def __init__(self, import_name, debug=False, **kwargs):
         resolver = RestyResolver('cmk.gui.plugins.openapi.endpoints')
         resolver.function_resolver = wrap_result(resolver.function_resolver, with_user)
 
         kwargs.setdefault('resolver', resolver)
-        super(CheckmkApiApp, self).__init__(import_name, api_cls=CheckmkApi, **kwargs)
+        super(CheckmkApiApp, self).__init__(import_name, api_cls=CheckmkApi, debug=debug, **kwargs)
 
     def create_app(self):
         """Will be persisted on self.app, where __call__ will dispatch to."""
         app = flask.Flask(self.import_name)
+        app.config['PROPAGATE_EXCEPTIONS'] = self.debug
+        app.config['DEBUG'] = self.debug
+        app.config['TESTING'] = self.debug
         app.json_encoder = FlaskJSONEncoder
         return app
 

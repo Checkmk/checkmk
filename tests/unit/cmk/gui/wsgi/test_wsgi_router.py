@@ -32,7 +32,8 @@ def test_openapi_version(wsgi_app, with_automation_user):
     assert resp.json['site'] == cmk_version.omd_site()
 
 
-def test_openapi_app_exception(wsgi_app, with_automation_user):
+def test_openapi_app_exception(wsgi_app_debug_off, with_automation_user):
+    wsgi_app = wsgi_app_debug_off
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version?fail=1", status=500)

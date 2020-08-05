@@ -313,8 +313,17 @@ class WebTestAppForCMK(webtest.TestApp):
         raise NotImplementedError("Format %s not implemented" % output_format)
 
 
-@pytest.fixture(scope='function')
-def wsgi_app(monkeypatch):
-    wsgi_callable = make_app(debug=True)
+def _make_webtest(debug):
+    wsgi_callable = make_app(debug=debug)
     cookies = CookieJar()
     return WebTestAppForCMK(wsgi_callable, cookiejar=cookies)
+
+
+@pytest.fixture(scope='function')
+def wsgi_app(monkeypatch):
+    return _make_webtest(debug=True)
+
+
+@pytest.fixture(scope='function')
+def wsgi_app_debug_off(monkeypatch):
+    return _make_webtest(debug=False)

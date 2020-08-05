@@ -66,11 +66,19 @@ def from_celsius(tempc, unit, relative=False):
 
 
 # Format number according to its datatype
-def render_temp(n, output_unit, relative=False):
-    t = from_celsius(n, output_unit, relative)
-    if isinstance(n, int):
-        return "%d" % t
-    return "%.1f" % t
+def render_temp(n: float, output_unit: str, relative: bool = False, *, sign: bool = False) -> str:
+    """
+        >>> render_temp(12., "c", False, sign=False)
+        '12.0'
+        >>> render_temp(12, "c", False, sign=True)
+        '+12'
+        >>> render_temp(-12., "f", False, sign=False)
+        '10.4'
+
+    """
+    value = from_celsius(n, output_unit, relative)
+    template = "%%%s%s" % ("+" if sign else "", "d" if isinstance(n, int) else ".1f")
+    return template % value
 
 
 temp_unitsym = {

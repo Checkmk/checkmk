@@ -640,8 +640,9 @@ class PostgresLinux(PostgresBase):
             ["(.*)bin/postgres(.*)", "(.*)bin/postmaster(.*)", "(.*)bin/edb-postgres(.*)"]
         ]
         for proc in psutil.process_iter():
-            if any(pat.search(proc.cmdline()[0]) for pat in procs_to_match):
-                out += "%s %s\n" % (proc.pid, " ".join(proc.cmdline()))
+            joined_cmd_line = " ".join(proc.cmdline())
+            if any(pat.search(joined_cmd_line) for pat in procs_to_match):
+                out += "%s %s\n" % (proc.pid, joined_cmd_line)
         return out.rstrip()
 
     def get_query_duration(self):

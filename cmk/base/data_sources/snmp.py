@@ -122,6 +122,7 @@ class SNMPConfigurator(ABCConfigurator):
             # Looks like it could be the case for cluster hosts which
             # don't have an IP address set.
             raise TypeError(self.ipaddress)
+        ip_lookup.verify_ipaddress(self.ipaddress)
         self.snmp_config = (
             # Because of crap inheritance.
             self.host_config.snmp_config(self.ipaddress)
@@ -367,7 +368,6 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
             self._use_outdated_persisted_sections,)
         configurator.selected_raw_sections = selected_raw_sections  # checking only
         # End of wrong
-        ip_lookup.verify_ipaddress(self.configurator.ipaddress)
         with SNMPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")

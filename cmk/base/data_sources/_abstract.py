@@ -111,6 +111,27 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         if host_sections.persisted_sections:
             self.persisted_sections.update(host_sections.persisted_sections)
 
+    def add_persisted_sections(
+        self,
+        persisted_sections: BoundedAbstractPersistedSections,
+        *,
+        logger: logging.Logger,
+    ) -> None:
+        if not persisted_sections:
+            return
+
+        for section_name, entry in persisted_sections.items():
+            if len(entry) == 2:
+                continue  # Skip entries of "old" format
+
+            # Don't overwrite sections that have been received from the source with this call
+            if section_name in self.sections:
+                logger.debug("Skipping persisted section %r, live data available", section_name)
+                continue
+
+            logger.debug("Using persisted section %r", section_name)
+            self._add_cached_section(section_name, *entry)
+
     def _extend_section(
         self,
         section_name: SectionName,
@@ -118,7 +139,7 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     ) -> None:
         self.sections.setdefault(section_name, []).extend(section_content)
 
-    def add_cached_section(
+    def _add_cached_section(
         self,
         section_name: SectionName,
         persisted_from: int,
@@ -359,8 +380,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                 self._section_store.store(persisted_sections)
 
             # Add information from previous persisted infos
-            self._update_info_with_persisted_sections(
-                host_sections,
+            host_sections.add_persisted_sections(
                 persisted_sections,
                 logger=self._logger,
             )
@@ -491,28 +511,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def exception(self) -> Optional[Exception]:
         """Provides exceptions happened during last self.run() call or None"""
         return self._exception
-
-    @staticmethod
-    def _update_info_with_persisted_sections(
-        host_sections: BoundedAbstractHostSections,
-        persisted_sections: BoundedAbstractPersistedSections,
-        *,
-        logger: logging.Logger,
-    ) -> None:
-        if not persisted_sections:
-            return
-
-        for section_name, entry in persisted_sections.items():
-            if len(entry) == 2:
-                continue  # Skip entries of "old" format
-
-            # Don't overwrite sections that have been received from the source with this call
-            if section_name in host_sections.sections:
-                logger.debug("Skipping persisted section %r, live data available", section_name)
-                continue
-
-            logger.debug("Using persisted section %r", section_name)
-            host_sections.add_cached_section(section_name, *entry)
 
     @classmethod
     def use_outdated_persisted_sections(cls) -> None:

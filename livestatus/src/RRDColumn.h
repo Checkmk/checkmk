@@ -48,7 +48,8 @@ private:
         std::vector<double> values;
     };
 
-    [[nodiscard]] Data getData(Row row) const;
+    static Data getData(MonitoringCore *mc, const RRDColumnArgs &args,
+                        const void *object, Table table);
 };
 
 #endif  // RRDColumn_h

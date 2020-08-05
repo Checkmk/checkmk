@@ -9,8 +9,6 @@ from cmk.base.plugins.agent_based.utils.ps import (
     get_discovery_specs,
     ps_info,
     ps_info_tuple,
-    minn,
-    maxx,
     replace_service_description,
     process_attributes_match,
     process_matches,

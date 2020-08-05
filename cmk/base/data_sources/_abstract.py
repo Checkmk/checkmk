@@ -23,7 +23,6 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
-    AgentRawData,
     SectionName,
     ServiceCheckResult,
     SourceType,
@@ -325,23 +324,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             get_raw_data=False,
         )
         if not isinstance(result, ABCHostSections):
-            raise TypeError("Got invalid type: %r" % result)
-        return result
-
-    def run_raw(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> AgentRawData:
-        """Small wrapper for self._run() which always returns raw data source data
-
-        Both hostname and ipaddress are optional, used for virtual
-        Check_MK clusters."""
-        result = self._run(
-            selected_raw_sections=selected_raw_sections,
-            get_raw_data=True,
-        )
-        if not isinstance(result, AgentRawData):
             raise TypeError("Got invalid type: %r" % result)
         return result
 

@@ -398,7 +398,8 @@ def mode_dump_agent(hostname: HostName) -> None:
         ):
             source.set_max_cachefile_age(config.check_max_cachefile_age)
             if isinstance(source, data_sources.agent.AgentDataSource):
-                output.append(source.run_raw(selected_raw_sections=None))
+                # TODO(ml): Call fetcher directly.
+                output.append(source.run_raw())
 
             source_state, source_output, _source_perfdata = source.get_summary_result()
             if source_state != 0:

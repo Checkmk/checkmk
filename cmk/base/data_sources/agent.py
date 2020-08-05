@@ -467,3 +467,7 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
             to_cache,
             self._logger,
         )
+
+    def run_raw(self) -> AgentRawData:
+        """Return raw data from cache or fetcher."""
+        return self._run(selected_raw_sections=None, get_raw_data=True)

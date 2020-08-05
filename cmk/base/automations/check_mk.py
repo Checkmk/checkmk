@@ -1243,7 +1243,9 @@ class AutomationDiagHost(Automation):
             elif isinstance(source, data_sources.snmp.SNMPDataSource):
                 continue
 
-            source_output = source.run_raw(selected_raw_sections=None)
+            # TODO(ml): Call fetcher directly.
+            assert isinstance(source, data_sources.agent.AgentDataSource)
+            source_output = source.run_raw()
 
             # We really receive a byte string here. The agent sections
             # may have different encodings and are normally decoded one
@@ -1527,7 +1529,8 @@ class AutomationGetAgentOutput(Automation):
                 for source in sources:
                     source.set_max_cachefile_age(config.check_max_cachefile_age)
                     if isinstance(source, data_sources.agent.AgentDataSource):
-                        agent_output += source.run_raw(selected_raw_sections=None)
+                        # TODO(ml): Call fetcher directly.
+                        agent_output += source.run_raw()
                 info = agent_output
 
                 # Optionally show errors of problematic data sources

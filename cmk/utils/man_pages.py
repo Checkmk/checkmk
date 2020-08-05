@@ -24,6 +24,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
@@ -280,7 +281,8 @@ def man_page_path(name: str) -> Optional[Path]:
                 cmk.utils.paths.local_check_manpages_dir,
                 Path(cmk.utils.paths.check_manpages_dir)
         ]:
-            p = basedir / name
+            # check plugins pre 1.7 could have dots in them. be nice and find those.
+            p = basedir / (name if name.startswith("check-mk") else maincheckify(name))
             if p.exists():
                 return p
     return None

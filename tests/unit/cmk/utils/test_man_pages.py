@@ -12,6 +12,9 @@ from testlib.utils import cmk_path
 
 import cmk.utils.debug
 import cmk.utils.man_pages as man_pages
+from cmk.utils.type_defs import CheckPluginName
+
+import cmk.base.api.agent_based.register as agent_based_register
 
 # TODO: Add tests for module internal functions
 
@@ -19,6 +22,11 @@ import cmk.utils.man_pages as man_pages
 @pytest.fixture(autouse=True)
 def patch_cmk_paths(monkeypatch, tmp_path):
     monkeypatch.setattr("cmk.utils.paths.local_check_manpages_dir", tmp_path)
+
+
+@pytest.fixture(scope="module", name="all_pages")
+def _get_all_pages():
+    return man_pages.all_man_pages()
 
 
 def test_man_page_exists_only_shipped():
@@ -57,6 +65,13 @@ def test_man_page_path_both_dirs(tmp_path):
     assert man_pages.man_page_path("if") == tmp_path / "if"
 
 
+def test_all_manpages_migrated(all_pages):
+    for name in all_pages:
+        if name in ("check-mk-inventory", "check-mk"):
+            continue
+        assert CheckPluginName(name)
+
+
 def test_all_man_pages(tmp_path):
     (tmp_path / ".asd").write_text(u"", encoding="utf-8")
     (tmp_path / "asd~").write_text(u"", encoding="utf-8")
@@ -72,9 +87,10 @@ def test_all_man_pages(tmp_path):
     assert pages["if64"] == "%s/checkman/if64" % cmk_path()
 
 
-def test_load_all_man_pages():
-    for name in man_pages.all_man_pages():
+def test_load_all_man_pages(all_pages):
+    for name in all_pages:
         man_page = man_pages.load_man_page(name)
+        assert man_page is not None, name
         assert isinstance(man_page, dict)
         _check_man_page_structure(man_page)
 
@@ -122,8 +138,8 @@ def test_no_unsorted_man_pages():
     assert not unsorted_page_names, "Found unsorted man pages: %s" % ", ".join(unsorted_page_names)
 
 
-def test_manpage_catalog_headers():
-    for name, path in man_pages.all_man_pages().items():
+def test_manpage_catalog_headers(all_pages):
+    for name, path in all_pages.items():
         try:
             parsed = man_pages._parse_man_page_header(name, Path(path))
         except Exception as e:
@@ -134,9 +150,8 @@ def test_manpage_catalog_headers():
         assert parsed.get("catalog"), "Did not find \"catalog:\" header in man page \"%s\"" % name
 
 
-def test_manpage_files():
-    manuals = man_pages.all_man_pages()
-    assert len(manuals) > 1000
+def test_manpage_files(all_pages):
+    assert len(all_pages) > 1000
 
 
 def _is_pure_section_declaration(check):
@@ -144,20 +159,16 @@ def _is_pure_section_declaration(check):
     return check.get('inventory_function') is None and check.get('check_function') is None
 
 
-def test_find_missing_manpages(config_check_info, config_active_check_info):
-    all_check_manuals = man_pages.all_man_pages()
+def test_find_missing_manpages_passive(config_load_all_checks, all_pages):
+    for plugin_name in (str(p.name) for p in agent_based_register.iter_all_check_plugins()):
+        if plugin_name in ("labels", "esx_systeminfo"):
+            continue  # these checks discovery functions can only create labels, never a service
+        assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
 
-    checks_sorted = sorted([(name, entry)
-                            for (name, entry) in config_check_info.items()
-                            if not _is_pure_section_declaration(entry)] +
-                           [("check_" + name, entry)
-                            for (name, entry) in config_active_check_info.items()])
-    assert len(checks_sorted) > 1000
 
-    for check_plugin_name, _check in checks_sorted:
-        if check_plugin_name in ["labels", "esx_systeminfo"]:
-            continue  # this check's discovery function can only create labels, never a service
-        assert check_plugin_name in all_check_manuals, "Manpage missing: %s" % check_plugin_name
+def test_find_missing_manpages_active(config_active_check_info, all_pages):
+    for plugin_name in ("check_%s" % n for n in config_active_check_info):
+        assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
 
 
 def test_no_subtree_and_entries_on_same_level():

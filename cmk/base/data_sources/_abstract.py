@@ -338,7 +338,29 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         which also includes information about the happed exception. In case the --debug
         mode is enabled, the exceptions are raised. self._exception is re-initialized
         to None when this method is called."""
-
+        #
+        # This function has two different functionalities depending on `get_raw_data`.
+        #
+        # In short, the code does (mind the types):
+        #
+        # def _run(self, *, ..., get_raw_data : Literal[True]) -> RawData:
+        #     assert get_raw_data is True
+        #     try:
+        #         return fetcher.data()
+        #     except:
+        #         return self.default_raw_data
+        #
+        # *or*
+        #
+        # def _run(self, *, ..., get_raw_data : Literal[False]) -> HostSections:
+        #     assert get_raw_data is False
+        #     try:
+        #         return self.parse(fetcher.data())
+        #     except:
+        #         return self.default_host_sections
+        #
+        # Also note that `get_raw_data()` is only used for Agent sources.
+        #
         self._exception = None
         self._host_sections = None
 

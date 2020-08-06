@@ -1682,6 +1682,7 @@ def _show_filter_form_buttons(filter_list_id: str) -> None:
 
 @cmk.gui.pages.register("view")
 def page_view():
+    """Central entry point for the initial HTML page rendering of a view"""
     view_spec, view_name = html.get_item_input("view_name", get_permitted_views())
 
     _patch_view_context(view_spec)

@@ -1341,7 +1341,7 @@ class OverridableContainer(Overridable, Container):
                 icon_name=cls.type_name(),
                 item=make_javascript_link(
                     "cmk.popup_menu.pagetype_add_to_container(%s, %s);cmk.utils.reload_sidebar();" %
-                    (cls.type_name(), page.name())),
+                    (json.dumps(cls.type_name()), json.dumps(page.name()))),
             )
 
     @classmethod

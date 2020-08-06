@@ -1518,18 +1518,21 @@ body.main .popup_menu {
   }
 }
 
-body.main .popup_menu a,
-body.main table.footer .popup_menu a,
-body.main .popup_menu span {
-  display: block;
-  padding-top: 1px;
-  padding-bottom: 1px;
-  color: $font-color;
-  text-align: left;
-  text-decoration: none;
+body.main .popup_menu,
+body.main table.footer .popup_menu,
+body.main .popup_menu {
+  a, span {
+    display: block;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    color: $font-color;
+    text-align: left;
+    text-decoration: none;
+  }
 
-  &:hover {
+  a:hover {
     text-decoration: underline;
+    cursor: pointer;
   }
 }
 

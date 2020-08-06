@@ -2521,6 +2521,8 @@ def _dropdown_matches_datasource(info_name: InfoName, datasource: ABCDataSource)
         return datasource.ident == "hosts"
     if info_name == "service":
         return datasource.ident == "services"
+    if info_name in ["hostgroup", "servicegroup"]:
+        return False
     if info_name == "aggr":
         return "aggr" in datasource.infos
 

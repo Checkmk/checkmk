@@ -492,14 +492,15 @@ def draw_dashboard(name: DashboardName) -> None:
 
     # In case we have a dashboard / dashlet that requires context information that is not available
     # yet, display a message to the user to insert the missing information.
-    missing_single_infos: Set[InfoName] = set()
     missing_mandatory_context_filters = not set(board_context.keys()).issuperset(
         set(board["mandatory_context_filters"]))
 
     dashlets = _get_dashlets(name, board)
 
+    missing_single_infos: Set[InfoName] = set()
     unconfigured_single_infos: Set[InfoName] = set()
     for dashlet in dashlets:
+        missing_single_infos.update(dashlet.missing_single_infos())
         unconfigured_single_infos.update(dashlet.unconfigured_single_infos())
 
     html.add_body_css_class("dashboard")
@@ -514,45 +515,19 @@ def draw_dashboard(name: DashboardName) -> None:
     dashlet_javascripts(board)
     dashlet_styles(board)
 
-    refresh_dashlets = []  # Dashlets with automatic refresh, for Javascript
-    dashlet_coords = []  # Dimensions and positions of dashlet
-    on_resize_dashlets = {}  # javascript function to execute after ressizing the dashlet
     for dashlet in dashlets:
-        dashlet_content_html = ""
-        dashlet_title_html = ""
-        try:
-            missing_single_infos.update(dashlet.missing_single_infos())
-            if missing_single_infos or missing_mandatory_context_filters:
-                dashlet_title_html = _("Filter context missing")
-                dashlet_content_html = str(
-                    html.render_warning(
-                        _("Unable to render this dashlet, "
-                          "because we miss some required context information (%s). Please update the "
-                          "form on the right to make this dashlet render.") %
-                        ", ".join(sorted(missing_single_infos))))
-            else:
-                refresh = get_dashlet_refresh(dashlet)
-                if refresh:
-                    refresh_dashlets.append(refresh)
-
-                on_resize = get_dashlet_on_resize(dashlet)
-                if on_resize:
-                    on_resize_dashlets[dashlet.dashlet_id] = on_resize
-
-                dashlet_title_html = render_dashlet_title_html(dashlet)
-                dashlet_content_html = _render_dashlet_content(board,
-                                                               dashlet,
-                                                               is_update=False,
-                                                               mtime=board["mtime"])
-
-        except Exception as e:
-            dashlet_content_html = render_dashlet_exception_content(dashlet, e)
+        title, content = _render_dashlet(
+            board,
+            dashlet,
+            is_update=False,
+            mtime=board["mtime"],
+            missing_mandatory_context_filters=missing_mandatory_context_filters,
+        )
 
         # Now after the dashlet content has been calculated render the whole dashlet
         dashlet_container_begin(dashlet)
-        draw_dashlet(dashlet, dashlet_content_html, dashlet_title_html)
+        draw_dashlet(dashlet, content, title)
         dashlet_container_end()
-        dashlet_coords.append(get_dashlet_dimensions(dashlet))
 
     # Display the dialog during initial rendering when required context information is missing.
     if missing_single_infos or missing_mandatory_context_filters:
@@ -568,11 +543,11 @@ def draw_dashboard(name: DashboardName) -> None:
         "screen_margin": screen_margin,
         "dashlet_padding": dashlet_padding,
         "dashlet_min_size": Dashlet.minimum_size,
-        "refresh_dashlets": refresh_dashlets,
-        "on_resize_dashlets": on_resize_dashlets,
+        "refresh_dashlets": _get_refresh_dashlets(dashlets),
+        "on_resize_dashlets": _get_resize_dashlets(dashlets),
         "dashboard_name": name,
         "dashboard_mtime": board['mtime'],
-        "dashlets": dashlet_coords,
+        "dashlets": _get_dashlet_coords(dashlets),
     }
 
     html.javascript("""
@@ -615,6 +590,33 @@ def _dashboard_breadcrumb(name: str, title: str) -> Breadcrumb:
     return breadcrumb
 
 
+def _get_refresh_dashlets(
+    dashlets: List[Dashlet]
+) -> List[Tuple[DashletId, DashletRefreshInterval, DashletRefreshAction]]:
+    """Return information for dashlets with automatic refresh"""
+    refresh_dashlets = []
+    for dashlet in dashlets:
+        refresh = get_dashlet_refresh(dashlet)
+        if refresh:
+            refresh_dashlets.append(refresh)
+    return refresh_dashlets
+
+
+def _get_resize_dashlets(dashlets: List[Dashlet]) -> Dict[DashletId, str]:
+    """Get list of javascript functions to execute after resizing the dashlets"""
+    on_resize_dashlets: Dict[DashletId, str] = {}
+    for dashlet in dashlets:
+        on_resize = get_dashlet_on_resize(dashlet)
+        if on_resize:
+            on_resize_dashlets[dashlet.dashlet_id] = on_resize
+    return on_resize_dashlets
+
+
+def _get_dashlet_coords(dashlets: List[Dashlet]) -> List[Dict[str, int]]:
+    """Return a list of all dashlets dimensions and positions"""
+    return [get_dashlet_dimensions(dashlet) for dashlet in dashlets]
+
+
 def dashlet_container_begin(dashlet: Dashlet) -> None:
     classes = ['dashlet', dashlet.type_name()]
     if dashlet.is_resizable():
@@ -627,7 +629,32 @@ def dashlet_container_end() -> None:
     html.close_div()
 
 
-def render_dashlet_title_html(dashlet: Dashlet) -> str:
+def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int,
+                    missing_mandatory_context_filters: bool) -> Tuple[str, str]:
+    content = ""
+    title = ""
+    try:
+        missing_single_infos = dashlet.missing_single_infos()
+        if missing_single_infos or missing_mandatory_context_filters:
+            return (
+                _("Filter context missing"),
+                str(
+                    html.render_warning(
+                        _("Unable to render this dashlet, "
+                          "because we miss some required context information (%s). Please update the "
+                          "form on the right to make this dashlet render.") %
+                        ", ".join(sorted(missing_single_infos)))))
+
+        title = _render_dashlet_title(dashlet)
+        content = _render_dashlet_content(board, dashlet, is_update=False, mtime=board["mtime"])
+
+    except Exception as e:
+        content = render_dashlet_exception_content(dashlet, e)
+
+    return title, content
+
+
+def _render_dashlet_title(dashlet: Dashlet) -> str:
     title = dashlet.display_title()
     if title is not None and dashlet.show_title():
         url = dashlet.title_url()
@@ -949,7 +976,7 @@ def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
         raise MKGeneralException(_('The dashlet does not exist.'))
 
 
-def draw_dashlet(dashlet: Dashlet, dashlet_content_html: str, dashlet_title_html: str) -> None:
+def draw_dashlet(dashlet: Dashlet, content: str, title: str) -> None:
     """Draws the initial HTML code for one dashlet
 
     Each dashlet has an id "dashlet_%d", where %d is its index (in
@@ -957,8 +984,8 @@ def draw_dashlet(dashlet: Dashlet, dashlet_content_html: str, dashlet_title_html
     div there is an inner div containing the actual dashlet content. This content
     is updated later using the dashboard_dashlet.py ajax call.
     """
-    if dashlet_title_html is not None and dashlet.show_title():
-        html.div(html.render_span(dashlet_title_html),
+    if title is not None and dashlet.show_title():
+        html.div(html.render_span(title),
                  id_="dashlet_title_%d" % dashlet.dashlet_id,
                  class_=["title"])
 
@@ -967,7 +994,7 @@ def draw_dashlet(dashlet: Dashlet, dashlet_content_html: str, dashlet_title_html
         css.append("background")
 
     html.open_div(id_="dashlet_inner_%d" % dashlet.dashlet_id, class_=css)
-    html.write_html(HTML(dashlet_content_html))
+    html.write_html(HTML(content))
     html.close_div()
 
 
@@ -1018,13 +1045,13 @@ def ajax_dashlet() -> None:
         dashlet_type = get_dashlet_type(dashlet_spec)
         dashlet = dashlet_type(name, board, ident, dashlet_spec)
 
-        dashlet_content_html = _render_dashlet_content(board, dashlet, is_update=True, mtime=mtime)
+        content = _render_dashlet_content(board, dashlet, is_update=True, mtime=mtime)
     except Exception as e:
         if dashlet is None:
             dashlet = _fallback_dashlet(name, board, dashlet_spec, ident)
-        dashlet_content_html = render_dashlet_exception_content(dashlet, e)
+        content = render_dashlet_exception_content(dashlet, e)
 
-    html.write_html(HTML(dashlet_content_html))
+    html.write_html(HTML(content))
 
 
 def _add_context_to_dashboard(board: DashboardConfig) -> DashboardConfig:

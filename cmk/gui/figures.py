@@ -100,7 +100,12 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         return 60
 
     def on_resize(self):
-        return "%(instance)s.resize() ; %(instance)s.render()" % {"instance": self.instance_name}
+        return ("if (typeof %(instance)s != 'undefined') {"
+                "%(instance)s.resize();"
+                "%(instance)s.render();"
+                "}") % {
+                    "instance": self.instance_name
+                }
 
 
 class TableFigureDataCreator:

@@ -1356,7 +1356,7 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
     av_table["object_titles"] = titles
 
     # Headers for availability cells
-    av_table["cell_titles"] = []
+    av_table["cell_titles"]: List[_Tuple[str, str]] = []
     os_aggrs, os_states = get_outage_statistic_options(avoptions)
     for timeformat, render_number in timeformats:
         for sid, css, sname, help_txt in availability_columns[what]:

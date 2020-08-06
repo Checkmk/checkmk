@@ -1162,15 +1162,15 @@ def _output_availability_timeline_csv(what: AVObjectType, av_entry: AVEntry, avo
 
 def _output_availability_csv(what: AVObjectType, av_data: AVData, avoptions: AVOptions) -> None:
     def cells_from_row(table: Table, group_titles: List[str], group_cells: List[str],
-                       object_titles: List[str], cell_titles: List[str], row_object: AVObjectCells,
-                       row_cells: AVRowCells) -> None:
+                       object_titles: List[str], cell_titles: List[Tuple[str, str]],
+                       row_object: AVObjectCells, row_cells: AVRowCells) -> None:
         for column_title, group_title in zip(group_titles, group_cells):
             table.cell(column_title, group_title)
 
         for title, (name, _url) in zip(object_titles, row_object):
             table.cell(title, name)
 
-        for title, (text, _css) in zip(cell_titles, row_cells):
+        for (title, _help), (text, _css) in zip(cell_titles, row_cells):
             table.cell(title, text)
 
     _av_output_set_content_disposition("Checkmk-Availability")

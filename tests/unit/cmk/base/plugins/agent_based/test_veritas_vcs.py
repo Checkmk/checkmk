@@ -219,8 +219,8 @@ def test_parse_veritas_vcs_hashes():
     assert veritas_vcs.parse_veritas_vcs(STRING_TABLE_HASHES) == SECTION_HASHES
 
 
-def test_discover_veritas_vcs_cluster():
-    assert list(veritas_vcs.discover_veritas_vcs_cluster(SECTION)) == [Service(item='minions')]
+def test_discover_veritas_vcs():
+    assert list(veritas_vcs.discover_veritas_vcs(SECTION)) == [Service(item='minions')]
 
 
 def test_discover_veritas_vcs_system():
@@ -331,8 +331,8 @@ PARAMS = type_defs.Parameters(
     },)
 
 
-def test_check_veritas_vcs_cluster():
-    assert list(veritas_vcs.check_veritas_vcs_cluster('minions', PARAMS, SECTION)) == [
+def test_check_veritas_vcs():
+    assert list(veritas_vcs.check_veritas_vcs('minions', PARAMS, SECTION)) == [
         Result(
             state=state.OK,
             summary='running',
@@ -391,9 +391,9 @@ def test_check_veritas_vcs_resource():
     ]
 
 
-def test_cluster_check_veritas_vcs_cluster():
+def test_cluster_check_veritas_vcs():
     assert list(
-        veritas_vcs.cluster_check_veritas_vcs_cluster(
+        veritas_vcs.cluster_check_veritas_vcs(
             'minions',
             PARAMS,
             {

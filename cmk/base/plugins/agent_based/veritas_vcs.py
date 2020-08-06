@@ -277,11 +277,11 @@ def cluster_check_veritas_vcs_subsection(
 #   +----------------------------------------------------------------------+
 
 
-def discover_veritas_vcs_cluster(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs(section: Section) -> type_defs.DiscoveryGenerator:
     yield from discover_veritas_vcs_subsection(section.get('cluster', {}))
 
 
-def check_veritas_vcs_cluster(
+def check_veritas_vcs(
     item: str,
     params: type_defs.Parameters,
     section: Section,
@@ -293,7 +293,7 @@ def check_veritas_vcs_cluster(
     )
 
 
-def cluster_check_veritas_vcs_cluster(
+def cluster_check_veritas_vcs(
     item: str,
     params: type_defs.Parameters,
     section: ClusterSection,
@@ -306,14 +306,14 @@ def cluster_check_veritas_vcs_cluster(
 
 
 register.check_plugin(
-    name="veritas_vcs_cluster",
+    name="veritas_vcs",
     sections=['veritas_vcs'],
     service_name="VCS Cluster %s",
-    discovery_function=discover_veritas_vcs_cluster,
+    discovery_function=discover_veritas_vcs,
     check_ruleset_name='veritas_vcs',
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
-    check_function=check_veritas_vcs_cluster,
-    cluster_check_function=cluster_check_veritas_vcs_cluster,
+    check_function=check_veritas_vcs,
+    cluster_check_function=cluster_check_veritas_vcs,
 )
 
 #.

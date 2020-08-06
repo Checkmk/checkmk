@@ -26,7 +26,12 @@ def patch_cmk_paths(monkeypatch, tmp_path):
 
 @pytest.fixture(scope="module", name="all_pages")
 def _get_all_pages():
-    return man_pages.all_man_pages()
+    return {name: man_pages.load_man_page(name) for name in man_pages.all_man_pages()}
+
+
+@pytest.fixture(scope="module", name="catalog")
+def _get_catalog():
+    return man_pages.load_man_page_catalog()
 
 
 def test_man_page_exists_only_shipped():
@@ -88,8 +93,7 @@ def test_all_man_pages(tmp_path):
 
 
 def test_load_all_man_pages(all_pages):
-    for name in all_pages:
-        man_page = man_pages.load_man_page(name)
+    for name, man_page in all_pages.items():
         assert man_page is not None, name
         assert isinstance(man_page, dict)
         _check_man_page_structure(man_page)
@@ -159,7 +163,7 @@ def test_find_missing_manpages_active(config_active_check_info, all_pages):
         assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
 
 
-def test_find_missing_manpages_cluster_section(config_load_all_checks):
+def test_find_missing_manpages_cluster_section(config_load_all_checks, all_pages):
     missing_cluster_description = set()
     for plugin in agent_based_register.iter_all_check_plugins():
         if plugin.cluster_check_function.__name__ in (
@@ -167,7 +171,7 @@ def test_find_missing_manpages_cluster_section(config_load_all_checks):
                 "cluster_legacy_mode_from_hell",
         ):
             continue
-        man_page = man_pages.load_man_page(str(plugin.name))
+        man_page = all_pages[str(plugin.name)]
         assert man_page
         if "cluster" not in man_page["header"]:
             missing_cluster_description.add(str(plugin.name))
@@ -175,8 +179,7 @@ def test_find_missing_manpages_cluster_section(config_load_all_checks):
     assert not missing_cluster_description
 
 
-def test_no_subtree_and_entries_on_same_level():
-    catalog = man_pages.load_man_page_catalog()
+def test_no_subtree_and_entries_on_same_level(catalog):
     for category, entries in catalog.items():
         has_entries = entries != []
         has_categories = man_pages._manpage_catalog_subtree_names(catalog, category) != []
@@ -209,8 +212,8 @@ def _check_man_page_structure(page):
     assert isinstance(page["header"]["agents"], list)
 
 
-def test_load_man_page_format():
-    page = man_pages.load_man_page("if64")
+def test_load_man_page_format(all_pages):
+    page = all_pages["if64"]
     assert isinstance(page, dict)
 
     _check_man_page_structure(page)
@@ -252,11 +255,11 @@ def test_print_man_page(capsys):
     assert "\n License: " in out
 
 
-def test_missing_catalog_entries_of_man_pages() -> None:
+def test_missing_catalog_entries_of_man_pages(all_pages) -> None:
     catalog_titles = set(man_pages.catalog_titles.keys())
     found_catalog_entries_from_man_pages = set()
     for name in man_pages.all_man_pages():
-        man_page = man_pages.load_man_page(name)
+        man_page = all_pages[name]
         assert man_page is not None
         found_catalog_entries_from_man_pages |= set(man_page['header']['catalog'].split("/"))
     missing_catalog_entries = found_catalog_entries_from_man_pages - catalog_titles

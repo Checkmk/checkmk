@@ -192,10 +192,10 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
     time_range, range_title = avoptions["range"]
 
     # We have two display modes:
-    # - Show availability table (stats) "table"
+    # - Show availability table (stats) "availability"
     # - Show timeline                   "timeline"
     # --> controlled by URL variable "av_mode"
-    av_mode = html.request.get_ascii_input_mandatory("av_mode", "table")
+    av_mode = html.request.get_ascii_input_mandatory("av_mode", "availability")
 
     if av_mode == "timeline":
         title = _("Availability Timeline")
@@ -1108,7 +1108,7 @@ def _handle_anno_request_vars():
 
 
 def _output_csv(what: AVObjectType, av_mode: AVMode, av_data: AVData, avoptions: AVOptions) -> None:
-    if av_mode == "table":
+    if av_mode == "availability":
         _output_availability_csv(what, av_data, avoptions)
     elif av_mode == "timeline":
         _output_availability_timelines_csv(what, av_data, avoptions)

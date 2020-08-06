@@ -4,11 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List, Tuple
+
 import collections
 import re
 import time
 
-from ..agent_based_api.v0 import get_rate, get_value_store, IgnoreResultsError, regex, render
+from ..agent_based_api.v0.type_defs import HostLabelGenerator, Parameters
+from ..agent_based_api.v0 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    regex,
+    render,
+)
 
 ps_info = collections.namedtuple(
     "Process_Info", ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile',
@@ -34,6 +43,23 @@ def get_discovery_specs(params):
         ))
 
     return inventory_specs
+
+
+def host_labels_ps(
+    params: List[Parameters],
+    section: Tuple[int, List],
+) -> HostLabelGenerator:
+    specs = get_discovery_specs(params)
+    for process_info, *command_line in section[1]:
+        for _servicedesc, pattern, userspec, cgroupspec, labels, _default_params in specs:
+            # First entry in line is the node name or None for non-clusters
+            if not process_attributes_match(process_info, userspec, cgroupspec):
+                continue
+            matches = process_matches(command_line, pattern)
+            if not matches:
+                continue  # skip not matched lines
+
+            yield from labels.values()
 
 
 def minn(a, b):
@@ -177,12 +203,19 @@ def format_process_list(processes, html_output):
     ]))
 
 
-# Parse time as output by ps into seconds.
-# Example 1: "12:17"
-# Example 2: "55:12:17"
-# Example 3: "7-12:34:59" (with 7 days)
-# Example 4: "7123459" (only seconds, windows)
 def parse_ps_time(text):
+    """Parse time as output by ps into seconds
+
+        >>> parse_ps_time("12:17")
+        737
+        >>> parse_ps_time("55:12:17")
+        198737
+        >>> parse_ps_time("7-12:34:59")
+        650099
+        >>> parse_ps_time("650099")
+        650099
+
+    """
     if "-" in text:
         tokens = text.split("-")
         days = int(tokens[0] or 0)

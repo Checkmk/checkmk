@@ -1079,8 +1079,18 @@ def _discover_host_labels(
                 # just for mypy. if parsed was None, the plugin would not have been in the list
                 continue
 
+            kwargs = {"section": parsed}
+            # TODO:
+            # The following block is a special case for the ps plugin. This should be done
+            # in a more general sense when CMK-5158 is addressed. Make sure to grep for
+            # "CMK-5158" in the code base.
+            if str(plugin.name) == "ps":
+                ps_check_plugin = agent_based_register.get_check_plugin(CheckPluginName("ps"))
+                assert ps_check_plugin
+                kwargs["params"] = config.get_discovery_parameters(host_key[0], ps_check_plugin)
+
             try:
-                for label in plugin.host_label_function(parsed):
+                for label in plugin.host_label_function(**kwargs):
                     label.plugin_name = str(plugin.name)
                     discovered_host_labels.add_label(label)
                     console.vverbose("  %s: %s (%s)\n" %

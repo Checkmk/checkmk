@@ -106,7 +106,9 @@ def _noop_host_label_function(section: Any) -> Generator[HostLabel, None, None]:
 
 
 def _create_host_label_function(
-        host_label_function: Optional[HostLabelFunction]) -> HostLabelFunction:
+    host_label_function: Optional[HostLabelFunction],
+    has_params: bool,
+) -> HostLabelFunction:
     if host_label_function is None:
         return _noop_host_label_function
 
@@ -114,8 +116,8 @@ def _create_host_label_function(
         "host_label",
         host_label_function,
         has_item=False,
-        has_params=False,
         sections=[ParsedSectionName("__always_just_one_section__")],
+        has_params=has_params,
     )
 
     @functools.wraps(host_label_function)
@@ -173,7 +175,14 @@ def create_agent_section_plugin(
         section_name,
         ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
         parse_function,
-        _create_host_label_function(host_label_function),
+        _create_host_label_function(
+            host_label_function,
+            # TODO:
+            # The following is a special case for the ps plugin. This should be done
+            # in a more general sense when CMK-5158 is addressed. Make sure to grep for
+            # "CMK-5158" in the code base.
+            name in ("ps", "ps_lnx"),
+        ),
         _create_supersedes(section_name, supersedes),
         module,
     )
@@ -210,7 +219,10 @@ def create_snmp_section_plugin(
         section_name,
         ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
         parse_function,
-        _create_host_label_function(host_label_function),
+        _create_host_label_function(
+            host_label_function,
+            has_params=False,
+        ),
         _create_supersedes(section_name, supersedes),
         detect_spec,
         trees,

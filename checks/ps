@@ -49,7 +49,7 @@
 # 3. user:     user definition
 # 5. perfdata: monitor with perfdata
 # 4. levels:   four numbers (thresholds)
-inventory_processes_rules = []
+#inventory_processes_rules = []
 
 
 def ps_cleanup_counters(parsed):
@@ -103,7 +103,7 @@ def inventory_ps(parsed_extra):
     if section_ps is None:
         return
     _cpu_cores, data = section_ps
-    params = host_extra_conf(host_name(), inventory_processes_rules)
+    params = host_extra_conf(host_name(), [])
     # bring back node info for now
     return inventory_ps_common(params, [[None] + line for line in data])
 
@@ -143,17 +143,17 @@ def check_ps(item, params, parsed_extra):
     return check_ps_common(item, params, parsed, cpu_cores=cpu_cores, total_ram=total_ram)
 
 
-check_info['ps'] = {
-    "inventory_function": inventory_ps,
-    "check_function": check_ps,
-    "service_description": "Process %s",
-    "includes": ["ps_lnx.include", "ps.include", "mem.include"],
-    "has_perfdata": True,
-    "node_info": True,  # add first column with actual host name
-    "group": "ps",
-    "default_levels_variable": "ps_default_levels",
-    "extra_sections": ["mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
-}
+# check_info['ps'] = {
+#     "inventory_function": inventory_ps,
+#     "check_function": check_ps,
+#     "service_description": "Process %s",
+#     "includes": ["ps_lnx.include", "ps.include", "mem.include"],
+#     "has_perfdata": True,
+#     "node_info": True,  # add first column with actual host name
+#     "group": "ps",
+#     "default_levels_variable": "ps_default_levels",
+#     "extra_sections": ["mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
+# }
 
 # NOTE: This check is deprecated and will be removed any decade now. ps now
 # does always performance data.
@@ -162,7 +162,7 @@ check_info['ps.perf'] = {
     "service_description": "Process %s",
     "includes": ["ps_lnx.include", "ps.include", "mem.include"],
     "has_perfdata": True,
-    "node_info": True,  # add first column with actual host name
+    #"node_info": True,  # add first column with actual host name
     "group": "ps",
     "default_levels_variable": "ps_default_levels",
     "extra_sections": ["mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],

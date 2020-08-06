@@ -27,9 +27,8 @@ def inventory_ps_common(params, parsed):
     inventory_specs = get_discovery_specs(params)
 
     inventory = []
-    inventory_labels = []
     for line in parsed:
-        for servicedesc, pattern, userspec, cgroupspec, labels, default_params in inventory_specs:
+        for servicedesc, pattern, userspec, cgroupspec, _labels, default_params in inventory_specs:
             # First entry in line is the node name or None for non-clusters
             process_info, command_line = line[1], line[2:]
             if not process_attributes_match(process_info, userspec, cgroupspec):
@@ -72,9 +71,8 @@ def inventory_ps_common(params, parsed):
 
             if inv not in inventory:
                 inventory.append(inv)
-                inventory_labels.append(HostLabels(*[HostLabel(k, v) for k, v in labels.items()]))
 
-    return inventory + inventory_labels
+    return inventory
 
 
 def check_ps_common(item, params, parsed, cpu_cores=1, info_name="Processes", total_ram=None):

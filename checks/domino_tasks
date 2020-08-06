@@ -17,6 +17,8 @@
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.7 tm_grab
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.8 Router
 
+import cmk.base.plugins.agent_based.utils.ps as ps
+
 inv_domino_tasks_rules = []
 
 # Deprecated option since 1.6. cmk.base creates a config warning when finding rules
@@ -38,7 +40,9 @@ def parse_domino_tasks(info):
 
 def inventory_domino_tasks(parsed):
     params = host_extra_conf(host_name(), inv_domino_tasks_rules)
-    return inventory_ps_common(params, parsed)
+    fake_section = (1, [line[1:] for line in parsed])
+    host_labels = list(ps.host_labels_ps(params, fake_section))
+    return inventory_ps_common(params, parsed) + host_labels
 
 
 def check_domino_tasks(item, params, parsed):

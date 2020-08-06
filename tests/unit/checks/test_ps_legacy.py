@@ -26,6 +26,12 @@ from testlib import on_time  # type: ignore[import]
 pytestmark = pytest.mark.checks
 
 
+@pytest.fixture(scope="module")
+def ps_context(check_manager):
+    check = check_manager.get_check("ps.perf")
+    return check.context
+
+
 def splitter(
     text: str,
     split_symbol: Optional[str] = None,
@@ -93,117 +99,6 @@ WSOPREKPFS01,85,126562500,csrss.exe,1176,744,8,468750,44486656,569344
         splitter(
             "/usr/sbin/xinetd -pidfile /var/run/xinetd.pid -stayalive -inetd_compat -inetd_ipv6"),
     ]
-
-
-result_parse = [
-    (1, [
-        [("root", "225948", "9684", "00:00:03/05:05:29", "1"), "/sbin/init", "splash"],
-        [("root", "0", "0", "00:00:00/05:05:29", "2"), "[kthreadd]"],
-        [
-            ("on", "288260", "7240", "00:00:00/05:03:00", "4480"),
-            "/usr/bin/gnome-keyring-daemon", "--start", "--foreground", "--components=secrets"
-        ],
-        [
-            ("on", "1039012", "11656", "00:00:00/05:02:41", "5043"), "/usr/bin/pulseaudio",
-            "--start", "--log-target=syslog"
-        ],
-        [("on", "1050360", "303252", "00:14:59/1-03:59:39", "9902"),
-         "emacs"],
-        [("on", "2924232", "472252", "00:12:05/07:24:15", "7912"),
-         "/usr/lib/firefox/firefox"],
-        [("heute", "11180", "1144", "00:00:00/03:54:10", "10884"), "/omd/sites/heute/lib/cmc/checkhelper"],
-        [("twelve", "11180", "1244", "00:00:00/02:37:39", "30136"),
-          "/omd/sites/twelve/lib/cmc/checkhelper"],
-        ],
-    ),
-    (1, [
-        [("root", "4056", "1512", "0.0/52-04:56:05", "5689"), "/usr/lib/ssh/sshd"],
-        [("zombie", "0", "0", "-/-", "1952"), "<defunct>"],
-        ],
-    ),
-    (1, [
-        [("SYSTEM", "0", "0", "0", "0", "0", "0", "0", "0", "1", "0"), "System Idle Process"],
-        [
-            ("\\NT AUTHORITY\\SYSTEM", "46640", "10680", "0", "600", "5212", "27924179", "58500375",
-             "370", "11", "12"), "svchost.exe"
-        ],
-        [
-            ("\\NT AUTHORITY\\NETWORK SERVICE", "36792", "10040", "0", "676", "5588", "492183155",
-             "189541215", "380", "8", "50"), "svchost.exe"
-        ],
-        [
-            ("\\NT AUTHORITY\\LOCAL SERVICE", "56100", "18796", "0", "764", "56632", "1422261117",
-             "618855967", "454", "13", "4300"), "svchost.exe"
-        ],
-        [
-            ("\\KLAPPRECHNER\\ab", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
-             "1", "642"), "NOTEPAD.EXE"
-        ],
-        ],
-    ),
-    (1, [[("db2prtl", "17176", "17540", "0.0"), "/usr/lib/ssh/sshd"]]),
-    (1, [
-        [("oracle", "9588", "298788", "0.0"), "ora_dmon_uc4prd"],
-        [("oracle", "11448", "300648", "0.0"), "oraclemetroprd", "(LOCAL=NO)"],
-    ]),
-    (2, [
-        [("SYSTEM", "0", "0", "0", "0", "0", "0", "0", "0", "2"), "System Idle Process"],
-        [
-            ("\\KLAPPRECHNER\\ab", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
-             "1"), "NOTEPAD.EXE"
-        ],
-    ]),
-    (24, [[(None,), u"[System Process]"],
-          [
-              ("unknown", "14484", "10608", "0", "4", "0", "0", "368895625000", "1227", "273", ""),
-              u"System"
-          ],
-          [
-              ("unknown", "64", "24", "0", "0", "0", "0", "388621186093750", "0", "24", ""),
-              u"System Idle Process"
-          ],
-          [
-              ("unknown", "4576", "316", "0", "520", "0", "156250", "2031250", "53", "2", ""),
-              u"smss.exe"
-          ],
-          [
-              ("unknown", "43444", "556", "0", "744", "1", "468750", "126562500", "85", "8", ""),
-              u"csrss.exe"
-          ],
-          [
-              ("unknown", "68500", "2848", "0", "680", "2", "2222031250", "10051718750", "679",
-               "10", ""), u"csrss.exe"
-          ]]),
-    (1, [[
-        ("root",), "/usr/sbin/xinetd", "-pidfile", "/var/run/xinetd.pid", "-stayalive",
-        "-inetd_compat", "-inetd_ipv6"
-    ]]),
-    (1, [[
-        (None,), "/usr/sbin/xinetd", "-pidfile", "/var/run/xinetd.pid", "-stayalive",
-        "-inetd_compat", "-inetd_ipv6"
-    ]]),
-]
-input_ids = [
-    "linux, openwrt agent(5 entry, cmk>=1.2.7)",
-    "solaris (5 entry cmk>=1.5)",
-    "windows agent(11 entry, cmk>=)",
-    "aix, bsd, hpux, macos, netbsd, openbsd, agent(4 entry, cmk>=1.1.5)",
-    "aix with zombies",
-    "windows agent(10 entry, cmk>1.2.5)",
-    "windows agent(wmic_info, cmk<1.2.5)",
-    "Second Generation user info only",
-    "First Generation process only",
-]
-
-
-@pytest.mark.parametrize("capture, result", list(zip(generate_inputs(), result_parse)), ids=input_ids)
-def test_parse_ps(capture, result):
-    cpu_core, lines = ps_section.parse_ps(capture)
-    assert cpu_core == result[0]  # cpu_cores
-
-    for out, ref in itertools.zip_longest(lines, result[1]):
-        assert out[0] == ps_utils.ps_info(*ref[0])
-        assert out[1:] == ref[1:]
 
 
 PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
@@ -356,64 +251,6 @@ def test_wato_rules():
     assert ps_utils.get_discovery_specs(PS_DISCOVERY_WATO_RULES) == PS_DISCOVERY_SPECS
 
 
-@pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, result", [
-    (["test", "ps"], "", None, True),
-    (["test", "ps"], "ps", None, True),
-    (["test", "ps"], "ps", "root", False),
-    (["test", "ps"], "ps", "~.*y$", False),
-    (["test", "ps"], "ps", "~.*t$", True),
-    (["test", "ps"], "sp", "~.*t$", False),
-    (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
-])
-def test_process_matches(ps_line, ps_pattern, user_pattern, result):
-    psi = ps_utils.ps_info(ps_line[0])  # type: ignore[call-arg]
-    matches_attr = ps_utils.process_attributes_match(psi, user_pattern, (None, False))
-    matches_proc = ps_utils.process_matches(ps_line[1:], ps_pattern)
-
-    assert (matches_attr and matches_proc) == result
-
-
-@pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, match_groups, result", [
-    (["test", "ps"], "", None, None, True),
-    (["test", "123_foo"], "~.*/(.*)_foo", None, ['123'], False),
-    (["test", "/a/b/123_foo"], "~.*/(.*)_foo", None, ['123'], True),
-    (["test", "123_foo"], "~.*\\\\(.*)_foo", None, ['123'], False),
-    (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ['123'], True),
-])
-def test_process_matches_match_groups(ps_line, ps_pattern, user_pattern,
-                                      match_groups, result):
-    psi = ps_utils.ps_info(ps_line[0])  # type: ignore[call-arg]
-    matches_attr = ps_utils.process_attributes_match(psi, user_pattern, (None, False))
-    matches_proc = ps_utils.process_matches(ps_line[1:], ps_pattern, match_groups)
-
-    assert (matches_attr and matches_proc) == result
-
-
-@pytest.mark.parametrize("attribute, pattern, result", [
-    ("user", "~user", True),
-    ("user", "user", True),
-    ("user", "~foo", False),
-    ("user", "foo", False),
-    ("user", "~u.er", True),
-    ("user", "u.er", False),
-    ("users", "~user", True),
-    ("users", "user", False),
-])
-def test_ps_match_user(attribute, pattern, result):
-    assert ps_utils.match_attribute(attribute, pattern) == result
-
-
-@pytest.mark.parametrize("text, result", [
-    ("12:17", 737),
-    ("55:12:17", 198737),
-    ("7-12:34:59", 650099),
-    ("650099", 650099),
-    ("0", 0),
-])
-def test_parse_ps_time(text, result):
-    assert ps_utils.parse_ps_time(text) == result
-
-
 @pytest.mark.parametrize("params, result", [
     (("sshd", 1, 1, 99, 99), {
         "process": "sshd",
@@ -452,9 +289,8 @@ def test_parse_ps_time(text, result):
         'cpu_rescale_max': True,
     }),
 ])
-def test_cleanup_params(check_manager, params, result):
-    check = check_manager.get_check("ps")
-    assert check.context["ps_cleanup_params"](params) == result
+def test_cleanup_params(ps_context, params, result):
+    assert ps_context["ps_cleanup_params"](params) == result
 
 
 PS_DISCOVERED_ITEMS = [
@@ -541,62 +377,15 @@ PS_DISCOVERED_ITEMS = [
     }),
 ]
 
-PS_DISCOVERED_HOST_LABELS = [
-    DiscoveredHostLabels(),
-    DiscoveredHostLabels(),
-    DiscoveredHostLabels(),
-    DiscoveredHostLabels(),
-    DiscoveredHostLabels(),
-    DiscoveredHostLabels(),
-    DiscoveredHostLabels(),
-    DiscoveredHostLabels(),
-    DiscoveredHostLabels(),
-]
 
-
-def test_inventory_common(check_manager):
-    check = check_manager.get_check("ps")
-    check.set_check_api_utils_globals()  # needed for host name
+def test_inventory_common(ps_context):
     info = list(itertools.chain.from_iterable(generate_inputs()))
     # nuke node info, b/c we never have node info during discovery
     _cpu_info, parsed_lines = ps_section.parse_ps(info)
     lines_with_node_name = [[None] + line for line in parsed_lines]
 
-    # Ugly contortions caused by horrible typing...
-    expected: List[object] = []
-    for psdi in PS_DISCOVERED_ITEMS:
-        expected.append(psdi)
-    for psdhl in PS_DISCOVERED_HOST_LABELS:
-        expected.append(psdhl)
-
-    assert check.context["inventory_ps_common"](
-        PS_DISCOVERY_WATO_RULES, lines_with_node_name) == expected
-
-
-@pytest.mark.parametrize("service_description, matches, result", [
-    ("PS %2 %1", ["service", "check"], "PS check service"),
-    ("PS %2 %1", ["service", "check", "sm"], "PS check service"),
-    ("PS %s %s", ["service", "rename"], "PS service rename"),
-    ("My Foo Service", ("Moo", "Cow"), "My Foo Service"),
-    ("My %sService", ("", "Cow"), "My Service"),
-    ("My %sService", (None, "Cow"), "My Service"),
-    ("My %s Service", ("Moo", "Cow"), "My Moo Service"),
-    ("My %2 Service sais '%1!'", ("Moo", "Cow"), "My Cow Service sais 'Moo!'"),
-    # the following is not very sensible, and not allowed by WATO configuration since 1.7.0i1.
-    # Make sure we know what's happening, though
-    ("PS %2 %s", ["service", "rename"], "PS rename rename"),
-    ("%s %2 %s %1", ("one", "two", "three", "four"), "three two four one")
-])
-def test_replace_service_description(check_manager, service_description, matches, result):
-    check = check_manager.get_check("ps")
-    assert check.context["replace_service_description"](service_description, matches, "") == result
-
-
-def test_replace_service_description_exception(check_manager):
-    check = check_manager.get_check("ps")
-
-    with pytest.raises(ValueError, match="1 replaceable elements"):
-        check.context["replace_service_description"]("%s", [], "")
+    assert ps_context["inventory_ps_common"](
+        PS_DISCOVERY_WATO_RULES, lines_with_node_name) == PS_DISCOVERED_ITEMS
 
 
 check_results = [
@@ -686,8 +475,7 @@ check_results = [
     "inv_item, reference",
     list(zip(PS_DISCOVERED_ITEMS, check_results)),
     ids=[a[0] for a in PS_DISCOVERED_ITEMS])
-def test_check_ps_common(check_manager, inv_item, reference):
-    check = check_manager.get_check("ps")
+def test_check_ps_common(ps_context, inv_item, reference):
     parsed: List[List[Optional[str]]] = []
     for info in generate_inputs():
         _cpu_cores, data = ps_section.parse_ps(info)
@@ -697,7 +485,7 @@ def test_check_ps_common(check_manager, inv_item, reference):
         factory_defaults = {"levels": (1, 1, 99999, 99999)}
         factory_defaults.update(inv_item[1])
         with value_store.context(CheckPluginName("ps"), "unit-test"):
-            test_result = CheckResult(check.context["check_ps_common"](
+            test_result = CheckResult(ps_context["check_ps_common"](
                 inv_item[0], factory_defaults, parsed, total_ram=total_ram))
         assertCheckResultsEqual(test_result, reference)
 
@@ -733,15 +521,13 @@ cpu_util_data = [
 
 
 @pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
-def test_check_ps_common_cpu(check_manager, monkeypatch, data):
-    check = check_manager.get_check("ps")
-
+def test_check_ps_common_cpu(ps_context, monkeypatch, data):
     def time_info(agent_info, check_time, cputime, cpu_cores):
         with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
             lines_with_node_name = [[None] + line for line in parsed_lines]
 
-            return CheckResult(check.context["check_ps_common"](
+            return CheckResult(ps_context["check_ps_common"](
                 inv_item[0], inv_item[1], lines_with_node_name, cpu_cores=cpu_cores))
 
     inv_item = (
@@ -764,7 +550,7 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
         (0, "Processes: 1", [("count", 1, 100000, 100000, 0)]),
         (0, "virtual: 105.00 kB", [("vsz", 105, None, None, None, None)]),
         (0, "physical: 30.00 kB", [("rss", 30, None, None, None, None)]),
-        check.context["cpu_check"](data.exp_load, inv_item[0], inv_item[1]),
+        ps_context["cpu_check"](data.exp_load, inv_item[0], inv_item[1]),
         (0, "running for: 239 m", []),
     ])
 
@@ -780,9 +566,7 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
         (0, "Processes: 0", [("count", 0, 100000, 100000, 0)]),
     ])),
 ])
-def test_check_ps_common_count(check_manager, levels, reference):
-    check = check_manager.get_check("ps")
-
+def test_check_ps_common_count(ps_context, levels, reference):
     _cpu_info, parsed_lines = ps_section.parse_ps(
         splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))
     lines_with_node_name = [[None] + line for line in parsed_lines]
@@ -793,14 +577,14 @@ def test_check_ps_common_count(check_manager, levels, reference):
         "levels": levels,
     }
 
-    output = CheckResult(check.context["check_ps_common"](
+    output = CheckResult(ps_context["check_ps_common"](
         'empty', params, lines_with_node_name, cpu_cores=1))
     assertCheckResultsEqual(output, reference)
 
 
 def test_subset_patterns(check_manager):
 
-    check = check_manager.get_check("ps")
+    check = check_manager.get_check("ps.perf")
     check.set_check_api_utils_globals()  # needed for host name
 
     _cpu_info, parsed_lines = ps_section.parse_ps(
@@ -846,9 +630,6 @@ def test_subset_patterns(check_manager):
             'user': None,
             'cgroup': (None, False),
         }),
-        DiscoveredHostLabels(),
-        DiscoveredHostLabels(),
-        DiscoveredHostLabels(),
     ]
 
     assert check.context["inventory_ps_common"](inv_params, lines_with_node_name) == discovered
@@ -865,12 +646,10 @@ def test_subset_patterns(check_manager):
 
 
 @pytest.mark.parametrize("cpu_cores", [2, 4, 5])
-def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
+def test_cpu_util_single_process_levels(ps_context, cpu_cores):
     """Test CPU utilization per single process.
 - Check that Number of cores weight is active
 - Check that single process CPU utilization is present only on warn/crit states"""
-
-    check = check_manager.get_check("ps")
 
     params: Dict[str, Any] = {
         'process': '~.*firefox',
@@ -889,7 +668,7 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
             lines_with_node_name = [[None] + line for line in parsed_lines]
 
-            return CheckResult(check.context["check_ps_common"](
+            return CheckResult(ps_context["check_ps_common"](
             'firefox', params, lines_with_node_name, cpu_cores=cpu_cores))
 
     with value_store.context(CheckPluginName("ps"), "unit-test"):
@@ -899,7 +678,7 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
         output = run_check_ps_common_with_elapsed_time(60, 2)
 
     cpu_util = 200.0 / cpu_cores
-    cpu_util_s = check.context['get_percent_human_readable'](cpu_util)
+    cpu_util_s = ps_context['get_percent_human_readable'](cpu_util)
     single_msg = 'firefox with PID 25898 CPU: %s (warn/crit at 45.0%%/80.0%%)' % cpu_util_s
     reference = [
         (0, "Processes: 4", [("count", 4, 100000, 100000, 0)]),
@@ -923,26 +702,3 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
         reference.insert(4, (1, single_msg, []))
 
     assertCheckResultsEqual(output, CheckResult(reference))
-
-
-PROCESSES = [
-    [("name", ("/bin/sh", "")), ("user", ("root", "")), ("virtual size", (1234, "kB")),
-     ("arguments", ("--feen-gibt-es-nicht quark --invert", ""))],
-]
-
-
-@pytest.mark.parametrize("processes, formatted_list, html_flag", [
-    (PROCESSES, (
-        "name /bin/sh, user root, virtual size 1234kB,"
-        " arguments --feen-gibt-es-nicht quark --invert\r\n"
-    ), False),
-    (PROCESSES, (
-        "<table><tr><th>name</th><th>user</th><th>virtual size</th><th>arguments</th></tr>"
-        "<tr><td>/bin/sh</td><td>root</td><td>1234kB</td>"
-        "<td>--feen-gibt-es-nicht quark --invert</td></tr></table>"
-    ), True),
-])
-def test_format_process_list(check_manager, processes, formatted_list, html_flag):
-    check = check_manager.get_check("ps")
-    format_process_list = check.context["format_process_list"]
-    assert format_process_list(processes, html_flag) == formatted_list

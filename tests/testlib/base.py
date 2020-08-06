@@ -86,8 +86,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'oracle_asm_diskgroup'),
     ('check', 'oracle_rman'),
     ('check', 'oracle_tablespaces'),
-    ('check', 'ps'),
-    ('check', 'ps_perf'),
     ('check', 'sap_hana_data_volume'),
     ('check', 'sap_hana_license'),
     ('check', 'services'),

@@ -44,6 +44,8 @@ from .utils import ps
 # WINDOWSXP,16875000,lsass.exe,3964928,21,3906250,43462656,6647808^M
 # WINDOWSXP,8750000,VBoxService.exe,1056768,8,468750,26652672,3342336^M
 
+Section = Tuple[int, List]  # don't ask what kind of list.
+
 
 # This function is only concerned with deprecated output from psperf.bat,
 # in case of all other output it just returns info unmodified. But if it is
@@ -154,8 +156,7 @@ def parse_process_entries(pre_parsed):
     return parsed
 
 
-def parse_ps(string_table: AgentStringTable,) -> Tuple[int, List]:  # don't ask what kind of list.
-    # But if you must know:
+def parse_ps(string_table: AgentStringTable,) -> Section:
     # Produces a list of lists where each sub list is built as follows:
     # [
     #     [(u'root', u'35156', u'4372', u'00:00:05/2-14:14:49', u'1'), u'/sbin/init'],
@@ -170,11 +171,22 @@ def parse_ps(string_table: AgentStringTable,) -> Tuple[int, List]:  # don't ask 
 register.agent_section(
     name="ps",
     parse_function=parse_ps,
+    host_label_function=ps.host_labels_ps,
 )
 
 
-def parse_ps_lnx(
-    string_table: AgentStringTable,) -> Optional[Tuple[int, List]]:  # don't ask what kind of list.
+def parse_ps_lnx(string_table: AgentStringTable,) -> Optional[Section]:
+    """
+        >>> cpu_cores, lines = parse_ps_lnx([
+        ...     ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+        ...     ["1:name=systemd:/init.scope,", "root", "226036", "9736", "00:00:09", "05:14:30",
+        ...      "1", "/sbin/init", "--ladida"],
+        ... ])
+        >>> print(cpu_cores)
+        1
+        >>> print(lines[0])
+        [Process_Info(user='root', virtual='226036', physical='9736', cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,'), '/sbin/init', '--ladida']
+    """
     if not string_table:
         return None
 
@@ -207,4 +219,5 @@ register.agent_section(
     name="ps_lnx",
     parsed_section_name="ps",
     parse_function=parse_ps_lnx,
+    host_label_function=ps.host_labels_ps,
 )

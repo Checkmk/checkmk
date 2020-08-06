@@ -34,8 +34,6 @@ public:
                      MonitoringCore *mc, const Column::Offsets &offsets)
         : DynamicColumn(name, description, offsets), _mc(mc) {}
 
-    MonitoringCore *core() { return _mc; }
-
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         RelationalOperator /*unused*/, const std::string & /*unused*/) const {
         throw std::runtime_error("filtering on dynamic RRD column '" + name() +
@@ -44,7 +42,7 @@ public:
 
     std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) override {
-        return std::make_unique<T>(name, "dynamic column", _offsets, core(),
+        return std::make_unique<T>(name, "dynamic column", _offsets, _mc,
                                    RRDColumnArgs{arguments, _name});
     }
 

@@ -15,25 +15,22 @@ export function add_suggestions(sugg_id, open) {
     suggestions_id = sugg_id;
 }
 
-
-function page_menu_entries() {
+function page_menu_dropdowns() {
     return Array.prototype.slice.call(document.getElementsByClassName("menu"));
 }
 
-
 // Closes the active page menu dropdown
-export function close_active_menu() {
+export function close_active_dropdown() {
     popup_menu.close_popup();
 }
 
-
 // Toggle a page menu dropdown
 export function toggle_dropdown(menu_title) {
-    const menu = menu_title.nextSibling;
-    popup_menu.toggle_popup(null, menu_title, menu.id, {"type": "inline"}, null, null, false);
+    const dropdown = menu_title.nextSibling;
+    popup_menu.toggle_popup(null, menu_title, dropdown.id, {"type": "inline"}, null, null, false);
 
     // focus first search field in popup menus, if any
-    for (let input of menu.getElementsByClassName("text")) {
+    for (let input of dropdown.getElementsByClassName("text")) {
         input.focus();
         input.select();
         break;
@@ -43,15 +40,15 @@ export function toggle_dropdown(menu_title) {
 // When one of the page menu dropdowns is open, open other dropdowns once
 // hovering over another title
 export function switch_dropdown(menu_title) {
-    const menu = menu_title.nextSibling;
-    // When the new focucssed menu is already open, leave it open
-    if (utils.has_class(menu.parentNode, "active")) {
+    const dropdown = menu_title.nextSibling;
+    // When the new focucssed dropdown is already open, leave it open
+    if (utils.has_class(dropdown.parentNode, "active")) {
         return;
     }
 
-    // Do not open the menu when no other menu is open at the moment
-    const menus = page_menu_entries();
-    if (!menus.some(elem => utils.has_class(elem.parentNode, "active"))) {
+    // Do not open the menu when no other dropdown is open at the moment
+    const dropdowns = page_menu_dropdowns();
+    if (!dropdowns.some(elem => utils.has_class(elem.parentNode, "active"))) {
         return;
     }
 
@@ -116,7 +113,7 @@ export function toggle_popup(popup_id) {
     let popup = document.getElementById(popup_id);
     let was_open = utils.has_class(popup, "active");
 
-    close_active_menu();
+    close_active_dropdown();
     close_active_popups();
 
     if (was_open)
@@ -127,7 +124,7 @@ export function toggle_popup(popup_id) {
 
 // Opens a PageMenuEntryPopup from a page menu entry
 export function open_popup(popup_id) {
-    close_active_menu();
+    close_active_dropdown();
     close_active_popups();
 
     var popup = document.getElementById(popup_id);
@@ -195,17 +192,4 @@ export function add_filter_scroll_update()
     catch (e) {
         scrollable.scrollTop = 0;
     }
-}
-
-export function open_page_menu_input(pageMenuInputId)
-{
-    close_active_menu();
-    let oPageMenuInput = document.getElementById(pageMenuInputId);
-    utils.add_class(oPageMenuInput, "active");
-}
-
-export function close_page_menu_input(pageMenuInputId)
-{
-    let oPageMenuInput = document.getElementById(pageMenuInputId);
-    utils.remove_class(oPageMenuInput, "active");
 }

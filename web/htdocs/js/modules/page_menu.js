@@ -5,6 +5,7 @@
 import * as utils from "utils";
 import "element-closest-polyfill";
 import * as foldable_container from "foldable_container";
+import * as popup_menu from "popup_menu";
 
 var suggestions_id = null;
 
@@ -22,47 +23,16 @@ function page_menu_entries() {
 
 // Closes the active page menu dropdown
 export function close_active_menu() {
-    const menu = page_menu_entries().find(elem => utils.has_class(elem, "active"));
-    if (menu)
-        utils.remove_class(menu, "active");
+    popup_menu.close_popup();
 }
 
 
-function outside_click_listener(event) {
-    const menu = page_menu_entries().find(elem => utils.has_class(elem, "active"));
-    if (!menu) {
-        // the menu is already closed, but click handler is still in place
-        remove_outside_click_listener();
-        return;
-    }
+// Toggle a page menu dropdown
+export function toggle_dropdown(menu_title) {
+    const menu = menu_title.nextSibling;
+    popup_menu.toggle_popup(null, menu_title, menu.id, {"type": "inline"}, null, null, false);
 
-    const container = menu.parentElement;
-    if (container.contains(event.target)) {
-        // click inside the opened menu
-        return;
-    }
-
-    utils.remove_class(menu, "active");
-    remove_outside_click_listener();
-}
-
-
-function remove_outside_click_listener() {
-    document.removeEventListener("click", outside_click_listener);
-}
-
-
-export function toggle(menu_title) {
-    var menu = menu_title.nextSibling;
-    if (utils.has_class(menu, "active")) {
-        utils.remove_class(menu, "active");
-        return;
-    }
-
-    utils.add_class(menu, "active");
-    document.addEventListener("click", outside_click_listener);
-
-    /* focus on search, if any */
+    // focus first search field in popup menus, if any
     for (let input of menu.getElementsByClassName("text")) {
         input.focus();
         input.select();
@@ -70,20 +40,22 @@ export function toggle(menu_title) {
     }
 }
 
-
-export function switch_menu(menu_title) {
+// When one of the page menu dropdowns is open, open other dropdowns once
+// hovering over another title
+export function switch_dropdown(menu_title) {
     const menu = menu_title.nextSibling;
-    if (utils.has_class(menu, "active")) {
+    // When the new focucssed menu is already open, leave it open
+    if (utils.has_class(menu.parentNode, "active")) {
         return;
     }
 
+    // Do not open the menu when no other menu is open at the moment
     const menus = page_menu_entries();
-    if (!menus.some(elem => utils.has_class(elem, "active"))) {
+    if (!menus.some(elem => utils.has_class(elem.parentNode, "active"))) {
         return;
     }
 
-    close_active_menu();
-    utils.add_class(menu, "active");
+    toggle_dropdown(menu_title);
 }
 
 
@@ -101,15 +73,17 @@ export function set_checkbox_entry(id_stem, checked) {
     }
 }
 
+// Make a dropdown usable
 export function enable_dropdown(id) {
-    toggle_dropdown(id, true);
+    toggle_dropdown_enabled(id, true);
 }
 
+// Set a dropdown to be not usable (inactive)
 export function disable_dropdown(id) {
-    toggle_dropdown(id, false);
+    toggle_dropdown_enabled(id, false);
 }
 
-function toggle_dropdown(id, enabled) {
+function toggle_dropdown_enabled(id, enabled) {
     var dropdown = document.getElementById("page_menu_dropdown_" + id);
     if (enabled) {
         utils.remove_class(dropdown, "disabled");
@@ -137,6 +111,7 @@ export function enable_menu_entry(id, enabled) {
         utils.change_class(oShortCut, from, to);
 }
 
+// Toggles a PageMenuEntryPopup from a page menu entry
 export function toggle_popup(popup_id) {
     let popup = document.getElementById(popup_id);
     let was_open = utils.has_class(popup, "active");
@@ -150,6 +125,7 @@ export function toggle_popup(popup_id) {
         utils.add_class(popup, "active");
 }
 
+// Opens a PageMenuEntryPopup from a page menu entry
 export function open_popup(popup_id) {
     close_active_menu();
     close_active_popups();
@@ -158,12 +134,14 @@ export function open_popup(popup_id) {
     utils.add_class(popup, "active");
 }
 
+// Closes all open PageMenuEntryPopup
 function close_active_popups() {
     document.querySelectorAll(".page_menu_popup").forEach((popup) => {
         utils.remove_class(popup, "active");
     });
 }
 
+// Close a specific PageMenuEntryPopup
 export function close_popup(a) {
     var popup = a.closest(".page_menu_popup");
     utils.remove_class(popup, "active");

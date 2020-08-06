@@ -129,18 +129,16 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, r
         }
     }
 
-    const container = trigger_obj.parentNode;
-
     // Add the popup to the DOM if required by the method.
     if (method.type === "colorpicker") {
         const rgb = trigger_obj.firstChild.style.backgroundColor;
         if (rgb !== "") {
             method.value = rgb2hex(rgb);
         }
-        const content = generate_menu(container, resizable);
+        const content = generate_menu(trigger_obj.parentNode, resizable);
         generate_colorpicker_body(content, method.varprefix, method.value);
     } else if (method.type === "ajax") {
-        const content = generate_menu(container, resizable);
+        const content = generate_menu(trigger_obj.parentNode, resizable);
         content.innerHTML = "<img src=\"themes/facelift/images/icon_reload.png\" class=\"icon reloading\">";
         const url_vars = !method.url_vars ? "" : "?" + method.url_vars;
         ajax.get_url("ajax_popup_" + method.endpoint + ".py" + url_vars, handle_render_popup_contents, {

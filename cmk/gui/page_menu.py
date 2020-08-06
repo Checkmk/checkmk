@@ -415,8 +415,8 @@ class PageMenuRenderer:
 
     def _show_dropdown_trigger(self, dropdown: PageMenuDropdown) -> None:
         html.open_div(class_="menutitle",
-                      onclick="cmk.page_menu.toggle(this)",
-                      onmouseenter="cmk.page_menu.switch_menu(this)")
+                      onclick="cmk.page_menu.toggle_dropdown(this)",
+                      onmouseenter="cmk.page_menu.switch_dropdown(this)")
         html.h2(dropdown.title)
         html.close_div()
 

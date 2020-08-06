@@ -108,6 +108,10 @@ div#top_heading {
       background-color: $navigation-bg-color;
       border-bottom: 2px solid $navigation-bg-color;
 
+      &.active div.menu {
+        display: block;
+      }
+
       &.disabled {
         display: none;
       }
@@ -158,10 +162,6 @@ div#top_heading {
         overflow-y: auto;
         background-color: $navigation-bg-color;
         scrollbar-width: none; /* Firefox */
-
-        &.active {
-          display: block;
-        }
 
         img {
           width: 16px;

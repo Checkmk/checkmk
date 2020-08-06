@@ -19,7 +19,7 @@ import cmk.utils.log
 class Profile:
     def __init__(self,
                  enabled: bool = True,
-                 profile_file: Union[Path, str] = None,
+                 profile_file: Union[Path, str, None] = None,
                  **kwargs: Any) -> None:
 
         if profile_file is None or isinstance(profile_file, Path):

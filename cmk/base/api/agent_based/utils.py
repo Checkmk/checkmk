@@ -150,9 +150,9 @@ def check_levels(
     *,
     levels_upper=None,  # tpye: Optional[Tuple[float, float]]
     levels_lower=None,  # tpye: Optional[Tuple[float, float]]
-    metric_name: str = None,
-    render_func: Callable[[float], str] = None,
-    label: str = None,
+    metric_name: Optional[str] = None,
+    render_func: Optional[Callable[[float], str]] = None,
+    label: Optional[str] = None,
     boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
 ) -> Generator[Union[Result, Metric], None, None]:
     """Generic function for checking a value against levels.

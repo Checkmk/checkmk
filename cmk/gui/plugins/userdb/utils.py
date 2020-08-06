@@ -207,7 +207,8 @@ def load_connection_config(lock: bool = False) -> List[UserConnectionSpec]:
     return store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
 
 
-def save_connection_config(connections: List[UserConnectionSpec], base_dir: str = None) -> None:
+def save_connection_config(connections: List[UserConnectionSpec],
+                           base_dir: Optional[str] = None) -> None:
     if not base_dir:
         base_dir = _multisite_dir()
     store.mkdir(base_dir)

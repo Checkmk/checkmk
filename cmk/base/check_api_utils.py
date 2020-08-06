@@ -36,8 +36,8 @@ class Service:
     def __init__(self,
                  item: Item,
                  parameters: LegacyCheckParameters = None,
-                 service_labels: DiscoveredServiceLabels = None,
-                 host_labels: DiscoveredHostLabels = None) -> None:
+                 service_labels: Optional[DiscoveredServiceLabels] = None,
+                 host_labels: Optional[DiscoveredHostLabels] = None) -> None:
         self.item = item
         self.parameters = parameters
         self.service_labels = service_labels or DiscoveredServiceLabels()

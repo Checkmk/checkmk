@@ -1252,7 +1252,7 @@ def context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> Itera
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.
 def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
-                              single_infos: SingleInfos = None) -> VisualContext:
+                              single_infos: Optional[SingleInfos] = None) -> VisualContext:
     if single_infos is None:
         single_infos = []
 

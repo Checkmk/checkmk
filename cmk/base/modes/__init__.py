@@ -201,13 +201,13 @@ class Option:
     def __init__(self,
                  long_option: str,
                  short_help: str,
-                 short_option: str = None,
+                 short_option: Optional[str] = None,
                  argument: bool = False,
-                 argument_descr: str = None,
-                 argument_conv: ConvertFunction = None,
+                 argument_descr: Optional[str] = None,
+                 argument_conv: Optional[ConvertFunction] = None,
                  argument_optional: bool = False,
                  count: bool = False,
-                 handler_function: OptionFunction = None) -> None:
+                 handler_function: Optional[OptionFunction] = None) -> None:
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         super(Option, self).__init__()  # pylint: disable=bad-super-call
         self.long_option = long_option
@@ -290,14 +290,12 @@ class Mode(Option):
                  short_option: Optional[OptionName] = None,
                  argument: bool = False,
                  argument_descr: Optional[str] = None,
-                 argument_conv: ConvertFunction = None,
+                 argument_conv: Optional[ConvertFunction] = None,
                  argument_optional: bool = False,
                  long_help: Optional[List[str]] = None,
                  needs_config: bool = True,
                  needs_checks: bool = True,
                  sub_options: Optional[List[Option]] = None) -> None:
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        # pylint: disable=bad-super-call
         super(Mode, self).__init__(long_option,
                                    short_help,
                                    short_option,

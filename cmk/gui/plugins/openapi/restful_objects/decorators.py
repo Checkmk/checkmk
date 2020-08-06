@@ -68,14 +68,14 @@ def _reduce_to_primitives(
 def endpoint_schema(path: str,
                     name: EndpointName,
                     method: HTTPMethod = 'get',
-                    parameters: Sequence[AnyParameterAndReference] = None,
+                    parameters: Optional[Sequence[AnyParameterAndReference]] = None,
                     content_type: str = 'application/json',
                     output_empty: bool = False,
                     response_schema: ResponseSchema = None,
                     request_schema: RequestSchema = None,
                     request_body_required: bool = True,
                     error_schema: Schema = ApiError,
-                    etag: ETagBehaviour = None,
+                    etag: Optional[ETagBehaviour] = None,
                     will_do_redirects: bool = False,
                     **options: dict):
     """Mark the function as a REST-API endpoint.

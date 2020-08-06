@@ -44,7 +44,7 @@ logger = logging.getLogger("cmk.omd")
 def call_init_scripts(site: 'SiteContext',
                       command: str,
                       daemon: Optional[str] = None,
-                      exclude_daemons: List[str] = None) -> int:
+                      exclude_daemons: Optional[List[str]] = None) -> int:
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.

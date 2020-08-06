@@ -3,8 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Callable, Dict, Any, Optional, Sequence, Tuple, Type, Union, List, Literal, \
-    TypedDict
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Tuple, Type, TypedDict, Union
 
 from marshmallow import Schema  # type: ignore[import]
 
@@ -133,15 +132,15 @@ OpenAPISchemaType = Literal['string', 'array', 'object', 'boolean', 'integer', '
 
 
 def _translate_to_openapi_keys(
-    name: str = None,
-    location: LocationType = None,
+    name: Optional[str] = None,
+    location: Optional[LocationType] = None,
     description: Optional[str] = None,
-    required: bool = None,
-    example: str = None,
-    allow_emtpy: bool = None,
-    schema_type: OpenAPISchemaType = None,
+    required: Optional[bool] = None,
+    example: Optional[str] = None,
+    allow_emtpy: Optional[bool] = None,
+    schema_type: Optional[OpenAPISchemaType] = None,
     schema_string_pattern: Optional[str] = None,
-    schema_string_format: str = None,
+    schema_string_format: Optional[str] = None,
     schema_num_minimum: Optional[int] = None,
     schema_num_maximum: Optional[int] = None,
 ):
@@ -201,15 +200,15 @@ class ParamDict(dict):
 
     def __call__(
         self,
-        name: str = None,
-        description: str = None,
-        location: LocationType = None,
-        required: bool = None,
-        allow_empty: bool = None,
-        example: str = None,
-        schema_type: OpenAPISchemaType = None,
-        schema_string_pattern: str = None,
-        schema_string_format: str = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        location: Optional[LocationType] = None,
+        required: Optional[bool] = None,
+        allow_empty: Optional[bool] = None,
+        example: Optional[str] = None,
+        schema_type: Optional[OpenAPISchemaType] = None,
+        schema_string_pattern: Optional[str] = None,
+        schema_string_format: Optional[str] = None,
         schema_num_minimum: Optional[int] = None,
         schema_num_maximum: Optional[int] = None,
     ):
@@ -265,10 +264,10 @@ class ParamDict(dict):
         description: Optional[str] = None,
         required: bool = True,
         allow_emtpy: bool = False,
-        example: str = None,
-        schema_type: OpenAPISchemaType = 'string',
+        example: Optional[str] = None,
+        schema_type: Optional[OpenAPISchemaType] = 'string',
         schema_string_pattern: Optional[str] = None,
-        schema_string_format: str = None,
+        schema_string_format: Optional[str] = None,
         schema_num_minimum: Optional[int] = None,
         schema_num_maximum: Optional[int] = None,
     ) -> 'ParamDict':

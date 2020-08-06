@@ -8,7 +8,7 @@ from logging import Logger
 import os
 import subprocess
 import time
-from typing import Any, Dict, Set
+from typing import Any, Dict, Optional, Set
 
 import cmk.utils.debug
 import cmk.utils.defines
@@ -262,7 +262,7 @@ def _get_event_tags(event_columns: Any, event: Any) -> Dict[Any, Any]:
 def do_notify(event_server: Any,
               logger: Logger,
               event: Any,
-              username: bool = None,
+              username: Optional[bool] = None,
               is_cancelling: bool = False) -> None:
     if _core_has_notifications_disabled(event, logger):
         return

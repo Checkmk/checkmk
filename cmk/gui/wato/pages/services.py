@@ -666,7 +666,7 @@ class DiscoveryPageRenderer:
             disabled=self._is_active(discovery_result),
         )
 
-    def _start_js_call(self, options: DiscoveryOptions, request_vars: dict = None) -> str:
+    def _start_js_call(self, options: DiscoveryOptions, request_vars: Optional[dict] = None) -> str:
         return "cmk.service_discovery.start(%s, %s, %s, %s, %s)" % (
             json.dumps(self._host.name()),
             json.dumps(self._host.folder().path()),

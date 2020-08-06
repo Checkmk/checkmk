@@ -1812,7 +1812,7 @@ class html(ABCHTMLGenerator):
 
     def begin_form(self,
                    name: str,
-                   action: str = None,
+                   action: Optional[str] = None,
                    method: str = "GET",
                    onsubmit: Optional[str] = None,
                    add_transid: bool = True) -> None:
@@ -1857,7 +1857,9 @@ class html(ABCHTMLGenerator):
     # field to the form - *if* they are not used in any input
     # field. (this is the reason why you must not add any further
     # input fields after this method has been called).
-    def hidden_fields(self, varlist: List[str] = None, add_action_vars: bool = False) -> None:
+    def hidden_fields(self,
+                      varlist: Optional[List[str]] = None,
+                      add_action_vars: bool = False) -> None:
         if varlist is not None:
             for var in varlist:
                 self.hidden_field(var, self.request.var(var, ""))
@@ -1870,7 +1872,7 @@ class html(ABCHTMLGenerator):
     def hidden_field(self,
                      var: str,
                      value: HTMLTagValue,
-                     id_: str = None,
+                     id_: Optional[str] = None,
                      add_var: bool = False,
                      class_: CSSSpec = None) -> None:
         self.write_html(
@@ -1879,7 +1881,7 @@ class html(ABCHTMLGenerator):
     def render_hidden_field(self,
                             var: str,
                             value: HTMLTagValue,
-                            id_: str = None,
+                            id_: Optional[str] = None,
                             add_var: bool = False,
                             class_: CSSSpec = None) -> HTML:
         if value is None:
@@ -2102,7 +2104,7 @@ class html(ABCHTMLGenerator):
                    cssclass: str = "text",
                    size: Union[None, str, int] = None,
                    label: Optional[str] = None,
-                   id_: str = None,
+                   id_: Optional[str] = None,
                    submit: Optional[str] = None,
                    try_max_width: bool = False,
                    read_only: bool = False,
@@ -2224,7 +2226,7 @@ class html(ABCHTMLGenerator):
                        cssclass: str = "text",
                        size: Union[None, str, int] = None,
                        label: Optional[str] = None,
-                       id_: str = None,
+                       id_: Optional[str] = None,
                        submit: Optional[str] = None,
                        try_max_width: bool = False,
                        read_only: bool = False,

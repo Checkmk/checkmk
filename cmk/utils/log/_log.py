@@ -7,7 +7,7 @@
 import sys
 import logging
 from pathlib import Path
-from typing import Union, IO
+from typing import IO, Optional, Union
 
 from ._level import VERBOSE
 
@@ -64,7 +64,7 @@ def open_log(log_file_path: Union[str, Path]) -> IOLog:
     return logfile
 
 
-def setup_logging_handler(stream: IOLog, formatter: logging.Formatter = None) -> None:
+def setup_logging_handler(stream: IOLog, formatter: Optional[logging.Formatter] = None) -> None:
     """This method enables all log messages to be written to the given
     stream file object. The messages are formated in Check_MK standard
     logging format.

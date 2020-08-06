@@ -63,7 +63,7 @@ class Service:
         item: Item,
         description: str,
         parameters: LegacyCheckParameters,
-        service_labels: DiscoveredServiceLabels = None,
+        service_labels: Optional[DiscoveredServiceLabels] = None,
     ) -> None:
         self._check_plugin_name = check_plugin_name
         self._item = item

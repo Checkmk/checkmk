@@ -235,7 +235,7 @@ class FixedValue(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         value: Any,
-        totext: str = None,
+        totext: _Optional[str] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
@@ -909,7 +909,7 @@ class EmailAddress(TextUnicode):
 
 
 def IPNetwork(  # pylint: disable=redefined-builtin
-    ip_class: Union[Type[ipaddress.IPv4Address], Type[ipaddress.IPv6Address]] = None,
+    ip_class: Union[None, Type[ipaddress.IPv4Address], Type[ipaddress.IPv6Address]] = None,
     # TextAscii
     allow_empty: bool = True,
     size: Union[int, str] = 34,
@@ -2028,7 +2028,7 @@ class ListOfMultiple(ValueSpec):
         self,
         choices: Union[GroupedListOfMultipleChoices, ListOfMultipleChoices],
         choice_page_name: str,
-        page_request_vars: Dict[str, Any] = None,
+        page_request_vars: _Optional[Dict[str, Any]] = None,
         size: _Optional[int] = None,
         add_label: _Optional[str] = None,
         del_label: _Optional[str] = None,
@@ -2368,7 +2368,7 @@ class DropdownChoice(ValueSpec):
         choices: DropdownChoices,
         sorted: bool = False,
         label: _Optional[str] = None,
-        help_separator: str = None,
+        help_separator: _Optional[str] = None,
         prefix_values: bool = False,
         empty_text: _Optional[str] = None,
         invalid_choice: _Optional[str] = "complain",
@@ -3239,7 +3239,7 @@ class OptionalDropdownChoice(DropdownChoice):
         # DropdownChoice
         sorted: bool = False,
         label: _Optional[str] = None,
-        help_separator: str = None,
+        help_separator: _Optional[str] = None,
         prefix_values: bool = False,
         empty_text: _Optional[str] = None,
         invalid_choice: _Optional[str] = "complain",
@@ -3248,8 +3248,8 @@ class OptionalDropdownChoice(DropdownChoice):
         no_preselect: bool = False,
         no_preselect_value: Any = None,
         no_preselect_title: str = "",
-        no_preselect_error: str = None,
-        on_change: str = None,
+        no_preselect_error: _Optional[str] = None,
+        on_change: _Optional[str] = None,
         read_only: bool = False,
         encode_value: bool = True,
         # ValueSpec
@@ -4526,7 +4526,7 @@ class Dictionary(ValueSpec):
         form_isopen: bool = True,
         headers: Union[None, str, List[Union[_Tuple[str, List[str]], _Tuple[str, str,
                                                                             List[str]]]]] = None,
-        migrate: Callable[[_Tuple], Dict] = None,
+        migrate: _Optional[Callable[[_Tuple], Dict]] = None,
         indent: bool = True,
         # ValueSpec
         title: _Optional[str] = None,
@@ -5363,7 +5363,7 @@ class Labels(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         world: 'Labels.World',
-        label_source: 'Labels.Source' = None,
+        label_source: _Optional['Labels.Source'] = None,
         max_labels: _Optional[int] = None,
         # ValueSpec
         title: _Optional[str] = None,

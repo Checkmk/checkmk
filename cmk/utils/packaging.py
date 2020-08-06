@@ -152,7 +152,7 @@ def release_package(pacname: PackageName) -> None:
     _remove_package_info(pacname)
 
 
-def create_mkp_file(package: PackageInfo, file_object: BinaryIO = None) -> None:
+def create_mkp_file(package: PackageInfo, file_object: Optional[BinaryIO] = None) -> None:
     package["version.packaged"] = cmk_version.__version__
     tar = tarfile.open(fileobj=file_object, mode="w:gz")
 

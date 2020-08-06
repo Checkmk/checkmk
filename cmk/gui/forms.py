@@ -42,7 +42,7 @@ def edit_dictionaries(dictionaries: 'List[Tuple[str, Union[Transform, Dictionary
                       validate: Optional[Callable[[Any], None]] = None,
                       buttontext: Optional[str] = None,
                       title: Optional[str] = None,
-                      buttons: List[Tuple[str, str, str]] = None,
+                      buttons: Optional[List[Tuple[str, str, str]]] = None,
                       method: str = "GET",
                       preview: bool = False,
                       varprefix: str = "",

@@ -21,7 +21,7 @@ BreadcrumbItem = NamedTuple("BreadcrumbItem", [
 
 
 class Breadcrumb(MutableSequence[BreadcrumbItem]):
-    def __init__(self, items: Iterable[BreadcrumbItem] = None):
+    def __init__(self, items: Optional[Iterable[BreadcrumbItem]] = None):
         super().__init__()
         self._items: List[BreadcrumbItem] = list(items) if items else []
 

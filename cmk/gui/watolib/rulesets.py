@@ -57,11 +57,11 @@ class RuleConditions:
     def __init__(
         self,
         host_folder: str,
-        host_tags: Tags = None,
-        host_labels: Labels = None,
+        host_tags: Optional[Tags] = None,
+        host_labels: Optional[Labels] = None,
         host_name: HostNameConditions = None,
         service_description: ServiceNameConditions = None,
-        service_labels: Labels = None,
+        service_labels: Optional[Labels] = None,
     ):
         self.host_folder = host_folder
         self.host_tags = host_tags or {}

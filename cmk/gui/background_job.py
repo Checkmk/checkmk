@@ -271,7 +271,7 @@ class BackgroundJob:
     # TODO: Make this an abstract property
     job_prefix = "unnamed-job"
 
-    def __init__(self, job_id: str, logger: logging.Logger = None, **kwargs: Any) -> None:
+    def __init__(self, job_id: str, logger: Optional[logging.Logger] = None, **kwargs: Any) -> None:
         super(BackgroundJob, self).__init__()
         self._job_id = job_id
         self._job_base_dir = BackgroundJobDefines.base_dir

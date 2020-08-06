@@ -485,7 +485,7 @@ class SingleSiteConnection(Helpers):
     # by the livestatus server, we automatically make a reconnect and send
     # the query again (once). This is due to timeouts during keepalive.
     def recv_response(self,
-                      query: Query = None,
+                      query: Optional[Query] = None,
                       add_headers: str = "",
                       timeout_at: Optional[float] = None) -> LivestatusResponse:
         try:

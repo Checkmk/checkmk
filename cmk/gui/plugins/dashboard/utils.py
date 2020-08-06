@@ -581,7 +581,7 @@ def _transform_builtin_dashboards() -> None:
 def copy_view_into_dashlet(dashlet: DashletConfig,
                            nr: DashletId,
                            view_name: str,
-                           add_context: VisualContext = None,
+                           add_context: Optional[VisualContext] = None,
                            load_from_all_views: bool = False) -> None:
     permitted_views = get_permitted_views()
 

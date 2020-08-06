@@ -35,9 +35,10 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
         return "base"
 
     @classmethod
-    def from_exception(cls,
-                       details: Dict = None,
-                       type_specific_attributes: Dict = None) -> crash_reporting.ABCCrashReport:
+    def from_exception(
+            cls,
+            details: Optional[Dict] = None,
+            type_specific_attributes: Optional[Dict] = None) -> crash_reporting.ABCCrashReport:
         return super(CMKBaseCrashReport, cls).from_exception(details={
             "argv": sys.argv,
             "env": dict(os.environ),

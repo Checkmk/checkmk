@@ -1204,7 +1204,7 @@ def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) ->
     config_set_value(site, config_hooks, hook_name, value)
 
 
-def config_set_all(site: SiteContext, ignored_hooks: list = None) -> None:
+def config_set_all(site: SiteContext, ignored_hooks: Optional[list] = None) -> None:
     if ignored_hooks is None:
         ignored_hooks = []
 
@@ -1624,7 +1624,7 @@ def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
 
 def main_help(version_info: VersionInfo,
               site: AbstractSiteContext,
-              global_opts: 'GlobalOptions' = None,
+              global_opts: Optional['GlobalOptions'] = None,
               args: Optional[Arguments] = None,
               options: Optional[CommandOptions] = None) -> None:
     if args is None:

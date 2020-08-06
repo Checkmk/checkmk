@@ -135,8 +135,8 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
 
     @classmethod
     def from_exception(cls,
-                       details: Dict = None,
-                       type_specific_attributes: Dict = None) -> 'ABCCrashReport':
+                       details: Optional[Dict] = None,
+                       type_specific_attributes: Optional[Dict] = None) -> 'ABCCrashReport':
         """Create a crash info object from the current exception context
 
         details - Is an optional dictionary of crash type specific attributes

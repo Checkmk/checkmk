@@ -679,7 +679,7 @@ def collection_item(
     )
 
 
-def serve_json(data: Serializable, profile: Dict[str, str] = None) -> Response:
+def serve_json(data: Serializable, profile: Optional[Dict[str, str]] = None) -> Response:
     content_type = 'application/json'
     if profile is not None:
         content_type += ';profile="%s"' % (profile,)

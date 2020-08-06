@@ -468,7 +468,7 @@ def declare_user_attribute(name: str,
                            user_editable: bool = True,
                            permission: Optional[str] = None,
                            show_in_table: bool = False,
-                           topic: str = None,
+                           topic: Optional[str] = None,
                            add_custom_macro: bool = False,
                            domain: str = "multisite",
                            from_config: bool = False) -> None:
@@ -794,7 +794,8 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
                     os.unlink(entry + '/' + to_delete)
 
 
-def write_contacts_and_users_file(profiles: Users, custom_default_config_dir: str = None) -> None:
+def write_contacts_and_users_file(profiles: Users,
+                                  custom_default_config_dir: Optional[str] = None) -> None:
     non_contact_keys = _non_contact_keys()
     multisite_keys = _multisite_keys()
     updated_profiles = _add_custom_macro_attributes(profiles)

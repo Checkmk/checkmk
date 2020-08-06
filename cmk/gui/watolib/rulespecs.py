@@ -693,8 +693,8 @@ def _get_manual_check_parameter_rulespec_instance(
     title: Optional[Callable[[], str]] = None,
     parameter_valuespec: Optional[Callable[[], ValueSpec]] = None,
     item_spec: Optional[Callable[[], ValueSpec]] = None,
-    is_optional: bool = None,
-    is_deprecated: bool = None,
+    is_optional: Optional[bool] = None,
+    is_deprecated: Optional[bool] = None,
 ) -> 'ManualCheckParameterRulespec':
     # There may be no RulespecGroup declaration for the static checks.
     # Create some based on the regular check groups (which should have a definition)
@@ -734,7 +734,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         group: Type[RulespecBaseGroup],
         parameter_valuespec: Callable[[], ValueSpec],
         title: Optional[Callable[[], str]] = None,
-        match_type: str = None,
+        match_type: Optional[str] = None,
         item_type: Optional[str] = None,
         item_name: Optional[Callable[[], str]] = None,
         item_spec: Optional[Callable[[], ValueSpec]] = None,

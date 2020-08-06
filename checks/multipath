@@ -163,7 +163,7 @@ def parse_multipath(info):
         (regex(r"^([-.a-zA-Z0-9_ :]+)\s?(dm-[0-9]+).*$"), 1, None, 2),  # 6. and 7.
     ]
 
-    reg_prio = regex("[[ ]prio=")
+    reg_prio = regex(r"[\[ ]prio=")
     reg_lun = regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
     uuid = None
     alias = None

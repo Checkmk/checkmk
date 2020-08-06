@@ -1,0 +1,10 @@
+Title: Display graph for SAP HANA License
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p16
+Date: 1596723584
+Class: fix
+
+The checkplugin "sap_hana_license" was not generating the graphs for "Used licenses" and "Size of license". This was fixed with this werk.

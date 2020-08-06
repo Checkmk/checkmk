@@ -146,7 +146,7 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
 from cmk.gui.type_defs import (PainterSpec, HTTPVariables, InfoName, FilterHeaders, Row, Rows,
-                               ColumnName, Visual)
+                               ColumnName, Visual, ViewSpec)
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -1684,6 +1684,8 @@ def _show_filter_form_buttons(filter_list_id: str) -> None:
 def page_view():
     view_spec, view_name = html.get_item_input("view_name", get_permitted_views())
 
+    _patch_view_context(view_spec)
+
     datasource = data_source_registry[view_spec["datasource"]]()
     context = visuals.get_merged_context(
         visuals.get_context_from_uri_vars(datasource.infos, single_infos=view_spec["single_infos"]),
@@ -1705,6 +1707,36 @@ def page_view():
     painter_options.update_from_url(view)
     view_renderer = GUIViewRenderer(view, show_buttons=True)
     process_view(view, view_renderer)
+
+
+def _patch_view_context(view_spec: ViewSpec) -> None:
+    """Apply some hacks that are needed because for some edge cases in the view / visuals / context
+    imlementation"""
+    # FIXME TODO HACK to make grouping single contextes possible on host/service infos
+    # Is hopefully cleaned up soon.
+    # This is also somehow connected to the datasource.link_filters hack hat has been created for
+    # linking hosts / services with groups
+    if view_spec["datasource"] in ['hosts', 'services']:
+        if html.request.has_var('hostgroup') and not html.request.has_var("opthost_group"):
+            html.request.set_var("opthost_group", html.request.get_str_input_mandatory("hostgroup"))
+        if html.request.has_var('servicegroup') and not html.request.has_var("optservice_group"):
+            html.request.set_var("optservice_group",
+                                 html.request.get_str_input_mandatory("servicegroup"))
+
+    # TODO: Another hack :( Just like the above one: When opening the view "ec_events_of_host",
+    # which is of single context "host" using a host name of a unrelated event, the list of
+    # events is always empty since the single context filter "host" is sending a "host_name = ..."
+    # filter to livestatus which is not matching a "unrelated event". Instead the filter event_host
+    # needs to be used.
+    # But this may only be done for the unrelated events view. The "ec_events_of_monhost" view still
+    # needs the filter. :-/
+    # Another idea: We could change these views to non single context views, but then we would not
+    # be able to show the buttons to other host related views, which is also bad. So better stick
+    # with the current mode.
+    if _is_ec_unrelated_host_view(view_spec):
+        # Set the value for the event host filter
+        if not html.request.has_var("event_host") and html.request.has_var("host"):
+            html.request.set_var("event_host", html.request.get_str_input_mandatory("host"))
 
 
 def process_view(view: View, view_renderer: ABCViewRenderer) -> None:
@@ -1757,30 +1789,6 @@ def get_row_count(view: View) -> int:
 # TODO: Move to View
 # TODO: Investigate and cleanup the side effect of setting the HTTP request variables.
 def _get_view_filters(view: View) -> List[Filter]:
-    # FIXME TODO HACK to make grouping single contextes possible on host/service infos
-    # Is hopefully cleaned up soon.
-    if view.datasource.ident in ['hosts', 'services']:
-        if html.request.has_var('hostgroup') and not html.request.has_var("opthost_group"):
-            html.request.set_var("opthost_group", html.request.get_str_input_mandatory("hostgroup"))
-        if html.request.has_var('servicegroup') and not html.request.has_var("optservice_group"):
-            html.request.set_var("optservice_group",
-                                 html.request.get_str_input_mandatory("servicegroup"))
-
-    # TODO: Another hack :( Just like the above one: When opening the view "ec_events_of_host",
-    # which is of single context "host" using a host name of a unrelated event, the list of
-    # events is always empty since the single context filter "host" is sending a "host_name = ..."
-    # filter to livestatus which is not matching a "unrelated event". Instead the filter event_host
-    # needs to be used.
-    # But this may only be done for the unrelated events view. The "ec_events_of_monhost" view still
-    # needs the filter. :-/
-    # Another idea: We could change these views to non single context views, but then we would not
-    # be able to show the buttons to other host related views, which is also bad. So better stick
-    # with the current mode.
-    if _is_ec_unrelated_host_view(view):
-        # Set the value for the event host filter
-        if not html.request.has_var("event_host") and html.request.has_var("host"):
-            html.request.set_var("event_host", html.request.get_str_input_mandatory("host"))
-
     # Now populate the HTML vars with context vars from the view definition. Hard
     # coded default values are treated differently:
     #
@@ -1888,7 +1896,7 @@ def _get_all_active_filters(view: View) -> 'List[Filter]':
     use_filters = list(visuals.filters_allowed_for_infos(view.datasource.infos).values())
 
     # See process_view() for more information about this hack
-    if _is_ec_unrelated_host_view(view):
+    if _is_ec_unrelated_host_view(view.spec):
         # Remove the original host name filter
         use_filters = [f for f in use_filters if f.ident != "host"]
 
@@ -1917,10 +1925,10 @@ def _export_view(view: View, rows: Rows) -> None:
     exporter.handler(view, rows)
 
 
-def _is_ec_unrelated_host_view(view: View) -> bool:
+def _is_ec_unrelated_host_view(view_spec: ViewSpec) -> bool:
     # The "name" is not set in view report elements
-    return view.datasource.ident in [ "mkeventd_events", "mkeventd_history" ] \
-       and "host" in view.spec["single_infos"] and view.spec.get("name") != "ec_events_of_monhost"
+    return (view_spec["datasource"] in ["mkeventd_events", "mkeventd_history"] and
+            "host" in view_spec["single_infos"] and view_spec.get("name") != "ec_events_of_monhost")
 
 
 def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],

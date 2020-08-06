@@ -692,7 +692,7 @@ class FilterOpthostgroup(FilterGroupCombo):
         return _("Optional selection of host group")
 
     def __init__(self):
-        FilterGroupCombo.__init__(self, "host", False)
+        FilterGroupCombo.__init__(self, "host", enforce=False)
 
 
 @filter_registry.register
@@ -714,7 +714,7 @@ class FilterOptservicegroup(FilterGroupCombo):
         return _("Optional selection of service group")
 
     def __init__(self):
-        FilterGroupCombo.__init__(self, "service", False)
+        FilterGroupCombo.__init__(self, "service", enforce=False)
 
 
 @filter_registry.register

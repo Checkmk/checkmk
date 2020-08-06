@@ -2037,6 +2037,7 @@ class ListOfMultiple(ValueSpec):
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
+        allow_empty: bool = True,
     ):
         super(ListOfMultiple, self).__init__(title=title,
                                              help=help,
@@ -2060,6 +2061,7 @@ class ListOfMultiple(ValueSpec):
         self._add_label = add_label if add_label is not None else _("Add element")
         self._del_label = del_label if del_label is not None else _("Delete this entry")
         self._delete_style = delete_style  # or "filter"
+        self._allow_empty = allow_empty
 
     def del_button(self, varprefix: str, ident: str) -> None:
         js = "cmk.valuespecs.listofmultiple_del(%s, %s)" % (json.dumps(varprefix),
@@ -2171,6 +2173,8 @@ class ListOfMultiple(ValueSpec):
             self._choice_dict[ident].validate_datatype(val, varprefix + '_' + ident)
 
     def _validate_value(self, value: Dict[str, Any], varprefix: str) -> None:
+        if not self._allow_empty and not value:
+            raise MKUserError(varprefix, _('You must specify at least one element.'))
         for ident, val in value.items():
             self._choice_dict[ident].validate_value(val, varprefix + '_' + ident)
 

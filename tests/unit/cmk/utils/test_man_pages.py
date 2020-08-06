@@ -138,18 +138,6 @@ def test_no_unsorted_man_pages():
     assert not unsorted_page_names, "Found unsorted man pages: %s" % ", ".join(unsorted_page_names)
 
 
-def test_manpage_catalog_headers(all_pages):
-    for name, path in all_pages.items():
-        try:
-            parsed = man_pages._parse_man_page_header(name, Path(path))
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-            parsed = man_pages._create_fallback_man_page(name, Path(path), e)
-
-        assert parsed.get("catalog"), "Did not find \"catalog:\" header in man page \"%s\"" % name
-
-
 def test_manpage_files(all_pages):
     assert len(all_pages) > 1000
 

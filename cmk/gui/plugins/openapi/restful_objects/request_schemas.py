@@ -365,6 +365,30 @@ class BulkInputContactGroup(BaseSchema):
     )
 
 
+class UpdateContactGroup(BaseSchema):
+    """Updating a contact group"""
+    name = Group(
+        group_type="contact",
+        description="The name of the contact group.",
+        example="OnCall",
+        required=True,
+        should_exist=True,
+    )
+    attributes = fields.Nested(InputContactGroup)
+
+
+class BulkUpdateContactGroup(BaseSchema):
+    """Bulk update contact groups"""
+    entries = fields.List(fields.Nested(UpdateContactGroup),
+                          example=[{
+                              'name': 'OnCall',
+                              'attributes': {
+                                  'name': 'OnCall updated',
+                                  'alias': 'Not on Sundays',
+                              },
+                          }])
+
+
 class InputServiceGroup(BaseSchema):
     """Creating a service group"""
     name = NAME_FIELD

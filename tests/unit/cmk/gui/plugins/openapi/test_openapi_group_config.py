@@ -95,23 +95,21 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         content_type='application/json',
     )
 
-    if group_type in ("host",
-                      "service"):  # TODO: delete if-condition with addition of other endpoints
-        update_groups = [{
-            'name': group['name'],
-            'attributes': {
-                'name': f"{group['name']} updated",
-                'alias': group['alias'],
-            },
-        } for group in groups]
+    update_groups = [{
+        'name': group['name'],
+        'attributes': {
+            'name': f"{group['name']} updated",
+            'alias': group['alias'],
+        },
+    } for group in groups]
 
-        _resp = wsgi_app.call_method(
-            'put',
-            base + "/domain-types/%s_group_config/actions/bulk-update/invoke" % (group_type,),
-            params=json.dumps({'entries': update_groups}),
-            status=200,
-            content_type='application/json',
-        )
+    _resp = wsgi_app.call_method(
+        'put',
+        base + "/domain-types/%s_group_config/actions/bulk-update/invoke" % (group_type,),
+        params=json.dumps({'entries': update_groups}),
+        status=200,
+        content_type='application/json',
+    )
 
 
 def _random_string(size):

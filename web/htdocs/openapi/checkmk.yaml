@@ -422,6 +422,18 @@ components:
           type: array
           uniqueItems: true
       type: object
+    BulkUpdateContactGroup:
+      properties:
+        entries:
+          example:
+          - attributes:
+              alias: Not on Sundays
+              name: OnCall updated
+            name: OnCall
+          items:
+            $ref: '#/components/schemas/UpdateContactGroup'
+          type: array
+      type: object
     BulkUpdateHost:
       properties:
         entries:
@@ -1256,6 +1268,17 @@ components:
       required:
       - domainType
       - links
+      type: object
+    UpdateContactGroup:
+      properties:
+        attributes:
+          $ref: '#/components/schemas/InputContactGroup'
+        name:
+          description: The name of the contact group.
+          example: OnCall
+          type: string
+      required:
+      - name
       type: object
     UpdateFolder:
       properties:
@@ -2438,6 +2461,78 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[\"windows\", \"panels\"]' \\\n  \
           \  --json"
+  /domain-types/contact_group_config/actions/bulk-update/invoke:
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group_config.bulk_update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkUpdateContactGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+          headers: {}
+      summary: Bulk update host-groups
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/domain-types/contact_group_config/actions/bulk-update/invoke\"\
+          ,\n    json={\n        'entries': [{\n            'name': 'OnCall',\n  \
+          \          'attributes': {\n                'name': 'OnCall updated',\n\
+          \                'alias': 'Not on Sundays'\n            }\n        }]\n\
+          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/contact_group_config/actions/bulk-update/invoke\"\
+          ,\n    method=\"PUT\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        'entries': [{\n            'name':\
+          \ 'OnCall',\n            'attributes': {\n                'name': 'OnCall\
+          \ updated',\n                'alias': 'Not on Sundays'\n            }\n\
+          \        }]\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"entries\": [\n            {\n      \
+          \        \"attributes\": {\n                \"alias\": \"Not on Sundays\"\
+          ,\n                \"name\": \"OnCall updated\"\n              },\n    \
+          \          \"name\": \"OnCall\"\n            }\n          ]\n        }'\
+          \ \\\n    \"$API_URL/domain-types/contact_group_config/actions/bulk-update/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/domain-types/contact_group_config/actions/bulk-update/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    entries='[{\"name\": \"OnCall\", \"attributes\"\
+          : {\"name\": \"OnCall updated\", \"alias\": \"Not on Sundays\"}}]' \\\n\
+          \    --json"
   /domain-types/downtime/collections/all:
     get:
       description: ''
@@ -6574,6 +6669,10 @@ tags:
 - description: <SchemaDefinition schemaRef="#/components/schemas/BulkDeleteContactGroup"
     showReadOnly={true} showWriteOnly={true} />
   name: BulkDeleteContactGroup
+- description: <SchemaDefinition schemaRef="#/components/schemas/BulkUpdateContactGroup"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BulkUpdateContactGroup
+  x-displayName: Bulk update contact groups
 - name: cmk.gui.plugins.openapi.endpoints.downtime
   x-displayName: Downtimes
 - description: <SchemaDefinition schemaRef="#/components/schemas/CreateDowntime" showReadOnly={true}
@@ -6715,6 +6814,7 @@ x-tagGroups:
   - InputContactGroup
   - BulkInputContactGroup
   - BulkDeleteContactGroup
+  - BulkUpdateContactGroup
   - CreateDowntime
   - BulkDeleteDowntime
   - CreateFolder

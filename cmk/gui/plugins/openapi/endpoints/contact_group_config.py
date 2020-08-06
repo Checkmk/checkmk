@@ -13,6 +13,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     load_groups,
     fetch_group,
     fetch_specific_groups,
+    update_groups,
 )
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -135,3 +136,17 @@ def update(params):
     edit_group(name, 'contact', params['body'])
     group = fetch_group(name, "contact")
     return serve_group(group, serialize_group('contact_group_config'))
+
+
+@endpoint_schema(constructors.domain_type_action_href('contact_group_config', 'bulk-update'),
+                 'cmk/bulk_update',
+                 method='put',
+                 request_schema=request_schemas.BulkUpdateContactGroup,
+                 response_schema=response_schemas.DomainObjectCollection)
+def bulk_update(params):
+    """Bulk update host-groups"""
+    body = params['body']
+    entries = body['entries']
+    updated_contact_groups = update_groups("contact", entries)
+    return constructors.serve_json(
+        serialize_group_list('contact_group_config', updated_contact_groups))

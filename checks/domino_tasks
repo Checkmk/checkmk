@@ -37,7 +37,8 @@ def parse_domino_tasks(info):
 
 
 def inventory_domino_tasks(parsed):
-    return inventory_ps_common(inv_domino_tasks_rules, parsed)
+    params = host_extra_conf(host_name(), inv_domino_tasks_rules)
+    return inventory_ps_common(params, parsed)
 
 
 def check_domino_tasks(item, params, parsed):

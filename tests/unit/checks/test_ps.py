@@ -207,14 +207,12 @@ def test_parse_ps(capture, result):
 
 
 PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
-    ({
+    {
         "default_params": {},
         "descr": "smss",
         "match": "~smss.exe"
-    }, [], ["@all"], {
-        "description": u"smss"
-    }),
-    ({
+    },
+    {
         "default_params": {
             "cpulevels": (90.0, 98.0),
             "handle_count": (1000, 2000),
@@ -227,20 +225,16 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
         },
         "descr": "svchost",
         "match": "svchost.exe"
-    }, [], ["@all"], {
-        "description": u"svchost win"
-    }),
-    ({
+    },
+    {
         "default_params": {
             "process_info": "text"
         },
         "match": "~.*(fire)fox",
         "descr": "firefox is on %s",
         "user": None,
-    }, [], ["@all"], {
-        "description": u"Firefox"
-    }),
-    ({
+    },
+    {
         "default_params": {
             "process_info": "text"
         },
@@ -248,10 +242,8 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
         "descr": "firefox is on %s",
         "user": None,
         "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo'), HostLabel(u'peter', u'pan')),
-    }, [], ["@all"], {
-        "description": u"Firefox with host labels"
-    }),
-    ({
+    },
+    {
         "default_params": {
             "cpu_rescale_max": True,
             "cpu_average": 15,
@@ -264,10 +256,8 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
         "descr": "emacs %u",
         "match": "emacs",
         "user": False
-    }, [], ["@all"], {
-        "description": u"emacs",
-    }),
-    ({
+    },
+    {
         "default_params": {
             "max_age": (3600, 7200),
             "resident_levels_perc": (25.0, 50.0),
@@ -277,49 +267,33 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
         "match": "~.*cron",
         "descr": "cron",
         "user": "root"
-    }, [], ["@all"], {
-        "description": u"cron"
-    }),
-    ({
+    },
+    {
         "default_params": {},
         "descr": "sshd",
         "match": "~.*sshd"
-    }, [], ["@all"], {
-        "description": u"sshd"
-    }),
-    ({
-        "default_params": {},
-        "descr": "Term",
-        "match": "~.*term"
-    }, [], ["@all"], {
-        "disabled": True,
-        "description": u"sshd"
-    }),
-    ({
+    },
+    {
         'default_params': {},
         'descr': 'PS counter',
         'user': 'zombie',
-    }, [], ["@all"], {}),
-    ({
+    },
+    {
         "default_params": {
             "process_info": "text"
         },
         "match": r"~/omd/sites/(\w+)/lib/cmc/checkhelper",
         "descr": "Checkhelpers %s",
         "user": None,
-    }, [], ["@all"], {
-        "description": u"Checkhelpers per site"
-    }),
-    ({
+    },
+    {
         "default_params": {
             "process_info": "text"
         },
         "match": r"~/omd/sites/\w+/lib/cmc/checkhelper",
         "descr": "Checkhelpers Overall",
         "user": None,
-    }, [], ["@all"], {
-        "description": u"Overall checkhelpers"
-    }),
+    },
 ]
 
 PS_DISCOVERY_SPECS = [
@@ -378,11 +352,8 @@ PS_DISCOVERY_SPECS = [
 ]
 
 
-def test_wato_rules(check_manager):
-    check = check_manager.get_check("ps")
-    check.set_check_api_utils_globals()  # needed for host name
-    assert check.context["ps_wato_configured_inventory_rules"](
-        PS_DISCOVERY_WATO_RULES) == PS_DISCOVERY_SPECS
+def test_wato_rules():
+    assert ps_utils.get_discovery_specs(PS_DISCOVERY_WATO_RULES) == PS_DISCOVERY_SPECS
 
 
 @pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, result", [
@@ -841,14 +812,14 @@ def test_subset_patterns(check_manager):
     lines_with_node_name = [[None] + line for line in parsed_lines]
 
     # Boundary in match is necessary otherwise main instance accumulates all
-    wato_rule: List[Tuple[Dict, List, List, Dict]] = [({
+    inv_params: List[Dict] = [{
         'default_params': {
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999)
         },
         'match': '~(main.*)\\b',
-        'descr': '%s'
-    }, [], ["@all"], {})]
+        'descr': '%s',
+    }]
 
     discovered = [
         ('main', {
@@ -880,12 +851,11 @@ def test_subset_patterns(check_manager):
         DiscoveredHostLabels(),
     ]
 
-    assert check.context["inventory_ps_common"](wato_rule, lines_with_node_name) == discovered
+    assert check.context["inventory_ps_common"](inv_params, lines_with_node_name) == discovered
 
     def counted_reference(count):
         return CheckResult([
-            (0, "Processes: %s" % count, [("count", count, 100000,
-                                                                        100000, 0, None)]),
+            (0, "Processes: %s" % count, [("count", count, 100000, 100000, 0, None)]),
             (0, "CPU: 0.5%", [("pcpu", 0.5, None, None, None, None)]),
         ])
 

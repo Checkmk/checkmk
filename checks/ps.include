@@ -23,13 +23,8 @@ factory_settings["ps_default_levels"] = {
 }
 
 
-def ps_wato_configured_inventory_rules(invrules):
-    """encapsulates the 'host_extra_conf' magic, that will not be neede in the new API"""
-    return get_discovery_specs(host_extra_conf(host_name(), invrules))
-
-
-def inventory_ps_common(invrules, parsed):
-    inventory_specs = ps_wato_configured_inventory_rules(invrules)
+def inventory_ps_common(params, parsed):
+    inventory_specs = get_discovery_specs(params)
 
     inventory = []
     inventory_labels = []

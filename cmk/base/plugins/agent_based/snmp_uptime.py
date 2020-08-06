@@ -67,17 +67,6 @@ def discover_snmp_uptime(section: int) -> DiscoveryGenerator:
 
 
 def check_snmp_uptime(params: Parameters, section: int) -> CheckGenerator:
-    """
-        >>> import freezegun
-        >>> with freezegun.freeze_time('1970-02-12 22:59:33'):
-        ...     result, metric = list(check_snmp_uptime({}, 100000000))
-        >>> print((result.state, result.summary))
-        (<state.OK: 0>, 'Up since Dec 13 1966 14:12:53, Uptime:: 3 years 62 days')
-        >>> print((metric.name, metric.value))
-        ('uptime', 100000000.0)
-
-    """
-
     if params is None:  # legacy: support older versions of parameters
         params = {}
 

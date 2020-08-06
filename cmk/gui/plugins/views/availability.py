@@ -1113,7 +1113,7 @@ def _output_csv(what: AVObjectType, av_mode: AVMode, av_data: AVData, avoptions:
     elif av_mode == "timeline":
         _output_availability_timelines_csv(what, av_data, avoptions)
     else:
-        raise NotImplementedError()
+        raise NotImplementedError("Unhandled availability mode: %r" % av_mode)
 
 
 def _output_availability_timelines_csv(what: AVObjectType, av_data: AVData,

@@ -9,13 +9,17 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
+#include <filesystem>
+#include <functional>
 #include <string>
 #include <vector>
 
 #include "Column.h"
 #include "DynamicRRDColumn.h"
 #include "ListColumn.h"
+#include "Metric.h"
 #include "contact_fwd.h"
+class Logger;
 class MonitoringCore;
 class Row;
 class RowRenderer;
@@ -39,6 +43,8 @@ public:
         Kind kind;
     };
 
+    using MetricLocator = std::function<MetricLocation(const Metric::Name &)>;
+
 private:
     [[nodiscard]] virtual ObjectPointer getObjectPointer(Row row) const = 0;
 
@@ -52,8 +58,10 @@ private:
         std::vector<double> values;
     };
 
-    static Data getData(MonitoringCore *mc, const RRDColumnArgs &args,
-                        const ObjectPointer &object);
+    static Data getData(Logger *logger,
+                        const std::filesystem::path &rrdcached_socket_path,
+                        const RRDColumnArgs &args,
+                        const MetricLocator &locator);
 };
 
 #endif  // RRDColumn_h

@@ -8,22 +8,17 @@
 #include <rrd.h>
 
 #include <algorithm>
-#include <chrono>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <filesystem>
 #include <iterator>
 #include <ostream>
 #include <set>
-#include <tuple>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 #include "DynamicRRDColumn.h"
 #include "Logger.h"
-#include "Metric.h"
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -45,7 +40,16 @@ void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
     // JSON we could output nested lists. In CSV mode this is not possible and
     // we rather stay compatible with CSV mode.
     ListRenderer l(r);
-    auto data = getData(_mc, _args, getObjectPointer(row));
+    auto object = getObjectPointer(row);
+    if (object.ptr == nullptr) {
+        Warning(_mc->loggerRRD()) << "Missing object pointer for RRDColumn";
+        return;
+    }
+    auto data = getData(_mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
+                        [this, object](const Metric::Name &var) {
+                            return this->_mc->metricLocation(
+                                object, Metric::MangledName(var));
+                        });
     l.output(data.start);
     l.output(data.end);
     l.output(data.step);
@@ -57,7 +61,17 @@ void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
 std::vector<std::string> RRDColumn::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds timezone_offset) const {
-    auto data = getData(_mc, _args, getObjectPointer(row));
+    auto object = getObjectPointer(row);
+    Data data;
+    if (object.ptr == nullptr) {
+        Warning(_mc->loggerRRD()) << "Missing object pointer for RRDColumn";
+    } else {
+        data = getData(_mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
+                       [this, object](const Metric::Name &var) {
+                           return this->_mc->metricLocation(
+                               object, Metric::MangledName(var));
+                       });
+    }
     std::vector<std::string> strings;
     strings.push_back(std::to_string(
         std::chrono::system_clock::to_time_t(data.start + timezone_offset)));
@@ -117,15 +131,9 @@ std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
 // Look at http://oss.oetiker.ch/rrdtool/doc/rrdgraph_rpn.en.html for details!
 
 // static
-RRDColumn::Data RRDColumn::getData(MonitoringCore *mc,
-                                   const RRDColumnArgs &args,
-                                   const ObjectPointer &object) {
-    Logger *logger = mc->loggerRRD();
-    if (object.ptr == nullptr) {
-        Warning(logger) << "Missing object pointer for RRDColumn";
-        return {};
-    }
-
+RRDColumn::Data RRDColumn::getData(
+    Logger *logger, const std::filesystem::path &rrdcached_socket_path,
+    const RRDColumnArgs &args, const MetricLocator &locator) {
     // Prepare the arguments for rrdtool xport in a dynamic array of strings.
     // Note: The actual step might be different!
     std::vector<std::string> argv_s{
@@ -178,11 +186,8 @@ RRDColumn::Data RRDColumn::getData(MonitoringCore *mc,
         // MAX. RRDTool does not allow a variable name to contain a '.', but
         // strangely enough, it allows an underscore. Therefore, we replace '.'
         // by '_' here.
-        Metric::Name var{""};
-        std::string cf;
-        tie(var, cf) = getVarAndCF(token);
-
-        auto location = mc->metricLocation(object, Metric::MangledName(var));
+        auto [var, cf] = getVarAndCF(token);
+        auto location = locator(var);
         std::string rrd_varname;
         if (location.path_.empty() || location.data_source_name_.empty()) {
             rrd_varname = replace_all(var.string(), ".", '_');
@@ -218,7 +223,6 @@ RRDColumn::Data RRDColumn::getData(MonitoringCore *mc,
     // RRDTool on the issue
     // https://github.com/oetiker/rrdtool-1.x/issues/1062
 
-    auto rrdcached_socket_path = mc->rrdcachedSocketPath();
     if (!rrdcached_socket_path.empty()) {
         std::vector<std::string> daemon_argv_s{
             "rrdtool flushcached",  // name of program (ignored)

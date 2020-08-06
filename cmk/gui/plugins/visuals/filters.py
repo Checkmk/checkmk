@@ -717,30 +717,6 @@ class FilterOptservicegroup(FilterGroupCombo):
         FilterGroupCombo.__init__(self, "service", False)
 
 
-# TODO: Had a name conflict with servicegroup filter for servicegroup info.
-# The other one was registered -> Investigate.
-#@filter_registry.register
-#class FilterServicegroup(FilterGroupCombo):
-#    @property
-#    def ident(self):
-#        return "servicegroup"
-#
-#    @property
-#    def title(self):
-#        return _("Servicegroup (enforced)")
-#
-#    @property
-#    def sort_index(self):
-#        return 205
-#
-#    @property
-#    def description(self):
-#        return _("Dropdown list, selection of service group is <b>enforced</b>")
-#
-#    def __init__(self):
-#        FilterGroupCombo.__init__(self, "service", _("Servicegroup (enforced)"), True)
-
-
 @filter_registry.register
 class FilterOpthostContactgroup(FilterGroupCombo):
     @property

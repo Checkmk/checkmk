@@ -27,6 +27,7 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPStringTable,
 )
 from cmk.base.api.agent_based.utils import parse_to_string_table
+from cmk.base.api.agent_based.register.utils import validate_function_arguments
 
 from cmk.base.discovered_labels import HostLabel
 
@@ -50,18 +51,6 @@ def _validate_parse_function(parse_function: Union[AgentParseFunction, SNMPParse
         if arg.annotation != expected_annotation[0]:
             raise TypeError('expected parse function argument annotation %r, got %r' %
                             (expected_annotation[1], arg.annotation))
-
-
-def _validate_host_label_function(host_label_function: HostLabelFunction) -> None:
-    """Validate the host label functions signature and type"""
-
-    if not inspect.isgeneratorfunction(host_label_function):
-        raise TypeError("host label function must be a generator function: %r" %
-                        (host_label_function,))
-
-    parameters = inspect.signature(host_label_function).parameters
-    if list(parameters) != ['section']:
-        raise ValueError("host label function must accept exactly one argument 'section'")
 
 
 def _validate_supersedings(own_name: SectionName, supersedes: List[SectionName]) -> None:
@@ -121,7 +110,13 @@ def _create_host_label_function(
     if host_label_function is None:
         return _noop_host_label_function
 
-    _validate_host_label_function(host_label_function)
+    validate_function_arguments(
+        "host_label",
+        host_label_function,
+        has_item=False,
+        has_params=False,
+        sections=[ParsedSectionName("__always_just_one_section__")],
+    )
 
     @functools.wraps(host_label_function)
     def filtered_generator(section):

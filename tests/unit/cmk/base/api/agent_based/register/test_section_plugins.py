@@ -79,17 +79,6 @@ def test_validate_parse_function_annotation_string_table():
     )
 
 
-@pytest.mark.parametrize(
-    "host_label_function, exception_type",
-    [
-        (lambda foo: None, TypeError),  # must be a generator
-        (_generator_function, ValueError),  # must take section or _section as argument!
-    ])
-def test_validate_host_label_function_value(host_label_function, exception_type):
-    with pytest.raises(exception_type):
-        section_plugins._validate_host_label_function(host_label_function)
-
-
 def test_validate_supersedings_raise_duplicate():
     supersedes = [
         SectionName("foo"),

@@ -101,7 +101,13 @@ def test_create_host_label_function(disco_func, labels_expected):
         disco_func, ["some_extra_section"])
 
     assert host_label_function is not None
-    section_plugins._validate_host_label_function(host_label_function)
+    section_plugins.validate_function_arguments(
+        "host_label",
+        host_label_function,
+        has_item=False,
+        has_params=False,
+        sections=[ParsedSectionName("__only_one_seciton__")],
+    )
 
     # check that we can pass an un-unpackable argument now!
     actual_labels = list(host_label_function({"parse": "result"}))

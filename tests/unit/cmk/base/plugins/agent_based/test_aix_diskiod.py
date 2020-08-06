@@ -128,5 +128,5 @@ def test_cluster_check_aix_diskiod(value_store, item):
                 item: DISK,
             },
         },
-        aix_diskiod.cluster_check_aix_diskoid,
+        aix_diskiod.cluster_check_aix_diskiod,
     )

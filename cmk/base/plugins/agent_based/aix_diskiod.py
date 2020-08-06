@@ -109,7 +109,7 @@ def check_aix_diskiod(
     yield from _check_disk(params, disk)
 
 
-def cluster_check_aix_diskoid(
+def cluster_check_aix_diskiod(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, diskstat.Section],
@@ -133,5 +133,5 @@ register.check_plugin(
     check_ruleset_name="diskstat",
     check_default_parameters={},
     check_function=check_aix_diskiod,
-    cluster_check_function=cluster_check_aix_diskoid,
+    cluster_check_function=cluster_check_aix_diskiod,
 )

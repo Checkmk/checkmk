@@ -201,6 +201,7 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
     expected_check_variables = {
         'AKCP_TEMP_CHECK_DEFAULT_PARAMETERS',
         'ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS',
+        'ANY_USER',
         'ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS',
         'AWSCostAndUageMetrics',
         'AWSEBSStorageTypes',
@@ -722,6 +723,8 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'inventory_mssql_counters_rules',
         'inventory_multipath_rules',
         'inventory_oracle_rman_incremental_details',
+        'inventory_processes',
+        'inventory_processes_perf',
         'inventory_processes_rules',
         'inventory_sap_values',
         'inventory_services',

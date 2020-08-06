@@ -53,6 +53,13 @@ import itertools
 # 4. levels:   four numbers (thresholds)
 inventory_processes_rules = []
 
+# Deprecated option since 1.6. cmk.base creates a config warning when finding rules
+# for this ruleset. Can be dropped with 1.7.
+inventory_processes = []
+
+inventory_processes_perf = []
+ANY_USER = None
+
 
 def ps_cleanup_counters(parsed):
     # remove legacy key used for some kind of caching

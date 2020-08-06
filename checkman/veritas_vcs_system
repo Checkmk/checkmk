@@ -32,3 +32,5 @@ item:
 inventory:
  One service is created for each system.
 
+cluster:
+  On a cluster the service assumes the worst of all encountered node states.

@@ -34,3 +34,6 @@ item:
 inventory:
  One service is created for each job.
 
+cluster:
+  The outcome on a cluster can be configured to be either the worst, or the
+  best state encountered for every job.

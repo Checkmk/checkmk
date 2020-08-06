@@ -25,3 +25,6 @@ inventory:
   created that has at least one hard disk. If set to {"legacy"} then a
   separate service for read and write will be created (deprecated).
 
+cluster:
+  If configured for clustering, every service will sum up the measurements
+  for disks with the same name.

@@ -171,6 +171,22 @@ def test_find_missing_manpages_active(config_active_check_info, all_pages):
         assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
 
 
+def test_find_missing_manpages_cluster_section(config_load_all_checks):
+    missing_cluster_description = set()
+    for plugin in agent_based_register.iter_all_check_plugins():
+        if plugin.cluster_check_function.__name__ in (
+                "unfit_for_clustering",
+                "cluster_legacy_mode_from_hell",
+        ):
+            continue
+        man_page = man_pages.load_man_page(str(plugin.name))
+        assert man_page
+        if "cluster" not in man_page["header"]:
+            missing_cluster_description.add(str(plugin.name))
+
+    assert not missing_cluster_description
+
+
 def test_no_subtree_and_entries_on_same_level():
     catalog = man_pages.load_man_page_catalog()
     for category, entries in catalog.items():

@@ -208,9 +208,9 @@ def check_md(item, _no_params, parsed):
     if "speed" in data:
         infotexts.append("Speed: %s" % data["speed"])
 
-    if "check_state" in data:
+    if "check_values" in data:
         header = "[Check]"
-        infotexts.append("Status: %s" % data["check_state"])
+        infotexts.append("Status: %s" % data["check_values"])
         yield 0, "%s %s" % (header, ", ".join(infotexts))
 
     elif infotexts:

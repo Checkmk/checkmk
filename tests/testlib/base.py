@@ -35,8 +35,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'oracle_rman'),
     ('section', 'oracle_tablespaces'),
     ('section', 'printer_pages'),
-    ('section', 'ps'),
-    ('section', 'ps_lnx'),
     ('section', 'sap_hana_data_volume'),
     ('section', 'sap_hana_license'),
     ('section', 'services'),

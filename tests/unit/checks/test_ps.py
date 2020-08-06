@@ -16,6 +16,7 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
+from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
 from checktestlib import CheckResult, assertCheckResultsEqual
@@ -25,15 +26,14 @@ from testlib import on_time  # type: ignore[import]
 pytestmark = pytest.mark.checks
 
 
-def _optionalize(lst: List[str]) -> List[Optional[str]]:
-    return [x for x in lst]  # pylint: disable=unnecessary-comprehension
+def splitter(
+    text: str,
+    split_symbol: Optional[str] = None,
+) -> List[List[str]]:
+    return [line.split(split_symbol) for line in text.split("\n")]
 
 
-def splitter(text: str, split_symbol: Optional[str] = None, node: Optional[str] = None) -> List[List[Optional[str]]]:
-    return [[node] + _optionalize(line.split(split_symbol)) for line in text.split("\n")]
-
-
-def generate_inputs() -> List[List[List[Optional[str]]]]:
+def generate_inputs() -> List[List[List[str]]]:
     return [
         # CMK 1.5
         # linux, openwrt agent(5 entry, cmk>=1.2.7)
@@ -52,8 +52,7 @@ def generate_inputs() -> List[List[List[Optional[str]]]]:
             """(root,4056,1512,0.0/52-04:56:05,5689) /usr/lib/ssh/sshd
 (zombie,0,0,-/-,1952) <defunct>
 (zombie,0,0,-/-,3952)
-(zombie,0,0,-/-,4952) """,
-            node="solaris"),
+(zombie,0,0,-/-,4952) """),
         # windows agent
         splitter(
             """(SYSTEM,0,0,0,0,0,0,0,0,1,0)	System Idle Process
@@ -62,7 +61,7 @@ def generate_inputs() -> List[List[List[Optional[str]]]]:
 (\\NT AUTHORITY\\LOCAL SERVICE,56100,18796,0,764,56632,1422261117,618855967,454,13,4300)	svchost.exe
 (\\KLAPPRECHNER\\ab,29284,2948,0,3124,904,400576,901296,35,1,642)\tNOTEPAD.EXE""", "\t"),
         # aix, bsd, hpux, macos, netbsd, openbsd agent(4 entry, cmk>=1.1.5)
-        splitter("(db2prtl,17176,17540,0.0) /usr/lib/ssh/sshd", node="bsd"),
+        splitter("(db2prtl,17176,17540,0.0) /usr/lib/ssh/sshd"),
         # aix with zombies
         splitter("""(oracle,9588,298788,0.0) ora_dmon_uc4prd
 (<defunct>,,,)
@@ -97,90 +96,90 @@ WSOPREKPFS01,85,126562500,csrss.exe,1176,744,8,468750,44486656,569344
 
 
 result_parse = [
-    (1,
-     [[None, ("root", "225948", "9684", "00:00:03/05:05:29", "1"), "/sbin/init", "splash"],
-      [None, ("root", "0", "0", "00:00:00/05:05:29", "2"), "[kthreadd]"],
-      [
-          None, ("on", "288260", "7240", "00:00:00/05:03:00", "4480"),
-          "/usr/bin/gnome-keyring-daemon", "--start", "--foreground", "--components=secrets"
-      ],
-      [
-          None, ("on", "1039012", "11656", "00:00:00/05:02:41", "5043"), "/usr/bin/pulseaudio",
-          "--start", "--log-target=syslog"
-      ],
-      [None, ("on", "1050360", "303252", "00:14:59/1-03:59:39", "9902"),
-       "emacs"],
-      [None, ("on", "2924232", "472252", "00:12:05/07:24:15", "7912"),
-       "/usr/lib/firefox/firefox"],
-      [None, ("heute", "11180", "1144", "00:00:00/03:54:10", "10884"), "/omd/sites/heute/lib/cmc/checkhelper"],
-      [None, ("twelve", "11180", "1244", "00:00:00/02:37:39", "30136"), "/omd/sites/twelve/lib/cmc/checkhelper"]]),
-    (1, [["solaris", ("root", "4056", "1512", "0.0/52-04:56:05", "5689"), "/usr/lib/ssh/sshd"],
-         ["solaris", ("zombie", "0", "0", "-/-", "1952"), "<defunct>"]]),
-    (1,
-     [[None, ("SYSTEM", "0", "0", "0", "0", "0", "0", "0", "0", "1", "0"), "System Idle Process"],
-      [
-          None,
-          ("\\NT AUTHORITY\\SYSTEM", "46640", "10680", "0", "600", "5212", "27924179", "58500375",
-           "370", "11", "12"), "svchost.exe"
-      ],
-      [
-          None,
-          ("\\NT AUTHORITY\\NETWORK SERVICE", "36792", "10040", "0", "676", "5588", "492183155",
-           "189541215", "380", "8", "50"), "svchost.exe"
-      ],
-      [
-          None,
-          ("\\NT AUTHORITY\\LOCAL SERVICE", "56100", "18796", "0", "764", "56632", "1422261117",
-           "618855967", "454", "13", "4300"), "svchost.exe"
-      ],
-      [
-          None,
-          ("\\KLAPPRECHNER\\ab", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
-           "1", "642"), "NOTEPAD.EXE"
-      ]]),
-    (1, [["bsd", ("db2prtl", "17176", "17540", "0.0"), "/usr/lib/ssh/sshd"]]),
     (1, [
-        [None, ("oracle", "9588", "298788", "0.0"), "ora_dmon_uc4prd"],
-        [None, ("oracle", "11448", "300648", "0.0"), "oraclemetroprd", "(LOCAL=NO)"],
+        [("root", "225948", "9684", "00:00:03/05:05:29", "1"), "/sbin/init", "splash"],
+        [("root", "0", "0", "00:00:00/05:05:29", "2"), "[kthreadd]"],
+        [
+            ("on", "288260", "7240", "00:00:00/05:03:00", "4480"),
+            "/usr/bin/gnome-keyring-daemon", "--start", "--foreground", "--components=secrets"
+        ],
+        [
+            ("on", "1039012", "11656", "00:00:00/05:02:41", "5043"), "/usr/bin/pulseaudio",
+            "--start", "--log-target=syslog"
+        ],
+        [("on", "1050360", "303252", "00:14:59/1-03:59:39", "9902"),
+         "emacs"],
+        [("on", "2924232", "472252", "00:12:05/07:24:15", "7912"),
+         "/usr/lib/firefox/firefox"],
+        [("heute", "11180", "1144", "00:00:00/03:54:10", "10884"), "/omd/sites/heute/lib/cmc/checkhelper"],
+        [("twelve", "11180", "1244", "00:00:00/02:37:39", "30136"),
+          "/omd/sites/twelve/lib/cmc/checkhelper"],
+        ],
+    ),
+    (1, [
+        [("root", "4056", "1512", "0.0/52-04:56:05", "5689"), "/usr/lib/ssh/sshd"],
+        [("zombie", "0", "0", "-/-", "1952"), "<defunct>"],
+        ],
+    ),
+    (1, [
+        [("SYSTEM", "0", "0", "0", "0", "0", "0", "0", "0", "1", "0"), "System Idle Process"],
+        [
+            ("\\NT AUTHORITY\\SYSTEM", "46640", "10680", "0", "600", "5212", "27924179", "58500375",
+             "370", "11", "12"), "svchost.exe"
+        ],
+        [
+            ("\\NT AUTHORITY\\NETWORK SERVICE", "36792", "10040", "0", "676", "5588", "492183155",
+             "189541215", "380", "8", "50"), "svchost.exe"
+        ],
+        [
+            ("\\NT AUTHORITY\\LOCAL SERVICE", "56100", "18796", "0", "764", "56632", "1422261117",
+             "618855967", "454", "13", "4300"), "svchost.exe"
+        ],
+        [
+            ("\\KLAPPRECHNER\\ab", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
+             "1", "642"), "NOTEPAD.EXE"
+        ],
+        ],
+    ),
+    (1, [[("db2prtl", "17176", "17540", "0.0"), "/usr/lib/ssh/sshd"]]),
+    (1, [
+        [("oracle", "9588", "298788", "0.0"), "ora_dmon_uc4prd"],
+        [("oracle", "11448", "300648", "0.0"), "oraclemetroprd", "(LOCAL=NO)"],
     ]),
     (2, [
-        [None, ("SYSTEM", "0", "0", "0", "0", "0", "0", "0", "0", "2"), "System Idle Process"],
+        [("SYSTEM", "0", "0", "0", "0", "0", "0", "0", "0", "2"), "System Idle Process"],
         [
-            None,
             ("\\KLAPPRECHNER\\ab", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
              "1"), "NOTEPAD.EXE"
         ],
     ]),
-    (24, [[None, (None,), u"[System Process]"],
+    (24, [[(None,), u"[System Process]"],
           [
-              None,
               ("unknown", "14484", "10608", "0", "4", "0", "0", "368895625000", "1227", "273", ""),
               u"System"
           ],
           [
-              None, ("unknown", "64", "24", "0", "0", "0", "0", "388621186093750", "0", "24", ""),
+              ("unknown", "64", "24", "0", "0", "0", "0", "388621186093750", "0", "24", ""),
               u"System Idle Process"
           ],
           [
-              None, ("unknown", "4576", "316", "0", "520", "0", "156250", "2031250", "53", "2", ""),
+              ("unknown", "4576", "316", "0", "520", "0", "156250", "2031250", "53", "2", ""),
               u"smss.exe"
           ],
           [
-              None,
               ("unknown", "43444", "556", "0", "744", "1", "468750", "126562500", "85", "8", ""),
               u"csrss.exe"
           ],
           [
-              None,
               ("unknown", "68500", "2848", "0", "680", "2", "2222031250", "10051718750", "679",
                "10", ""), u"csrss.exe"
           ]]),
     (1, [[
-        None, ("root",), "/usr/sbin/xinetd", "-pidfile", "/var/run/xinetd.pid", "-stayalive",
+        ("root",), "/usr/sbin/xinetd", "-pidfile", "/var/run/xinetd.pid", "-stayalive",
         "-inetd_compat", "-inetd_ipv6"
     ]]),
     (1, [[
-        None, (None,), "/usr/sbin/xinetd", "-pidfile", "/var/run/xinetd.pid", "-stayalive",
+        (None,), "/usr/sbin/xinetd", "-pidfile", "/var/run/xinetd.pid", "-stayalive",
         "-inetd_compat", "-inetd_ipv6"
     ]]),
 ]
@@ -198,18 +197,13 @@ input_ids = [
 
 
 @pytest.mark.parametrize("capture, result", list(zip(generate_inputs(), result_parse)), ids=input_ids)
-def test_parse_ps(check_manager, capture, result):
-    check = check_manager.get_check("ps")
+def test_parse_ps(capture, result):
+    cpu_core, lines = ps_section.parse_ps(capture)
+    assert cpu_core == result[0]  # cpu_cores
 
-    parsed = check.context['parse_ps'](capture)
-    for cpu_core, _node_data in parsed.values():
-        assert cpu_core == result[0]  # cpu_cores
-
-    lines = [[node] + line for node, (_, node_data) in parsed.items() for line in node_data]
     for out, ref in itertools.zip_longest(lines, result[1]):
-        assert out[0] == ref[0]
-        assert out[1] == ps_utils.ps_info(*ref[1])
-        assert out[2:] == ref[2:]
+        assert out[0] == ps_utils.ps_info(*ref[0])
+        assert out[1:] == ref[1:]
 
 
 PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
@@ -594,8 +588,7 @@ def test_inventory_common(check_manager):
     check.set_check_api_utils_globals()  # needed for host name
     info = list(itertools.chain.from_iterable(generate_inputs()))
     # nuke node info, b/c we never have node info during discovery
-    parsed_by_nodes = check.context['parse_ps']([[None] + l[1:] for l in info])  # type: ignore[operator]
-    parsed_lines = parsed_by_nodes[None][1]
+    _cpu_info, parsed_lines = ps_section.parse_ps(info)
     lines_with_node_name = [[None] + line for line in parsed_lines]
 
     # Ugly contortions caused by horrible typing...
@@ -688,13 +681,13 @@ check_results = [
          [])
     ]),
     CheckResult([
-        (0, "Processes: 2 [running on bsd, solaris]", [("count", 2, 100000, 100000, 0, None)]),
+        (0, "Processes: 2", [("count", 2, 100000, 100000, 0, None)]),
         (0, "virtual: 20.73 MB", [("vsz", 21232, None, None, None, None)]),
         (0, "physical: 18.61 MB", [("rss", 19052, None, None, None, None)]),
         (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]),
         (0, "running for: 52 d", []),
     ]),
-    CheckResult([(0, 'Processes: 1 [running on solaris]', [('count', 1, 100000, 100000, 0, None)]),
+    CheckResult([(0, 'Processes: 1', [('count', 1, 100000, 100000, 0, None)]),
                  (0, 'CPU: 0%', [('pcpu', 0.0, None, None, None, None)]),
                  (0, 'running for: 0.00 s', [])]),
     CheckResult([
@@ -722,16 +715,12 @@ check_results = [
     "inv_item, reference",
     list(zip(PS_DISCOVERED_ITEMS, check_results)),
     ids=[a[0] for a in PS_DISCOVERED_ITEMS])
-def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
+def test_check_ps_common(check_manager, inv_item, reference):
     check = check_manager.get_check("ps")
-    parsed: List = []
+    parsed: List[List[Optional[str]]] = []
     for info in generate_inputs():
-        parsed_per_node = check.context['parse_ps'](info)
-        parsed.extend(
-            [node] + line
-            for node, (_cpu_cores, node_info) in parsed_per_node.items()
-            for line in node_info
-        )
+        _cpu_cores, data = ps_section.parse_ps(info)
+        parsed.extend([None] + line for line in data)
     total_ram = 1024**3 if "emacs" in inv_item[0] else None
     with on_time(1540375342, "CET"):
         factory_defaults = {"levels": (1, 1, 99999, 99999)}
@@ -778,8 +767,7 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
 
     def time_info(agent_info, check_time, cputime, cpu_cores):
         with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
-            parsed_per_node = check.context['parse_ps'](splitter(agent_info.format(cputime)))
-            parsed_lines = parsed_per_node[None][1]
+            _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
             lines_with_node_name = [[None] + line for line in parsed_lines]
 
             return CheckResult(check.context["check_ps_common"](
@@ -824,9 +812,8 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
 def test_check_ps_common_count(check_manager, levels, reference):
     check = check_manager.get_check("ps")
 
-    parsed_per_node = check.context['parse_ps'](
+    _cpu_info, parsed_lines = ps_section.parse_ps(
         splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))
-    parsed_lines = parsed_per_node[None][1]
     lines_with_node_name = [[None] + line for line in parsed_lines]
 
     params = {
@@ -845,12 +832,12 @@ def test_subset_patterns(check_manager):
     check = check_manager.get_check("ps")
     check.set_check_api_utils_globals()  # needed for host name
 
-    parsed_per_node = check.context['parse_ps'](
+    _cpu_info, parsed_lines = ps_section.parse_ps(
         splitter("""(user,0,0,0.5) main
 (user,0,0,0.4) main_dev
 (user,0,0,0.1) main_dev
 (user,0,0,0.5) main_test"""))
-    parsed_lines = parsed_per_node[None][1]
+
     lines_with_node_name = [[None] + line for line in parsed_lines]
 
     # Boundary in match is necessary otherwise main instance accumulates all
@@ -929,8 +916,7 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
 (on,1869920,359836,00:01:23/6:57,25664) firefox
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
-            parsed_per_node = check.context['parse_ps'](splitter(agent_info.format(cputime)))
-            parsed_lines = parsed_per_node[None][1]
+            _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
             lines_with_node_name = [[None] + line for line in parsed_lines]
 
             return CheckResult(check.context["check_ps_common"](

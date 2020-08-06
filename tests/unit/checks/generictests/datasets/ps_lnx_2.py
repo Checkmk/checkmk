@@ -4,11 +4,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.ps_section import parse_ps_lnx
 # yapf: disable
 # type: ignore
 checkname = 'ps'
 
-info = [[None, 'dummy', 'section', '--', 'refer', 'to', 'section', 'ps_lnx']]
+parsed = parse_ps_lnx([
+    ['[header]', 'CGROUP', 'USER', 'VSZ', 'RSS', 'TIME', 'ELAPSED', 'PID', 'COMMAND'],
+    [
+        '12:blkio:/user.slice,11:devices:/user.slice,5:cpu,cpuacct:/user.slice,4:pids:/user.slice/user-1000.slice/user@1000.service,2:memory:/user.slice/user-1000.slice/user@1000.service,1:name=systemd:/user.slice/user-1000.slice/user@1000.service/vte-spawn-052a0d9a-9d9b-441a-af56-15abe1f4c573.scope,0::/user.slice/user-1000.slice/user@1000.service/vte-spawn-052a0d9a-9d9b-441a-af56-15abe1f4c573.scope',
+        'joerg', '13740', '7800', '00:00:03', '10:06:14', '6195',
+        '/bin/bash'
+    ],
+    [
+        '12:blkio:/user.slice,11:devices:/user.slice,5:cpu,cpuacct:/user.slice,4:pids:/user.slice/user-1000.slice/user@1000.service,2:memory:/user.slice/user-1000.slice/user@1000.service,1:name=systemd:/user.slice/user-1000.slice/user@1000.service/vte-spawn-94f2992d-1408-41a7-946e-82cb5cfadcbf.scope,0::/user.slice/user-1000.slice/user@1000.service/vte-spawn-94f2992d-1408-41a7-946e-82cb5cfadcbf.scope',
+        'joerg', '11712', '5656', '00:00:00', '10:02:52', '7413',
+        '/bin/bash'
+    ],
+    [
+        '12:blkio:/user.slice,11:devices:/user.slice,5:cpu,cpuacct:/user.slice,4:pids:/user.slice/user-1000.slice/user@1000.service,2:memory:/user.slice/user-1000.slice/user@1000.service,1:name=systemd:/user.slice/user-1000.slice/user@1000.service/vte-spawn-94f2992d-1408-41a7-946e-82cb5cfadcbf.scope,0::/user.slice/user-1000.slice/user@1000.service/vte-spawn-94f2992d-1408-41a7-946e-82cb5cfadcbf.scope',
+        'ps_stable', '13184', '5816', '00:00:00', '01:40:25', '220485',
+        'bash'
+    ],
+    [
+        '12:blkio:/user.slice,11:devices:/user.slice,5:cpu,cpuacct:/user.slice,4:pids:/user.slice/user-1000.slice/user@1000.service,2:memory:/user.slice/user-1000.slice/user@1000.service,1:name=systemd:/user.slice/user-1000.slice/user@1000.service/vte-spawn-56f500f9-50cd-4ef3-b286-33d221c13a9e.scope,0::/user.slice/user-1000.slice/user@1000.service/vte-spawn-56f500f9-50cd-4ef3-b286-33d221c13a9e.scope',
+        'joerg', '12636', '6828', '00:00:00', '40:22', '264451',
+        '/bin/bash'
+    ],
+    [
+        '12:blkio:/system.slice/xinetd.service,11:devices:/system.slice/xinetd.service,5:cpu,cpuacct:/system.slice/xinetd.service,4:pids:/system.slice/xinetd.service,2:memory:/system.slice/xinetd.service,1:name=systemd:/system.slice/xinetd.service,0::/system.slice/xinetd.service',
+        'root', '10852', '4428', '00:00:00', '00:01', '303304',
+        '/bin/bash', '/usr/bin/check_mk_agent'
+    ]
+])
 
 discovery = {
     '': [
@@ -144,42 +172,6 @@ checks = {
 
 extra_sections = {
     '': [
-        [
-            [
-                None, '[header]', 'CGROUP', 'USER', 'VSZ', 'RSS', 'TIME',
-                'ELAPSED', 'PID', 'COMMAND'
-            ],
-            [
-                None,
-                '12:blkio:/user.slice,11:devices:/user.slice,5:cpu,cpuacct:/user.slice,4:pids:/user.slice/user-1000.slice/user@1000.service,2:memory:/user.slice/user-1000.slice/user@1000.service,1:name=systemd:/user.slice/user-1000.slice/user@1000.service/vte-spawn-052a0d9a-9d9b-441a-af56-15abe1f4c573.scope,0::/user.slice/user-1000.slice/user@1000.service/vte-spawn-052a0d9a-9d9b-441a-af56-15abe1f4c573.scope',
-                'joerg', '13740', '7800', '00:00:03', '10:06:14', '6195',
-                '/bin/bash'
-            ],
-            [
-                None,
-                '12:blkio:/user.slice,11:devices:/user.slice,5:cpu,cpuacct:/user.slice,4:pids:/user.slice/user-1000.slice/user@1000.service,2:memory:/user.slice/user-1000.slice/user@1000.service,1:name=systemd:/user.slice/user-1000.slice/user@1000.service/vte-spawn-94f2992d-1408-41a7-946e-82cb5cfadcbf.scope,0::/user.slice/user-1000.slice/user@1000.service/vte-spawn-94f2992d-1408-41a7-946e-82cb5cfadcbf.scope',
-                'joerg', '11712', '5656', '00:00:00', '10:02:52', '7413',
-                '/bin/bash'
-            ],
-            [
-                None,
-                '12:blkio:/user.slice,11:devices:/user.slice,5:cpu,cpuacct:/user.slice,4:pids:/user.slice/user-1000.slice/user@1000.service,2:memory:/user.slice/user-1000.slice/user@1000.service,1:name=systemd:/user.slice/user-1000.slice/user@1000.service/vte-spawn-94f2992d-1408-41a7-946e-82cb5cfadcbf.scope,0::/user.slice/user-1000.slice/user@1000.service/vte-spawn-94f2992d-1408-41a7-946e-82cb5cfadcbf.scope',
-                'ps_stable', '13184', '5816', '00:00:00', '01:40:25', '220485',
-                'bash'
-            ],
-            [
-                None,
-                '12:blkio:/user.slice,11:devices:/user.slice,5:cpu,cpuacct:/user.slice,4:pids:/user.slice/user-1000.slice/user@1000.service,2:memory:/user.slice/user-1000.slice/user@1000.service,1:name=systemd:/user.slice/user-1000.slice/user@1000.service/vte-spawn-56f500f9-50cd-4ef3-b286-33d221c13a9e.scope,0::/user.slice/user-1000.slice/user@1000.service/vte-spawn-56f500f9-50cd-4ef3-b286-33d221c13a9e.scope',
-                'joerg', '12636', '6828', '00:00:00', '40:22', '264451',
-                '/bin/bash'
-            ],
-            [
-                None,
-                '12:blkio:/system.slice/xinetd.service,11:devices:/system.slice/xinetd.service,5:cpu,cpuacct:/system.slice/xinetd.service,4:pids:/system.slice/xinetd.service,2:memory:/system.slice/xinetd.service,1:name=systemd:/system.slice/xinetd.service,0::/system.slice/xinetd.service',
-                'root', '10852', '4428', '00:00:00', '00:01', '303304',
-                '/bin/bash', '/usr/bin/check_mk_agent'
-            ]
-        ],
         [
             ['MemTotal:', '16203208', 'kB'], ['MemFree:', '474848', 'kB'],
             ['MemAvailable:', '6528956', 'kB'], ['Buffers:', '690504', 'kB'],

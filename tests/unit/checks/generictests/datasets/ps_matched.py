@@ -4,18 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.ps_section import parse_ps
+
 # yapf: disable
 # type: ignore
 checkname = 'ps'
 
-info = [
+parsed = parse_ps([
     [
-        None,
         '(\\\\DUBETFUTIL502\\ntpservice,31108,6140,0,300,2,312500,1250000,105,5,16517)',
         'C:\\Program', 'Files', '(x86)\\NTP\\bin\\ntpd.exe', '-U', '3', '-M',
         '-c', 'C:\\Program', 'Files', '(x86)\\NTP\\etc\\ntp.conf'
     ]
-]
+])
 
 discovery = {
     '': [
@@ -97,7 +98,7 @@ checks = {
     ]
 }
 
-extra_sections = {'': [[], [], [], [], [], []]}
+extra_sections = {'': [[], [], [], [], []]}  # type: ignore
 
 mock_host_conf = {
     '': {

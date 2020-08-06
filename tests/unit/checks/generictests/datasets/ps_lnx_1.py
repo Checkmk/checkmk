@@ -4,11 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.ps_section import parse_ps_lnx
+
 # yapf: disable
 # type: ignore
 checkname = 'ps'
 
-info = []
+parsed = parse_ps_lnx([
+    ['[header]', 'CGROUP', 'USER', 'VSZ', 'RSS', 'TIME', 'ELAPSED', 'PID', 'COMMAND'],
+    ['1:name=systemd:/init.scope,', 'root', '226036', '9736', '00:00:09', '05:14:30',
+     '1', '/sbin/init', '--ladida'],
+])
+
 
 discovery = {
     '': [
@@ -37,7 +44,7 @@ checks = {
                 'cpu_rescale_max': None
             }, [
                 (
-                    0, 'Processes: 1 [running on NODE]', [
+                    0, 'Processes: 1', [
                         ('count', 1, 100000.0, 100000.0, 0.0, None)
                     ]
                 ),
@@ -64,7 +71,7 @@ checks = {
             'max_age': (10, 20),
         }, [
                 (
-                    0, 'Processes: 1 [running on NODE]', [
+                    0, 'Processes: 1', [
                         ('count', 1, 100000.0, 100000.0, 0.0, None)
                     ]
                 ),
@@ -92,7 +99,7 @@ checks = {
             'min_age': (86400, 43200),
         }, [
              (
-                 0, 'Processes: 1 [running on NODE]', [
+                 0, 'Processes: 1', [
                      ('count', 1, 100000.0, 100000.0, 0.0, None)
                  ]
              ),
@@ -119,7 +126,7 @@ checks = {
             'min_age': (86400, 43200),
         }, [
              (
-                 0, 'Processes: 1 [running on NODE]', [
+                 0, 'Processes: 1', [
                      ('count', 1, 100000.0, 100000.0, 0.0, None)
                  ]
              ),
@@ -139,19 +146,8 @@ checks = {
     ]
 }
 
-extra_sections = {
-    '': [
-        [
-            [
-                'NODE', '[header]', 'CGROUP', 'USER', 'VSZ', 'RSS', 'TIME',
-                'ELAPSED', 'PID', 'COMMAND'
-            ],
-            [
-                'NODE', '1:name=systemd:/init.scope,', 'root', '226036',
-                '9736', '00:00:09', '05:14:30', '1', '/sbin/init', '--ladida'
-            ]
-        ], [], [], [], [], []
-    ]
+extra_sections = {  # type: ignore
+    '': [[]] * 5,
 }
 
 mock_host_conf = {

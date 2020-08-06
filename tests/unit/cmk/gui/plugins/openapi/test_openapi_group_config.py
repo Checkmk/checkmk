@@ -95,7 +95,8 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         content_type='application/json',
     )
 
-    if group_type == "host":  # TODO: delete if-condition with addition of other endpoints
+    if group_type in ("host",
+                      "service"):  # TODO: delete if-condition with addition of other endpoints
         update_groups = [{
             'name': group['name'],
             'attributes': {

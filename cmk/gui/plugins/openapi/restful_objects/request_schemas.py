@@ -301,6 +301,14 @@ EXISTING_HOST_GROUP_NAME = Group(
     should_exist=True,
 )
 
+EXISTING_SERVICE_GROUP_NAME = Group(
+    group_type="service",
+    example="windows",
+    required=True,
+    description="The name of the service group.",
+    should_exist=True,
+)
+
 
 class InputHostGroup(BaseSchema):
     """Creating a host group"""
@@ -359,7 +367,7 @@ class BulkInputContactGroup(BaseSchema):
 
 class InputServiceGroup(BaseSchema):
     """Creating a service group"""
-    name = fields.String(required=True, example="environment")
+    name = NAME_FIELD
     alias = fields.String(example="Environment Sensors")
 
 
@@ -373,6 +381,24 @@ class BulkInputServiceGroup(BaseSchema):
         }],
         uniqueItems=True,
     )
+
+
+class UpdateServiceGroup(BaseSchema):
+    """Updating a service group"""
+    name = EXISTING_SERVICE_GROUP_NAME
+    attributes = fields.Nested(InputServiceGroup)
+
+
+class BulkUpdateServiceGroup(BaseSchema):
+    """Bulk update service groups"""
+    entries = fields.List(fields.Nested(UpdateServiceGroup),
+                          example=[{
+                              'name': 'windows',
+                              'attributes': {
+                                  'name': 'windows updated',
+                                  'alias': 'Windows Servers',
+                              },
+                          }])
 
 
 class CreateFolder(BaseSchema):

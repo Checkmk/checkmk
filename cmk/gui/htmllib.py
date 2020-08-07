@@ -135,7 +135,6 @@ HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, str]
 Choices = List[Tuple[Optional[str], str]]
 DefaultChoice = str
-FoldingIndent = Union[str, None, bool]
 
 ChoiceGroup = NamedTuple("ChoiceGroup", [
     ("title", Text),
@@ -986,8 +985,6 @@ class html(ABCHTMLGenerator):
         self.enable_debug = False
         self.screenshotmode = False
         self.have_help = False
-        # TODO: Clean this foldable specific state member up
-        self.folding_indent: FoldingIndent = None
 
         # browser options
         self.output_format = "html"
@@ -2517,86 +2514,60 @@ class html(ABCHTMLGenerator):
                                  id_: str,
                                  isopen: bool,
                                  title: HTMLContent,
-                                 indent: FoldingIndent = True,
+                                 indent: Union[str, None, bool] = True,
                                  first: bool = False,
                                  icon: Optional[str] = None,
                                  fetch_url: Optional[str] = None,
                                  title_url: Optional[str] = None,
                                  title_target: Optional[str] = None) -> bool:
-        self.folding_indent = indent
-
         isopen = self.foldable_container_is_open(treename, id_, isopen)
+        onclick = self.foldable_container_onclick(treename, id_, fetch_url)
+        img_id = self.foldable_container_img_id(treename, id_)
+        container_id = self.foldable_container_id(treename, id_)
 
-        onclick = "cmk.foldable_container.toggle(%s, %s, %s)"\
-                    % (json.dumps(treename), json.dumps(id_), json.dumps(fetch_url if fetch_url else ''))
+        self.open_div(class_="foldable")
 
-        img_id = "treeimg.%s.%s" % (treename, id_)
-        container_id = "tree.%s.%s" % (treename, id_)
-
-        if indent == "nform":
-            self.open_thead()
-            self.open_tr(class_="heading")
-            self.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan=2)
+        if not icon:
+            self.img(id_=img_id,
+                     class_=["treeangle", "open" if isopen else "closed"],
+                     src="themes/%s/images/tree_closed.png" % (self._theme),
+                     align="absbottom",
+                     onclick=onclick)
+        if isinstance(title, HTML):  # custom HTML code
             if icon:
-                self.img(id_=img_id,
-                         class_=["treeangle", "title"],
-                         src="themes/%s/images/icon_%s.png" % (self._theme, icon))
-            else:
-                self.img(id_=img_id,
-                         class_=["treeangle", "nform", "open" if isopen else "closed"],
-                         src="themes/%s/images/tree_closed.png" % (self._theme),
-                         align="absbottom")
+                self.img(class_=["treeangle", "title"],
+                         src="themes/%s/images/icon_%s.png" % (self._theme, icon),
+                         onclick=onclick)
             self.write_text(title)
+            if indent != "form":
+                self.br()
+        else:
+            self.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
+            if icon:
+                self.img(class_=["treeangle", "title"],
+                         src="themes/%s/images/icon_%s.png" % (self._theme, icon))
+            if title_url:
+                self.a(title, href=title_url, target=title_target)
+            else:
+                self.write_text(title)
+            self.close_b()
+            self.br()
+
+        indent_style = "padding-left: %dpx; " % (indent is True and 15 or 0)
+        if indent == "form":
             self.close_td()
             self.close_tr()
-            self.close_thead()
-            self.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
-        else:
-            self.open_div(class_="foldable")
+            self.close_table()
+            indent_style += "margin: 0; "
+        self.open_ul(id_=container_id,
+                     class_=["treeangle", "open" if isopen else "closed"],
+                     style=indent_style)
 
-            if not icon:
-                self.img(id_=img_id,
-                         class_=["treeangle", "open" if isopen else "closed"],
-                         src="themes/%s/images/tree_closed.png" % (self._theme),
-                         align="absbottom",
-                         onclick=onclick)
-            if isinstance(title, HTML):  # custom HTML code
-                if icon:
-                    self.img(class_=["treeangle", "title"],
-                             src="themes/%s/images/icon_%s.png" % (self._theme, icon),
-                             onclick=onclick)
-                self.write_text(title)
-                if indent != "form":
-                    self.br()
-            else:
-                self.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
-                if icon:
-                    self.img(class_=["treeangle", "title"],
-                             src="themes/%s/images/icon_%s.png" % (self._theme, icon))
-                if title_url:
-                    self.a(title, href=title_url, target=title_target)
-                else:
-                    self.write_text(title)
-                self.close_b()
-                self.br()
-
-            indent_style = "padding-left: %dpx; " % (indent is True and 15 or 0)
-            if indent == "form":
-                self.close_td()
-                self.close_tr()
-                self.close_table()
-                indent_style += "margin: 0; "
-            self.open_ul(id_=container_id,
-                         class_=["treeangle", "open" if isopen else "closed"],
-                         style=indent_style)
-
-        # give caller information about current toggling state (needed for nform)
         return isopen
 
     def end_foldable_container(self) -> None:
-        if self.folding_indent != "nform":
-            self.close_ul()
-            self.close_div()
+        self.close_ul()
+        self.close_div()
 
     def foldable_container_is_open(self, treename: str, id_: str, isopen: bool) -> bool:
         # try to get persisted state of tree
@@ -2605,6 +2576,16 @@ class html(ABCHTMLGenerator):
         if id_ in tree_state:
             isopen = tree_state[id_] == "on"
         return isopen
+
+    def foldable_container_onclick(self, treename: str, id_: str, fetch_url: Optional[str]) -> str:
+        return "cmk.foldable_container.toggle(%s, %s, %s)" % (
+            json.dumps(treename), json.dumps(id_), json.dumps(fetch_url if fetch_url else ''))
+
+    def foldable_container_img_id(self, treename: str, id_: str) -> str:
+        return "treeimg.%s.%s" % (treename, id_)
+
+    def foldable_container_id(self, treename: str, id_: str) -> str:
+        return "tree.%s.%s" % (treename, id_)
 
     #
     # Context Buttons

@@ -174,14 +174,42 @@ def header(title: str,
     html.open_table(id_=table_id if table_id else None,
                     class_=["nform", "narrow" if narrow else None, css if css else None])
 
-    html.begin_foldable_container(treename=html.form_name if html.form_name else "nform",
-                                  id_=ensure_str(base64.b64encode(ensure_binary(title))),
-                                  isopen=isopen,
-                                  title=title,
-                                  indent="nform")
+    _begin_foldable_nform_container(
+        treename=html.form_name if html.form_name else "nform",
+        id_=ensure_str(base64.b64encode(ensure_binary(title))),
+        isopen=isopen,
+        title=title,
+    )
     html.tr(html.render_td('', colspan=2))
     g_header_open = True
     g_section_open = False
+
+
+def _begin_foldable_nform_container(
+    treename: str,
+    id_: str,
+    isopen: bool,
+    title: str,
+) -> bool:
+    isopen = html.foldable_container_is_open(treename, id_, isopen)
+    onclick = html.foldable_container_onclick(treename, id_, fetch_url=None)
+    img_id = html.foldable_container_img_id(treename, id_)
+    container_id = html.foldable_container_id(treename, id_)
+
+    html.open_thead()
+    html.open_tr(class_="heading")
+    html.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan=2)
+    html.img(id_=img_id,
+             class_=["treeangle", "nform", "open" if isopen else "closed"],
+             src="themes/%s/images/tree_closed.png" % (html.get_theme()),
+             align="absbottom")
+    html.write_text(title)
+    html.close_td()
+    html.close_tr()
+    html.close_thead()
+    html.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
+
+    return isopen
 
 
 # container without legend and content
@@ -203,10 +231,15 @@ def section(title: Union[None, HTML, str] = None,
             simple: bool = False,
             hide: bool = False,
             legend: bool = True,
-            css: Optional[str] = None) -> None:
+            css: Optional[str] = None,
+            is_advanced: bool = False) -> None:
     global g_section_open
     section_close()
-    html.open_tr(id_=section_id, class_=[css], style="display:none;" if hide else None)
+    html.open_tr(
+        id_=section_id,
+        class_=[css, "advanced" if is_advanced else "basic"],
+        style="display:none;" if hide else None,
+    )
 
     if legend:
         html.open_td(class_=["legend", "simple" if simple else None])
@@ -241,7 +274,6 @@ def end() -> None:
     global g_header_open
     g_header_open = False
     section_close()
-    html.end_foldable_container()
     html.tr(html.render_td('', colspan=2), class_=["bottom"])
     html.close_tbody()
     html.close_table()

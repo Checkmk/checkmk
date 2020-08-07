@@ -1575,7 +1575,10 @@ def configure_attributes(new,
                                                      onclick=onclick,
                                                      **checkbox_kwargs)
 
-            forms.section(_u(attr.title()), checkbox=checkbox_code, section_id="attr_" + attrname)
+            forms.section(_u(attr.title()),
+                          checkbox=checkbox_code,
+                          section_id="attr_" + attrname,
+                          is_advanced=attr.is_advanced())
             html.help(attr.help())
 
             if len(values) == 1:

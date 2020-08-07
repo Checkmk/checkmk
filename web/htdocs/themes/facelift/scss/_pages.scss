@@ -1161,6 +1161,12 @@ table.nform {
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
   empty-cells: show;
 
+  &.closed {
+    tr.heading a.more {
+      display: none;
+    }
+  }
+
   body.main.screenshotmode & {
     background-color: rgb(255, 255, 255);
     background-image: none;
@@ -1192,6 +1198,16 @@ table.nform {
 
     img.treeangle.nform {
       margin: 0 8px 0 0;
+    }
+
+    a.more {
+      float: right;
+
+      img {
+        top: 3px;
+        width: 16px;
+        height: 16px;
+      }
     }
   }
 

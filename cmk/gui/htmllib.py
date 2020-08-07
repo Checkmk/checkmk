@@ -2525,7 +2525,7 @@ class html(ABCHTMLGenerator):
         img_id = self.foldable_container_img_id(treename, id_)
         container_id = self.foldable_container_id(treename, id_)
 
-        self.open_div(class_="foldable")
+        self.open_div(class_=["foldable", "open" if isopen else "closed"])
 
         if not icon:
             self.img(id_=img_id,

@@ -1411,6 +1411,7 @@ def configure_attributes(new,
             topic_title,
             isopen=topic_id in ["basic", "address", "data_sources"],
             table_id=topic_id,
+            show_advanced_toggle=True,
         )
 
         if topic_id == "basic":

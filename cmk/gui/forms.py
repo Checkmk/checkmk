@@ -166,19 +166,26 @@ def header(title: str,
            isopen: bool = True,
            table_id: str = "",
            narrow: bool = False,
-           css: Optional[str] = None) -> None:
+           css: Optional[str] = None,
+           show_advanced_toggle: bool = False) -> None:
     global g_header_open, g_section_open
     if g_header_open:
         end()
 
     html.open_table(id_=table_id if table_id else None,
-                    class_=["nform", "narrow" if narrow else None, css if css else None])
+                    class_=[
+                        "nform",
+                        "narrow" if narrow else None,
+                        css if css else None,
+                        "open" if isopen else "closed",
+                    ])
 
     _begin_foldable_nform_container(
         treename=html.form_name if html.form_name else "nform",
         id_=ensure_str(base64.b64encode(ensure_binary(title))),
         isopen=isopen,
         title=title,
+        show_advanced_toggle=show_advanced_toggle,
     )
     html.tr(html.render_td('', colspan=2))
     g_header_open = True
@@ -190,6 +197,7 @@ def _begin_foldable_nform_container(
     id_: str,
     isopen: bool,
     title: str,
+    show_advanced_toggle: bool,
 ) -> bool:
     isopen = html.foldable_container_is_open(treename, id_, isopen)
     onclick = html.foldable_container_onclick(treename, id_, fetch_url=None)
@@ -204,6 +212,8 @@ def _begin_foldable_nform_container(
              src="themes/%s/images/tree_closed.png" % (html.get_theme()),
              align="absbottom")
     html.write_text(title)
+    if show_advanced_toggle:
+        html.more_button("foldable_" + id_, dom_levels_up=4)
     html.close_td()
     html.close_tr()
     html.close_thead()

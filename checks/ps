@@ -99,13 +99,7 @@ def ps_get_current_pids(parsed):
 
 
 def inventory_ps(parsed_extra):
-    section_ps = parsed_extra[0]
-    if section_ps is None:
-        return
-    _cpu_cores, data = section_ps
-    params = host_extra_conf(host_name(), [])
-    # bring back node info for now
-    return inventory_ps_common(params, [[None] + line for line in data])
+    return []
 
 
 def check_ps(item, params, parsed_extra):

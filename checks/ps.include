@@ -6,15 +6,13 @@
 import time
 
 from cmk.base.plugins.agent_based.utils.ps import (
-    get_discovery_specs,
     ps_info,
     replace_service_description,
-    process_attributes_match,
-    process_matches,
     format_process_list,
     ps_cleanup_params,
     process_capture as check_ps_process_capture,
 )
+from cmk.base.plugins.agent_based.ps_check import discover_ps
 
 GRAB_USER = False
 
@@ -24,54 +22,11 @@ factory_settings["ps_default_levels"] = {
 
 
 def inventory_ps_common(params, parsed):
-    inventory_specs = get_discovery_specs(params)
-
     inventory = []
-    for line in parsed:
-        for servicedesc, pattern, userspec, cgroupspec, _labels, default_params in inventory_specs:
-            # First entry in line is the node name or None for non-clusters
-            process_info, command_line = line[1], line[2:]
-            if not process_attributes_match(process_info, userspec, cgroupspec):
-                continue
-            matches = process_matches(command_line, pattern)
-            if not matches:
-                continue  # skip not matched lines
-
-            # User capturing on rule
-            if userspec == GRAB_USER:
-                i_userspec = process_info.user
-            else:
-                i_userspec = userspec
-
-            i_servicedesc = servicedesc.replace("%u", i_userspec or "")
-
-            # Process capture
-            match_groups = matches.groups() if hasattr(matches, 'groups') else ()
-
-            i_servicedesc = replace_service_description(i_servicedesc, match_groups, pattern)
-
-            # Problem here: We need to instantiate all subexpressions
-            # with their actual values of the found process.
-            inv_params = {
-                "process": pattern,
-                "match_groups": match_groups,
-                "user": i_userspec,
-                "cgroup": cgroupspec,
-            }
-
-            # default_params is either a clean dict with optional
-            # parameters to set as default or - from version 1.2.4 - the
-            # dict from the rule itself. In the later case we need to remove
-            # the keys that do not specify default parameters
-            for key, value in default_params.items():
-                if key not in ("descr", "match", "user", "perfdata"):
-                    inv_params[key] = value
-
-            inv = (i_servicedesc, inv_params)
-
-            if inv not in inventory:
-                inventory.append(inv)
-
+    for service in discover_ps(params, (1, parsed)):
+        inv = (service.item, service.parameters)
+        if inv not in inventory:
+            inventory.append(inv)
     return inventory
 
 

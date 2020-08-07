@@ -56,6 +56,9 @@ class TCPConfigurator(AgentConfigurator):
             "encryption_settings": self.host_config.agent_encryption,
         }
 
+    def make_checker(self) -> "TCPDataSource":
+        return TCPDataSource(self)
+
     @staticmethod
     def _make_description(hostname: HostName, ipaddress: Optional[HostAddress]) -> str:
         return "TCP: %s:%d" % (
@@ -65,13 +68,9 @@ class TCPConfigurator(AgentConfigurator):
 
 
 class TCPDataSource(AgentDataSource):
-    def __init__(
-        self,
-        *,
-        configurator: TCPConfigurator,
-    ) -> None:
+    def __init__(self, configurator: TCPConfigurator) -> None:
         super().__init__(
-            configurator=configurator,
+            configurator,
             summarizer=AgentSummarizerDefault(configurator),
         )
 

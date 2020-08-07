@@ -27,15 +27,15 @@ from cmk.base.config import HostConfig, SelectedRawSections
 from ._abstract import ABCDataSource, Mode
 from .agent import AgentDataSource, AgentHostSections
 from .host_sections import HostKey, MultiHostSections
-from .ipmi import IPMIConfigurator, IPMIManagementBoardDataSource
+from .ipmi import IPMIConfigurator
 from .piggyback import PiggyBackConfigurator, PiggyBackDataSource
 from .programs import (
     DSProgramConfigurator,
     SpecialAgentConfigurator,
     ProgramDataSource,
 )
-from .snmp import SNMPConfigurator, SNMPDataSource
-from .tcp import TCPConfigurator, TCPDataSource
+from .snmp import SNMPConfigurator
+from .tcp import TCPConfigurator
 
 __all__ = ["DataSources", "make_host_sections", "make_sources"]
 
@@ -97,21 +97,21 @@ class SourceBuilder:
 
         if "no-piggyback" not in self._host_config.tags:
             self._add_source(
-                PiggyBackDataSource(configurator=PiggyBackConfigurator(
+                PiggyBackConfigurator(
                     self._hostname,
                     self._ipaddress,
                     mode=self._mode,
-                ),))
+                ).make_checker())
 
     def _initialize_snmp_data_sources(self,) -> None:
         if not self._host_config.is_snmp_host:
             return
         self._add_source(
-            SNMPDataSource(configurator=SNMPConfigurator.snmp(
+            SNMPConfigurator.snmp(
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
-            ),))
+            ).make_checker())
 
     def _initialize_management_board_data_sources(self) -> None:
         protocol = self._host_config.management_protocol
@@ -121,18 +121,18 @@ class SourceBuilder:
         ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._host_config)
         if protocol == "snmp":
             self._add_source(
-                SNMPDataSource(configurator=SNMPConfigurator.management_board(
+                SNMPConfigurator.management_board(
                     self._hostname,
                     ip_address,
                     mode=self._mode,
-                ),))
+                ).make_checker())
         elif protocol == "ipmi":
             self._add_source(
-                IPMIManagementBoardDataSource(configurator=IPMIConfigurator(
+                IPMIConfigurator(
                     self._hostname,
                     ip_address,
                     mode=self._mode,
-                ),),)
+                ).make_checker())
         else:
             raise NotImplementedError()
 
@@ -155,30 +155,30 @@ class SourceBuilder:
 
         datasource_program = self._host_config.datasource_program
         if datasource_program is not None:
-            return ProgramDataSource(configurator=DSProgramConfigurator(
+            return DSProgramConfigurator(
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
                 main_data_source=main_data_source,
                 template=datasource_program,
-            ),)
+            ).make_checker()
 
-        return TCPDataSource(configurator=TCPConfigurator(
+        return TCPConfigurator(
             self._hostname,
             self._ipaddress,
             mode=self._mode,
             main_data_source=main_data_source,
-        ),)
+        ).make_checker()
 
     def _get_special_agent_data_sources(self) -> List[ProgramDataSource]:
         return [
-            ProgramDataSource(configurator=SpecialAgentConfigurator(
+            SpecialAgentConfigurator(
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
                 special_agent_id=agentname,
                 params=params,
-            ),) for agentname, params in self._host_config.special_agents
+            ).make_checker() for agentname, params in self._host_config.special_agents
         ]
 
 
@@ -188,13 +188,7 @@ def make_sources(
     *,
     mode: Mode,
 ) -> DataSources:
-    """Return a list of sources for DataSources.
-
-    Args:
-        host_config: The host configuration.
-        ipaddress: The host address.
-
-    """
+    """Return a list of sources for DataSources."""
     return SourceBuilder(host_config, ipaddress, mode=mode).sources
 
 

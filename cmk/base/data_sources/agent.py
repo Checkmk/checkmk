@@ -459,12 +459,12 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
 
     def __init__(
         self,
-        *,
         configurator: ABCConfigurator,
+        *,
         summarizer: AgentSummarizer,
     ) -> None:
         super().__init__(
-            configurator=configurator,
+            configurator,
             summarizer=summarizer,
             default_raw_data=b"",
             default_host_sections=AgentHostSections(),

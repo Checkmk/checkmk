@@ -227,6 +227,10 @@ class ABCConfigurator(abc.ABC):
     def configure_fetcher(self) -> Dict[str, Any]:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def make_checker(self) -> "ABCDataSource":
+        raise NotImplementedError
+
 
 class ABCSummarizer(Generic[BoundedAbstractHostSections], metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -258,8 +262,8 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
     def __init__(
         self,
-        *,
         configurator: ABCConfigurator,
+        *,
         summarizer: ABCSummarizer,
         default_raw_data: BoundedAbstractRawData,
         default_host_sections: BoundedAbstractHostSections,

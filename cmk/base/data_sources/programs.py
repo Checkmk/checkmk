@@ -96,6 +96,9 @@ class ProgramConfigurator(AgentConfigurator):
             "is_cmc": config.is_cmc(),
         }
 
+    def make_checker(self) -> "ProgramDataSource":
+        return ProgramDataSource(self)
+
     @staticmethod
     def _make_description(cmdline, stdin):
         response = ["Program: %s" % cmdline]
@@ -256,13 +259,9 @@ class SpecialAgentConfigurator(ProgramConfigurator):
 
 class ProgramDataSource(AgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
-    def __init__(
-        self,
-        *,
-        configurator: ProgramConfigurator,
-    ) -> None:
+    def __init__(self, configurator: ProgramConfigurator) -> None:
         super().__init__(
-            configurator=configurator,
+            configurator,
             summarizer=AgentSummarizerDefault(configurator),
         )
 

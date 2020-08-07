@@ -65,6 +65,9 @@ class IPMIConfigurator(AgentConfigurator):
             "password": self.credentials["password"],
         }
 
+    def make_checker(self) -> "IPMIManagementBoardDataSource":
+        return IPMIManagementBoardDataSource(self)
+
     @staticmethod
     def _make_description(ipaddress: Optional[HostAddress], credentials: IPMICredentials):
         description = "Management board - IPMI"
@@ -100,15 +103,8 @@ class IPMISummarizer(AgentSummarizer):
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
 class IPMIManagementBoardDataSource(AgentDataSource):
-    def __init__(
-        self,
-        *,
-        configurator: IPMIConfigurator,
-    ) -> None:
-        super().__init__(
-            configurator=configurator,
-            summarizer=IPMISummarizer(),
-        )
+    def __init__(self, configurator: IPMIConfigurator) -> None:
+        super().__init__(configurator, summarizer=IPMISummarizer())
 
     def _execute(
         self,

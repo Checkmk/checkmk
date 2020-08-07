@@ -196,6 +196,9 @@ class SNMPConfigurator(ABCConfigurator):
             "snmp_config": self.snmp_config._asdict(),
         }
 
+    def make_checker(self) -> "SNMPDataSource":
+        return SNMPDataSource(self)
+
     def _make_oid_infos(
         self,
         *,
@@ -322,13 +325,9 @@ class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
 
 class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                    SNMPHostSections]):
-    def __init__(
-        self,
-        *,
-        configurator: SNMPConfigurator,
-    ) -> None:
+    def __init__(self, configurator: SNMPConfigurator) -> None:
         super().__init__(
-            configurator=configurator,
+            configurator,
             summarizer=SNMPSummarizer(),
             default_raw_data={},
             default_host_sections=SNMPHostSections(),

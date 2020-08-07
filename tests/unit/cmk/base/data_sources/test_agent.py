@@ -25,7 +25,6 @@ from cmk.base.data_sources.agent import (
     AgentDataSource,
     AgentParser,
     AgentSummarizer,
-    AgentSummarizerDefault,
 )
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
@@ -163,6 +162,9 @@ class StubConfigurator(AgentConfigurator):
     def configure_fetcher(self):
         return {}
 
+    def make_checker(self) -> "StubAgent":
+        return StubAgent(self)
+
 
 class StubSummarizer(AgentSummarizer):
     def summarize(self, host_sections):
@@ -170,6 +172,9 @@ class StubSummarizer(AgentSummarizer):
 
 
 class StubAgent(AgentDataSource):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, summarizer=StubSummarizer(), **kwargs)
+
     def _execute(self, *args, **kwargs):
         return self.default_host_sections
 
@@ -192,7 +197,7 @@ class TestAgentSummaryResult:
 
     @pytest.fixture
     def source(self, hostname, mode):
-        configurator = StubConfigurator(
+        return StubConfigurator(
             hostname,
             "1.2.3.4",
             mode=mode,
@@ -200,20 +205,12 @@ class TestAgentSummaryResult:
             id_="agent_id",
             cpu_tracking_id="agent_cpu_id",
             description="agent description",
-        )
-        return StubAgent(
-            configurator=configurator,
-            summarizer=AgentSummarizerDefault(configurator),
-        )
+        ).make_checker()
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source, mode):
         source._host_sections = source.default_host_sections
-        assert source.get_summary_result() == (
-            0,
-            "Version: unknown, OS: unknown",
-            [],
-        )
+        assert source.get_summary_result() == (0, "", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):

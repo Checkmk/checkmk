@@ -13,6 +13,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.fetchers import FetcherType
 
+from cmk.base.data_sources.snmp import CachedSNMPDetector
 from cmk.base.data_sources import fetcher_configuration
 
 
@@ -25,31 +26,53 @@ def file_fixture():
     return io.StringIO()
 
 
-@pytest.mark.parametrize(
-    "hostname, tags, fetchers",
-    [
-        ("agent-host", {}, [FetcherType.TCP, FetcherType.PIGGYBACK]),
-        ("ping-host", {
+@pytest.mark.parametrize("hostname, tags, fetchers", [
+    ("agent-host", {}, [FetcherType.TCP, FetcherType.PIGGYBACK]),
+    (
+        "ping-host",
+        {
             "agent": "no-agent"
-        }, [FetcherType.PIGGYBACK]),
-        # TODO(ml): Handle SNMP.
-        (
-            "all-agents-host",
-            {
-                "agent": "all-agents"
-            },
-            [FetcherType.TCP, FetcherType.PIGGYBACK],
-        ),
-        (
-            "all-special-host",
-            {
-                "agent": "special-agents"
-            },
-            [FetcherType.PIGGYBACK],
-        ),
-    ])
+        },
+        [FetcherType.PIGGYBACK],
+    ),
+    (
+        "snmp-host",
+        {
+            "agent": "no-agent",
+            "snmp_ds": "snmp-v2"
+        },
+        [FetcherType.SNMP, FetcherType.PIGGYBACK],
+    ),
+    (
+        "dual-host",
+        {
+            "agent": "cmk-agent",
+            "snmp_ds": "snmp-v2"
+        },
+        [FetcherType.TCP, FetcherType.SNMP, FetcherType.PIGGYBACK],
+    ),
+    (
+        "all-agents-host",
+        {
+            "agent": "all-agents"
+        },
+        [FetcherType.TCP, FetcherType.PIGGYBACK],
+    ),
+    (
+        "all-special-host",
+        {
+            "agent": "special-agents"
+        },
+        [FetcherType.PIGGYBACK],
+    ),
+])
 def test_generates_correct_sections(file, hostname, tags, fetchers, monkeypatch):
     make_scenario(hostname, tags).apply(monkeypatch)
+    monkeypatch.setattr(
+        CachedSNMPDetector,
+        "__call__",
+        lambda *args, **kwargs: {},
+    )
     fetcher_configuration.dump(hostname, "1.2.3.4", file)
     file.seek(0)
     assert [FetcherType[f["fetcher_type"]] for f in json.load(file)["fetchers"]] == fetchers

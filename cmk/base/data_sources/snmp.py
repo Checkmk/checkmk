@@ -181,7 +181,8 @@ class SNMPConfigurator(ABCConfigurator):
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
             "oid_infos": {
-                name: [tree.to_json() for tree in trees] for name, trees in self._make_oid_infos(
+                str(name): [tree.to_json() for tree in trees]
+                for name, trees in self._make_oid_infos(
                     persisted_sections=self.persisted_sections,
                     selected_raw_sections=self.selected_raw_sections,
                     prefetched_sections=self.prefetched_sections,

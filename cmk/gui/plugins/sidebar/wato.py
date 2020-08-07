@@ -12,8 +12,9 @@ import cmk.gui.dashboard as dashboard
 import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML, Choices
-from cmk.gui.i18n import _
-from cmk.gui.type_defs import TopicMenuTopic, TopicMenuItem
+from cmk.gui.i18n import _, _l
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
 from cmk.gui.globals import html
 
 from cmk.gui.plugins.sidebar import (
@@ -88,6 +89,16 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
 
     # Return the sorted topics
     return [v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index, e[0].title))]
+
+
+MegaMenuSetup = mega_menu_registry.register(
+    MegaMenu(
+        name="setup",
+        title=_l("Setup"),
+        icon_name="main_setup",
+        sort_index=15,
+        topics=get_wato_menu_items,
+    ))
 
 
 @snapin_registry.register

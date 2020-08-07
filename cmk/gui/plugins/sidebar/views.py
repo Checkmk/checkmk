@@ -10,7 +10,8 @@ import cmk.gui.config as config
 import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
-from cmk.gui.type_defs import Visual
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,
@@ -18,8 +19,7 @@ from cmk.gui.plugins.sidebar import (
     make_topic_menu,
     show_topic_menu,
 )
-from cmk.gui.type_defs import TopicMenuTopic
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 
 
 @snapin_registry.register
@@ -75,3 +75,13 @@ def get_view_menu_items() -> List[TopicMenuTopic]:
     visuals_to_show += page_type_items
 
     return make_topic_menu(visuals_to_show)
+
+
+MegaMenuMonitoring = mega_menu_registry.register(
+    MegaMenu(
+        name="monitoring",
+        title=_l("Monitor"),
+        icon_name="main_monitoring",
+        sort_index=5,
+        topics=get_view_menu_items,
+    ))

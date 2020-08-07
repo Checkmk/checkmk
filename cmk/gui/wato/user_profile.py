@@ -20,10 +20,11 @@ import cmk.gui.login as login
 
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
-from cmk.gui.i18n import _, _u
+from cmk.gui.i18n import _, _l, _u
 from cmk.gui.globals import html
 from cmk.gui.pages import page_registry, AjaxPage, Page
 
@@ -33,6 +34,64 @@ from cmk.gui.wato.pages.users import select_language
 
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
+
+
+def _user_menu_topics() -> List[TopicMenuTopic]:
+    items = [
+        TopicMenuItem(
+            name="change_password",
+            title=_("Change password"),
+            url="user_change_pw.py",
+            sort_index=10,
+            is_advanced=False,
+            icon_name="topic_change_password",
+        ),
+        TopicMenuItem(
+            name="user_profile",
+            title=_("Edit profile"),
+            url="user_profile.py",
+            sort_index=20,
+            is_advanced=False,
+            icon_name="topic_profile",
+        ),
+        TopicMenuItem(
+            name="logout",
+            title=_("Logout"),
+            url="logout.py",
+            sort_index=30,
+            is_advanced=False,
+            icon_name="sidebar_logout",
+        ),
+    ]
+
+    if rulebased_notifications_enabled() and config.user.may('general.edit_notifications'):
+        items.insert(
+            1,
+            TopicMenuItem(
+                name="notification_rules",
+                title=_("Notification rules"),
+                url="wato.py?mode=user_notifications_p",
+                sort_index=30,
+                is_advanced=False,
+                icon_name="topic_events",
+            ))
+
+    return [TopicMenuTopic(
+        name="user",
+        title=_("User"),
+        icon_name="topic_profile",
+        items=items,
+    )]
+
+
+MegaMenuUser = mega_menu_registry.register(
+    MegaMenu(
+        name="user",
+        title=_l("User"),
+        icon_name="main_user",
+        sort_index=20,
+        topics=_user_menu_topics,
+    ))
 
 
 def user_profile_async_replication_page() -> None:

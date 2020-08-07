@@ -21,7 +21,7 @@ def build(Map args) {
                     DOCKER_BUILDS[DISTRO] = {
                         stage('test') {
                             dir ('tests') {
-                                sh "RESULT_PATH='${WORKSPACE}/test-results/${DISTRO}' EDITION='"+args.EDITION+"' DOCKER_TAG='"+args.DOCKER_TAG+"' VERSION='$CMK_VERSION' DISTRO='$DISTRO' make "+args.MAKE_TARGET
+                                sh "RESULT_PATH='${WORKSPACE}/test-results/${DISTRO}' EDITION='"+args.EDITION+"' DOCKER_TAG='"+args.DOCKER_TAG+"' VERSION='$CMK_VERSION' DISTRO='$DISTRO' BRANCH='${args.BRANCH}' make "+args.MAKE_TARGET
                             }
                         }
                     }

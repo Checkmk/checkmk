@@ -4,19 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import collections
 import re
 import time
 
-from ..agent_based_api.v0.type_defs import HostLabelGenerator, Parameters
+from ..agent_based_api.v0.type_defs import CheckGenerator, HostLabelGenerator, Parameters
 from ..agent_based_api.v0 import (
+    check_levels,
+    get_average,
     get_rate,
     get_value_store,
     IgnoreResultsError,
+    Metric,
     regex,
     render,
+    Result,
+    state,
 )
 
 ps_info = collections.namedtuple(
@@ -291,8 +296,8 @@ class ProcessAggregator:
         self.resident_size = 0
         self.handle_count = 0
         self.percent_cpu = 0.0
-        self.max_elapsed = None
-        self.min_elapsed = None
+        self.max_elapsed: Optional[float] = None
+        self.min_elapsed: Optional[float] = None
         self.processes = []
         self.running_on_nodes = set()
 
@@ -442,3 +447,213 @@ def process_capture(parsed, params, cpu_cores):
         ps_aggregator.append(process)
 
     return ps_aggregator
+
+
+def check_ps_common(
+    *,
+    label: str,
+    item: str,
+    params: Parameters,
+    process_lines: List,
+    cpu_cores: int,
+    total_ram: Optional[float],
+) -> CheckGenerator:
+    params = ps_cleanup_params(params)
+
+    processes = process_capture(process_lines, params, cpu_cores)
+
+    yield from count_check(processes, params, label)
+
+    yield from memory_check(processes, params)
+
+    if processes.resident_size and "resident_levels_perc" in params:
+        yield from memory_perc_check(processes, params, total_ram)
+
+    # CPU
+    if processes.count:
+        yield from cpu_check(processes.percent_cpu, params)
+
+    if "single_cpulevels" in params:
+        yield from individual_process_check(processes, params)
+
+    # only check handle_count if provided by wmic counters
+    if processes.handle_count:
+        yield from handle_count_check(processes, params)
+
+    if processes.min_elapsed is not None and processes.max_elapsed is not None:
+        yield from uptime_check(processes.min_elapsed, processes.max_elapsed, params)
+
+    if params.get("process_info"):
+        yield Result(
+            state=state.OK,
+            details=format_process_list(processes, params["process_info"] == "html"),
+        )
+
+
+def count_check(
+    processes: ProcessAggregator,
+    params: Parameters,
+    info_name: str,
+) -> CheckGenerator:
+    warnmin, okmin, okmax, warnmax = params["levels"]
+    yield from check_levels(
+        processes.count,
+        metric_name="count",
+        levels_lower=(okmin, warnmin),
+        levels_upper=(okmax + 1, warnmax + 1),
+        render_func=lambda d: str(int(d)),
+        boundaries=(0, None),
+        label=info_name,
+    )
+    if processes.running_on_nodes:
+        yield Result(
+            state=state.OK,
+            summary="Running on nodes %s" % ", ".join(sorted(processes.running_on_nodes)),
+        )
+
+
+def memory_check(
+    processes: ProcessAggregator,
+    params: Parameters,
+) -> CheckGenerator:
+    """Check levels for virtual and physical used memory"""
+    for size, label, levels, metric in [
+        (processes.virtual_size, "virtual", "virtual_levels", "vsz"),
+        (processes.resident_size, "physical", "resident_levels", "rss"),
+    ]:
+        if size == 0:
+            continue
+
+        yield from check_levels(
+            size * 1024,
+            levels_upper=params.get(levels),
+            render_func=render.bytes,
+            label=label,
+        )
+        yield Metric(metric, size, levels=params.get(levels))
+
+
+def memory_perc_check(
+    processes: ProcessAggregator,
+    params: Parameters,
+    total_ram: Optional[float],
+) -> CheckGenerator:
+    """Check levels that are in percent of the total RAM of the host"""
+    if not total_ram:
+        yield Result(
+            state=state.UNKNOWN,
+            summary="Percentual RAM levels configured, but total RAM is unknown",
+        )
+        return
+
+    resident_perc = 100.0 * processes.resident_size * 1024.0 / total_ram
+    yield from check_levels(
+        resident_perc,
+        levels_upper=params["resident_levels_perc"],
+        render_func=render.percent,
+        label="Percentage of total RAM",
+    )
+
+
+def cpu_check(percent_cpu: float, params: Parameters) -> CheckGenerator:
+    """Check levels for cpu utilization from given process"""
+
+    warn_cpu, crit_cpu = params.get("cpulevels", (None, None, None))[:2]
+    yield Metric("pcpu", percent_cpu, levels=(warn_cpu, crit_cpu))
+
+    # CPU might come with previous
+    if "cpu_average" in params:
+        avg_cpu = get_average(
+            get_value_store(),
+            "cpu",
+            time.time(),
+            percent_cpu,
+            params["cpu_average"],
+        )
+        infotext = "CPU: %s, %d min average" % (render.percent(percent_cpu), params["cpu_average"])
+        yield Metric("pcpuavg",
+                     avg_cpu,
+                     levels=(warn_cpu, crit_cpu),
+                     boundaries=(0, params["cpu_average"]))  # wat?
+        percent_cpu = avg_cpu  # use this for level comparison
+    else:
+        infotext = "CPU"
+
+    yield from check_levels(
+        percent_cpu,
+        levels_upper=(warn_cpu, crit_cpu),
+        render_func=render.percent,
+        label=infotext,
+    )
+
+
+def individual_process_check(
+    processes: ProcessAggregator,
+    params: Parameters,
+) -> CheckGenerator:
+    levels = params["single_cpulevels"]
+    for p in processes.processes:
+        cpu_usage, name, pid = 0.0, None, None
+
+        for the_item, (value, _unit) in p:
+            if the_item == "name":
+                name = value
+            if the_item == "pid":
+                pid = value
+            elif the_item.startswith("cpu usage"):
+                cpu_usage += value
+
+        result = list(
+            check_levels(
+                cpu_usage,
+                levels_upper=levels,
+                render_func=render.percent,
+                label=str(name) + (" with PID %s CPU" % pid if pid else ""),
+            ))[0]
+        assert isinstance(result, Result)
+        yield Result(
+            state=result.state,
+            notice=result.summary,
+        )
+
+
+def uptime_check(
+    min_elapsed: float,
+    max_elapsed: float,
+    params: Parameters,
+) -> CheckGenerator:
+    """Check how long the process is running"""
+    if min_elapsed == max_elapsed:
+        yield from check_levels(
+            min_elapsed,
+            levels_lower=params.get("min_age"),
+            levels_upper=params.get("max_age"),
+            render_func=render.timespan,
+            label="Running for",
+        )
+    else:
+        yield from check_levels(
+            min_elapsed,
+            levels_lower=params.get("min_age"),
+            render_func=render.timespan,
+            label="Youngest running for",
+        )
+        yield from check_levels(
+            max_elapsed,
+            levels_upper=params.get("max_age"),
+            render_func=render.timespan,
+            label="Oldest running for",
+        )
+
+
+def handle_count_check(
+    processes: ProcessAggregator,
+    params: Parameters,
+) -> CheckGenerator:
+    yield from check_levels(
+        processes.handle_count,
+        metric_name="process_handles",
+        levels_upper=params.get("handle_count"),
+        render_func=lambda d: str(int(d)),
+        label="Process handles",
+    )

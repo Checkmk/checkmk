@@ -656,24 +656,28 @@ class CreateDowntime(OneOfSchema):
 class AcknowledgeHostProblem(BaseSchema):
     sticky = fields.Boolean(
         required=False,
+        missing=False,
         example=False,
         description=param_description(acknowledge_host_problem.__doc__, 'sticky'),
     )
 
     persistent = fields.Boolean(
         required=False,
+        missing=False,
         example=False,
         description=param_description(acknowledge_host_problem.__doc__, 'persistent'),
     )
 
     notify = fields.Boolean(
         required=False,
+        missing=False,
         example=False,
         description=param_description(acknowledge_host_problem.__doc__, 'notify'),
     )
 
     comment = fields.String(
         required=False,
+        missing="Acknowledged",
         example='This was expected.',
         description=param_description(acknowledge_host_problem.__doc__, 'comment'),
     )

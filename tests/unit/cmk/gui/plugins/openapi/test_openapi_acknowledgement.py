@@ -326,3 +326,43 @@ def test_openapi_acknowledge_servicegroup(
             }),
             status=204,
         )
+
+
+def test_openapi_acknowledge_hostgroup(
+    wsgi_app,
+    with_automation_user,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    live.add_table('hostgroups', [
+        {
+            'members': ['example.com', 'heute'],
+            'name': 'samples',
+        },
+    ])
+
+    live.expect_query('GET hostgroups\nColumns: members\nFilter: name = samples')
+    live.expect_query(
+        'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123-...;Acknowledged',
+        match_type='ellipsis',
+    )
+    live.expect_query(
+        'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;heute;1;0;0;test123-...;Acknowledged',
+        match_type='ellipsis',
+    )
+
+    with live:
+        wsgi_app.post(
+            base + '/objects/hostgroup/samples/actions/acknowledge/invoke',
+            content_type='application/json',
+            params=json.dumps({
+                'sticky': False,
+                'notify': False,
+                'persistent': False,
+            }),
+            status=204,
+        )

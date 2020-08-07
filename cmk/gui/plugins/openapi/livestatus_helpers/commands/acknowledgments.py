@@ -193,3 +193,59 @@ def acknowledge_host_problem(
             comment,
         ],
     )
+
+
+def acknowledge_hostgroup_problem(
+    connection,
+    hostgroup_name: str,
+    sticky: bool = False,
+    notify: bool = False,
+    persistent: bool = False,
+    user: str = "",
+    comment: str = "",
+):
+    """Acknowledge the problems of the current hosts of the hostgroup
+
+    When acknowledging a problem, further notifications for the respective services are disabled, as
+    long as a specific service doesn't change state. At state change, notifications are re-enabled.
+
+    Args:
+        connection:
+            A livestatus connection object.
+
+        hostgroup_name:
+            The name of the host group.
+
+        sticky:
+            If set, only a state-change of the service to an OK state will discard the
+            acknowledgement. Otherwise it will be discarded on any state-change. Defaults to False.
+
+        notify:
+            If set, notifications will be sent out to the configured contacts. Defaults to False.
+
+        persistent:
+            If set, the comment will persist a restart. Defaults to False.
+
+        user:
+        comment:
+            If set, this comment will be stored alongside the acknowledgement.
+
+    """
+    members: List[str] = Query([tables.Hostgroups.members],
+                               tables.Hostgroups.name.equals(hostgroup_name)).value(connection)
+
+    acknowledgement = 2 if sticky else 1  # 1: normal, 2: sticky
+
+    for host_name in members:
+        send_command(
+            connection,
+            "ACKNOWLEDGE_HOST_PROBLEM",
+            [
+                host_name,
+                acknowledgement,
+                int(notify),
+                int(persistent),
+                user,
+                comment,
+            ],
+        )

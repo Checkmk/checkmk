@@ -15,6 +15,7 @@ from connexion import problem  # type: ignore[import]
 from cmk.gui import config, sites, http
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
     acknowledge_host_problem,
+    acknowledge_hostgroup_problem,
     acknowledge_service_problem,
     acknowledge_servicegroup_problem,
 )
@@ -62,6 +63,33 @@ def set_acknowledgement_on_host(params):
         persistent=bool(params.get('persistent')),
         user=_user_id(),
         comment=params.get('comment', 'Acknowledged'),
+    )
+    return http.Response(status=204)
+
+
+@endpoint_schema(constructors.object_action_href('hostgroup', '{hostgroup_name}', 'acknowledge'),
+                 'cmk/create',
+                 method='post',
+                 parameters=[
+                     ParamDict.create('hostgroup_name',
+                                      'path',
+                                      description='The name of the host group',
+                                      example='samples',
+                                      required=True),
+                 ],
+                 request_schema=request_schemas.AcknowledgeHostProblem,
+                 output_empty=True)
+def set_acknowledgement_on_hostgroup(params):
+    """Acknowledge problems for hosts of a host group"""
+    body = params['body']
+    acknowledge_hostgroup_problem(
+        sites.live(),
+        params['hostgroup_name'],
+        sticky=body['sticky'],
+        notify=body['notify'],
+        persistent=body['persistent'],
+        user=config.user.ident,
+        comment=body['comment'],
     )
     return http.Response(status=204)
 

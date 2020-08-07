@@ -54,6 +54,7 @@ components:
     AcknowledgeHostProblem:
       properties:
         sticky:
+          default: false
           description: 'If set, only a state-change of the host to an UP state will
             discard the acknowledgement.
 
@@ -61,15 +62,18 @@ components:
           example: false
           type: boolean
         persistent:
+          default: false
           description: If set, the comment will persist a restart. Defaults to False.
           example: false
           type: boolean
         notify:
+          default: false
           description: If set, notifications will be sent out to the configured contacts.
             Defaults to False.
           example: false
           type: boolean
         comment:
+          default: Acknowledged
           description: If set, this comment will be stored alongside the acknowledgement.
           example: This was expected.
           type: string
@@ -199,6 +203,7 @@ components:
     BulkAcknowledgeHostProblem:
       properties:
         sticky:
+          default: false
           description: 'If set, only a state-change of the host to an UP state will
             discard the acknowledgement.
 
@@ -206,15 +211,18 @@ components:
           example: false
           type: boolean
         persistent:
+          default: false
           description: If set, the comment will persist a restart. Defaults to False.
           example: false
           type: boolean
         notify:
+          default: false
           description: If set, notifications will be sent out to the configured contacts.
             Defaults to False.
           example: false
           type: boolean
         comment:
+          default: Acknowledged
           description: If set, this comment will be stored alongside the acknowledgement.
           example: This was expected.
           type: string
@@ -1543,6 +1551,78 @@ paths:
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/actions/acknowledge/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
+          \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
+  /objects/hostgroup/{hostgroup_name}/actions/acknowledge/invoke:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_hostgroup
+      parameters:
+      - allowEmptyValue: false
+        description: The name of the host group
+        example: samples
+        in: path
+        name: hostgroup_name
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeHostProblem'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Acknowledge problems for hosts of a host group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.acknowledgement
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/objects/hostgroup/samples/actions/acknowledge/invoke\"\
+          ,\n    json={\n        'sticky': False,\n        'persistent': False,\n\
+          \        'notify': False,\n        'comment': 'This was expected.'\n   \
+          \ },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/hostgroup/samples/actions/acknowledge/invoke\"\
+          ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        'sticky': False,\n        'persistent':\
+          \ False,\n        'notify': False,\n        'comment': 'This was expected.'\n\
+          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
+          \          \"notify\": false,\n          \"persistent\": false,\n      \
+          \    \"sticky\": false\n        }' \\\n    \"$API_URL/objects/hostgroup/samples/actions/acknowledge/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/hostgroup/samples/actions/acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
           \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
@@ -6432,7 +6512,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
-          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -6441,8 +6521,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'passphrase':\
-          \ 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
+          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -6601,7 +6681,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
-          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -6611,7 +6691,7 @@ paths:
           \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({'passphrase': 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n\
+          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash

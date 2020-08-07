@@ -9,13 +9,15 @@
 # equivalents.
 # In each case, I ordered them so <sys/types.h> was first, if it was
 # an option for this type.  That's the preferred #include all else
-# equal.  The visibility on the symbol-name is ignored; by convension
+# equal.  The visibility on the symbol-name is ignored; by convention
 # we always set it to private.
 [
   { symbol: [ "blksize_t", private, "<sys/types.h>", public ] },
   { symbol: [ "blkcnt_t", private, "<sys/stat.h>", public ] },
   { symbol: [ "blkcnt_t", private, "<sys/types.h>", public ] },
   { symbol: [ "blksize_t", private, "<sys/stat.h>", public ] },
+  { symbol: [ "clock_t", private, "<sys/types.h>", public ] },
+  { symbol: [ "clock_t", private, "<time.h>", public ] },
   { symbol: [ "daddr_t", private, "<sys/types.h>", public ] },
   { symbol: [ "daddr_t", private, "<rpc/types.h>", public ] },
   { symbol: [ "dev_t", private, "<sys/types.h>", public ] },
@@ -43,7 +45,15 @@
   { symbol: [ "ino_t", private, "<sys/stat.h>", public ] },
   { symbol: [ "int8_t", private, "<sys/types.h>", public ] },
   { symbol: [ "int8_t", private, "<stdint.h>", public ] },
+  { symbol: [ "int16_t", private, "<stdint.h>", public ] },
+  { symbol: [ "int32_t", private, "<stdint.h>", public ] },
+  { symbol: [ "int64_t", private, "<stdint.h>", public ] },
+  { symbol: [ "uint8_t", private, "<stdint.h>", public ] },
+  { symbol: [ "uint16_t", private, "<stdint.h>", public ] },
+  { symbol: [ "uint32_t", private, "<stdint.h>", public ] },
+  { symbol: [ "uint64_t", private, "<stdint.h>", public ] },
   { symbol: [ "intptr_t", private, "<stdint.h>", public ] },
+  { symbol: [ "uintptr_t", private, "<stdint.h>", public ] },
   { symbol: [ "intptr_t", private, "<unistd.h>", public ] },
   { symbol: [ "key_t", private, "<sys/types.h>", public ] },
   { symbol: [ "key_t", private, "<sys/ipc.h>", public ] },
@@ -80,6 +90,10 @@
   { symbol: [ "suseconds_t", private, "<sys/types.h>", public ] },
   { symbol: [ "suseconds_t", private, "<sys/time.h>", public ] },
   { symbol: [ "suseconds_t", private, "<sys/select.h>", public ] },
+  { symbol: [ "time_t", private, "<sys/types.h>", public ] },
+  { symbol: [ "time_t", private, "<time.h>", public ] },
+  { symbol: [ "timespec", private, "<time.h>", public ] },
+  { symbol: [ "timeval", private, "<sys/time.h>", public ] },
   { symbol: [ "u_char", private, "<sys/types.h>", public ] },
   { symbol: [ "u_char", private, "<rpc/types.h>", public ] },
   { symbol: [ "uid_t", private, "<sys/types.h>", public ] },
@@ -97,6 +111,7 @@
   { symbol: [ "size_t", private, "<stdlib.h>", public ] },
   { symbol: [ "size_t", private, "<string.h>", public ] },
   { symbol: [ "size_t", private, "<time.h>", public ] },
+  { symbol: [ "size_t", private, "<uchar.h>", public ] },
   { symbol: [ "size_t", private, "<wchar.h>", public ] },
   # Macros that can be defined in more than one file, don't have the
   # same __foo_defined guard that other types do, so the grep above

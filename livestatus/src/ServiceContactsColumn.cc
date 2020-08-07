@@ -12,7 +12,7 @@
 #include "Object.h"
 #include "cmc.h"
 #else
-#include <functional>
+#include <functional>  // IWYU pragma: keep
 #include <unordered_set>
 
 #include "nagios.h"

@@ -5,9 +5,9 @@
 
 #include "TableEventConsole.h"
 
-#include <algorithm>
+#include <algorithm>  // IWYU pragma: keep
 #include <filesystem>
-#include <functional>
+#include <functional>  // IWYU pragma: keep
 #include <iosfwd>
 #include <iostream>
 #include <memory>

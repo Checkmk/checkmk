@@ -8,7 +8,7 @@
 #include <algorithm>  // IWYU pragma: keep
 #include <cstdlib>
 #include <cstring>
-#include <functional>
+#include <functional>  // IWYU pragma: keep
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>

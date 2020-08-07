@@ -11,7 +11,7 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
-#include <functional>
+#include <functional>  // IWYU pragma: keep
 #include <string>
 #include <unordered_map>
 #include <vector>

@@ -35,7 +35,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
-from cmk.gui.main_menu import MegaMenuMonitoring
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
     PageMenu,
@@ -480,7 +480,8 @@ class View:
                 visuals.get_singlecontext_html_vars(self.context,
                                                     self.spec["single_infos"]).items())
 
-            breadcrumb = make_topic_breadcrumb(MegaMenuMonitoring, self.spec["topic"])
+            breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
+                                               self.spec["topic"])
             breadcrumb.append(
                 BreadcrumbItem(
                     title=view_title(self.spec),

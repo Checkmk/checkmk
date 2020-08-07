@@ -19,7 +19,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.main_menu import MegaMenuMonitoring
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.views.utils import make_host_breadcrumb
 
 #   .--HTML Output---------------------------------------------------------.
@@ -73,7 +73,8 @@ def button_all_logfiles():
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
     title = _("All problematic logfiles")
-    html.header(title, make_simple_page_breadcrumb(MegaMenuMonitoring, title))
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+    html.header(title, breadcrumb)
 
     html.begin_context_buttons()
     html.context_button(_("Analyze Patterns"),
@@ -298,7 +299,7 @@ def do_log_ack(site, host_name, file_name):
     if host_name:
         breadcrumb = make_host_breadcrumb(host_name)
     else:
-        breadcrumb = make_simple_page_breadcrumb(MegaMenuMonitoring, title)
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
 
     html.header(title, breadcrumb)
 

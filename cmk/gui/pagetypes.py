@@ -888,7 +888,7 @@ class Overridable(Base):
 
     @classmethod
     def breadcrumb(cls, title: str, page_name: str) -> Breadcrumb:
-        breadcrumb = make_main_menu_breadcrumb(MegaMenuConfigure)
+        breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_configure())
 
         breadcrumb.append(BreadcrumbItem(title=cls.phrase("title_plural"), url=cls.list_url()))
 

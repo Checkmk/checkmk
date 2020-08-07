@@ -33,7 +33,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.config import LoggedInUser
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.pagetypes import MegaMenuConfigure
+from cmk.gui.main_menu import mega_menu_registry
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
@@ -887,7 +887,8 @@ def page_add_snapin() -> None:
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
     title = _("Available snapins")
-    html.header(title, make_simple_page_breadcrumb(MegaMenuConfigure, title))
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_configure(), title)
+    html.header(title, breadcrumb)
 
     html.begin_context_buttons()
     CustomSnapins.context_button_list()

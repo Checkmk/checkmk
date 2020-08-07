@@ -50,7 +50,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.main_menu import MegaMenuSetup
+from cmk.gui.main_menu import mega_menu_registry
 
 #.
 #   .--Config--------------------------------------------------------------.
@@ -1671,7 +1671,8 @@ class PageBackupRestore:
         # Special handling for Check_MK / CMA differences
         if is_site():
             title = _("Insert passphrase")
-            html.header(title, make_simple_page_breadcrumb(MegaMenuSetup, title))
+            breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
+            html.header(title, breadcrumb)
             html.begin_context_buttons()
             html.context_button(_("Back"), html.makeuri([("mode", "backup_restore")]), "back")
             html.end_context_buttons()

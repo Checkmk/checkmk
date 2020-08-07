@@ -41,7 +41,7 @@ from cmk.gui.breadcrumb import (
     BreadcrumbItem,
     Breadcrumb,
 )
-from cmk.gui.main_menu import MegaMenuSetup
+from cmk.gui.main_menu import mega_menu_registry
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
@@ -140,7 +140,7 @@ def page_werk():
 
 
 def _release_notes_breadcrumb() -> Breadcrumb:
-    breadcrumb = make_main_menu_breadcrumb(MegaMenuSetup)
+    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_setup())
     breadcrumb.append(BreadcrumbItem(
         title=_("Release notes"),
         url="version.py",

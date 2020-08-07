@@ -14,7 +14,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.type_defs import MegaMenu
-from cmk.gui.main_menu import MegaMenuSetup
+from cmk.gui.main_menu import mega_menu_registry
 
 NewMode = Union[None, bool, str]
 ActionResult = Union[NewMode, Tuple[NewMode, str]]
@@ -57,7 +57,7 @@ class WatoMode(metaclass=abc.ABCMeta):
     # is not part of the Setup main menu but the user menu.
     def main_menu(self) -> MegaMenu:
         """Specify the top-level breadcrumb item of this mode"""
-        return MegaMenuSetup
+        return mega_menu_registry.menu_setup()
 
     def breadcrumb(self) -> Breadcrumb:
         """Render the breadcrumb to the current mode

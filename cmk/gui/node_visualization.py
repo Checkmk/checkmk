@@ -37,7 +37,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import FilterHeaders
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.main_menu import MegaMenuMonitoring
+from cmk.gui.main_menu import mega_menu_registry
 
 TopologyConfig = Dict[str, Any]
 Mesh = Set[str]
@@ -125,7 +125,8 @@ class ParentChildTopologyPage(Page):
                       growth_auto_max_nodes: Optional[int] = None,
                       mesh_depth: int = 0,
                       max_nodes: int = 400) -> None:
-        html.header("", breadcrumb=make_simple_page_breadcrumb(MegaMenuMonitoring, ""))
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), "")
+        html.header("", breadcrumb)
         self.show_topology_content(hostnames,
                                    mode,
                                    growth_auto_max_nodes=growth_auto_max_nodes,
@@ -191,7 +192,8 @@ def _bi_map() -> None:
     aggr_name = html.request.var("aggr_name")
     layout_id = html.request.var("layout_id")
     title = _("BI visualization")
-    html.header(title, make_simple_page_breadcrumb(MegaMenuMonitoring, title))
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+    html.header(title, breadcrumb)
     div_id = "node_visualization"
     html.div("", id=div_id)
     html.javascript("node_instance = new cmk.node_visualization.BIVisualization(%s);" %

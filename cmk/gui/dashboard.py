@@ -36,7 +36,7 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger
 from cmk.gui.globals import html
-from cmk.gui.main_menu import MegaMenuMonitoring
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
     PageMenu,
@@ -579,7 +579,7 @@ def _get_dashlets(name: DashboardName, board: DashboardConfig) -> List[Dashlet]:
 
 
 def _dashboard_breadcrumb(name: str, title: str) -> Breadcrumb:
-    breadcrumb = make_main_menu_breadcrumb(MegaMenuMonitoring)
+    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_monitoring())
 
     breadcrumb.append(BreadcrumbItem(
         title,

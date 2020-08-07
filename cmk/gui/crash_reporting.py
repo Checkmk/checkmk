@@ -39,7 +39,7 @@ from cmk.gui.valuespec import (
 import cmk.gui.config as config
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb, Breadcrumb
-from cmk.gui.main_menu import MegaMenuMonitoring
+from cmk.gui.main_menu import mega_menu_registry
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 
@@ -154,7 +154,8 @@ class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
 class PageCrash(ABCCrashReportPage):
     def page(self):
         title = _("Crash report: %s") % self._crash_id
-        html.header(title, make_simple_page_breadcrumb(MegaMenuMonitoring, title))
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+        html.header(title, breadcrumb)
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
 

@@ -19,7 +19,7 @@ import cmk.gui.forms as forms
 import cmk.gui.login as login
 
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.main_menu import MegaMenuUser
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
@@ -37,7 +37,7 @@ from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional
 
 def user_profile_async_replication_page() -> None:
     title = _('Replicate new user profile')
-    breadcrumb = make_simple_page_breadcrumb(MegaMenuUser, title)
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
     html.header(title, breadcrumb)
 
     html.begin_context_buttons()
@@ -211,7 +211,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
         users = userdb.load_users()
 
-        breadcrumb = make_simple_page_breadcrumb(MegaMenuUser, self._page_title())
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), self._page_title())
         html.header(self._page_title(), breadcrumb)
 
         change_reason = html.request.get_ascii_input('reason')
@@ -320,7 +320,7 @@ class UserProfile(ABCUserProfilePage):
 
         users = userdb.load_users()
 
-        breadcrumb = make_simple_page_breadcrumb(MegaMenuUser, self._page_title())
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), self._page_title())
         html.header(self._page_title(), breadcrumb)
 
         self._show_context_buttons()

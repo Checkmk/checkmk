@@ -39,7 +39,7 @@ from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.main_menu import MegaMenuMonitoring
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
@@ -2639,7 +2639,8 @@ def page_debug():
     compile_forest()
 
     title = "BI Debug"
-    html.header(title, make_simple_page_breadcrumb(MegaMenuMonitoring, title))
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+    html.header(title, breadcrumb)
     render_forest()
     html.footer()
 
@@ -2648,7 +2649,8 @@ def page_debug():
 @cmk.gui.pages.register("bi")
 def page_all():
     title = "All"
-    html.header(title, make_simple_page_breadcrumb(MegaMenuMonitoring, title))
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+    html.header(title, breadcrumb)
     compile_forest()
     for group, trees in g_tree_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)

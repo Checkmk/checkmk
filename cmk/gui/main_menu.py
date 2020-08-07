@@ -24,8 +24,41 @@ def any_advanced_items(topics: List[TopicMenuTopic]) -> bool:
 
 
 class MegaMenuRegistry(Registry[MegaMenu]):
+    """A registry that contains the menu entries of the main navigation.
+
+    All menu entries must be obtained via this registry to avoid cyclic
+    imports. To avoid typos it's recommended to use the helper methods
+    menu_* to obtain the different entries.
+
+    Examples:
+
+        >>> from cmk.gui.i18n import _l
+        >>> from cmk.gui.type_defs import MegaMenu
+        >>> from cmk.gui.main_menu import mega_menu_registry
+        >>> MyMenuEntry = mega_menu_registry.register(MegaMenu(
+        ...     name="monitoring",
+        ...     title=_l("Monitor"),
+        ...     icon_name="main_monitoring",
+        ...     sort_index=5,
+        ...     topics=lambda: [],
+        ... ))
+        >>> assert mega_menu_registry["monitoring"].sort_index == 5
+
+    """
     def plugin_name(self, instance: MegaMenu) -> str:
         return instance.name
+
+    def menu_monitoring(self) -> MegaMenu:
+        return self["monitoring"]
+
+    def menu_configure(self) -> MegaMenu:
+        return self["configure"]
+
+    def menu_setup(self) -> MegaMenu:
+        return self["setup"]
+
+    def menu_user(self) -> MegaMenu:
+        return self["user"]
 
 
 mega_menu_registry = MegaMenuRegistry()

@@ -108,10 +108,6 @@ div#top_heading {
       background-color: $navigation-bg-color;
       border-bottom: 2px solid $navigation-bg-color;
 
-      &.active div.menu {
-        display: block;
-      }
-
       &.disabled {
         display: none;
       }
@@ -128,10 +124,18 @@ div#top_heading {
         border-radius: $popup-filters-border-radius 0 0 $popup-filters-border-radius;
       }
 
-      div.menutitle {
+      div.popup_trigger {
         height: 100%;
         min-width: 78px;
-        text-align: center;
+
+        > a {
+          text-align: center;
+          text-decoration: none;
+        }
+
+        &.active div.menu {
+          display: block;
+        }
 
         &:focus {
           border: 10px solid #fff;
@@ -160,6 +164,7 @@ div#top_heading {
         min-width: 220px;
         padding: $spacing;
         overflow-y: auto;
+        text-align: left;
         background-color: $navigation-bg-color;
         scrollbar-width: none; /* Firefox */
 

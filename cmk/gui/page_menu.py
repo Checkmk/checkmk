@@ -22,6 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib import HTML
+from cmk.gui.utils.popups import MethodInline
 
 
 def enable_page_menu_entry(name):
@@ -407,21 +408,25 @@ class PageMenuRenderer:
                           class_=["menucontainer", "disabled" if not dropdown.is_enabled else None])
 
             self._show_dropdown_trigger(dropdown)
-            self._show_dropdown_area(dropdown)
 
             html.close_div()  # menucontainer
 
         html.close_td()
 
     def _show_dropdown_trigger(self, dropdown: PageMenuDropdown) -> None:
-        html.open_div(class_="menutitle",
-                      onclick="cmk.page_menu.toggle_dropdown(this)",
-                      onmouseenter="cmk.page_menu.switch_dropdown(this)")
-        html.h2(dropdown.title)
-        html.close_div()
+        html.popup_trigger(
+            html.render_h2(dropdown.title),
+            ident="menu_" + dropdown.name,
+            method=MethodInline(self._render_dropdown_area(dropdown)),
+        )
+
+    def _render_dropdown_area(self, dropdown: PageMenuDropdown) -> str:
+        with html.plugged():
+            self._show_dropdown_area(dropdown)
+            return html.drain()
 
     def _show_dropdown_area(self, dropdown: PageMenuDropdown) -> None:
-        id_ = id_ = "menu_%s" % dropdown.name
+        id_ = "menu_%s" % dropdown.name
         show_more = html.foldable_container_is_open("more_buttons", id_, isopen=False)
         html.open_div(class_=["menu", ("more" if show_more else "less")], id_=id_)
 

@@ -31,7 +31,9 @@ _TIME_UNITS = [
 ]
 
 # Karl Marx Gave The Proletariat Eleven Zeppelins, Yo!
-_SIZE_PREFIXES = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
+_SIZE_PREFIXES_SI = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
+_SIZE_PREFIXES_IEC = _SIZE_PREFIXES_SI[:]
+_SIZE_PREFIXES_IEC[1] = 'K'
 
 
 def date(epoch: Optional[float]) -> str:
@@ -91,14 +93,20 @@ def _digits_left(value: float) -> int:
 
 
 def _auto_scale(value: float, use_si_units: bool) -> Tuple[str, str]:
-    base = 1000 if use_si_units else 1024
+    if use_si_units:
+        base = 1000
+        size_prefixes = _SIZE_PREFIXES_SI
+    else:
+        base = 1024
+        size_prefixes = _SIZE_PREFIXES_IEC
+
     try:
-        exponent = min(max(int(math.log(value, base)), 0), len(_SIZE_PREFIXES) - 1)
+        exponent = min(max(int(math.log(value, base)), 0), len(size_prefixes) - 1)
     except ValueError:
         if value < 0:
             raise
         exponent = 0
-    unit = (_SIZE_PREFIXES[exponent] + ("B" if use_si_units else "iB")).lstrip('i')
+    unit = (size_prefixes[exponent] + ("B" if use_si_units else "iB")).lstrip('i')
     scaled_value = float(value) / base**exponent
     fmt = "%%.%df" % max(3 - _digits_left(scaled_value), 0)
     return fmt % scaled_value, unit

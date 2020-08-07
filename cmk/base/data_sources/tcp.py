@@ -29,6 +29,7 @@ class TCPConfigurator(AgentConfigurator):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
+        main_data_source: bool = False,
     ) -> None:
         super().__init__(
             hostname,
@@ -39,6 +40,7 @@ class TCPConfigurator(AgentConfigurator):
             description=TCPConfigurator._make_description(hostname, ipaddress),
             id_="agent",
             cpu_tracking_id="agent",
+            main_data_source=main_data_source,
         )
         self.port: Optional[int] = None
         self.timeout: Optional[float] = None
@@ -67,12 +69,10 @@ class TCPDataSource(AgentDataSource):
         self,
         *,
         configurator: TCPConfigurator,
-        main_data_source: bool = False,
     ) -> None:
         super().__init__(
             configurator=configurator,
             summarizer=AgentSummarizerDefault(configurator),
-            main_data_source=main_data_source,
         )
 
     def _execute(
@@ -82,7 +82,7 @@ class TCPDataSource(AgentDataSource):
     ) -> AgentRawData:
         if TCPConfigurator._use_only_cache:
             raise MKAgentError("Got no data: No usable cache file present at %s" %
-                               self._cache_file_path)
+                               self.configurator.cache_file_path)
 
         with TCPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()

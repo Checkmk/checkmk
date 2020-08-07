@@ -7,21 +7,24 @@
 import abc
 import time
 from pathlib import Path
-from typing import cast, Dict, List, Optional, Tuple
+from typing import cast, Dict, Final, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
+from cmk.fetchers.controller import FetcherType
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.misc
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.type_defs import (
     AgentRawData,
+    HostAddress,
     HostName,
     Metric,
     SectionName,
     ServiceCheckResult,
     ServiceDetails,
     ServiceState,
+    SourceType,
 )
 from cmk.utils.werks import parse_check_mk_version
 
@@ -56,7 +59,44 @@ class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersis
 
 
 class AgentConfigurator(ABCConfigurator):
-    pass
+    """Configure agent checkers and fetchers.
+
+    Args:
+        main_data_source: The data source that is the "main" agent
+            based data source uses the cache and persisted directories
+            that existed before the data source concept has been added
+            where each data source has it's own set of directories.
+
+    """
+    def __init__(
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        *,
+        mode: Mode,
+        source_type: SourceType,
+        fetcher_type: FetcherType,
+        description: str,
+        id_: str,
+        main_data_source: bool,
+        cpu_tracking_id: str,
+    ):
+        super().__init__(
+            hostname,
+            ipaddress,
+            mode=mode,
+            source_type=source_type,
+            fetcher_type=fetcher_type,
+            description=description,
+            id_=id_,
+            cpu_tracking_id=cpu_tracking_id,
+            cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
+            persisted_section_dir=(Path(cmk.utils.paths.var_dir) /
+                                   "persisted") if main_data_source else None,
+        )
+        # TODO: We should cleanup these old directories one day.
+        #       Then we can remove this special case
+        self.main_data_source: Final[bool] = main_data_source
 
 
 class AgentSummarizer(ABCSummarizer[AgentHostSections]):
@@ -422,26 +462,13 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
         *,
         configurator: ABCConfigurator,
         summarizer: AgentSummarizer,
-        main_data_source: bool,
     ) -> None:
         super().__init__(
             configurator=configurator,
             summarizer=summarizer,
             default_raw_data=b"",
             default_host_sections=AgentHostSections(),
-            cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
-            persisted_section_dir=(Path(cmk.utils.paths.var_dir) /
-                                   "persisted") if main_data_source else None,
         )
-        self._is_main_agent_data_source = main_data_source
-        """Tell the data source that it's the main agent based data source
-
-        The data source that is the "main" agent based data source uses the
-        cache and persisted directories that existed before the data source
-        concept has been added where each data source has it's own set of
-        directories.
-        """
-        # TODO: We should cleanup these old directories one day. Then we can remove this special case
 
     @property
     def _parser(self) -> ABCParser:
@@ -458,7 +485,7 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
             return ensure_binary(raw_data)
 
         return FileCache(
-            self._cache_file_path,
+            self.configurator.cache_file_path,
             self._max_cachefile_age,
             self.is_agent_cache_disabled(),
             self.get_may_use_cache_file(),

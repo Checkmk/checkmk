@@ -102,6 +102,8 @@ class SNMPConfigurator(ABCConfigurator):
         source_type: SourceType,
         id_: str,
         cpu_tracking_id: str,
+        cache_dir: Optional[Path] = None,
+        persisted_section_dir: Optional[Path] = None,
         title: str,
     ):
         super().__init__(
@@ -113,6 +115,8 @@ class SNMPConfigurator(ABCConfigurator):
             description=SNMPConfigurator._make_description(hostname, ipaddress, title=title),
             id_=id_,
             cpu_tracking_id=cpu_tracking_id,
+            cache_dir=cache_dir,
+            persisted_section_dir=persisted_section_dir,
         )
         if self.ipaddress is None:
             # snmp_config.ipaddress is not Optional.
@@ -322,16 +326,12 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         self,
         *,
         configurator: SNMPConfigurator,
-        cache_dir: Optional[Path] = None,
-        persisted_section_dir: Optional[Path] = None,
     ) -> None:
         super().__init__(
             configurator=configurator,
             summarizer=SNMPSummarizer(),
             default_raw_data={},
             default_host_sections=SNMPHostSections(),
-            cache_dir=cache_dir,
-            persisted_section_dir=persisted_section_dir,
         )
 
     @property
@@ -349,7 +349,7 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
             return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
         return FileCache(
-            self._cache_file_path,
+            self.configurator.cache_file_path,
             self._max_cachefile_age,
             self.is_agent_cache_disabled(),
             self.get_may_use_cache_file(),

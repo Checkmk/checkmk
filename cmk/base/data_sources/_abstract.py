@@ -182,6 +182,8 @@ class ABCConfigurator(abc.ABC):
         description: str,
         id_: str,
         cpu_tracking_id: str,
+        cache_dir: Optional[Path] = None,
+        persisted_section_dir: Optional[Path] = None,
     ) -> None:
         self.hostname: Final[str] = hostname
         self.ipaddress: Final[Optional[str]] = ipaddress
@@ -191,6 +193,14 @@ class ABCConfigurator(abc.ABC):
         self.description: Final[str] = description
         self.id: Final[str] = id_
         self.cpu_tracking_id: Final[str] = cpu_tracking_id
+        if not cache_dir:
+            cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
+        if not persisted_section_dir:
+            persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
+
+        self.cache_file_path: Final[Path] = cache_dir / self.hostname
+        self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
+
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
 
@@ -253,8 +263,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         summarizer: ABCSummarizer,
         default_raw_data: BoundedAbstractRawData,
         default_host_sections: BoundedAbstractHostSections,
-        cache_dir: Optional[Path] = None,
-        persisted_section_dir: Optional[Path] = None,
     ) -> None:
         super().__init__()
         self.configurator = configurator
@@ -262,16 +270,8 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self.default_raw_data: Final[BoundedAbstractRawData] = default_raw_data
         self.default_host_sections: Final[BoundedAbstractHostSections] = default_host_sections
         self._logger = self.configurator._logger
-        if not cache_dir:
-            cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.configurator.id
-        if not persisted_section_dir:
-            persisted_section_dir = Path(
-                cmk.utils.paths.var_dir) / "persisted_sections" / self.configurator.id
-
-        self._cache_file_path: Final[Path] = cache_dir / self.configurator.hostname
-        self._persisted_sections_file_path: Final[
-            Path] = persisted_section_dir / self.configurator.hostname
-        self._section_store = SectionStore(self._persisted_sections_file_path, self._logger)
+        self._section_store = SectionStore(self.configurator.persisted_sections_file_path,
+                                           self._logger)
 
         self._max_cachefile_age: Optional[int] = None
 

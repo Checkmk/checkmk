@@ -153,8 +153,12 @@ class TestParser:
 
 class StubConfigurator(AgentConfigurator):
     def __init__(self, *args, **kwargs):
-        kwargs["fetcher_type"] = FetcherType.NONE
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            fetcher_type=FetcherType.NONE,
+            main_data_source=False,
+            **kwargs,
+        )
 
     def configure_fetcher(self):
         return {}
@@ -200,7 +204,6 @@ class TestAgentSummaryResult:
         return StubAgent(
             configurator=configurator,
             summarizer=AgentSummarizerDefault(configurator),
-            main_data_source=False,
         )
 
     @pytest.mark.usefixtures("scenario")

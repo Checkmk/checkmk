@@ -32,6 +32,7 @@ class ProgramConfigurator(AgentConfigurator):
         mode: Mode,
         id_: str,
         cpu_tracking_id: str,
+        main_data_source: bool,
         cmdline: str,
         stdin: Optional[str],
     ) -> None:
@@ -47,6 +48,7 @@ class ProgramConfigurator(AgentConfigurator):
             ),
             id_=id_,
             cpu_tracking_id=cpu_tracking_id,
+            main_data_source=main_data_source,
         )
         self.cmdline = cmdline
         self.stdin = stdin
@@ -57,6 +59,7 @@ class ProgramConfigurator(AgentConfigurator):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
+        main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
     ) -> "SpecialAgentConfigurator":
@@ -64,6 +67,7 @@ class ProgramConfigurator(AgentConfigurator):
             hostname,
             ipaddress,
             mode=mode,
+            main_data_source=main_data_source,
             special_agent_id=special_agent_id,
             params=params,
         )
@@ -74,9 +78,16 @@ class ProgramConfigurator(AgentConfigurator):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
+        main_data_source: bool = False,
         template: str,
     ) -> "DSProgramConfigurator":
-        return DSProgramConfigurator(hostname, ipaddress, mode=mode, template=template)
+        return DSProgramConfigurator(
+            hostname,
+            ipaddress,
+            mode=mode,
+            main_data_source=main_data_source,
+            template=template,
+        )
 
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
@@ -100,6 +111,7 @@ class DSProgramConfigurator(ProgramConfigurator):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
+        main_data_source: bool = False,
         template: str,
     ) -> None:
         super().__init__(
@@ -108,6 +120,7 @@ class DSProgramConfigurator(ProgramConfigurator):
             mode=mode,
             id_="agent",
             cpu_tracking_id="ds",
+            main_data_source=main_data_source,
             cmdline=DSProgramConfigurator._translate(
                 template,
                 hostname,
@@ -165,6 +178,7 @@ class SpecialAgentConfigurator(ProgramConfigurator):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
+        main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
     ) -> None:
@@ -174,6 +188,7 @@ class SpecialAgentConfigurator(ProgramConfigurator):
             mode=mode,
             id_="special_%s" % special_agent_id,
             cpu_tracking_id="ds",
+            main_data_source=main_data_source,
             cmdline=SpecialAgentConfigurator._make_cmdline(
                 hostname,
                 ipaddress,
@@ -245,12 +260,10 @@ class ProgramDataSource(AgentDataSource):
         self,
         *,
         configurator: ProgramConfigurator,
-        main_data_source: bool = False,
     ) -> None:
         super().__init__(
             configurator=configurator,
             summarizer=AgentSummarizerDefault(configurator),
-            main_data_source=main_data_source,
         )
 
     def _execute(

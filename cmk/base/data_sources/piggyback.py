@@ -39,6 +39,7 @@ class PiggyBackConfigurator(AgentConfigurator):
             description=PiggyBackConfigurator._make_description(hostname),
             id_="piggyback",
             cpu_tracking_id="agent",
+            main_data_source=False,
         )
         self.time_settings: Final = (config.get_config_cache().get_piggybacked_hosts_time_settings(
             piggybacked_hostname=hostname))
@@ -102,7 +103,6 @@ class PiggyBackDataSource(AgentDataSource):
         super().__init__(
             configurator=configurator,
             summarizer=PiggyBackSummarizer(configurator),
-            main_data_source=False,
         )
 
     def _execute(

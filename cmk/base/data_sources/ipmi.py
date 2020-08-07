@@ -46,6 +46,7 @@ class IPMIConfigurator(AgentConfigurator):
             ),
             id_="mgmt_ipmi",
             cpu_tracking_id="mgmt_ipmi",
+            main_data_source=False,
         )
         self.credentials: Final[IPMICredentials] = cast(
             IPMICredentials,
@@ -107,7 +108,6 @@ class IPMIManagementBoardDataSource(AgentDataSource):
         super().__init__(
             configurator=configurator,
             summarizer=IPMISummarizer(),
-            main_data_source=False,
         )
 
     def _execute(

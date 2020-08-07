@@ -155,20 +155,20 @@ class SourceBuilder:
 
         datasource_program = self._host_config.datasource_program
         if datasource_program is not None:
-            return ProgramDataSource(
-                configurator=DSProgramConfigurator(
-                    self._hostname,
-                    self._ipaddress,
-                    mode=self._mode,
-                    template=datasource_program,
-                ),
+            return ProgramDataSource(configurator=DSProgramConfigurator(
+                self._hostname,
+                self._ipaddress,
+                mode=self._mode,
                 main_data_source=main_data_source,
-            )
+                template=datasource_program,
+            ),)
 
-        return TCPDataSource(
-            configurator=TCPConfigurator(self._hostname, self._ipaddress, mode=self._mode),
+        return TCPDataSource(configurator=TCPConfigurator(
+            self._hostname,
+            self._ipaddress,
+            mode=self._mode,
             main_data_source=main_data_source,
-        )
+        ),)
 
     def _get_special_agent_data_sources(self) -> List[ProgramDataSource]:
         return [

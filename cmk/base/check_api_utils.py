@@ -45,6 +45,8 @@ class Service:
 
 
 def set_hostname(hostname: Optional[HostName]) -> None:
+    """Set the host name for the function host_name that is part of the Check API.
+    host_name is used e.g. by the ps-discovery."""
     global _hostname
     _hostname = hostname
 

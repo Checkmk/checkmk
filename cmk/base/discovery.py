@@ -386,6 +386,8 @@ def _do_discovery_for(
     only_new: bool,
     on_error: str,
 ) -> None:
+    check_api_utils.set_hostname(hostname)
+
     discovered_services = _discover_services(
         hostname,
         ipaddress,
@@ -1213,10 +1215,6 @@ def _discover_services(
     on_error: str,
     check_plugin_whitelist: Optional[Set[CheckPluginName]],
 ) -> List[Service]:
-    # Set host name for host_name()-function (part of the Check API)
-    # (used e.g. by ps-discovery)
-    check_api_utils.set_hostname(hostname)
-
     # find out which plugins we need to discover
     plugin_candidates = _find_candidates(multi_host_sections, check_plugin_whitelist)
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
@@ -1405,6 +1403,8 @@ def _get_discovered_services(
     multi_host_sections: MultiHostSections,
     on_error: str,
 ) -> Tuple[ServicesTable, DiscoveredHostLabels]:
+    check_api_utils.set_hostname(hostname)
+
     # Create a dict from check_plugin_name/item to check_source/paramstring
     services: ServicesTable = {}
 

@@ -50,7 +50,8 @@ function execute_test() {
 
 if [ -z ${RUN_HERE} ]; then
     echo "Running in Docker Container $CONTAINER"
-    docker run -d -t \
+    docker run -t -a stdout -a stderr \
+        -u ${UID}:${UID} \
         -v ${REPO_DIR}:/${REPO_DIR} \
         -e RUN_HERE="true" \
         -w ${PWD} \

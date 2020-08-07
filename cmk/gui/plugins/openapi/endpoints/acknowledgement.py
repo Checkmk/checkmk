@@ -13,12 +13,20 @@ from typing import Dict
 from connexion import problem  # type: ignore[import]
 
 from cmk.gui import config, sites, http
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import \
-    acknowledge_host_problem, acknowledge_service_problem
+from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
+    acknowledge_host_problem,
+    acknowledge_service_problem,
+    acknowledge_servicegroup_problem,
+)
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, Or
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Services
-from cmk.gui.plugins.openapi.restful_objects import constructors, endpoint_schema, request_schemas
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    endpoint_schema,
+    request_schemas,
+    ParamDict,
+)
 
 
 @endpoint_schema(constructors.object_action_href('host', '{host_name}', 'acknowledge'),
@@ -249,6 +257,34 @@ def bulk_set_acknowledgement_on_host_service(params):
             user=str(config.user.id),
             comment=body.get('comment', 'Acknowledged'),
         )
+    return http.Response(status=204)
+
+
+@endpoint_schema(constructors.object_action_href('servicegroup', '{servicegroup_name}',
+                                                 'acknowledge'),
+                 'cmk/create',
+                 method='post',
+                 parameters=[
+                     ParamDict.create('servicegroup_name',
+                                      'path',
+                                      description='The name of the service group',
+                                      example='windows',
+                                      required=True),
+                 ],
+                 request_schema=request_schemas.AcknowledgeServiceProblem,
+                 output_empty=True)
+def set_acknowledgement_on_servicegroup(params):
+    """Acknowledge problems for services of a service group"""
+    body = params['body']
+    acknowledge_servicegroup_problem(
+        sites.live(),
+        params['servicegroup_name'],
+        sticky=body['sticky'],
+        notify=body['notify'],
+        persistent=body['persistent'],
+        user=config.user.ident,
+        comment=body['comment'],
+    )
     return http.Response(status=204)
 
 

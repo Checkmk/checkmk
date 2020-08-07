@@ -5,8 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains helpers to trigger acknowledgments.
 """
+from typing import List
 
+from cmk.gui.plugins.openapi.livestatus_helpers import tables
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.lowlevel import send_command
+
+from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 
 
 def acknowledge_service_problem(
@@ -71,6 +75,65 @@ def acknowledge_service_problem(
             comment,
         ],
     )
+
+
+def acknowledge_servicegroup_problem(
+    connection,
+    servicegroup_name: str,
+    sticky: bool = False,
+    notify: bool = False,
+    persistent: bool = False,
+    user: str = "",
+    comment: str = "",
+):
+    """Acknowledge the problems of the current services of the servicegroup
+
+    When acknowledging a problem, further notifications for the respective services are disabled, as
+    long as a specific service doesn't change state. At state change, notifications are re-enabled.
+
+    Args:
+        connection:
+            A livestatus connection object.
+
+        servicegroup_name:
+            The host-name for which this acknowledgement is for.
+
+        sticky:
+            If set, only a state-change of the service to an OK state will discard the
+            acknowledgement. Otherwise it will be discarded on any state-change. Defaults to False.
+
+        notify:
+            If set, notifications will be sent out to the configured contacts. Defaults to False.
+
+        persistent:
+            If set, the comment will persist a restart. Defaults to False.
+
+        user:
+        comment:
+            If set, this comment will be stored alongside the acknowledgement.
+
+    """
+    members: List[List[str]] = Query(
+        [tables.Servicegroups.members],
+        tables.Servicegroups.name.equals(servicegroup_name),
+    ).value(connection)
+
+    acknowledgement = 2 if sticky else 1  # 1: normal, 2: sticky
+
+    for host_name, service_description in members:
+        send_command(
+            connection,
+            "ACKNOWLEDGE_SVC_PROBLEM",
+            [
+                host_name,
+                service_description,
+                acknowledgement,
+                int(notify),
+                int(persistent),
+                user,
+                comment,
+            ],
+        )
 
 
 def acknowledge_host_problem(

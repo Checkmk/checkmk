@@ -137,6 +137,13 @@ NAME_FIELD = fields.String(
     example='windows',
 )
 
+SERVICEGROUP_NAME = fields.String(
+    required=True,
+    description=param_description(schedule_servicegroup_service_downtime.__doc__,
+                                  'servicegroup_name'),
+    example='Webservers',
+)
+
 
 class CreateHost(BaseSchema):
     """Creating a new host
@@ -608,12 +615,7 @@ class CreateServiceDowntime(CreateDowntimeBase):
 
 
 class CreateServiceGroupDowntime(CreateDowntimeBase):
-    servicegroup_name = fields.String(
-        required=True,
-        description=param_description(schedule_servicegroup_service_downtime.__doc__,
-                                      'servicegroup_name'),
-        example='Webservers',
-    )
+    servicegroup_name = SERVICEGROUP_NAME
     include_hosts = fields.Boolean(
         required=False,
         description=param_description(schedule_servicegroup_service_downtime.__doc__,
@@ -687,24 +689,28 @@ class BulkAcknowledgeHostProblem(AcknowledgeHostProblem):
 
 SERVICE_STICKY_FIELD = fields.Boolean(
     required=False,
+    missing=False,
     example=False,
     description=param_description(acknowledge_service_problem.__doc__, 'sticky'),
 )
 
 SERVICE_PERSISTENT_FIELD = fields.Boolean(
     required=False,
+    missing=False,
     example=False,
     description=param_description(acknowledge_service_problem.__doc__, 'persistent'),
 )
 
 SERVICE_NOTIFY_FIELD = fields.Boolean(
     required=False,
+    missing=False,
     example=False,
     description=param_description(acknowledge_service_problem.__doc__, 'notify'),
 )
 
 SERVICE_COMMENT_FIELD = fields.String(
     required=False,
+    missing="Acknowledged",
     example='This was expected.',
     description=param_description(acknowledge_service_problem.__doc__, 'comment'),
 )

@@ -286,3 +286,43 @@ def test_openapi_bulk_acknowledge(
             content_type='application/json',
             status=400,
         )
+
+
+def test_openapi_acknowledge_servicegroup(
+    wsgi_app,
+    with_automation_user,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    live.add_table('servicegroups', [
+        {
+            'members': [('example.com', 'Memory'), ('example.com', 'CPU load')],
+            'name': 'windows',
+        },
+    ])
+
+    live.expect_query('GET servicegroups\nColumns: members\nFilter: name = windows',)
+    live.expect_query(
+        'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;Memory;1;0;0;test123-...;Acknowledged',
+        match_type='ellipsis',
+    )
+    live.expect_query(
+        'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;CPU load;1;0;0;test123-...;Acknowledged',
+        match_type='ellipsis',
+    )
+    with live:
+        wsgi_app.post(
+            base + '/objects/servicegroup/windows/actions/acknowledge/invoke',
+            content_type='application/json',
+            params=json.dumps({
+                'servicegroup_name': 'windows',
+                'sticky': False,
+                'notify': False,
+                'persistent': False,
+            }),
+            status=204,
+        )

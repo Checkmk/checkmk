@@ -157,6 +157,25 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, r
     });
 }
 
+// When one of the popups of a group is open, open other popups once hovering over another popups
+// trigger. This currently only works on PopupMethodInline based popups.
+export function switch_popup_menu_group(trigger, group_cls) {
+    const popup = trigger.nextSibling;
+    // When the new focucssed dropdown is already open, leave it open
+    if (utils.has_class(popup.parentNode, "active")) {
+        return;
+    }
+
+    // Do not open the menu when no other dropdown is open at the moment
+    const popups = Array.prototype.slice.call(document.getElementsByClassName(group_cls));
+    if (!popups.some(elem => utils.has_class(elem.parentNode, "active"))) {
+        return;
+    }
+
+    // Now open the popup menu by triggering the onclick event
+    trigger.click();
+}
+
 function generate_menu(container, resizable) {
     // Generate the popup menu structure and return the content div
     const menu = document.createElement("div");

@@ -418,6 +418,7 @@ class PageMenuRenderer:
             html.render_h2(dropdown.title),
             ident="menu_" + dropdown.name,
             method=MethodInline(self._render_dropdown_area(dropdown)),
+            popup_group="menu",
         )
 
     def _render_dropdown_area(self, dropdown: PageMenuDropdown) -> str:

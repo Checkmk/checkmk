@@ -15,46 +15,10 @@ export function add_suggestions(sugg_id, open) {
     suggestions_id = sugg_id;
 }
 
-function page_menu_dropdowns() {
-    return Array.prototype.slice.call(document.getElementsByClassName("menu"));
-}
-
 // Closes the active page menu dropdown
 export function close_active_dropdown() {
     popup_menu.close_popup();
 }
-
-// Toggle a page menu dropdown
-export function toggle_dropdown(menu_title) {
-    const dropdown = menu_title.nextSibling;
-    popup_menu.toggle_popup(null, menu_title, dropdown.id, {"type": "inline"}, null, null, false);
-
-    // focus first search field in popup menus, if any
-    for (let input of dropdown.getElementsByClassName("text")) {
-        input.focus();
-        input.select();
-        break;
-    }
-}
-
-// When one of the page menu dropdowns is open, open other dropdowns once
-// hovering over another title
-export function switch_dropdown(menu_title) {
-    const dropdown = menu_title.nextSibling;
-    // When the new focucssed dropdown is already open, leave it open
-    if (utils.has_class(dropdown.parentNode, "active")) {
-        return;
-    }
-
-    // Do not open the menu when no other dropdown is open at the moment
-    const dropdowns = page_menu_dropdowns();
-    if (!dropdowns.some(elem => utils.has_class(elem.parentNode, "active"))) {
-        return;
-    }
-
-    toggle_dropdown(menu_title);
-}
-
 
 export function set_checkbox_entry(id_stem, checked) {
     var oEntryChecked = document.getElementById("menu_entry_" + id_stem + "_checked");

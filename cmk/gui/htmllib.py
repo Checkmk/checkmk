@@ -2849,12 +2849,13 @@ class html(ABCHTMLGenerator):
                       method: PopupMethod,
                       data: Any = None,
                       style: Optional[str] = None,
-                      cssclass: Optional[str] = None,
+                      cssclass: CSSSpec = None,
                       onclose: Optional[str] = None,
-                      resizable: bool = False) -> None:
+                      resizable: bool = False,
+                      popup_group: Optional[str] = None) -> None:
         self.write_html(
             self.render_popup_trigger(content, ident, method, data, style, cssclass, onclose,
-                                      resizable))
+                                      resizable, popup_group))
 
     def render_popup_trigger(self,
                              content: HTML,
@@ -2862,9 +2863,10 @@ class html(ABCHTMLGenerator):
                              method: PopupMethod,
                              data: Any = None,
                              style: Optional[str] = None,
-                             cssclass: Optional[str] = None,
+                             cssclass: CSSSpec = None,
                              onclose: Optional[str] = None,
-                             resizable: bool = False) -> HTML:
+                             resizable: bool = False,
+                             popup_group: Optional[str] = None) -> HTML:
 
         onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s);' % \
                     (json.dumps(ident),
@@ -2873,6 +2875,12 @@ class html(ABCHTMLGenerator):
                      json.dumps(onclose.replace("'", "\\'") if onclose else None),
                      json.dumps(resizable))
 
+        if popup_group:
+            onmouseenter: Optional[
+                str] = "cmk.popup_menu.switch_popup_menu_group(this, %s)" % json.dumps(popup_group)
+        else:
+            onmouseenter = None
+
         atag = self.render_a(
             content,
             class_="popup_trigger",
@@ -2880,10 +2888,17 @@ class html(ABCHTMLGenerator):
             # Needed to prevent wrong linking when views are parts of dashlets
             target="_self",
             onclick=onclick,
+            onmouseenter=onmouseenter,
         )
 
+        classes: List[Optional[str]] = ["popup_trigger"]
+        if isinstance(cssclass, list):
+            classes.extend(cssclass)
+        elif cssclass:
+            classes.append(cssclass)
+
         return self.render_div(atag + method.content,
-                               class_=["popup_trigger", cssclass],
+                               class_=classes,
                                id_="popup_trigger_%s" % ident,
                                style=style)
 

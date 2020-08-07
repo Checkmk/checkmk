@@ -59,6 +59,7 @@ class MainMenuRenderer:
             html.render_icon("main_search") + html.render_div(_("Search")),
             "mega_menu_search",
             method=MethodInline(self._get_search_menu_content()),
+            popup_group="main_menu_popup",
         )
         html.close_li()
 
@@ -69,6 +70,7 @@ class MainMenuRenderer:
                 ident="mega_menu_" + menu_item.name,
                 method=MethodInline(self._get_mega_menu_content(menu_item)),
                 cssclass=menu_item.name,
+                popup_group="main_menu_popup",
             )
             html.close_li()
 
@@ -86,7 +88,7 @@ class MainMenuRenderer:
     # TODO(tb): can we use the MegaMenuRenderer here and move this code to mega_menu.py?
     def _get_search_menu_content(self) -> str:
         with html.plugged():
-            html.open_div(class_=["popup_menu", "global_search"])
+            html.open_div(class_=["popup_menu", "main_menu_popup", "global_search"])
             QuicksearchSnapin().show()
             html.close_div()
             html.div("", id_="popup_shadow", onclick="cmk.popup_menu.close_popup()")
@@ -95,7 +97,7 @@ class MainMenuRenderer:
     def _get_mega_menu_content(self, menu_item: MainMenuItem) -> str:
         with html.plugged():
             menu = mega_menu_registry[menu_item.name]
-            html.open_div(class_="popup_menu")
+            html.open_div(class_=["popup_menu", "main_menu_popup"])
             MegaMenuRenderer().show(menu)
             html.close_div()
             html.div("", id_="popup_shadow", onclick="cmk.popup_menu.close_popup()")

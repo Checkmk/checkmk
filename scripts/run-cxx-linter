@@ -6,12 +6,13 @@
 set -e
 TARGET=$1
 PATCHSET_REVISION=$2
-REPO_DIR="$(dirname $(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd))"
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+REPO_DIR="$(dirname "$(cd "$(dirname "$SCRIPT_PATH")" >/dev/null 2>&1 && pwd)")"
 CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
 
 function execute_test() {
     # Prevpare Makefiles, otherwise "make compile_commands.json" will fail
-    make -C $REPO_DIR config.h
+    make -C "$REPO_DIR" config.h
 
     # To really compute only the files which need checking, we better make sure
     # that our project is up-to-date without any further changes first.
@@ -45,19 +46,33 @@ function execute_test() {
     echo "${FILES_TO_CHECK}"
 
     echo "==================== ${TARGET}"
-    make ${TARGET} FILES_TO_CHECK="$(echo ${FILES_TO_CHECK})"
+    make "${TARGET}" FILES_TO_CHECK="$(echo $FILES_TO_CHECK)"
 }
 
-if [ -z ${RUN_HERE} ]; then
-    echo "Running in Docker Container $CONTAINER"
+if [ "$PWD" != "$REPO_DIR/livestatus/src" ] && [ "$PWD" != "$REPO_DIR/enterprise/core/src" ]; then
+    echo "ERROR: Wrong working directory (go to $REPO_DIR/livestatus/src or $REPO_DIR/enterprise/core/src)"
+    exit 1
+fi
+
+if [ -z "$TARGET" ]; then
+    echo "ERROR: You need to provide a make target (iwyu, tidy, ...) as 1st argument"
+    exit 1
+fi
+
+if [ -z "$PATCHSET_REVISION" ]; then
+    echo "ERROR: You need to provide a git refspec as 2nd argument"
+    exit 1
+fi
+
+if [ -z "$RUN_HERE" ]; then
+    echo "Running in Docker Container $CONTAINER (workdir $PWD)"
     docker run -t -a stdout -a stderr \
-        -u ${UID}:${UID} \
-        -v ${REPO_DIR}:/${REPO_DIR} \
+        -u "$UID:$UID" \
+        -v "$REPO_DIR:$REPO_DIR" \
         -e RUN_HERE="true" \
-        -w ${PWD} \
-        $CONTAINER \
-        ${REPO_DIR}/scripts/$(basename "$0") $TARGET $PATCHSET_REVISION
+        -w "$PWD" \
+        "$CONTAINER" \
+        "$SCRIPT_PATH" "$TARGET" "$PATCHSET_REVISION"
 else
-    pwd \
-    && execute_test $TARGET $PATCHSET_REVISION
+    execute_test "$TARGET" "$PATCHSET_REVISION"
 fi

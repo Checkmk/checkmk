@@ -6,6 +6,7 @@
 #include "opids.h"
 
 #include <algorithm>
+#include <functional>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>

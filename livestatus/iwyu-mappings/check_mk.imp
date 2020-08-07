@@ -17,4 +17,5 @@
   { include: ['@"gtest/.*"', private, '"gtest/gtest.h"', public ] },
   { include: ["@<gtest/.*>", private, "<gtest/gtest.h>", public ] },
   { symbol: ["std::filesystem", private, "<filesystem>", public ] },
+  { symbol: ["std::hash", private, "<functional>", public ] },
 ]

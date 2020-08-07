@@ -12,6 +12,7 @@
 #include "Object.h"
 #include "cmc.h"
 #else
+#include <functional>
 #include <unordered_set>
 
 #include "nagios.h"

@@ -10,8 +10,8 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <string>
-#include <string_view>  // for hash, hmmm...
 #include <utility>
 #include <vector>
 

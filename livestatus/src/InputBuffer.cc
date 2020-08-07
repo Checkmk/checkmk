@@ -7,6 +7,7 @@
 
 #include <unistd.h>
 
+// IWYU pragma: no_include <type_traits>
 #include <cctype>
 #include <cerrno>
 #include <cstring>

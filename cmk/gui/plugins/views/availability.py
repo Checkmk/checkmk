@@ -597,6 +597,28 @@ def render_timeline_bar(timeline_layout, style, timeline_nr=0):
 #   '----------------------------------------------------------------------'
 
 
+def _get_bi_availability(avoptions, aggr_rows, timewarp):
+
+    logrow_limit = avoptions["logrow_limit"]
+    if logrow_limit == 0:
+        livestatus_limit = None
+    else:
+        livestatus_limit = (len(aggr_rows) * logrow_limit) + 1
+
+    timeline_containers, fetched_rows = availability.get_timeline_containers(
+        aggr_rows, avoptions, timewarp, livestatus_limit)
+
+    has_reached_logrow_limit = livestatus_limit and fetched_rows > livestatus_limit
+
+    spans: List[AVSpan] = []
+    for timeline_container in timeline_containers:
+        spans.extend(timeline_container.timeline)
+
+    av_rawdata = availability.spans_by_object(spans)
+
+    return timeline_containers, av_rawdata, has_reached_logrow_limit
+
+
 # Render availability of a BI aggregate. This is currently
 # no view and does not support display options
 # TODO: Why should we handle this in a special way? Probably because we cannot
@@ -652,31 +674,18 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
         avoptions = render_availability_options("bi")
 
     if not html.has_user_errors():
-        logrow_limit = avoptions["logrow_limit"]
-        if logrow_limit == 0:
-            livestatus_limit = None
-        else:
-            livestatus_limit = (len(aggr_rows) * logrow_limit)
-
-        spans: List[AVSpan] = []
 
         # iterate all aggregation rows
         timewarpcode = HTML()
         timewarp = html.request.get_integer_input("timewarp")
 
-        has_reached_logrow_limit = False
-        timeline_containers, fetched_rows = availability.get_timeline_containers(
-            aggr_rows, avoptions, timewarp,
-            livestatus_limit + 1 if livestatus_limit is not None else None)
-        if livestatus_limit and fetched_rows > livestatus_limit:
-            has_reached_logrow_limit = True
+        timeline_containers, av_rawdata, has_reached_logrow_limit = _get_bi_availability(
+            avoptions, aggr_rows, timewarp)
 
         for timeline_container in timeline_containers:
             tree = timeline_container.aggr_tree
             these_spans = timeline_container.timeline
             timewarp_tree_state = timeline_container.timewarp_state
-
-            spans += these_spans
 
             # render selected time warp for the corresponding aggregation row (should be matched by only one)
             if timewarp and timewarp_tree_state:
@@ -755,7 +764,6 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
 
                     timewarpcode += html.drain()
 
-        av_rawdata = availability.spans_by_object(spans)
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)
 
         # If we abolish the limit we have to fetch the data again

@@ -8,14 +8,16 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+// The stream-related pragmas are probably caused by
+// https://github.com/include-what-you-use/include-what-you-use/issues/277
 #include <atomic>
 #include <cerrno>
 #include <chrono>
-#include <fstream>
+#include <fstream>  // IWYU pragma: keep
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <sstream>
+#include <sstream>  // IWYU pragma: keep
 #include <string>
 #include <system_error>
 #include <unordered_map>

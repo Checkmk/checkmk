@@ -11,7 +11,6 @@
 #include <cerrno>
 #include <cstring>
 #include <ostream>
-#include <type_traits>
 
 #include "Logger.h"
 #include "Poller.h"

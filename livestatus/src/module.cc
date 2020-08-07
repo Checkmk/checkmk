@@ -31,7 +31,6 @@
 #include <optional>
 #include <sstream>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "Average.h"

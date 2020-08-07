@@ -5,6 +5,10 @@
   { ref: gcc.stl.headers.imp },
   { ref: stl.c.headers.imp },
   { ref: asio.imp },
+  { include: ["<bits/exception.h>", private, "<exception>", public ] },
+  { include: ["<bits/getopt_core.h>", private, "<getopt.h>", public ] },
+  { include: ["<bits/types/struct_tm.h>", private, "<time.h>", public ] },
+  { include: ["<linux/if_ether.h>", private, "<netinet/if_ether.h>", public ] },
   { include: ["<pcap/bpf.h>", private, "<pcap.h>", public ] },
   { include: ["<pcap/dlt.h>", private, "<pcap.h>", public ] },
   { include: ["<pcap/pcap.h>", private, "<pcap.h>", public ] },
@@ -12,4 +16,5 @@
   { include: ["@<gmock/.*>", private, "<gmock/gmock.h>", public ] },
   { include: ['@"gtest/.*"', private, '"gtest/gtest.h"', public ] },
   { include: ["@<gtest/.*>", private, "<gtest/gtest.h>", public ] },
+  { symbol: ["std::filesystem", private, "<filesystem>", public ] },
 ]

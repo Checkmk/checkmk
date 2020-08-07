@@ -12,7 +12,6 @@
 #include <asio/system_error.hpp>
 #include <chrono>
 #include <ostream>
-#include <system_error>
 #include <thread>
 #include <utility>
 

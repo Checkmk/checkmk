@@ -5,6 +5,7 @@
 
 #include "TableEventConsole.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <iosfwd>
 #include <iostream>

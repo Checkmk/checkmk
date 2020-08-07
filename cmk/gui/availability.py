@@ -17,6 +17,7 @@ import cmk.utils.defines as defines
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.prediction import lq_logic
 
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
@@ -1851,18 +1852,17 @@ def get_bi_leaf_history(
         timeline_container = TimelineContainer(row)
 
         for site, host, service in bi.find_all_leaves(tree):
-            by_host.setdefault(host, set()).add(service)
-            timeline_container.host_service_info.add((host, service if service else u""))
-            timeline_container.host_service_info.add((host, u""))
+            this_service = service or ""
+            by_host.setdefault(host, set()).add(this_service)
+            timeline_container.host_service_info.add((host, this_service))
+            timeline_container.host_service_info.add((host, ""))
 
         timeline_containers.append(timeline_container)
 
     for host, services in by_host.items():
         query += "Filter: host_name = %s\n" % host
-        query += "Filter: service_description = \n"
-        for service in services:
-            query += "Filter: service_description = %s\n" % service
-        query += "Or: %d\nAnd: 2\n" % (len(services) + 1)
+        query += lq_logic("Filter: service_description = ", list(services), "Or")
+        query += "And: 2\n"
     if len(hosts) != 1:
         query += "Or: %d\n" % len(hosts)
 

@@ -63,16 +63,32 @@ class TestControllerApi:
         # More complicated method of testing may be written in the future
         monkeypatch.setattr(cmk.fetchers.controller, "write_data", write_to_stdout)
 
-    @pytest.mark.skip("TODO(ml,sk)")
-    @pytest.mark.parametrize("the_host", ["heute", "rrd_host"])
+    @staticmethod
+    @pytest.fixture
+    def expected_error() -> str:
+        return 'TCP: Not connected'
+
+    @staticmethod
+    @pytest.fixture
+    def expected_blob() -> str:
+        def make_blob(fetcher: str, status: int, payload: str) -> str:
+            return '{"fetcher_type": "%s", "status": %d, "payload": "%s"}' % (fetcher, status,
+                                                                              payload)
+
+        return '[%s, %s]' % (make_blob("TCP", 50, "Not connected"), make_blob("PIGGYBACK", 0, ""))
+
+    @pytest.mark.parametrize("the_host", [
+        "heute",
+        "rrd_host",
+    ])
     @pytest.mark.usefixtures("scenario")
-    def test_run_fetchers(self, the_host, capsys):
+    def test_run_fetchers(self, the_host, capsys, expected_error, expected_blob):
         fetcher_config = FetcherConfig()
         fetcher_config.write(hostname=the_host)
         run_fetchers(serial=str(fetcher_config.serial), host_name=the_host, timeout=35)
         captured = capsys.readouterr()
-        assert captured.out == make_success_answer("{}") + make_failure_answer(
-            data="No process", severity="critical") + make_waiting_answer()
+        assert captured.out == make_success_answer(expected_blob) + make_failure_answer(
+            data=expected_error, severity="critical") + make_waiting_answer()
 
     @pytest.mark.usefixtures("scenario")
     def test_run_fetchers_bad_data(self, capsys):

@@ -877,7 +877,7 @@ class GUIViewRenderer(ABCViewRenderer):
             )
 
     def _page_menu_dropdown_add_to(self) -> List[PageMenuDropdown]:
-        return visuals.page_menu_dropdown_add_to_visual(add_type="view")
+        return visuals.page_menu_dropdown_add_to_visual(add_type="view", name=self.view.name)
 
     def _render_filter_form(self, show_filters: List[Filter]) -> str:
         if not display_options.enabled(display_options.F) or not show_filters:

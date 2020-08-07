@@ -16,7 +16,7 @@ The hierarchy here is:
 import abc
 import json
 from dataclasses import dataclass, field
-from typing import List, Iterator, Optional
+from typing import List, Iterator, Optional, Dict, Union
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -127,6 +127,9 @@ class PageMenuDropdown:
     title: str
     topics: List[PageMenuTopic] = field(default_factory=list)
     is_enabled: bool = True
+    # Optional data for the popup. To be used by popup_trigger().
+    # It has been added for the "add view to dashboard/report" dropdown.
+    popup_data: Optional[List[Union[str, Dict]]] = None
 
     @property
     def any_advanced_entries(self) -> bool:
@@ -418,6 +421,7 @@ class PageMenuRenderer:
             html.render_h2(dropdown.title),
             ident="menu_" + dropdown.name,
             method=MethodInline(self._render_dropdown_area(dropdown)),
+            data=dropdown.popup_data,
             popup_group="menu",
         )
 

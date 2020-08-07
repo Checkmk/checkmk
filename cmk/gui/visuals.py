@@ -1696,8 +1696,9 @@ def may_add_site_hint(visual_name: str, info_keys: List[InfoName], single_info_k
 
 @cmk.gui.pages.register("ajax_popup_add_visual")
 def ajax_popup_add() -> None:
+    # name is unused at the moment in this, hand over as empty name
     page_menu_dropdown = page_menu_dropdown_add_to_visual(
-        html.request.get_ascii_input_mandatory("add_type"))[0]
+        add_type=html.request.get_ascii_input_mandatory("add_type"), name="")[0]
 
     html.open_ul()
 
@@ -1726,7 +1727,7 @@ def ajax_popup_add() -> None:
     html.close_ul()
 
 
-def page_menu_dropdown_add_to_visual(add_type: str) -> List[PageMenuDropdown]:
+def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> List[PageMenuDropdown]:
     """Create the dropdown menu for adding a visual to other visuals / pagetypes
 
     Please not that this data structure is not only used for rendering the dropdown
@@ -1772,8 +1773,16 @@ def page_menu_dropdown_add_to_visual(add_type: str) -> List[PageMenuDropdown]:
             name="add_to",
             title=_("Add to"),
             topics=pagetypes.page_menu_add_to_topics(add_type) + visual_topics,
+            popup_data=[add_type,
+                        _encode_page_context(html.page_context), {
+                            "name": name,
+                        }],
         )
     ]
+
+
+def _encode_page_context(page_context: VisualContext) -> VisualContext:
+    return {k: "" if v is None else v for k, v in page_context.items()}
 
 
 @cmk.gui.pages.register("ajax_add_visual")

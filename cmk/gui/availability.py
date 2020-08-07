@@ -686,9 +686,6 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
 
     query = "GET statehist\n" + av_filter
     query += "Timelimit: %d\n" % avoptions["timelimit"]
-    logrow_limit = avoptions["logrow_limit"]
-    if logrow_limit:
-        query += "Limit: %d\n" % (logrow_limit + 1)
 
     # Add Columns needed for object identification
     columns = ["host_name", "service_description"]
@@ -721,12 +718,10 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
 
     query += "Columns: %s\n" % " ".join(columns)
     query += filterheaders
+    logrow_limit = avoptions["logrow_limit"]
 
-    sites.live().set_prepend_site(True)
-    sites.live().set_only_sites(only_sites)
-    data = sites.live().query(query)
-    sites.live().set_only_sites(None)
-    sites.live().set_prepend_site(False)
+    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(logrow_limit):
+        data = sites.live().query(query)
     columns = ["site"] + columns
     spans: List[AVSpan] = [dict(zip(columns, span)) for span in data]
 
@@ -1850,9 +1845,6 @@ def get_bi_leaf_history(
         "in_service_period",
     ]
 
-    sites.live().set_only_sites(list(only_sites))
-    sites.live().set_prepend_site(True)
-    sites.live().set_limit(livestatus_limit)
     query = "GET statehist\n" + \
             "Columns: " + " ".join(columns) + "\n" +\
             "Filter: time >= %d\nFilter: time < %d\n" % time_range
@@ -1882,12 +1874,13 @@ def get_bi_leaf_history(
     if len(hosts) != 1:
         query += "Or: %d\n" % len(hosts)
 
-    data = sites.live().query(query)
+    with sites.only_sites(
+            list(only_sites)), sites.prepend_site(), sites.set_limit(livestatus_limit):
+        data = sites.live().query(query)
+
     if not data:
         return [], [], 0
 
-    sites.live().set_prepend_site(False)
-    sites.live().set_only_sites(None)
     columns = ["site"] + columns
     rows = [dict(zip(columns, row)) for row in data]
 

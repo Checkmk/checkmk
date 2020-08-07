@@ -9,29 +9,21 @@ CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
 REPO_DIR=$(git rev-parse --show-toplevel)
 
 function execute_test() {
-    SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
-        cat .site
-        break
-    else cd ..; fi; done)}
-    SITE=${SITE:-$(omd sites --bare | head -n 1)}
-    ROOT=/omd/sites/$SITE
-
     LANG=C make -C ../../.. config.status
     (cd ../../.. && ./config.status)
     LANG=C make -j4 -C .. unit-test
 }
 
 # same as in scripts/run-cxx-linter
-if [ -z ${RUN_HERE} ]; then
-    echo "Running in Docker Container $CONTAINER"
-    echo $REPO_DIR
+if [ -z "$RUN_HERE" ]; then
+    echo "Running in Docker Container $CONTAINER (workdir $PWD)"
     docker run -a stdout -a stderr -t \
-        -u ${UID}:${UID} \
-        -v ${REPO_DIR}:${REPO_DIR} \
+        -u "$UID:$UID" \
+        -v "$REPO_DIR:$REPO_DIR" \
         -e RUN_HERE="true" \
-        -w ${PWD} \
-        $CONTAINER \
-        ./.f12 $TARGET $PATCHSET_REVISION
+        -w "$PWD" \
+        "$CONTAINER" \
+        ./.f12
 else
-    execute_test $TARGET $PATCHSET_REVISION
+    execute_test
 fi

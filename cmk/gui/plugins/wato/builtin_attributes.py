@@ -63,6 +63,9 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def topic(self):
         return HostAttributeTopicBasicSettings
 
+    def is_advanced(self) -> bool:
+        return True
+
     @classmethod
     def sort_index(cls):
         return 10
@@ -171,6 +174,9 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 50
 
+    def is_advanced(self) -> bool:
+        return True
+
     def name(self):
         return "additional_ipv4addresses"
 
@@ -272,6 +278,9 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 80
+
+    def is_advanced(self) -> bool:
+        return True
 
     def show_in_table(self):
         return True
@@ -680,6 +689,9 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
+    def is_advanced(self) -> bool:
+        return True
+
     def name(self):
         return "management_snmp_community"
 
@@ -729,6 +741,9 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 140
 
+    def is_advanced(self) -> bool:
+        return True
+
     def show_in_table(self):
         return False
 
@@ -746,6 +761,9 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
 class HostAttributeSite(ABCHostAttributeValueSpec):
     def name(self):
         return "site"
+
+    def is_advanced(self) -> bool:
+        return True
 
     def topic(self):
         return HostAttributeTopicBasicSettings
@@ -975,6 +993,9 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 190
+
+    def is_advanced(self) -> bool:
+        return True
 
     def help(self):
         return _("With the help of labels you can flexibly group your hosts in "

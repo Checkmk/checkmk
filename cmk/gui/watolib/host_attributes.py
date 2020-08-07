@@ -354,6 +354,10 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
     def is_tag_attribute(self) -> bool:
         return False
 
+    def is_advanced(self) -> bool:
+        """Whether or not this attribute is treated as advanced element in the GUI"""
+        return False
+
 
 class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[ABCHostAttribute]]):
     _index = 0

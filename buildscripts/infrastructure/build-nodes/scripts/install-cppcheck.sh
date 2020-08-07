@@ -7,6 +7,8 @@ set -e
 
 INSTALL_PREFIX=""
 CPPCHECK_VERSION=1.90
+DIR_NAME=cppcheck-${CPPCHECK_VERSION}
+TARGET_DIR=/opt
 
 failure() {
     echo "$(basename $0):" "$@" >&2
@@ -97,3 +99,11 @@ else
     rm -f cppcheck
     ln --symbolic --force $(basename ${CPPCHECK_PATH}) cppcheck
 fi
+
+set_symlinks() {
+    echo "Set symlink"
+    mkdir -p "${TARGET_DIR}/bin"
+    ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${TARGET_DIR}/bin"
+}
+
+set_symlinks

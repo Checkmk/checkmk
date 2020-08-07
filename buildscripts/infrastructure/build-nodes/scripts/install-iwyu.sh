@@ -7,6 +7,7 @@ set -e
 
 INSTALL_PREFIX=""
 CLANG_VERSION=10
+TARGET_DIR=/opt
 
 failure() {
     echo "$(basename $0):" "$@" >&2
@@ -125,3 +126,11 @@ else
     rm -f iwyu
     ln --symbolic --force $(basename ${IWYU_PATH}) iwyu
 fi
+
+set_symlinks() {
+    echo "Set symlink"
+    mkdir -p "${TARGET_DIR}/bin"
+    ln -sf "${IWYU_PATH}/bin/"* "${TARGET_DIR}/bin"
+}
+
+set_symlinks

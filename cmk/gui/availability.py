@@ -732,12 +732,13 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
     # Now we find out if the log row limit was exceeded or
     # if the log's length is the limit by accident.
     # If this limit was exceeded then we cut off the last element
-    # in spans_by_object because it might be incomplete.
-    logrow_limit_reached_entry: _Optional[AVSpan] = None
-    if logrow_limit and len(data) >= logrow_limit + 1:
-        logrow_limit_reached_entry = dict(zip(columns, data[-1]))
+    # because it might be incomplete.
+    exceeded_log_row_limit: bool = False
+    if logrow_limit and len(data) > logrow_limit:
+        exceeded_log_row_limit = True
+        spans = spans[:-1]
 
-    return spans_by_object(spans, logrow_limit_reached_entry)
+    return spans_by_object(spans), exceeded_log_row_limit
 
 
 def filter_groups_of_entries(context, avoptions, spans):
@@ -798,8 +799,7 @@ def filter_groups_of_entries(context, avoptions, spans):
 
 # Sort the raw spans into a tree of dicts, so that we
 # have easy access to the timeline of each object
-def spans_by_object(spans: List[AVSpan],
-                    logrow_limit_reached_entry: _Optional[AVSpan]) -> _Tuple[AVRawData, bool]:
+def spans_by_object(spans: List[AVSpan]) -> AVRawData:
     # Sort by site/host and service, while keeping native order
     av_rawdata: AVRawData = {}
     for span in spans:
@@ -808,15 +808,7 @@ def spans_by_object(spans: List[AVSpan],
         av_rawdata.setdefault(site_host, {})
         av_rawdata[site_host].setdefault(service, []).append(span)
 
-    if logrow_limit_reached_entry:
-        site_host = (logrow_limit_reached_entry["site"], logrow_limit_reached_entry["host_name"])
-        if logrow_limit_reached_entry["service_description"]:
-            del av_rawdata[site_host][logrow_limit_reached_entry["service_description"]]
-        else:
-            del av_rawdata[site_host]
-
-    # We have to remember if rawdata was modified
-    return av_rawdata, logrow_limit_reached_entry is not None
+    return av_rawdata
 
 
 # Compute an availability table. what is one of "bi", "host", "service".

@@ -755,10 +755,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
 
                     timewarpcode += html.drain()
 
-        # Note: 'spans_by_object' returns two arguments which are used by
-        # all availability views but not by BI. There we have to take
-        # only complete aggregations
-        av_rawdata = availability.spans_by_object(spans, None)[0]
+        av_rawdata = availability.spans_by_object(spans)
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)
 
         # If we abolish the limit we have to fetch the data again

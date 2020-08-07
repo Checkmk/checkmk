@@ -598,7 +598,7 @@ class GUIViewRenderer(ABCViewRenderer):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if html.request.has_var("_row_id") and html.do_actions():
-                rows = filter_by_row_id(view_spec, rows)
+                rows = filter_selected_rows(view_spec, rows, [html.request.has_var("_row_id")])
 
             # If we are currently within an action (confirming or executing), then
             # we display only the selected rows (if checkbox mode is active)
@@ -626,7 +626,7 @@ class GUIViewRenderer(ABCViewRenderer):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if html.request.has_var("_row_id") and html.do_actions():
-                rows = filter_by_row_id(view_spec, rows)
+                rows = filter_selected_rows(view_spec, rows, [html.request.has_var("_row_id")])
 
             try:
                 do_actions(view_spec, self.view.datasource.infos[0], rows, '')
@@ -2884,15 +2884,6 @@ def do_actions(view, what, action_rows, backurl):
     return True
 
 
-def filter_by_row_id(view, rows):
-    wanted_row_id = html.request.var("_row_id")
-
-    for row in rows:
-        if row_id(view, row) == wanted_row_id:
-            return [row]
-    return []
-
-
 def filter_selected_rows(view, rows, selected_ids):
     action_rows = []
     for row in rows:
@@ -3105,19 +3096,16 @@ class PageRescheduleCheck(AjaxPage):
             "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now),
             site)
 
-        try:
-            sites.live().set_only_sites([site])
-            query = u"GET %ss\n" \
-                    "WaitObject: %s\n" \
-                    "WaitCondition: last_check >= %d\n" \
-                    "WaitTimeout: %d\n" \
-                    "WaitTrigger: check\n" \
-                    "Columns: last_check state plugin_output\n" \
-                    "Filter: host_name = %s\n%s" \
-                    % (what, livestatus.lqencode(wait_spec), now, config.reschedule_timeout * 1000, livestatus.lqencode(host), add_filter)
+        query = u"GET %ss\n" \
+                 "WaitObject: %s\n" \
+                 "WaitCondition: last_check >= %d\n" \
+                 "WaitTimeout: %d\n" \
+                 "WaitTrigger: check\n" \
+                 "Columns: last_check state plugin_output\n" \
+                 "Filter: host_name = %s\n%s" \
+                 % (what, livestatus.lqencode(wait_spec), now, config.reschedule_timeout * 1000, livestatus.lqencode(host), add_filter)
+        with sites.only_sites(site):
             row = sites.live().query_row(query)
-        finally:
-            sites.live().set_only_sites()
 
         last_check = row[0]
         if last_check < now:

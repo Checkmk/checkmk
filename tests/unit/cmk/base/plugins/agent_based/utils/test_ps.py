@@ -167,3 +167,24 @@ PROCESSES = [[
 ])
 def test_format_process_list(processes, formatted_list, html_flag):
     assert ps.format_process_list(processes, html_flag) == formatted_list
+
+
+def test_unused_value_remover():
+
+    value_store_test = {
+        "test": {
+            "unused": (23., 23.),
+            "updated": (42., 42.),
+        },
+    }
+
+    with ps.unused_value_remover(value_store_test, "test") as value_store:
+        value_store["updated"] = (3.14, 3.14)
+        value_store["new"] = (2.7, 2.7)
+
+    assert value_store_test == {
+        "test": {
+            "updated": (3.14, 3.14),
+            "new": (2.7, 2.7),
+        },
+    }

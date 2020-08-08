@@ -25,3 +25,6 @@ ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
 
 # hr_mem (amongst others)
 memused_default_levels = (150.0, 200.0)
+
+# ps
+ps_default_levels = {"levels": (1, 1, 99999, 99999)}

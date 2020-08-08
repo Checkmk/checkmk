@@ -3,13 +3,20 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List, Optional, Tuple, Union
+from typing import Dict, Generator, List, Optional, Tuple, Union
 
 import collections
+import contextlib
 import re
 import time
 
-from ..agent_based_api.v0.type_defs import CheckGenerator, HostLabelGenerator, Parameters
+from ..agent_based_api.v0.type_defs import (
+    CheckGenerator,
+    DiscoveryGenerator,
+    HostLabelGenerator,
+    Parameters,
+    ValueStore,
+)
 from ..agent_based_api.v0 import (
     check_levels,
     get_average,
@@ -20,6 +27,7 @@ from ..agent_based_api.v0 import (
     regex,
     render,
     Result,
+    Service,
     state,
 )
 
@@ -280,8 +288,7 @@ def ps_cleanup_params(params):
     return params
 
 
-def cpu_rate(counter, now, lifetime):
-    value_store = get_value_store()
+def cpu_rate(value_store, counter, now, lifetime):
     try:
         return get_rate(value_store, counter, now, lifetime)
     except IgnoreResultsError:
@@ -354,7 +361,7 @@ class ProcessAggregator:
                     (render.datetime(creation_time_unix), ""),
                 ))
 
-    def cpu_usage(self, process_info, process):
+    def cpu_usage(self, value_store, process_info, process):
 
         now = time.time()
 
@@ -363,7 +370,7 @@ class ProcessAggregator:
         if ":" in pcpu_text:  # In linux is a time
             total_seconds = parse_ps_time(pcpu_text)
             pid = process_info.process_id
-            cputime = cpu_rate("ps_stat.pcpu.%s" % pid, now, total_seconds)
+            cputime = cpu_rate(value_store, "stat.pcpu.%s" % pid, now, total_seconds)
 
             pcpu = cputime * 100 * self.core_weight(is_win=False)
             process.append(("pid", (pid, "")))
@@ -372,8 +379,9 @@ class ProcessAggregator:
         elif process_info.usermode_time and process_info.kernelmode_time:
             pid = process_info.process_id
 
-            user_per_sec = cpu_rate("ps_wmic.user.%s" % pid, now, int(process_info.usermode_time))
-            kernel_per_sec = cpu_rate("ps_wmic.kernel.%s" % pid, now,
+            user_per_sec = cpu_rate(value_store, "user.%s" % pid, now,
+                                    int(process_info.usermode_time))
+            kernel_per_sec = cpu_rate(value_store, "kernel.%s" % pid, now,
                                       int(process_info.kernelmode_time))
 
             if not all([user_per_sec, kernel_per_sec]):
@@ -409,6 +417,7 @@ def process_capture(
     process_lines: List[Tuple[Optional[str], ps_info, List[str]]],
     params: Parameters,
     cpu_cores: int,
+    value_store: ValueStore,
 ) -> ProcessAggregator:
 
     ps_aggregator = ProcessAggregator(cpu_cores, params)
@@ -443,7 +452,7 @@ def process_capture(
             ps_aggregator.resident_size += int(process_info.physical)  # kB
 
             ps_aggregator.lifetimes(process_info, process)
-            ps_aggregator.cpu_usage(process_info, process)
+            ps_aggregator.cpu_usage(value_store, process_info, process)
 
         include_args = params.get("process_info_arguments", 0)
         if include_args:
@@ -452,6 +461,84 @@ def process_capture(
         ps_aggregator.append(process)
 
     return ps_aggregator
+
+
+SectionMem = Dict[str, float]
+SectionCpu = Dict[str, Union[float, List[float]]]
+
+
+def discover_ps(
+    params: List[Parameters],
+    section_ps: Optional[Section],
+    section_mem: Optional[SectionMem],
+    section_cpu: Optional[SectionCpu],
+) -> DiscoveryGenerator:
+    if not section_ps:
+        return
+
+    inventory_specs = get_discovery_specs(params)
+
+    for process_info, command_line in section_ps[1]:
+        for servicedesc, pattern, userspec, cgroupspec, _labels, default_params in inventory_specs:
+            if not process_attributes_match(process_info, userspec, cgroupspec):
+                continue
+            matches = process_matches(command_line, pattern)
+            if not matches:
+                continue  # skip not matched lines
+
+            # User capturing on rule
+            if userspec is False:
+                i_userspec = process_info.user
+            else:
+                i_userspec = userspec
+
+            i_servicedesc = servicedesc.replace("%u", i_userspec or "")
+
+            # Process capture
+            match_groups = matches.groups() if hasattr(matches, 'groups') else ()
+
+            i_servicedesc = replace_service_description(i_servicedesc, match_groups, pattern)
+
+            # Problem here: We need to instantiate all subexpressions
+            # with their actual values of the found process.
+            inv_params = {
+                "process": pattern,
+                "match_groups": match_groups,
+                "user": i_userspec,
+                "cgroup": cgroupspec,
+            }
+
+            # default_params is either a clean dict with optional
+            # parameters to set as default or - from version 1.2.4 - the
+            # dict from the rule itself. In the later case we need to remove
+            # the keys that do not specify default parameters
+            for key, value in default_params.items():
+                if key not in ("descr", "match", "user", "perfdata"):
+                    inv_params[key] = value
+
+            yield Service(
+                item=i_servicedesc,
+                parameters=inv_params,
+            )
+
+
+@contextlib.contextmanager
+def unused_value_remover(
+    value_store: ValueStore,
+    key: str,
+) -> Generator[Dict[str, Tuple[float, float]], None, None]:
+    """Remove all values that remain unchanged
+
+    This plugin uses the process IDs in the keys to persist values.
+    This would lead to a lot of orphaned values if we used the value store directly.
+    Thus we use a single dictionary and only store the values that have been used.
+    """
+    values = value_store.setdefault(key, {})
+    old_values = values.copy()
+
+    yield values
+
+    value_store[key] = {k: v for k, v in values.items() if v != old_values.get(k)}
 
 
 def check_ps_common(
@@ -465,7 +552,8 @@ def check_ps_common(
 ) -> CheckGenerator:
     params = ps_cleanup_params(params)
 
-    processes = process_capture(process_lines, params, cpu_cores)
+    with unused_value_remover(get_value_store(), "collective") as value_store:
+        processes = process_capture(process_lines, params, cpu_cores, value_store)
 
     yield from count_check(processes, params, label)
 

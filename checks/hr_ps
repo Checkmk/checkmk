@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.ps as ps
 
 discovery_hr_processes_rules = []
 
@@ -46,8 +47,9 @@ def discovery_hr_ps(parsed):
             else:
                 match_groups = []
 
-            service_descr = replace_service_description(rule['descr'], match_groups,
-                                                        match_name_or_path)
+            service_descr = ps.replace_service_description(rule['descr'], match_groups,
+                                                           match_name_or_path)
+
             discovered_items.setdefault(
                 service_descr, '%r' % {
                     'match_name_or_path': match_name_or_path,
@@ -128,7 +130,7 @@ check_info['hr_ps'] = {
             '4',  # hrSWRunPath
             '7',  # hrSWRunStatus
         ]),
-    'includes': ['ucd_hr.include', 'ps.include'],
+    'includes': ['ucd_hr.include'],
     'group': 'hr_ps',
     'default_levels_variable': 'hr_ps_default_levels',
 }

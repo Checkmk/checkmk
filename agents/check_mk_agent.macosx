@@ -10,8 +10,22 @@
 export LC_ALL=C
 unset LANG
 
-export MK_LIBDIR="/to/be/changed"
-export MK_CONFDIR="/to/be/changed"
+export MK_LIBDIR="/usr/lib/check_mk_agent"
+export MK_CONFDIR="/etc/check_mk"
+
+
+# Check if remote address should be allowed
+if [ -e "$MK_CONFDIR/user.cfg" ]; then
+    . "$MK_CONFDIR/user.cfg"
+echo "DEBUG of:$ONLY_FROM: ra:$REMOTE_ADDR"
+    if [ -n "$ONLY_FROM" ]; then
+        if [ "$ONLY_FROM" != "$REMOTE_ADDR" ]; then
+            echo "EXIT remote not allowed"
+            exit 31
+        fi
+    fi
+fi
+
 
 # Optionally set a tempdir for all subsequent calls
 #export TMPDIR=

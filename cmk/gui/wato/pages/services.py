@@ -35,7 +35,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     PageMenuRenderer,
-    disable_page_menu_entry,
+    enable_page_menu_entry,
     make_display_options_dropdown,
     make_simple_link,
     make_javascript_link,
@@ -416,7 +416,7 @@ class DiscoveryPageRenderer:
 
     def render(self, discovery_result: DiscoveryResult, request: dict) -> str:
         with html.plugged():
-            self._show_action_buttons(discovery_result)
+            self._toggle_action_page_menu_entries(discovery_result)
             self._show_discovered_host_labels(discovery_result)
             self._show_discovery_details(discovery_result, request)
             return html.drain()
@@ -513,11 +513,10 @@ class DiscoveryPageRenderer:
             by_group.setdefault(entry[0], []).append(entry)
         return by_group
 
-    def _show_action_buttons(self, discovery_result: DiscoveryResult) -> None:
+    def _toggle_action_page_menu_entries(self, discovery_result: DiscoveryResult) -> None:
         if not config.user.may("wato.services"):
             return
 
-        html.open_div(class_="action_buttons")
         fixall = 0
         already_has_services = False
         for check in discovery_result.check_table:
@@ -526,65 +525,30 @@ class DiscoveryPageRenderer:
             if check[0] in [DiscoveryState.UNDECIDED, DiscoveryState.VANISHED]:
                 fixall += 1
 
+        if self._is_active(discovery_result):
+            enable_page_menu_entry("stop")
+            return
+
+        enable_page_menu_entry("scan")
+
         # TODO: Add correct permission checking
         if fixall >= 1:
-            fix_all_options = self._options._replace(action=DiscoveryAction.FIX_ALL)
-            html.jsbutton(
-                "fix_all",
-                _("Fix all missing/vanished"),
-                _start_js_call(self._host, fix_all_options),
-                disabled=self._is_active(discovery_result),
-            )
+            enable_page_menu_entry("fix_all")
 
-        if already_has_services \
-            and config.user.may("wato.service_discovery_to_undecided") \
-            and config.user.may("wato.service_discovery_to_monitored") \
-            and config.user.may("wato.service_discovery_to_ignored") \
-            and config.user.may("wato.service_discovery_to_removed"):
-            refresh_options = self._options._replace(action=DiscoveryAction.REFRESH)
-            html.jsbutton(
-                "refresh",
-                _("Automatic refresh (tabula rasa)"),
-                _start_js_call(self._host, refresh_options),
-                disabled=self._is_active(discovery_result),
-            )
+        if (already_has_services and config.user.may("wato.service_discovery_to_undecided") and
+                config.user.may("wato.service_discovery_to_monitored") and
+                config.user.may("wato.service_discovery_to_ignored") and
+                config.user.may("wato.service_discovery_to_removed")):
+            enable_page_menu_entry("refresh")
 
-        scan_options = self._options._replace(action=DiscoveryAction.SCAN)
-        html.jsbutton(
-            "scan",
-            _("Full scan"),
-            _start_js_call(self._host, scan_options),
-            disabled=self._is_active(discovery_result),
-        )
+        if discovery_result.host_labels:
+            enable_page_menu_entry("update_host_labels")
 
-        if discovery_result.host_labels or self._is_active(discovery_result):
-            self._show_button_spacer()
-
-            if discovery_result.host_labels:
-                update_host_labels_options = self._options._replace(
-                    action=DiscoveryAction.UPDATE_HOST_LABELS)
-                html.jsbutton(
-                    "update_host_labels",
-                    _("Update host labels"),
-                    _start_js_call(self._host, update_host_labels_options),
-                    disabled=self._is_active(discovery_result),
-                )
-
-            if self._is_active(discovery_result):
-                stop_options = self._options._replace(action=DiscoveryAction.STOP)
-                html.jsbutton(
-                    "stop",
-                    _("Stop job"),
-                    _start_js_call(self._host, stop_options),
-                )
-
-        if not already_has_services or self._is_active(discovery_result):
-            disable_page_menu_entry("show_checkboxes")
-            disable_page_menu_entry("show_parameters")
-            disable_page_menu_entry("show_discovered_labels")
-            disable_page_menu_entry("show_plugin_names")
-
-        html.close_div()
+        if already_has_services:
+            enable_page_menu_entry("show_checkboxes")
+            enable_page_menu_entry("show_parameters")
+            enable_page_menu_entry("show_discovered_labels")
+            enable_page_menu_entry("show_plugin_names")
 
     def _show_button_spacer(self):
         html.div("", class_=["button_spacer"])
@@ -1125,6 +1089,20 @@ def service_page_menu(breadcrumb, host: watolib.CREHost, options: DiscoveryOptio
     menu = PageMenu(
         dropdowns=[
             PageMenuDropdown(
+                name="actions",
+                title=_("Actions"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Service configuration"),
+                        entries=list(_page_menu_service_configuration_entries(host, options)),
+                    ),
+                    PageMenuTopic(
+                        title=_("Host labels"),
+                        entries=list(_page_menu_host_labels_entries(host, options)),
+                    ),
+                ],
+            ),
+            PageMenuDropdown(
                 name="host",
                 title=_("Host"),
                 topics=[
@@ -1293,6 +1271,58 @@ def _page_menu_entry_show_plugin_names(host: watolib.CREHost,
         icon_name="checkbox",
         item=make_javascript_link(_start_js_call(host, params_options)),
         is_advanced=True,
+        name="show_plugin_names",
+    )
+
+
+def _page_menu_service_configuration_entries(host: watolib.CREHost,
+                                             options: DiscoveryOptions) -> Iterator[PageMenuEntry]:
+    yield PageMenuEntry(
+        title=_("Add all missing, remove all vanished"),
+        icon_name="services_fix_all",
+        item=make_javascript_link(
+            _start_js_call(host, options._replace(action=DiscoveryAction.FIX_ALL))),
+        name="fix_all",
+        is_enabled=False,
+    )
+
+    yield PageMenuEntry(
+        title=_("Do a full service scan"),
+        icon_name="services_full_scan",
+        item=make_javascript_link(
+            _start_js_call(host, options._replace(action=DiscoveryAction.SCAN))),
+        name="scan",
+        is_enabled=False,
+    )
+
+    yield PageMenuEntry(
+        title=_("Remove all and find new"),
+        icon_name="services_tabula_rasa",
+        item=make_javascript_link(
+            _start_js_call(host, options._replace(action=DiscoveryAction.REFRESH))),
+        name="refresh",
+        is_enabled=False,
+    )
+
+    yield PageMenuEntry(
+        title=_("Stop job"),
+        icon_name="services_stop",
+        item=make_javascript_link(
+            _start_js_call(host, options._replace(action=DiscoveryAction.STOP))),
+        name="stop",
+        is_enabled=False,
+    )
+
+
+def _page_menu_host_labels_entries(host: watolib.CREHost,
+                                   options: DiscoveryOptions) -> Iterator[PageMenuEntry]:
+    yield PageMenuEntry(
+        title=_("Update host labels"),
+        icon_name="update_host_labels",
+        item=make_javascript_link(
+            _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))),
+        name="update_host_labels",
+        is_enabled=False,
     )
 
 

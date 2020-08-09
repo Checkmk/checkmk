@@ -205,14 +205,17 @@ div#top_heading {
             padding-left: 0;
             margin: 0 0 $spacing $spacing;
 
-            &.enabled a {
+            a {
               display: flex;
               align-items: center;
 
               color: #ddd;
               text-decoration: none;
 
-              &:hover {
+            }
+
+            &.enabled {
+              a:hover {
                 color: #fff;
 
                 img {
@@ -220,6 +223,14 @@ div#top_heading {
                 }
               }
             }
+
+            &.disabled a {
+              text-decoration: none;
+              pointer-events: none;
+              cursor: default;
+              opacity: .5;
+	    }
+
           }
         }
 

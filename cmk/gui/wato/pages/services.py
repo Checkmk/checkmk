@@ -9,7 +9,7 @@ import ast
 import json
 import traceback
 import pprint
-from typing import Any, Dict, NamedTuple, List, Optional, Type
+from typing import Any, Dict, NamedTuple, List, Optional, Type, Iterator
 
 import six
 
@@ -28,6 +28,14 @@ from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 from cmk.gui.watolib import (
     automation_command_registry,
@@ -42,14 +50,12 @@ from cmk.gui.watolib.services import (DiscoveryState, Discovery, checkbox_id, ex
 from cmk.gui.wato.pages.hosts import ModeEditHost
 
 from cmk.gui.plugins.wato import (
-    host_status_button,
-    global_buttons,
     may_edit_ruleset,
     mode_registry,
     WatoMode,
 )
 
-from cmk.gui.plugins.wato.utils.context_buttons import changelog_button
+from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link, changelog_button
 
 AjaxDiscoveryRequest = Dict[str, Any]
 
@@ -115,44 +121,90 @@ class ModeDiscovery(WatoMode):
     def title(self):
         return _("Services of host %s") % self._host.name()
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="host",
+                    title=_("Host"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("For this host"),
+                            entries=list(self._page_menu_host_entries()),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="settings",
+                    title=_("Settings"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Settings"),
+                            entries=list(self._page_menu_settings_entries()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
-        host_status_button(self._host.name(), "host")
-
-        html.context_button(
-            _("Properties"),
-            watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._host.name())]),
-            "edit")
-
-        if config.user.may('wato.rulesets'):
-            html.context_button(
-                _("Parameters"),
-                watolib.folder_preserving_link([("mode", "object_parameters"),
-                                                ("host", self._host.name())]), "rulesets")
-            if self._host.is_cluster():
-                html.context_button(
-                    _("Clustered services"),
-                    watolib.folder_preserving_link([("mode", "edit_ruleset"),
-                                                    ("varname", "clustered_services")]), "rulesets")
+    def _page_menu_host_entries(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Properties"),
+            icon_name="edit",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "edit_host"),
+                                                ("host", self._host.name())])),
+        )
 
         if not self._host.is_cluster():
-            html.context_button(
-                _("Diagnostic"),
-                watolib.folder_preserving_link([("mode", "diag_host"),
-                                                ("host", self._host.name())]), "diagnose")
+            yield PageMenuEntry(
+                title=_("Connection tests"),
+                icon_name="diagnose",
+                item=make_simple_link(
+                    watolib.folder_preserving_link([("mode", "diag_host"),
+                                                    ("host", self._host.name())])),
+            )
 
-        html.context_button(
-            _("Disabled services"),
-            watolib.folder_preserving_link([("mode", "edit_ruleset"),
-                                            ("varname", "ignored_services")]), "disabled_service")
+        if config.user.may('wato.rulesets'):
+            yield PageMenuEntry(
+                title=_("Effective parameters"),
+                icon_name="rulesets",
+                item=make_simple_link(
+                    watolib.folder_preserving_link([("mode", "object_parameters"),
+                                                    ("host", self._host.name())])),
+            )
 
-        html.context_button(
-            _("Disabled checks"),
-            watolib.folder_preserving_link([("mode", "edit_ruleset"),
-                                            ("varname", "ignored_checks")]), "check_parameters")
+        yield make_host_status_link(host_name=self._host.name(), view_name="hoststatus")
+
+    def _page_menu_settings_entries(self) -> Iterator[PageMenuEntry]:
+        if not config.user.may('wato.rulesets'):
+            return
+
+        if self._host.is_cluster():
+            yield PageMenuEntry(
+                title=_("Clustered services"),
+                icon_name="rulesets",
+                item=make_simple_link(
+                    watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                                    ("varname", "clustered_services")])),
+            )
+
+        yield PageMenuEntry(
+            title=_("Disabled services"),
+            icon_name="disabled_service",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                                ("varname", "ignored_services")])),
+        )
+
+        yield PageMenuEntry(
+            title=_("Disabled checks"),
+            icon_name="check_parameters",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                                ("varname", "ignored_checks")])),
+        )
 
     def page(self):
         # This is needed to make the discovery page show the help toggle

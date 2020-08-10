@@ -148,35 +148,26 @@ export function toggle_attribute(oCheckbox, attrname) {
     }
 }
 
-function get_container_ids()
+function get_containers()
 {
-    let container = [];
-    let form = document.getElementById("form_edit_host");
-    for (let i = 0; i < form.childNodes.length; i++) {
-        if (form.childNodes[i].className == "nform")
-            container.push(form.childNodes[i].id);
-    }
-    return container;
-
+    return document.getElementById("form_edit_host").querySelectorAll("table.nform");
 }
 
 function get_effective_tags()
 {
     var current_tags = [];
 
-    var container_ids = get_container_ids();
+    var containers = get_containers();
+    console.log(containers);
 
-    for (var a = 0; a < container_ids.length; a++) {
-        var tag_container = document.getElementById(container_ids[a]);
-        if (!tag_container)
-            continue;
-
+    for (var a = 0; a < containers.length; a++) {
+        var tag_container = containers[a];
         for (var i = 0; i < tag_container.rows.length; i++) {
             var row = tag_container.rows[i];
             var add_tag_id = null;
             if (row.tagName == "TR") {
                 var legend_cell = row.cells[0];
-                if (legend_cell.className != "legend") {
+                if (!utils.has_class(legend_cell.className, "legend")) {
                     continue;
                 }
                 var content_cell = row.cells[1];

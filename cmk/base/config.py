@@ -1527,13 +1527,12 @@ def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) 
         )
 
     # add variables corresponding to check plugins that may have been migrated to new API
+    migrated_vars = vars(cmk.utils.migrated_check_variables)
     _set_check_variable_defaults(
-        {
-            k: v
-            for k, v in vars(cmk.utils.migrated_check_variables).items()
-            if not k.startswith('_')
-        }, ["__migrated_plugins_variables__"])
-    _check_contexts.setdefault("__migrated_plugins_variables__", {})
+        migrated_vars,
+        ["__migrated_plugins_variables__"],
+    )
+    _check_contexts.setdefault("__migrated_plugins_variables__", migrated_vars)
 
     # Now convert check_info to new format.
     convert_check_info()

@@ -476,16 +476,13 @@ class DiscoveryPageRenderer:
             html.begin_form("checks_%s" % entry.table_group, method="POST", action="wato.py")
             html.h3(self._get_group_header(entry))
 
-            if entry.show_bulk_actions and len(checks) > 10:
-                self._show_bulk_actions(discovery_result, entry.table_group)
-
             with table_element(css="data", searchable=False, limit=None, sortable=False) as table:
                 for check in sorted(checks, key=lambda c: c[6].lower()):
                     self._show_check_row(table, discovery_result, request, check,
                                          entry.show_bulk_actions)
 
             if entry.show_bulk_actions:
-                self._show_bulk_actions(discovery_result, entry.table_group)
+                self._toggle_bulk_action_page_menu_entries(discovery_result, entry.table_group)
             html.hidden_fields()
             html.end_form()
 
@@ -550,72 +547,36 @@ class DiscoveryPageRenderer:
             enable_page_menu_entry("show_discovered_labels")
             enable_page_menu_entry("show_plugin_names")
 
-    def _show_button_spacer(self):
-        html.div("", class_=["button_spacer"])
-
-    def _show_bulk_actions(self, discovery_result, table_source):
+    def _toggle_bulk_action_page_menu_entries(self, discovery_result, table_source):
         if not config.user.may("wato.services"):
             return
 
         if table_source == DiscoveryState.MONITORED:
             if config.user.may("wato.service_discovery_to_undecided"):
-                self._bulk_button(discovery_result, table_source, DiscoveryState.UNDECIDED,
-                                  _("Undecided"))
+                self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
             if config.user.may("wato.service_discovery_to_ignored"):
-                self._bulk_button(discovery_result, table_source, DiscoveryState.IGNORED,
-                                  _("Disable"))
+                self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
         elif table_source == DiscoveryState.IGNORED:
             if config.user.may("wato.service_discovery_to_monitored"):
-                self._bulk_button(discovery_result, table_source, DiscoveryState.MONITORED,
-                                  _("Monitor"))
+                self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
             if config.user.may("wato.service_discovery_to_undecided"):
-                self._bulk_button(discovery_result, table_source, DiscoveryState.UNDECIDED,
-                                  _("Undecided"))
+                self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
 
         elif table_source == DiscoveryState.VANISHED:
             if config.user.may("wato.service_discovery_to_removed"):
-                self._bulk_button(discovery_result, table_source, DiscoveryState.REMOVED,
-                                  _("Remove"))
+                self._enable_bulk_button(table_source, DiscoveryState.REMOVED)
             if config.user.may("wato.service_discovery_to_ignored"):
-                self._bulk_button(discovery_result, table_source, DiscoveryState.IGNORED,
-                                  _("Disable"))
+                self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
         elif table_source == DiscoveryState.UNDECIDED:
             if config.user.may("wato.service_discovery_to_monitored"):
-                self._bulk_button(discovery_result, table_source, DiscoveryState.MONITORED,
-                                  _("Monitor"))
+                self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
             if config.user.may("wato.service_discovery_to_ignored"):
-                self._bulk_button(discovery_result, table_source, DiscoveryState.IGNORED,
-                                  _("Disable"))
+                self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
-    def _bulk_button(self, discovery_result, source, target, target_label):
-        label = _("selected services") if self._options.show_checkboxes else _("all services")
-        options = self._options._replace(action=DiscoveryAction.BULK_UPDATE)
-        html.jsbutton(
-            "_bulk_%s_%s" % (source, target),
-            target_label,
-            _start_js_call(self._host,
-                           options,
-                           request_vars={
-                               "update_target": target,
-                               "update_source": source,
-                           }),
-            title=_("Move %s to %s services") % (label, target),
-            disabled=self._is_active(discovery_result),
-        )
-
-    def _bulk_action_colspan(self):
-        colspan = 5
-        if self._options.show_parameters:
-            colspan += 1
-        if self._options.show_discovered_labels:
-            colspan += 1
-        if self._options.show_checkboxes:
-            colspan += 1
-        if self._options.show_plugin_names:
-            colspan += 1
-        return colspan
+    def _enable_bulk_button(self, source, target):
+        enable_page_menu_entry("_bulk_%s_%s" % (source, target))
 
     def _show_check_row(self, table, discovery_result, request, check, show_bulk_actions):
         table_source, check_type, checkgroup, item, _paramstring, params, \
@@ -1097,6 +1058,10 @@ def service_page_menu(breadcrumb, host: watolib.CREHost, options: DiscoveryOptio
                         entries=list(_page_menu_service_configuration_entries(host, options)),
                     ),
                     PageMenuTopic(
+                        title=_("On selected services"),
+                        entries=list(_page_menu_selected_services_entries(host, options)),
+                    ),
+                    PageMenuTopic(
                         title=_("Host labels"),
                         entries=list(_page_menu_host_labels_entries(host, options)),
                     ),
@@ -1312,6 +1277,55 @@ def _page_menu_service_configuration_entries(host: watolib.CREHost,
         name="stop",
         is_enabled=False,
     )
+
+
+BulkEntry = NamedTuple("BulkEntry", [
+    ("is_shortcut", bool),
+    ("is_advanced", bool),
+    ("source", str),
+    ("target", str),
+    ("title", str),
+    ("explanation", Optional[str]),
+])
+
+
+def _page_menu_selected_services_entries(host: watolib.CREHost,
+                                         options: DiscoveryOptions) -> Iterator[PageMenuEntry]:
+
+    for entry in [
+            BulkEntry(True, False, DiscoveryState.UNDECIDED, DiscoveryState.MONITORED,
+                      _("Monitor undecided services"),
+                      _("Add all detected but not yet monitored services to the monitoring.")),
+            BulkEntry(False, False, DiscoveryState.UNDECIDED, DiscoveryState.IGNORED,
+                      _("Disable undecided services"), None),
+            BulkEntry(False, True, DiscoveryState.MONITORED, DiscoveryState.UNDECIDED,
+                      _("Declare monitored services as undecided"), None),
+            BulkEntry(False, True, DiscoveryState.MONITORED, DiscoveryState.IGNORED,
+                      _("Disable monitored services"), None),
+            BulkEntry(False, True, DiscoveryState.IGNORED, DiscoveryState.MONITORED,
+                      _("Add disabled services to monitoring"), None),
+            BulkEntry(False, True, DiscoveryState.IGNORED, DiscoveryState.UNDECIDED,
+                      _("Declare disabled services as undecided"), None),
+            BulkEntry(False, False, DiscoveryState.VANISHED, DiscoveryState.REMOVED,
+                      _("Remove vanished services"), None),
+            BulkEntry(False, True, DiscoveryState.VANISHED, DiscoveryState.IGNORED,
+                      _("Disable vanished services"), None),
+    ]:
+        yield PageMenuEntry(
+            title=entry.title,
+            icon_name="service_to_%s" % entry.target,
+            item=make_javascript_link(
+                _start_js_call(host,
+                               options._replace(action=DiscoveryAction.BULK_UPDATE),
+                               request_vars={
+                                   "update_target": entry.target,
+                                   "update_source": entry.source,
+                               })),
+            name="_bulk_%s_%s" % (entry.source, entry.target),
+            is_enabled=False,
+            is_shortcut=entry.is_shortcut,
+            is_advanced=entry.is_advanced,
+        )
 
 
 def _page_menu_host_labels_entries(host: watolib.CREHost,

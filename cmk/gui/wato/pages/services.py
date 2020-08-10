@@ -34,8 +34,8 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
-    PageMenuRenderer,
     enable_page_menu_entry,
+    disable_page_menu_entry,
     make_display_options_dropdown,
     make_simple_link,
     make_javascript_link,
@@ -240,22 +240,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         )
         page_code = renderer.render(discovery_result, request)
 
-        # TODO: How to get the correct breadcrumb?
-        #mode = ModeDiscovery()
-        #breadcrumb = make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
-        breadcrumb = Breadcrumb()
-        page_menu = service_page_menu(breadcrumb, self._host, self._options)
-        with html.plugged():
-            PageMenuRenderer().show(page_menu)
-            page_menu_code = html.drain()
-
         return {
             "is_finished": not self._is_active(discovery_result),
             "job_state": discovery_result.job_status["state"],
             "message": self._get_status_message(discovery_result, performed_action),
             "body": page_code,
             "changes_button": self._render_changelog_button(),
-            "page_menu": page_menu_code,
             "discovery_options": self._options._asdict(),
             "discovery_result": repr(tuple(discovery_result)),
         }
@@ -526,6 +516,7 @@ class DiscoveryPageRenderer:
             enable_page_menu_entry("stop")
             return
 
+        disable_page_menu_entry("stop")
         enable_page_menu_entry("scan")
 
         # TODO: Add correct permission checking
@@ -576,7 +567,7 @@ class DiscoveryPageRenderer:
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
     def _enable_bulk_button(self, source, target):
-        enable_page_menu_entry("_bulk_%s_%s" % (source, target))
+        enable_page_menu_entry("bulk_%s_%s" % (source, target))
 
     def _show_check_row(self, table, discovery_result, request, check, show_bulk_actions):
         table_source, check_type, checkgroup, item, _paramstring, params, \
@@ -1190,6 +1181,7 @@ def _page_menu_entry_show_parameters(host: watolib.CREHost,
         item=make_javascript_link(_start_js_call(host, params_options)),
         is_advanced=True,
         name="show_parameters",
+        css_classes=["toggle"],
     )
 
 
@@ -1207,6 +1199,7 @@ def _page_menu_entry_show_checkboxes(host: watolib.CREHost,
         icon_name="checkbox",
         item=make_javascript_link(_start_js_call(host, checkbox_options)),
         name="show_checkboxes",
+        css_classes=["toggle"],
     )
 
 
@@ -1225,6 +1218,7 @@ def _page_menu_entry_show_discovered_labels(host: watolib.CREHost,
         item=make_javascript_link(_start_js_call(host, params_options)),
         is_advanced=True,
         name="show_discovered_labels",
+        css_classes=["toggle"],
     )
 
 
@@ -1243,6 +1237,7 @@ def _page_menu_entry_show_plugin_names(host: watolib.CREHost,
         item=make_javascript_link(_start_js_call(host, params_options)),
         is_advanced=True,
         name="show_plugin_names",
+        css_classes=["toggle"],
     )
 
 
@@ -1255,6 +1250,7 @@ def _page_menu_service_configuration_entries(host: watolib.CREHost,
             _start_js_call(host, options._replace(action=DiscoveryAction.FIX_ALL))),
         name="fix_all",
         is_enabled=False,
+        css_classes=["action"],
     )
 
     yield PageMenuEntry(
@@ -1264,6 +1260,7 @@ def _page_menu_service_configuration_entries(host: watolib.CREHost,
             _start_js_call(host, options._replace(action=DiscoveryAction.SCAN))),
         name="scan",
         is_enabled=False,
+        css_classes=["action"],
     )
 
     yield PageMenuEntry(
@@ -1273,6 +1270,7 @@ def _page_menu_service_configuration_entries(host: watolib.CREHost,
             _start_js_call(host, options._replace(action=DiscoveryAction.REFRESH))),
         name="refresh",
         is_enabled=False,
+        css_classes=["action"],
     )
 
     yield PageMenuEntry(
@@ -1282,6 +1280,7 @@ def _page_menu_service_configuration_entries(host: watolib.CREHost,
             _start_js_call(host, options._replace(action=DiscoveryAction.STOP))),
         name="stop",
         is_enabled=False,
+        css_classes=["action"],
     )
 
 
@@ -1327,10 +1326,11 @@ def _page_menu_selected_services_entries(host: watolib.CREHost,
                                    "update_target": entry.target,
                                    "update_source": entry.source,
                                })),
-            name="_bulk_%s_%s" % (entry.source, entry.target),
+            name="bulk_%s_%s" % (entry.source, entry.target),
             is_enabled=False,
             is_shortcut=entry.is_shortcut,
             is_advanced=entry.is_advanced,
+            css_classes=["action"],
         )
 
 
@@ -1343,6 +1343,7 @@ def _page_menu_host_labels_entries(host: watolib.CREHost,
             _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))),
         name="update_host_labels",
         is_enabled=False,
+        css_classes=["action"],
     )
 
 

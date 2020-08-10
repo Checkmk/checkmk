@@ -382,10 +382,9 @@ def test_inventory_common(ps_context):
     info = list(itertools.chain.from_iterable(generate_inputs()))
     # nuke node info, b/c we never have node info during discovery
     _cpu_info, parsed_lines = ps_section.parse_ps(info)
-    lines_with_node_name = [[None] + line for line in parsed_lines]
 
     assert ps_context["inventory_ps_common"](
-        PS_DISCOVERY_WATO_RULES, lines_with_node_name) == PS_DISCOVERED_ITEMS
+        PS_DISCOVERY_WATO_RULES, parsed_lines) == PS_DISCOVERED_ITEMS
 
 
 check_results = [
@@ -476,10 +475,10 @@ check_results = [
     list(zip(PS_DISCOVERED_ITEMS, check_results)),
     ids=[a[0] for a in PS_DISCOVERED_ITEMS])
 def test_check_ps_common(ps_context, inv_item, reference):
-    parsed: List[List[Optional[str]]] = []
+    parsed: List = []
     for info in generate_inputs():
         _cpu_cores, data = ps_section.parse_ps(info)
-        parsed.extend([None] + line for line in data)
+        parsed.extend((None, ps_info, cmd_line) for (ps_info, cmd_line) in data)
     total_ram = 1024**3 if "emacs" in inv_item[0] else None
     with on_time(1540375342, "CET"):
         factory_defaults = {"levels": (1, 1, 99999, 99999)}
@@ -525,7 +524,8 @@ def test_check_ps_common_cpu(ps_context, monkeypatch, data):
     def time_info(agent_info, check_time, cputime, cpu_cores):
         with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
-            lines_with_node_name = [[None] + line for line in parsed_lines]
+            lines_with_node_name = [
+                (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
 
             return CheckResult(ps_context["check_ps_common"](
                 inv_item[0], inv_item[1], lines_with_node_name, cpu_cores=cpu_cores))
@@ -569,7 +569,7 @@ def test_check_ps_common_cpu(ps_context, monkeypatch, data):
 def test_check_ps_common_count(ps_context, levels, reference):
     _cpu_info, parsed_lines = ps_section.parse_ps(
         splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))
-    lines_with_node_name = [[None] + line for line in parsed_lines]
+    lines_with_node_name = [(None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
 
     params = {
         "process": "~test",
@@ -592,8 +592,6 @@ def test_subset_patterns(check_manager):
 (user,0,0,0.4) main_dev
 (user,0,0,0.1) main_dev
 (user,0,0,0.5) main_test"""))
-
-    lines_with_node_name = [[None] + line for line in parsed_lines]
 
     # Boundary in match is necessary otherwise main instance accumulates all
     inv_params: List[Dict] = [{
@@ -632,7 +630,7 @@ def test_subset_patterns(check_manager):
         }),
     ]
 
-    assert check.context["inventory_ps_common"](inv_params, lines_with_node_name) == discovered
+    assert check.context["inventory_ps_common"](inv_params, parsed_lines) == discovered
 
     def counted_reference(count):
         return CheckResult([
@@ -641,7 +639,8 @@ def test_subset_patterns(check_manager):
         ])
 
     for (item, params), count in zip(discovered, [1, 2, 1]):
-        output = CheckResult(check.context["check_ps_common"](item, params, lines_with_node_name, cpu_cores=1))
+        output = CheckResult(check.context["check_ps_common"](
+            item, params, [(None, psi, cmd_line) for (psi, cmd_line) in parsed_lines], cpu_cores=1))
         assertCheckResultsEqual(output, counted_reference(count))
 
 
@@ -666,7 +665,8 @@ def test_cpu_util_single_process_levels(ps_context, cpu_cores):
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
-            lines_with_node_name = [[None] + line for line in parsed_lines]
+            lines_with_node_name = [
+                (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
 
             return CheckResult(ps_context["check_ps_common"](
             'firefox', params, lines_with_node_name, cpu_cores=cpu_cores))

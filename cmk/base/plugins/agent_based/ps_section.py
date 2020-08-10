@@ -136,28 +136,28 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
 
 
 # This mainly formats the line[1] element which contains the process info (user,...)
-def parse_process_entries(pre_parsed):
+def parse_process_entries(pre_parsed) -> List[Tuple[ps.ps_info, List[str]]]:
     parsed = []
     # line[0] = process_info OR (if no process info available) = process name
     for line in pre_parsed:
         process_info = ps.ps_info_tuple(line[0])
         if process_info:
-            parsed_line = [process_info] + line[1:]
+            cmd_line = line[1:]
         else:
-            # Make number of columns in line consistent for discovery/check
-            parsed_line = [ps.ps_info()] + line  # type: ignore[call-arg]
+            process_info = ps.ps_info()  # type: ignore[call-arg]
+            cmd_line = line
 
         # Filter out any lines where no process command line is available, e.g.
         # [None, u'(<defunct>,,,)']
         # [None, u'(<defunct>,,,)', u'']
-        if len(parsed_line) > 1 and parsed_line[1]:
-            parsed.append(parsed_line)
+        if cmd_line and cmd_line[0]:
+            parsed.append((process_info, cmd_line))
 
     return parsed
 
 
-def parse_ps(string_table: AgentStringTable,) -> Section:
-    # Produces a list of lists where each sub list is built as follows:
+def parse_ps(string_table: AgentStringTable,) -> ps.Section:
+    # Produces a list of Tuples where each sub list is built as follows:
     # [
     #     [(u'root', u'35156', u'4372', u'00:00:05/2-14:14:49', u'1'), u'/sbin/init'],
     # ]
@@ -175,7 +175,7 @@ register.agent_section(
 )
 
 
-def parse_ps_lnx(string_table: AgentStringTable,) -> Optional[Section]:
+def parse_ps_lnx(string_table: AgentStringTable,) -> Optional[ps.Section]:
     """
         >>> cpu_cores, lines = parse_ps_lnx([
         ...     ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
@@ -184,8 +184,10 @@ def parse_ps_lnx(string_table: AgentStringTable,) -> Optional[Section]:
         ... ])
         >>> print(cpu_cores)
         1
-        >>> print(lines[0])
-        [Process_Info(user='root', virtual='226036', physical='9736', cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,'), '/sbin/init', '--ladida']
+        >>> print(lines[0][0])
+        Process_Info(user='root', virtual='226036', physical='9736', cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,')
+        >>> print(lines[0][1])
+        ['/sbin/init', '--ladida']
     """
     if not string_table:
         return None
@@ -208,8 +210,7 @@ def parse_ps_lnx(string_table: AgentStringTable,) -> Optional[Section]:
             cgroup=ps_raw.get('cgroup'),
         )
 
-        # we're adding lists with different types here :-(
-        data.append([ps_info_obj] + line[cmd_idx:])  # type: ignore[operator]
+        data.append((ps_info_obj, line[cmd_idx:]))
 
     # cpu_cores for compatibility!
     return 1, data

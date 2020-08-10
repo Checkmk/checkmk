@@ -3,8 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import collections
 import re
@@ -30,6 +29,8 @@ ps_info = collections.namedtuple(
 
 ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)  # type: ignore[attr-defined]
 
+Section = Tuple[int, List[Tuple[ps_info, List[str]]]]
+
 
 def get_discovery_specs(params):
     inventory_specs = []
@@ -52,10 +53,10 @@ def get_discovery_specs(params):
 
 def host_labels_ps(
     params: List[Parameters],
-    section: Tuple[int, List],
+    section: Section,
 ) -> HostLabelGenerator:
     specs = get_discovery_specs(params)
-    for process_info, *command_line in section[1]:
+    for process_info, command_line in section[1]:
         for _servicedesc, pattern, userspec, cgroupspec, labels, _default_params in specs:
             # First entry in line is the node name or None for non-clusters
             if not process_attributes_match(process_info, userspec, cgroupspec):
@@ -403,16 +404,19 @@ class ProcessAggregator:
             process.append(("handle count", (int(process_info.handles), "")))
 
 
-def process_capture(parsed, params, cpu_cores):
+def process_capture(
+    # process_lines: (Node, ps_info, cmd_line)
+    process_lines: List[Tuple[Optional[str], ps_info, List[str]]],
+    params: Parameters,
+    cpu_cores: int,
+) -> ProcessAggregator:
 
     ps_aggregator = ProcessAggregator(cpu_cores, params)
 
     userspec = params.get("user")
     cgroupspec = params.get("cgroup", (None, False))
 
-    for line in parsed:
-        node_name, process_line = line[0], line[1:]
-        process_info, command_line = process_line[0], process_line[1:]
+    for node_name, process_info, command_line in process_lines:
 
         if not process_attributes_match(process_info, userspec, cgroupspec):
             continue
@@ -420,7 +424,8 @@ def process_capture(parsed, params, cpu_cores):
         if not process_matches(command_line, params.get("process"), params.get('match_groups')):
             continue
 
-        process = []
+        # typing: nothing intentional, just adapt to sad reality
+        process: List[Tuple[str, Tuple[Union[str, float], str]]] = []
 
         if node_name is not None:
             ps_aggregator.running_on_nodes.add(node_name)
@@ -454,7 +459,7 @@ def check_ps_common(
     label: str,
     item: str,
     params: Parameters,
-    process_lines: List,
+    process_lines: List[Tuple[Optional[str], ps_info, List[str]]],
     cpu_cores: int,
     total_ram: Optional[float],
 ) -> CheckGenerator:

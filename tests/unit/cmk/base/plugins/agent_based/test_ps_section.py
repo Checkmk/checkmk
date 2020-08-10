@@ -214,6 +214,6 @@ def test_parse_ps(capture, result):
     cpu_core, lines = ps_section.parse_ps(capture)
     assert cpu_core == result[0]  # cpu_cores
 
-    for out, ref in itertools.zip_longest(lines, result[1]):
-        assert out[0] == ps.ps_info(*ref[0])
-        assert out[1:] == ref[1:]
+    for (ps_info_item, cmd_line), ref in itertools.zip_longest(lines, result[1]):
+        assert ps_info_item == ps.ps_info(*ref[0])
+        assert cmd_line == ref[1:]

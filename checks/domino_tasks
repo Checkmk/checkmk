@@ -34,15 +34,15 @@ def parse_domino_tasks(info):
     for line in info:
         node, task_name = line
         # node, process_info, command_line
-        parsed.append((node, ps_info(), task_name))
+        parsed.append((node, ps_info(), [task_name]))
     return parsed
 
 
 def inventory_domino_tasks(parsed):
     params = host_extra_conf(host_name(), inv_domino_tasks_rules)
-    fake_section = (1, [line[1:] for line in parsed])
+    fake_section = (1, [(line[1], line[2]) for line in parsed])
     host_labels = list(ps.host_labels_ps(params, fake_section))
-    return inventory_ps_common(params, parsed) + host_labels
+    return inventory_ps_common(params, fake_section[1]) + host_labels
 
 
 def check_domino_tasks(item, params, parsed):

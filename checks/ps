@@ -112,7 +112,7 @@ def check_ps(item, params, parsed_extra):
     cpu_cores, lines = parsed
     # bring back node info for now
     node = None  # TODO: this can be done properly when migrating!
-    parsed = [[node] + line for line in lines]
+    parsed = [(node, ps_info, cmd_line) for (ps_info, cmd_line) in lines]
 
     # Cleanup counters of processes which do not exist anymore
     ps_cleanup_counters(parsed)

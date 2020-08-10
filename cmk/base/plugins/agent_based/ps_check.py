@@ -4,20 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple
+from typing import List
 from .agent_based_api.v0.type_defs import DiscoveryGenerator, Parameters
 
 from .agent_based_api.v0 import register, Service
 from .utils import ps
 
 
-def discover_ps(params: List[Parameters], section: Tuple[int, List]) -> DiscoveryGenerator:
+def discover_ps(params: List[Parameters], section: ps.Section) -> DiscoveryGenerator:
     inventory_specs = ps.get_discovery_specs(params)
 
-    for line in section[1]:
+    for process_info, command_line in section[1]:
         for servicedesc, pattern, userspec, cgroupspec, _labels, default_params in inventory_specs:
-            # First entry in line is the node name or None for non-clusters
-            process_info, command_line = line[1], line[2:]
             if not ps.process_attributes_match(process_info, userspec, cgroupspec):
                 continue
             matches = ps.process_matches(command_line, pattern)

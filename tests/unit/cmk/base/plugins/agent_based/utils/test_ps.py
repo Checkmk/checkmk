@@ -19,11 +19,11 @@ def test_host_labels_ps_no_match_attr():
     section = (
         1,
         [
-            [
+            (
                 ps.ps_info(
                     "(root,4056,1512,0.0/52-04:56:05,5689)".split()),  # type: ignore[call-arg]
-                "/usr/lib/ssh/sshd",
-            ],
+                ["/usr/lib/ssh/sshd"],
+            ),
         ])
     params = [
         Parameters({
@@ -41,11 +41,11 @@ def test_host_labels_ps_no_match_pattern():
     section = (
         1,
         [
-            [
+            (
                 ps.ps_info(
                     "(root,4056,1512,0.0/52-04:56:05,5689)".split()),  # type: ignore[call-arg]
-                "/usr/lib/ssh/sshd",
-            ],
+                ["/usr/lib/ssh/sshd"],
+            ),
         ])
     params = [
         Parameters({
@@ -62,11 +62,11 @@ def test_host_labels_ps_match():
     section = (
         1,
         [
-            [
+            (
                 ps.ps_info(
                     "(root,4056,1512,0.0/52-04:56:05,5689)".split()),  # type: ignore[call-arg]
-                "/usr/lib/ssh/sshd",
-            ],
+                ["/usr/lib/ssh/sshd"],
+            ),
         ])
     params = [
         Parameters({

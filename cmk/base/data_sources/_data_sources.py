@@ -9,7 +9,7 @@
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
 import itertools
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, Optional, Sequence, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -24,16 +24,12 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
 
-from ._abstract import ABCDataSource, Mode
-from .agent import AgentDataSource, AgentHostSections
+from ._abstract import ABCConfigurator, ABCDataSource, Mode
+from .agent import AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMIConfigurator
-from .piggyback import PiggyBackConfigurator, PiggyBackDataSource
-from .programs import (
-    DSProgramConfigurator,
-    SpecialAgentConfigurator,
-    ProgramDataSource,
-)
+from .piggyback import PiggyBackConfigurator
+from .programs import DSProgramConfigurator, SpecialAgentConfigurator
 from .snmp import SNMPConfigurator
 from .tcp import TCPConfigurator
 
@@ -42,8 +38,8 @@ __all__ = ["DataSources", "make_host_sections", "make_sources"]
 DataSources = Iterable[ABCDataSource]
 
 
-class SourceBuilder:
-    """Build the source list from host config and raw sections."""
+class _Builder:
+    """Build a configurator list from host config and raw sections."""
     def __init__(
         self,
         host_config: HostConfig,
@@ -56,100 +52,99 @@ class SourceBuilder:
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
         self._mode = mode
-        self._sources: Dict[str, ABCDataSource] = {}
+        self._elems: Dict[str, ABCConfigurator] = {}
 
-        self._initialize_data_sources()
+        self._initialize()
+
+    @property
+    def configurators(self) -> Iterable[ABCConfigurator]:
+        # Always execute piggyback at the end
+        return sorted(
+            self._elems.values(),
+            key=lambda c: (isinstance(c, PiggyBackConfigurator), c.id),
+        )
 
     @property
     def sources(self) -> DataSources:
-        # Always execute piggyback at the end
-        return sorted(self._sources.values(),
-                      key=lambda s: (isinstance(s, PiggyBackDataSource), s.configurator.id))
+        return list(c.make_checker() for c in self.configurators)
 
-    def _initialize_data_sources(self) -> None:
+    def _initialize(self) -> None:
         if self._host_config.is_cluster:
             # Cluster hosts do not have any actual data sources
             # Instead all data is provided by the nodes
             return
 
-        self._initialize_agent_based_data_sources()
-        self._initialize_snmp_data_sources()
-        self._initialize_management_board_data_sources()
+        self._initialize_agent_based()
+        self._initialize_snmp_based()
+        self._initialize_mgmt_boards()
 
-    def _initialize_agent_based_data_sources(self) -> None:
+    def _initialize_agent_based(self) -> None:
         if self._host_config.is_all_agents_host:
-            self._add_source(
-                self._get_agent_data_source(
-                    ignore_special_agents=True,
-                    main_data_source=True,
-                ))
-            self._add_sources(self._get_special_agent_data_sources())
+            self._add(self._get_agent(
+                ignore_special_agents=True,
+                main_data_source=True,
+            ))
+            for elem in self._get_special_agent():
+                self._add(elem)
 
         elif self._host_config.is_all_special_agents_host:
-            self._add_sources(self._get_special_agent_data_sources())
+            for elem in self._get_special_agent():
+                self._add(elem)
 
         elif self._host_config.is_tcp_host:
-            self._add_source(
-                self._get_agent_data_source(
-                    ignore_special_agents=False,
-                    main_data_source=True,
-                ))
+            self._add(self._get_agent(
+                ignore_special_agents=False,
+                main_data_source=True,
+            ))
 
         if "no-piggyback" not in self._host_config.tags:
-            self._add_source(
-                PiggyBackConfigurator(
-                    self._hostname,
-                    self._ipaddress,
-                    mode=self._mode,
-                ).make_checker())
-
-    def _initialize_snmp_data_sources(self,) -> None:
-        if not self._host_config.is_snmp_host:
-            return
-        self._add_source(
-            SNMPConfigurator.snmp(
+            self._add(PiggyBackConfigurator(
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
-            ).make_checker())
+            ))
 
-    def _initialize_management_board_data_sources(self) -> None:
+    def _initialize_snmp_based(self,) -> None:
+        if not self._host_config.is_snmp_host:
+            return
+        self._add(SNMPConfigurator.snmp(
+            self._hostname,
+            self._ipaddress,
+            mode=self._mode,
+        ))
+
+    def _initialize_mgmt_boards(self) -> None:
         protocol = self._host_config.management_protocol
         if protocol is None:
             return
 
         ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._host_config)
         if protocol == "snmp":
-            self._add_source(
+            self._add(
                 SNMPConfigurator.management_board(
                     self._hostname,
                     ip_address,
                     mode=self._mode,
-                ).make_checker())
+                ))
         elif protocol == "ipmi":
-            self._add_source(
-                IPMIConfigurator(
-                    self._hostname,
-                    ip_address,
-                    mode=self._mode,
-                ).make_checker())
+            self._add(IPMIConfigurator(
+                self._hostname,
+                ip_address,
+                mode=self._mode,
+            ))
         else:
-            raise NotImplementedError()
+            raise LookupError()
 
-    def _add_sources(self, sources: DataSources) -> None:
-        for source in sources:
-            self._add_source(source)
+    def _add(self, configurator: ABCConfigurator) -> None:
+        self._elems[configurator.id] = configurator
 
-    def _add_source(self, source: ABCDataSource) -> None:
-        self._sources[source.configurator.id] = source
-
-    def _get_agent_data_source(
+    def _get_agent(
         self,
         ignore_special_agents: bool,
         main_data_source: bool,
-    ) -> AgentDataSource:
+    ) -> ABCConfigurator:
         if not ignore_special_agents:
-            special_agents = self._get_special_agent_data_sources()
+            special_agents = self._get_special_agent()
             if special_agents:
                 return special_agents[0]
 
@@ -161,16 +156,16 @@ class SourceBuilder:
                 mode=self._mode,
                 main_data_source=main_data_source,
                 template=datasource_program,
-            ).make_checker()
+            )
 
         return TCPConfigurator(
             self._hostname,
             self._ipaddress,
             mode=self._mode,
             main_data_source=main_data_source,
-        ).make_checker()
+        )
 
-    def _get_special_agent_data_sources(self) -> List[ProgramDataSource]:
+    def _get_special_agent(self) -> Sequence[ABCConfigurator]:
         return [
             SpecialAgentConfigurator(
                 self._hostname,
@@ -178,7 +173,7 @@ class SourceBuilder:
                 mode=self._mode,
                 special_agent_id=agentname,
                 params=params,
-            ).make_checker() for agentname, params in self._host_config.special_agents
+            ) for agentname, params in self._host_config.special_agents
         ]
 
 
@@ -189,7 +184,7 @@ def make_sources(
     mode: Mode,
 ) -> DataSources:
     """Return a list of sources for DataSources."""
-    return SourceBuilder(host_config, ipaddress, mode=mode).sources
+    return _Builder(host_config, ipaddress, mode=mode).sources
 
 
 def make_host_sections(

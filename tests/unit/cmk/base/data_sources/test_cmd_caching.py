@@ -115,8 +115,8 @@ def _patch_data_source_run(mocker, **kwargs):
 
         elif isinstance(self, SNMPDataSource):
             configurator = cast(SNMPConfigurator, self.configurator)
-            assert configurator.detector.do_snmp_scan == defaults["do_snmp_scan"]
-            assert configurator.detector.on_error == defaults["on_error"]
+            assert configurator.do_snmp_scan == defaults["do_snmp_scan"]
+            assert configurator.on_snmp_scan_error == defaults["on_error"]
             assert configurator.use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
             assert configurator.ignore_check_interval == defaults["_ignore_check_interval"]
 

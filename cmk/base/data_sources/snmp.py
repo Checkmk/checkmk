@@ -48,20 +48,13 @@ class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedS
 
 class CachedSNMPDetector:
     """Object to run/cache SNMP detection"""
-    def __init__(
-        self,
-        *,
-        on_error: str = "raise",
-        do_snmp_scan: bool = False,
-    ) -> None:
+    def __init__(self) -> None:
         super(CachedSNMPDetector, self).__init__()
         # Optional set: None: we never tried, empty: we tried, but found nothing
-        # TODO: Check if do_snmp_scan and on_error can be dropped.
-        self.on_error = on_error
-        self.do_snmp_scan = do_snmp_scan
         self._cached_result: Optional[Set[SectionName]] = None
 
-    def sections(self) -> Iterable[SNMPScanSection]:
+    @staticmethod
+    def sections() -> Iterable[SNMPScanSection]:
         return [
             SNMPScanSection(section.name, section.detect_spec)
             for section in agent_based_register.iter_all_snmp_sections()
@@ -71,24 +64,25 @@ class CachedSNMPDetector:
     def __call__(
         self,
         snmp_config: SNMPHostConfig,
+        *,
+        on_error,
+        do_snmp_scan,
     ) -> Set[SectionName]:
         """Returns a list of raw sections that shall be processed by this source.
 
         The logic is only processed once. Once processed, the answer is cached.
         """
-        if self._cached_result is not None:
-            return self._cached_result
-
-        self._cached_result = gather_available_raw_section_names(
-            self.sections(),
-            on_error=self.on_error,
-            do_snmp_scan=self.do_snmp_scan,
-            binary_host=config.get_config_cache().in_binary_hostlist(
-                snmp_config.hostname,
-                config.snmp_without_sys_descr,
-            ),
-            backend=factory.backend(snmp_config),
-        )
+        if self._cached_result is None:
+            self._cached_result = gather_available_raw_section_names(
+                self.sections(),
+                on_error=on_error,
+                do_snmp_scan=do_snmp_scan,
+                binary_host=config.get_config_cache().in_binary_hostlist(
+                    snmp_config.hostname,
+                    config.snmp_without_sys_descr,
+                ),
+                backend=factory.backend(snmp_config),
+            )
         return self._cached_result
 
 
@@ -105,6 +99,8 @@ class SNMPConfigurator(ABCConfigurator):
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
         title: str,
+        on_error: str = "raise",
+        do_snmp_scan: bool = False,
     ):
         super().__init__(
             hostname,
@@ -132,6 +128,8 @@ class SNMPConfigurator(ABCConfigurator):
             # Because of crap inheritance.
             self.host_config.snmp_config(self.ipaddress)
             if self.source_type is SourceType.HOST else self.host_config.management_snmp_config)
+        self.on_snmp_scan_error = on_error
+        self.do_snmp_scan = do_snmp_scan
         self.detector: Final = CachedSNMPDetector()
         # Attributes below are wrong
         self.use_snmpwalk_cache = True
@@ -207,9 +205,15 @@ class SNMPConfigurator(ABCConfigurator):
         prefetched_sections: Sequence[SectionName],
     ) -> Dict[SectionName, List[SNMPTree]]:
         oid_infos = {}  # Dict[SectionName, List[SNMPTree]]
-        for section_name in SNMPConfigurator._sort_section_names(
-            {s.name for s in selected_raw_sections.values()}
-                if selected_raw_sections is not None else self.detector(self.snmp_config)):
+        if selected_raw_sections is None:
+            section_names = self.detector(
+                self.snmp_config,
+                on_error=self.on_snmp_scan_error,
+                do_snmp_scan=self.do_snmp_scan,
+            )
+        else:
+            section_names = {s.name for s in selected_raw_sections.values()}
+        for section_name in SNMPConfigurator._sort_section_names(section_names):
             plugin = agent_based_register.get_section_plugin(section_name)
             if not isinstance(plugin, SNMPSectionPlugin):
                 self._logger.debug("%s: No such section definition", section_name)

@@ -308,8 +308,8 @@ def _do_inv_for_realhost(
         if isinstance(source, data_sources.snmp.SNMPDataSource):
             # TODO(ml): This modifies the SNMP fetcher config dynamically.
             configurator = cast(data_sources.snmp.SNMPConfigurator, source.configurator)
-            configurator.detector.on_error = "raise"  # default
-            configurator.detector.do_snmp_scan = True
+            configurator.on_snmp_scan_error = "raise"  # default
+            configurator.do_snmp_scan = True
             data_sources.snmp.SNMPDataSource.disable_data_source_cache()
             configurator.use_snmpwalk_cache = False
             configurator.ignore_check_interval = True

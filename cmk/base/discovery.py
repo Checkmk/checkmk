@@ -1259,8 +1259,8 @@ def _get_sources_for_discovery(
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPDataSource):
             configurator = cast(data_sources.snmp.SNMPConfigurator, source.configurator)
-            configurator.detector.on_error = on_error
-            configurator.detector.do_snmp_scan = do_snmp_scan
+            configurator.on_snmp_scan_error = on_error
+            configurator.do_snmp_scan = do_snmp_scan
             configurator.use_snmpwalk_cache = False
             configurator.ignore_check_interval = True
 

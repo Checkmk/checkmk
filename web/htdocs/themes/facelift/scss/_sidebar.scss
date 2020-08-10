@@ -47,6 +47,8 @@ body.side {
 }
 
 #check_mk_navigation {
+  display: flex;
+  flex-direction: column;
   float: left;
   width: 64px;
   height: 100%;
@@ -146,12 +148,9 @@ body.main .popup_menu #side_header > span {
 }
 
 #side_fold {
-  position: absolute;
-  bottom: 40px;
-  left: 22px;
-  z-index: 15;
   width: 15px;
   height: 15px;
+  margin: 0 auto;
   cursor: pointer;
 
   background: no-repeat center / 36% url("images/side_fold.png") $navigation-bg-color;
@@ -168,9 +167,7 @@ body.main .popup_menu #side_header > span {
 }
 
 #side_version {
-  position: absolute;
-  bottom: 5px;
-  left: 8px;
+  margin: $spacing;
   font-size: 8px;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;

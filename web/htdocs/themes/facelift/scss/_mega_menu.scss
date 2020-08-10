@@ -27,7 +27,11 @@
 
 
 #main_menu {
-  padding: 12px 0 6px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 0;
+  margin: $spacing 0;
 
   a.more {
     position: absolute;
@@ -213,16 +217,6 @@
       div.main_menu.extended_topic div.topic:not(.extended) { display: none; }
     }
 
-    &.user {
-      position: absolute;
-      bottom: 64px;
-      left: 0;
-      z-index: 15;
-      width: 64px;
-      height: 58px;
-      cursor: pointer;
-    }
-
     #popup_shadow {
       position: absolute;
       top: 0;
@@ -248,6 +242,10 @@
     margin: 0;
     list-style: none;
 
+    &:last-of-type {
+      margin-top: auto;  // place the user menu at the bottom
+    }
+
     a.popup_trigger {
       display: block;
       padding: $spacing 4px $spacing 0;
@@ -258,7 +256,6 @@
       outline: none;
     }
   }
-
 }
 
 /* TODO: Additional styling when a mega menu is used.

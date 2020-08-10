@@ -1092,6 +1092,7 @@ def service_page_menu(breadcrumb, host: watolib.CREHost, options: DiscoveryOptio
     )
 
     _extend_display_dropdown(menu, host, options)
+    _extend_help_dropdown(menu)
     return menu
 
 
@@ -1167,6 +1168,11 @@ def _extend_display_dropdown(menu: PageMenu, host: watolib.CREHost,
                 _page_menu_entry_show_plugin_names(host, options),
             ],
         ))
+
+
+def _extend_help_dropdown(menu: PageMenu) -> None:
+    menu.add_manual_reference(_("Beginner's guide: Configuring services"), "intro", "services")
+    menu.add_manual_reference(_("Understanding and configuring services"), "wato_services")
 
 
 def _page_menu_entry_show_parameters(host: watolib.CREHost,

@@ -192,6 +192,8 @@ function snapinTerminateDrag() {
 }
 
 export function snapin_stop_drag(event) {
+    if (!g_snapin_dragging) return;
+
     if (!event)
         event = window.event;
 

@@ -2805,10 +2805,7 @@ class html(ABCHTMLGenerator):
             self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
                                     class_))
 
-    def more_button(self,
-                    id_: str,
-                    dom_levels_up: int,
-                    additional_js: Optional[str] = None) -> None:
+    def more_button(self, id_: str, dom_levels_up: int, additional_js: str = "") -> None:
         if config.user.get_attribute("ui_basic_advanced_mode") in ("enforce_basic",
                                                                    "enforce_advanced"):
             return

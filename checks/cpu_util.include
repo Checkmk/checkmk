@@ -15,6 +15,26 @@
 #     "average" : 15 # -> compute average for 15 minutes, optional
 #   }
 
+##########################################################################################
+##########################################################################################
+##########################################################################################
+#                                                                                        #
+#     THE FUNCTIONS IN THIS FILE HAVE PARTIALLY BEEN MIGRATED TO CPU_UTIL.PY             #
+#     IN cmk/base/plugins/agent_based/utils/                                             #
+#                                                                                        #
+#     PLEASE TAKE A LOOK AT THOSE BEFOR MODIFYING ANY CODE IN THIS FILE                  #
+#     THERE ARE MORE FUNCTIONS IN IT THAT THE ONES USED BELOW!                           #
+#                                                                                        #
+
+import cmk.base.plugins.agent_based.utils.cpu_util as cpu_util
+
+cpu_util_core_name = cpu_util.core_name
+
+#                                                                                        #
+##########################################################################################
+##########################################################################################
+##########################################################################################
+
 
 # This one can handle user, system and wait. values is a list of:
 # - 0 - name: name of core
@@ -80,22 +100,6 @@ def util_counter(stats, this_time):
         set_item_state(countername, (this_time, v))
 
     return cpu_info([stats.name] + diff_values)
-
-
-# normalize name of a cpu core so that the perfdata-template
-# recognizes it. If the input name doesn't end on a number, this
-# returns consecutive numbers per call so this function has to be
-# called exactly once per core
-def cpu_util_core_name(orig, core_index):
-    expr = regex(r"\d+$")
-    match = expr.search(orig)
-    if match is not None:
-        num = match.group(0)
-    else:
-        # fallback: if the cores have odd names, use
-        # consecutive numbers for each call
-        num = core_index
-    return "cpu_core_util_%s" % num, "cpu_core_util_average_%s" % num
 
 
 def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):

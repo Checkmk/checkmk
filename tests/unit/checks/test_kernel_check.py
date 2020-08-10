@@ -11,16 +11,6 @@ from checktestlib import CheckResult, assertCheckResultsEqual
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("data, result", [
-    (("cpu5", 2), ("cpu_core_util_5", "cpu_core_util_average_5")),
-    (("cpu65", 35), ("cpu_core_util_65", "cpu_core_util_average_65")),
-    (("cpuaex", 15), ("cpu_core_util_15", "cpu_core_util_average_15")),
-])
-def test_cpu_util_core_name(check_manager, data, result):
-    check = check_manager.get_check("kernel.util")
-    assert check.context["cpu_util_core_name"](*data) == result
-
-
 def cpu_info(t):
     return None, {
         "Cpu Utilization": [

@@ -23,8 +23,13 @@ SNMPScanSection = NamedTuple("SNMPScanSection", [
 ])
 
 
-def _evaluate_snmp_detection(detect_spec: SNMPDetectSpec, s_name: SectionName, do_snmp_scan: bool,
-                             *, backend: ABCSNMPBackend) -> bool:
+def _evaluate_snmp_detection(
+    detect_spec: SNMPDetectSpec,
+    s_name: SectionName,
+    do_snmp_scan: bool,
+    *,
+    backend: ABCSNMPBackend,
+) -> bool:
     """Evaluate a SNMP detection specification
 
     Return True if and and only if at least all conditions in one "line" are True
@@ -36,8 +41,13 @@ def _evaluate_snmp_detection(detect_spec: SNMPDetectSpec, s_name: SectionName, d
         for alternative in detect_spec)
 
 
-def _evaluate_snmp_detection_atom(atom: SNMPDetectAtom, s_name: SectionName, do_snmp_scan: bool, *,
-                                  backend: ABCSNMPBackend) -> bool:
+def _evaluate_snmp_detection_atom(
+    atom: SNMPDetectAtom,
+    s_name: SectionName,
+    do_snmp_scan: bool,
+    *,
+    backend: ABCSNMPBackend,
+) -> bool:
     oid, pattern, flag = atom
     value = snmp_modes.get_single_oid(
         oid,
@@ -47,15 +57,20 @@ def _evaluate_snmp_detection_atom(atom: SNMPDetectAtom, s_name: SectionName, do_
     )
     if value is None:
         # check for "not_exists"
-        return pattern == '.*' and not flag
+        return pattern == ".*" and not flag
     # ignore case!
     return bool(regex(pattern, re.IGNORECASE).fullmatch(value)) is flag
 
 
 # gather auto_discovered check_plugin_names for this host
-def gather_available_raw_section_names(sections: Iterable[SNMPScanSection], on_error: str,
-                                       do_snmp_scan: bool, *, binary_host: bool,
-                                       backend: ABCSNMPBackend) -> Set[SectionName]:
+def gather_available_raw_section_names(
+    sections: Iterable[SNMPScanSection],
+    on_error: str,
+    do_snmp_scan: bool,
+    *,
+    binary_host: bool,
+    backend: ABCSNMPBackend,
+) -> Set[SectionName]:
     try:
         return _snmp_scan(
             sections,
@@ -77,12 +92,14 @@ OID_SYS_DESCR = ".1.3.6.1.2.1.1.1.0"
 OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 
 
-def _snmp_scan(sections: Iterable[SNMPScanSection],
-               on_error: str = "ignore",
-               do_snmp_scan: bool = True,
-               *,
-               binary_host: bool,
-               backend: ABCSNMPBackend) -> Set[SectionName]:
+def _snmp_scan(
+    sections: Iterable[SNMPScanSection],
+    on_error: str = "ignore",
+    do_snmp_scan: bool = True,
+    *,
+    binary_host: bool,
+    backend: ABCSNMPBackend,
+) -> Set[SectionName]:
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
     _snmp_scan_cache_description(
@@ -91,34 +108,57 @@ def _snmp_scan(sections: Iterable[SNMPScanSection],
         backend=backend,
     )
 
-    found_sections = _snmp_scan_find_sections(sections,
-                                              do_snmp_scan=do_snmp_scan,
-                                              on_error=on_error,
-                                              backend=backend)
+    found_sections = _snmp_scan_find_sections(
+        sections,
+        do_snmp_scan=do_snmp_scan,
+        on_error=on_error,
+        backend=backend,
+    )
     _output_snmp_check_plugins("SNMP scan found", found_sections)
     snmp_cache.write_single_oid_cache(backend.config)
     return found_sections
 
 
-def _snmp_scan_cache_description(binary_host: bool, *, do_snmp_scan: bool,
-                                 backend: ABCSNMPBackend) -> None:
+def _snmp_scan_cache_description(
+    binary_host: bool,
+    *,
+    do_snmp_scan: bool,
+    backend: ABCSNMPBackend,
+) -> None:
     if not binary_host:
-        for oid, name in [(OID_SYS_DESCR, "system description"), (OID_SYS_OBJ, "system object")]:
-            value = snmp_modes.get_single_oid(oid, do_snmp_scan=do_snmp_scan, backend=backend)
+        for oid, name in [
+            (OID_SYS_DESCR, "system description"),
+            (OID_SYS_OBJ, "system object"),
+        ]:
+            value = snmp_modes.get_single_oid(
+                oid,
+                do_snmp_scan=do_snmp_scan,
+                backend=backend,
+            )
             if value is None:
-                raise MKSNMPError("Cannot fetch %s OID %s. Please check your SNMP "
-                                  "configuration. Possible reason might be: Wrong credentials, "
-                                  "wrong SNMP version, Firewall rules, etc." % (name, oid))
+                raise MKSNMPError(
+                    "Cannot fetch %s OID %s. Please check your SNMP "
+                    "configuration. Possible reason might be: Wrong credentials, "
+                    "wrong SNMP version, Firewall rules, etc." % (name, oid),)
     else:
         # Fake OID values to prevent issues with a lot of scan functions
-        console.vverbose("       Skipping system description OID "
-                         "(Set %s and %s to \"\")\n", OID_SYS_DESCR, OID_SYS_OBJ)
+        console.vverbose(
+            "       Skipping system description OID "
+            '(Set %s and %s to "")\n',
+            OID_SYS_DESCR,
+            OID_SYS_OBJ,
+        )
         snmp_cache.set_single_oid_cache(OID_SYS_DESCR, "")
         snmp_cache.set_single_oid_cache(OID_SYS_OBJ, "")
 
 
-def _snmp_scan_find_sections(sections: Iterable[SNMPScanSection], *, do_snmp_scan: bool,
-                             on_error: str, backend: ABCSNMPBackend) -> Set[SectionName]:
+def _snmp_scan_find_sections(
+    sections: Iterable[SNMPScanSection],
+    *,
+    do_snmp_scan: bool,
+    on_error: str,
+    backend: ABCSNMPBackend,
+) -> Set[SectionName]:
     found_sections: Set[SectionName] = set()
     for name, specs in sections:
         try:
@@ -141,10 +181,18 @@ def _snmp_scan_find_sections(sections: Iterable[SNMPScanSection], *, do_snmp_sca
     return found_sections
 
 
-def _output_snmp_check_plugins(title: str, collection: Iterable[SectionName]) -> None:
+def _output_snmp_check_plugins(
+    title: str,
+    collection: Iterable[SectionName],
+) -> None:
     if collection:
         collection_out = " ".join(str(n) for n in sorted(collection))
     else:
         collection_out = "-"
-    console.vverbose("   %-35s%s%s%s%s\n" %
-                     (title, tty.bold, tty.yellow, collection_out, tty.normal))
+    console.vverbose("   %-35s%s%s%s%s\n" % (
+        title,
+        tty.bold,
+        tty.yellow,
+        collection_out,
+        tty.normal,
+    ))

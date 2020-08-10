@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 import time
 from pathlib import Path
 from typing import Any, cast, Dict, Final, Iterable, List, Optional, Sequence, Set
@@ -21,7 +20,8 @@ from cmk.snmplib.type_defs import (
     SNMPTree,
 )
 
-from cmk.fetchers import factory, FetcherType, SNMPDataFetcher
+from cmk.fetchers import factory, FetcherType, SNMPDataFetcher, SNMPFileCache
+from cmk.fetchers._base import ABCFileCache
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -38,7 +38,7 @@ from ._abstract import (
     ABCSummarizer,
     Mode,
 )
-from ._cache import ABCFileCache, SectionStore
+from ._cache import SectionStore
 
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
@@ -329,16 +329,6 @@ class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
         return 0, "Success", []
 
 
-class SNMPFileCache(ABCFileCache[SNMPRawData]):
-    @staticmethod
-    def _from_cache_file(raw_data: bytes) -> SNMPRawData:
-        return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
-
-    @staticmethod
-    def _to_cache_file(raw_data: SNMPRawData) -> bytes:
-        return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
-
-
 class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                    SNMPHostSections]):
     def __init__(self, configurator: SNMPConfigurator) -> None:
@@ -361,6 +351,7 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
             self.is_agent_cache_disabled(),
             self.get_may_use_cache_file(),
             self._use_outdated_cache_file,
+            config.simulation_mode,
             self._logger,
         )
 

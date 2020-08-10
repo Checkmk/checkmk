@@ -16,6 +16,7 @@ import cmk.utils.paths
 import cmk.utils.encoding
 import cmk.utils.crash_reporting as crash_reporting
 from cmk.utils.type_defs import (
+    AgentRawData,
     CheckPluginName,
     CheckPluginNameStr,
     HostName,
@@ -23,7 +24,6 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.base.config as config
-from cmk.base.check_utils import AgentRawData
 
 CrashReportStore = crash_reporting.CrashReportStore
 

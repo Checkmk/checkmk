@@ -21,14 +21,15 @@ from cmk.utils.exceptions import MKSNMPError, MKTerminate, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
+from cmk.fetchers._base import ABCFileCache
 from cmk.fetchers.controller import FetcherType
+from cmk.fetchers.type_defs import BoundedAbstractRawData
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.cpu_tracking as cpu_tracking
 from cmk.base.check_utils import (
     BoundedAbstractPersistedSections,
-    BoundedAbstractRawData,
     BoundedAbstractSectionContent,
     BoundedAbstractSections,
     PiggybackRawData,
@@ -37,7 +38,7 @@ from cmk.base.check_utils import (
 from cmk.base.config import HostConfig, SelectedRawSections
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLookupError
 
-from ._cache import ABCFileCache, SectionStore
+from ._cache import SectionStore
 
 __all__ = ["ABCHostSections", "ABCConfigurator", "ABCDataSource", "Mode"]
 

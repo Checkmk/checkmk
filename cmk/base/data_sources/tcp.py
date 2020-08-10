@@ -7,12 +7,11 @@
 import socket
 from typing import Optional
 
-from cmk.utils.type_defs import HostAddress, HostName, SourceType
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
 from cmk.fetchers import FetcherType, TCPDataFetcher
 
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.check_utils import AgentRawData
 from cmk.base.config import HostConfig, SelectedRawSections
 from cmk.base.exceptions import MKAgentError
 

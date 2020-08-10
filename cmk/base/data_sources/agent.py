@@ -11,7 +11,6 @@ from typing import cast, Dict, Final, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
-from cmk.fetchers.controller import FetcherType
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.misc
 from cmk.utils.encoding import ensure_str_with_fallback
@@ -27,6 +26,10 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 from cmk.utils.werks import parse_check_mk_version
+
+from cmk.fetchers import AgentFileCache
+from cmk.fetchers._base import ABCFileCache
+from cmk.fetchers.controller import FetcherType
 
 import cmk.base.config as config
 from cmk.base.check_api_utils import state_markers
@@ -48,7 +51,6 @@ from ._abstract import (
     ABCSummarizer,
     Mode,
 )
-from ._cache import ABCFileCache
 
 __all__ = ["AgentHostSections", "AgentDataSource"]
 
@@ -443,18 +445,6 @@ class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
         )
 
 
-class AgentFileCache(ABCFileCache[AgentRawData]):
-    @staticmethod
-    def _from_cache_file(raw_data: bytes) -> AgentRawData:
-        return raw_data
-
-    @staticmethod
-    def _to_cache_file(raw_data: AgentRawData) -> bytes:
-        raw_data = cast(AgentRawData, raw_data)
-        # TODO: This does not seem to be needed
-        return ensure_binary(raw_data)
-
-
 class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedSections,
                                     AgentHostSections],
                       metaclass=abc.ABCMeta):
@@ -497,6 +487,7 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
             self.is_agent_cache_disabled(),
             self.get_may_use_cache_file(),
             self._use_outdated_cache_file,
+            config.simulation_mode,
             self._logger,
         )
 

@@ -5,22 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Package containing the fetchers to the data sources."""
 
-import enum
+from typing import TypeVar, Union
 
-from .ipmi import IPMIDataFetcher
-from .piggyback import PiggyBackDataFetcher
-from .program import ProgramDataFetcher
-from .snmp import SNMPDataFetcher
-from .tcp import TCPDataFetcher
+from cmk.utils.type_defs import AgentRawData
 
-__all__ = ["FetcherType"]
+from cmk.snmplib.type_defs import SNMPRawData
 
+__all__ = ["BoundedAbstractRawData"]
 
-class FetcherType(enum.Enum):
-    """Map short name to fetcher class."""
-    NONE = None
-    IPMI = IPMIDataFetcher
-    PIGGYBACK = PiggyBackDataFetcher
-    PROGRAM = ProgramDataFetcher
-    SNMP = SNMPDataFetcher
-    TCP = TCPDataFetcher
+# TODO(ml): This type does not really belong here but there currently
+#           is not better place.
+AbstractRawData = Union[AgentRawData, SNMPRawData]
+BoundedAbstractRawData = TypeVar("BoundedAbstractRawData", bound=AbstractRawData)

@@ -7,19 +7,9 @@
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostName,
-    Item,
-    AgentRawData,
-    SectionName,
-)
-from cmk.snmplib.type_defs import (
-    SNMPPersistedSections,
-    SNMPRawData,
-    SNMPSectionContent,
-    SNMPSections,
-)
+from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName
+
+from cmk.snmplib.type_defs import SNMPPersistedSections, SNMPSectionContent, SNMPSections
 
 from cmk.base.caching import runtime_cache as _runtime_cache
 from cmk.base.discovered_labels import DiscoveredServiceLabels
@@ -39,11 +29,9 @@ ParsedSectionContent = Any
 FinalSectionContent = Union[None, ParsedSectionContent, List[ParsedSectionContent]]
 
 AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
-AbstractRawData = Union[AgentRawData, SNMPRawData]
 AbstractSections = Union[AgentSections, SNMPSections]
 AbstractPersistedSections = Union[AgentPersistedSections, SNMPPersistedSections]
 
-BoundedAbstractRawData = TypeVar("BoundedAbstractRawData", bound=AbstractRawData)
 BoundedAbstractSectionContent = TypeVar("BoundedAbstractSectionContent",
                                         bound=AbstractSectionContent)
 BoundedAbstractSections = TypeVar("BoundedAbstractSections", bound=AbstractSections)

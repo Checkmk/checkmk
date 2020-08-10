@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import logging
 from functools import partial
 from types import TracebackType
@@ -15,6 +16,17 @@ import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
 from . import factory
+from ._base import ABCFileCache
+
+
+class SNMPFileCache(ABCFileCache[SNMPRawData]):
+    @staticmethod
+    def _from_cache_file(raw_data: bytes) -> SNMPRawData:
+        return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
+
+    @staticmethod
+    def _to_cache_file(raw_data: SNMPRawData) -> bytes:
+        return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
 
 class SNMPDataFetcher:

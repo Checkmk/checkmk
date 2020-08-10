@@ -11,13 +11,13 @@ import enum
 import json
 import os
 from pathlib import Path
-from typing import Any, Union, Dict
+from typing import Any, Dict, Union
 
 from cmk.utils.paths import core_fetcher_config_dir
 from cmk.utils.type_defs import HostName
 
+from . import FetcherType
 from ._base import AbstractDataFetcher
-from .type_defs import FetcherType
 
 
 class FetcherFactory:

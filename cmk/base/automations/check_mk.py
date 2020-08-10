@@ -249,6 +249,8 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         new_services = []
         for (check_plugin_name, item), (params, raw_service_labels) in new_items.items():
+            check_plugin_name = CheckPluginName(check_plugin_name)
+
             descr = config.service_description(hostname, check_plugin_name, item)
 
             service_labels = DiscoveredServiceLabels()

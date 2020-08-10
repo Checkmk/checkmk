@@ -497,7 +497,7 @@ class PageMenuRenderer:
         ]
 
         if isinstance(entry.css_classes, list):
-            classes.extend([c for c in entry.css_classes if c is not None])
+            classes.extend(c for c in entry.css_classes if c is not None)
         elif entry.css_classes is not None:
             classes.append(entry.css_classes)
 

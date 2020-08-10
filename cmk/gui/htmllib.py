@@ -112,6 +112,7 @@ from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
+from cmk.gui.page_state import PageState, PageStateRenderer
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuRenderer,
@@ -1661,6 +1662,7 @@ class html(ABCHTMLGenerator):
                title: str,
                breadcrumb: Breadcrumb,
                page_menu: Optional[PageMenu] = None,
+               page_state: Optional[PageState] = None,
                javascripts: Optional[List[str]] = None,
                force: bool = False,
                show_body_start: bool = True,
@@ -1679,6 +1681,7 @@ class html(ABCHTMLGenerator):
                         title,
                         breadcrumb=breadcrumb,
                         page_menu=page_menu or PageMenu(breadcrumb=breadcrumb),
+                        page_state=page_state,
                     )
             self.begin_page_content()
 
@@ -1700,7 +1703,8 @@ class html(ABCHTMLGenerator):
     def top_heading(self,
                     title: str,
                     breadcrumb: Breadcrumb,
-                    page_menu: Optional[PageMenu] = None) -> None:
+                    page_menu: Optional[PageMenu] = None,
+                    page_state: Optional[PageState] = None) -> None:
         self.open_div(id_="top_heading")
         self.open_div(class_="titlebar")
 
@@ -1716,6 +1720,9 @@ class html(ABCHTMLGenerator):
 
         if breadcrumb:
             BreadcrumbRenderer().show(breadcrumb)
+
+        if page_state:
+            PageStateRenderer().show(page_state)
 
         self.close_div()  # titlebar
 

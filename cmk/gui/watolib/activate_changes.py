@@ -341,7 +341,7 @@ class ActivateChanges:
         SiteChanges(site_id).clear()
         cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-    def get_changes_estimate(self):
+    def get_changes_estimate(self) -> Optional[str]:
         changes_counter = 0
         for site_id in activation_sites():
             changes_counter += len(SiteChanges(site_id).load())
@@ -351,6 +351,7 @@ class ActivateChanges:
             return _("1 change")
         if changes_counter > 1:
             return _("%d changes") % changes_counter
+        return None
 
     def grouped_changes(self):
         return self._changes
@@ -1744,16 +1745,16 @@ def execute_activate_changes(domains: List[ConfigDomainName]) -> ConfigWarnings:
     return results
 
 
-def confirm_all_local_changes():
+def confirm_all_local_changes() -> None:
     ActivateChanges().confirm_site_changes(config.omd_site())
 
 
-def get_pending_changes_info():
+def get_pending_changes_info() -> Optional[str]:
     changes = ActivateChanges()
     return changes.get_changes_estimate()
 
 
-def get_number_of_pending_changes():
+def get_number_of_pending_changes() -> int:
     changes = ActivateChanges()
     changes.load()
     return len(changes.grouped_changes())

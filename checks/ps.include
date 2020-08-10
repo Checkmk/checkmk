@@ -7,7 +7,6 @@ import time
 
 from cmk.base.plugins.agent_based.utils.ps import (
     ps_info,
-    replace_service_description,
     format_process_list,
     ps_cleanup_params,
     process_capture as check_ps_process_capture,

@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Cache implementations for the data sources."""
 
+import abc
 import logging
 import time
 from pathlib import Path
-from typing import Optional, Union
+from typing import Generic, Optional, Union
 
 import cmk.utils
 import cmk.utils.store as store
@@ -67,7 +68,7 @@ class SectionStore:
         return sections
 
 
-class FileCache:
+class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
     def __init__(
         self,
         path: Union[str, Path],
@@ -75,20 +76,25 @@ class FileCache:
         is_agent_cache_disabled: bool,
         may_use_cache_file: bool,
         use_outdated_cache_file: bool,
-        from_cache_file,
-        to_cache_file,
         logger: logging.Logger,
-    ):
-        # type (...) -> None
-        super(FileCache, self).__init__()
+    ) -> None:
+        super().__init__()
         self.path = Path(path)
         self._max_cachefile_age = max_cachefile_age
         self._is_agent_cache_disabled = is_agent_cache_disabled
         self._may_use_cache_file = may_use_cache_file
         self._use_outdated_cache_file = use_outdated_cache_file
-        self._from_cache_file = from_cache_file
-        self._to_cache_file = to_cache_file
         self._logger = logger
+
+    @staticmethod
+    @abc.abstractmethod
+    def _from_cache_file(raw_data: bytes) -> BoundedAbstractRawData:
+        raise NotImplementedError()
+
+    @staticmethod
+    @abc.abstractmethod
+    def _to_cache_file(raw_data: BoundedAbstractRawData) -> bytes:
+        raise NotImplementedError()
 
     def read(self) -> Optional[BoundedAbstractRawData]:
         assert self._max_cachefile_age is not None

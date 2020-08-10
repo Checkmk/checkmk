@@ -37,7 +37,7 @@ from cmk.base.check_utils import (
 from cmk.base.config import HostConfig, SelectedRawSections
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLookupError
 
-from ._cache import FileCache, SectionStore
+from ._cache import ABCFileCache, SectionStore
 
 __all__ = ["ABCHostSections", "ABCConfigurator", "ABCDataSource", "Mode"]
 
@@ -457,7 +457,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
     @property
     @abc.abstractmethod
-    def _file_cache(self) -> FileCache:
+    def _file_cache(self) -> ABCFileCache:
         raise NotImplementedError
 
     def set_max_cachefile_age(self, max_cachefile_age: int) -> None:

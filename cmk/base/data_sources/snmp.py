@@ -38,7 +38,7 @@ from ._abstract import (
     ABCSummarizer,
     Mode,
 )
-from ._cache import FileCache, SectionStore
+from ._cache import ABCFileCache, SectionStore
 
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
@@ -329,6 +329,16 @@ class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
         return 0, "Success", []
 
 
+class SNMPFileCache(ABCFileCache[SNMPRawData]):
+    @staticmethod
+    def _from_cache_file(raw_data: bytes) -> SNMPRawData:
+        return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
+
+    @staticmethod
+    def _to_cache_file(raw_data: SNMPRawData) -> bytes:
+        return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
+
+
 class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                    SNMPHostSections]):
     def __init__(self, configurator: SNMPConfigurator) -> None:
@@ -344,23 +354,13 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         return SNMPParser(self.hostname, self._logger)
 
     @property
-    def _file_cache(self) -> FileCache:
-        def from_cache(raw_data: bytes) -> SNMPRawData:
-            return {
-                SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()
-            }
-
-        def to_cache(raw_data: SNMPRawData) -> bytes:
-            return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
-
-        return FileCache(
+    def _file_cache(self) -> ABCFileCache:
+        return SNMPFileCache(
             self.configurator.cache_file_path,
             self._max_cachefile_age,
             self.is_agent_cache_disabled(),
             self.get_may_use_cache_file(),
             self._use_outdated_cache_file,
-            from_cache,
-            to_cache,
             self._logger,
         )
 

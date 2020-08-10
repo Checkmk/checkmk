@@ -15,71 +15,6 @@
 # NOTE: By design the extra_sections are passed to EVERY subcheck and
 # therefore have to be removed in every subcheck!
 # Change-Id: I3b6a56efcff4c75bbd05a051242e18deaa499d9e
-check_info['esx_vsphere_hostsystem'] = {
-    'extra_sections': ["winperf_processor"],
-}
-
-#.
-#   .--CPU-----------------------------------------------------------------.
-#   |                           ____ ____  _   _                           |
-#   |                          / ___|  _ \| | | |                          |
-#   |                         | |   | |_) | | | |                          |
-#   |                         | |___|  __/| |_| |                          |
-#   |                          \____|_|    \___/                           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-esx_host_cpu_default_levels = {}
-
-# hardware.cpuInfo.numCpuCores 12
-# hardware.cpuInfo.numCpuPackages 2
-# hardware.cpuInfo.numCpuThreads 24
-# hardware.cpuInfo.hz 2933436846               --> In Hz per CPU Core
-# summary.quickStats.overallCpuUsage 7539      --> In MHz
-
-
-def inventory_esx_vsphere_hostsystem_cpu(info):
-    data, winperf_info = info
-    if all([
-            not winperf_info,
-            'summary.quickStats.overallCpuUsage' in data,
-            'hardware.cpuInfo.hz' in data,
-            'hardware.cpuInfo.numCpuCores' in data,
-    ]):
-        return [(None, {})]
-
-
-def check_esx_vsphere_hostsystem_cpu(item, params, info):
-    data, winperf_info = info
-
-    if winperf_info or "summary.quickStats.overallCpuUsage" not in data:
-        return
-
-    num_sockets = int(data['hardware.cpuInfo.numCpuPackages'][0])
-    num_cores = int(data['hardware.cpuInfo.numCpuCores'][0])
-    num_threads = int(data['hardware.cpuInfo.numCpuThreads'][0])
-    used_mhz = float(data['summary.quickStats.overallCpuUsage'][0])
-    mhz_per_core = (float(data['hardware.cpuInfo.hz'][0]) / 1000.0) / 1000.0
-    total_mhz = mhz_per_core * num_cores
-
-    usage = used_mhz / total_mhz * 100
-    for res in check_cpu_util(usage, params):
-        yield res
-
-    yield 0, "%.2fGHz/%.2fGHz" % (used_mhz / 1000.0, total_mhz / 1000.0)
-    yield 0, "%d sockets, %d cores/socket, %d threads" % (num_sockets, num_cores / num_sockets,
-                                                          num_threads)
-
-
-check_info['esx_vsphere_hostsystem.cpu_usage'] = {
-    "inventory_function": inventory_esx_vsphere_hostsystem_cpu,
-    "check_function": check_esx_vsphere_hostsystem_cpu,
-    "service_description": "CPU utilization",
-    "group": "cpu_utilization_os",
-    "has_perfdata": True,
-    "default_levels_variable": "esx_host_cpu_default_levels",
-    "includes": ["cpu_util.include"],
-}
 
 #.
 #   .--Mem-Cluster---------------------------------------------------------.
@@ -92,8 +27,7 @@ check_info['esx_vsphere_hostsystem.cpu_usage'] = {
 #   +----------------------------------------------------------------------+
 
 
-def check_esx_vsphere_hostsystem_mem_cluster(item, params, info):
-    parsed, _ = info
+def check_esx_vsphere_hostsystem_mem_cluster(item, params, parsed):
     data = {}
     for key, value in parsed.items():
         if key in ["summary.quickStats.overallMemoryUsage", "hardware.memorySize", "name"]:
@@ -138,8 +72,7 @@ check_info['esx_vsphere_hostsystem.mem_usage_cluster'] = {
 #   +----------------------------------------------------------------------+
 
 
-def check_esx_vsphere_hostsystem_cpu_util_cluster(item, params, info):
-    parsed, _ = info
+def check_esx_vsphere_hostsystem_cpu_util_cluster(item, params, parsed):
     current_node = {}
 
     def get_node_usage(node):
@@ -212,20 +145,18 @@ check_info['esx_vsphere_hostsystem.cpu_util_cluster'] = {
 esx_host_mem_default_levels = (80.0, 90.0)
 
 
-def inventory_esx_vsphere_hostsystem_mem(info):
-    data, _ = info
-    if 'summary.quickStats.overallMemoryUsage' in data and 'hardware.memorySize' in data:
+def inventory_esx_vsphere_hostsystem_mem(parsed):
+    if 'summary.quickStats.overallMemoryUsage' in parsed and 'hardware.memorySize' in parsed:
         return [(None, 'esx_host_mem_default_levels')]
 
 
-def check_esx_vsphere_hostsystem_mem(item, params, info):
-    data, _ = info
+def check_esx_vsphere_hostsystem_mem(item, params, parsed):
 
-    if "summary.quickStats.overallMemoryUsage" not in data:
+    if "summary.quickStats.overallMemoryUsage" not in parsed:
         return
 
-    memory_usage = savefloat(data['summary.quickStats.overallMemoryUsage'][0]) * 1024 * 1024
-    memory_size = savefloat(data['hardware.memorySize'][0])
+    memory_usage = savefloat(parsed['summary.quickStats.overallMemoryUsage'][0]) * 1024 * 1024
+    memory_size = savefloat(parsed['hardware.memorySize'][0])
 
     state, text, perf = check_memory_element(
         "Usage",
@@ -257,19 +188,17 @@ check_info['esx_vsphere_hostsystem.mem_usage'] = {
 #   +----------------------------------------------------------------------+
 
 
-def inventory_esx_vsphere_hostsystem_state(info):
-    data, _ = info
-    if 'runtime.inMaintenanceMode' in data:
+def inventory_esx_vsphere_hostsystem_state(parsed):
+    if 'runtime.inMaintenanceMode' in parsed:
         return [(None, None)]
 
 
-def check_esx_vsphere_hostsystem_state(_no_item, _no_params, info):
-    data, _ = info
+def check_esx_vsphere_hostsystem_state(_no_item, _no_params, parsed):
     state = 0
-    if "overallStatus" not in data:
+    if "overallStatus" not in parsed:
         return
 
-    overallStatus = str(data['overallStatus'][0])
+    overallStatus = str(parsed['overallStatus'][0])
     if overallStatus == "yellow":
         state = 1
     elif overallStatus in ["red", "gray"]:
@@ -277,7 +206,7 @@ def check_esx_vsphere_hostsystem_state(_no_item, _no_params, info):
     yield state, "Entity state: " + overallStatus
 
     state = 0
-    powerState = str(data['runtime.powerState'][0])
+    powerState = str(parsed['runtime.powerState'][0])
     if powerState in ['poweredOff', 'unknown']:
         state = 2
     elif powerState == 'standBy':
@@ -304,21 +233,19 @@ check_info['esx_vsphere_hostsystem.state'] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_hostsystem_maintenance(info):
-    data, _ = info
-    if 'runtime.inMaintenanceMode' in data:
-        current_state = str(data['runtime.inMaintenanceMode'][0]).lower()
+def inventory_esx_vsphere_hostsystem_maintenance(parsed):
+    if 'runtime.inMaintenanceMode' in parsed:
+        current_state = str(parsed['runtime.inMaintenanceMode'][0]).lower()
         return [(None, {'target_state': current_state})]
 
 
-def check_esx_vsphere_hostsystem_maintenance(_no_item, params, info):
-    data, _ = info
+def check_esx_vsphere_hostsystem_maintenance(_no_item, params, parsed):
     target_state = params['target_state']
 
-    if "runtime.inMaintenanceMode" not in data:
+    if "runtime.inMaintenanceMode" not in parsed:
         return
 
-    current_state = str(data['runtime.inMaintenanceMode'][0]).lower()
+    current_state = str(parsed['runtime.inMaintenanceMode'][0]).lower()
     state = 0
     if target_state != current_state:
         state = 2
@@ -366,13 +293,11 @@ def esx_vsphere_multipath_convert(data):
     return paths
 
 
-def inventory_esx_vsphere_hostsystem_multipath(info):
-    data, _ = info
-    return [(x, None) for x in esx_vsphere_multipath_convert(data)]
+def inventory_esx_vsphere_hostsystem_multipath(parsed):
+    return [(x, None) for x in esx_vsphere_multipath_convert(parsed)]
 
 
-def check_esx_vsphere_hostsystem_multipath(item, params, info):
-    data, _ = info
+def check_esx_vsphere_hostsystem_multipath(item, params, parsed):
     state_infos = {
         # alert_state, count, info
         "active": [0, 0, ""],
@@ -386,7 +311,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
     message = ""
     path_names = []
 
-    for path, states in esx_vsphere_multipath_convert(data).items():
+    for path, states in esx_vsphere_multipath_convert(parsed).items():
         if path == item:
             # Collect states
             for path_state, path_name in states:

@@ -82,15 +82,3 @@ checks = {
     )],
     'state': [(None, {}, [(0, 'Entity state: green', []), (0, 'Power state: poweredOn', [])])]
 }
-
-
-extra_sections = {
-    '': [[]],
-    'cpu_usage': [[]],
-    'cpu_util_cluster': [[]],
-    'maintenance': [[]],
-    'mem_usage': [[]],
-    'mem_usage_cluster': [[]],
-    'multipath': [[]],
-    'state': [[]]
-}

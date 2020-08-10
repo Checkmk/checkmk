@@ -34,7 +34,7 @@ function execute_test() {
         grep -e '-MD -MP -MF' |
         sed 's/ &&\\$//' |
         sed "s,.* || echo '\\./'\`,," |
-        sed 's/.-c -o .\.o //' |
+        sed 's/.*-c -o .*\.o //' |
         sort)
 
     if test -z "${FILES_TO_CHECK}"; then

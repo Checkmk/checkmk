@@ -7,10 +7,12 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
+
+
 checkname = 'esx_vsphere_hostsystem'
 
-info = [
-    [
+parsed = parse_esx_vsphere_hostsystem([
         [
             # This is output from the old API endpoint for the check esx_vsphere_hostsystem.multipath
             # which is not supported anymore.
@@ -29,9 +31,8 @@ info = [
         [u'runtime.powerState', u'poweredOn'],
         [u'summary.quickStats.overallCpuUsage', u'1930'],
         [u'summary.quickStats.overallMemoryUsage', u'79464'],
-    ],
-    None,
-]
+    ]
+)
 
 discovery = {
     '': [],
@@ -80,4 +81,16 @@ checks = {
         )],
     )],
     'state': [(None, {}, [(0, 'Entity state: green', []), (0, 'Power state: poweredOn', [])])]
+}
+
+
+extra_sections = {
+    '': [[]],
+    'cpu_usage': [[]],
+    'cpu_util_cluster': [[]],
+    'maintenance': [[]],
+    'mem_usage': [[]],
+    'mem_usage_cluster': [[]],
+    'multipath': [[]],
+    'state': [[]]
 }

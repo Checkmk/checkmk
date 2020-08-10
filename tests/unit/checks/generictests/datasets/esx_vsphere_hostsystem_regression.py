@@ -7,10 +7,11 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
+
 checkname = 'esx_vsphere_hostsystem'
 
-info = [
-    [
+parsed = parse_esx_vsphere_hostsystem([
         [
             u'config.storageDevice.multipathInfo', u'6e843b6d8f2740bdecbad4676da7a9dd',
             u'vmhba66:C0:T2:L0', u'active', u'6e843b6bc5cc897d430ad40b7d9172d1',
@@ -53,9 +54,8 @@ info = [
         [u'runtime.powerState', u'poweredOn'],
         [u'summary.quickStats.overallCpuUsage', u'2946'],
         [u'summary.quickStats.overallMemoryUsage', u'110738'],
-    ],
-    None,
-]
+    ]
+)
 
 discovery = {
     '': [],
@@ -142,4 +142,15 @@ checks = {
             (0, 'Power state: poweredOn', []),
         ],
     )],
+}
+
+extra_sections = {
+    '': [[]],
+    'cpu_usage': [[]],
+    'cpu_util_cluster': [[]],
+    'maintenance': [[]],
+    'mem_usage': [[]],
+    'mem_usage_cluster': [[]],
+    'multipath': [[]],
+    'state': [[]]
 }

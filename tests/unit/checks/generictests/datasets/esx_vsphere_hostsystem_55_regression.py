@@ -7,10 +7,11 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
 
 checkname = 'esx_vsphere_hostsystem'
 
-info = [[[
+parsed = parse_esx_vsphere_hostsystem([[
     u'config.storageDevice.multipathInfo', u'600143801259e9240000a00006460000',
     u'fc.50060b0000c32e03:50060b0000c32e02-fc.5001438024484b70:5001438024484b7f-naa.600143801259e9240000a00006460000',
     u'active', u'600143801259e9240000a00006460000',
@@ -28,7 +29,7 @@ info = [[[
     u'active', u'5001438024484b70',
     u'fc.50060b0000c32e01:50060b0000c32e00-fc.5001438024484b70:5001438024484b7e-naa.5001438024484b70',
     u'active'
-]], None]
+]])
 
 discovery = {
     '': [],
@@ -65,4 +66,15 @@ checks = {
             )],
         ),
     ]
+}
+
+extra_sections = {
+    '': [[]],
+    'cpu_usage': [[]],
+    'cpu_util_cluster': [[]],
+    'maintenance': [[]],
+    'mem_usage': [[]],
+    'mem_usage_cluster': [[]],
+    'multipath': [[]],
+    'state': [[]]
 }

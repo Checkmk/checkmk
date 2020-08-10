@@ -7,12 +7,12 @@
 # yapf: disable
 # type: ignore
 
-
+from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
 
 checkname = 'esx_vsphere_hostsystem'
 
 
-info = [[[u'config.multipathState.path',
+parsed = parse_esx_vsphere_hostsystem([[u'config.multipathState.path',
           u'fc.2000001b329d47ad:2100001b329d47ad-fc.207000c0ffd76501:207000c0ffd76501-naa.600c0ff000d775af138c0a5601000000',
           u'active',
           u'fc.2000001b329d47ad:2100001b329d47ad-fc.207800c0ffd76501:217800c0ffd76501-naa.600c0ff000d7ba43d28c0a5601000000',
@@ -82,8 +82,7 @@ info = [[[u'config.multipathState.path',
          [u'runtime.inMaintenanceMode', u'false'],
          [u'runtime.powerState', u'poweredOn'],
          [u'summary.quickStats.overallCpuUsage', u'10733'],
-         [u'summary.quickStats.overallMemoryUsage', u'53325']],
-        None]
+         [u'summary.quickStats.overallMemoryUsage', u'53325']])
 
 
 discovery = {'': [],
@@ -121,3 +120,14 @@ checks = {'cpu_usage': [(None,
                      {},
                      [(0, 'Entity state: green', []),
                       (0, 'Power state: poweredOn', [])])]}
+
+extra_sections = {
+    '': [[]],
+    'cpu_usage': [[]],
+    'cpu_util_cluster': [[]],
+    'maintenance': [[]],
+    'mem_usage': [[]],
+    'mem_usage_cluster': [[]],
+    'multipath': [[]],
+    'state': [[]]
+}

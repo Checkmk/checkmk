@@ -38,7 +38,7 @@ from ._abstract import (
     ABCSummarizer,
     Mode,
 )
-from ._cache import FileCache
+from ._cache import FileCache, SectionStore
 
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
@@ -134,11 +134,12 @@ class SNMPConfigurator(ABCConfigurator):
         # Attributes below are wrong
         self.use_snmpwalk_cache = True
         self.ignore_check_interval = False
-        self.persisted_sections: SNMPPersistedSections = {}
         self.selected_raw_sections: Optional[SelectedRawSections] = None
-        # TODO(ml): `prefetched_sections` cannot be `Final`.
-        #           It is set in `cmk.base.inventory` only.
         self.prefetched_sections: Sequence[SectionName] = ()
+        self.section_store = SectionStore(
+            self.persisted_sections_file_path,
+            self._logger,
+        )
 
     @classmethod
     def snmp(
@@ -185,7 +186,8 @@ class SNMPConfigurator(ABCConfigurator):
             "oid_infos": {
                 str(name): [tree.to_json() for tree in trees]
                 for name, trees in self._make_oid_infos(
-                    persisted_sections=self.persisted_sections,
+                    persisted_sections=self.section_store.load(
+                        SNMPDataSource._use_outdated_persisted_sections),
                     selected_raw_sections=self.selected_raw_sections,
                     prefetched_sections=self.prefetched_sections,
                 ).items()
@@ -369,8 +371,6 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
     ) -> SNMPRawData:
         # This is wrong
         configurator = cast(SNMPConfigurator, self.configurator)
-        configurator.persisted_sections = self._section_store.load(
-            self._use_outdated_persisted_sections,)
         configurator.selected_raw_sections = selected_raw_sections  # checking only
         # End of wrong
         with SNMPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:

@@ -274,8 +274,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self.default_raw_data: Final[BoundedAbstractRawData] = default_raw_data
         self.default_host_sections: Final[BoundedAbstractHostSections] = default_host_sections
         self._logger = self.configurator._logger
-        self._section_store = SectionStore(self.configurator.persisted_sections_file_path,
-                                           self._logger)
+        self._section_store = SectionStore(
+            self.configurator.persisted_sections_file_path,
+            self._logger,
+        )
 
         self._max_cachefile_age: Optional[int] = None
 

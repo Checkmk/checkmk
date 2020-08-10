@@ -1,0 +1,12 @@
+Title: Make omd restore work with hardlinks in local dir
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0p16
+Date: 1597039165
+Class: fix
+
+In case a backup file was created from a site which contained hardlinks in the local directory, the restore mechnism will crash with the following message:
+<code>KeyError: "linkname '<a site name>/local/<a link name>' not found"</code>
+This werk will enable resolving hard links which reside under the local directory.

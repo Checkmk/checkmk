@@ -875,7 +875,7 @@ def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
             message += html.drain()
 
     if message:
-        wato_html_head(operation.confirm_title(), breadcrumb)
+        wato_html_head(title=operation.confirm_title(), breadcrumb=breadcrumb)
         html.open_div(class_="really")
         html.h3(_("Your modifications affect some objects"))
         html.write_text(message)

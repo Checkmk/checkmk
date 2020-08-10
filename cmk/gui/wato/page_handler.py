@@ -173,7 +173,7 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
 
     breadcrumb = make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
     page_menu = mode.page_menu(breadcrumb)
-    wato_html_head(mode.title(),
+    wato_html_head(title=mode.title(),
                    breadcrumb=breadcrumb,
                    page_menu=page_menu,
                    show_body_start=display_options.enabled(display_options.H),

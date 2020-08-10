@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional
+
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
 # TODO: Change all call sites to directly import from cmk.gui.page_menu
-from cmk.gui.page_menu import search_form  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.page_menu import PageMenu, search_form  # noqa: F401 # pylint: disable=unused-import
 
 # TODO: Refactor to context handler or similar?
 _html_head_open = False
@@ -17,7 +19,7 @@ _html_head_open = False
 def wato_confirm(html_title, message):
     if not html.request.has_var("_do_confirm") and not html.request.has_var("_do_actions"):
         # TODO: get the breadcrumb from all call sites
-        wato_html_head(html_title, Breadcrumb())
+        wato_html_head(title=html_title, breadcrumb=Breadcrumb())
     return html.confirm(message)
 
 
@@ -26,15 +28,23 @@ def initialize_wato_html_head():
     _html_head_open = False
 
 
-# TODO: Check all call sites and clean up args/kwargs
-def wato_html_head(title: str, breadcrumb: Breadcrumb, *args, **kwargs) -> None:
+def wato_html_head(*,
+                   title: str,
+                   breadcrumb: Breadcrumb,
+                   page_menu: Optional[PageMenu] = None,
+                   show_body_start: bool = True,
+                   show_top_heading: bool = True) -> None:
     global _html_head_open
 
     if _html_head_open:
         return
 
     _html_head_open = True
-    html.header(title, breadcrumb, *args, **kwargs)
+    html.header(title=title,
+                breadcrumb=breadcrumb,
+                page_menu=page_menu,
+                show_body_start=show_body_start,
+                show_top_heading=show_top_heading)
     html.open_div(class_="wato")
 
 

@@ -1721,6 +1721,9 @@ class html(ABCHTMLGenerator):
         if breadcrumb:
             BreadcrumbRenderer().show(breadcrumb)
 
+        if page_state is None:
+            page_state = self._make_default_page_state()
+
         if page_state:
             PageStateRenderer().show(page_state)
 
@@ -1736,6 +1739,20 @@ class html(ABCHTMLGenerator):
 
         if self.enable_debug:
             self._dump_get_vars()
+
+    def _make_default_page_state(self) -> Optional[PageState]:
+        """Create a general page state for all pages without specific one"""
+        if not self.browser_reload:
+            return None
+
+        return PageState(
+            top_line=_("%d sec. update") % self.browser_reload,
+            bottom_line=self.render_a(_("Reload now"),
+                                      href="javascript:void(0)",
+                                      onclick="this.innerHTML=\'%s\'; document.location.reload();" %
+                                      _("Reloading...")),
+            icon_name="trans",
+        )
 
     def begin_page_content(self):
         content_id = "main_page_content"
@@ -1768,10 +1785,6 @@ class html(ABCHTMLGenerator):
                 self.td('', class_="middle")
 
                 self.open_td(class_="right")
-                content = _("refresh: %s secs") % self.render_div("%0.2f" % self.browser_reload,
-                                                                  id_="foot_refresh_time")
-                style = "display:inline-block;" if self.browser_reload else "display:none;"
-                self.div(HTML(content), id_="foot_refresh", style=style)
                 self.close_td()
 
                 self.close_tr()

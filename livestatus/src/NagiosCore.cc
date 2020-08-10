@@ -11,16 +11,13 @@
 #include <filesystem>
 #include <memory>
 #include <ostream>
-#include <stdexcept>
 #include <utility>
 
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
 #include "Logger.h"
-#include "RRDColumn.h"
 #include "StringUtils.h"
 #include "contact_fwd.h"
-#include "pnp4nagios.h"
 
 void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "socket path = '" << _socket << "'";
@@ -172,7 +169,6 @@ std::filesystem::path NagiosCore::crashReportPath() const {
     return _paths._crash_reports_path;
 }
 std::filesystem::path NagiosCore::pnpPath() const { return _paths._pnp; }
-std::filesystem::path NagiosCore::rrdPath() const { return pnpPath(); }
 std::filesystem::path NagiosCore::historyFilePath() const {
     extern char *log_file;
     return log_file;
@@ -183,29 +179,6 @@ std::filesystem::path NagiosCore::logArchivePath() const {
 }
 std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     return _paths._rrdcached_socket;
-}
-MetricLocation NagiosCore::metricLocation(
-    const RRDColumn::ObjectPointer &object,
-    const Metric::MangledName &name) const {
-    switch (object.kind) {
-        case RRDColumn::ObjectPointer::Kind::services: {
-            const auto *svc = static_cast<const service *>(object.ptr);
-            return {rrdPath() / svc->host_name /
-                        pnp_cleanup(std::string{svc->description} + "_" +
-                                    name.string() + ".rrd"),
-                    "1"};
-        }
-        case RRDColumn::ObjectPointer::Kind::hosts: {
-            const auto *hst = static_cast<const host *>(object.ptr);
-            return {rrdPath() / hst->name /
-                        pnp_cleanup(std::string{"_HOST_"} + "_" +
-                                    name.string() + ".rrd"),
-                    "1"};
-        }
-        case RRDColumn::ObjectPointer::Kind::objects:
-            throw std::runtime_error("invalid parameter");
-    }
-    return {};  // make GCC happy :-)
 }
 
 Encoding NagiosCore::dataEncoding() { return _data_encoding; }

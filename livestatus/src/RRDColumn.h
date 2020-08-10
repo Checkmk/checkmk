@@ -36,15 +36,6 @@ public:
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const override;
 
-    // HACK
-    struct ObjectPointer {
-        enum class Kind { objects, services, hosts };
-        const void *ptr;
-        Kind kind;
-    };
-
-    using MetricLocator = std::function<MetricLocation(const Metric::Name &)>;
-
 protected:
     struct Data {
         std::chrono::system_clock::time_point start;
@@ -53,6 +44,7 @@ protected:
         std::vector<double> values;
     };
 
+    using MetricLocator = std::function<MetricLocation(const Metric::Name &)>;
     static Data getData(Logger *logger,
                         const std::filesystem::path &rrdcached_socket_path,
                         const RRDColumnArgs &args,

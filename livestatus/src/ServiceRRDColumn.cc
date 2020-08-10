@@ -5,22 +5,26 @@
 
 #include "ServiceRRDColumn.h"
 
-#include "Logger.h"
+#include <filesystem>
+#include <string>
+
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "nagios.h"
+#include "pnp4nagios.h"
 
 RRDColumn::Data ServiceRRDColumn::getDataFor(Row row) const {
-    ObjectPointer object{columnData<service>(row),
-                         RRDColumn::ObjectPointer::Kind::services};
-    if (object.ptr == nullptr) {
-        Warning(_mc->loggerRRD()) << "Missing object pointer for RRDColumn";
-        return {};
+    if (const auto *svc{columnData<service>(row)}) {
+        return getData(
+            _mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
+            [this, svc](const Metric::Name &var) {
+                return MetricLocation{
+                    this->_mc->pnpPath() / svc->host_name /
+                        pnp_cleanup(std::string{svc->description} + "_" +
+                                    Metric::MangledName(var).string() + ".rrd"),
+                    "1"};
+            });
     }
-    return getData(_mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
-                   [this, object](const Metric::Name &var) {
-                       return this->_mc->metricLocation(
-                           object, Metric::MangledName(var));
-                   });
+    return {};
 }

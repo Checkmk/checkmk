@@ -158,7 +158,6 @@ function get_effective_tags()
     var current_tags = [];
 
     var containers = get_containers();
-    console.log(containers);
 
     for (var a = 0; a < containers.length; a++) {
         var tag_container = containers[a];
@@ -167,7 +166,7 @@ function get_effective_tags()
             var add_tag_id = null;
             if (row.tagName == "TR") {
                 var legend_cell = row.cells[0];
-                if (!utils.has_class(legend_cell.className, "legend")) {
+                if (!utils.has_class(legend_cell, "legend")) {
                     continue;
                 }
                 var content_cell = row.cells[1];

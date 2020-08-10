@@ -45,12 +45,7 @@ public:
 
     using MetricLocator = std::function<MetricLocation(const Metric::Name &)>;
 
-private:
-    [[nodiscard]] virtual ObjectPointer getObjectPointer(Row row) const = 0;
-
-    MonitoringCore *_mc;
-    RRDColumnArgs _args;
-
+protected:
     struct Data {
         std::chrono::system_clock::time_point start;
         std::chrono::system_clock::time_point end;
@@ -62,6 +57,12 @@ private:
                         const std::filesystem::path &rrdcached_socket_path,
                         const RRDColumnArgs &args,
                         const MetricLocator &locator);
+
+    MonitoringCore *_mc;
+    RRDColumnArgs _args;
+
+private:
+    [[nodiscard]] virtual Data getDataFor(Row row) const = 0;
 };
 
 #endif  // RRDColumn_h

@@ -16,7 +16,7 @@ public:
     using RRDColumn::RRDColumn;
 
 private:
-    [[nodiscard]] ObjectPointer getObjectPointer(Row row) const override;
+    [[nodiscard]] Data getDataFor(Row row) const override;
 };
 
 #endif

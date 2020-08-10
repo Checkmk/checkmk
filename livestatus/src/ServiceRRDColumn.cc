@@ -5,9 +5,22 @@
 
 #include "ServiceRRDColumn.h"
 
+#include "Logger.h"
+#include "Metric.h"
+#include "MonitoringCore.h"
 #include "Row.h"
-class service;
+#include "nagios.h"
 
-RRDColumn::ObjectPointer ServiceRRDColumn::getObjectPointer(Row row) const {
-    return {columnData<service>(row), RRDColumn::ObjectPointer::Kind::services};
+RRDColumn::Data ServiceRRDColumn::getDataFor(Row row) const {
+    ObjectPointer object{columnData<service>(row),
+                         RRDColumn::ObjectPointer::Kind::services};
+    if (object.ptr == nullptr) {
+        Warning(_mc->loggerRRD()) << "Missing object pointer for RRDColumn";
+        return {};
+    }
+    return getData(_mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
+                   [this, object](const Metric::Name &var) {
+                       return this->_mc->metricLocation(
+                           object, Metric::MangledName(var));
+                   });
 }

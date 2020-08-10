@@ -19,7 +19,6 @@
 
 #include "DynamicRRDColumn.h"
 #include "Logger.h"
-#include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
 #if defined(CMC)
@@ -39,17 +38,8 @@ void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
     // We output meta data as first elements in the list. Note: In Python or
     // JSON we could output nested lists. In CSV mode this is not possible and
     // we rather stay compatible with CSV mode.
+    auto data = getDataFor(row);
     ListRenderer l(r);
-    auto object = getObjectPointer(row);
-    if (object.ptr == nullptr) {
-        Warning(_mc->loggerRRD()) << "Missing object pointer for RRDColumn";
-        return;
-    }
-    auto data = getData(_mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
-                        [this, object](const Metric::Name &var) {
-                            return this->_mc->metricLocation(
-                                object, Metric::MangledName(var));
-                        });
     l.output(data.start);
     l.output(data.end);
     l.output(data.step);
@@ -61,17 +51,7 @@ void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
 std::vector<std::string> RRDColumn::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds timezone_offset) const {
-    auto object = getObjectPointer(row);
-    Data data;
-    if (object.ptr == nullptr) {
-        Warning(_mc->loggerRRD()) << "Missing object pointer for RRDColumn";
-    } else {
-        data = getData(_mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
-                       [this, object](const Metric::Name &var) {
-                           return this->_mc->metricLocation(
-                               object, Metric::MangledName(var));
-                       });
-    }
+    auto data = getDataFor(row);
     std::vector<std::string> strings;
     strings.push_back(std::to_string(
         std::chrono::system_clock::to_time_t(data.start + timezone_offset)));

@@ -72,6 +72,23 @@ export function enable_menu_entry(id, enabled) {
         utils.change_class(oShortCut, from, to);
 }
 
+export function enable_menu_entries(css_class, enabled) {
+    let from, to;
+    if (enabled) {
+        from = "disabled";
+        to = "enabled";
+    }
+    else {
+        from = "enabled";
+        to = "disabled";
+    }
+
+    const elements = document.getElementById("page_menu_bar").querySelectorAll(".entry." + css_class);
+    for (const element of elements) {
+        utils.change_class(element, from, to);
+    }
+}
+
 // Toggles a PageMenuEntryPopup from a page menu entry
 export function toggle_popup(popup_id) {
     let popup = document.getElementById(popup_id);

@@ -26,17 +26,30 @@ from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import CSSSpec
 
 
-def enable_page_menu_entry(name):
+def enable_page_menu_entry(name: str):
     _toggle_page_menu_entry(name, state=True)
 
 
-def disable_page_menu_entry(name):
+def disable_page_menu_entry(name: str):
     _toggle_page_menu_entry(name, state=False)
 
 
 def _toggle_page_menu_entry(name: str, state: bool) -> None:
     html.javascript("cmk.page_menu.enable_menu_entry(%s, %s)" %
                     (json.dumps(name), json.dumps(state)))
+
+
+def enable_page_menu_entries(css_class: str):
+    toggle_page_menu_entries(css_class, state=True)
+
+
+def disable_page_menu_entries(css_class: str):
+    toggle_page_menu_entries(css_class, state=False)
+
+
+def toggle_page_menu_entries(css_class: str, state: bool) -> None:
+    html.javascript("cmk.page_menu.enable_menu_entries(%s, %s)" %
+                    (json.dumps(css_class), json.dumps(state)))
 
 
 @dataclass

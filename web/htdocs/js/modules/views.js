@@ -78,22 +78,6 @@ function reschedule_check_response_handler(handler_data, ajax_response) {
     }
 }
 
-export function update_togglebutton(id, enabled)
-{
-    var on  = document.getElementById(id + "_on");
-    var off = document.getElementById(id + "_off");
-    if (!on || !off)
-        return;
-
-    if (enabled) {
-        on.style.display = "block";
-        off.style.display = "none";
-    } else {
-        on.style.display = "none";
-        off.style.display = "block";
-    }
-}
-
 /* Switch filter, commands and painter options */
 export function toggle_form(button, form_id) {
     var display = "none";

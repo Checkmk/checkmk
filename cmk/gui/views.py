@@ -46,6 +46,7 @@ from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_simple_link,
     make_checkbox_selection_topic,
+    toggle_page_menu_entries,
 )
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
@@ -657,19 +658,18 @@ class GUIViewRenderer(ABCViewRenderer):
 
             # The number of rows might have changed to enable/disable actions and checkboxes
             if self._show_buttons:
-                update_context_links(
-                    # don't take display_options into account here ('c' is set during reload)
-                    row_count > 0 and
-                    _should_show_command_form(self.view.datasource, ignore_display_option=True),
-                    # and not html.do_actions(),
-                    layout.can_display_checkboxes)
+                # don't take display_options into account here ('c' is set during reload)
+                toggle_page_menu_entries(
+                    css_class="command",
+                    state=row_count > 0 and
+                    _should_show_command_form(self.view.datasource, ignore_display_option=True))
 
             # Play alarm sounds, if critical events have been displayed
             if display_options.enabled(display_options.S) and view_spec.get("play_sounds"):
                 play_alarm_sounds()
         else:
             # Always hide action related context links in this situation
-            update_context_links(False, False)
+            toggle_page_menu_entries(css_class="command", state=False)
 
         # In multi site setups error messages of single sites do not block the
         # output and raise now exception. We simply print error messages here.
@@ -765,6 +765,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     name="command_%s" % command.ident,
                     is_enabled=_should_show_command_form(self.view.datasource),
                     is_advanced=command.is_advanced,
+                    css_classes=["command"],
                 )
 
     def _page_menu_dropdowns_context(self, rows: Rows) -> List[PageMenuDropdown]:
@@ -2198,13 +2199,6 @@ def _link_to_host_by_name(host_name: str) -> str:
     """Return an URL to the edit-properties of a host when we just know its name"""
     return html.makeuri_contextless([("mode", "edit_host"), ("host", host_name)],
                                     filename="wato.py")
-
-
-def update_context_links(enable_command_toggle, enable_checkbox_toggle):
-    html.javascript("cmk.views.update_togglebutton('commands', %d);" %
-                    (enable_command_toggle and 1 or 0))
-    html.javascript("cmk.views.update_togglebutton('checkbox', %d);" %
-                    (enable_command_toggle and enable_checkbox_toggle and 1 or 0,))
 
 
 def _get_context_page_menu_dropdowns(view: View, rows: Rows,

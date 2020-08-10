@@ -84,7 +84,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
     )]
 
 
-MegaMenuUser = mega_menu_registry.register(
+mega_menu_registry.register(
     MegaMenu(
         name="user",
         title=_l("User"),

@@ -1673,7 +1673,7 @@ def _configure_menu_topics() -> List[TopicMenuTopic]:
     ]
 
 
-MegaMenuConfigure = mega_menu_registry.register(
+mega_menu_registry.register(
     MegaMenu(
         name="configure",
         title=_l("Configure"),

@@ -77,7 +77,7 @@ def get_view_menu_items() -> List[TopicMenuTopic]:
     return make_topic_menu(visuals_to_show)
 
 
-MegaMenuMonitoring = mega_menu_registry.register(
+mega_menu_registry.register(
     MegaMenu(
         name="monitoring",
         title=_l("Monitor"),

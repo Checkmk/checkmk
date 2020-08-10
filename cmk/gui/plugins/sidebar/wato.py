@@ -91,7 +91,7 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
     return [v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index, e[0].title))]
 
 
-MegaMenuSetup = mega_menu_registry.register(
+mega_menu_registry.register(
     MegaMenu(
         name="setup",
         title=_l("Setup"),

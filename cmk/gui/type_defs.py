@@ -12,6 +12,8 @@ LivestatusQuery = str
 PermissionName = str
 RoleName = str
 
+CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
+
 # View specific
 Row = Dict[str, Any]  # TODO: Improve this type
 Rows = List[Row]

@@ -118,6 +118,7 @@ from cmk.gui.page_menu import (
     PageMenuPopupsRenderer,
     enable_page_menu_entry,
 )
+from cmk.gui.type_defs import CSSSpec
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -125,8 +126,6 @@ if TYPE_CHECKING:
     from cmk.gui.valuespec import ValueSpec
     from cmk.gui.utils.output_funnel import OutputFunnelInput
 
-# TODO: Cleanup this mess.
-CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
 HTMLTagName = str
 HTMLTagValue = Optional[str]
 HTMLContent = Union[None, int, HTML, str]

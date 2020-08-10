@@ -23,6 +23,7 @@ from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib import HTML
 from cmk.gui.utils.popups import MethodInline
+from cmk.gui.type_defs import CSSSpec
 
 
 def enable_page_menu_entry(name):
@@ -111,6 +112,7 @@ class PageMenuEntry:
     is_shortcut: bool = False
     is_suggested: bool = False
     shortcut_title: Optional[str] = None
+    css_classes: CSSSpec = None
 
 
 @dataclass
@@ -460,9 +462,7 @@ class PageMenuRenderer:
     def _show_entry(self, entry: PageMenuEntry) -> None:
         classes = [
             "entry",
-            ("enabled" if entry.is_enabled else "disabled"),
-            ("advanced" if entry.is_advanced else "basic"),
-        ]
+        ] + self._get_entry_css_classes(entry)
 
         html.open_div(class_=classes, id_="menu_entry_%s" % entry.name)
         DropdownEntryRenderer().show(entry)
@@ -484,11 +484,24 @@ class PageMenuRenderer:
         html.open_tr(id_="suggestions")
         html.open_td(colspan=3)
         for entry in entries:
-            html.open_div(class_="suggestion")
+            html.open_div(class_=["suggestion"] + self._get_entry_css_classes(entry))
             SuggestedEntryRenderer().show(entry)
             html.close_div()
         html.close_td()
         html.close_tr()
+
+    def _get_entry_css_classes(self, entry: PageMenuEntry) -> List[str]:
+        classes = [
+            ("enabled" if entry.is_enabled else "disabled"),
+            ("advanced" if entry.is_advanced else "basic"),
+        ]
+
+        if isinstance(entry.css_classes, list):
+            classes.extend([c for c in entry.css_classes if c is not None])
+        elif entry.css_classes is not None:
+            classes.append(entry.css_classes)
+
+        return classes
 
 
 class SuggestedEntryRenderer:

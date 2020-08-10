@@ -519,8 +519,8 @@ class DiscoveryPageRenderer:
         disable_page_menu_entry("stop")
         enable_page_menu_entry("scan")
 
-        # TODO: Add correct permission checking
-        if fixall >= 1:
+        if (fixall >= 1 and config.user.may("wato.service_discovery_to_monitored") and
+                config.user.may("wato.service_discovery_to_removed")):
             enable_page_menu_entry("fix_all")
 
         if (already_has_services and config.user.may("wato.service_discovery_to_undecided") and

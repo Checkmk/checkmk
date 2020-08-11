@@ -97,8 +97,7 @@ if TYPE_CHECKING:
 #   '----------------------------------------------------------------------'
 
 
-# Get availability options without rendering the valuespecs
-def get_availability_options_from_url(what: AVObjectType) -> AVOptions:
+def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
     with html.plugged():
         avoptions = render_availability_options(what)
         html.drain()
@@ -198,7 +197,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
     else:
         what = "host"
 
-    avoptions = get_availability_options_from_url(what)
+    avoptions = get_availability_options_from_request(what)
     time_range, range_title = cast(AVRangeSpec, avoptions["range"])
 
     # We have two display modes:
@@ -717,7 +716,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
     config.user.need_permission("general.see_availability")
 
     av_mode = html.request.get_ascii_input_mandatory("av_mode", "availability")
-    avoptions = get_availability_options_from_url("bi")
+    avoptions = get_availability_options_from_request("bi")
 
     title = view_title(view.spec)
     if av_mode == "timeline":

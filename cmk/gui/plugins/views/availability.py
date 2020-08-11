@@ -99,12 +99,12 @@ if TYPE_CHECKING:
 
 def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
     with html.plugged():
-        avoptions = render_availability_options(what)
+        avoptions = _show_availability_options(what)
         html.drain()
     return avoptions
 
 
-def render_availability_options(what: AVObjectType) -> AVOptions:
+def _show_availability_options(what: AVObjectType) -> AVOptions:
     if html.request.var("_reset"):
         config.user.save_file("avoptions", {})
         html.request.del_vars("avo_")
@@ -247,6 +247,14 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
         handle_delete_annotations()
         confirmation_html_code = html.drain()
 
+    # Remove variables for editing annotations, otherwise they will make it into the uris
+    html.request.del_vars("anno_")
+    if html.request.var("filled_in") == "editanno":
+        html.request.del_var("filled_in")
+    # Re-read the avoptions again, because the HTML vars have changed above (anno_ and editanno_ has
+    # been removed, which must not be part of the form
+    avoptions = get_availability_options_from_request(what)
+
     # Now compute all data, we need this also for CSV export
     if not html.has_user_errors():
         include_long_output = av_mode == "timeline" \
@@ -281,15 +289,6 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
         html.final_javascript("cmk.page_menu.open_popup('avoptions');")
 
     html.write(confirmation_html_code)
-
-    # Remove variables for editing annotations, otherwise they will make it into the uris
-    html.request.del_vars("anno_")
-    if html.request.var("filled_in") == "editanno":
-        html.request.del_var("filled_in")
-
-    # Render the avoptions again to get the HTML code, because the HTML vars have changed
-    # above (anno_ and editanno_ has been removed, which must not be part of the form
-    avoptions = render_availability_options(what)
 
     if not html.has_user_errors():
         # If we abolish the limit we have to fetch the data again
@@ -327,7 +326,7 @@ def _page_menu_availability(breadcrumb: Breadcrumb, what: AVObjectType, av_mode:
                             PageMenuEntry(
                                 title=_("Availability options"),
                                 icon_name="painteroptions",
-                                item=PageMenuPopup(_render_avoptions_form()),
+                                item=PageMenuPopup(_render_avoptions_form(what)),
                                 name="avoptions",
                             )
                         ],
@@ -376,8 +375,10 @@ def _page_menu_availability(breadcrumb: Breadcrumb, what: AVObjectType, av_mode:
     return menu
 
 
-def _render_avoptions_form() -> str:
-    return ""
+def _render_avoptions_form(what: AVObjectType) -> str:
+    with html.plugged():
+        _show_availability_options(what)
+        return html.drain()
 
 
 def _page_menu_entries_av_mode(what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec,
@@ -758,7 +759,8 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
             html.context_button(_("Timeline"), timeline_url, "timeline")
         html.end_context_buttons()
 
-        avoptions = render_availability_options("bi")
+        avoptions = get_availability_options_from_request("bi")
+        _show_availability_options("bi")
 
     if not html.has_user_errors():
 

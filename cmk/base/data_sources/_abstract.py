@@ -378,23 +378,23 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             raw_data, is_cached_data = self._get_raw_data(
                 selected_raw_sections=selected_raw_sections,)
 
-            self._host_sections = host_sections = self._parser.parse(raw_data)
-            assert isinstance(host_sections, ABCHostSections)
+            self._host_sections = self._parser.parse(raw_data)
+            assert isinstance(self._host_sections, ABCHostSections)
 
             if get_raw_data:
                 return raw_data
 
-            if host_sections.persisted_sections and not is_cached_data:
-                persisted_sections.update(host_sections.persisted_sections)
+            if self._host_sections.persisted_sections and not is_cached_data:
+                persisted_sections.update(self._host_sections.persisted_sections)
                 self._section_store.store(persisted_sections)
 
             # Add information from previous persisted infos
-            host_sections.add_persisted_sections(
+            self._host_sections.add_persisted_sections(
                 persisted_sections,
                 logger=self._logger,
             )
 
-            return host_sections
+            return self._host_sections
 
         except MKTerminate:
             raise

@@ -18,6 +18,7 @@
 #include "Logger.h"
 #include "StringUtils.h"
 #include "contact_fwd.h"
+#include "pnp4nagios.h"
 
 void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "socket path = '" << _socket << "'";
@@ -243,6 +244,16 @@ Attributes NagiosCore::customAttributes(const void *holder,
         }
     }
     return attrs;
+}
+
+MetricLocation NagiosCore::metricLocation(
+    const std::string &host_name, const std::string &service_description,
+    const Metric::Name &var) const {
+    return MetricLocation{
+        pnpPath() / host_name /
+            pnp_cleanup(service_description + "_" +
+                        Metric::MangledName(var).string() + ".rrd"),
+        "1"};
 }
 
 bool NagiosCore::answerRequest(InputBuffer &input, OutputBuffer &output) {

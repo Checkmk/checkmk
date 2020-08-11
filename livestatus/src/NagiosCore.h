@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Metric.h"
 #include "MonitoringCore.h"
 #include "Store.h"
 #include "Triggers.h"
@@ -112,6 +113,10 @@ public:
 
     Attributes customAttributes(const void *holder,
                                 AttributeKind kind) const override;
+
+    MetricLocation metricLocation(const std::string &host_name,
+                                  const std::string &service_description,
+                                  const Metric::Name &var) const override;
 
     // specific for NagiosCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);

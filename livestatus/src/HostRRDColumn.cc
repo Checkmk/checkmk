@@ -5,7 +5,6 @@
 
 #include "HostRRDColumn.h"
 
-#include <filesystem>
 #include <string>
 
 #include "Metric.h"
@@ -16,15 +15,11 @@
 
 RRDColumn::Data HostRRDColumn::getDataFor(Row row) const {
     if (const auto *hst{columnData<host>(row)}) {
-        return getData(
-            _mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
-            [this, hst](const Metric::Name &var) {
-                return MetricLocation{
-                    this->_mc->pnpPath() / hst->name /
-                        pnp_cleanup(dummy_service_description() + "_" +
-                                    Metric::MangledName(var).string() + ".rrd"),
-                    "1"};
-            });
+        return getData(_mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
+                       [this, hst](const Metric::Name &var) {
+                           return _mc->metricLocation(
+                               hst->name, dummy_service_description(), var);
+                       });
     }
     return {};
 }

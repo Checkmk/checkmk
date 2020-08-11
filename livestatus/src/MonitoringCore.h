@@ -141,6 +141,10 @@ public:
     virtual Attributes customAttributes(const void *holder,
                                         AttributeKind kind) const = 0;
 
+    [[nodiscard]] virtual MetricLocation metricLocation(
+        const std::string &host_name, const std::string &service_description,
+        const Metric::Name &var) const = 0;
+
     // Our escape hatch, this should die in the long run...
     template <typename T>
     [[nodiscard]] T *impl() const {

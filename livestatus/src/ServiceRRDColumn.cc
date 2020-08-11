@@ -5,26 +5,20 @@
 
 #include "ServiceRRDColumn.h"
 
-#include <filesystem>
 #include <string>
 
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "nagios.h"
-#include "pnp4nagios.h"
 
 RRDColumn::Data ServiceRRDColumn::getDataFor(Row row) const {
     if (const auto *svc{columnData<service>(row)}) {
-        return getData(
-            _mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
-            [this, svc](const Metric::Name &var) {
-                return MetricLocation{
-                    this->_mc->pnpPath() / svc->host_name /
-                        pnp_cleanup(std::string{svc->description} + "_" +
-                                    Metric::MangledName(var).string() + ".rrd"),
-                    "1"};
-            });
+        return getData(_mc->loggerRRD(), _mc->rrdcachedSocketPath(), _args,
+                       [this, svc](const Metric::Name &var) {
+                           return _mc->metricLocation(svc->host_name,
+                                                      svc->description, var);
+                       });
     }
     return {};
 }

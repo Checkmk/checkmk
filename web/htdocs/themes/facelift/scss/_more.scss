@@ -42,10 +42,6 @@ a.more {
     width: auto;
     padding: 0;
     margin: 0;
-    filter: brightness(65%);
-    animation-duration: 0.1s;
-    animation-timing-function: linear;
-    animation-fill-mode: both;
   }
 }
 
@@ -60,50 +56,24 @@ div.more_container {
   }
 }
 
-@keyframes more_0_0_0_1 {
-  0% { filter: opacity(0%); }
-  25% { filter: opacity(0%); }
-  75% { filter: opacity(0%); }
-
-  100% {
-    z-index: 2;
-    filter: opacity(100%);
-  }
-}
-@keyframes more_0_0_1_0 {
-  0% { filter: opacity(0%); }
-  25% { filter: opacity(0%); }
-  75% { filter: opacity(100%); }
-  100% { filter: opacity(0%); }
-}
-@keyframes more_0_1_0_0 {
-  0% { filter: opacity(0%); }
-  25% { filter: opacity(100%); }
-  75% { filter: opacity(0%); }
-  100% { filter: opacity(0%); }
-}
-@keyframes more_1_0_0_0 {
-  0% {
-    z-index: 2;
-    filter: opacity(100%);
-  }
-  25% { filter: opacity(0%); }
-  75% { filter: opacity(0%); }
-  100% { filter: opacity(0%); }
-}
-
 .more a.more {
-  img.more_0 { animation-name: more_1_0_0_0; }
-  img.more_1 { animation-name: more_0_1_0_0; }
-  img.more_2 { animation-name: more_0_0_1_0; }
-  img.more_3 { animation-name: more_0_0_0_1; }
+  img.show_more {
+    opacity: 0;
+  }
+
+  img.show_less {
+    opacity: 1;
+  }
 }
 
 a.more {
-  img.more_0 { animation-name: more_0_0_0_1; }
-  img.more_1 { animation-name: more_0_0_1_0; }
-  img.more_2 { animation-name: more_0_1_0_0; }
-  img.more_3 { animation-name: more_1_0_0_0; }
+  img.show_more {
+    opacity: 1;
+  }
+
+  img.show_less {
+    opacity: 0;
+  }
 }
 
 /* TODO: more this to nform styles */

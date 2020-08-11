@@ -5,6 +5,7 @@
 import * as ajax from "ajax";
 import * as async_progress from "async_progress";
 import * as utils from "utils";
+import * as page_menu from "page_menu";
 
 //#.
 //#   .-Activation---------------------------------------------------------.
@@ -119,10 +120,6 @@ function handle_start_activation_error(_unused, status_code, error_msg)
 function lock_activation_controls(lock)
 {
     var elements = [];
-    elements.push(document.getElementById("activate_affected"));
-    elements.push(document.getElementById("activate_selected"));
-    // TODO: Remove once new changes mechanism has been implemented
-    elements.push(document.getElementById("discard_changes_button"));
 
     elements = elements.concat(Array.prototype.slice.call(document.getElementsByName("activate_p_comment"), 0));
     elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("site_checkbox"), 0));
@@ -139,6 +136,10 @@ function lock_activation_controls(lock)
 
         elements[i].disabled = lock ? "disabled" : false;
     }
+
+    page_menu.enable_menu_entry("activate_affected", !lock);
+    page_menu.enable_menu_entry("activate_selected", !lock);
+    page_menu.enable_menu_entry("discard_changes", !lock);
 }
 
 function hide_last_results()

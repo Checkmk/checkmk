@@ -9,7 +9,7 @@ remote sites in distributed WATO."""
 import ast
 import tarfile
 import os
-from typing import Dict, NamedTuple, List, Optional
+from typing import Dict, NamedTuple, List, Optional, Iterator
 
 from six import ensure_str
 
@@ -32,6 +32,15 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode
 from cmk.gui.valuespec import DictionaryEntry
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_javascript_link,
+)
 
 
 @mode_registry.register
@@ -52,23 +61,92 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
     def title(self):
         return _("Activate pending changes")
 
-    def buttons(self):
-        # TODO: Remove once new changes mechanism has been implemented
-        if self._may_discard_changes():
-            html.context_button(_("Discard Changes!"),
-                                html.makeactionuri([("_action", "discard")]),
-                                "discard",
-                                id_="discard_changes_button")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="changes",
+                    title=_("Changes"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("On all sites"),
+                            entries=list(self._page_menu_entries_all_sites()),
+                        ),
+                        PageMenuTopic(
+                            title=_("On selected sites"),
+                            entries=list(self._page_menu_entries_selected_sites()),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_setup()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
+    def _page_menu_entries_setup(self) -> Iterator[PageMenuEntry]:
         if config.user.may("wato.sites"):
-            html.context_button(_("Site Configuration"),
-                                watolib.folder_preserving_link([("mode", "sites")]), "sites")
+            yield PageMenuEntry(
+                title=_("Sites"),
+                icon_name="sites",
+                item=make_simple_link(html.makeuri_contextless([
+                    ("mode", "sites"),
+                ])),
+            )
+
+    def _page_menu_entries_all_sites(self) -> Iterator[PageMenuEntry]:
+        if self._may_activate_changes():
+            yield PageMenuEntry(
+                title=_("Activate on affected sites"),
+                icon_name="activate",
+                item=make_javascript_link("cmk.activation.activate_changes(\"affected\")"),
+                name="activate_affected",
+                is_shortcut=True,
+                is_suggested=True,
+            )
+
+        if self._may_discard_changes():
+            yield PageMenuEntry(
+                title=_("Discard all pending changes"),
+                icon_name="discard",
+                item=make_simple_link(html.makeactionuri([("_action", "discard")])),
+                name="discard_changes",
+            )
 
         if config.user.may("wato.auditlog"):
-            html.context_button(_("Audit Log"),
-                                watolib.folder_preserving_link([("mode", "auditlog")]), "auditlog")
+            yield PageMenuEntry(
+                title=_("Audit log"),
+                icon_name="auditlog",
+                item=make_simple_link(watolib.folder_preserving_link([("mode", "auditlog")])),
+            )
 
-    def _may_discard_changes(self):
+    def _page_menu_entries_selected_sites(self) -> Iterator[PageMenuEntry]:
+        if self._may_activate_changes():
+            yield PageMenuEntry(
+                title=_("Activate on selected sites"),
+                icon_name="activate",
+                item=make_javascript_link("cmk.activation.activate_changes(\"selected\")"),
+                name="activate_selected",
+            )
+
+    def _may_discard_changes(self) -> bool:
+        if not self._may_activate_changes():
+            return False
+
+        if not self._get_last_wato_snapshot_file():
+            return False
+
+        return True
+
+    def _may_activate_changes(self) -> bool:
         if not config.user.may("wato.activate"):
             return False
 
@@ -76,9 +154,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return False
 
         if not config.user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
-            return False
-
-        if not self._get_last_wato_snapshot_file():
             return False
 
         return True
@@ -213,13 +288,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                       "a permitted user to do it for you."))
 
         forms.end()
-        html.jsbutton("activate_affected",
-                      _("Activate affected"),
-                      "cmk.activation.activate_changes(\"affected\")",
-                      cssclass="hot")
-        html.jsbutton("activate_selected", _("Activate selected"),
-                      "cmk.activation.activate_changes(\"selected\")")
-
         html.hidden_fields()
         html.end_form()
 

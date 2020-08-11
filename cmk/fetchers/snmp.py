@@ -16,7 +16,7 @@ import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
 from . import factory
-from ._base import ABCFileCache, AbstractDataFetcher
+from ._base import ABCFileCache, AbstractFetcher
 
 
 class SNMPFileCache(ABCFileCache[SNMPRawData]):
@@ -29,7 +29,7 @@ class SNMPFileCache(ABCFileCache[SNMPRawData]):
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
 
-class SNMPDataFetcher(AbstractDataFetcher[SNMPRawData]):
+class SNMPFetcher(AbstractFetcher[SNMPRawData]):
     def __init__(
         self,
         oid_infos: Dict[SectionName, List[SNMPTree]],
@@ -37,14 +37,14 @@ class SNMPDataFetcher(AbstractDataFetcher[SNMPRawData]):
         snmp_config: SNMPHostConfig,
     ):
         # type (...) -> None
-        super(SNMPDataFetcher, self).__init__()
+        super(SNMPFetcher, self).__init__()
         self._oid_infos = oid_infos
         self._use_snmpwalk_cache = use_snmpwalk_cache
         self._snmp_config = snmp_config
         self._logger = logging.getLogger("cmk.fetchers.snmp")
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> 'SNMPDataFetcher':
+    def from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
         return cls(
             {
                 name: [SNMPTree.from_json(tree) for tree in trees
@@ -54,7 +54,7 @@ class SNMPDataFetcher(AbstractDataFetcher[SNMPRawData]):
             SNMPHostConfig(**serialized["snmp_config"]),
         )
 
-    def __enter__(self) -> 'SNMPDataFetcher':
+    def __enter__(self) -> 'SNMPFetcher':
         return self
 
     def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],

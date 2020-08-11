@@ -29,61 +29,61 @@ def to_json(data):
     return json.loads(json.dumps(data))
 
 
-class TestIPMIDataFetcher:
+class TestIPMIFetcher:
     def test_deserialization(self):
-        fetcher = IPMIDataFetcher.from_json(
+        fetcher = IPMIFetcher.from_json(
             to_json({
                 "address": "1.2.3.4",
                 "username": "us3r",
                 "password": "secret",
             }))
-        assert isinstance(fetcher, IPMIDataFetcher)
+        assert isinstance(fetcher, IPMIFetcher)
 
     def test_command_raises_IpmiException_handling(self, monkeypatch):
-        monkeypatch.setattr(IPMIDataFetcher, "open", lambda self: None)
+        monkeypatch.setattr(IPMIFetcher, "open", lambda self: None)
 
         with pytest.raises(MKFetcherError):
-            with IPMIDataFetcher("127.0.0.1", "", ""):
+            with IPMIFetcher("127.0.0.1", "", ""):
                 raise IpmiException()
 
     def test_parse_sensor_reading_standard_case(self):
         reading = SensorReading(  #
             ['lower non-critical threshold'], 1, "Hugo", None, "", [42], "hugo-type", None, 0)
-        assert IPMIDataFetcher._parse_sensor_reading(  #
+        assert IPMIFetcher._parse_sensor_reading(  #
             0, reading) == [b"0", b"Hugo", b"hugo-type", b"N/A", b"", b"WARNING"]
 
     def test_parse_sensor_reading_false_positive(self):
         reading = SensorReading(  #
             ['Present'], 1, "Dingeling", 0.2, b"\xc2\xb0C", [], "FancyDevice", 3.14159265, 1)
-        assert IPMIDataFetcher._parse_sensor_reading(  #
+        assert IPMIFetcher._parse_sensor_reading(  #
             0, reading) == [b"0", b"Dingeling", b"FancyDevice", b"3.14", b"C", b"Present"]
 
 
 class TestPiggyBack:
     def test_deserialization(self):
-        fetcher = PiggyBackDataFetcher.from_json(
+        fetcher = PiggyBackFetcher.from_json(
             to_json({
                 "hostname": "host",
                 "address": "1.2.3.4",
                 "time_settings": [],
             }))
-        assert isinstance(fetcher, PiggyBackDataFetcher)
+        assert isinstance(fetcher, PiggyBackFetcher)
 
 
 class TestProgram:
     def test_deserialization(self):
-        fetcher = ProgramDataFetcher.from_json(
+        fetcher = ProgramFetcher.from_json(
             to_json({
                 "cmdline": "/bin/true",
                 "stdin": None,
                 "is_cmc": False,
             }))
-        assert isinstance(fetcher, ProgramDataFetcher)
+        assert isinstance(fetcher, ProgramFetcher)
 
 
 class TestSNMP:
     def test_deserialization(self):
-        fetcher = SNMPDataFetcher.from_json(
+        fetcher = SNMPFetcher.from_json(
             to_json({
                 "oid_infos": {
                     "pim": [SNMPTree(base=".1.1.1", oids=["1.2", "3.4"]).to_json()],
@@ -112,12 +112,12 @@ class TestSNMP:
                     record_stats=False,
                 )._asdict(),
             }))
-        assert isinstance(fetcher, SNMPDataFetcher)
+        assert isinstance(fetcher, SNMPFetcher)
 
 
-class TestTCPDataFetcher:
+class TestTCPFetcher:
     def test_deserialization(self):
-        fetcher = TCPDataFetcher.from_json(
+        fetcher = TCPFetcher.from_json(
             to_json({
                 "family": socket.AF_INET,
                 "address": "1.2.3.4",
@@ -126,19 +126,19 @@ class TestTCPDataFetcher:
                     "encryption": "settings"
                 },
             }))
-        assert isinstance(fetcher, TCPDataFetcher)
+        assert isinstance(fetcher, TCPFetcher)
 
     def test_decrypt_plaintext_is_noop(self):
         settings = {"use_regular": "allow"}
         output = b"<<<section:sep(0)>>>\nbody\n"
-        fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings)
+        fetcher = TCPFetcher(socket.AF_INET, ("", 0), 0.0, settings)
 
         assert fetcher._decrypt(output) == output
 
     def test_decrypt_plaintext_with_enforce_raises_MKFetcherError(self):
         settings = {"use_regular": "enforce"}
         output = b"<<<section:sep(0)>>>\nbody\n"
-        fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings)
+        fetcher = TCPFetcher(socket.AF_INET, ("", 0), 0.0, settings)
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)
@@ -146,7 +146,7 @@ class TestTCPDataFetcher:
     def test_decrypt_payload_with_wrong_protocol_raises_MKFetcherError(self):
         settings = {"use_regular": "enforce"}
         output = b"the first two bytes are not a number"
-        fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings)
+        fetcher = TCPFetcher(socket.AF_INET, ("", 0), 0.0, settings)
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)

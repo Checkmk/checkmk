@@ -16,7 +16,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.fetchers import FetcherType, IPMIDataFetcher
+from cmk.fetchers import FetcherType, IPMIFetcher
 
 from cmk.base.config import HostConfig, IPMICredentials, SelectedRawSections
 from cmk.base.exceptions import MKAgentError
@@ -116,6 +116,6 @@ class IPMIManagementBoardDataSource(AgentDataSource):
             # TODO(ml): Should we pass that to the fetcher?
             selected_raw_section_names = {SectionName("mgmt_ipmi_sensors")}
 
-        with IPMIDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
+        with IPMIFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")

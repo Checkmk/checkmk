@@ -12,22 +12,22 @@ from typing import List, Optional, Tuple, Type
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
-from .agent import AgentDataFetcher
+from .agent import AgentFetcher
 
 
-class PiggyBackDataFetcher(AgentDataFetcher):
+class PiggyBackFetcher(AgentFetcher):
     def __init__(self, hostname: HostName, address: Optional[HostAddress],
                  time_settings: List[Tuple[Optional[str], str, int]]) -> None:
-        super(PiggyBackDataFetcher, self).__init__()
+        super(PiggyBackFetcher, self).__init__()
         self._hostname = hostname
         self._address = address
         self._time_settings = time_settings
         self._logger = logging.getLogger("cmk.fetchers.piggyback")
         self._sources: List[PiggybackRawDataInfo] = []
 
-    def __enter__(self) -> 'PiggyBackDataFetcher':
+    def __enter__(self) -> 'PiggyBackFetcher':
         for origin in (self._hostname, self._address):
-            self._sources.extend(PiggyBackDataFetcher._raw_data(origin, self._time_settings))
+            self._sources.extend(PiggyBackFetcher._raw_data(origin, self._time_settings))
         return self
 
     def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],

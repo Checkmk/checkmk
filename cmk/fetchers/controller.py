@@ -17,12 +17,12 @@ from cmk.utils.paths import core_fetcher_config_dir
 from cmk.utils.type_defs import HostName
 
 from . import FetcherType
-from ._base import AbstractDataFetcher
+from ._base import AbstractFetcher
 
 
 class FetcherFactory:
     @staticmethod
-    def make(fetcher_type: str, fetcher_params: Dict[str, Any]) -> AbstractDataFetcher:
+    def make(fetcher_type: str, fetcher_params: Dict[str, Any]) -> AbstractFetcher:
         return FetcherType[fetcher_type].value.from_json(fetcher_params)
 
 

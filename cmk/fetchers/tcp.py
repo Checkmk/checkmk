@@ -16,10 +16,10 @@ import cmk.utils.debug
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from ._base import MKFetcherError
-from .agent import AgentDataFetcher
+from .agent import AgentFetcher
 
 
-class TCPDataFetcher(AgentDataFetcher):
+class TCPFetcher(AgentFetcher):
     def __init__(
         self,
         family: socket.AddressFamily,
@@ -28,7 +28,7 @@ class TCPDataFetcher(AgentDataFetcher):
         encryption_settings: Dict[str, str],
     ):
         # type (...) -> None
-        super(TCPDataFetcher, self).__init__()
+        super(TCPFetcher, self).__init__()
         self._family = socket.AddressFamily(family)
         self._address = address
         self._timeout = timeout
@@ -36,7 +36,7 @@ class TCPDataFetcher(AgentDataFetcher):
         self._logger = logging.getLogger("cmk.fetchers.tcp")
         self._socket: Optional[socket.socket] = None
 
-    def __enter__(self) -> 'TCPDataFetcher':
+    def __enter__(self) -> 'TCPFetcher':
         self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)", self._address[0],
                            self._address[1], self._timeout)
         self._socket = socket.socket(self._family, socket.SOCK_STREAM)

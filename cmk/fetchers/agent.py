@@ -10,7 +10,7 @@ from six import ensure_binary
 
 from cmk.utils.type_defs import AgentRawData
 
-from ._base import ABCFileCache, AbstractDataFetcher
+from ._base import ABCFileCache, AbstractFetcher
 
 
 class AgentFileCache(ABCFileCache[AgentRawData]):
@@ -25,5 +25,5 @@ class AgentFileCache(ABCFileCache[AgentRawData]):
         return ensure_binary(raw_data)
 
 
-class AgentDataFetcher(AbstractDataFetcher[AgentRawData]):
+class AgentFetcher(AbstractFetcher[AgentRawData]):
     pass

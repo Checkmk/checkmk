@@ -17,24 +17,24 @@ from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData
 
 from ._base import MKFetcherError
-from .agent import AgentDataFetcher
+from .agent import AgentFetcher
 
 
-class ProgramDataFetcher(AgentDataFetcher):
+class ProgramFetcher(AgentFetcher):
     def __init__(
         self,
         cmdline: Union[bytes, str],
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
-        super(ProgramDataFetcher, self).__init__()
+        super(ProgramFetcher, self).__init__()
         self._cmdline = cmdline
         self._stdin = stdin
         self._is_cmc = is_cmc
         self._logger = logging.getLogger("cmk.fetchers.program")
         self._process: Optional[subprocess.Popen] = None
 
-    def __enter__(self) -> 'ProgramDataFetcher':
+    def __enter__(self) -> 'ProgramFetcher':
         if self._is_cmc:
             # Warning:
             # The preexec_fn parameter is not safe to use in the presence of threads in your

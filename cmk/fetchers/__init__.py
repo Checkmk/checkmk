@@ -8,18 +8,18 @@
 import enum
 
 from .agent import AgentFileCache
-from .ipmi import IPMIDataFetcher
-from .piggyback import PiggyBackDataFetcher
-from .program import ProgramDataFetcher
-from .snmp import SNMPDataFetcher, SNMPFileCache
-from .tcp import TCPDataFetcher
+from .ipmi import IPMIFetcher
+from .piggyback import PiggyBackFetcher
+from .program import ProgramFetcher
+from .snmp import SNMPFetcher, SNMPFileCache
+from .tcp import TCPFetcher
 
 __all__ = [
-    "IPMIDataFetcher",
-    "PiggyBackDataFetcher",
-    "ProgramDataFetcher",
-    "SNMPDataFetcher",
-    "TCPDataFetcher",
+    "IPMIFetcher",
+    "PiggyBackFetcher",
+    "ProgramFetcher",
+    "SNMPFetcher",
+    "TCPFetcher",
     "FetcherType",
 ]
 
@@ -27,8 +27,8 @@ __all__ = [
 class FetcherType(enum.Enum):
     """Map short name to fetcher class."""
     NONE = None
-    IPMI = IPMIDataFetcher
-    PIGGYBACK = PiggyBackDataFetcher
-    PROGRAM = ProgramDataFetcher
-    SNMP = SNMPDataFetcher
-    TCP = TCPDataFetcher
+    IPMI = IPMIFetcher
+    PIGGYBACK = PiggyBackFetcher
+    PROGRAM = ProgramFetcher
+    SNMP = SNMPFetcher
+    TCP = TCPFetcher

@@ -19,24 +19,24 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from ._base import MKFetcherError
-from .agent import AgentDataFetcher
+from .agent import AgentFetcher
 
 
-class IPMIDataFetcher(AgentDataFetcher):
+class IPMIFetcher(AgentFetcher):
     def __init__(
         self,
         address: HostAddress,
         username: str,
         password: str,
     ) -> None:
-        super(IPMIDataFetcher, self).__init__()
+        super(IPMIFetcher, self).__init__()
         self._address = address
         self._username = username
         self._password = password
         self._logger = logging.getLogger("cmk.fetchers.ipmi")
         self._command: Optional[ipmi_cmd.Command] = None
 
-    def __enter__(self) -> 'IPMIDataFetcher':
+    def __enter__(self) -> 'IPMIFetcher':
         self.open()
         return self
 
@@ -100,7 +100,7 @@ class IPMIDataFetcher(AgentDataFetcher):
                 # not installed
                 if "GPU" in reading.name and has_no_gpu:
                     continue
-                sensors.append(IPMIDataFetcher._parse_sensor_reading(number, reading))
+                sensors.append(IPMIFetcher._parse_sensor_reading(number, reading))
 
         return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
             [b"|".join(sensor) + b"\n" for sensor in sensors])
@@ -154,7 +154,7 @@ class IPMIDataFetcher(AgentDataFetcher):
             health_txt = b"CRITICAL"
         elif reading.health >= ipmi_const.Health.Warning:
             # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
-            health_txt = IPMIDataFetcher._handle_false_positive_warnings(reading)
+            health_txt = IPMIFetcher._handle_false_positive_warnings(reading)
         elif reading.health == ipmi_const.Health.Ok:
             health_txt = b"OK"
 

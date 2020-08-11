@@ -12,7 +12,7 @@ from six import ensure_str
 import cmk.utils.paths
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
-from cmk.fetchers import FetcherType, ProgramDataFetcher
+from cmk.fetchers import FetcherType, ProgramFetcher
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -271,6 +271,6 @@ class ProgramDataSource(AgentDataSource):
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> AgentRawData:
         # TODO(ml): Do something with the selection.
-        with ProgramDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
+        with ProgramFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")

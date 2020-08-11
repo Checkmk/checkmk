@@ -12,7 +12,7 @@ from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import get_piggyback_raw_data
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, ServiceCheckResult, SourceType
 
-from cmk.fetchers import FetcherType, PiggyBackDataFetcher
+from cmk.fetchers import FetcherType, PiggyBackFetcher
 
 import cmk.base.config as config
 from cmk.base.config import SelectedRawSections
@@ -106,7 +106,7 @@ class PiggyBackDataSource(AgentDataSource):
         *,
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> AgentRawData:
-        with PiggyBackDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
+        with PiggyBackFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 

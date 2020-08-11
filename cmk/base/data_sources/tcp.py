@@ -9,7 +9,7 @@ from typing import Optional
 
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
-from cmk.fetchers import FetcherType, TCPDataFetcher
+from cmk.fetchers import FetcherType, TCPFetcher
 
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
@@ -82,7 +82,7 @@ class TCPDataSource(AgentDataSource):
             raise MKAgentError("Got no data: No usable cache file present at %s" %
                                self.configurator.cache_file_path)
 
-        with TCPDataFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
+        with TCPFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 

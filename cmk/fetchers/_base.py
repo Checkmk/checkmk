@@ -22,15 +22,15 @@ class MKFetcherError(MKException):
     """An exception common to the fetchers."""
 
 
-class AbstractDataFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
+class AbstractFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> 'AbstractDataFetcher':
+    def from_json(cls, serialized: Dict[str, Any]) -> 'AbstractFetcher':
         """Deserialize from JSON."""
         return cls(**serialized)  # type: ignore[call-arg]
 
     @abc.abstractmethod
-    def __enter__(self) -> 'AbstractDataFetcher':
+    def __enter__(self) -> 'AbstractFetcher':
         """Prepare the data source."""
 
     @abc.abstractmethod

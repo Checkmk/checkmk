@@ -13,7 +13,6 @@ from .agent_based_api.v0 import (
     register,
     Service,
     SNMPTree,
-    startswith,
 )
 from .agent_based_api.v0.type_defs import (
     CheckGenerator,
@@ -21,6 +20,7 @@ from .agent_based_api.v0.type_defs import (
     SNMPStringTable,
     Parameters,
 )
+from .utils.netscaler import SNMP_DETECT
 
 # example SNMP output:
 #
@@ -54,7 +54,7 @@ register.snmp_section(
             ],
         ),
     ],
-    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5951.1"),
+    detect=SNMP_DETECT,
 )
 
 

@@ -98,39 +98,20 @@ if TYPE_CHECKING:
 
 
 def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
-    with html.plugged():
-        avoptions = _show_availability_options(what)
-        html.drain()
-    return avoptions
-
-
-def _show_availability_options(what: AVObjectType) -> AVOptions:
-    if html.request.var("_reset"):
-        config.user.save_file("avoptions", {})
-        html.request.del_vars("avo_")
-        html.request.del_var("avoptions")
-
     avoptions = availability.get_default_avoptions()
 
     # Users of older versions might not have all keys set. The following
     # trick will merge their options with our default options.
     avoptions.update(config.user.load_file("avoptions", {}))
 
-    is_open = False
-    html.begin_form("avoptions")
-    html.hidden_field("avoptions", "set")
     avoption_entries = availability.get_avoption_entries(what)
     if html.request.var("avoptions") == "set":
-        for name, height, _show_in_reporting, vs in avoption_entries:
+        for name, _height, _show_in_reporting, vs in avoption_entries:
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
                 vs.validate_value(avoptions[name], "avo_" + name)
             except MKUserError as e:
                 html.add_user_error(e.varname, e)
-                is_open = True
-
-    if html.request.var("_unset_logrow_limit") == "1":
-        avoptions["logrow_limit"] = 0
 
     range_vs = availability.vs_rangespec()
     try:
@@ -139,12 +120,36 @@ def _show_availability_options(what: AVObjectType) -> AVOptions:
     except MKUserError as e:
         html.add_user_error(e.varname, e)
 
+    if html.request.var("_unset_logrow_limit") == "1":
+        avoptions["logrow_limit"] = 0
+
+    if html.form_submitted():
+        config.user.save_file("avoptions", avoptions)
+
+    return avoptions
+
+
+def _handle_availability_option_reset() -> None:
+    if html.request.var("_reset"):
+        config.user.save_file("avoptions", {})
+        html.request.del_vars("avo_")
+        html.request.del_var("avoptions")
+
+
+def _show_availability_options(what: AVObjectType, avoptions: AVOptions) -> None:
+    is_open = html.has_user_errors()
+    html.begin_form("avoptions")
+    html.hidden_field("avoptions", "set")
+
     if html.has_user_errors():
         html.show_user_errors()
 
     html.begin_floating_options("avoptions", is_open)
+
+    avoption_entries = availability.get_avoption_entries(what)
     for name, height, _show_in_reporting, vs in avoption_entries:
         html.render_floating_option(name, height, "avo_", vs, avoptions.get(name))
+
     html.end_floating_options(reset_url=html.makeuri(
         [("_reset", "1")],
         remove_prefix="avo_",
@@ -153,11 +158,6 @@ def _show_availability_options(what: AVObjectType) -> AVOptions:
 
     html.hidden_fields()
     html.end_form()
-
-    if html.form_submitted():
-        config.user.save_file("avoptions", avoptions)
-
-    return avoptions
 
 
 #.
@@ -197,6 +197,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
     else:
         what = "host"
 
+    _handle_availability_option_reset()
     avoptions = get_availability_options_from_request(what)
     time_range, range_title = cast(AVRangeSpec, avoptions["range"])
 
@@ -279,11 +280,11 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
         html.body_start(title, force=True)
 
     if display_options.enabled(display_options.T):
-        html.top_heading(
-            title,
-            breadcrumb,
-            page_menu=_page_menu_availability(breadcrumb, what, av_mode, av_object, time_range)
-            if display_options.enabled(display_options.B) else None)
+        html.top_heading(title,
+                         breadcrumb,
+                         page_menu=_page_menu_availability(breadcrumb, what, av_mode, av_object,
+                                                           time_range, avoptions)
+                         if display_options.enabled(display_options.B) else None)
 
     if html.has_user_errors():
         html.final_javascript("cmk.page_menu.open_popup('avoptions');")
@@ -313,7 +314,8 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
 
 
 def _page_menu_availability(breadcrumb: Breadcrumb, what: AVObjectType, av_mode: AVMode,
-                            av_object: AVObjectSpec, time_range: AVTimeRange) -> PageMenu:
+                            av_object: AVObjectSpec, time_range: AVTimeRange,
+                            avoptions: AVOptions) -> PageMenu:
     menu = PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -326,7 +328,7 @@ def _page_menu_availability(breadcrumb: Breadcrumb, what: AVObjectType, av_mode:
                             PageMenuEntry(
                                 title=_("Availability options"),
                                 icon_name="painteroptions",
-                                item=PageMenuPopup(_render_avoptions_form(what)),
+                                item=PageMenuPopup(_render_avoptions_form(what, avoptions)),
                                 name="avoptions",
                             )
                         ],
@@ -375,9 +377,9 @@ def _page_menu_availability(breadcrumb: Breadcrumb, what: AVObjectType, av_mode:
     return menu
 
 
-def _render_avoptions_form(what: AVObjectType) -> str:
+def _render_avoptions_form(what: AVObjectType, avoptions: AVOptions) -> str:
     with html.plugged():
-        _show_availability_options(what)
+        _show_availability_options(what, avoptions)
         return html.drain()
 
 
@@ -717,6 +719,8 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
     config.user.need_permission("general.see_availability")
 
     av_mode = html.request.get_ascii_input_mandatory("av_mode", "availability")
+
+    _handle_availability_option_reset()
     avoptions = get_availability_options_from_request("bi")
 
     title = view_title(view.spec)
@@ -760,7 +764,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
         html.end_context_buttons()
 
         avoptions = get_availability_options_from_request("bi")
-        _show_availability_options("bi")
+        _show_availability_options("bi", avoptions)
 
     if not html.has_user_errors():
 

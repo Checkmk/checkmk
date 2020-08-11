@@ -49,7 +49,7 @@ def get_show_more_setting(more_id: str) -> bool:
 class MainMenuRenderer:
     """Renders the main navigation sidebar"""
     def show(self) -> None:
-        html.open_ul(id_="main_menu", class_=["mega_menu"])
+        html.open_ul(id_="main_menu")
         self._show_main_menu_content()
         html.close_ul()
 

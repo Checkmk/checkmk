@@ -38,7 +38,6 @@
 #
 # - Unify CSS classes attribute to "class_"
 import functools
-import time
 import os
 import ast
 import re
@@ -1001,7 +1000,6 @@ class html(ABCHTMLGenerator):
         # Browser options
         self.user_errors: Dict[Optional[str], str] = {}
         self.focus_object: Union[None, Tuple[Optional[str], str], str] = None
-        self.status_icons: Dict[str, Union[Tuple[str, str], str]] = {}
         self.final_javascript_code = ""
         self.page_context: 'VisualContext' = {}
 
@@ -1012,11 +1010,6 @@ class html(ABCHTMLGenerator):
         # Forms
         self.form_name: Optional[str] = None
         self.form_vars: List[str] = []
-
-        # Time measurement
-        self.times: Dict[str, float] = {}
-        self.start_time = time.time()
-        self.last_measurement = self.start_time
 
         # Register helpers
         self.encoder = URLEncoder()
@@ -1326,13 +1319,6 @@ class html(ABCHTMLGenerator):
     # Other things
     #
 
-    def measure_time(self, name: str) -> None:
-        self.times.setdefault(name, 0.0)
-        now = time.time()
-        elapsed = now - self.last_measurement
-        self.times[name] += elapsed
-        self.last_measurement = now
-
     def is_mobile(self) -> bool:
         return self.mobile
 
@@ -1370,12 +1356,6 @@ class html(ABCHTMLGenerator):
 
     def add_body_css_class(self, cls: str) -> None:
         self._body_classes.append(cls)
-
-    def add_status_icon(self, img: str, tooltip: str, url: Optional[str] = None) -> None:
-        if url:
-            self.status_icons[img] = tooltip, url
-        else:
-            self.status_icons[img] = tooltip
 
     def final_javascript(self, code: str) -> None:
         self.final_javascript_code += code + "\n"
@@ -1779,23 +1759,7 @@ class html(ABCHTMLGenerator):
                 self.body_end()
 
     def bottom_footer(self) -> None:
-        if self._header_sent:
-            self.bottom_focuscode()
-            if self.render_headfoot:
-                self.open_table(class_="footer")
-                self.open_tr()
-
-                self.open_td(class_="left")
-                self._write_status_icons()
-                self.close_td()
-
-                self.td('', class_="middle")
-
-                self.open_td(class_="right")
-                self.close_td()
-
-                self.close_tr()
-                self.close_table()
+        self.bottom_focuscode()
 
     def bottom_focuscode(self) -> None:
         if self.focus_object:
@@ -2895,21 +2859,3 @@ class html(ABCHTMLGenerator):
             if not prefix or name.startswith(prefix):
                 self.tr(self.render_td(name, class_="left") + self.render_td(value, class_="right"))
         self.close_table()
-
-    # TODO: Rename the status_icons because they are not only showing states. There are also actions.
-    # Something like footer icons or similar seems to be better
-    def _write_status_icons(self) -> None:
-        for img, tooltip in self.status_icons.items():
-            if isinstance(tooltip, tuple):
-                tooltip, url = tooltip
-                self.icon_button(url, tooltip, img, cssclass="inline")
-            else:
-                self.icon(tooltip, img, cssclass="inline")
-
-        if self.times:
-            self.measure_time('body')
-            self.open_div(class_=["execution_times"])
-            entries = sorted(self.times.items())
-            for name, duration in entries:
-                self.div("%s: %.1fms" % (name, duration * 1000))
-            self.close_div()

@@ -215,30 +215,6 @@ body {
 
       body.dashboard & { padding-bottom: 0; }
     }
-
-    /* The content page footer containing optional status icons */
-    table.footer,
-    table.footer .popup_menu a,
-    table.footer .popup_menu span {
-      color: $font-color;
-    }
-
-    table.footer {
-      width: 100%;
-      margin-top: 10px;
-      padding-right: 12px;
-      padding-bottom: 10px;
-
-      div.popup_menu {
-        bottom: -1px;
-        left: 20px;
-      }
-    }
-
-    table.footer td.left   { text-align: left; }
-    table.footer td.middle { text-align: center; }
-    table.footer td.right  { text-align: right; }
-    table.footer a { color: rgb(34, 68, 102); }
   }
 }
 
@@ -1475,7 +1451,6 @@ body.main .popup_menu {
 }
 
 body.main .popup_menu,
-body.main table.footer .popup_menu,
 body.main .popup_menu {
   a, span {
     display: block;

@@ -7,7 +7,6 @@
 import abc
 import ast
 import time
-import os
 import pprint
 import traceback
 import json
@@ -681,15 +680,8 @@ class GUIViewRenderer(ABCViewRenderer):
                         "<b>%s - %s</b><br>%s" %
                         (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
-        # FIXME: Sauberer waere noch die Status Icons hier mit aufzunehmen
         if display_options.enabled(display_options.R):
             html.close_div()
-
-        pid = os.getpid()
-        if sites.live().successfully_persisted():
-            html.add_status_icon(
-                "persist",
-                _("Reused persistent livestatus connection from earlier request (PID %d)") % pid)
 
         if display_options.enabled(display_options.T):
             html.end_page_content()

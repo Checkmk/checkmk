@@ -125,11 +125,8 @@ function update(handler_data, response) {
 
 function update_activate_changes_button(response)
 {
-    //var tmp_container = document.createElement("div");
-    //tmp_container.innerHTML = response.changes_button;
-    //var context_buttons_container = document.getElementsByClassName("contextlinks")[0];
-    //var cur_changes_button = context_buttons_container.childNodes[0];
-    //context_buttons_container.replaceChild(tmp_container.childNodes[0].childNodes[0], cur_changes_button);
+    let container = document.getElementById("page_state_top_line");
+    container.innerHTML = response.pending_changes_info;
 }
 
 function get_state_independent_controls() {

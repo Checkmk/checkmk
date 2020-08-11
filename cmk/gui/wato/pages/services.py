@@ -52,6 +52,7 @@ from cmk.gui.watolib.services import (DiscoveryState, Discovery, checkbox_id, ex
                                       get_check_table, DiscoveryAction, CheckTable, CheckTableEntry,
                                       DiscoveryResult, DiscoveryOptions, StartDiscoveryRequest)
 from cmk.gui.wato.pages.hosts import ModeEditHost
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
 from cmk.gui.plugins.wato import (
     may_edit_ruleset,
@@ -59,7 +60,7 @@ from cmk.gui.plugins.wato import (
     WatoMode,
 )
 
-from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link, changelog_button
+from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 
 AjaxDiscoveryRequest = Dict[str, Any]
 
@@ -245,7 +246,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "job_state": discovery_result.job_status["state"],
             "message": self._get_status_message(discovery_result, performed_action),
             "body": page_code,
-            "changes_button": self._render_changelog_button(),
+            "pending_changes_info": get_pending_changes_info(),
             "discovery_options": self._options._asdict(),
             "discovery_result": repr(tuple(discovery_result)),
         }
@@ -308,11 +309,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return " ".join(messages)
 
         return None
-
-    def _render_changelog_button(self):
-        with html.plugged():
-            changelog_button()
-            return html.drain()
 
     def _get_discovery_options(self, request: dict) -> DiscoveryOptions:
 

@@ -32,7 +32,7 @@ class PageStateRenderer:
         html.open_div(class_="text")
 
         html.open_span()
-        html.write_text(page_state.top_line)
+        html.span(page_state.top_line, id_="page_state_top_line")
         html.span("", id_="headinfo")
         html.close_span()
 

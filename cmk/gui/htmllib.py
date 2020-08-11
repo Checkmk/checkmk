@@ -105,7 +105,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
-from cmk.gui.utils.popups import PopupMethod, MethodAjax
+from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
@@ -2899,19 +2899,6 @@ class html(ABCHTMLGenerator):
     # TODO: Rename the status_icons because they are not only showing states. There are also actions.
     # Something like footer icons or similar seems to be better
     def _write_status_icons(self) -> None:
-        # TODO: This should be handled by pagetypes.py
-        if self.myfile == "graph_collection":
-            self.popup_trigger(
-                self.render_icon("menu",
-                                 _("Add this graph collection to..."),
-                                 cssclass="iconbutton inline"),
-                'add_visual',
-                MethodAjax(endpoint='add_visual', url_vars=[("add_type", "graph_collection")]),
-                data=["graph_collection", {}, {
-                    'name': self.request.var('name')
-                }],
-            )
-
         for img, tooltip in self.status_icons.items():
             if isinstance(tooltip, tuple):
                 tooltip, url = tooltip

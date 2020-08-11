@@ -46,7 +46,7 @@ def check_zpool(item, params, parsed):
                 break
         num = float(val[:idx])
         unit = val[idx:].lstrip().lower()
-        unit = ["b", "k", "m", "g", "t"].index(unit)
+        unit = ["b", "k", "m", "g", "t", "p"].index(unit)
 
         return num * (1024**(unit - 2))
 

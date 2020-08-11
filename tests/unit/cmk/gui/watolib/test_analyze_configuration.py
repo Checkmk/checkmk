@@ -33,6 +33,7 @@ def test_registered_ac_tests():
         'ACTestRulebasedNotifications',
         'ACTestSizeOfExtensions',
         'ACTestTmpfs',
+        'ACTestUnexpectedAllowedIPRanges',
     ]
 
     if not cmk_version.is_raw_edition():

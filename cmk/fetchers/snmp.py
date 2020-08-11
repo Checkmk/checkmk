@@ -47,8 +47,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
         return cls(
             {
-                name: [SNMPTree.from_json(tree) for tree in trees
-                      ] for name, trees in serialized["oid_infos"].items()
+                SectionName(name): [SNMPTree.from_json(tree) for tree in trees
+                                   ] for name, trees in serialized["oid_infos"].items()
             },
             serialized["use_snmpwalk_cache"],
             SNMPHostConfig(**serialized["snmp_config"]),

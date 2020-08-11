@@ -34,7 +34,9 @@ class PageStateRenderer:
         html.span(page_state.bottom_line)
         html.close_div()
 
+        html.open_div(class_="icon_container")
         html.icon(None, page_state.icon_name, id_="page_state_icon")
+        html.close_div()
 
         html.close_div()
 

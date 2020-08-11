@@ -1752,6 +1752,7 @@ class html(ABCHTMLGenerator):
                                       onclick="this.innerHTML=\'%s\'; document.location.reload();" %
                                       _("Reloading...")),
             icon_name="trans",
+            css_classes=["default"],
         )
 
     def begin_page_content(self):

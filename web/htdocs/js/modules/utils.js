@@ -323,25 +323,46 @@ export function set_reload(secs, url)
 
 // Issues the timer for the next page reload. If some timer is already
 // running, this timer is terminated and replaced by the new one.
-export function schedule_reload(url, milisecs)
+export function schedule_reload(url, remaining_ms)
 {
     if (typeof url === "undefined")
         url = ""; // reload current page (or just the content)
 
-    if (typeof milisecs === "undefined") {
+    if (typeof remaining_ms === "undefined") {
         if (g_reload_interval === 0) {
             return;  // the reload interval is set to "off"
         }
-        milisecs = parseFloat(g_reload_interval) * 1000; // use default reload interval
+
+        // initialize the timer with the configured interval
+        remaining_ms = parseFloat(g_reload_interval) * 1000;
+    }
+
+    update_page_state_reload_indicator(remaining_ms);
+
+    if (remaining_ms <= 0) {
+        // The time is over. Now trigger the desired actions
+        do_reload(url);
+
+        // Prepare for the next update interval
+        remaining_ms = parseFloat(g_reload_interval) * 1000;
     }
 
     stop_reload_timer();
-
     g_reload_timer = setTimeout(function() {
-        do_reload(url);
-    }, milisecs);
+        schedule_reload(url, remaining_ms - 1000);
+    }, 1000);
 }
 
+function update_page_state_reload_indicator(remaining_ms) {
+    let icon = document.getElementById("page_state_icon");
+    if (!icon)
+        return; // Not present, no update needed
+
+    let perc = remaining_ms / (g_reload_interval * 1000) * 100;
+
+    icon.style.clipPath = "circle(" + Math.floor(perc) + "% at 100%)";
+    icon.title = "Remaining: " + Math.floor(remaining_ms/1000) + " sec.";
+}
 
 export function stop_reload_timer()
 {
@@ -441,27 +462,8 @@ function handle_content_reload_error(_unused, status_code)
 }
 
 export function set_reload_interval(secs) {
-    update_foot_refresh(secs);
     if (secs !== 0) {
         g_reload_interval = secs;
-    }
-}
-
-function update_foot_refresh(secs)
-{
-    var o = document.getElementById("foot_refresh");
-    var o2 = document.getElementById("foot_refresh_time");
-    if (!o) {
-        return;
-    }
-
-    if(secs == 0) {
-        o.style.display = "none";
-    } else {
-        o.style.display = "inline-block";
-        if(o2) {
-            o2.innerHTML = secs;
-        }
     }
 }
 

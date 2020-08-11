@@ -9,7 +9,18 @@ import abc
 import enum
 import string
 import sys
-from typing import Any, Dict, List, Literal, NewType, Optional, Set, Tuple, TypedDict, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    NewType,
+    Optional,
+    Set,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 HostName = str
 HostAddress = str
@@ -56,8 +67,24 @@ UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this
 
 AgentHash = NewType("AgentHash", str)
-BakeryOpSys = NewType("BakeryOpSys", str)
 AgentConfig = Dict[str, Any]  # TODO Split into more sub configs
+
+# TODO(au): Replace usage with AgentPackagePlatform
+# But we need complete typing in cmk.gui.cee.agent_bakery first before we can safely do this.
+BakeryOpSys = NewType("BakeryOpSys", str)
+
+
+class AgentPackagePlatform(enum.Enum):
+    LINUX_DEB = "linux_deb"
+    LINUX_RPM = "linux_rpm"
+    SOLARIS_PKG = "solaris_pkg"
+    WINDOWS_MSI = "windows_msi"
+    LINUX_TGZ = "linux_tgz"
+    SOLARIS_TGZ = "solaris_tgz"
+    AIX_TGZ = "aix_tgz"
+
+    def __str__(self) -> str:
+        return str(self.value)
 
 
 class BuiltinBakeryHostName(enum.Enum):

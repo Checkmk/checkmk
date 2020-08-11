@@ -6,19 +6,20 @@
 
 import logging
 import socket
-from hashlib import sha256, md5
+from hashlib import md5, sha256
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type
 
 from Cryptodome.Cipher import AES
 
 import cmk.utils.debug
-from cmk.utils.type_defs import HostAddress, AgentRawData
+from cmk.utils.type_defs import AgentRawData, HostAddress
 
-from ._base import AbstractDataFetcher, MKFetcherError
+from ._base import MKFetcherError
+from .agent import AgentDataFetcher
 
 
-class TCPDataFetcher(AbstractDataFetcher):
+class TCPDataFetcher(AgentDataFetcher):
     def __init__(
         self,
         family: socket.AddressFamily,

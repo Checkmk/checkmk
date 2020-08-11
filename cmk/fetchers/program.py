@@ -16,10 +16,11 @@ from six import ensure_binary, ensure_str
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData
 
-from ._base import AbstractDataFetcher, MKFetcherError
+from ._base import MKFetcherError
+from .agent import AgentDataFetcher
 
 
-class ProgramDataFetcher(AbstractDataFetcher):
+class ProgramDataFetcher(AgentDataFetcher):
     def __init__(
         self,
         cmdline: Union[bytes, str],

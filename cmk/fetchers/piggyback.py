@@ -9,17 +9,13 @@ import logging
 from types import TracebackType
 from typing import List, Optional, Tuple, Type
 
-from cmk.utils.piggyback import (
-    get_piggyback_raw_data,
-    PiggybackRawDataInfo,
-    PiggybackTimeSettings,
-)
-from cmk.utils.type_defs import HostAddress, HostName, AgentRawData
+from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
-from ._base import AbstractDataFetcher
+from .agent import AgentDataFetcher
 
 
-class PiggyBackDataFetcher(AbstractDataFetcher):
+class PiggyBackDataFetcher(AgentDataFetcher):
     def __init__(self, hostname: HostName, address: Optional[HostAddress],
                  time_settings: List[Tuple[Optional[str], str, int]]) -> None:
         super(PiggyBackDataFetcher, self).__init__()

@@ -14,7 +14,6 @@ import cmk.utils
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import AgentRawData
 
 from .type_defs import BoundedAbstractRawData
 
@@ -23,7 +22,7 @@ class MKFetcherError(MKException):
     """An exception common to the fetchers."""
 
 
-class AbstractDataFetcher(metaclass=abc.ABCMeta):
+class AbstractDataFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> 'AbstractDataFetcher':
@@ -40,7 +39,7 @@ class AbstractDataFetcher(metaclass=abc.ABCMeta):
         """Destroy the data source."""
 
     @abc.abstractmethod
-    def data(self) -> AgentRawData:
+    def data(self) -> BoundedAbstractRawData:
         """Return the data from the source."""
 
 

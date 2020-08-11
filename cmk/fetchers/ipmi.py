@@ -16,12 +16,13 @@ from six import ensure_binary
 
 import cmk.utils.debug
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostAddress, AgentRawData
+from cmk.utils.type_defs import AgentRawData, HostAddress
 
-from ._base import AbstractDataFetcher, MKFetcherError
+from ._base import MKFetcherError
+from .agent import AgentDataFetcher
 
 
-class IPMIDataFetcher(AbstractDataFetcher):
+class IPMIDataFetcher(AgentDataFetcher):
     def __init__(
         self,
         address: HostAddress,

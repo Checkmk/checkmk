@@ -16,7 +16,7 @@ import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
 from . import factory
-from ._base import ABCFileCache
+from ._base import ABCFileCache, AbstractDataFetcher
 
 
 class SNMPFileCache(ABCFileCache[SNMPRawData]):
@@ -29,7 +29,7 @@ class SNMPFileCache(ABCFileCache[SNMPRawData]):
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
 
-class SNMPDataFetcher:
+class SNMPDataFetcher(AbstractDataFetcher[SNMPRawData]):
     def __init__(
         self,
         oid_infos: Dict[SectionName, List[SNMPTree]],

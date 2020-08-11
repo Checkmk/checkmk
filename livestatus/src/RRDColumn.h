@@ -9,17 +9,15 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
-#include <filesystem>
-#include <functional>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Column.h"
 #include "DynamicRRDColumn.h"
 #include "ListColumn.h"
-#include "Metric.h"
 #include "contact_fwd.h"
-class Logger;
 class MonitoringCore;
 class Row;
 class RowRenderer;
@@ -44,17 +42,14 @@ protected:
         std::vector<double> values;
     };
 
-    using MetricLocator = std::function<MetricLocation(const Metric::Name &)>;
-    static Data getData(Logger *logger,
-                        const std::filesystem::path &rrdcached_socket_path,
-                        const RRDColumnArgs &args,
-                        const MetricLocator &locator);
+    [[nodiscard]] Data getData(Row row) const;
 
     MonitoringCore *_mc;
     RRDColumnArgs _args;
 
 private:
-    [[nodiscard]] virtual Data getDataFor(Row row) const = 0;
+    [[nodiscard]] virtual std::optional<std::pair<std::string, std::string>>
+    getHostNameServiceDesc(Row row) const = 0;
 };
 
 #endif  // RRDColumn_h

@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <filesystem>
 #include <iterator>
 #include <ostream>
 #include <set>
@@ -19,6 +20,8 @@
 
 #include "DynamicRRDColumn.h"
 #include "Logger.h"
+#include "Metric.h"
+#include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
 #if defined(CMC)
@@ -38,7 +41,7 @@ void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
     // We output meta data as first elements in the list. Note: In Python or
     // JSON we could output nested lists. In CSV mode this is not possible and
     // we rather stay compatible with CSV mode.
-    auto data = getDataFor(row);
+    auto data = getData(row);
     ListRenderer l(r);
     l.output(data.start);
     l.output(data.end);
@@ -51,7 +54,7 @@ void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
 std::vector<std::string> RRDColumn::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds timezone_offset) const {
-    auto data = getDataFor(row);
+    auto data = getData(row);
     std::vector<std::string> strings;
     strings.push_back(std::to_string(
         std::chrono::system_clock::to_time_t(data.start + timezone_offset)));
@@ -109,25 +112,26 @@ std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
 // and that have a different syntax then we have in our metrics system.
 // >= --> GE. Or should we also go with GE instead of >=?
 // Look at http://oss.oetiker.ch/rrdtool/doc/rrdgraph_rpn.en.html for details!
+RRDColumn::Data RRDColumn::getData(Row row) const {
+    auto host_name_service_description = getHostNameServiceDesc(row);
+    if (!host_name_service_description) {
+        return {};
+    }
 
-// static
-RRDColumn::Data RRDColumn::getData(
-    Logger *logger, const std::filesystem::path &rrdcached_socket_path,
-    const RRDColumnArgs &args, const MetricLocator &locator) {
     // Prepare the arguments for rrdtool xport in a dynamic array of strings.
     // Note: The actual step might be different!
     std::vector<std::string> argv_s{
         "rrdtool xport",  // name of program (ignored)
         "-s",
-        std::to_string(args.start_time),
+        std::to_string(_args.start_time),
         "-e",
-        std::to_string(args.end_time),
+        std::to_string(_args.end_time),
         "--step",
-        std::to_string(args.resolution)};
+        std::to_string(_args.resolution)};
 
-    if (args.max_entries > 0) {
+    if (_args.max_entries > 0) {
         argv_s.emplace_back("-m");
-        argv_s.emplace_back(std::to_string(args.max_entries));
+        argv_s.emplace_back(std::to_string(_args.max_entries));
     }
 
     // We have an RPN like fs_used,1024,*. In order for that to work, we need to
@@ -139,7 +143,7 @@ RRDColumn::Data RRDColumn::getData(
     // faster) way is to look for the names of variables within our RPN
     // expressions and create DEFs just for them - if the according RRD exists.
     std::string converted_rpn;  // convert foo.max -> foo-max
-    std::vector<char> rpn_copy(args.rpn.begin(), args.rpn.end());
+    std::vector<char> rpn_copy(_args.rpn.begin(), _args.rpn.end());
     rpn_copy.push_back('\0');
     char *scan = &rpn_copy[0];
 
@@ -167,7 +171,9 @@ RRDColumn::Data RRDColumn::getData(
         // strangely enough, it allows an underscore. Therefore, we replace '.'
         // by '_' here.
         auto [var, cf] = getVarAndCF(token);
-        auto location = locator(var);
+        auto location =
+            _mc->metricLocation(host_name_service_description->first,
+                                host_name_service_description->second, var);
         std::string rrd_varname;
         if (location.path_.empty() || location.data_source_name_.empty()) {
             rrd_varname = replace_all(var.string(), ".", '_');
@@ -203,10 +209,11 @@ RRDColumn::Data RRDColumn::getData(
     // RRDTool on the issue
     // https://github.com/oetiker/rrdtool-1.x/issues/1062
 
-    if (!rrdcached_socket_path.empty()) {
+    auto *logger = _mc->loggerRRD();
+    if (!_mc->rrdcachedSocketPath().empty()) {
         std::vector<std::string> daemon_argv_s{
             "rrdtool flushcached",  // name of program (ignored)
-            "--daemon", rrdcached_socket_path};
+            "--daemon", _mc->rrdcachedSocketPath()};
 
         for (const auto &rrdfile : touched_rrds) {
             daemon_argv_s.push_back(rrdfile);

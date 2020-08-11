@@ -126,7 +126,6 @@ liblivestatus_a_SOURCES = \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \
-        HostRRDColumn.cc \
         HostServiceState.cc \
         HostSpecialDoubleColumn.cc \
         HostSpecialIntColumn.cc \
@@ -164,7 +163,6 @@ liblivestatus_a_SOURCES = \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
         ServiceListStateColumn.cc \
-        ServiceRRDColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \
         StatsColumn.cc \

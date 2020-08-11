@@ -6,7 +6,7 @@
 
 import time
 import itertools
-from typing import List, TYPE_CHECKING, Set, Tuple, cast
+from typing import List, TYPE_CHECKING, Set, Tuple, Iterator, cast
 
 import cmk.utils.version as cmk_version
 import cmk.utils.render
@@ -39,6 +39,14 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuPopup,
+    make_simple_link,
+)
 
 from cmk.gui.exceptions import MKUserError
 
@@ -264,7 +272,14 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
         html.body_start(title, force=True)
 
     if display_options.enabled(display_options.T):
-        html.top_heading(title, breadcrumb)
+        html.top_heading(
+            title,
+            breadcrumb,
+            page_menu=_page_menu_availability(breadcrumb, what, av_mode, av_object, time_range)
+            if display_options.enabled(display_options.B) else None)
+
+    if html.has_user_errors():
+        html.final_javascript("cmk.page_menu.open_popup('avoptions');")
 
     html.write(confirmation_html_code)
 
@@ -272,55 +287,6 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
     html.request.del_vars("anno_")
     if html.request.var("filled_in") == "editanno":
         html.request.del_var("filled_in")
-
-    if display_options.enabled(display_options.B):
-        html.begin_context_buttons()
-        html.toggle_button(
-            "avoptions",
-            html.has_user_errors(),
-            "painteroptions",
-            _("Configure details of the report"),
-        )
-        html.context_button(
-            _("Status View"),
-            html.makeuri([("mode", "status")]),
-            "status",
-        )
-        if config.reporting_available() and config.user.may("general.reporting"):
-            html.context_button(
-                _("Export as PDF"),
-                html.makeuri([], filename="report_instant.py"),
-                "report",
-            )
-
-        if config.user.may("general.csv_export"):
-            html.context_button(
-                _("Export as CSV"),
-                html.makeuri([("output_format", "csv_export")]),
-                "download_csv",
-            )
-
-        if av_mode == "timeline" or av_object:
-            html.context_button(
-                _("Availability"),
-                html.makeuri([("av_mode", "availability"), ("av_host", ""), ("av_aggr", "")]),
-                "availability",
-            )
-        elif not av_object:
-            html.context_button(
-                _("Timeline"),
-                html.makeuri([("av_mode", "timeline")]),
-                "timeline",
-            )
-        elif av_mode == "timeline" and what != "bi":
-            history_url = availability.history_url_of(av_object, time_range)
-            html.context_button(
-                _("History"),
-                history_url,
-                "history",
-            )
-
-        html.end_context_buttons()
 
     # Render the avoptions again to get the HTML code, because the HTML vars have changed
     # above (anno_ and editanno_ has been removed, which must not be part of the form
@@ -346,6 +312,126 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
 
     if display_options.enabled(display_options.H):
         html.body_end()
+
+
+def _page_menu_availability(breadcrumb: Breadcrumb, what: AVObjectType, av_mode: AVMode,
+                            av_object: AVObjectSpec, time_range: AVTimeRange) -> PageMenu:
+    menu = PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="availability",
+                title=_("Availability"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Parameters"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Availability options"),
+                                icon_name="painteroptions",
+                                item=PageMenuPopup(_render_avoptions_form()),
+                                name="avoptions",
+                            )
+                        ],
+                    ),
+                    PageMenuTopic(
+                        title=_("Display mode"),
+                        entries=list(
+                            _page_menu_entries_av_mode(what, av_mode, av_object, time_range)),
+                    ),
+                ],
+            ),
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Monitoring"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Status view"),
+                                icon_name="status",
+                                item=make_simple_link(html.makeuri([("mode", "status")])),
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+            PageMenuDropdown(
+                name="export",
+                title=_("Export"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Data"),
+                        entries=list(_page_menu_entries_export_data()),
+                    ),
+                    PageMenuTopic(
+                        title=_("Reports"),
+                        entries=list(_page_menu_entries_export_reporting()),
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+
+    return menu
+
+
+def _render_avoptions_form() -> str:
+    return ""
+
+
+def _page_menu_entries_av_mode(what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec,
+                               time_range: AVTimeRange) -> Iterator[PageMenuEntry]:
+    if av_mode == "timeline" or av_object:
+        yield PageMenuEntry(
+            title=_("Availability"),
+            icon_name="availability",
+            item=make_simple_link(
+                html.makeuri([("av_mode", "availability"), ("av_host", ""), ("av_aggr", "")])),
+        )
+        return
+
+    if not av_object:
+        yield PageMenuEntry(
+            title=_("Timeline"),
+            icon_name="timeline",
+            item=make_simple_link(html.makeuri([("av_mode", "timeline")])),
+        )
+        return
+
+    if av_mode == "timeline" and what != "bi":
+        history_url = availability.history_url_of(av_object, time_range)
+        yield PageMenuEntry(
+            title=_("History"),
+            icon_name="history",
+            item=make_simple_link(history_url),
+        )
+
+
+def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:
+    if not config.user.may("general.csv_export"):
+        return
+
+    yield PageMenuEntry(
+        title=_("Export CSV"),
+        icon_name="download_csv",
+        item=make_simple_link(html.makeuri([("output_format", "csv_export")])),
+    )
+
+
+def _page_menu_entries_export_reporting() -> Iterator[PageMenuEntry]:
+    if not config.reporting_available():
+        return
+
+    if not config.user.may("general.reporting") or not config.user.may("general.instant_reports"):
+        return
+
+    yield PageMenuEntry(
+        title=_("This view as PDF"),
+        icon_name="report",
+        item=make_simple_link(html.makeuri([], filename="report_instant.py")),
+    )
 
 
 def do_render_availability(what: AVObjectType, av_rawdata: AVRawData, av_data: AVData,

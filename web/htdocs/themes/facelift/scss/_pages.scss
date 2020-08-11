@@ -242,16 +242,6 @@ body {
   }
 }
 
-/* TODO: Check out whether this style and the respective span element within the
- *       header are still needed */
-#headinfo {
-  margin-right: 10px;
-}
-
-div#foot_refresh, div#foot_refresh_time {
-  display: inline-block;
-}
-
 /* TODO: Reproduce all these pause styles */
 #reload_pause {
   position: fixed;

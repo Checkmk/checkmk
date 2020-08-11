@@ -210,9 +210,9 @@ export function update_header_timer() {
 
 export function update_header_info(text)
 {
-    var oDiv = document.getElementById("headinfo");
-    if (oDiv) {
-        oDiv.innerHTML = text;
+    var container = document.getElementById("headinfo");
+    if (container) {
+        container.innerHTML = ", " + text;
     }
 }
 

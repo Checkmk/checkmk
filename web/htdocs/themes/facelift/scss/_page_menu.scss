@@ -59,7 +59,7 @@ div#top_heading {
       right: 45px;
       text-align: right;
 
-      span:first-child {
+      > span:first-child {
         /* break between top and bottom line */
         display: table;
       }

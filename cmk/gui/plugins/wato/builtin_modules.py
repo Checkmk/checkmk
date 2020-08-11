@@ -906,6 +906,41 @@ class MainModulePasswords(MainModule):
 
 
 @main_module_registry.register
+class MainModuleAuditLog(MainModule):
+    @property
+    def mode_or_url(self):
+        return "auditlog"
+
+    @property
+    def topic(self):
+        return MainModuleTopicGeneral
+
+    @property
+    def title(self):
+        return _("Audit log")
+
+    @property
+    def icon(self):
+        return "auditlog"
+
+    @property
+    def permission(self):
+        return "auditlog"
+
+    @property
+    def description(self):
+        return _("Examine the change history of the configuration")
+
+    @property
+    def sort_index(self):
+        return 80
+
+    @property
+    def is_advanced(self):
+        return True
+
+
+@main_module_registry.register
 class MainModuleAnalyzeConfig(MainModule):
     @property
     def mode_or_url(self):

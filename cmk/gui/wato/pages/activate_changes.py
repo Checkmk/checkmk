@@ -102,31 +102,34 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 ])),
             )
 
-    def _page_menu_entries_all_sites(self) -> Iterator[PageMenuEntry]:
-        if self._may_activate_changes():
-            yield PageMenuEntry(
-                title=_("Activate on affected sites"),
-                icon_name="activate",
-                item=make_javascript_link("cmk.activation.activate_changes(\"affected\")"),
-                name="activate_affected",
-                is_shortcut=True,
-                is_suggested=True,
-            )
-
-        if self._may_discard_changes():
-            yield PageMenuEntry(
-                title=_("Discard all pending changes"),
-                icon_name="discard",
-                item=make_simple_link(html.makeactionuri([("_action", "discard")])),
-                name="discard_changes",
-            )
-
         if config.user.may("wato.auditlog"):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name="auditlog",
                 item=make_simple_link(watolib.folder_preserving_link([("mode", "auditlog")])),
             )
+
+    def _page_menu_entries_all_sites(self) -> Iterator[PageMenuEntry]:
+        if not self._may_activate_changes():
+            return
+
+        yield PageMenuEntry(
+            title=_("Activate on affected sites"),
+            icon_name="activate",
+            item=make_javascript_link("cmk.activation.activate_changes(\"affected\")"),
+            name="activate_affected",
+            is_shortcut=True,
+            is_suggested=True,
+            is_enabled=self.has_changes(),
+        )
+
+        yield PageMenuEntry(
+            title=_("Discard all pending changes"),
+            icon_name="discard",
+            item=make_simple_link(html.makeactionuri([("_action", "discard")])),
+            name="discard_changes",
+            is_enabled=self.has_changes() and self._get_last_wato_snapshot_file(),
+        )
 
     def _page_menu_entries_selected_sites(self) -> Iterator[PageMenuEntry]:
         if self._may_activate_changes():
@@ -135,6 +138,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 icon_name="activate",
                 item=make_javascript_link("cmk.activation.activate_changes(\"selected\")"),
                 name="activate_selected",
+                is_enabled=self.has_changes(),
             )
 
     def _may_discard_changes(self) -> bool:
@@ -148,9 +152,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     def _may_activate_changes(self) -> bool:
         if not config.user.may("wato.activate"):
-            return False
-
-        if not self.has_changes():
             return False
 
         if not config.user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
@@ -168,7 +169,9 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         if not self._may_discard_changes():
             return
 
-        # TODO: Remove once new changes mechanism has been implemented
+        if not self.has_changes():
+            return
+
         # Now remove all currently pending changes by simply restoring the last automatically
         # taken snapshot. Then activate the configuration. This should revert all pending changes.
         file_to_restore = self._get_last_wato_snapshot_file()

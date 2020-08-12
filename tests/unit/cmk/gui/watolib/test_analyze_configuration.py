@@ -29,4 +29,5 @@ def test_registered_ac_tests():
         'ACTestSecureNotificationSpoolerMessages',
         'ACTestSizeOfExtensions',
         'ACTestTmpfs',
+        'ACTestUnexpectedAllowedIPRanges',
     ])

@@ -95,10 +95,6 @@ mega_menu_registry.register(
 
 
 def user_profile_async_replication_page() -> None:
-    title = _('Replicate new user profile')
-    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
-    html.header(title, breadcrumb)
-
     html.begin_context_buttons()
     html.context_button(_('User Profile'), 'user_profile.py', 'back')
     html.end_context_buttons()
@@ -199,6 +195,14 @@ class ABCUserProfilePage(Page):
             except MKUserError as e:
                 html.add_user_error(e.varname, e)
 
+        if profile_changed and config.user.authorized_login_sites():
+            title = _('Replicate new user profile')
+        else:
+            title = self._page_title()
+
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
+        html.header(title, breadcrumb)
+
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously
         if profile_changed and config.user.authorized_login_sites():
@@ -269,9 +273,6 @@ class UserChangePasswordPage(ABCUserProfilePage):
         assert config.user.id is not None
 
         users = userdb.load_users()
-
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), self._page_title())
-        html.header(self._page_title(), breadcrumb)
 
         change_reason = html.request.get_ascii_input('reason')
 
@@ -378,9 +379,6 @@ class UserProfile(ABCUserProfilePage):
         assert config.user.id is not None
 
         users = userdb.load_users()
-
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), self._page_title())
-        html.header(self._page_title(), breadcrumb)
 
         self._show_context_buttons()
 

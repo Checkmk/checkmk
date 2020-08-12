@@ -128,8 +128,11 @@ def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
     json_file = build_json_file_path(serial=serial, host_name=host_name)
 
     if not json_file.exists():
-        write_data(make_failure_answer("fetcher file is absent", severity="warning"))
-        #  we do not send waiting answer - the fetcher should be dead
+        # this happens during development(or filesystem is broken)
+        text = f"fetcher file for host '{host_name}' and {serial} is absent"
+        write_data(make_success_answer(text))
+        write_data(make_failure_answer(text, severity="warning"))
+        write_data(make_waiting_answer())
         return
 
     # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json

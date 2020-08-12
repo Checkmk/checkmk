@@ -70,6 +70,13 @@ class TestControllerApi:
 
     @staticmethod
     @pytest.fixture
+    def write_config() -> int:
+        ff = FetcherConfig()
+        ff.write("heute")
+        return ff.serial
+
+    @staticmethod
+    @pytest.fixture
     def expected_blob() -> str:
         def make_blob(fetcher: str, status: int, payload: str) -> str:
             return '{"fetcher_type": "%s", "status": %d, "payload": "%s"}' % (fetcher, status,
@@ -91,16 +98,20 @@ class TestControllerApi:
             data=expected_error, severity="critical") + make_waiting_answer()
 
     @pytest.mark.usefixtures("scenario")
-    def test_run_fetchers_bad_data(self, capsys):
-
-        FetcherConfig().write("heute")
-
-        run_fetchers(serial=str(FetcherConfig().serial), host_name="zzz", timeout=35)
+    def test_run_fetchers_bad_file(self, capsys, write_config):
+        run_fetchers(serial=str(write_config), host_name="zzz", timeout=35)
         captured = capsys.readouterr()
-        assert captured.out == make_failure_answer("fetcher file is absent", severity="warning")
-        run_fetchers(serial=str(FetcherConfig().serial + 1), host_name="heute", timeout=35)
+        text = f"fetcher file for host 'zzz' and {write_config} is absent"
+        assert captured.out == make_success_answer(text) + make_failure_answer(
+            text, severity="warning") + make_waiting_answer()
+
+    @pytest.mark.usefixtures("scenario")
+    def test_run_fetchers_bad_serial(self, capsys, write_config):
+        run_fetchers(serial=str(write_config + 1), host_name="heute", timeout=35)
         captured = capsys.readouterr()
-        assert captured.out == make_failure_answer("fetcher file is absent", severity="warning")
+        text = f"fetcher file for host 'heute' and {write_config + 1} is absent"
+        assert captured.out == make_success_answer(text) + make_failure_answer(
+            text, severity="warning") + make_waiting_answer()
 
 
 class TestHeader:

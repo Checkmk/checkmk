@@ -408,20 +408,33 @@ class HostConfig:
 
     def get_config_for_host(self, host_name, deflt):
         with self._lock:
-            self._update_cache()
+            if not self._update_cache_after_core_restart():
+                return deflt
+
             return self._hosts_by_name.get(host_name, deflt)
 
     def get_canonical_name(self, event_host_name: str) -> str:
         with self._lock:
-            try:
-                timestamp = self._get_config_timestamp()
-                if timestamp > self._cache_timestamp:
-                    self._update_cache()
-                    self._cache_timestamp = timestamp
-            except Exception:
-                self._logger.exception("Failed to get host info from core. Try again later.")
+            if not self._update_cache_after_core_restart():
                 return ""
+
             return self._hosts_by_designation.get(event_host_name.lower(), "")
+
+    def _update_cache_after_core_restart(self) -> bool:
+        """Once the core reports a restart update the cache
+
+        Returns:
+            False in case the update failed, otherwise True.
+        """
+        try:
+            timestamp = self._get_config_timestamp()
+            if timestamp > self._cache_timestamp:
+                self._update_cache()
+                self._cache_timestamp = timestamp
+        except Exception:
+            self._logger.exception("Failed to get host info from core. Try again later.")
+            return False
+        return True
 
     def _update_cache(self) -> None:
         self._logger.debug("Fetching host config from core")

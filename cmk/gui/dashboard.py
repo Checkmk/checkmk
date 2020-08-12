@@ -36,8 +36,9 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger
 from cmk.gui.globals import html
+from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
+from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
@@ -503,7 +504,7 @@ def draw_dashboard(name: DashboardName) -> None:
         unconfigured_single_infos.update(dashlet.unconfigured_single_infos())
 
     html.add_body_css_class("dashboard")
-    breadcrumb = _dashboard_breadcrumb(name, title)
+    breadcrumb = _dashboard_breadcrumb(name, board, title)
     html.header(title,
                 breadcrumb=breadcrumb,
                 page_menu=_page_menu(breadcrumb, name, board, board_context,
@@ -578,8 +579,9 @@ def _get_dashlets(name: DashboardName, board: DashboardConfig) -> List[Dashlet]:
     return dashlets
 
 
-def _dashboard_breadcrumb(name: str, title: str) -> Breadcrumb:
-    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_monitoring())
+def _dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
+    breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
+                                       PagetypeTopics.get_topic(board["topic"]))
 
     breadcrumb.append(BreadcrumbItem(
         title,

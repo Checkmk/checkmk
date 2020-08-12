@@ -122,6 +122,7 @@ class MegaMenuRenderer:
         html.close_div()
         html.close_div()
         html.javascript(hide_entries_js)
+        html.javascript("cmk.popup_menu.initialize_mega_menus();")
 
     def _show_topic(self, topic: TopicMenuTopic, menu_id: str) -> None:
         advanced = all(i.is_advanced for i in topic.items)

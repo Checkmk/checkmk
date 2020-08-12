@@ -357,6 +357,34 @@ export function graph_export(page)
     location.href = page + ".py?request=" + encodeURIComponent(JSON.stringify(request));
 }
 
+/****************************************
+ * Mega menu
+ ****************************************/
+
+export function initialize_mega_menus() {
+    ["resize", "load"].forEach(event => {
+        window.addEventListener(event, () => {
+            resize_all_mega_menu_popups();
+        });
+    });
+}
+
+function resize_all_mega_menu_popups() {
+    for (const popup of document.getElementsByClassName("main_menu_popup")) {
+        resize_mega_menu_popup(popup);
+    }
+}
+
+function resize_mega_menu_popup(menu_popup) {
+    const topics = menu_popup.getElementsByClassName("topic");
+    if (topics.length === 0) {
+        return;
+    }
+    const last_topic = topics[topics.length -1];
+    const menu_width = Math.min(window.innerWidth - 60, last_topic.offsetLeft + last_topic.offsetWidth);
+    menu_popup.style.width = menu_width + "px";
+}
+
 export function mega_menu_show_all_items(current_topic_id)
 {
     let current_topic = document.getElementById(current_topic_id);
@@ -401,4 +429,5 @@ export function mega_menu_hide_entries(menu_id) {
                 utils.remove_class(topic, "extendable");
         }
     });
+    resize_mega_menu_popup(menu.parentElement);
 }

@@ -61,10 +61,16 @@ g_werks: Dict[int, Dict[str, Any]] = {}
 @cmk.gui.pages.register("version")
 def page_version():
     breadcrumb = _release_notes_breadcrumb()
+
     load_werks()
-    html.header(_("Release notes"), breadcrumb, _release_notes_page_menu(breadcrumb))
+    werk_table_options = _werk_table_options_from_request()
+
+    html.header(_("Release notes"), breadcrumb,
+                _release_notes_page_menu(breadcrumb, werk_table_options))
+
     handle_acknowledgement()
-    render_werks_table()
+    render_werks_table(werk_table_options)
+
     html.footer()
 
 
@@ -104,7 +110,8 @@ def _release_notes_breadcrumb() -> Breadcrumb:
     return breadcrumb
 
 
-def _release_notes_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+def _release_notes_page_menu(breadcrumb: Breadcrumb, werk_table_options: Dict[str,
+                                                                              Any]) -> PageMenu:
     menu = PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -120,7 +127,7 @@ def _release_notes_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
         ],
         breadcrumb=breadcrumb,
     )
-    _extend_display_dropdown(menu)
+    _extend_display_dropdown(menu, werk_table_options)
     return menu
 
 
@@ -136,7 +143,7 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
     )
 
 
-def _extend_display_dropdown(menu) -> None:
+def _extend_display_dropdown(menu, werk_table_options: Dict[str, Any]) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
     display_dropdown.topics.insert(
         0,
@@ -147,7 +154,7 @@ def _extend_display_dropdown(menu) -> None:
                     title=_("Filter view"),
                     icon_name="filters",
                     item=PageMenuPopup(
-                        _render_werk_options_form(),
+                        _render_werk_options_form(werk_table_options),
                         css_classes=["side_popup"],
                     ),
                     name="filters",
@@ -157,8 +164,33 @@ def _extend_display_dropdown(menu) -> None:
         ))
 
 
-def _render_werk_options_form() -> str:
-    return ""
+def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> str:
+    with html.plugged():
+        html.begin_form("werks")
+        html.hidden_field("wo_set", "set")
+
+        _show_werk_options_controls()
+
+        html.open_div(class_="side_popup_content")
+        for name, height, vs, _default_value in _werk_table_option_entries():
+            html.render_floating_option(name, height, "wo_", vs, werk_table_options[name])
+        html.close_div()
+
+        html.hidden_fields()
+        html.end_form()
+
+        return html.drain()
+
+
+def _show_werk_options_controls() -> None:
+    html.open_div(class_="side_popup_controls")
+
+    html.open_div(class_="update_buttons")
+    html.button("apply", _("Apply"), "submit")
+    html.buttonlink(html.makeuri([], remove_prefix=""), _("Reset"))
+    html.close_div()
+
+    html.close_div()
 
 
 @cmk.gui.pages.register("werk")
@@ -410,10 +442,7 @@ _SORT_AND_GROUP = {
 }
 
 
-def render_werks_table():
-    werk_table_options = _werk_table_options_from_request()
-    _render_werk_table_options(werk_table_options)
-
+def render_werks_table(werk_table_options: Dict[str, Any]):
     translator = cmk.utils.werks.WerkTranslator()
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
@@ -518,21 +547,6 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
     werk_table_options["date_range"] = from_date, until_date
 
     return werk_table_options
-
-
-def _render_werk_table_options(werk_table_options: Dict[str, Any]) -> None:
-    html.begin_form("werks")
-    html.hidden_field("wo_set", "set")
-
-    html.begin_floating_options("werks", is_open=True)
-
-    for name, height, vs, _default_value in _werk_table_option_entries():
-        html.render_floating_option(name, height, "wo_", vs, werk_table_options[name])
-
-    html.end_floating_options(reset_url=html.makeuri([], remove_prefix=""))
-
-    html.hidden_fields()
-    html.end_form()
 
 
 def render_werk_id(werk, with_link):

@@ -411,10 +411,9 @@ _SORT_AND_GROUP = {
 
 
 def render_werks_table():
-    if html.request.var("show_unack") and not html.request.has_var("wo_set"):
-        werk_table_options = _default_werk_table_options()
-    else:
-        werk_table_options = _render_werk_table_options()
+    werk_table_options = _werk_table_options_from_request()
+    _render_werk_table_options(werk_table_options)
+
     translator = cmk.utils.werks.WerkTranslator()
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
@@ -499,10 +498,12 @@ def _default_werk_table_options():
     return werk_table_options
 
 
-def _render_werk_table_options():
-    werk_table_options: Dict[str, Any] = {}
+def _werk_table_options_from_request() -> Dict[str, Any]:
+    if html.request.var("show_unack") and not html.request.has_var("wo_set"):
+        return _default_werk_table_options()
 
-    for name, height, vs, default_value in _werk_table_option_entries():
+    werk_table_options: Dict[str, Any] = {}
+    for name, _height, vs, default_value in _werk_table_option_entries():
         value = default_value
         try:
             if html.request.has_var("wo_set"):
@@ -513,25 +514,25 @@ def _render_werk_table_options():
 
         werk_table_options.setdefault(name, value)
 
-    html.begin_foldable_container("werks",
-                                  "options",
-                                  isopen=True,
-                                  title=_("Searching and Filtering"),
-                                  indent=False)
-    html.begin_form("werks")
-    html.hidden_field("wo_set", "set")
-    html.begin_floating_options("werks", is_open=True)
-    for name, height, vs, default_value in _werk_table_option_entries():
-        html.render_floating_option(name, height, "wo_", vs, werk_table_options[name])
-    html.end_floating_options(reset_url=html.makeuri([], remove_prefix=""))
-    html.hidden_fields()
-    html.end_form()
-    html.end_foldable_container()
-
     from_date, until_date = Timerange().compute_range(werk_table_options["date"])[0]
     werk_table_options["date_range"] = from_date, until_date
 
     return werk_table_options
+
+
+def _render_werk_table_options(werk_table_options: Dict[str, Any]) -> None:
+    html.begin_form("werks")
+    html.hidden_field("wo_set", "set")
+
+    html.begin_floating_options("werks", is_open=True)
+
+    for name, height, vs, _default_value in _werk_table_option_entries():
+        html.render_floating_option(name, height, "wo_", vs, werk_table_options[name])
+
+    html.end_floating_options(reset_url=html.makeuri([], remove_prefix=""))
+
+    html.hidden_fields()
+    html.end_form()
 
 
 def render_werk_id(werk, with_link):

@@ -1469,8 +1469,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'cisco_hsrp',
         'cisco_ip_sla',
         'cisco_mem',
-        'cisco_mem_asa',
-        'cisco_mem_asa64',
         'cisco_nexus_cpu',
         'cisco_oldcpu',
         'cisco_power',

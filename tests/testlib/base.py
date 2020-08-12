@@ -13,8 +13,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
-    ('section', 'cisco_mem_asa'),
-    ('section', 'cisco_mem_asa64'),
     ('section', 'cisco_wlc'),
     ('section', 'if'),
     ('section', 'if64'),

@@ -59,6 +59,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("hr_mem"): CheckPluginName("mem_used"),
     CheckPluginName("solaris_mem"): CheckPluginName("mem_used"),
     CheckPluginName("statgrab_mem"): CheckPluginName("mem_used"),
+    CheckPluginName("cisco_mem_asa64"): CheckPluginName("cisco_mem_asa"),
 }
 
 

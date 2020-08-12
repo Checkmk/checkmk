@@ -316,8 +316,7 @@ div.contextlinks {
   }
 }
 
-div.contextlink,
-div.togglebutton {
+div.contextlink {
   position: relative;
   float: left;
   width: 158px;
@@ -385,8 +384,7 @@ div.togglebutton {
   }
 }
 
-div.contextlink.down,
-div.down.togglebutton {
+div.contextlink.down {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
@@ -420,54 +418,6 @@ div.contextlink {
     width: 18px;
     height: 18px;
     margin-right: 5px;
-  }
-}
-
-/* Specific toggle button styles */
-div.togglebutton {
-  width: 35.75px;
-  height: $button-height;
-
-  &.off {
-    border: $toggle-button-off-border;
-    opacity: 0.5;
-    filter: alpha(opacity=50);
-
-    a,
-    body.main .popup_menu span,
-    body.main .popup_menu & span {
-      &, &:hover {
-        display: block;
-        overflow: hidden;
-        line-height: 18px;
-        color: $font-color;
-        text-decoration: none;
-        text-overflow: ellipsis;
-        cursor: default;
-        background: $bg-color-secondary;
-        border-radius: 5px;
-        box-shadow: none;
-      }
-
-      & {
-        font-size: $font-size-global;
-        font-weight: $font-weight-default;
-        letter-spacing: $letter-spacing-default;
-        cursor: auto;
-        border: none;
-      }
-    }
-  }
-
-  img {
-    width: 18px;
-    height: 18px;
-  }
-
-  &:active:not(.off) img,
-  &.down:not(.off) img {
-    position: relative;
-    left: 1px;
   }
 }
 

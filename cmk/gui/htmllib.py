@@ -2008,44 +2008,6 @@ class html(ABCHTMLGenerator):
                    disabled=disabled,
                    onclick="location.href=\'%s\'" % href)
 
-    # TODO: Refactor the arguments. It is only used in views/wato
-    def toggle_button(self,
-                      id_: str,
-                      isopen: bool,
-                      icon: str,
-                      title: str,
-                      hidden: bool = False,
-                      disabled: bool = False,
-                      onclick: Optional[str] = None,
-                      is_context_button: bool = True) -> None:
-        if is_context_button:
-            self.begin_context_buttons()  # TODO: Check all calls. If done before, remove this!
-
-        if not onclick and not disabled:
-            onclick = "cmk.views.toggle_form(this.parentNode, '%s');" % id_
-
-        if disabled:
-            state = "off" if disabled else "on"
-            cssclass = ""
-            title = ""
-        else:
-            state = "on"
-            if isopen:
-                cssclass = "down"
-            else:
-                cssclass = "up"
-
-        self.open_div(
-            id_="%s_%s" % (id_, state),
-            class_=["togglebutton", state, icon, cssclass],
-            title=title,
-            style='display:none' if hidden else None,
-        )
-        self.open_a("javascript:void(0)", onclick=onclick)
-        self.icon(title=None, icon=icon)
-        self.close_a()
-        self.close_div()
-
     def empty_icon_button(self) -> None:
         self.write(self.render_icon("trans", cssclass="iconbutton trans"))
 

@@ -10,48 +10,25 @@ HTMLInput = Union["HTML", int, float, None, str]
 
 
 class HTML:
-    """This is a simple class which wraps a unicode string provided by
-    the caller to make escaping.escape_attribute() know that this string should
-    not be escaped.
+    """HTML code wrapper to prevent escaping
 
-    This way we can implement encodings while still allowing HTML code.
-    This is useful when one needs to print out HTML tables in messages
-    or help texts.
+    This is a simple class which wraps a string provided by the caller to make
+    escaping.escape_attribute() know that this string should not be escaped.
 
-    The HTML class is implemented as an immutable type.
-    Every instance of the class is a unicode string.
-    Only utf-8 compatible encodings are supported."""
-    def __init__(self, value: HTMLInput = u'') -> None:
+    This way we can implement escaping while still allowing HTML code. This is useful when one needs
+    to print out HTML tables in messages or help texts.
+    """
+    def __init__(self, value: HTMLInput = "") -> None:
         super(HTML, self).__init__()
         self.value = self._ensure_str(value)
 
     def _ensure_str(self, value: HTMLInput) -> str:
-        # value can of of any type: HTML, int, float, None, str, ...
-        # TODO cleanup call sites
         return value if isinstance(value, str) else str(value)
 
     def __html__(self) -> str:
         return "%s" % self
 
-    # TODO: This is broken! Cleanup once we are using Python 3.
-    # NOTE: Return type "unicode" of "__str__" incompatible with return type "str" in supertype "object"
-    def __str__(self) -> str:  # type: ignore[override]
-        # Against the sense of the __str__() method, we need to return the value
-        # as unicode here. Why? There are many cases where something like
-        # "%s" % HTML(...) is done in the GUI code. This calls the __str__ function
-        # because the origin is a str() object. The call will then return a UTF-8
-        # encoded str() object. This brings a lot of compatbility issues to the code
-        # which can not be solved easily.
-        # To deal with this situation we need the implicit conversion from str to
-        # unicode that happens when we return a unicode value here. In all relevant
-        # cases this does exactly what we need. It would only fail if the origin
-        # string contained characters that can not be decoded with the ascii codec
-        # which is not relevant for us here.
-        #
-        # This is problematic:
-        #   html.write("%s" % HTML("ä"))
-        #
-        # Bottom line: We should really cleanup internal unicode/str handling.
+    def __str__(self) -> str:
         return self.value
 
     def __repr__(self) -> str:

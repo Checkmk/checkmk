@@ -67,6 +67,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuLink,
     make_javascript_link,
+    make_simple_link,
 )
 from cmk.gui.main_menu import mega_menu_registry
 
@@ -437,7 +438,7 @@ def page_list(what,
               custom_columns=None,
               render_custom_buttons=None,
               render_custom_columns=None,
-              render_custom_context_buttons=None,
+              custom_page_menu_entries=None,
               check_deletable_handler=None):
 
     if custom_columns is None:
@@ -447,36 +448,28 @@ def page_list(what,
     if not config.user.may("general.edit_" + what):
         raise MKAuthException(_("Sorry, you lack the permission for editing this type of visuals."))
 
-    html.header(title, visual_page_breadcrumb(what, title, "list"))
+    breadcrumb = visual_page_breadcrumb(what, title, "list")
 
-    html.begin_context_buttons()
-    html.context_button(_('New'), 'create_%s.py' % what_s, "new")
-    if render_custom_context_buttons:
-        render_custom_context_buttons()
+    visual_type = visual_type_registry[what]()
+    current_type_dropdown = PageMenuDropdown(
+        name=what,
+        title=visual_type.plural_title.title(),
+        topics=[
+            PageMenuTopic(
+                title=visual_type.plural_title.title(),
+                entries=[
+                    PageMenuEntry(
+                        title=_('Add %s') % visual_type.title,
+                        icon_name="new",
+                        item=make_simple_link("create_%s.py" % what_s),
+                    ),
+                ] + (list(custom_page_menu_entries()) if custom_page_menu_entries else []),
+            ),
+        ],
+    )
 
-    for plugin_class in visual_type_registry.values():
-        plugin = plugin_class()
-        if what != plugin.ident:
-            html.context_button(plugin.plural_title.title(), 'edit_%s.py' % plugin.ident,
-                                plugin.ident[:-1])
-
-    # TODO: We hack in those visuals that already have been moved to pagetypes here
-    if pagetypes.has_page_type("graph_collection"):
-        html.context_button(_("Graph collections"), "graph_collections.py", "graph_collection")
-    if pagetypes.has_page_type("custom_graph"):
-        html.context_button(_("Custom graphs"), "custom_graphs.py", "custom_graph")
-    if pagetypes.has_page_type("forecast_graph"):
-        html.context_button(_("Forecast Graphs"), "forecast_graphs.py", "forecast_graph")
-    if pagetypes.has_page_type("graph_tuning"):
-        html.context_button(_("Graph tunings"), "graph_tunings.py", "graph_tuning")
-    if pagetypes.has_page_type("sla_configuration"):
-        html.context_button(_("SLAs"), "sla_configurations.py", "sla_configuration")
-    if pagetypes.has_page_type("custom_snapin"):
-        html.context_button(_("Custom snapins"), "custom_snapins.py", "custom_snapin")
-    html.context_button(_("Bookmark lists"), "bookmark_lists.py", "bookmark_list")
-    html.context_button(_("Topics"), "pagetype_topics.py", "pagetype_topics")
-
-    html.end_context_buttons()
+    page_menu = pagetypes.configure_page_menu(breadcrumb, current_type_dropdown, what)
+    html.header(title, breadcrumb, page_menu)
 
     # Deletion of visuals
     delname = html.request.var("_delete")

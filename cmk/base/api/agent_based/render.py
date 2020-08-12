@@ -85,10 +85,8 @@ def timespan(seconds: float) -> str:
 def _digits_left(value: float) -> int:
     """Return the number of didgits left of the decimal point"""
     try:
-        return max(int(math.log10(value) + 1), 1)
-    except ValueError:  # value is exactly zero
-        if value < 0:
-            raise
+        return max(int(math.log10(abs(value)) + 1), 1)
+    except ValueError:
         return 1
 
 
@@ -101,11 +99,11 @@ def _auto_scale(value: float, use_si_units: bool) -> Tuple[str, str]:
         size_prefixes = _SIZE_PREFIXES_IEC
 
     try:
-        exponent = min(max(int(math.log(value, base)), 0), len(size_prefixes) - 1)
+        log_value = int(math.log(abs(value), base))
     except ValueError:
-        if value < 0:
-            raise
-        exponent = 0
+        log_value = 0
+
+    exponent = min(max(log_value, 0), len(size_prefixes) - 1)
     unit = (size_prefixes[exponent] + ("B" if use_si_units else "iB")).lstrip('i')
     scaled_value = float(value) / base**exponent
     fmt = "%%.%df" % max(3 - _digits_left(scaled_value), 0)

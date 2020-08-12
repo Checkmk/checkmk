@@ -412,6 +412,7 @@ def _render_avoptions_form(what: AVObjectType, avoptions: AVOptions,
 
 def _page_menu_entries_av_mode(what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec,
                                time_range: AVTimeRange) -> Iterator[PageMenuEntry]:
+
     if av_mode == "timeline" or av_object:
         yield PageMenuEntry(
             title=_("Availability"),
@@ -421,7 +422,7 @@ def _page_menu_entries_av_mode(what: AVObjectType, av_mode: AVMode, av_object: A
         )
         return
 
-    if not av_object:
+    if what != "bi" and not av_object:
         yield PageMenuEntry(
             title=_("Timeline"),
             icon_name="timeline",
@@ -766,32 +767,39 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
                 url=breadcrumb[-1].url + "&mode=availability",
             ))
 
-        html.top_heading(title, breadcrumb)
-        html.begin_context_buttons()
-        html.toggle_button("avoptions", False, "painteroptions",
-                           _("Configure details of the report"))
-        html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
-        if config.reporting_available() and config.user.may("general.reporting"):
-            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"),
-                                "report")
-        if config.user.may("general.csv_export"):
-            html.context_button(_("Export as CSV"), html.makeuri([("output_format", "csv_export")]),
-                                "download_csv")
+        av_object: AVObjectSpec = None
+        if html.request.var("av_aggr"):
+            av_object = (None, None, html.request.get_unicode_input_mandatory("av_aggr"))
 
-        if av_mode == "timeline":
-            html.context_button(_("Availability"), html.makeuri([("av_mode", "availability")]),
-                                "availability")
+        # Dummy time_range, this is not needed for the BI
+        page_menu = _page_menu_availability(breadcrumb, "bi", av_mode, av_object, (0.0, 0.0),
+                                            avoptions)
 
-        elif len(aggr_rows) == 1:
+        # This hack is needed because of some BI specific link. May be generalized in the future
+        if av_mode != "timeline" and len(aggr_rows) == 1:
+            dropdown = page_menu.get_dropdown_by_name("availability",
+                                                      deflt=PageMenuDropdown(
+                                                          name="availability",
+                                                          title=_("Availability"),
+                                                          topics=[]))
+            if not dropdown:
+                raise RuntimeError("Dropdown \"availability\" missing")
+
             aggr_name = aggr_rows[0]["aggr_name"]
             aggr_group = aggr_rows[0]["aggr_group"]
             timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_name", aggr_name),
                                          ("av_aggr_group", aggr_group)])
-            html.context_button(_("Timeline"), timeline_url, "timeline")
-        html.end_context_buttons()
+
+            dropdown.topics[-1].entries.append(
+                PageMenuEntry(
+                    title=_("Timeline"),
+                    icon_name="timeline",
+                    item=make_simple_link(timeline_url),
+                ))
+
+        html.top_heading(title, breadcrumb, page_menu)
 
         avoptions = get_availability_options_from_request("bi")
-        _show_availability_options("bi", avoptions, availability.get_avoption_entries("bi"))
 
     if not html.has_user_errors():
 

@@ -648,15 +648,18 @@ class Overridable(Base):
         html.context_button(_("Edit"), self.edit_url(), "edit")
 
     @classmethod
-    def page_menu_entry_list(cls) -> PageMenuEntry:
-        return PageMenuEntry(
+    def page_menu_entry_list(cls) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
             title=cls.phrase("title_plural"),
             icon_name=cls.type_name(),
             item=make_simple_link(cls.list_url()),
         )
 
-    def page_menu_entry_edit(self) -> PageMenuEntry:
-        return PageMenuEntry(
+    def page_menu_entry_edit(self) -> Iterator[PageMenuEntry]:
+        if not self.may_edit():
+            return
+
+        yield PageMenuEntry(
             title=_("Edit properties"),
             icon_name="edit",
             item=make_simple_link(self.edit_url()),

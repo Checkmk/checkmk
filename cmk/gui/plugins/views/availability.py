@@ -6,7 +6,7 @@
 
 import time
 import itertools
-from typing import List, TYPE_CHECKING, Set, Tuple, Iterator, cast
+from typing import List, TYPE_CHECKING, Set, Tuple, Iterator
 
 import cmk.utils.version as cmk_version
 import cmk.utils.render
@@ -29,7 +29,6 @@ from cmk.gui.availability import (
     AVData,
     AVRawData,
     AVEntry,
-    AVRangeSpec,
     AVTimeRange,
     AVOptionValueSpecs,
 )
@@ -211,7 +210,8 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
 
     _handle_availability_option_reset()
     avoptions = get_availability_options_from_request(what)
-    time_range, range_title = cast(AVRangeSpec, avoptions["range"])
+    time_range: AVTimeRange = avoptions["range"][0]
+    range_title: str = avoptions["range"][1]
 
     # We have two display modes:
     # - Show availability table (stats) "availability"
@@ -660,7 +660,8 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
 def render_timeline_bar(timeline_layout, style, timeline_nr=0):
     render_date = timeline_layout["render_date"]
-    from_time, until_time = cast(AVTimeRange, timeline_layout["range"])
+    time_range: AVTimeRange = timeline_layout["range"]
+    from_time, until_time = time_range
     html.open_div(class_=["timelinerange", style])
 
     if style == "standalone":
@@ -932,7 +933,9 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
 
 
 def get_relevant_annotations(annotations, by_host, what, avoptions):
-    (from_time, until_time), _range_title = cast(AVRangeSpec, avoptions["range"])
+    time_range: AVTimeRange = avoptions["range"][0]
+    from_time, until_time = time_range
+
     annos_to_render = []
     annos_rendered: Set[int] = set()
 

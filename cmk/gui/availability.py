@@ -7,7 +7,7 @@
 import time
 import os
 
-from typing import cast, Callable, Set, Dict, Any, Union, List, NamedTuple, Tuple as _Tuple, Optional as _Optional
+from typing import Callable, Set, Dict, Any, Union, List, NamedTuple, Tuple as _Tuple, Optional as _Optional
 from six import ensure_str
 
 from livestatus import SiteId
@@ -674,7 +674,7 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
         return get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_output,
                                            avoptions)
 
-    time_range, _range_title = cast(AVRangeSpec, avoptions["range"])
+    time_range: AVTimeRange = avoptions["range"][0]
 
     av_filter = "Filter: time >= %d\nFilter: time < %d\n" % time_range
     if av_object:
@@ -1301,7 +1301,7 @@ def delete_annotation(annotations: AVAnnotations, site_host_svc: AVAnnotationKey
 # }
 def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
                               availability_table: AVData, avoptions: AVOptions) -> AVLayoutTable:
-    time_range, _range_title = cast(AVRangeSpec, avoptions["range"])
+    time_range: AVTimeRange = avoptions["range"][0]
     from_time, until_time = time_range
     total_duration = until_time - from_time
     timeformats = prepare_avo_timeformats(avoptions["timeformat"])
@@ -1538,7 +1538,7 @@ def get_object_cells(what: AVObjectType, av_entry: AVEntry, labelling: List[str]
 def layout_timeline(what: AVObjectType, timeline_rows: AVTimelineRows, considered_duration: int,
                     avoptions: AVOptions, style: AVTimelineStyle) -> AVLayoutTimeline:
     timeformats = prepare_avo_timeformats(avoptions["timeformat"])
-    time_range, _range_title = cast(AVRangeSpec, avoptions["range"])
+    time_range: AVTimeRange = avoptions["range"][0]
     from_time, until_time = time_range
     total_duration = until_time - from_time
     availability_columns = AvailabilityColumns()
@@ -1788,7 +1788,7 @@ def get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_ou
 def get_timeline_containers(
         aggr_rows: Rows, avoptions: AVOptions, timewarp: _Optional[AVTimeStamp],
         livestatus_limit: _Optional[int]) -> '_Tuple[List[TimelineContainer], int]':
-    time_range, _range_title = cast(AVRangeSpec, avoptions["range"])
+    time_range: AVTimeRange = avoptions["range"][0]
     phases_list, timeline_containers, fetched_rows = get_bi_leaf_history(
         aggr_rows, time_range, livestatus_limit)
     return compute_bi_timelines(timeline_containers, time_range, timewarp,

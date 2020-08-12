@@ -260,12 +260,13 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
         return css
 
     def normalize_css_spec(self, css_classes: CSSSpec) -> List[str]:
-        classes: List[str] = []
         if isinstance(css_classes, list):
-            classes.extend(c for c in css_classes if c is not None)
-        elif css_classes is not None:
-            classes.append(css_classes)
-        return classes
+            return [c for c in css_classes if c is not None]
+
+        if css_classes is not None:
+            return [css_classes]
+
+        return []
 
     # applies attribute encoding to prevent code injections.
     def _render_start_tag(self,

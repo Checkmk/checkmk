@@ -50,6 +50,7 @@ from cmk.base.api.agent_based.utils import (
     not_startswith,
     parse_to_string_table,
     startswith,
+    GetRateError,
 )
 from cmk.base.api.agent_based.value_store import get_value_store
 from cmk.base.discovered_labels import HostLabel
@@ -98,4 +99,5 @@ __all__ = [
     "state",
     "TableRow",
     "type_defs",
+    "GetRateError",
 ]

@@ -21,7 +21,7 @@ from typing import List, Iterator, Optional, Dict, Union
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.htmllib import HTML
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import CSSSpec
 
@@ -96,6 +96,7 @@ def make_form_submit_link(form_name: str, button_name: str) -> PageMenuLink:
 class PageMenuPopup(ABCPageMenuItem):
     """A link opening a pre-rendered hidden area (not necessarily a popup window)"""
     content: str
+    css_classes: CSSSpec = None
 
 
 @dataclass
@@ -504,17 +505,10 @@ class PageMenuRenderer:
         html.close_tr()
 
     def _get_entry_css_classes(self, entry: PageMenuEntry) -> List[str]:
-        classes = [
+        return [
             ("enabled" if entry.is_enabled else "disabled"),
             ("advanced" if entry.is_advanced else "basic"),
-        ]
-
-        if isinstance(entry.css_classes, list):
-            classes.extend(c for c in entry.css_classes if c is not None)
-        elif entry.css_classes is not None:
-            classes.append(entry.css_classes)
-
-        return classes
+        ] + html.normalize_css_spec(entry.css_classes)
 
 
 class SuggestedEntryRenderer:
@@ -660,7 +654,8 @@ class PageMenuPopupsRenderer:
         if entry.name is None:
             raise ValueError("Missing \"name\" attribute on entry \"%s\"" % entry.title)
 
-        html.open_div(id_="popup_%s" % entry.name, class_="page_menu_popup")
+        html.open_div(id_="popup_%s" % entry.name,
+                      class_=["page_menu_popup"] + html.normalize_css_spec(entry.item.css_classes))
 
         html.open_div(class_="head")
         html.h3(entry.title)

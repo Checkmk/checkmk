@@ -835,7 +835,7 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("Filter view"),
             icon_name="filters_set" if is_filter_set else "filters",
-            item=PageMenuPopup(self._render_filter_form(show_filters)),
+            item=PageMenuPopup(self._render_filter_form(show_filters), css_classes=["side_popup"]),
             name="filters",
             is_shortcut=True,
         )
@@ -1660,7 +1660,7 @@ def show_filter_form(view: View, show_filters: List[Filter]) -> None:
 
 
 def _show_filter_form_buttons(filter_list_id: str) -> None:
-    html.open_div(class_="filter_controls")
+    html.open_div(class_="side_popup_controls")
 
     html.open_a(href="javascript:void(0);",
                 onclick="cmk.page_menu.toggle_popup_filter_list(this, %s)" %

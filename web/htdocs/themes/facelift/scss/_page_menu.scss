@@ -423,7 +423,7 @@ div#page_menu_popups {
 }
 
 /* Filter popup specific styling */
-div#page_menu_popups div#popup_filters {
+div#page_menu_popups div.side_popup {
   position: fixed;
   top: 0;
   right: 0;
@@ -432,7 +432,7 @@ div#page_menu_popups div#popup_filters {
   height: 100vh;
   padding: 0;
 
-  #form_filter {
+  form {
     width: inherit;
     text-align: left;
 
@@ -493,7 +493,7 @@ div#page_menu_popups div#popup_filters {
 
     table.valuespec_listof.filter > tbody { padding-left: 6px; }
 
-    div.filter_controls {
+    div.side_popup_controls {
       padding: 10px;
       margin: 0;
       border-top: $primary-table-border;

@@ -50,6 +50,8 @@ from cmk.gui.i18n import _l, _u, _
 from cmk.gui.globals import html
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
     make_javascript_link,
@@ -924,40 +926,31 @@ class Overridable(Base):
         # custom_columns = []
         # render_custom_buttons = None
         # render_custom_columns = None
-        # render_custom_context_buttons = None
         # check_deletable_handler = None
 
         cls.need_overriding_permission("edit")
 
-        html.header(cls.phrase("title_plural"), cls.breadcrumb(cls.phrase("title_plural"), "list"))
-        html.begin_context_buttons()
-        html.context_button(cls.phrase("new"), cls.create_url(), "new_" + cls.type_name())
+        breadcrumb = cls.breadcrumb(cls.phrase("title_plural"), "list")
 
-        # TODO: Remove this legacy code as soon as views, dashboards and reports have been
-        # moved to pagetypes.py
-        html.context_button(_("Views"), "edit_views.py", "view")
-        html.context_button(_("Dashboards"), "edit_dashboards.py", "dashboard")
+        current_type_dropdown = PageMenuDropdown(
+            name=cls.type_name(),
+            title=cls.phrase("title_plural"),
+            topics=[
+                PageMenuTopic(
+                    title=cls.phrase("title_plural"),
+                    entries=[
+                        PageMenuEntry(
+                            title=cls.phrase("new"),
+                            icon_name="new_%s" % cls.type_name(),
+                            item=make_simple_link(cls.create_url()),
+                        ),
+                    ],
+                ),
+            ],
+        )
 
-        def has_reporting():
-            try:
-                # The suppression below is OK, we just want to check if the module is there.
-                import cmk.gui.cee.reporting as _dummy  # noqa: F401 # pylint: disable=import-outside-toplevel
-                return True
-            except ImportError:
-                return False
-
-        if has_reporting():
-            html.context_button(_("Reports"), "edit_reports.py", "report")
-
-        # ## if render_custom_context_buttons:
-        # ##     render_custom_context_buttons()
-
-        for other_type_name, other_pagetype in page_types.items():
-            if cls.type_name() != other_type_name:
-                html.context_button(
-                    other_pagetype.phrase("title_plural").title(), '%ss.py' % other_type_name,
-                    other_type_name)
-        html.end_context_buttons()
+        page_menu = configure_page_menu(breadcrumb, current_type_dropdown, cls.type_name())
+        html.header(cls.phrase("title_plural"), breadcrumb, page_menu)
 
         # Deletion
         delname = html.request.var("_delete")
@@ -1261,6 +1254,65 @@ class Overridable(Base):
             html.show_localization_hint()
 
         html.footer()
+
+
+def configure_page_menu(breadcrumb: Breadcrumb, current_type_dropdown: PageMenuDropdown,
+                        current_type_name: str) -> PageMenu:
+    return PageMenu(
+        dropdowns=[
+            current_type_dropdown,
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Configure"),
+                        entries=list(_page_menu_entries_related(current_type_name)),
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+
+
+def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry]:
+    if current_type_name != "views":
+        yield PageMenuEntry(
+            title=_("Views"),
+            icon_name="view",
+            item=make_simple_link("edit_views.py"),
+        )
+
+    if current_type_name != "dashboards":
+        yield PageMenuEntry(
+            title=_("Dashboards"),
+            icon_name="dashboard",
+            item=make_simple_link("edit_dashboards.py"),
+        )
+
+    def has_reporting():
+        try:
+            # The suppression below is OK, we just want to check if the module is there.
+            import cmk.gui.cee.reporting as _dummy  # noqa: F401 # pylint: disable=import-outside-toplevel
+            return True
+        except ImportError:
+            return False
+
+    if has_reporting() and current_type_name != "reports":
+        yield PageMenuEntry(
+            title=_("Reports"),
+            icon_name="report",
+            item=make_simple_link("edit_reports.py"),
+        )
+
+    for other_type_name, other_pagetype in page_types.items():
+        if current_type_name != other_type_name:
+            yield PageMenuEntry(
+                title=other_pagetype.phrase("title_plural").title(),
+                icon_name=other_type_name,
+                item=make_simple_link('%ss.py' % other_type_name),
+            )
 
 
 def PublishTo(title: _Optional[str] = None,

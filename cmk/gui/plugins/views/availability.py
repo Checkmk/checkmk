@@ -31,6 +31,7 @@ from cmk.gui.availability import (
     AVEntry,
     AVRangeSpec,
     AVTimeRange,
+    AVOptionValueSpecs,
 )
 from cmk.gui.table import table_element, Table
 
@@ -136,28 +137,39 @@ def _handle_availability_option_reset() -> None:
         html.request.del_var("avoptions")
 
 
-def _show_availability_options(what: AVObjectType, avoptions: AVOptions) -> None:
-    is_open = html.has_user_errors()
+def _show_availability_options(what: AVObjectType, avoptions: AVOptions,
+                               valuespecs: AVOptionValueSpecs) -> None:
     html.begin_form("avoptions")
     html.hidden_field("avoptions", "set")
 
+    _show_availability_options_controls()
+
+    html.open_div(class_="side_popup_content")
     if html.has_user_errors():
         html.show_user_errors()
 
-    html.begin_floating_options("avoptions", is_open)
-
-    avoption_entries = availability.get_avoption_entries(what)
-    for name, height, _show_in_reporting, vs in avoption_entries:
+    for name, height, _show_in_reporting, vs in valuespecs:
         html.render_floating_option(name, height, "avo_", vs, avoptions.get(name))
-
-    html.end_floating_options(reset_url=html.makeuri(
-        [("_reset", "1")],
-        remove_prefix="avo_",
-        delvars=["apply", "filled_in"],
-    ))
+    html.close_div()
 
     html.hidden_fields()
     html.end_form()
+
+
+def _show_availability_options_controls() -> None:
+    html.open_div(class_="side_popup_controls")
+
+    html.open_div(class_="update_buttons")
+    html.button("apply", _("Apply"), "submit")
+    reset_url = html.makeuri(
+        [("_reset", "1")],
+        remove_prefix="avo_",
+        delvars=["apply", "filled_in"],
+    )
+    html.buttonlink(reset_url, _("Reset"))
+    html.close_div()
+
+    html.close_div()
 
 
 #.
@@ -323,13 +335,27 @@ def _page_menu_availability(breadcrumb: Breadcrumb, what: AVObjectType, av_mode:
                 title=_("Availability"),
                 topics=[
                     PageMenuTopic(
-                        title=_("Parameters"),
+                        title=_("Options"),
                         entries=[
                             PageMenuEntry(
-                                title=_("Availability options"),
+                                title=_("Change display options"),
                                 icon_name="painteroptions",
-                                item=PageMenuPopup(_render_avoptions_form(what, avoptions)),
-                                name="avoptions",
+                                item=PageMenuPopup(
+                                    _render_avoptions_form(
+                                        what, avoptions, availability.get_av_display_options(what)),
+                                    css_classes=["side_popup"],
+                                ),
+                                name="avoptions_display",
+                            ),
+                            PageMenuEntry(
+                                title=_("Change computation options"),
+                                icon_name="av_computation",
+                                item=PageMenuPopup(
+                                    _render_avoptions_form(
+                                        what, avoptions, availability.get_av_computation_options()),
+                                    css_classes=["side_popup"],
+                                ),
+                                name="avoptions_computation",
                             )
                         ],
                     ),
@@ -377,9 +403,10 @@ def _page_menu_availability(breadcrumb: Breadcrumb, what: AVObjectType, av_mode:
     return menu
 
 
-def _render_avoptions_form(what: AVObjectType, avoptions: AVOptions) -> str:
+def _render_avoptions_form(what: AVObjectType, avoptions: AVOptions,
+                           valuespecs: AVOptionValueSpecs) -> str:
     with html.plugged():
-        _show_availability_options(what, avoptions)
+        _show_availability_options(what, avoptions, valuespecs)
         return html.drain()
 
 
@@ -764,7 +791,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
         html.end_context_buttons()
 
         avoptions = get_availability_options_from_request("bi")
-        _show_availability_options("bi", avoptions)
+        _show_availability_options("bi", avoptions, availability.get_avoption_entries("bi"))
 
     if not html.has_user_errors():
 

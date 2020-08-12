@@ -42,6 +42,7 @@ from cmk.gui.globals import html
 AVMode = str  # TODO: Improve this type
 AVObjectType = str  # TODO: Improve this type
 AVOptions = Dict[str, Any]  # TODO: Improve this type
+AVOptionValueSpecs = List  # TODO: Be more specific here
 AVObjectSpec = Union[None, _Tuple[None, None, str], _Tuple[str, str, str]]
 AVSpan = Dict[str, Any]  # TODO: Improve this type
 SiteHost = _Tuple[SiteId, HostName]
@@ -179,11 +180,11 @@ class AvailabilityColumns:
 # 4. the valuespec
 
 
-def get_avoption_entries(what):
+def get_avoption_entries(what) -> AVOptionValueSpecs:
     return get_av_display_options(what) + get_av_computation_options()
 
 
-def get_av_display_options(what):
+def get_av_display_options(what) -> AVOptionValueSpecs:
     if what == "bi":
         grouping_choices = [
             (None, _("Do not group")),
@@ -354,7 +355,7 @@ def vs_rangespec():
     )
 
 
-def get_av_computation_options():
+def get_av_computation_options() -> AVOptionValueSpecs:
     return [
         # How to deal with downtimes
         ("downtimes", "double", True,

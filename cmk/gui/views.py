@@ -1645,6 +1645,7 @@ def show_filter_form(view: View, show_filters: List[Filter]) -> None:
 
     _show_filter_form_buttons(filter_list_id)
 
+    html.open_div(class_="side_popup_content")
     html.open_table(class_=["filterform"], cellpadding="0", cellspacing="0", border="0")
     html.open_tr()
     html.open_td()
@@ -1654,6 +1655,7 @@ def show_filter_form(view: View, show_filters: List[Filter]) -> None:
     html.close_td()
     html.close_tr()
     html.close_table()
+    html.close_div()
 
     html.hidden_fields()
     html.end_form()

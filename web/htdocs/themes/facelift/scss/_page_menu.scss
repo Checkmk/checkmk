@@ -436,28 +436,26 @@ div#page_menu_popups div.side_popup {
     width: inherit;
     text-align: left;
 
-    table.filterform { width: inherit; }
-
-    table.filter {
-      border-spacing: 0;
-
-      > tbody > tr > td {
-        padding: 4px 16px;
-        border-bottom: 1px solid $headline-color;
-      }
+    div.side_popup_content {
+      height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
+    /* general floatfilter elment styling */
     div.floatfilter, div.floatfilter.double {
+      display: block;
       float: none;
-      width: 423px;
       height: auto;
       padding: 0;
       padding-right: 8px;
       padding-bottom: 3px;
       margin: 0;
+      overflow: visible;
       background-color: $button-bg-color-default;
       border-style: none;
       border-radius: 0;
+      box-shadow: none;
 
       input.neg[type="text"] {
         width: 84%;
@@ -477,11 +475,43 @@ div#page_menu_popups div.side_popup {
 
       div.content {
         height: auto;
+        padding: 0;
       }
 
       span.select2-container--default {
         display: inline-block;
       }
+    }
+
+    /* case 1: filters in list of valuespec (view filters) */
+    table.filterform {
+      width: 100%;
+
+      table.valuespec_listof.filter {
+        border-spacing: 0;
+
+        > tbody {
+          padding-left: 6px;
+        }
+
+        > tbody > tr > td {
+          padding: 11px 0 0 11px;
+          border-bottom: 1px solid $headline-color;
+        }
+
+        div.floatfilter {
+          width: 333px;
+        }
+      }
+    }
+
+    /* case 2: floatfilters in list of valuespec (availability options) */
+    > div.side_popup_content > div.floatfilter,
+    > div.side_popup_content > div.floatfilter.double {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-bottom: 1px solid $headline-color;
     }
 
     table.filterform {
@@ -491,9 +521,11 @@ div#page_menu_popups div.side_popup {
       }
     }
 
-    table.valuespec_listof.filter > tbody { padding-left: 6px; }
-
     div.side_popup_controls {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+
       padding: 10px;
       margin: 0;
       border-top: $primary-table-border;
@@ -528,9 +560,9 @@ div#page_menu_popups div.side_popup {
       }
 
       div.update_buttons {
-        float: right;
+        margin-left: auto;
 
-        input.reset, input.apply {
+        input {
           padding: 8px 16px;
           margin: 0;
         }

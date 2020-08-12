@@ -11,7 +11,7 @@ import itertools
 import os
 import re
 import time
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Iterator
 
 from six import ensure_str
 
@@ -42,6 +42,15 @@ from cmk.gui.breadcrumb import (
     Breadcrumb,
 )
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuPopup,
+    make_simple_link,
+    make_display_options_dropdown,
+)
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
@@ -51,8 +60,9 @@ g_werks: Dict[int, Dict[str, Any]] = {}
 
 @cmk.gui.pages.register("version")
 def page_version():
-    html.header(_("Release notes"), _release_notes_breadcrumb())
+    breadcrumb = _release_notes_breadcrumb()
     load_werks()
+    html.header(_("Release notes"), breadcrumb, _release_notes_page_menu(breadcrumb))
     handle_acknowledgement()
     render_werks_table()
     html.footer()
@@ -85,6 +95,72 @@ def handle_acknowledgement():
     render_unacknowleged_werks()
 
 
+def _release_notes_breadcrumb() -> Breadcrumb:
+    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_setup())
+    breadcrumb.append(BreadcrumbItem(
+        title=_("Release notes"),
+        url="version.py",
+    ))
+    return breadcrumb
+
+
+def _release_notes_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+    menu = PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="werks",
+                title=_("Werks"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Incompatible werks"),
+                        entries=list(_page_menu_entries_ack_all_werks()),
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+    _extend_display_dropdown(menu)
+    return menu
+
+
+def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
+    if not may_acknowledge():
+        return
+
+    yield PageMenuEntry(
+        title=_("Acknowledge all"),
+        icon_name="werk_ack",
+        item=make_simple_link(html.makeactionuri([("_ack_all", "1")])),
+        is_enabled=bool(unacknowledged_incompatible_werks()),
+    )
+
+
+def _extend_display_dropdown(menu) -> None:
+    display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+    display_dropdown.topics.insert(
+        0,
+        PageMenuTopic(
+            title=_("Filter"),
+            entries=[
+                PageMenuEntry(
+                    title=_("Filter view"),
+                    icon_name="filters",
+                    item=PageMenuPopup(
+                        _render_werk_options_form(),
+                        css_classes=["side_popup"],
+                    ),
+                    name="filters",
+                    is_shortcut=True,
+                ),
+            ],
+        ))
+
+
+def _render_werk_options_form() -> str:
+    return ""
+
+
 @cmk.gui.pages.register("werk")
 def page_werk():
     load_werks()
@@ -97,15 +173,7 @@ def page_werk():
 
     breadcrumb = _release_notes_breadcrumb()
     breadcrumb.append(make_current_page_breadcrumb_item(title))
-    html.header(title, breadcrumb)
-
-    html.begin_context_buttons()
-    back_url = html.makeuri([], filename="version.py", delvars=["werk"])  # keeps filter settings
-    html.context_button(_("Back"), back_url, "back")
-    if werk["compatible"] == "incomp_unack" and may_acknowledge():
-        ack_url = html.makeactionuri([("_werk_ack", werk["id"])], filename="version.py")
-        html.context_button(_("Acknowledge"), ack_url, "werk_ack")
-    html.end_context_buttons()
+    html.header(title, breadcrumb, _page_menu_werk(breadcrumb, werk))
 
     html.open_table(class_=["data", "headerleft", "werks"])
 
@@ -139,13 +207,35 @@ def page_werk():
     html.footer()
 
 
-def _release_notes_breadcrumb() -> Breadcrumb:
-    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_setup())
-    breadcrumb.append(BreadcrumbItem(
-        title=_("Release notes"),
-        url="version.py",
-    ))
-    return breadcrumb
+def _page_menu_werk(breadcrumb: Breadcrumb, werk: Dict[str, Any]):
+    return PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="Werk",
+                title="Werk",
+                topics=[
+                    PageMenuTopic(
+                        title=_("Incompatible werk"),
+                        entries=list(_page_menu_entries_ack_werk(werk)),
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+
+
+def _page_menu_entries_ack_werk(werk: Dict[str, Any]) -> Iterator[PageMenuEntry]:
+    if not may_acknowledge():
+        return
+
+    ack_url = html.makeactionuri([("_werk_ack", werk["id"])], filename="version.py")
+    yield PageMenuEntry(
+        title=_("Acknowledge"),
+        icon_name="werk_ack",
+        item=make_simple_link(ack_url),
+        is_enabled=werk["compatible"] == "incomp_unack",
+    )
 
 
 def load_werks():
@@ -287,12 +377,6 @@ def _werk_table_option_entries():
 
 def render_unacknowleged_werks():
     werks = unacknowledged_incompatible_werks()
-    if werks and may_acknowledge():
-        html.begin_context_buttons()
-        html.context_button(_("Acknowledge all"), html.makeactionuri([("_ack_all", "1")]),
-                            "werk_ack")
-        html.end_context_buttons()
-
     if werks and not html.request.has_var("show_unack"):
         html.open_div(class_=["warning"])
         html.write_text(

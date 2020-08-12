@@ -123,6 +123,10 @@ class UpdateConfig:
         root_folder.rewrite_hosts_files()
 
     def _rewrite_autochecks(self):
+        # Failing to load the config here will result in the loss of *all*
+        # services due to an exception thrown by cmk.base.config.service_description
+        # in _parse_autocheck_entry of cmk.base.autochecks.
+        cmk.base.config.load()
         cmk.base.config.load_all_checks(cmk.base.check_api.get_check_api_context)
         check_variables = cmk.base.config.get_check_variables()
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):

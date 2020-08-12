@@ -88,9 +88,18 @@ def parse_mssql_counters(info):
                 except ValueError:
                     pass
 
-        data = parsed.setdefault((obj, instance), {}).setdefault(node_name, {})
+        data = parsed.setdefault(node_name, {}).setdefault((obj, instance), {})
         data.setdefault(counter, values)
     return parsed
+
+
+def extract_item_data(item, parsed):
+    obj, instance, *_ = item.split()
+    return {
+        node_name: node_data[(obj, instance)]
+        for node_name, node_data in parsed.items()
+        if (obj, instance) in node_data
+    } or None
 
 
 check_info['mssql_counters'] = {
@@ -119,8 +128,8 @@ def inventory_mssql_counters_cache_hits(parsed, want_counters):
     add_zero_based_services = host_extra_conf_merged(host_name(), inventory_mssql_counters_rules)\
                               .get('add_zero_based_services', False)
 
-    for (obj, instance), node_data in parsed.items():
-        for counters in node_data.values():
+    for node_data in parsed.values():
+        for (obj, instance), counters in parsed.items():
             for counter in counters:
                 if counter not in want_counters:
                     continue
@@ -133,14 +142,14 @@ def inventory_mssql_counters_cache_hits(parsed, want_counters):
 
 
 def check_mssql_counters_cache_hits(item, params, parsed):
-    obj, instance, counter = item.split()
-    node_data = parsed.get((obj, instance))
+    node_data = extract_item_data(item, parsed)
 
     if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
+    _obj, _instance, counter = item.split()
     for node_name, counters in node_data.items():
         value = counters.get(counter)
         base = counters.get("%s_base" % counter, 0)
@@ -194,8 +203,7 @@ check_info['mssql_counters.cache_hits'] = {
 
 
 def check_mssql_counters_transactions(item, params, parsed):
-    obj, instance = item.split()
-    node_data = parsed.get((obj, instance))
+    node_data = extract_item_data(item, parsed)
 
     if node_data is None:
         # Assume general connection problem to the database, which is reported
@@ -240,8 +248,7 @@ check_info['mssql_counters.transactions'] = {
 
 
 def check_mssql_counters_locks(item, params, parsed):
-    obj, instance = item.split()
-    node_data = parsed.get((obj, instance))
+    node_data = extract_item_data(item, parsed)
 
     if node_data is None:
         # Assume general connection problem to the database, which is reported
@@ -300,8 +307,8 @@ check_info['mssql_counters.locks'] = {
 
 
 def inventory_mssql_counters_sqlstats(parsed, want_counters, dflt=None):
-    for (obj, instance), node_data in parsed.items():
-        for counters in node_data.values():
+    for node_data in parsed.values():
+        for (obj, instance), counters in parsed.items():
             for counter in counters:
                 if counter not in want_counters:
                     continue
@@ -309,14 +316,14 @@ def inventory_mssql_counters_sqlstats(parsed, want_counters, dflt=None):
 
 
 def check_mssql_counters_sqlstats(item, params, parsed):
-    obj, instance, counter = item.split()
-    node_data = parsed.get((obj, instance))
+    node_data = extract_item_data(item, parsed)
 
     if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
+    _obj, _instance, counter = item.split()
     for node_name, counters in node_data.items():
         value = counters.get(counter)
         if value is None:
@@ -358,8 +365,7 @@ check_info["mssql_counters.sqlstats"] = {
 
 
 def check_mssql_counters_pageactivity(item, params, parsed):
-    obj, instance = item.split()
-    node_data = parsed.get((obj, instance))
+    node_data = extract_item_data(item, parsed)
 
     if node_data is None:
         # Assume general connection problem to the database, which is reported
@@ -415,20 +421,33 @@ check_info['mssql_counters.pageactivity'] = {
 
 
 def inventory_mssql_counters_locks_per_batch(parsed):
-    db_names = [(obj.split(":")[0], node_name) for (obj, _instance), node_data in parsed.items()
-                if ":" in obj for node_name in node_data]
+    db_names = [(obj.split(":")[0], node_name)
+                for node_name, node_data in parsed.items()
+                for (obj, _instance) in node_data
+                if ":" in obj]
 
     for db_name, node_name in db_names:
-        if "lock_requests/sec" in parsed.get(("%s:Locks" % db_name, "_Total"), {})\
-                                        .get(node_name, {}) \
-           and "batch_requests/sec" in parsed.get(("%s:SQL_Statistics" % db_name, "None"))\
-                                             .get(node_name, {}):
-            yield db_name, {}
+        node_data = parsed[node_name]
+        if "lock_requests/sec" not in node_data.get(("%s:Locks" % db_name, "_Total"), {}):
+            continue
+        if "batch_requests/sec" not in node_data.get(("%s:SQL_Statistics" % db_name, "None"), {}):
+            continue
+        yield db_name, {}
 
 
 def check_mssql_counters_locks_per_batch(item, params, parsed):
-    data_locks_data = parsed.get(("%s:Locks" % item, "_Total"), {})
-    data_stats_data = parsed.get(("%s:SQL_Statistics" % item, "None"), {})
+    locks_key = ("%s:Locks" % item, "_Total")
+    data_locks_data = {
+        node_name: node_data[locks_key]
+        for node_name, node_data in parsed.items()
+        if locks_key in node_data
+    }
+    stats_key = ("%s:SQL_Statistics" % item, "None")
+    data_stats_data = {
+        node_name: node_data[stats_key]
+        for node_name, node_data in parsed.items()
+        if stats_key in node_data
+    }
 
     if not any(list(data_locks_data.values()) + list(data_stats_data.values())):
         # Assume general connection problem to the database, which is reported
@@ -494,8 +513,7 @@ check_info["mssql_counters.locks_per_batch"] = {
 
 
 def check_mssql_file_sizes(item, params, parsed):
-    obj, instance = item.split()
-    node_data = parsed.get((obj, instance))
+    node_data = extract_item_data(item, parsed)
 
     if node_data is None:
         # Assume general connection problem to the database, which is reported

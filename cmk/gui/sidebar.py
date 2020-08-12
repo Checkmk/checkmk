@@ -32,8 +32,13 @@ from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.config import LoggedInUser
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+)
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
@@ -888,11 +893,7 @@ def page_add_snapin() -> None:
 
     title = _("Available snapins")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_configure(), title)
-    html.header(title, breadcrumb)
-
-    html.begin_context_buttons()
-    CustomSnapins.context_button_list()
-    html.end_context_buttons()
+    html.header(title, breadcrumb, _add_snapins_page_menu(breadcrumb))
 
     used_snapins = _used_snapins()
 
@@ -916,6 +917,26 @@ def page_add_snapin() -> None:
 
     html.close_div()
     html.footer()
+
+
+def _add_snapins_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+    return PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Configure"),
+                        entries=[
+                            CustomSnapins.page_menu_entry_list(),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
 
 
 def _used_snapins() -> List[Any]:

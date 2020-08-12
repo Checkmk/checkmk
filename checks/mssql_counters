@@ -54,7 +54,7 @@ def inventory_mssql_counters_generic(parsed, want_counters, dflt=None):
 # parse function.
 
 
-def parse_mssql_counters_base(info):
+def parse_mssql_counters(info):
     parsed = {}
     for line in info:
         if len(line) < 4 or line[-1].startswith("ERROR: "):
@@ -93,19 +93,8 @@ def parse_mssql_counters_base(info):
     return parsed
 
 
-def inventory_mssql_counters_base(_parsed):
-    return
-
-
-def check_mssql_counters_base(_item, _params, _parsed):
-    return 3, 'Not implemented check plugin'
-
-
 check_info['mssql_counters'] = {
-    'parse_function': parse_mssql_counters_base,
-    'inventory_function': inventory_mssql_counters_base,
-    'check_function': check_mssql_counters_base,
-    'service_description': "MSSQL",
+    'parse_function': parse_mssql_counters,
     'node_info': True,
 }
 

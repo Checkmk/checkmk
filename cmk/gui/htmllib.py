@@ -2645,28 +2645,6 @@ class html(ABCHTMLGenerator):
     # Floating Options
     #
 
-    def begin_floating_options(self, div_id: str, is_open: bool) -> None:
-        self.open_div(id_=div_id,
-                      class_=["view_form"],
-                      style="display: none" if not is_open else None)
-        self.open_table(class_=["filterform"], cellpadding="0", cellspacing="0", border="0")
-        self.open_tr()
-        self.open_td()
-
-    def end_floating_options(self, reset_url: Optional[str] = None) -> None:
-        self.close_td()
-        self.close_tr()
-        self.open_tr()
-        self.open_td()
-        self.button("apply", _("Apply"), "submit")
-        if reset_url:
-            self.buttonlink(reset_url, _("Reset to defaults"))
-
-        self.close_td()
-        self.close_tr()
-        self.close_table()
-        self.close_div()
-
     def render_floating_option(self, name: str, height: str, varprefix: str, valuespec: 'ValueSpec',
                                value: Any) -> None:
         self.open_div(class_=["floatfilter", height, name])

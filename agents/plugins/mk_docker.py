@@ -21,6 +21,7 @@ This plugin it will be called by the agent without any arguments.
 
 from __future__ import with_statement
 
+import configparser
 import os
 import sys
 import time
@@ -45,11 +46,6 @@ if (not os.path.isfile('/var/lib/docker') and not os.path.isfile('/var/run/docke
         not which('docker')):
     sys.stderr.write("mk_docker.py: Does not seem to be a docker host. Terminating.\n")
     sys.exit(1)
-
-try:
-    import ConfigParser as configparser  # type: ignore[import]
-except ImportError:  # Python3
-    import configparser  # type: ignore[import,no-redef]
 
 try:
     import docker  # type: ignore[import]

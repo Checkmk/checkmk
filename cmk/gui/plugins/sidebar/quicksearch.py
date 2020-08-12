@@ -874,14 +874,14 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
             else:
                 tag_key, tag_value = entry.split(":", 1)
 
-            # here we check which *_to_group_dict containes the tag_key
+            # here we check which *_to_group_dict containes the tag_value
             # we do not care about the actual data
             # its purpose is to decide which 'url info' to use
-            if tag_key in hosttag_to_group_dict:
+            if tag_value in hosttag_to_group_dict:
                 url_infos.append(("host_tag_%d_grp" % idx, tag_key))
                 url_infos.append(("host_tag_%d_op" % idx, "is"))
                 url_infos.append(("host_tag_%d_val" % idx, tag_value))
-            elif tag_key in auxtag_to_group_dict:
+            elif tag_value in auxtag_to_group_dict:
                 url_infos.append(("host_auxtags_%d" % idx, tag_key))
 
         return "", url_infos

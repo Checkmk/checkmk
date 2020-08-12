@@ -1,0 +1,11 @@
+Title: Quicksearch: Fixed incorrect result page when querying host tags
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1597221681
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p16
+
+The filter <tg:> was incorrectly evaluated when the result set included mulitple hosts.

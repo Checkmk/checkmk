@@ -7,7 +7,7 @@
 
 import time
 import abc
-from typing import List, Union
+from typing import List, Union, Iterator
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.i18n
@@ -27,6 +27,14 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MK
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.globals import html
 from cmk.gui.pages import page_registry, AjaxPage, Page
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
@@ -95,10 +103,6 @@ mega_menu_registry.register(
 
 
 def user_profile_async_replication_page() -> None:
-    html.begin_context_buttons()
-    html.context_button(_('User Profile'), 'user_profile.py', 'back')
-    html.end_context_buttons()
-
     sites = list(config.user.authorized_login_sites().keys())
     user_profile_async_replication_dialog(sites=sites)
 
@@ -201,7 +205,7 @@ class ABCUserProfilePage(Page):
             title = self._page_title()
 
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
-        html.header(title, breadcrumb)
+        html.header(title, breadcrumb, user_page_menu(html.myfile, breadcrumb))
 
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously
@@ -380,8 +384,6 @@ class UserProfile(ABCUserProfilePage):
 
         users = userdb.load_users()
 
-        self._show_context_buttons()
-
         if profile_changed:
             html.reload_sidebar()
             html.show_message(_("Successfully updated user profile."))
@@ -437,14 +439,6 @@ class UserProfile(ABCUserProfilePage):
         html.end_form()
         html.footer()
 
-    def _show_context_buttons(self) -> None:
-        rulebased_notifications = rulebased_notifications_enabled()
-        if rulebased_notifications and config.user.may('general.edit_notifications'):
-            html.begin_context_buttons()
-            url = "wato.py?mode=user_notifications_p"
-            html.context_button(_("Notifications"), url, "notifications")
-            html.end_context_buttons()
-
 
 @page_registry.register_page("wato_ajax_profile_repl")
 class ModeAjaxProfileReplication(AjaxPage):
@@ -488,3 +482,45 @@ class ModeAjaxProfileReplication(AjaxPage):
         watolib.ActivateChanges().update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC,
                                                          duration)
         return result
+
+
+def user_page_menu(page_name: str, breadcrumb: Breadcrumb) -> PageMenu:
+    return PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("User"),
+                        entries=list(_page_menu_entries_related(page_name)),
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+
+
+def _page_menu_entries_related(page_name: str) -> Iterator[PageMenuEntry]:
+    if page_name != "user_change_pw":
+        yield PageMenuEntry(
+            title=_("Change password"),
+            icon_name="topic_change_password",
+            item=make_simple_link("user_change_pw.py"),
+        )
+
+    if page_name != "user_profile":
+        yield PageMenuEntry(
+            title=_("Edit profile"),
+            icon_name="topic_profile",
+            item=make_simple_link("user_profile.py"),
+        )
+
+    if page_name != "user_notifications_p" and rulebased_notifications_enabled(
+    ) and config.user.may('general.edit_notifications'):
+        yield PageMenuEntry(
+            title=_("Notification rules"),
+            icon_name="topic_events",
+            item=make_simple_link("wato.py?mode=user_notifications_p"),
+        )

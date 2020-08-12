@@ -62,6 +62,15 @@ from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
 )
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 
 
 class NotificationsMode(EventsMode):
@@ -833,6 +842,34 @@ class ModePersonalUserNotifications(UserNotificationsMode):
     def main_menu(self):
         return mega_menu_registry.menu_user()
 
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = cmk.gui.wato.user_profile.user_page_menu("user_notifications_p", breadcrumb)
+
+        menu.dropdowns.insert(
+            0,
+            PageMenuDropdown(
+                name="rules",
+                title=_("Rules"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Personal rules"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Add rule"),
+                                icon_name="new",
+                                item=make_simple_link(
+                                    watolib.folder_preserving_link([("mode", "notification_rule_p")
+                                                                   ])),
+                                is_shortcut=True,
+                                is_suggested=True,
+                            ),
+                        ],
+                    )
+                ],
+            ))
+
+        return menu
+
     def _user_id(self):
         return config.user.id
 
@@ -845,12 +882,6 @@ class ModePersonalUserNotifications(UserNotificationsMode):
 
     def title(self):
         return _("Your personal notification rules")
-
-    def buttons(self):
-        html.context_button(_("Profile"), "user_profile.py", "back")
-        html.context_button(_("New Rule"),
-                            watolib.folder_preserving_link([("mode", "notification_rule_p")]),
-                            "new")
 
 
 # TODO: Split editing of user notification rule and global notification rule
@@ -1354,7 +1385,5 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
             return _("Create new notification rule")
         return _("Edit notification rule %d") % self._edit_nr
 
-    def buttons(self):
-        html.context_button(_("All Rules"),
-                            watolib.folder_preserving_link([("mode", "user_notifications_p")]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")

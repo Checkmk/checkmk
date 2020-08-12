@@ -26,6 +26,7 @@ from werkzeug.test import create_environ
 import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 import cmk.base.check_api
+from cmk.base.check_utils import Service  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
@@ -33,7 +34,7 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
 import cmk.utils
-from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs import CheckPluginName, UserId
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.plugins.views.utils import get_all_views
@@ -49,6 +50,16 @@ from cmk.gui.globals import AppContext, RequestContext  # pylint: disable=cmk-mo
 from cmk.gui.http import Request  # pylint: disable=cmk-module-layer-violation
 
 import cmk.update_rrd_fs_names
+
+# mapping removed check plugins to their replacement:
+REMOVED_CHECK_PLUGIN_MAP = {
+    CheckPluginName("ps_perf"): CheckPluginName("ps"),
+    CheckPluginName("aix_memory"): CheckPluginName("mem_used"),
+    CheckPluginName("docker_container_mem"): CheckPluginName("mem_used"),
+    CheckPluginName("hr_mem"): CheckPluginName("mem_used"),
+    CheckPluginName("solaris_mem"): CheckPluginName("mem_used"),
+    CheckPluginName("statgrab_mem"): CheckPluginName("mem_used"),
+}
 
 
 # TODO: Better make our application available?
@@ -142,7 +153,20 @@ class UpdateConfig:
                     "%s\nIf you encounter this error during the update process "
                     "you need to replace the the variable by its actual value, e.g. "
                     "replace `my_custom_levels` by `{'levels': (23, 42)}`." % exc)
+            autochecks = [self._map_removed_check_plugin_names(s) for s in autochecks]
             cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
+
+    def _map_removed_check_plugin_names(self, service: Service) -> Service:
+        """Change names of removed plugins to the new ones"""
+        if service.check_plugin_name not in REMOVED_CHECK_PLUGIN_MAP:
+            return service
+        return Service(
+            check_plugin_name=REMOVED_CHECK_PLUGIN_MAP[service.check_plugin_name],
+            item=service.item,
+            description=service.description,
+            parameters=service.parameters,
+            service_labels=service.service_labels,
+        )
 
     def _rewrite_wato_rulesets(self):
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()

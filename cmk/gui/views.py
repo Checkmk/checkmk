@@ -480,8 +480,9 @@ class View:
                 visuals.get_singlecontext_html_vars(self.context,
                                                     self.spec["single_infos"]).items())
 
-            breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
-                                               self.spec["topic"])
+            breadcrumb = make_topic_breadcrumb(
+                mega_menu_registry.menu_monitoring(),
+                pagetypes.PagetypeTopics.get_topic(self.spec["topic"]))
             breadcrumb.append(
                 BreadcrumbItem(
                     title=view_title(self.spec),

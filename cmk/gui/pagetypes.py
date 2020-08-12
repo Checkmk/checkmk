@@ -1607,6 +1607,12 @@ class PagetypeTopics(Overridable):
         cls.load()
         return {p.name(): p for p in cls.permitted_instances_sorted()}
 
+    @classmethod
+    def get_topic(cls, topic_id) -> "PagetypeTopics":
+        """Returns either the requested topic or fallback to "other"."""
+        PagetypeTopics.load()
+        return PagetypeTopics.find_page(topic_id) or PagetypeTopics.find_page("other")
+
 
 declare(PagetypeTopics)
 

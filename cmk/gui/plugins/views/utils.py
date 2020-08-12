@@ -52,6 +52,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
 from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.pagetypes import PagetypeTopics
 
 from cmk.gui.type_defs import (
     ColumnName,
@@ -2120,7 +2121,7 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     allhosts_view_spec = permitted_views["allhosts"]
 
     breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
-                                       allhosts_view_spec["topic"])
+                                       PagetypeTopics.get_topic(allhosts_view_spec["topic"]))
 
     # 1. level: list of all hosts
     breadcrumb.append(

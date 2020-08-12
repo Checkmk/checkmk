@@ -1175,7 +1175,9 @@ class Overridable(Base):
                                       _("The requested %s does not exist") % cls.phrase("title"))
 
                 if not page.may_edit():
-                    raise MKAuthException(_("You do not have the permissions to edit this graph"))
+                    raise MKAuthException(
+                        _("You do not have the permissions to edit this %s") % cls.phrase("title"))
+
                 # TODO FIXME: Looks like a hack
                 cls.remove_instance((owner_user_id, page_name))  # will be added later again
             else:  # clone

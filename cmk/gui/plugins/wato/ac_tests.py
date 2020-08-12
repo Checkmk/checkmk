@@ -897,8 +897,9 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
 
     def help(self) -> str:
         return _(
-            "This check returns CRIT if the ruleset b>State in case of restricted address missmatch</b> "
-            "is configured and differs from default state <b>WARN</b>. "
+            "This check returns CRIT if the parameter <b>State in case of restricted address missmatch</b> "
+            "in the ruleset <b>Status of the Check_MK services</b> is configured and differs from default "
+            "state <b>WARN</b>. "
             "With the above setting you can overwrite the default service state. This will help "
             "you to reduce above warnings during the update process of your Checkmk sites "
             "and agents. "

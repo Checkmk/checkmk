@@ -656,9 +656,6 @@ class Overridable(Base):
         )
 
     def page_menu_entry_edit(self) -> PageMenuEntry:
-        if not self.may_edit():
-            return
-
         return PageMenuEntry(
             title=_("Edit properties"),
             icon_name="edit",

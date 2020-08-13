@@ -265,15 +265,18 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             html.show_warning(_("Sorry, you are not allowed to activate changes of other users."))
             return
 
-        valuespec = self._vs_activation()
+        valuespec = _vs_activation(self.title(), self.has_foreign_changes())
 
         html.begin_form("activate", method="POST", action="")
         html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
-        forms.header(valuespec.title())
 
-        valuespec.render_input("activate", self._value)
-        valuespec.set_focus("activate")
-        html.help(valuespec.help())
+        if valuespec:
+            title = valuespec.title()
+            assert title is not None
+            forms.header(title)
+            valuespec.render_input("activate", self._value)
+            valuespec.set_focus("activate")
+            html.help(valuespec.help())
 
         if self.has_foreign_changes():
             if config.user.may("wato.activateforeign"):
@@ -293,34 +296,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         forms.end()
         html.hidden_fields()
         html.end_form()
-
-    def _vs_activation(self):
-        elements: List[DictionaryEntry] = [
-            ("comment",
-             TextAreaUnicode(
-                 title=_("Comment (optional)"),
-                 cols=40,
-                 try_max_width=True,
-                 rows=3,
-                 help=_("You can provide an optional comment for the current activation. "
-                        "This can be useful to document the reason why the changes you "
-                        "activate have been made."),
-             )),
-        ]
-
-        if self.has_foreign_changes() and config.user.may("wato.activateforeign"):
-            elements.append(("foreign",
-                             Checkbox(
-                                 title=_("Activate foreign changes"),
-                                 label=_("Activate changes of other users"),
-                             )))
-
-        return Dictionary(
-            title=self.title(),
-            elements=elements,
-            optional_keys=[],
-            render="form_part",
-        )
 
     def _change_table(self):
         with table_element("changes", sortable=False, searchable=False, css="changes",
@@ -482,6 +457,42 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         html.write(last_state["_status_details"])
 
 
+def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary]:
+    elements: List[DictionaryEntry] = []
+
+    if config.wato_activate_changes_comment_mode != "disabled":
+        is_optional = config.wato_activate_changes_comment_mode != "enforce"
+        elements.append(
+            ("comment",
+             TextAreaUnicode(
+                 title=_("Comment (optional)") if is_optional else _("Comment"),
+                 cols=40,
+                 try_max_width=True,
+                 rows=1,
+                 help=_("You can provide an optional comment for the current activation. "
+                        "This can be useful to document the reason why the changes you "
+                        "activate have been made."),
+                 allow_empty=is_optional,
+             )))
+
+    if has_foreign_changes and config.user.may("wato.activateforeign"):
+        elements.append(("foreign",
+                         Checkbox(
+                             title=_("Activate foreign changes"),
+                             label=_("Activate changes of other users"),
+                         )))
+
+    if not elements:
+        return None
+
+    return Dictionary(
+        title=title,
+        elements=elements,
+        optional_keys=[],
+        render="form_part",
+    )
+
+
 @page_registry.register_page("ajax_start_activation")
 class ModeAjaxStartActivation(AjaxPage):
     def page(self):
@@ -505,10 +516,18 @@ class ModeAjaxStartActivation(AjaxPage):
             affected_sites = affected_sites_request.split(",")
 
         comment: Optional[str] = request.get("comment", "").strip()
-        if comment == "":
-            comment = None
 
         activate_foreign = request.get("activate_foreign", "0") == "1"
+
+        valuespec = _vs_activation("", manager.has_foreign_changes())
+        if valuespec:
+            valuespec.validate_value({
+                "comment": comment,
+                "foreign": activate_foreign,
+            }, "activate")
+
+        if comment == "":
+            comment = None
 
         activation_id = manager.start(
             sites=affected_sites,

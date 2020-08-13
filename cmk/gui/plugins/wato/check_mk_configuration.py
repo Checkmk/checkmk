@@ -1742,6 +1742,30 @@ class ConfigVariableActivateChangesConcurrency(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupWATO
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "wato_activate_changes_comment_mode"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Comment for activation of changes"),
+            help=_("Whether or not Checkmk should ask the user for a comment before activating a "
+                   "configuration change."),
+            choices=[
+                ('enforce', _("Require a comment")),
+                ('optional', _("Ask for an optional comment")),
+                ('disabled', _("Do not ask for a comment")),
+            ],
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableWATOActivationMethod(ConfigVariable):
     def group(self):
         return ConfigVariableGroupWATO

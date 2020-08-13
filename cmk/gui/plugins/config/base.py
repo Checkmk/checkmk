@@ -5,7 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Default configuration settings for the Check_MK GUI"""
 
-from typing import Any as _Any, Dict as _Dict, List as _List, Tuple as _Tuple, Union as _Union
+from typing import (
+    Any as _Any,
+    Dict as _Dict,
+    List as _List,
+    Tuple as _Tuple,
+    Union as _Union,
+    Literal as _Literal,
+)
 
 #.
 #   .--Generic-------------------------------------------------------------.
@@ -473,6 +480,9 @@ wato_icon_categories = [
     ("parts", u"Parts"),
     ("misc", u"Misc"),
 ]
+
+_ActivateChangesCommentMode = _Literal["enforce", "optional", "disabled"]
+wato_activate_changes_comment_mode: _ActivateChangesCommentMode = "disabled"
 
 #.
 #   .--BI------------------------------------------------------------------.

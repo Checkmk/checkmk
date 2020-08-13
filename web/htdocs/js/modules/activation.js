@@ -55,7 +55,7 @@ export function activate_changes(mode, site_id)
 
     var comment = "";
     var comment_field = document.getElementsByName("activate_p_comment")[0];
-    if (comment_field.value != "")
+    if (comment_field && comment_field.value != "")
         comment = comment_field.value;
 
     var activate_foreign = 0;

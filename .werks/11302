@@ -1,0 +1,13 @@
+Title: Azure Storage: egress data levels wrongly labelled on user interface
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p16
+Date: 1597321681
+
+The egress data levels parameters of the Azure Storage plugin were labelled
+'ingress data'. This has been fixed.

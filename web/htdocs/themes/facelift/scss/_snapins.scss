@@ -526,10 +526,10 @@ div.spacertop {
 
   input {
     width: 100%;
-    padding: 6px 0 6px 37px;
+    padding: 6px 0 6px $spacing;
     font-size: 14px;
     background-image: url("images/icon_quicksearch.png");
-    background-position: left 8px bottom 6px;
+    background-position: right $spacing bottom 6px;
     background-size: 15px;
   }
 

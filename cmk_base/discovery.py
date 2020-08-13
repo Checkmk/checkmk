@@ -304,8 +304,7 @@ def discover_on_host(config_cache,
                                              ipaddress,
                                              check_plugin_names=None,
                                              do_snmp_scan=do_snmp_scan,
-                                             on_error=on_error,
-                                             for_check_discovery=True)
+                                             on_error=on_error)
 
         multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
@@ -411,8 +410,7 @@ def check_discovery(hostname, ipaddress):
                                          ipaddress,
                                          check_plugin_names=None,
                                          do_snmp_scan=params["inventory_check_do_scan"],
-                                         on_error="raise",
-                                         for_check_discovery=True)
+                                         on_error="raise")
 
     multi_host_sections = _get_host_sections_for_discovery(
         sources, use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
@@ -868,12 +866,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def _get_sources_for_discovery(hostname,
-                               ipaddress,
-                               check_plugin_names,
-                               do_snmp_scan,
-                               on_error,
-                               for_check_discovery=False):
+def _get_sources_for_discovery(hostname, ipaddress, check_plugin_names, do_snmp_scan, on_error):
     sources = data_sources.DataSources(hostname, ipaddress)
 
     for source in sources.get_data_sources():
@@ -882,14 +875,6 @@ def _get_sources_for_discovery(hostname,
             source.set_do_snmp_scan(do_snmp_scan)
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
-
-            # During discovery, the snmp datasource can never fully rely on the locally cached data,
-            # since the available oid trees depend on the current running checks
-            # We can not disable the data_source_cache per default when caching is set
-            # since this would affect the WATO service discvoery page.
-            if for_check_discovery and source.get_may_use_cache_file():
-                source.disable_data_source_cache()
-
             source.set_check_plugin_name_filter(snmp_scan.gather_snmp_check_plugin_names)
 
     # When check types are specified via command line, enforce them and disable auto detection

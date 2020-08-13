@@ -242,3 +242,39 @@ def test_data_sources_of_hosts(monkeypatch, hostname, settings):
     sources = cmk_base.data_sources.DataSources(hostname, "127.0.0.1")
     source_names = [s.__class__.__name__ for s in sources.get_data_sources()]
     assert settings["sources"] == source_names, "Wrong sources for %s" % hostname
+
+
+@pytest.mark.parametrize("live_data", [
+    {},
+    {
+        "live": "LIVE",
+    },
+])
+def test_data_sources_snmp__get_raw_data_live(monkeypatch, live_data):
+    Scenario().add_host("hostname").apply(monkeypatch)
+    source = cmk_base.data_sources.snmp.SNMPDataSource("hostname", "ipaddress")
+    monkeypatch.setattr(source, "_read_cache_file", lambda: {})
+    monkeypatch.setattr(source, "_write_cache_file", lambda raw_data: None)
+    monkeypatch.setattr(source, "_execute", lambda: live_data)
+
+    assert source._get_raw_data() == (live_data, False)
+
+
+@pytest.mark.parametrize("cached_data, live_data", [
+    ({
+        "cached": "CACHED",
+    }, {}),
+    ({
+        "cached": "CACHED",
+    }, {
+        "live": "LIVE",
+    }),
+])
+def test_data_sources_snmp__get_raw_data_cached(monkeypatch, cached_data, live_data):
+    Scenario().add_host("hostname").apply(monkeypatch)
+    source = cmk_base.data_sources.snmp.SNMPDataSource("hostname", "ipaddress")
+    monkeypatch.setattr(source, "_read_cache_file", lambda: cached_data)
+    monkeypatch.setattr(source, "_write_cache_file", lambda raw_data: None)
+    monkeypatch.setattr(source, "_execute", lambda: live_data)
+
+    assert source._get_raw_data() == (cached_data, True)

@@ -263,11 +263,6 @@ def test_registered_configvars():
             'ntop_connection',
         ]
 
-    if cmk_version.is_managed_edition():
-        expected_vars += [
-            "color_set",
-        ]
-
     registered = sorted(config_variable_registry.keys())
     assert registered == sorted(expected_vars)
 

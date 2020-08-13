@@ -1586,10 +1586,6 @@ class html(ABCHTMLGenerator):
             self.write('<link rel="stylesheet" type="text/css" href="%s">\n' %
                        config.custom_style_sheet)
 
-        if self._theme == "classic" and cmk_version.is_managed_edition():
-            import cmk.gui.cme.gui_colors as gui_colors  # pylint: disable=no-name-in-module,disable=import-outside-toplevel
-            gui_colors.GUIColors().render_html()
-
     def _plugin_stylesheets(self) -> Set[str]:
         plugin_stylesheets = set([])
         for directory in [

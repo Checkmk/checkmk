@@ -36,14 +36,11 @@ div#top_heading {
     margin: 6px 0 0;
     font-size: 18px;
     font-weight: bold;
-    color: #eaeaea;
+    color: $font-color;
     text-decoration: none;
     white-space: nowrap;
 
-    &:hover {
-      color: #fff;
-      cursor: pointer;
-    }
+    &:hover { cursor: pointer; }
   }
 
   div.page_state {
@@ -107,12 +104,12 @@ div#top_heading {
       &:last-child:after {
         content: "";
       }
-      color: #ccc;
+      color: rgba($font-color, .5);
       text-decoration: none;
     }
 
     a:hover {
-      color: #fff;
+      color: $font-color;
     }
 
     // TODO: Check whether this selector works at all
@@ -200,10 +197,7 @@ div#top_heading {
           margin: 0;
           font-size: 12px;
 
-          &:hover {
-            color: #fff;
-            cursor: pointer;
-	  }
+          &:hover { cursor: pointer; }
 	}
       }
 
@@ -382,7 +376,7 @@ div#page_menu_popups {
         margin: 8px 10px;
         font-size: 14px;
         font-weight: bold;
-        color: $font-color-highlight;
+        color: $font-color;
         text-transform: uppercase;
       }
 

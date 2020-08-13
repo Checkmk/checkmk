@@ -31,6 +31,7 @@ $bg-color:                                  rgb(28, 34, 40);
 $base-color:                                rgb(32, 39, 46);
 $headline-color:                            rgb(38, 47, 56);
 $table-highlight-color:                     rgb(38, 45, 52);
+$img-color:                                 $white;
 
 $font-color:                                $white;
 $font-color-light:                          $lightgrey; // light grey
@@ -64,7 +65,6 @@ $letter-spacing-table:    1px;
 $primary-font-color:			    $font-color;
 $secondary-font-color:			    $font-color;
 $primary-hover-font-color:		    $grey-1;
-$primary-sidebar-font-color:		    $font-color;
 
 
 // -----------------------------------------------------------------------------
@@ -280,9 +280,6 @@ $dark-font-color:			    $grey-7 !important;
 $body-dashlet-bg-color:			    $bg-color-secondary;
 $dashlet-bg-color:			    $bg-color-secondary;
 
-$tactical-overview-th-font-color:	    $font-color;
-$tactical-overview-td-bg-color:		    $grey-3;
-
 $state-border-top-color:		    $grey-6;
 
 $body-side-bg-color:			    $bg-color-default;
@@ -439,12 +436,10 @@ $topology-filter-border-color:		    $grey-7;
 
 $host-folder-font-color:		    $font-color;
 
-$snapin-link-hover-color:		    $grey-1;
-
 $if-state-up-font-color:		    $grey-7;
 
 $foldertree-snapin-bg-color:		    $grey-3;
-$foldertree-snapin-font-color:		    $primary-sidebar-font-color;
+$foldertree-snapin-font-color:		    $font-color;
 
 $table-headerleft-border-bottom:	    1px solid $bg-color-default;
 
@@ -508,11 +503,15 @@ $button-bg-color-default:                   rgb(53, 63, 74);
 $button-bg-color-secondary:                 rgb(48, 57, 68);
 $button-bg-color-secondary-hover:           rgb(53, 63, 74);
 $navigation-bg-color:                       $navbar-color;
-$snapin-bg-color:                           $navigation-bg-color;
-$sidebar-border-color:                      rgb(56, 68, 93);
+$snapin-bg-color:                           $navbar-color;
+$sidebar-border-color:                      $headline-color;
 $form-bg-color:                             $button-bg-color-default;
 $form-font-color:                           rgb(234, 234, 234);
-$font-color-highlight:                      $white;
 $filter-group-title-font-color:             $white;
 $popup-filters-border-radius:               2px;
 $popup-button-border:                       1px solid $grey-2;
+$popup-trigger-active-bg-color:             $button-bg-color-default;
+$popup-menu-bg-color:                       $button-bg-color-default;
+$tactical-overview-th-font-color:	    $font-color;
+$tactical-overview-td-bg-color:		    $button-bg-color-default;
+$snapin-heading-border-color:               rgba(255, 255, 255, 0.2);

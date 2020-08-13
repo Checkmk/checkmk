@@ -44,9 +44,7 @@ h3 {
 body {
   color: rgb(255, 255, 255);
 
-  a, a:link, a:visited {
-    color: rgb(255, 255, 255);
-  }
+  a, a:link, a:visited { color: $font-color; }
 
   &.hidden:after {
     position: absolute;

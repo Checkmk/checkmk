@@ -45,7 +45,7 @@
   }
 
   #mk_side_search_field {
-    background-color: #1e262e;
+    background-color: $bg-color;
   }
 
   #mk_search_results {
@@ -68,7 +68,7 @@
     }
 
     &.active {
-      background-color: $button-bg-color-default;
+      background-color: $popup-trigger-active-bg-color;
 
       a.popup_trigger {
         font-weight: bold;
@@ -96,7 +96,7 @@
       left: 64px;
       z-index: 1000;
       height: calc(100vh - #{$page-header-height});
-      background-color: $button-bg-color-default;
+      background-color: $popup-menu-bg-color;
       border-right: 4px solid $success;
       border-left: 1px solid $headline-color;
       visibility: hidden;
@@ -133,7 +133,7 @@
             margin: 0;
             font-size: 14px;
             font-weight: bold;
-            color: $font-color-highlight;
+            color: $font-color;
             text-transform: uppercase;
 
             a.show_all_topics {
@@ -237,7 +237,6 @@
         display: block;
       }
     }
-
   }
 
   li {
@@ -253,7 +252,7 @@
       display: block;
       padding: $spacing 4px $spacing 0;
       font-size: $font-size-small;
-      color: #fff;
+      color: $font-color;
       text-align: center;
       text-decoration: none;
       outline: none;

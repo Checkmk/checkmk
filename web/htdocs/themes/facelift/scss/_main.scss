@@ -338,8 +338,8 @@ div.livestatus.message {
 '-------------------------------------------------------------------------*/
 
 img.treeangle {
-  width: 13px;
-  height: 12px;
+  width: 9px;
+  height: 8px;
   margin-top: 0;
   margin-right: 3px;
   vertical-align: middle;
@@ -370,7 +370,7 @@ img.treeangle {
 
 b.treeangle.title {
   font-weight: bold;
-  color: rgb(255, 255, 255);
+  color: $font-color;
   cursor: pointer;
 
   table.data & {
@@ -803,7 +803,7 @@ div#hover_menu {
   }
 
   div.message {
-    color: $primary-sidebar-font-color;
+    color: $font-color;
     background-color: $black;
   }
 

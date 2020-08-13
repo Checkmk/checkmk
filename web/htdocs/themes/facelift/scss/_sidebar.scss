@@ -29,14 +29,6 @@ body.side {
     color: $darkgrey;
   }
 
-  .link {
-    color: $lightgrey;
-  }
-
-  .title {
-    color: $lightgrey;
-  }
-
   &.screenshotmode {
     background-image: url("");
   }
@@ -87,9 +79,7 @@ body.side {
       }
     }
 
-    img {
-      width: 19px;
-    }
+    img { width: 19px; }
   }
 
   #side_content {
@@ -161,7 +151,7 @@ body.main .popup_menu #side_header > span {
   cursor: pointer;
 
   background: no-repeat center / 36% url("images/side_fold.png") $navigation-bg-color;
-  border: 1px solid $white;
+  border: 1px solid $img-color;
   border-radius: 9px;
 
   &.folded {
@@ -193,7 +183,7 @@ body.main .popup_menu #side_header > span {
   span.unack_werks {
     padding: 2px;
     margin-left: 2px;
-    color: $primary-sidebar-font-color;
+    color: $font-color;
     cursor: pointer;
     background-color: rgb(255, 0, 0);
     border-radius: 6px;
@@ -234,7 +224,7 @@ div.snapin {
     position: relative;
     height: auto;
     line-height: 10px; /* affects height of snapin title bar */
-    color: $font-color-highlight;
+    color: $font-color;
     text-align: left;
     background: transparent;
 
@@ -248,7 +238,7 @@ div.snapin {
       font-weight: $font-weight-bold;
       line-height: 16px;
       letter-spacing: $letter-spacing-table;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      border-bottom: 1px solid $snapin-heading-border-color;
     }
 
     &.closed span.minisnapin {
@@ -305,7 +295,7 @@ div.snapin {
     top: 64px;
     width: 100%;
     padding: $spacing 0 0;
-    color: $font-color-highlight;
+    color: $font-color;
     box-sizing: border-box;
   }
 
@@ -322,25 +312,22 @@ div.snapin {
    */
 
   td {
-    color: $primary-sidebar-font-color;
+    color: $font-color;
   }
 
   h3 {
     margin: 2px 0;
     font-size: 100%;
-    color: $primary-sidebar-font-color;
+    color: $font-color;
   }
 
   /* Normal link in snapins */
   a {
     font-weight: normal;
-    color: $primary-sidebar-font-color;
+    color: $font-color;
     text-decoration: none;
 
-    &:hover {
-      color: $snapin-link-hover-color;
-      text-decoration: underline;
-    }
+    &:hover { text-decoration: underline; }
 
     &.iconlink img {
       margin-right: 8px;

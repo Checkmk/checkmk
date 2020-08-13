@@ -257,7 +257,7 @@ def _ast_convert_unary(unop_ast: ast.UnaryOp) -> SNMPDetectSpec:
         # We can only negate atomic specs, for now
         if len(operand) == 1 and len(operand[0]) == 1:
             oidstr, pattern, result = operand[0][0]
-            return [[(oidstr, pattern, not result)]]
+            return SNMPDetectSpec([[(oidstr, pattern, not result)]])
         raise NotImplementedError("cannot negate operand")
     raise ValueError(ast.dump(unop_ast))
 
@@ -345,7 +345,7 @@ def create_detect_spec(name: str, snmp_scan_function: Callable,
     expression_ast = _get_expression_from_function(name, scan_func_ast)
 
     if _is_false(expression_ast):
-        spec = []
+        spec = SNMPDetectSpec()
     else:
         spec = _ast_convert_dispatcher(expression_ast)
 

@@ -12,7 +12,7 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName
 
-from cmk.snmplib.type_defs import OIDEnd, SNMPTree
+from cmk.snmplib.type_defs import OIDEnd, SNMPDetectSpec, SNMPTree
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.type_defs import (
@@ -121,9 +121,9 @@ def test_create_snmp_section_plugin():
         ),
     ]
 
-    detect = [
+    detect = SNMPDetectSpec([
         [('.1.2.3.4.5', 'Foo.*', True)],
-    ]
+    ])
 
     plugin = section_plugins.create_snmp_section_plugin(
         name="norris",

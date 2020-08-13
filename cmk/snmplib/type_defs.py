@@ -66,7 +66,15 @@ SNMPCredentials = Union[SNMPCommunity, Tuple[str, ...]]
 SNMPTiming = Dict
 
 SNMPDetectAtom = Tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
-SNMPDetectSpec = List[List[SNMPDetectAtom]]
+
+
+# make this a class in order to hide the List implementation from the sphinx doc!
+class SNMPDetectSpec(List[List[SNMPDetectAtom]]):
+    """A specification for SNMP device detection
+
+    Note that the structure of this object is not part of the API,
+    and may change at any time.
+    """
 
 
 # Wraps the configuration of a host into a single object for the SNMP code

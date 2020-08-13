@@ -42,44 +42,44 @@ def parse_to_string_table(string_table):
 
 def all_of(spec_0: SNMPDetectSpec, spec_1: SNMPDetectSpec,
            *specs: SNMPDetectSpec) -> SNMPDetectSpec:
-    reduced = [l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1)]
+    reduced = SNMPDetectSpec(l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1))
     if not specs:
         return reduced
     return all_of(reduced, *specs)
 
 
 def any_of(*specs: SNMPDetectSpec) -> SNMPDetectSpec:
-    return sum(specs, [])
+    return SNMPDetectSpec(sum(specs, []))
 
 
 def _negate(spec: SNMPDetectSpec) -> SNMPDetectSpec:
     assert len(spec) == 1
     assert len(spec[0]) == 1
-    return [[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]]
+    return SNMPDetectSpec([[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]])
 
 
 def matches(oidstr: str, value: str) -> SNMPDetectSpec:
-    return [[(oidstr, value, True)]]
+    return SNMPDetectSpec([[(oidstr, value, True)]])
 
 
 def contains(oidstr: str, value: str) -> SNMPDetectSpec:
-    return [[(oidstr, '.*%s.*' % re.escape(value), True)]]
+    return SNMPDetectSpec([[(oidstr, '.*%s.*' % re.escape(value), True)]])
 
 
 def startswith(oidstr: str, value: str) -> SNMPDetectSpec:
-    return [[(oidstr, '%s.*' % re.escape(value), True)]]
+    return SNMPDetectSpec([[(oidstr, '%s.*' % re.escape(value), True)]])
 
 
 def endswith(oidstr: str, value: str) -> SNMPDetectSpec:
-    return [[(oidstr, '.*%s' % re.escape(value), True)]]
+    return SNMPDetectSpec([[(oidstr, '.*%s' % re.escape(value), True)]])
 
 
 def equals(oidstr: str, value: str) -> SNMPDetectSpec:
-    return [[(oidstr, '%s' % re.escape(value), True)]]
+    return SNMPDetectSpec([[(oidstr, '%s' % re.escape(value), True)]])
 
 
 def exists(oidstr: str) -> SNMPDetectSpec:
-    return [[(oidstr, '.*', True)]]
+    return SNMPDetectSpec([[(oidstr, '.*', True)]])
 
 
 def not_matches(oidstr: str, value: str) -> SNMPDetectSpec:

@@ -172,9 +172,3 @@ def _include_file_path(name: str) -> str:
     if os.path.exists(shared_path):
         return shared_path
     return config.check_include_file_path(name)
-
-
-def is_snmp_plugin(check_plugin_name: str) -> bool:
-    section_name = section_name_of(check_plugin_name)
-    plugin = agent_based_register.get_section_plugin(SectionName(section_name))
-    return isinstance(plugin, SNMPSectionPlugin)

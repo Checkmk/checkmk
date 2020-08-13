@@ -6,12 +6,10 @@
 
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
-from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName
 
 from cmk.snmplib.type_defs import SNMPPersistedSections, SNMPSectionContent, SNMPSections
 
-from cmk.base.caching import runtime_cache as _runtime_cache
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
 LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
@@ -106,17 +104,6 @@ class Service:
             self.parameters,
             self.service_labels.to_dict(),
         )
-
-
-def is_snmp_check(check_plugin_name: str) -> bool:
-    cache = _runtime_cache.get_dict("is_snmp_check")
-    try:
-        return cache[check_plugin_name]
-    except KeyError:
-        snmp_checks = _runtime_cache.get_set("check_type_snmp")
-        result = section_name_of(check_plugin_name) in snmp_checks
-        cache[check_plugin_name] = result
-        return result
 
 
 # TODO (mo): *consider* using the type aliases.

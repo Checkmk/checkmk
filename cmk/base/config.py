@@ -1933,14 +1933,13 @@ def _extract_agent_and_snmp_sections() -> None:
     # start with the "main"-checks, the ones without '.' in their names:
     for check_plugin_name in sorted(check_info, key=lambda name: ('.' in name, name)):
         section_name = section_name_of(check_plugin_name)
-        is_snmp_plugin = section_name in snmp_info
 
         if agent_based_register.is_registered_section_plugin(SectionName(section_name)):
             continue
 
         check_info_dict = check_info.get(section_name, check_info[check_plugin_name])
         try:
-            if is_snmp_plugin:
+            if section_name in snmp_info:
                 agent_based_register.add_section_plugin(
                     create_snmp_section_plugin_from_legacy(
                         section_name,
@@ -3085,7 +3084,6 @@ class ConfigCache:
     def _initialize_caches(self) -> None:
         self.check_table_cache = _config_cache.get_dict("check_tables")
 
-        self._cache_is_snmp_check = _runtime_cache.get_dict("is_snmp_check")
         self._cache_section_name_of: Dict[CheckPluginNameStr, str] = {}
 
         self._cache_match_object_service: Dict[Tuple[HostName, ServiceName],
@@ -3455,15 +3453,6 @@ class ConfigCache:
             section_name = section_name_of(section)
             self._cache_section_name_of[section] = section_name
             return section_name
-
-    def is_snmp_check(self, check_plugin_name: CheckPluginNameStr) -> bool:
-        try:
-            return self._cache_is_snmp_check[check_plugin_name]
-        except KeyError:
-            snmp_checks = _runtime_cache.get_set("check_type_snmp")
-            result = self.section_name_of(check_plugin_name) in snmp_checks
-            self._cache_is_snmp_check[check_plugin_name] = result
-            return result
 
     def host_extra_conf_merged(self, hostname: HostName, ruleset: Ruleset) -> Dict[str, Any]:
         return self.ruleset_matcher.get_host_ruleset_merged_dict(

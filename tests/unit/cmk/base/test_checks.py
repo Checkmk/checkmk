@@ -82,41 +82,6 @@ def test_imports_in_checks():
                                                                   "\n".join(with_from_imports))
 
 
-def test_is_snmp_check():
-    config.load_all_checks(check_api.get_check_api_context)
-    assert cmk.base.check_utils.is_snmp_check("xxx") is False
-    assert cmk.base.check_utils.is_snmp_check("uptime") is False
-    assert cmk.base.check_utils.is_snmp_check("uptime") is False
-    assert cmk.base.check_utils.is_snmp_check("mem") is False
-    assert cmk.base.check_utils.is_snmp_check("mem.linux") is False
-    assert cmk.base.check_utils.is_snmp_check("mem.ding") is False
-    assert cmk.base.check_utils.is_snmp_check("apc_humidity") is True
-    assert cmk.base.check_utils.is_snmp_check("brocade.power") is True
-    assert cmk.base.check_utils.is_snmp_check("brocade.fan") is True
-    assert cmk.base.check_utils.is_snmp_check("brocade.xy") is True
-    assert cmk.base.check_utils.is_snmp_check("brocade") is True
-
-
-# ########### Management board checks
-
-
-def _check_plugins():
-    return {
-        "tcp_check_mgmt_only": "mgmt_only",
-        "tcp_check_host_precedence": "host_precedence",
-        "tcp_check_host_only": "host_only",
-        "snmp_check_mgmt_only": "mgmt_only",
-        "snmp_check_host_precedence": "host_precedence",
-        "snmp_check_host_only": "host_only",
-    }
-
-
-@pytest.fixture()
-def patch_mgmt_board_plugins(monkeypatch):
-    monkeypatch.setattr(config, "get_management_board_precedence", lambda c, _: _check_plugins()[c])
-    monkeypatch.setattr(cmk.base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
-
-
 def test_check_plugin_header():
     for checkfile in Path(testlib.repo_path()).joinpath(Path('checks')).iterdir():
         if checkfile.name.startswith("."):

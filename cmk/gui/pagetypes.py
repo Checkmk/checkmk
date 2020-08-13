@@ -224,14 +224,10 @@ class Base:
     def default_name(cls) -> str:
         stem = cls.type_name()
         nr = 1
+        used_instance_names = [instance.name() for instance in cls.__instances.values()]
         while True:
             name = "%s_%d" % (stem, nr)
-            conflict = False
-            for instance in cls.__instances.values():
-                if instance.name() == name:
-                    conflict = True
-                    break
-            if not conflict:
+            if name not in used_instance_names:
                 return name
             nr += 1
 

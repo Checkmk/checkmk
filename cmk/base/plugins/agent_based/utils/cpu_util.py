@@ -131,15 +131,13 @@ def _check_single_core_util(
 ) -> CheckGenerator:
     for result in check_levels(
             util,
-            metric_name=metric,
             levels_upper=levels,
             render_func=render.percent,
             label=label,
     ):
-        if isinstance(result, Result):
-            yield Result(state=result.state, notice=result.summary)
-        else:
-            yield result
+        yield Result(state=result.state, notice=result.summary)
+    if metric:
+        yield Metric(metric, util, levels=levels)
 
 
 def _util_perfdata(core: str, total_perc: float, core_index: int, this_time: float, params: Mapping,

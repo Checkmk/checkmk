@@ -9,7 +9,7 @@ These are meant to be exposed in the API
 """
 import itertools
 import re
-from typing import Any, Callable, Dict, Generator, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, Optional, overload, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
@@ -143,6 +143,34 @@ def _levelsinfo_ty(preposition: str, levels: Tuple[float, float],
     warn_str = "never" if levels[0] is None else render_func(levels[0])
     crit_str = "never" if levels[1] is None else render_func(levels[1])
     return " (warn/crit %s %s/%s)" % (preposition, warn_str, crit_str)
+
+
+@overload
+def check_levels(
+    value: float,
+    *,
+    levels_upper: Optional[Tuple[float, float]] = None,
+    levels_lower: Optional[Tuple[float, float]] = None,
+    metric_name: None = None,
+    render_func: Optional[Callable[[float], str]] = None,
+    label: Optional[str] = None,
+    boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+) -> Generator[Result, None, None]:
+    pass
+
+
+@overload
+def check_levels(
+    value: float,
+    *,
+    levels_upper: Optional[Tuple[float, float]] = None,
+    levels_lower: Optional[Tuple[float, float]] = None,
+    metric_name: str = "",
+    render_func: Optional[Callable[[float], str]] = None,
+    label: Optional[str] = None,
+    boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+) -> Generator[Union[Result, Metric], None, None]:
+    pass
 
 
 def check_levels(

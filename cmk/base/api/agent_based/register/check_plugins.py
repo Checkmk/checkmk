@@ -8,7 +8,6 @@
 import functools
 from typing import Any, Callable, Dict, Generator, get_args, List, Optional
 
-from cmk.utils.check_utils import ensure_management_name, MANAGEMENT_NAME_PREFIX
 from cmk.utils.type_defs import CheckPluginName, RuleSetName
 
 from cmk.base.api.agent_based.type_defs import (
@@ -35,7 +34,7 @@ ITEM_VARIABLE = "%s"
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
 
-def _validate_service_name(plugin_name: str, service_name: str) -> None:
+def _validate_service_name(plugin_name: CheckPluginName, service_name: str) -> None:
     if not isinstance(service_name, str):
         raise TypeError("service_name must be str, got %r" % (service_name,))
     if not service_name:
@@ -43,13 +42,13 @@ def _validate_service_name(plugin_name: str, service_name: str) -> None:
     if service_name.count(ITEM_VARIABLE) not in (0, 1):
         raise ValueError("service_name must contain %r at most once" % ITEM_VARIABLE)
 
-    if (plugin_name.startswith(MANAGEMENT_NAME_PREFIX)
-            is not service_name.startswith(MANAGEMENT_DESCR_PREFIX)):
+    if plugin_name.is_management_name() is not service_name.startswith(MANAGEMENT_DESCR_PREFIX):
         raise ValueError(
             "service name and description inconsistency: Please neither have your plugins "
             "name start with %r, nor the description with %r. In the rare case that you want to "
             "implement a check plugin explicitly designed for management boards (and nothing else),"
-            " you must do both of the above." % (MANAGEMENT_NAME_PREFIX, MANAGEMENT_DESCR_PREFIX))
+            " you must do both of the above." %
+            (CheckPluginName.MANAGEMENT_PREFIX, MANAGEMENT_DESCR_PREFIX))
 
 
 def _requires_item(service_name: str) -> bool:
@@ -162,7 +161,7 @@ def create_check_plugin(
 
     subscribed_sections = create_subscribed_sections(sections, plugin_name)
 
-    _validate_service_name(name, service_name)
+    _validate_service_name(plugin_name, service_name)
     requires_item = _requires_item(service_name)
 
     # validate discovery arguments
@@ -235,7 +234,7 @@ def create_check_plugin(
 
 def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
     return CheckPlugin(
-        ensure_management_name(original_plugin.name),
+        original_plugin.name.create_management_name(),
         original_plugin.sections,
         "%s%s" % (MANAGEMENT_DESCR_PREFIX, original_plugin.service_name),
         original_plugin.discovery_function,

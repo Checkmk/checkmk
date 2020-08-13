@@ -62,12 +62,12 @@ def dummy_function_jj(section_jim, section_jill):  # pylint: disable=unused-argu
 ])
 def test_invalid_service_name(string, exc_ty):
     with pytest.raises(exc_ty):
-        check_plugins._validate_service_name("", string)
+        check_plugins._validate_service_name(CheckPluginName("test"), string)
 
 
 @pytest.mark.parametrize("string", ["whooop", "foo %s bar"])
 def test_valid_service_name(string):
-    check_plugins._validate_service_name("", string)
+    check_plugins._validate_service_name(CheckPluginName("test"), string)
 
 
 @pytest.mark.parametrize("service_name, expected", [

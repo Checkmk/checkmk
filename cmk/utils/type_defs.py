@@ -214,9 +214,24 @@ class RuleSetName(ABCName):
 
 
 class CheckPluginName(ABCName):
+    MANAGEMENT_PREFIX = 'mgmt_'
+
     @property
     def _legacy_naming_exceptions(self) -> Set[str]:
         return set()
+
+    def is_management_name(self) -> bool:
+        return self._value.startswith(self.MANAGEMENT_PREFIX)
+
+    def create_management_name(self) -> 'CheckPluginName':
+        if self.is_management_name():
+            return self
+        return CheckPluginName("%s%s" % (self.MANAGEMENT_PREFIX, self._value))
+
+    def create_host_name(self) -> 'CheckPluginName':
+        if self.is_management_name():
+            return CheckPluginName(self._value[len(self.MANAGEMENT_PREFIX):])
+        return self
 
 
 class InventoryPluginName(ABCName):

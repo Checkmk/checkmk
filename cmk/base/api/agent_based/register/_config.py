@@ -14,7 +14,6 @@ from cmk.utils.type_defs import (
     ParsedSectionName,
     SectionName,
 )
-from cmk.utils.check_utils import is_management_name, MANAGEMENT_NAME_PREFIX
 
 from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
@@ -54,12 +53,11 @@ def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
     Management plugins may be created on the fly.
     """
     plugin = registered_check_plugins.get(plugin_name)
-    if plugin is not None or not is_management_name(plugin_name):
+    if plugin is not None or not plugin_name.is_management_name():
         return plugin
 
     # create management board plugin on the fly:
-    non_mgmt_name = CheckPluginName(str(plugin_name)[len(MANAGEMENT_NAME_PREFIX):])
-    non_mgmt_plugin = registered_check_plugins.get(non_mgmt_name)
+    non_mgmt_plugin = registered_check_plugins.get(plugin_name.create_host_name())
     if non_mgmt_plugin is not None:
         return management_plugin_factory(non_mgmt_plugin)
 

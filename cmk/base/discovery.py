@@ -39,8 +39,6 @@ import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import (
-    ensure_management_name,
-    is_management_name,
     unwrap_parameters,
     wrap_parameters,
 )
@@ -1164,7 +1162,7 @@ def _find_host_candidates(
         plugin.name
         for plugin in preliminary_candidates
         # *filter out* all names of management only check plugins
-        if not is_management_name(plugin.name) and any(
+        if not plugin.name.is_management_name() and any(
             section in available_parsed_sections for section in plugin.sections)
     }
 
@@ -1184,7 +1182,7 @@ def _find_mgmt_candidates(
 
     return {
         # *create* all management only names of the plugins
-        ensure_management_name(plugin.name)
+        plugin.name.create_management_name()
         for plugin in preliminary_candidates
         if any(section in available_parsed_sections for section in plugin.sections)
     }
@@ -1294,7 +1292,7 @@ def _execute_discovery(
     host_key = HostKey(
         hostname,
         ipaddress,
-        SourceType.MANAGEMENT if is_management_name(check_plugin.name) else SourceType.HOST,
+        SourceType.MANAGEMENT if check_plugin.name.is_management_name() else SourceType.HOST,
     )
 
     try:

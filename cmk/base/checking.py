@@ -33,7 +33,7 @@ import cmk.utils.debug
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
-from cmk.utils.check_utils import is_management_name, maincheckify
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
@@ -440,7 +440,7 @@ def get_aggregated_result(
                       if host_config.is_cluster else plugin.check_function)
 
     source_type = (SourceType.MANAGEMENT
-                   if is_management_name(service.check_plugin_name) else SourceType.HOST)
+                   if service.check_plugin_name.is_management_name() else SourceType.HOST)
 
     kwargs = {}
     try:
@@ -453,7 +453,7 @@ def get_aggregated_result(
             plugin.sections,
         )
 
-        if not kwargs and not is_management_name(service.check_plugin_name):
+        if not kwargs and not service.check_plugin_name.is_management_name():
             # in 1.6 some plugins where discovered for management boards, but with
             # the regular host plugins name. In this case retry with the source type
             # forced to MANAGEMENT:

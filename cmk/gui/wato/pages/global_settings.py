@@ -7,7 +7,7 @@
 settings"""
 
 import abc
-from typing import Optional, Union
+from typing import Optional, Union, Iterator
 
 import cmk.utils.version as cmk_version
 import cmk.gui.config as config
@@ -23,14 +23,24 @@ from cmk.gui.plugins.watolib.utils import (
 )
 from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.html_elements import search_form, wato_confirm
-from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
+from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuCheckbox,
+    PageMenuSearch,
+    make_simple_link,
+    make_display_options_dropdown,
+)
 
 
 class GlobalSettingsMode(WatoMode):
@@ -46,7 +56,8 @@ class GlobalSettingsMode(WatoMode):
 
     def _from_vars(self):
         self._search = get_search_expression()
-        self._show_only_modified = html.request.has_var("show_only_modified")
+        self._show_only_modified = html.request.get_integer_input_mandatory(
+            "_show_only_modified", 0) == 1
 
     def _groups(self, show_all=False):
         groups = []
@@ -72,17 +83,7 @@ class GlobalSettingsMode(WatoMode):
         return "edit_configvar"
 
     def _show_configuration_variables(self, groups):
-        search_form(_("Search for settings:"))
         search = self._search
-
-        html.open_div(class_="filter_buttons")
-        if self._show_only_modified:
-            html.buttonlink(html.makeuri([], delvars=["show_only_modified"]),
-                            _("Show all settings"))
-        else:
-            html.buttonlink(html.makeuri([("show_only_modified", "1")]),
-                            _("Show only modified settings"))
-        html.close_div()
 
         at_least_one_painted = False
         html.open_div(class_="globalvars")
@@ -338,12 +339,72 @@ class ModeEditGlobals(GlobalSettingsMode):
             return _("Global settings matching '%s'") % html.render_text(self._search)
         return _("Global settings")
 
-    def buttons(self):
-        global_buttons()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        dropdowns = []
 
         if cmk_version.is_managed_edition():
             import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module,import-outside-toplevel
-            cmk.gui.cme.plugins.wato.managed.cme_global_settings_buttons()
+            dropdowns.append(cmk.gui.cme.plugins.wato.managed.cme_global_settings_dropdown())
+
+        dropdowns.append(
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Setup"),
+                        entries=list(self._page_menu_entries_related()),
+                    ),
+                ],
+            ),)
+
+        menu = PageMenu(
+            dropdowns=dropdowns,
+            breadcrumb=breadcrumb,
+        )
+
+        self._extend_display_dropdown(menu)
+        return menu
+
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Sites"),
+            icon_name="sites",
+            item=make_simple_link("wato.py?mode=sites"),
+        )
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0, PageMenuTopic(
+                title=_("Details"),
+                entries=list(self._page_menu_entries_details()),
+            ))
+
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter settings"),
+                entries=list(self._page_menu_entries_filter()),
+            ))
+
+    def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Show only modified settings"),
+            icon_name="trans",
+            item=PageMenuCheckbox(
+                is_checked=self._show_only_modified,
+                check_url=html.makeuri([("_show_only_modified", "1")]),
+                uncheck_url=html.makeuri([("_show_only_modified", "0")]),
+            ),
+        )
+
+    def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title="",
+            icon_name="trans",
+            item=PageMenuSearch(),
+        )
 
     def action(self):
         varname = html.request.var("_varname")

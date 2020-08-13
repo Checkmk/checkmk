@@ -106,59 +106,6 @@ def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictio
     html.end_form()
 
 
-# Similar but for editing an arbitrary valuespec
-def edit_valuespec(vs: 'Dictionary',
-                   value: Dict[str, Any],
-                   buttontext: Optional[str] = None,
-                   method: str = "GET",
-                   varprefix: str = "",
-                   validate: Optional[Callable[[Dict[str, Any]], None]] = None,
-                   formname: str = "form",
-                   consume_transid: bool = True,
-                   focus: Optional[str] = None) -> Optional[Dict[str, Any]]:
-
-    if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
-        if consume_transid:
-            html.check_transaction()
-
-        messages = []
-        try:
-            new_value = vs.from_html_vars(varprefix)
-            vs.validate_value(new_value, varprefix)
-
-        except MKUserError as e:
-            messages.append("%s: %s" % (vs.title(), e.message))
-            html.add_user_error(e.varname, e.message)
-
-        if validate and not html.has_user_errors():
-            try:
-                validate(new_value)
-            except MKUserError as e:
-                messages.append(e.message)
-                html.add_user_error(e.varname, e.message)
-
-        if messages:
-            html.show_error("".join(["%s<br>\n" % m for m in messages]))
-        else:
-            return new_value
-
-    html.begin_form(formname, method=method)
-    html.help(vs.help())
-    vs.render_input(varprefix, value)
-    if buttontext is None:
-        buttontext = _("Save")
-    html.button("save", buttontext)
-    # Should be ignored be hidden_fields, but I do not dare to change it there
-    html.request.del_var("filled_in")
-    html.hidden_fields()
-    if focus:
-        html.set_focus(focus)
-    else:
-        vs.set_focus(varprefix)
-    html.end_form()
-    return None
-
-
 # New functions for painting forms
 
 

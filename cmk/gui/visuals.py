@@ -845,6 +845,7 @@ def page_edit_visual(what,
         type_title=visual_type.title,
         ident_attr_name=visual_type.ident_attr,
         sub_pages=sub_pages,
+        form_name="visual",
         visualname=visualname,
     )
     html.header(title, breadcrumb, page_menu)

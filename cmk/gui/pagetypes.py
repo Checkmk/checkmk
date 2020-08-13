@@ -30,7 +30,6 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.table import table_element
-import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
 from cmk.gui.valuespec import (
     ID,
@@ -1202,20 +1201,14 @@ class Overridable(Base):
             type_title=cls.phrase("title"),
             ident_attr_name="name",
             sub_pages=None,
+            form_name="edit",
             visualname=page_name,
         )
         html.header(title, breadcrumb, page_menu)
 
         parameters, keys_by_topic = cls._collect_parameters(mode)
-        vs = Dictionary(
-            title=_("General Properties"),
-            render='form',
-            optional_keys=False,
-            elements=parameters,
-            headers=keys_by_topic,
-        )
 
-        def validate(page_dict):
+        def _validate_clone(page_dict, varprefix):
             owner_user_id = UserId(html.request.get_unicode_input_mandatory(
                 "owner", config.user.id))
             page_name = page_dict["name"]
@@ -1225,24 +1218,36 @@ class Overridable(Base):
                 page = cls.find_foreign_page(owner_user_id, page_name)
             if page:
                 raise MKUserError(
-                    "_p_name",
+                    varprefix + "_p_name",
                     _("You already have an element with the ID <b>%s</b>") % page_dict["name"])
 
-        new_page_dict = forms.edit_valuespec(vs,
-                                             page_dict,
-                                             validate=validate,
-                                             focus="_p_title",
-                                             method="POST")
-        if new_page_dict is not None:
+        vs = Dictionary(
+            title=_("General Properties"),
+            render='form',
+            optional_keys=False,
+            elements=parameters,
+            headers=keys_by_topic,
+            validate=_validate_clone,
+        )
+
+        varprefix = ""
+        if html.request.get_ascii_input("filled_in") == "edit" and html.check_transaction():
+            try:
+                new_page_dict = vs.from_html_vars(varprefix)
+                vs.validate_value(new_page_dict, varprefix)
+            except MKUserError as e:
+                html.add_user_error(e.varname, e.message)
+
             # Take over keys from previous value that are specific to the page type
             # and not edited here.
             if mode in ("edit", "clone"):
-                for key, value in page_dict.items():
-                    new_page_dict.setdefault(key, value)
+                page_dict.update(new_page_dict)
+            else:
+                page_dict = new_page_dict
 
             owner = UserId(html.request.get_unicode_input_mandatory("owner", config.user.id))
-            new_page_dict["owner"] = owner
-            new_page = cls(new_page_dict)
+            page_dict["owner"] = owner
+            new_page = cls(page_dict)
 
             cls.add_page(new_page)
             cls.save_user_instances(owner)
@@ -1259,13 +1264,22 @@ class Overridable(Base):
             # of type PageRenderer but has a dedicated sidebar snapin. Maybe
             # the best option would be to make a dedicated method to decide whether
             # or not to reload the sidebar.
-            if new_page_dict.get("hidden") in [ None, False ] \
-               or new_page_dict.get("hidden") != page_dict.get("hidden"):
+            if (not page_dict.get("hidden") or
+                    new_page_dict.get("hidden") != page_dict.get("hidden")):
                 html.reload_sidebar()
 
         else:
             html.show_localization_hint()
 
+        html.show_user_errors()
+
+        html.begin_form("edit", method="POST")
+        html.help(vs.help())
+        vs.render_input(varprefix, page_dict)
+        # Should be ignored by hidden_fields, but I do not dare to change it there
+        html.request.del_var("filled_in")
+        html.hidden_fields()
+        html.end_form()
         html.footer()
 
 
@@ -1349,7 +1363,7 @@ def PublishTo(title: _Optional[str] = None,
 
 
 def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: str, type_title: str,
-                             ident_attr_name: str, sub_pages: SubPagesSpec,
+                             ident_attr_name: str, sub_pages: SubPagesSpec, form_name: str,
                              visualname: _Optional[str]) -> PageMenu:
     return PageMenu(
         dropdowns=[
@@ -1362,7 +1376,7 @@ def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: s
                         entries=list(
                             _page_menu_entries_save(breadcrumb,
                                                     sub_pages,
-                                                    form_name="visual",
+                                                    form_name=form_name,
                                                     button_name="save")),
                     ),
                     PageMenuTopic(
@@ -1381,9 +1395,6 @@ def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: s
 def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, form_name: str,
                             button_name: str) -> Iterator[PageMenuEntry]:
     """Provide the different "save" buttons"""
-    if not sub_pages:
-        return
-
     yield PageMenuEntry(
         title=_("List"),
         icon_name="save",
@@ -1391,6 +1402,7 @@ def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, for
         is_list_entry=True,
         is_shortcut=True,
         is_suggested=True,
+        shortcut_title=_("Save and go to list"),
     )
 
     parent_item = breadcrumb[-2]
@@ -1403,6 +1415,9 @@ def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, for
         is_shortcut=True,
         is_suggested=True,
     )
+
+    if not sub_pages:
+        return
 
     for nr, (title, _pagename, _icon) in enumerate(sub_pages):
         yield PageMenuEntry(

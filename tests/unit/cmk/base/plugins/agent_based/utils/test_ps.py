@@ -32,7 +32,8 @@ def test_host_labels_ps_no_match_attr():
             "match": "~.*ssh?",
             "user": "flynn",
             "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo')),
-        })
+        }),
+        Parameters({}),
     ]
     assert list(ps.host_labels_ps(params, section)) == []
 
@@ -53,7 +54,8 @@ def test_host_labels_ps_no_match_pattern():
             "descr": "SSH",
             "match": "~wat?",
             "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo')),
-        })
+        }),
+        Parameters({}),
     ]
     assert list(ps.host_labels_ps(params, section)) == []
 
@@ -74,7 +76,8 @@ def test_host_labels_ps_match():
             "descr": "SSH",
             "match": "~.*ssh?",
             "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo')),
-        })
+        }),
+        Parameters({}),
     ]
     assert list(ps.host_labels_ps(params, section)) == [HostLabel(u'marco', u'polo')]
 

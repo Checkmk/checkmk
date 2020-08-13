@@ -104,6 +104,7 @@ def test_get_discovery_specs():
             "descr": "Checkhelpers Overall",
             "user": None,
         },
+        {},
     ]) == [
         ("smss", "~smss.exe", None, (None, False), DiscoveredHostLabels(), {
             'cpu_rescale_max': None

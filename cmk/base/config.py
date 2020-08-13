@@ -2061,8 +2061,7 @@ def get_discovery_parameters(
 
     if check_plugin.discovery_ruleset_type == "all":
         host_rules = config_cache.host_extra_conf(host_name, rules)
-        if check_plugin.discovery_default_parameters:
-            host_rules.append(check_plugin.discovery_default_parameters)
+        host_rules.append(check_plugin.discovery_default_parameters)
         return [Parameters(d) for d in host_rules]
 
     if check_plugin.discovery_ruleset_type == "merged":

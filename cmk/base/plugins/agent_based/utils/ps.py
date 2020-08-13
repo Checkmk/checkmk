@@ -42,7 +42,7 @@ Section = Tuple[int, List[Tuple[ps_info, List[str]]]]
 
 def get_discovery_specs(params):
     inventory_specs = []
-    for value in params:
+    for value in params[:-1]:  # skip empty default parameters
         default_params = value.get('default_params', value)
         if "cpu_rescale_max" not in default_params:
             default_params["cpu_rescale_max"] = None

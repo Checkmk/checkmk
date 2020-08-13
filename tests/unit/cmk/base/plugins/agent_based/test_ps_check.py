@@ -17,7 +17,7 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v0 import Metric, Result, Service, state
-from cmk.base.plugins.agent_based import ps_section, ps_check
+from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
 from testlib import on_time  # type: ignore[import]
@@ -182,6 +182,7 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
         "descr": "Checkhelpers Overall",
         "user": None,
     },
+    {},
 ]
 
 @pytest.mark.parametrize("params, result", [
@@ -675,7 +676,7 @@ def test_subset_patterns():
         },
         'match': '~(main.*)\\b',
         'descr': '%s',
-    }]
+    }, {}]
 
     discovered = [
         Service(

@@ -7,7 +7,6 @@ import cmk.base.plugins.agent_based.utils.docker as docker
 
 
 def parse_docker_network(info):
-    # pylint: disable=undefined-variable
     version = docker.get_version(info)
 
     if version is None:
@@ -25,15 +24,13 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
         sorted_container_items = sorted(network["Containers"].items())
 
-        containers = [
-            {
-                "name": container["Name"],
-                "id": docker_get_short_id(container_id),  # pylint: disable=undefined-variable
-                "ipv4_address": container["IPv4Address"],
-                "ipv6_address": container["IPv6Address"],
-                "mac_address": container["MacAddress"],
-            } for container_id, container in sorted_container_items
-        ]
+        containers = [{
+            "name": container["Name"],
+            "id": docker.get_short_id(container_id),
+            "ipv4_address": container["IPv4Address"],
+            "ipv6_address": container["IPv6Address"],
+            "mac_address": container["MacAddress"],
+        } for container_id, container in sorted_container_items]
 
         network_name = network["Name"]
         path = "software.applications.docker.networks.%s." % network_name
@@ -47,7 +44,7 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
         inventory_network.update({
             "name": network_name,
-            "network_id": docker_get_short_id(network_id),  # pylint: disable=undefined-variable
+            "network_id": docker.get_short_id(network_id),
             "scope": network["Scope"],
         })
 
@@ -56,12 +53,12 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
         except KeyError:
             pass
 
-        labels = docker_format_labels(network)  # pylint: disable=undefined-variable
+        labels = docker.format_labels(network)
         if labels:
             inventory_network["labels"] = labels
 
 
-inv_info["docker_node_network.networks"] = {  # pylint: disable=undefined-variable
+inv_info["docker_node_network.networks"] = {
     "includes": ['legacy_docker.include'],
     "inv_function": inv_docker_node_network_networks,
 }

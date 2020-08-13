@@ -469,6 +469,9 @@ class PageMenuRenderer:
         html.div(topic.title, class_="topic_title")
 
         for entry in topic.entries:
+            if not entry.is_list_entry:
+                continue
+
             self._show_entry(entry)
 
         html.close_div()

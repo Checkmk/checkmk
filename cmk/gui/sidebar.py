@@ -928,9 +928,7 @@ def _add_snapins_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
                 topics=[
                     PageMenuTopic(
                         title=_("Configure"),
-                        entries=[
-                            CustomSnapins.page_menu_entry_list(),
-                        ],
+                        entries=list(CustomSnapins.page_menu_entry_list()),
                     ),
                 ],
             ),

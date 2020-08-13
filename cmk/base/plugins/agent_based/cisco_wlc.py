@@ -3,61 +3,157 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Cisco WLC sections and checks
+
+>>> import re
+>>> all(re.match(VERSION_CISCO_WLC_PATTERN, v) for v in (
+...     ".1.3.6.1.4.1.14179.1.1.4.3",
+...     ".1.3.6.1.4.1.9.1.1069",
+...     ".1.3.6.1.4.1.9.1.1615",
+...     ".1.3.6.1.4.1.9.1.1645",
+...     ".1.3.6.1.4.1.9.1.1631",
+...     ".1.3.6.1.4.1.9.1.1279",
+...     ".1.3.6.1.4.1.9.1.1293",
+...     ".1.3.6.1.4.1.9.1.2170",
+...     ".1.3.6.1.4.1.9.1.2171",
+...     ".1.3.6.1.4.1.9.1.2371",
+...     ".1.3.6.1.4.1.9.1.2250",
+...     ".1.3.6.1.4.1.9.1.2427",
+... ))
+True
+>>> any(re.match(VERSION_CISCO_WLC_PATTERN, v) for v in (
+...     ".1.3.6.1.4.1.14179",
+...     ".1.3.6.1.4.1.9.1.1068",
+...     ".1 3.6.1.4.1.9.1.1069",
+...     "1.3.6.1.4.1.9.1.1069",
+... ))
+False
 """
-def inventory_cisco_wlc(info):
-    return [(name, {}) for _node, name, _status in info]
 
+from typing import Dict, Mapping, Optional
 
-def check_cisco_wlc(item, params, info):
-    map_states = {
-        "1": (0, "online"),
-        "2": (2, "critical"),
-        "3": (1, "warning"),
-    }
+from .agent_based_api.v0 import (
+    SNMPTree,
+    register,
+    Service,
+    Result,
+    state,
+    matches,
+)
+from .agent_based_api.v0.type_defs import (
+    Parameters,
+    SNMPStringTable,
+    CheckGenerator,
+    DiscoveryGenerator,
+)
 
-    for node, name, status in info:
-        if name == item:
-            if node is None:
-                nodeinfo = ''
-            else:
-                nodeinfo = ' (connected to %s)' % node
+Section = Dict[str, str]
 
-            state, state_readable = map_states.get(status, ("3", "unknown[%s]" % status))
-            return state, "Accesspoint: %s%s" % (state_readable, nodeinfo)
+OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
+VERSION_CISCO_WLC_PATTERN = "|".join((
+    ".1.3.6.1.4.1.14179.1.1.4.3",
+    ".1.3.6.1.4.1.9.1.1069",
+    ".1.3.6.1.4.1.9.1.1615",
+    ".1.3.6.1.4.1.9.1.1645",
+    ".1.3.6.1.4.1.9.1.1631",
+    ".1.3.6.1.4.1.9.1.1279",
+    ".1.3.6.1.4.1.9.1.1293",
+    ".1.3.6.1.4.1.9.1.2170",
+    ".1.3.6.1.4.1.9.1.2171",
+    ".1.3.6.1.4.1.9.1.2371",
+    ".1.3.6.1.4.1.9.1.2250",
+    ".1.3.6.1.4.1.9.1.2427",
+)).replace(".", r"\.")
 
-    infotext = "Accesspoint not found"
-    # Special treatment if this device is missing
-    if params:
-        for ap_name, ap_state in params.get("ap_name", []):
-            if item.startswith(ap_name):
-                return ap_state, infotext
-
-    return 2, infotext
-
-
-check_info["cisco_wlc"] = {
-    "check_function": check_cisco_wlc,
-    "inventory_function": inventory_cisco_wlc,
-    "group": "cisco_wlc",
-    "service_description": "AP %s",
-    "node_info": True,
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') in [
-        ".1.3.6.1.4.1.14179.1.1.4.3",
-        ".1.3.6.1.4.1.9.1.1069",
-        ".1.3.6.1.4.1.9.1.1615",
-        ".1.3.6.1.4.1.9.1.1645",
-        ".1.3.6.1.4.1.9.1.1631",
-        ".1.3.6.1.4.1.9.1.1279",
-        ".1.3.6.1.4.1.9.1.1293",
-        ".1.3.6.1.4.1.9.1.2170",
-        ".1.3.6.1.4.1.9.1.2171",
-        ".1.3.6.1.4.1.9.1.2371",
-        ".1.3.6.1.4.1.9.1.2250",
-        ".1.3.6.1.4.1.9.1.2427",
-    ],
-    "snmp_info": (".1.3.6.1.4.1.14179.2.2.1.1", [
-        "3",
-        "6",
-    ]),
+map_states = {
+    "1": (state.OK, "online"),
+    "2": (state.CRIT, "critical"),
+    "3": (state.WARN, "warning"),
 }
-"""
+
+
+def parse_cisco_wlc(string_table: SNMPStringTable) -> Section:
+    """
+    >>> parse_cisco_wlc([[['AP19', '1'], ['AP02', '1']]])
+    {'AP19': '1', 'AP02': '1'}
+    """
+    return dict(string_table[0])  # type: ignore[arg-type]
+
+
+def discovery_cisco_wlc(section: Section) -> DiscoveryGenerator:
+    """
+    >>> list(discovery_cisco_wlc({'AP19': '1', 'AP02': '1'}))
+    [Service(item='AP19', parameters={}, labels=[]), Service(item='AP02', parameters={}, labels=[])]
+    """
+    yield from (Service(item=item) for item in section)
+
+
+def _node_not_found(item: str, params: Parameters) -> Result:
+    infotext = "Accesspoint not found"
+    for ap_name, ap_state in params.get("ap_name", []):
+        if item.startswith(ap_name):
+            return Result(state=ap_state, summary=infotext)
+    return Result(state=state.CRIT, summary=infotext)
+
+
+def _ap_info(node: Optional[str], wlc_status: str) -> Result:
+    status, state_readable = map_states.get(wlc_status, (state.UNKNOWN, "unknown[%s]" % wlc_status))
+    return Result(
+        state=status,
+        summary="Accesspoint: %s%s" % (state_readable,
+                                       (' (connected to %s)' % node) if node else ""),
+    )
+
+
+def check_cisco_wlc(item: str, params: Parameters, section: Section) -> CheckGenerator:
+    """
+    >>> list(check_cisco_wlc("AP19", {}, {'AP19': '1', 'AP02': '1'}))
+    [Result(state=<state.OK: 0>, summary='Accesspoint: online', details='Accesspoint: online')]
+    >>> list(check_cisco_wlc("AP18", {}, {'AP19': '1', 'AP02': '1'}))
+    [Result(state=<state.CRIT: 2>, summary='Accesspoint not found', details='Accesspoint not found')]
+    """
+    if item in section:
+        yield _ap_info(None, section[item])
+    else:
+        yield _node_not_found(item, params)
+
+
+def cluster_check_cisco_wlc(
+    item: str,
+    params: Parameters,
+    section: Mapping[str, Section],
+) -> CheckGenerator:
+    """
+    >>> list(cluster_check_cisco_wlc("AP19", {}, {"node1": {'AP19': '1', 'AP02': '1'}}))
+    [Result(state=<state.OK: 0>, summary='Accesspoint: online (connected to node1)', details='Accesspoint: online (connected to node1)')]
+    >>> list(cluster_check_cisco_wlc("AP18", {}, {"node1": {'AP19': '1', 'AP02': '1'}}))
+    [Result(state=<state.CRIT: 2>, summary='Accesspoint not found', details='Accesspoint not found')]
+    """
+    for node, node_section in section.items():
+        if item in node_section:
+            yield _ap_info(node, node_section[item])
+            return
+    yield _node_not_found(item, params)
+
+
+register.snmp_section(
+    name="cisco_wlc",
+    detect=matches(OID_sysObjectID, VERSION_CISCO_WLC_PATTERN),
+    parse_function=parse_cisco_wlc,
+    trees=[
+        SNMPTree(base=".1.3.6.1.4.1.14179.2.2.1.1", oids=[
+            "3",
+            "6",
+        ]),
+    ],
+)
+
+register.check_plugin(
+    name="cisco_wlc",  # name taken from pre-1.7 plugin
+    service_name="AP %s",
+    discovery_function=discovery_cisco_wlc,
+    check_default_parameters={},
+    check_ruleset_name="cisco_wlc",
+    check_function=check_cisco_wlc,
+    cluster_check_function=cluster_check_cisco_wlc,
+)

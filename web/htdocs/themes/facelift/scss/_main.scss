@@ -98,10 +98,6 @@ td.checkbox input[type="checkbox"] + label:before {
 input[type="checkbox"] {
   display: none;
 
-  &[disabled] + label:before {
-    display: none;
-  }
-
   + label:before {
     display: inline-block;
     width: 12.5px;

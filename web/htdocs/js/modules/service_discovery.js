@@ -5,6 +5,7 @@
 import * as utils from "utils";
 import * as ajax from "ajax";
 import * as async_progress from "async_progress";
+import * as page_menu from "page_menu";
 
 //#   +--------------------------------------------------------------------+
 //#   | Handling of the asynchronous service discovery dialog              |
@@ -120,13 +121,7 @@ function update(handler_data, response) {
     container.innerHTML = response.body;
     utils.execute_javascript_by_object(container);
 
-    update_activate_changes_button(response);
-}
-
-function update_activate_changes_button(response)
-{
-    let container = document.getElementById("page_state_top_line");
-    container.innerHTML = response.pending_changes_info;
+    page_menu.update_page_state_top_line(response.pending_changes_info);
 }
 
 function get_state_independent_controls() {

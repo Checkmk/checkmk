@@ -174,3 +174,9 @@ export function add_filter_scroll_update()
         scrollable.scrollTop = 0;
     }
 }
+
+export function update_page_state_top_line(text)
+{
+    let container = document.getElementById("page_state_top_line");
+    container.innerHTML = text;
+}

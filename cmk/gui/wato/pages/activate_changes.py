@@ -9,6 +9,7 @@ remote sites in distributed WATO."""
 import ast
 import tarfile
 import os
+import json
 from typing import Dict, NamedTuple, List, Optional, Iterator
 
 from six import ensure_str
@@ -21,6 +22,7 @@ import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.watolib.changes import activation_sites
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
@@ -243,13 +245,24 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.h2(_("Activation status"))
         self._activation_status()
 
-        html.h2(_("Pending changes"))
-        self._change_table()
+        if self.has_changes():
+            html.h2(_("Pending changes"))
+            self._change_table()
 
     def _activation_msg(self):
-        html.open_div(id_="async_progress_msg", style="display:none")
-        html.show_message("")
+        html.open_div(id_="async_progress_msg")
+        html.show_message(self._get_initial_message())
         html.close_div()
+
+    def _get_initial_message(self) -> str:
+        changes = sum(len(self._changes_of_site(site_id)) for site_id in activation_sites())
+        if changes == 0:
+            if html.request.has_var("_finished"):
+                return _("Activation has finished.")
+            return _("Currently there are no changes to activate.")
+        if changes == 1:
+            return _("Currently there is one change to activate.")
+        return _("Currently there are %d changes to activate.") % changes
 
     def _activation_form(self):
         if not config.user.may("wato.activate"):
@@ -257,7 +270,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return
 
         if not self._changes:
-            html.show_message(_("Currently there are no changes to activate."))
             return
 
         if not config.user.may("wato.activateforeign") \
@@ -298,8 +310,12 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.end_form()
 
     def _change_table(self):
-        with table_element("changes", sortable=False, searchable=False, css="changes",
-                           limit=None) as table:
+        with table_element("changes",
+                           sortable=False,
+                           searchable=False,
+                           css="changes",
+                           limit=None,
+                           empty_text=_("Currently there are no changes to activate.")) as table:
             for _change_id, change in reversed(self._changes):
                 css = []
                 if self._is_foreign(change):
@@ -374,7 +390,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
                 # Activation checkbox
                 table.cell("", css="buttons")
-                if can_activate_all and need_action:
+                if can_activate_all:
                     html.checkbox("site_%s" % site_id, cssclass="site_checkbox")
 
                 # Iconbuttons
@@ -415,7 +431,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                                      "url",
                                      target="_blank")
 
-                table.text_cell(_("Site"), site.get("alias", site_id))
+                table.text_cell(_("Site"), site.get("alias", site_id), css="narrow nobr")
 
                 # Livestatus
                 table.cell(_("Status"), css="narrow nobr")
@@ -438,23 +454,32 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 html.open_div(id_="site_%s_progress" % site_id, class_=["progress"])
                 html.close_div()
 
-                # Hidden on initial rendering and shown on activation start
                 table.cell(_("Details"), css="details")
                 html.open_div(id_="site_%s_details" % site_id)
 
-                # Shown on initial rendering and hidden on activation start
-                table.cell(_("Last result"), css="last_result")
                 last_state = self._last_activation_state(site_id)
 
                 if not is_logged_in:
                     html.write_text(_("Is not logged in.") + " ")
 
-                if not last_state:
+                if need_action:
+                    html.write_text(_("Activation needed"))
+                elif not last_state:
                     html.write_text(_("Has never been activated"))
                 else:
-                    html.write_text("%s: %s. " % (_("State"), last_state["_status_text"]))
+                    if html.request.has_var("_finished"):
+                        label = _("State")
+                    else:
+                        label = _("Last state")
+
+                    html.write_text("%s: %s. " % (label, last_state["_status_text"]))
                     if last_state["_status_details"]:
                         html.write(last_state["_status_details"])
+
+                    html.javascript("cmk.activation.update_site_activation_state(%s);" %
+                                    json.dumps(last_state))
+
+                html.close_div()
 
 
 def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary]:

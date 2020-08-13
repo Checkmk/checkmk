@@ -1034,42 +1034,35 @@ div.varname {
     top: 4px;
     left: 0;
     z-index: 0;
+    width: 160px;
     height: 24px;
     padding-top: 10px;
     font-size: 11px;
     color: $black;
-    background: $repprogress-progress-bg-color;
-    border: 1px solid $repprogress-progress-border-color;
     border-radius: $theme-border-radius;
     box-shadow: none;
     box-sizing: border-box;
 
+    &.in_progress {
+      background: $repprogress-progress-bg-color;
+      border-color: $repprogress-progress-border-color;
+    }
+
     &.state_success {
-      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
       background: $color-state-success-background;
       border-color: $color-state-success-border;
     }
 
     &.state_error {
-      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
       background: $color-state-2-background;
       border-color: $color-state-2-border;
     }
 
     &.state_warning {
-      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
       background: $yellow;
       border-color: $color-state-1-border;
     }
   }
-}
-
-/* TODO: Either remove this style or remove all repprogress styles from above */
-.wato td.details,
-.wato th.header_details,
-.wato td.repprogress,
-.wato th.header_repprogress {
-  display: none;
 }
 
 .wato td.tag-ellipsis {

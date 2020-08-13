@@ -144,7 +144,7 @@ def _parameter_valuespec_azure_storageaccounts():
          )),
         ('egress_levels',
          Tuple(
-             title=_("Levels on ingress data in bytes"),
+             title=_("Levels on egress data in bytes"),
              elements=[
                  Float(title=_("Warning at"), unit="B"),
                  Float(title=_("Critical at"), unit="B"),

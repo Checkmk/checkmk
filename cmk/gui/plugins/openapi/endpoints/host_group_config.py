@@ -68,7 +68,7 @@ def bulk_create(params):
                  method='get',
                  response_schema=response_schemas.DomainObjectCollection)
 def list_groups(params):
-    """List service-groups"""
+    """List host-groups"""
     return constructors.serve_json(
         serialize_group_list('service_group_config', list(load_host_group_information().values())))
 

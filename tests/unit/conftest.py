@@ -153,17 +153,22 @@ def config_check_variables(config_load_all_checks):
 
 
 @pytest.fixture(name="mock_livestatus")
-def _mock_livestatus(mocker):
+def _mock_livestatus(mocker, monkeypatch):
     """Mock LiveStatus by patching MultiSiteConnection
 
     Use it like this:
 
+        def test_function():
+           from cmk.gui import sites
+           sites.live().query("Foo")
+
         def test_foo(mock_livestatus):
-            live = mock_livestatus
-            live.expect_query("Foo")
-            with live:
-                # here call a function which does livestatus calls.
-                sites.live().query("Foo", '')  # Example. Should work.
+           live = mock_livestatus
+           live.expect_query("Foo")
+           with live:
+               # here call a function which does livestatus calls.
+               test_function()
+
 
     """
     live = MockLiveStatusConnection()
@@ -179,4 +184,7 @@ def _mock_livestatus(mocker):
     mocker.patch("livestatus.SingleSiteConnection._create_socket")
     mocker.patch("livestatus.SingleSiteConnection.do_query", new=live.do_query)
     mocker.patch("livestatus.SingleSiteConnection.do_command", new=live.do_command)
+
+    monkeypatch.setenv('OMD_ROOT', '/')
+
     return live

@@ -58,10 +58,10 @@ class MockLiveStatusConnection:
             ...         .expect_query("GET services\\nColumns: description"))
             >>> with live(expect_status_query=False):
             ...     live.query_non_parallel("GET hosts\\nColumns: name", '')
-            ...     live.query_non_parallel("GET services\\nColumns: description", '')
+            ...     live.query_non_parallel("GET services\\nColumns: description",
+            ...                             'ColumnHeaders: on')
             [['heute'], ['example.com']]
-            [['Memory'], ['CPU load'], ['CPU load']]
-
+            [['description'], ['Memory'], ['CPU load'], ['CPU load']]
 
         This test will pass as well (useful in real GUI or REST-API calls):
 
@@ -114,7 +114,7 @@ program_start num_hosts num_services'
     """
     def __init__(self, report_multiple: bool = False) -> None:
         self._prepend_site = False
-        self._expected_queries: List[Tuple[str, List[List[str]], MatchType]] = []
+        self._expected_queries: List[Tuple[str, List[str], List[List[str]], MatchType]] = []
         self._num_queries = 0
         self._query_index = 0
         self._report_multiple = report_multiple
@@ -132,6 +132,10 @@ program_start num_hosts num_services'
                 'program_start': _program_start_timestamp,
                 'num_hosts': 1,
                 'num_services': 36,
+                'helper_usage_cmk': 0.00151953,
+                'helper_usage_generic': 0.00151953,
+                'average_latency_cmk': 0.0846039,
+                'average_latency_generic': 0.0846039,
             }],
             'downtimes': [{
                 'id': 54,
@@ -237,6 +241,27 @@ program_start num_hosts num_services'
     def add_table(self, name: str, data: List[Dict[str, Any]]) -> 'MockLiveStatusConnection':
         """Add the data of a table.
 
+        This is desirable in tests, to isolate the individual tests from one another. It is not
+        recommended to use the global test-data for all the tests.
+
+        Examples:
+
+            If a table is set, the table is replaced.
+
+                >>> host_list = [{'name': 'heute'}, {'name': 'gestern'}]
+
+                >>> live = MockLiveStatusConnection()
+                >>> _ = live.add_table('hosts', host_list)
+
+            The table actually get's replaced, but only for this instance.
+
+                >>> live._tables['hosts'] == host_list
+                True
+
+                >>> live = MockLiveStatusConnection()
+                >>> live._tables['hosts'] == host_list
+                False
+
         """
         self._tables[name] = data
         return self
@@ -281,14 +306,16 @@ program_start num_hosts num_services'
             query = '\n'.join(query)
 
         table = _table_of_query(query)
-        columns = _column_of_query(query)
+        # If the columns are explicitly asked for, we get the columns here.
+        columns = _column_of_query(query) or []
 
         if table and not columns:
-            # figure out columns from table store.
+            # Otherwise, we figure out the columns from the table store.
             for entry in self._tables.get(table, []):
                 columns = sorted(entry.keys())
 
-        result = []  # default result is nothing
+        # If neither table nor columns can't be deduced, we default to an empty response.
+        result = []
         if table and columns:
             # We check the store for data and filter for the actual data that is requested.
             if table not in self._tables:
@@ -304,28 +331,32 @@ program_start num_hosts num_services'
                 result.append(row)
 
         if force_pos is not None:
-            self._expected_queries.insert(force_pos, (query, result, match_type))
+            self._expected_queries.insert(force_pos, (query, columns, result, match_type))
         else:
-            self._expected_queries.append((query, result, match_type))
+            self._expected_queries.append((query, columns, result, match_type))
 
         return self
 
-    def _lookup_next_query(self, query, headers) -> Response:
+    def _lookup_next_query(self, query, headers: str) -> Response:
         if self._expect_status_query is None:
             raise RuntimeError("Please use MockLiveStatusConnection as a context manager.")
-
-        if headers:
-            raise RuntimeError("Extra headers checking not yet implemented.")
 
         # We don't want to str() cmk.gui.plugins.openapi.livestatus_helpers.queries.Query because
         # livestatus.py doesn't support it yet. We want it to crash if we ever get one here.
         if hasattr(query, 'default_suppressed_exceptions'):
             query = str(query)
 
+        # TODO: This should be refactored to not be dependent on livestatus.py internal structure
+        header_dict = _unpack_headers(headers)
+        show_columns = header_dict.pop('ColumnHeaders', 'off')
+        if header_dict:
+            raise RuntimeError("The following headers are not yet supported: "
+                               f"{', '.join(header_dict)}")
+
         if not self._expected_queries:
             raise RuntimeError(f"Got unexpected query:\n" f" * {repr(query)}")
 
-        expected_query, response, match_type = self._expected_queries[0]
+        expected_query, columns, response, match_type = self._expected_queries[0]
 
         if not _compare(expected_query, query, match_type):
             raise RuntimeError(f"Expected query:\n"
@@ -336,10 +367,16 @@ program_start num_hosts num_services'
         # Passed, remove this entry.
         self._expected_queries.pop(0)
 
-        if self._prepend_site:
-            return [['NO_SITE'] + line for line in response]
+        def _generate_output():
+            if show_columns == 'on':
+                yield columns
 
-        return response
+            if self._prepend_site:
+                yield from [['NO_SITE'] + line for line in response]
+            else:
+                yield from response
+
+        return list(_generate_output())
 
     # Mocked livestatus api below
     def get_connection(self, site_id: str) -> 'MockLiveStatusConnection':
@@ -349,7 +386,7 @@ program_start num_hosts num_services'
         self.do_command(command)
 
     def do_command(self, command: str) -> None:
-        self._lookup_next_query(f"COMMAND {command}", [])
+        self._lookup_next_query(f"COMMAND {command}", '')
 
     def set_prepend_site(self, prepend_site: bool) -> None:
         self._prepend_site = prepend_site
@@ -729,3 +766,31 @@ def _table_of_query(query: str) -> Optional[str]:
         return lines[0].split(None, 1)[1]
 
     return None
+
+
+def _unpack_headers(headers: str) -> Dict[str, str]:
+    r"""Unpack and normalize headers from a string.
+
+    Examples:
+
+        >>> _unpack_headers("ColumnHeaders: off")
+        {'ColumnHeaders': 'off'}
+
+        >>> _unpack_headers("ColumnHeaders: off\nResponseFormat: fixed16")
+        {'ColumnHeaders': 'off', 'ResponseFormat': 'fixed16'}
+
+    Args:
+        headers:
+            Headers as a string.
+
+    Returns:
+        Headers as a dict.
+
+    """
+    unpacked = {}
+    for header in headers.split("\n"):
+        if not header:
+            continue
+        key, value = header.split(":", 1)
+        unpacked[key] = value.lstrip(" ")
+    return unpacked

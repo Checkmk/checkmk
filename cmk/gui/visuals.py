@@ -62,7 +62,6 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
-    PageMenu,
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
@@ -70,14 +69,12 @@ from cmk.gui.page_menu import (
     make_javascript_link,
     make_simple_link,
     make_simple_form_page_menu,
-    make_form_submit_link,
 )
 from cmk.gui.main_menu import mega_menu_registry
 
 from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     visual_type_registry,
-    VisualType,
     filter_registry,
 )
 
@@ -92,8 +89,6 @@ if not cmk_version.is_raw_edition():
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.visuals  # pylint: disable=no-name-in-module
-
-SubPagesSpec = Optional[List[Tuple[str, str, str]]]
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -765,7 +760,7 @@ def page_edit_visual(what,
                      create_handler=None,
                      load_handler=None,
                      info_handler=None,
-                     sub_pages: SubPagesSpec = None):
+                     sub_pages: pagetypes.SubPagesSpec = None):
     if sub_pages is None:
         sub_pages = []
 
@@ -843,8 +838,15 @@ def page_edit_visual(what,
     back_url = html.get_url_input("back", "edit_%s.py" % what)
 
     breadcrumb = visual_page_breadcrumb(what, title, mode)
-    page_menu = _make_edit_form_page_menu(breadcrumb, what, mode, visual_type, sub_pages,
-                                          visualname)
+    page_menu = pagetypes.make_edit_form_page_menu(
+        breadcrumb,
+        dropdown_name=what[:-1],
+        mode=mode,
+        type_title=visual_type.title,
+        ident_attr_name=visual_type.ident_attr,
+        sub_pages=sub_pages,
+        visualname=visualname,
+    )
     html.header(title, breadcrumb, page_menu)
 
     # A few checkboxes concerning the visibility of the visual. These will
@@ -1045,92 +1047,6 @@ def page_edit_visual(what,
     html.hidden_fields()
     html.end_form()
     html.footer()
-
-
-def _make_edit_form_page_menu(breadcrumb: Breadcrumb, what: str, mode: str, visual_type: VisualType,
-                              sub_pages: SubPagesSpec, visualname: Optional[str]) -> PageMenu:
-    return PageMenu(
-        dropdowns=[
-            PageMenuDropdown(
-                name=what[:-1],
-                title=visual_type.title.title(),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Save this %s and go to") % visual_type.title.title(),
-                        entries=list(
-                            _page_menu_entries_save(breadcrumb,
-                                                    sub_pages,
-                                                    form_name="visual",
-                                                    button_name="save")),
-                    ),
-                    PageMenuTopic(
-                        title=_("For this %s") % visual_type.title.title(),
-                        entries=list(
-                            _page_menu_entries_sub_pages(mode, sub_pages, visual_type, visualname)),
-                    ),
-                ],
-            ),
-        ],
-        breadcrumb=breadcrumb,
-    )
-
-
-def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, form_name: str,
-                            button_name: str) -> Iterator[PageMenuEntry]:
-    """Provide the different "save" buttons"""
-    if not sub_pages:
-        return
-
-    yield PageMenuEntry(
-        title=_("List"),
-        icon_name="save",
-        item=make_form_submit_link(form_name, button_name),
-        is_list_entry=True,
-        is_shortcut=True,
-        is_suggested=True,
-    )
-
-    parent_item = breadcrumb[-2]
-
-    yield PageMenuEntry(
-        title=_("Abort"),
-        icon_name="abort",
-        item=make_simple_link(parent_item.url),
-        is_list_entry=False,
-        is_shortcut=True,
-        is_suggested=True,
-    )
-
-    for nr, (title, _pagename, _icon) in enumerate(sub_pages):
-        yield PageMenuEntry(
-            title=title,
-            icon_name="save",
-            item=make_form_submit_link(form_name, "save%d" % nr),
-        )
-
-
-def _page_menu_entries_sub_pages(mode: str, sub_pages: SubPagesSpec, visual_type: VisualType,
-                                 visualname: Optional[str]) -> Iterator[PageMenuEntry]:
-    """Extra links to sub modules
-
-    These are used for things to edit about this visual that are more complex to be done in one
-    value spec."""
-    if not sub_pages:
-        return
-
-    if mode != "edit":
-        return
-
-    assert visualname is not None
-
-    for title, pagename, icon in sub_pages:
-        yield PageMenuEntry(
-            title=title,
-            icon_name=icon,
-            item=make_simple_link(
-                html.makeuri_contextless([(visual_type.ident_attr, visualname)],
-                                         filename=pagename + '.py')),
-        )
 
 
 #.

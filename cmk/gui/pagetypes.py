@@ -56,6 +56,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     make_javascript_link,
     make_simple_link,
+    make_form_submit_link,
 )
 
 from cmk.gui.exceptions import (
@@ -79,6 +80,8 @@ from cmk.gui.type_defs import (
     TopicMenuItem,
 )
 from cmk.gui.main_menu import mega_menu_registry
+
+SubPagesSpec = _Optional[List[Tuple[str, str, str]]]
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
@@ -1150,6 +1153,7 @@ class Overridable(Base):
         # "edit"   -> edit existing page
         mode = html.request.get_ascii_input_mandatory('mode', 'edit')
         if mode == "create":
+            page_name = None
             title = cls.phrase("create")
             page_dict = {
                 "name": cls.default_name(),
@@ -1190,10 +1194,17 @@ class Overridable(Base):
                                       _("The requested %s does not exist") % cls.phrase("title"))
             page_dict = page.internal_representation()
 
-        html.header(title, cls.breadcrumb(title, mode))
-        html.begin_context_buttons()
-        html.context_button(_("Back"), back_url, "back")
-        html.end_context_buttons()
+        breadcrumb = cls.breadcrumb(title, mode)
+        page_menu = make_edit_form_page_menu(
+            breadcrumb,
+            dropdown_name=cls.type_name(),
+            mode=mode,
+            type_title=cls.phrase("title"),
+            ident_attr_name="name",
+            sub_pages=None,
+            visualname=page_name,
+        )
+        html.header(title, breadcrumb, page_menu)
 
         parameters, keys_by_topic = cls._collect_parameters(mode)
         vs = Dictionary(
@@ -1335,6 +1346,94 @@ def PublishTo(title: _Optional[str] = None,
     ]
 
     return CascadingDropdown(title=title, choices=choices)
+
+
+def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: str, type_title: str,
+                             ident_attr_name: str, sub_pages: SubPagesSpec,
+                             visualname: _Optional[str]) -> PageMenu:
+    return PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name=dropdown_name,
+                title=type_title.title(),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Save this %s and go to") % type_title.title(),
+                        entries=list(
+                            _page_menu_entries_save(breadcrumb,
+                                                    sub_pages,
+                                                    form_name="visual",
+                                                    button_name="save")),
+                    ),
+                    PageMenuTopic(
+                        title=_("For this %s") % type_title.title(),
+                        entries=list(
+                            _page_menu_entries_sub_pages(mode, sub_pages, ident_attr_name,
+                                                         visualname)),
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+
+
+def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, form_name: str,
+                            button_name: str) -> Iterator[PageMenuEntry]:
+    """Provide the different "save" buttons"""
+    if not sub_pages:
+        return
+
+    yield PageMenuEntry(
+        title=_("List"),
+        icon_name="save",
+        item=make_form_submit_link(form_name, button_name),
+        is_list_entry=True,
+        is_shortcut=True,
+        is_suggested=True,
+    )
+
+    parent_item = breadcrumb[-2]
+
+    yield PageMenuEntry(
+        title=_("Abort"),
+        icon_name="abort",
+        item=make_simple_link(parent_item.url),
+        is_list_entry=False,
+        is_shortcut=True,
+        is_suggested=True,
+    )
+
+    for nr, (title, _pagename, _icon) in enumerate(sub_pages):
+        yield PageMenuEntry(
+            title=title,
+            icon_name="save",
+            item=make_form_submit_link(form_name, "save%d" % nr),
+        )
+
+
+def _page_menu_entries_sub_pages(mode: str, sub_pages: SubPagesSpec, ident_attr_name: str,
+                                 visualname: _Optional[str]) -> Iterator[PageMenuEntry]:
+    """Extra links to sub modules
+
+    These are used for things to edit about this visual that are more complex to be done in one
+    value spec."""
+    if not sub_pages:
+        return
+
+    if mode != "edit":
+        return
+
+    assert visualname is not None
+
+    for title, pagename, icon in sub_pages:
+        yield PageMenuEntry(
+            title=title,
+            icon_name=icon,
+            item=make_simple_link(
+                html.makeuri_contextless([(ident_attr_name, visualname)],
+                                         filename=pagename + '.py')),
+        )
 
 
 class ContactGroupChoice(DualListChoice):

@@ -205,9 +205,8 @@ def check_memory_dict(meminfo, params):
 
     # VMalloc,
     # newer kernel version report wrong data,
-    # i.d. both VmallocUsed and Chunk equal zero
-    if "VmallocUsed" in meminfo and "VmallocChunk" in meminfo and (meminfo["VmallocUsed"] +
-                                                                   meminfo["VmallocChunk"]):
+    # i.d. VMalloc Chunk equal zero
+    if "VmallocUsed" in meminfo and "VmallocChunk" in meminfo and meminfo["VmallocChunk"]:
         results["vmalloc"] = check_memory_element(
             "Largest Free VMalloc Chunk",
             meminfo["VmallocTotal"] - meminfo["VmallocChunk"],

@@ -943,6 +943,8 @@ class Overridable(Base):
                             title=cls.phrase("new"),
                             icon_name="new_%s" % cls.type_name(),
                             item=make_simple_link(cls.create_url()),
+                            is_shortcut=True,
+                            is_suggested=True,
                         ),
                     ],
                 ),

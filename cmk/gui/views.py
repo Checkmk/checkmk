@@ -46,6 +46,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_checkbox_selection_topic,
     toggle_page_menu_entries,
+    make_simple_form_page_menu,
 )
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
@@ -1184,11 +1185,14 @@ def show_create_view_dialog(next_url=None):
 
     ds = 'services'  # Default selection
 
-    title = _('Create View')
-    html.header(title, visuals.visual_page_breadcrumb("views", title, "create"))
-    html.begin_context_buttons()
-    html.context_button(_("Back"), html.get_url_input("back", "edit_views.py"), "back")
-    html.end_context_buttons()
+    title = _('Create view')
+    breadcrumb = visuals.visual_page_breadcrumb("views", title, "create")
+    html.header(
+        title, breadcrumb,
+        make_simple_form_page_menu(breadcrumb,
+                                   form_name="create_view",
+                                   button_name="save",
+                                   save_title=_("Continue")))
 
     if html.request.var('save') and html.check_transaction():
         try:
@@ -1212,8 +1216,6 @@ def show_create_view_dialog(next_url=None):
     vs_ds.render_input('ds', ds)
     html.help(vs_ds.help())
     forms.end()
-
-    html.button('save', _('Continue'), 'submit')
 
     html.hidden_fields()
     html.end_form()

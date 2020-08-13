@@ -81,10 +81,10 @@
 
     div.popup_menu {
       position: absolute;
-      top: 58px;
+      top: $page-header-height;
       left: 64px;
       z-index: 1000;
-      height: calc(100vh - 60px);
+      height: calc(100vh - #{$page-header-height});
       background-color: $button-bg-color-default;
       border-right: 4px solid $success;
       border-left: 1px solid $headline-color;
@@ -104,7 +104,7 @@
       div.content.inner {
         display: flex;
         flex-flow: column wrap;
-        height: calc(100vh - 60px);
+        height: calc(100vh - #{$page-header-height});
         padding: 0;
         overflow-y: auto;
 

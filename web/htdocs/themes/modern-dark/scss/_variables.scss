@@ -500,8 +500,8 @@ $dc-graph-color-2:			    rgb(255, 125, 20);
 $timeseries-legend-bg-color:		    $darkgrey;
 $scatterdot-hilite-color:		    $yellow;
 
-/* NOTE: preliminary variables defined for the UX project mockups */
-
+/* TODO:  move variables defined for the UX project to the correct place */
+$page-header-height:                        58px;
 $menubar-topic-title-font-color:            rgba($white, 0.5);
 $menubar-topic-title-border-color:          rgba($white, 0.2);
 $button-bg-color-default:                   rgb(53, 63, 74);

@@ -498,10 +498,9 @@ $dc-graph-color-2:			    rgb(255, 125, 20);
 $timeseries-legend-bg-color:		    rgba($white, .87);
 $scatterdot-hilite-color:		    rgb(0, 185, 255);
 
-/* NOTE: preliminary variables defined for the UX project
- * these colors are not adapted for the facelift theme.
-*/
-
+/* TODO:  move variables defined for the UX project to the correct place */
+/* TODO:  adapt variables to modern theme */
+$page-header-height:                        58px;
 $menubar-topic-title-font-color:            rgba($white, 0.5);
 $menubar-topic-title-border-color:          rgba($white, 0.2);
 $button-bg-color-default:                   rgb(53, 63, 74);

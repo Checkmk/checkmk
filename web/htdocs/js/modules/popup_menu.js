@@ -381,7 +381,9 @@ function resize_mega_menu_popup(menu_popup) {
         return;
     }
     const last_topic = topics[topics.length -1];
-    const menu_width = Math.min(window.innerWidth - 60, last_topic.offsetLeft + last_topic.offsetWidth);
+    const navigation_width = document.getElementById("check_mk_navigation").offsetWidth;
+    const menu_width = Math.min(window.innerWidth - navigation_width,
+                                last_topic.offsetLeft + last_topic.offsetWidth);
     menu_popup.style.width = menu_width + "px";
 }
 

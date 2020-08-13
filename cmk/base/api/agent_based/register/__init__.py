@@ -12,9 +12,11 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 from cmk.base.api.agent_based.register._config import (
     add_check_plugin,
+    add_discovery_ruleset,
     add_inventory_plugin,
     add_section_plugin,
     get_check_plugin,
+    get_discovery_ruleset,
     get_inventory_plugin,
     get_relevant_raw_sections,
     get_ranked_sections,
@@ -24,8 +26,10 @@ from cmk.base.api.agent_based.register._config import (
     is_registered_section_plugin,
     iter_all_agent_sections,
     iter_all_check_plugins,
+    iter_all_discovery_rulesets,
     iter_all_inventory_plugins,
     iter_all_snmp_sections,
+    set_discovery_ruleset,
 )
 
 
@@ -42,9 +46,11 @@ def load_all_plugins():
 
 __all__ = [
     "add_check_plugin",
+    "add_discovery_ruleset",
     "add_inventory_plugin",
     "add_section_plugin",
     "get_check_plugin",
+    "get_discovery_ruleset",
     "get_inventory_plugin",
     "get_relevant_raw_sections",
     "get_ranked_sections",
@@ -54,7 +60,9 @@ __all__ = [
     "is_registered_section_plugin",
     "iter_all_agent_sections",
     "iter_all_check_plugins",
+    "iter_all_discovery_rulesets",
     "iter_all_inventory_plugins",
     "iter_all_snmp_sections",
     "load_all_plugins",
+    "set_discovery_ruleset",
 ]

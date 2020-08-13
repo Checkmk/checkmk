@@ -75,7 +75,6 @@ from cmk.utils.type_defs import (
     LabelSources,
     Ruleset,
     RulesetName,
-    RuleSetName,
     SectionName,
     ServicegroupName,
     ServiceName,
@@ -441,14 +440,14 @@ def _transform_plugin_names_from_160_to_170(global_dict: Dict[str, Any]) -> None
         ]
 
 
-def _collect_discovery_parameter_rulesets_from_globals(global_dict: Dict[str, Any]) -> None:
+def _collect_discovery_parameter_rulesets_from_globals(global_dict: Dict[str, Any],) -> None:
     # list of discovery ruleset names which are used in migrated AND in legacy code; can be removed
     # once we have no such cases any more
     partially_migrated = ["diskstat_inventory"]
-    for ruleset_name in discovery_parameter_rulesets:
+    for ruleset_name in agent_based_register.iter_all_discovery_rulesets():
         var_name = str(ruleset_name)
         if var_name in global_dict:
-            discovery_parameter_rulesets[ruleset_name] = global_dict[var_name]
+            agent_based_register.set_discovery_ruleset(ruleset_name, global_dict[var_name])
             if var_name not in partially_migrated:
                 del global_dict[var_name]
 
@@ -1360,10 +1359,6 @@ snmp_scan_functions: Dict[str, SNMPScanFunction] = {}
 active_check_info: Dict[str, Dict[str, Any]] = {}
 special_agent_info: Dict[str, SpecialAgentInfoFunction] = {}
 
-# Collection of all discovery parameters.
-# Filled in _collect_discovery_parameter_rulesets_from_globals
-discovery_parameter_rulesets: Dict[RuleSetName, List[Dict]] = {}
-
 # Names of variables registered in the check files. This is used to
 # keep track of the variables needed by each file. Those variables are then
 # (if available) read from the config and applied to the checks module after
@@ -2062,7 +2057,7 @@ def get_discovery_parameters(
         return None
 
     config_cache = get_config_cache()
-    rules = discovery_parameter_rulesets.get(check_plugin.discovery_ruleset_name, [])
+    rules = agent_based_register.get_discovery_ruleset(check_plugin.discovery_ruleset_name)
 
     if check_plugin.discovery_ruleset_type == "all":
         host_rules = config_cache.host_extra_conf(host_name, rules)

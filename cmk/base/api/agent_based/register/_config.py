@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Iterable, List, Optional, Set
+from typing import Any, Dict, Iterable, List, Optional, Set
 
 import itertools
 
@@ -19,6 +19,7 @@ from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     CheckPlugin,
     InventoryPlugin,
+    RuleSetName,
     SectionPlugin,
     SNMPSectionPlugin,
 )
@@ -31,9 +32,15 @@ registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
 registered_check_plugins: Dict[CheckPluginName, CheckPlugin] = {}
 registered_inventory_plugins: Dict[InventoryPluginName, InventoryPlugin] = {}
 
+stored_discovery_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
+
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
     registered_check_plugins[check_plugin.name] = check_plugin
+
+
+def add_discovery_ruleset(ruleset_name: RuleSetName) -> None:
+    stored_discovery_rulesets.setdefault(ruleset_name, [])
 
 
 def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
@@ -62,6 +69,11 @@ def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
         return management_plugin_factory(non_mgmt_plugin)
 
     return None
+
+
+def get_discovery_ruleset(ruleset_name: RuleSetName) -> List[Dict[str, Any]]:
+    """Returns all rulesets of a given name"""
+    return stored_discovery_rulesets.get(ruleset_name, [])
 
 
 def get_inventory_plugin(plugin_name: InventoryPluginName) -> Optional[InventoryPlugin]:
@@ -140,9 +152,21 @@ def iter_all_check_plugins() -> Iterable[CheckPlugin]:
     return registered_check_plugins.values()  # pylint: disable=dict-values-not-iterating
 
 
+def iter_all_discovery_rulesets() -> Iterable[RuleSetName]:
+    return stored_discovery_rulesets.keys()  # pylint: disable=dict-keys-not-iterating
+
+
 def iter_all_inventory_plugins() -> Iterable[InventoryPlugin]:
     return registered_inventory_plugins.values()  # pylint: disable=dict-values-not-iterating
 
 
 def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:
     return registered_snmp_sections.values()  # pylint: disable=dict-values-not-iterating
+
+
+def set_discovery_ruleset(
+    ruleset_name: RuleSetName,
+    rules: List[Dict[str, Any]],
+) -> None:
+    """Set a ruleset to a given value"""
+    stored_discovery_rulesets[ruleset_name] = rules

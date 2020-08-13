@@ -8,15 +8,6 @@
 from typing import Any, Callable, Dict, List, Optional
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
-
-from cmk.base import config
-from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name
-from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
-from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
-from cmk.base.api.agent_based.register.section_plugins import (
-    create_agent_section_plugin,
-    create_snmp_section_plugin,
-)
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     CheckFunction,
@@ -26,8 +17,17 @@ from cmk.base.api.agent_based.type_defs import (
     HostLabelFunction,
     SNMPParseFunction,
 )
+
+from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name
+from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
+from cmk.base.api.agent_based.register.section_plugins import (
+    create_agent_section_plugin,
+    create_snmp_section_plugin,
+)
 from cmk.base.api.agent_based.register import (
     add_check_plugin,
+    add_discovery_ruleset,
     add_inventory_plugin,
     add_section_plugin,
     is_registered_check_plugin,
@@ -186,7 +186,7 @@ def check_plugin(
 
     add_check_plugin(plugin)
     if plugin.discovery_ruleset_name is not None:
-        config.discovery_parameter_rulesets.setdefault(plugin.discovery_ruleset_name, [])
+        add_discovery_ruleset(plugin.discovery_ruleset_name)
 
 
 def inventory_plugin(

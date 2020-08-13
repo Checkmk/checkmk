@@ -9,7 +9,7 @@ These are meant to be exposed in the API
 """
 import itertools
 import re
-from typing import Callable, Generator, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, Optional, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
@@ -148,8 +148,8 @@ def _levelsinfo_ty(preposition: str, levels: Tuple[float, float],
 def check_levels(
     value: float,
     *,
-    levels_upper=None,  # tpye: Optional[Tuple[float, float]]
-    levels_lower=None,  # tpye: Optional[Tuple[float, float]]
+    levels_upper: Optional[Tuple[float, float]] = None,
+    levels_lower: Optional[Tuple[float, float]] = None,
     metric_name: Optional[str] = None,
     render_func: Optional[Callable[[float], str]] = None,
     label: Optional[str] = None,
@@ -187,7 +187,7 @@ def check_levels(
 def check_levels_predictive(
     value: float,
     *,
-    levels,  # tpye: Dict[str, Any]
+    levels: Dict[str, Any],
     metric_name: str,
     render_func: Optional[Callable[[float], str]] = None,
     label: Optional[str] = None,

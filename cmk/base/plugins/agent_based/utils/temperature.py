@@ -231,20 +231,23 @@ def _check_trend(
 
     trend = rate_avg * trend_range_min * 60.0
     warn_upper_trend, crit_upper_trend = params.get('trend_levels', (None, None))
+    if warn_upper_trend is None or crit_upper_trend is None:
+        levels_upper_trend = None
+    else:
+        levels_upper_trend = (warn_upper_trend, crit_upper_trend)
 
     warn_lower_trend, crit_lower_trend = params.get("trend_levels_lower", (None, None))
     if warn_lower_trend is None or crit_lower_trend is None:
-        warn_lower_trend, crit_lower_trend = None, None
+        levels_lower_trend = None
     else:
         # GUI representation of this parameter is labelled 'temperature decrease'; the user may input this
         # as a positive or negative value
-        warn_lower_trend = abs(warn_lower_trend) * -1
-        crit_lower_trend = abs(crit_lower_trend) * -1
+        levels_lower_trend = (abs(warn_lower_trend) * -1, abs(crit_lower_trend) * -1)
 
     yield from check_levels(
         value=trend,
-        levels_upper=(warn_upper_trend, crit_upper_trend),
-        levels_lower=(warn_lower_trend, crit_lower_trend),
+        levels_upper=levels_upper_trend,
+        levels_lower=levels_lower_trend,
         label='Temperature trend',
         render_func=lambda trend: render_temp(
             trend,
@@ -264,15 +267,17 @@ def _check_trend(
 
     # compute time until temperature limit is reached
     warn_timeleft_min, crit_timeleft_min = params["trend_timeleft"]
+    if warn_timeleft_min is None or crit_timeleft_min is None:
+        levels_timeleft_sec = None
+    else:
+        levels_timeleft_sec = (warn_timeleft_min * 60.0, crit_timeleft_min * 60.0)
+
     diff_to_limit = limit - temp
     seconds_left = float(diff_to_limit / rate_avg)
 
     yield from check_levels(
         value=seconds_left,
-        levels_lower=(
-            None if warn_timeleft_min is None else warn_timeleft_min * 60.0,
-            None if crit_timeleft_min is None else crit_timeleft_min * 60.0,
-        ),
+        levels_lower=levels_timeleft_sec,
         render_func=timespan,
         label='Time until temperature limit reached',
     )

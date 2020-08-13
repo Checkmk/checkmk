@@ -137,12 +137,12 @@ def summarize_disks(disks: Iterable[Tuple[str, Disk]]) -> Disk:
 
 
 def _scale_levels(
-    levels: Optional[Iterable[float]],
+    levels: Optional[Tuple[float, float]],
     factor: Union[int, float],
-) -> Optional[Tuple[float, ...]]:
+) -> Optional[Tuple[float, float]]:
     if levels is None:
-        return levels
-    return tuple(level * factor for level in levels)
+        return None
+    return (levels[0] * factor, levels[1] * factor)
 
 
 class MetricSpecs(TypedDict, total=False):

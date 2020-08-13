@@ -70,6 +70,8 @@ from cmk.gui.plugins.views import (
     format_plugin_output,
 )
 
+from cmk.gui.visuals import page_menu_dropdown_add_to_visual
+
 if TYPE_CHECKING:
     from cmk.gui.type_defs import (
         FilterHeaders,
@@ -294,8 +296,8 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
     if display_options.enabled(display_options.T):
         html.top_heading(title,
                          breadcrumb,
-                         page_menu=_page_menu_availability(breadcrumb, what, av_mode, av_object,
-                                                           time_range, avoptions)
+                         page_menu=_page_menu_availability(breadcrumb, view, what, av_mode,
+                                                           av_object, time_range, avoptions)
                          if display_options.enabled(display_options.B) else None)
 
     if html.has_user_errors():
@@ -325,7 +327,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
         html.body_end()
 
 
-def _page_menu_availability(breadcrumb: Breadcrumb, what: AVObjectType, av_mode: AVMode,
+def _page_menu_availability(breadcrumb: Breadcrumb, view, what: AVObjectType, av_mode: AVMode,
                             av_object: AVObjectSpec, time_range: AVTimeRange,
                             avoptions: AVOptions) -> PageMenu:
     menu = PageMenu(
@@ -365,7 +367,8 @@ def _page_menu_availability(breadcrumb: Breadcrumb, what: AVObjectType, av_mode:
                             _page_menu_entries_av_mode(what, av_mode, av_object, time_range)),
                     ),
                 ],
-            ),
+            )
+        ] + page_menu_dropdown_add_to_visual(add_type="availability", name=view.name) + [
             PageMenuDropdown(
                 name="related",
                 title=_("Related"),
@@ -773,7 +776,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
             av_object = (None, None, html.request.get_unicode_input_mandatory("av_aggr"))
 
         # Dummy time_range, this is not needed for the BI
-        page_menu = _page_menu_availability(breadcrumb, "bi", av_mode, av_object, (0.0, 0.0),
+        page_menu = _page_menu_availability(breadcrumb, view, "bi", av_mode, av_object, (0.0, 0.0),
                                             avoptions)
 
         # This hack is needed because of some BI specific link. May be generalized in the future

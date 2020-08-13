@@ -1499,7 +1499,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'cisco_vpn_sessions',
         'cisco_vpn_tunnel',
         'cisco_vss',
-        'cisco_wlc',
         'cisco_wlc_clients',
         'citrix_controller.services',
         'citrix_controller.registered',

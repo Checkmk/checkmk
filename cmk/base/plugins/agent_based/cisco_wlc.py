@@ -3,8 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
+"""
 def inventory_cisco_wlc(info):
     return [(name, {}) for _node, name, _status in info]
 
@@ -61,3 +60,4 @@ check_info["cisco_wlc"] = {
         "6",
     ]),
 }
+"""

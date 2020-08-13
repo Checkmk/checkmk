@@ -13,7 +13,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
-    ('section', 'cisco_wlc'),
     ('section', 'if'),
     ('section', 'if64'),
     ('section', 'if64adm'),
@@ -37,7 +36,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'site_object_status'),
     ('section', 'site_object_counts'),
     ('section', 'tsm_stagingpools'),
-    ('check', 'cisco_wlc'),
     ('check', 'docker_container_status'),
     ('check', 'docker_container_status_health'),
     ('check', 'docker_container_status_uptime'),

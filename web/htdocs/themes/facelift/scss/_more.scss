@@ -58,6 +58,7 @@ div.more_container {
 
 .more a.more {
   img.show_more {
+    z-index: 0;
     opacity: 0;
   }
 
@@ -68,6 +69,7 @@ div.more_container {
 
 a.more {
   img.show_more {
+    z-index: 1;
     opacity: 1;
   }
 

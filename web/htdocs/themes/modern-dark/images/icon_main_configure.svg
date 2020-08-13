@@ -4,7 +4,7 @@
     <title>customization</title>
     <desc>Created with Sketch.</desc>
     <g id="design" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="bar_left_actions" transform="translate(-23.000000, -213.000000)" fill="#505862">
+        <g id="bar_left_actions" transform="translate(-23.000000, -213.000000)" fill="#F6F6F6">
             <g id="Nav" transform="translate(-0.000000, 0.000000)">
                 <g id="customization" transform="translate(23.000000, 213.000000)">
                     <path d="M5.794656,6.345728 L0.550976,6.345728 C0.247936,6.345728 -6.39999998e-05,6.097728 -6.39999998e-05,5.794848 L-6.39999998e-05,0.550848 C-6.39999998e-05,0.247968 0.247936,0.000128 0.550976,0.000128 L5.794656,0.000128 C6.097856,0.000128 6.345536,0.247968 6.345536,0.550848 L6.345536,5.794848 C6.345536,6.097728 6.097856,6.345728 5.794656,6.345728 Z" id="Stroke-1"></path>

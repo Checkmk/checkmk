@@ -2666,20 +2666,27 @@ class html(ABCHTMLGenerator):
  htdocs/
 
         Priority:
-        1. In case a theme is active: themes/images/icon_[name].svg in site local hierarchy
-        2. In case a theme is active: themes/images/icon_[name].svg in standard hierarchy
-        3. In case a theme is active: themes/images/icon_[name].png in site local hierarchy
-        4. In case a theme is active: themes/images/icon_[name].png in standard hierarchy
-        5. images/icons/[name].png in site local hierarchy
-        6. images/icons/[name].png in standard hierarchy
+        1. In case the modern-dark theme is active: <theme> = modern-dark -> priorities 3-6
+        2. In case the modern-dark theme is active: <theme> = facelift -> priorities 3-6
+        3. In case a theme is active: themes/<theme>/images/icon_[name].svg in site local hierarchy
+        4. In case a theme is active: themes/<theme>/images/icon_[name].svg in standard hierarchy
+        5. In case a theme is active: themes/<theme>/images/icon_[name].png in site local hierarchy
+        6. In case a theme is active: themes/<theme>/images/icon_[name].png in standard hierarchy
+        7. images/icons/[name].png in site local hierarchy
+        8. images/icons/[name].png in standard hierarchy
         """
 
-        rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s" % (self._theme, icon_name)
-
-        for file_type in ["svg", "png"]:
-            for base_dir in [cmk.utils.paths.omd_root, cmk.utils.paths.omd_root + "/local"]:
-                if os.path.exists(base_dir + "/" + rel_path + "." + file_type):
-                    return "themes/%s/images/icon_%s.%s" % (self._theme, icon_name, file_type)
+        if self._theme == "modern-dark":
+            # in the modern-dark theme facelift images act as fallbacks
+            themes = [self._theme, "facelift"]
+        else:
+            themes = [self._theme]
+        for theme in themes:
+            rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s" % (theme, icon_name)
+            for file_type in ["svg", "png"]:
+                for base_dir in [cmk.utils.paths.omd_root, cmk.utils.paths.omd_root + "/local"]:
+                    if os.path.exists(base_dir + "/" + rel_path + "." + file_type):
+                        return "themes/%s/images/icon_%s.%s" % (self._theme, icon_name, file_type)
 
         # TODO: This fallback is odd. Find use cases and clean this up
         return "images/icons/%s.png" % icon_name

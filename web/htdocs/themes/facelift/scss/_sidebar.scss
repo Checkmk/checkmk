@@ -250,7 +250,7 @@ div.snapin {
     position: absolute;
     right: 5px;
     opacity: 0;
-    transition: opacity 0.2s ease-in 0.2s;
+    transition: opacity 50ms ease-in 50ms;
   }
 
   &:hover div.snapin_buttons {

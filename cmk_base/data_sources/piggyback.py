@@ -53,7 +53,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         path = os.path.join(tmp_dir, "piggyback", self._hostname)
         return "Process piggyback data from %s" % path
 
-    def _execute(self):
+    def _execute(self, check_plugin_names):
         raw_data_from_sources = _raw_data(self._hostname, self._time_settings)\
                                 + _raw_data(self._ipaddress, self._time_settings)
 
@@ -89,7 +89,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         Special for piggyback: No caching of raw data
         """
         self._logger.verbose("Execute data source")
-        return self._execute(), False
+        return self._execute([]), False
 
     def _summary_result(self, for_checking):
         """Returns useful information about the data source execution

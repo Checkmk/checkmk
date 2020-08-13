@@ -4,6 +4,7 @@ import os
 import pytest  # type: ignore
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
+from collections import namedtuple
 
 import cmk_base
 import cmk_base.caching
@@ -253,28 +254,130 @@ def test_data_sources_of_hosts(monkeypatch, hostname, settings):
 def test_data_sources_snmp__get_raw_data_live(monkeypatch, live_data):
     Scenario().add_host("hostname").apply(monkeypatch)
     source = cmk_base.data_sources.snmp.SNMPDataSource("hostname", "ipaddress")
+    monkeypatch.setattr(source, "get_check_plugin_names", lambda: [])
     monkeypatch.setattr(source, "_read_cache_file", lambda: {})
     monkeypatch.setattr(source, "_write_cache_file", lambda raw_data: None)
-    monkeypatch.setattr(source, "_execute", lambda: live_data)
+    monkeypatch.setattr(source, "_execute", lambda check_plugin_names: live_data)
 
     assert source._get_raw_data() == (live_data, False)
 
 
-@pytest.mark.parametrize("cached_data, live_data", [
-    ({
-        "cached": "CACHED",
-    }, {}),
-    ({
-        "cached": "CACHED",
-    }, {
-        "live": "LIVE",
-    }),
+SNMPGetRawDataParameters = namedtuple('SNMPGetRawDataParameters', [
+    'found_sections',
+    'cached_data',
+    'live_data',
+    'result_data',
 ])
-def test_data_sources_snmp__get_raw_data_cached(monkeypatch, cached_data, live_data):
+
+
+@pytest.mark.parametrize(
+    "snmp_raw_data_parameters",
+    [
+        # no or known check plugin names
+        SNMPGetRawDataParameters(
+            found_sections=[],
+            cached_data={
+                "cached": "CACHED",
+            },
+            live_data={},
+            result_data={
+                "cached": "CACHED",
+            },
+        ),
+        SNMPGetRawDataParameters(
+            found_sections=["cached"],
+            cached_data={
+                "cached": "CACHED",
+            },
+            live_data={},
+            result_data={
+                "cached": "CACHED",
+            },
+        ),
+        SNMPGetRawDataParameters(
+            found_sections=[],
+            cached_data={
+                "cached": "CACHED",
+            },
+            live_data={
+                "live": "LIVE",
+            },
+            result_data={
+                "cached": "CACHED",
+            },
+        ),
+        SNMPGetRawDataParameters(
+            found_sections=["cached"],
+            cached_data={
+                "cached": "CACHED",
+            },
+            live_data={
+                "live": "LIVE",
+            },
+            result_data={
+                "cached": "CACHED",
+            },
+        ),
+        # live check plugin names
+        SNMPGetRawDataParameters(
+            found_sections=["live"],
+            cached_data={
+                "cached": "CACHED",
+            },
+            live_data={},
+            result_data={
+                "cached": "CACHED",
+            },
+        ),
+        SNMPGetRawDataParameters(
+            found_sections=["live"],
+            cached_data={
+                "cached": "CACHED",
+            },
+            live_data={
+                "live": "LIVE",
+            },
+            result_data={
+                "cached": "CACHED",
+                "live": "LIVE",
+            },
+        ),
+        # known or live check plugin names
+        SNMPGetRawDataParameters(
+            found_sections=["cached", "live"],
+            cached_data={
+                "cached": "CACHED",
+            },
+            live_data={
+                "live": "LIVE",
+            },
+            result_data={
+                "cached": "CACHED",
+                "live": "LIVE",
+            },
+        ),
+        SNMPGetRawDataParameters(
+            found_sections=["cached", "live", "live2"],
+            cached_data={
+                "cached": "CACHED",
+            },
+            live_data={
+                "live": "LIVE",
+            },
+            result_data={
+                "cached": "CACHED",
+                "live": "LIVE",
+            },
+        ),
+    ])
+def test_data_sources_snmp__get_raw_data_cached(monkeypatch, snmp_raw_data_parameters):
     Scenario().add_host("hostname").apply(monkeypatch)
     source = cmk_base.data_sources.snmp.SNMPDataSource("hostname", "ipaddress")
-    monkeypatch.setattr(source, "_read_cache_file", lambda: cached_data)
+    monkeypatch.setattr(source, "get_check_plugin_names",
+                        lambda: snmp_raw_data_parameters.found_sections)
+    monkeypatch.setattr(source, "_read_cache_file", lambda: snmp_raw_data_parameters.cached_data)
     monkeypatch.setattr(source, "_write_cache_file", lambda raw_data: None)
-    monkeypatch.setattr(source, "_execute", lambda: live_data)
+    monkeypatch.setattr(source, "_execute",
+                        lambda check_plugin_names: snmp_raw_data_parameters.live_data)
 
-    assert source._get_raw_data() == (cached_data, True)
+    assert source._get_raw_data() == (snmp_raw_data_parameters.result_data, True)

@@ -76,7 +76,7 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         return self._host_config.tcp_connect_timeout
 
-    def _execute(self):
+    def _execute(self, check_plugin_names):
         if self._use_only_cache:
             raise MKAgentError("Got no data: No usable cache file present at %s" %
                                self._cache_file_path())

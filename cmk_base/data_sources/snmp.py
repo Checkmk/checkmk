@@ -33,6 +33,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk_base.config as config
 import cmk_base.snmp as snmp
 import cmk_base.snmp_utils as snmp_utils
+from cmk_base.check_utils import section_name_of
 
 from .abstract import DataSource, ManagementBoardDataSource
 from .host_sections import HostSections
@@ -169,12 +170,26 @@ class SNMPDataSource(ABCSNMPDataSource):
             self._check_plugin_names[(self._hostname, self._ipaddress)] = check_plugin_names
             return check_plugin_names
 
-    def _execute(self):
+    def _update_cached_raw_data(self, raw_data, check_plugin_names):
+        new_sections = (set([section_name_of(cpn) for cpn in check_plugin_names]) -
+                        set([section_name_of(cpn) for cpn in raw_data.keys()]))
+
+        if not new_sections:
+            self._logger.verbose("Use cached data")
+            return raw_data, True
+
+        self._logger.verbose("Use partially cached data. Fetch missing data for %s" %
+                             ", ".join(new_sections))
+
+        missing_raw_data = self._execute(new_sections)
+        raw_data.update(missing_raw_data)
+        self._write_cache_file(raw_data)
+        return raw_data, True
+
+    def _execute(self, check_plugin_names):
         import cmk_base.inventory_plugins
 
         self._verify_ipaddress()
-
-        check_plugin_names = self.get_check_plugin_names()
 
         snmp_config = self._snmp_config
         info = {}
@@ -183,7 +198,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
             has_snmp_info = False
-            section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
+            section_name = section_name_of(check_plugin_name)
             if section_name in config.snmp_info:
                 oid_info = config.snmp_info[section_name]
             elif section_name in cmk_base.inventory_plugins.inv_info:

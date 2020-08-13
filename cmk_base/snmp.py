@@ -277,7 +277,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
             oid = '.' + oid
 
     # TODO: Use generic cache mechanism
-    if _is_in_single_oid_cache(snmp_config, oid):
+    if not do_snmp_scan and _is_in_single_oid_cache(snmp_config, oid):
         console.vverbose("       Using cached OID %s: " % oid)
         value = _get_oid_from_single_oid_cache(snmp_config, oid)
         console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))

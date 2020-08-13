@@ -169,16 +169,17 @@ class DataSource(object):
         CheckMKAgentDataSource sources. The SNMPDataSource source already
         return the final info data structure.
         """
+        check_plugin_names = self.get_check_plugin_names()
         raw_data = self._read_cache_file()
         if raw_data:
-            self._logger.verbose("Use cached data")
+            self._update_cached_raw_data(raw_data, check_plugin_names)
             return raw_data, True
 
         elif raw_data is None and config.simulation_mode:
             raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
 
         self._logger.verbose("Execute data source")
-        raw_data = self._execute()
+        raw_data = self._execute(check_plugin_names)
         self._write_cache_file(raw_data)
         return raw_data, False
 
@@ -186,15 +187,27 @@ class DataSource(object):
         """Small wrapper for self.run() which always returns raw data source data"""
         return self.run(get_raw_data=True)
 
+    def _update_cached_raw_data(self, raw_data, check_plugin_names):
+        """For SNMP data sources we have to update the cached raw data if the
+        SNMP scan mechanism detects new sections. If we find some new sections
+        then we run _execute() with these new sections."""
+        self._logger.verbose("Use cached data")
+        return raw_data
+
     @abc.abstractmethod
-    def _execute(self):
+    def _execute(self, check_plugin_names):
         """Fetches the current agent data from the source specified with
         hostname and ipaddress and returns the result as "raw data" that is
         later converted by self._convert_to_sections() to a HostSection().
 
         The "raw data" is the raw byte string returned by the source for
         CheckMKAgentDataSource sources. The SNMPDataSource source already
-        return the final data structure to be wrapped into HostSections()."""
+        return the final data structure to be wrapped into HostSections().
+
+        The argument 'check_plugin_names' is needed for SNMP data sources
+        because previously we might have detected new sections via the SNMP
+        scan mechanism and must update these cached raw data with the new
+        sections."""
         raise NotImplementedError()
 
     def _read_cache_file(self):

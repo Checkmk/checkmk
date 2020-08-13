@@ -88,7 +88,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
     def _gather_check_plugin_names(self):
         return ["mgmt_ipmi_sensors"]
 
-    def _execute(self):
+    def _execute(self, check_plugin_names):
         connection = None
         try:
             connection = self._create_ipmi_connection()

@@ -34,7 +34,7 @@ import six
 import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
@@ -438,7 +438,11 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def get_sorted_host_attributes(self):
         # type: () -> List[ABCHostAttribute]
         """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
-        return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()))
+        cache_id = "sorted_host_attributes"
+        if cache_id not in current_app.g:
+            current_app.g[cache_id] = sorted(self.attributes(),
+                                             key=lambda a: (a.sort_index(), a.topic()))
+        return current_app.g[cache_id]
 
     def get_choices(self):
         return [(a.name(), a.title()) for a in self.get_sorted_host_attributes()]

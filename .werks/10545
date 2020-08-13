@@ -1,0 +1,11 @@
+Title: Improved performance when sorting thousands of hosttag groups
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1597305337
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p17
+
+

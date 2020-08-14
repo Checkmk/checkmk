@@ -132,20 +132,17 @@ class APICallGrafanaConnector(APICallCollection):
         except ImportError:
             raise MKGeneralException(_("Currently not supported with this Check_MK Edition"))
 
-        presentation = request.get("presentation", "sum")
+        if "presentation" not in request:
+            request['presentation'] = 'sum'
+        presentation = request["presentation"]
         if presentation not in combined_graph_presentations:
             raise MKGeneralException(_("The requested item %s does not exist") % presentation)
-
-        single_infos = request["single_infos"]
-        datasource_name = request["datasource"]
-        context = request["context"]
 
         # The grafana connector needs the template title for making them
         # selectable by the user. We extend the graph identification here.
         # Otherwise we would need more API calls
         response = []
-        for graph_identification in matching_combined_graphs(datasource_name, single_infos,
-                                                             presentation, context):
+        for graph_identification in matching_combined_graphs(request):
             graph_template_id = graph_identification[1]["graph_template"]
             graph_title = dict(get_graph_template_choices()).get(graph_template_id,
                                                                  graph_template_id)

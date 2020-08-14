@@ -38,8 +38,6 @@ from cmk.special_agents.utils import vcrtrace
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agents/agent_vsphere")
 
 REQUESTED_COUNTERS_KEYS = (
-    'cpu.ready',
-    'cpu.costop',
     'disk.numberRead',
     'disk.numberWrite',
     'disk.read',

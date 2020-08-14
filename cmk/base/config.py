@@ -1954,8 +1954,13 @@ def _extract_agent_and_snmp_sections() -> None:
             # test otherwise.
             #if cmk.utils.debug.enabled():
             #    raise MKGeneralException(exc)
+            # TODO (mo): Prevent any stdio output here. It will kill the process immediately.
+            #     This piece of code is a part of microcore subrpocess "cmk --checker'
+            #     Microcore expected in stdout some correctly formatted data. If no, then process will
+            #     be killed on sight. Sdterr is ok.
             #console.warning(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
-            console.vverbose(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+            #console.vverbose(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+            pass
 
 
 def _extract_check_plugins() -> None:

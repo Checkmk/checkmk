@@ -15,7 +15,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # be empty. If that is the case, please remove it entirely.
     ('section', 'juniper_trpz_aps'),
     ('section', 'juniper_trpz_aps_sessions'),
-    ('section', 'oracle_rman'),
     ('section', 'oracle_tablespaces'),
     ('section', 'site_object_status'),
     ('section', 'site_object_counts'),
@@ -31,7 +30,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'logwatch_groups'),
     ('check', 'netapp_api_vf_stats'),
     ('check', 'netapp_api_vf_stats_traffic'),
-    ('check', 'oracle_rman'),
     ('check', 'oracle_tablespaces'),
     ('check', 'ps_perf'),
     ('check', 'site_object_counts'),

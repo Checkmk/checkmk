@@ -16,6 +16,14 @@
 #
 # This function returns a tuple when an ORA-* message has been found.
 # It returns False if this line should be skipped by the check.
+# ==================================================================================================
+# THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
+# THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FILE ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
+# RESIDING IN
+# cmk/base/plugins/agent_based/utils/oracle.py
+# IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
+# ANYTHING ELSE.
+# ==================================================================================================
 def oracle_handle_ora_errors(line):
     if len(line) == 1:
         return
@@ -37,6 +45,14 @@ def oracle_handle_ora_errors(line):
         return (3, 'Found error in agent output "%s"' % ' '.join(line[1:]))
 
 
+# ==================================================================================================
+# THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
+# THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FILE ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
+# RESIDING IN
+# cmk/base/plugins/agent_based/utils/oracle.py
+# IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
+# ANYTHING ELSE.
+# ==================================================================================================
 def oracle_handle_legacy_ora_errors(line):
     # Skip over line before ORA- errors (e.g. sent by AIX agent from 2014)
     if line == ["ERROR:"]:

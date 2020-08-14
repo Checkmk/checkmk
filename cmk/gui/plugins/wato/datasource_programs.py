@@ -340,6 +340,14 @@ def _check_not_empty_exporter_dict(value, _varprefix):
 def _valuespec_generic_metrics_prometheus():
     return Dictionary(
         elements=[
+            ("connection",
+             CascadingDropdown(
+                 choices=[
+                     ("ip_address", _("IP Address")),
+                     ("host_name", _("Host name")),
+                 ],
+                 title=_("Prometheus connection option"),
+             )),
             ("port", Integer(
                 title=_('Prometheus web port'),
                 default_value=9090,

@@ -12,6 +12,7 @@ import argparse
 import json
 import time
 import logging
+import traceback
 from typing import List, Dict, Any, Mapping, DefaultDict, Optional, Iterator, Tuple, Callable, Union
 from collections import OrderedDict, defaultdict
 import math
@@ -1172,7 +1173,12 @@ class PrometheusServer:
         self.api_client = api_client
 
     def build_info(self):
-        result = {"scrape_target": self._scrape_targets(), "version": self._version()}
+        result: Dict[str, Any] = {}
+        result.update({"scrape_target": self._scrape_targets()})
+
+        version = self._prometheus_version()
+        if version:
+            result["version"] = version
 
         storage_retention = self._storage_retention()
         if storage_retention:
@@ -1185,7 +1191,6 @@ class PrometheusServer:
         return result
 
     def scrape_targets_health(self) -> Dict[str, Dict[str, Any]]:
-
         result = {}
         for scrape_target_name, attributes in self.api_client.scrape_targets_attributes():
             result[scrape_target_name] = {
@@ -1200,7 +1205,7 @@ class PrometheusServer:
         response = self.api_client.query_static_endpoint("/-/healthy")
         return {"status_code": response.status_code, "status_text": response.reason}
 
-    def _version(self) -> str:
+    def _prometheus_version(self) -> str:
         promql_result = self.api_client.perform_multi_result_promql('prometheus_build_info')
 
         if promql_result is None:
@@ -1208,7 +1213,12 @@ class PrometheusServer:
 
         if len(promql_result.promql_metrics) > 1:
             raise ApiError("Multiple Prometheus instances connected")
-        version = promql_result.promql_metrics[0]["labels"]["version"]
+
+        try:
+            version = promql_result.promql_metrics[0]["labels"]["version"]
+        except IndexError:
+            return ""
+
         return version
 
     def _scrape_targets(self) -> Dict[str, Any]:
@@ -1720,10 +1730,8 @@ class ApiData:
         return node_name.split(":")[0]
 
 
-def _extract_config_args(config):
-    server_address = config["host_address"]
-    if "port" in config:
-        server_address += ":%s" % config["port"]
+def _extract_config_args(config: Dict[str, Any]) -> Dict[str, Any]:
+    connection = _extract_connection(config)
 
     exporter_options = {}
     for exporter in config["exporter"]:
@@ -1746,10 +1754,22 @@ def _extract_config_args(config):
             exporter_options[exporter_name] = exporter_info
 
     return {
-        "server_address": server_address,
+        "connection": connection,
         "custom_services": config.get("promql_checks", []),
         "exporter_options": exporter_options
     }
+
+
+def _extract_connection(config: Dict[str, Any]):
+    connection_type = config["connection"]
+    if connection_type == "host_name":
+        server_address = config['host_name']
+    else:
+        server_address = config["host_address"]
+
+    if "port" in config:
+        server_address += ":%s" % config["port"]
+    return server_address
 
 
 def _get_host_label(labels):
@@ -1770,7 +1790,7 @@ def main(argv=None):
         config_args = _extract_config_args(config)
         exporter_options = config_args["exporter_options"]
         # default cases always must be there
-        api_client = PrometheusAPI(config_args["server_address"])
+        api_client = PrometheusAPI(config_args["connection"])
         api_data = ApiData(api_client, exporter_options)
         print(api_data.prometheus_build_section())
         print(api_data.promql_section(config_args["custom_services"]))
@@ -1781,9 +1801,9 @@ def main(argv=None):
         if "node_exporter" in exporter_options:
             print(*list(api_data.node_exporter_section(exporter_options["node_exporter"])))
 
-    except Exception as e:
+    except Exception:
         if args.debug:
             raise
-        sys.stderr.write("%s\n" % e)
+        sys.stderr.write(traceback.format_exc())
         return 1
     return 0

@@ -31,7 +31,7 @@
   flex-direction: column;
   flex-grow: 1;
   padding: 0;
-  margin: $spacing 0;
+  margin: 0 0 $spacing;
 
   a.more {
     position: absolute;
@@ -82,6 +82,12 @@
     img {
       width: 19px;
       margin-bottom: 6px;
+    }
+
+    &.user > div.popup_menu {
+      top: unset;
+      height: 150px;
+      margin-top: -150px;
     }
 
     div.popup_menu {

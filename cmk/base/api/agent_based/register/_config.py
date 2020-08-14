@@ -104,16 +104,14 @@ def get_relevant_raw_sections(
     parsed_section_names: Set[ParsedSectionName] = set()
 
     for check_plugin_name in check_plugin_names:
-        plugin = get_check_plugin(check_plugin_name)
-        if plugin:
-            parsed_section_names.update(plugin.sections)
+        check_plugin = get_check_plugin(check_plugin_name)
+        if check_plugin:
+            parsed_section_names.update(check_plugin.sections)
 
     for inventory_plugin_name in inventory_plugin_names:
-        # TODO (mo): once the inventory plugins are facing the new API,
-        # this should look exactly as the block above!
-        # For now: every inventory plugin name is exactly the parsed section name
-        # Also TODO: add a few tests when this block is non-trivial.
-        parsed_section_names.add(ParsedSectionName(str(inventory_plugin_name)))
+        inventory_plugin = get_inventory_plugin(inventory_plugin_name)
+        if inventory_plugin:
+            parsed_section_names.update(inventory_plugin.sections)
 
     iter_all_sections: Iterable[SectionPlugin] = itertools.chain(
         iter_all_agent_sections(),

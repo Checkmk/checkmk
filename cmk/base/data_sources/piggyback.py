@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Any, Dict, Final, Optional, Tuple
+from typing import Any, Dict, Final, Optional
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
@@ -114,10 +114,10 @@ class PiggyBackDataSource(AgentDataSource):
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-    ) -> Tuple[AgentRawData, bool]:
+    ) -> AgentRawData:
         """Returns the current raw data of this data source
 
         Special for piggyback: No caching of raw data
         """
         self._logger.log(VERBOSE, "Execute data source")
-        return self._execute(selected_raw_sections=selected_raw_sections), False
+        return self._execute(selected_raw_sections=selected_raw_sections)

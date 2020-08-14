@@ -9,7 +9,7 @@ import enum
 import logging
 import sys
 from pathlib import Path
-from typing import Any, cast, Dict, Final, Generic, Optional, Tuple, TypeVar, Union
+from typing import Any, cast, Dict, Final, Generic, Optional, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -375,8 +375,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             persisted_sections: BoundedAbstractPersistedSections = self._section_store.load(
                 self._use_outdated_persisted_sections)
 
-            raw_data, is_cached_data = self._get_raw_data(
-                selected_raw_sections=selected_raw_sections,)
+            raw_data = self._get_raw_data(selected_raw_sections=selected_raw_sections,)
 
             self._host_sections = self._parser.parse(raw_data)
             assert isinstance(self._host_sections, ABCHostSections)
@@ -384,7 +383,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             if get_raw_data:
                 return raw_data
 
-            if self._host_sections.persisted_sections and not is_cached_data:
+            if persisted_sections != self._host_sections.persisted_sections:
                 persisted_sections.update(self._host_sections.persisted_sections)
                 self._section_store.store(persisted_sections)
 
@@ -413,7 +412,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-    ) -> Tuple[BoundedAbstractRawData, bool]:
+    ) -> BoundedAbstractRawData:
         """Returns the current raw data of this data source
 
         It either uses previously cached raw data of this data source or
@@ -426,7 +425,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         raw_data = self._file_cache.read()
         if raw_data:
             self._logger.log(VERBOSE, "Use cached data")
-            return raw_data, True
+            return raw_data
 
         if raw_data is None and config.simulation_mode:
             raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
@@ -434,7 +433,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self._logger.log(VERBOSE, "Execute data source")
         raw_data = self._execute(selected_raw_sections=selected_raw_sections,)
         self._file_cache.write(raw_data)
-        return raw_data, False
+        return raw_data
 
     @abc.abstractmethod
     def _execute(

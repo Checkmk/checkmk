@@ -369,11 +369,11 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
-                name="dummy",
-                title="dummy",
+                name="actions",
+                title=_("Actions"),
                 topics=[
                     PageMenuTopic(
-                        title=_("Dummy"),
+                        title=_("Actions"),
                         entries=entries,
                     ),
                 ],
@@ -392,7 +392,6 @@ def _make_form_save_link(form_name: str,
         title=save_title or _("Save"),
         icon_name=save_icon,
         item=make_form_submit_link(form_name, button_name),
-        is_list_entry=False,
         is_shortcut=True,
         is_suggested=True,
         is_enabled=save_is_enabled,
@@ -408,7 +407,6 @@ def _make_form_abort_link(breadcrumb: Breadcrumb) -> PageMenuEntry:
         title=_("Abort"),
         icon_name="abort",
         item=make_simple_link(parent_item.url),
-        is_list_entry=False,
         is_shortcut=True,
         is_suggested=True,
     )

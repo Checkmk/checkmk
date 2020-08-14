@@ -34,7 +34,7 @@ def parse_docker_container_mem(string_table: AgentStringTable) -> Dict[str, int]
         ...     [('{"usage": 4034560, "limit": 16690180096, "max_usage": 7208960,'
         ...       ' "stats": {"cache": 42, "hierarchical_memory_limit": 9223372036854771712}}')]
         ... ]))
-        {'Cached': 42, 'MemFree': 16686145578, 'MemTotal': 16690180096}
+        {'MemFree': 16686145578, 'MemTotal': 16690180096}
         >>> pprint.pprint(parse_docker_container_mem([
         ...     ['cache', '41316352'], ['rss', '79687680'], ['rss_huge', '8388608'],
         ...     ['mapped_file', '5976064'], ['swap', '0'], ['pgpgin', '7294455'],
@@ -53,7 +53,7 @@ def parse_docker_container_mem(string_table: AgentStringTable) -> Dict[str, int]
         ...     ['usage_in_bytes', '121810944'], ['limit_in_bytes', '9223372036854771712'],
         ...     ['MemTotal:', '65660592', 'kB']
         ... ]))
-        {'Cached': 41316352, 'MemFree': 67155951616, 'MemTotal': 67236446208}
+        {'MemFree': 67155951616, 'MemTotal': 67236446208}
 
     """
     version = docker.get_version(string_table)
@@ -80,7 +80,8 @@ def parse_docker_container_mem(string_table: AgentStringTable) -> Dict[str, int]
     # container (cgroup).
     section["MemTotal"] = min(parsed["MemTotal"], parsed["limit_in_bytes"])
     section["MemFree"] = section["MemTotal"] - usage
-    section["Cached"] = parsed["cache"]
+    # temporarily disabled. See CMK-5224
+    # section["Cached"] = parsed["cache"]
 
     return section
 

@@ -11,6 +11,7 @@ from typing import Any, Callable, Dict, List, Set, Tuple, Union, Optional, Itera
 
 import livestatus
 
+import cmk.utils.version as cmk_version
 from cmk.gui.plugins.metrics.utils import check_metrics
 from cmk.gui.plugins.metrics.timeseries import op_func_wrapper, time_series_operators
 from cmk.utils.prediction import livestatus_lql, TimeSeries
@@ -107,8 +108,13 @@ def needed_elements_of_expression(expression):
         yield tuple(expression[1:])
     elif expression[0] in ["operator", "transformation"]:
         for operand in expression[2]:
-            for result in needed_elements_of_expression(operand):
-                yield result
+            yield from needed_elements_of_expression(operand)
+    elif expression[0] == "combined" and not cmk_version.is_raw_edition():
+        from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec
+        metrics = resolve_combined_single_metric_spec(expression[1])
+
+        for out in (needed_elements_of_expression(m['expression']) for m in metrics):
+            yield from out
 
 
 def get_needed_sources(metrics: List[Dict[str, Any]],

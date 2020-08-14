@@ -31,34 +31,32 @@ def compute_graph_curves(metrics, rrd_data):
     curves = []
     for metric_definition in metrics:
         expression = metric_definition["expression"]
-        if expression[0] == "transformation" and expression[1][0] == "forecast":
-            curves.extend(multiline_curves(metric_definition, rrd_data))
-        else:
+        time_series = evaluate_time_series_expression(expression, rrd_data)
+        if len(time_series) == 1 and isinstance(time_series[0], tuple):
+            time_series = time_series[0][3]
 
+        if isinstance(time_series[0], tuple):
+            for line, color, title, ts in time_series:
+                curves.append({
+                    "line_type": line,
+                    'color': color,
+                    'title': "%s - %s" % (metric_definition["title"], title),
+                    'rrddata': ts
+                })
+        else:
             curves.append({
                 "line_type": metric_definition["line_type"],
                 "color": metric_definition["color"],
                 "title": metric_definition["title"],
-                "rrddata": evaluate_time_series_expression(expression, rrd_data),
+                "rrddata": time_series,
             })
+
     return curves
-
-
-def multiline_curves(metric_definition, rrd_data):
-    "For the moment only works on forecast"
-    time_series = evaluate_time_series_expression(metric_definition["expression"], rrd_data)
-    for line, color, title, ts in time_series:
-        yield {
-            "line_type": line,
-            'color': color,
-            'title': "%s - %s" % (metric_definition["title"], title),
-            'rrddata': ts
-        }
 
 
 def evaluate_time_series_expression(expression, rrd_data):
     if rrd_data:
-        num_points = len(list(rrd_data.values())[0])
+        num_points = len(next(iter(rrd_data.values())))
     else:
         num_points = 1
 
@@ -90,6 +88,13 @@ def evaluate_time_series_expression(expression, rrd_data):
 
     if expression[0] == "constant":
         return [expression[1]] * num_points
+
+    if expression[0] == "combined" and not cmk_version.is_raw_edition():
+        from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec
+        metrics = resolve_combined_single_metric_spec(expression[1])
+
+        return [(m["line_type"], m["color"], m['title'],
+                 evaluate_time_series_expression(m['expression'], rrd_data)) for m in metrics]
 
     raise NotImplementedError()
 

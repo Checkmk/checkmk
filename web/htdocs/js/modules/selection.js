@@ -237,18 +237,18 @@ function set_rowselection(action, rows) {
         + "&rows=" + rows.join(","));
 }
 
+// Update the header information (how many rows selected)
 function update_row_selection_information() {
-    // First update the header information (how many rows selected)
-    var count = selection_properties.selected_rows.length;
-    var oDiv = document.getElementById("headinfo");
-    if (oDiv) {
-        var current_text = oDiv.innerHTML;
-        if (current_text.indexOf("/") != -1) {
-            var parts = current_text.split("/");
-            current_text = parts[1];
-        }
-        oDiv.innerHTML = count + "/" + current_text;
+    let count = selection_properties.selected_rows.length;
+    let current_text = utils.get_header_info();
+
+    // First remove the text added by previous calls to this functions
+    if (current_text.indexOf("/") != -1) {
+        var parts = current_text.split("/");
+        current_text = parts[1];
     }
+
+    utils.update_header_info(count + "/" + current_text);
 }
 
 // Is used to select/deselect all rows in the current view. This can optionally

@@ -208,6 +208,12 @@ export function update_header_timer() {
     date.innerHTML = date_format.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
 }
 
+export function get_header_info()
+{
+    // Return the current text (minus the separator prepended by update_header_info())
+    return document.getElementById("headinfo").innerHTML.substr(2);
+}
+
 export function update_header_info(text)
 {
     var container = document.getElementById("headinfo");

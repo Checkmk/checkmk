@@ -309,6 +309,37 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _cpu_tracking_id(self) -> str:
         return self.configurator.cpu_tracking_id
 
+    def check(self, raw_data: BoundedAbstractRawData) -> BoundedAbstractHostSections:
+        try:
+            host_sections = self._parser.parse(raw_data)
+
+            # Add information from previous persisted infos
+            persisted_sections = self._determine_persisted_sections(host_sections)
+            host_sections.add_persisted_sections(persisted_sections, logger=self._logger)
+
+            return host_sections
+
+        except Exception as exc:
+            self._logger.log(VERBOSE, "ERROR: %s", exc)
+            if cmk.utils.debug.enabled():
+                raise
+            self._exception = exc
+            return self.default_host_sections
+        else:
+            self._exception = None
+
+    def _determine_persisted_sections(
+        self,
+        host_sections: BoundedAbstractHostSections,
+    ) -> BoundedAbstractPersistedSections:
+        # TODO(ml): This function should take a BoundedAbstractPersistedSections
+        #           instead of the host_section but mypy does not allow it.
+        persisted_sections = self._section_store.load(self._use_outdated_persisted_sections)
+        if persisted_sections != host_sections.persisted_sections:
+            persisted_sections.update(host_sections.persisted_sections)
+            self._section_store.store(persisted_sections)
+        return persisted_sections
+
     def run(
         self,
         *,
@@ -370,27 +401,12 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         #
         self._exception = None
         self._host_sections = None
-
         try:
-            persisted_sections = self._section_store.load(self._use_outdated_persisted_sections)
-
             raw_data = self._get_raw_data(selected_raw_sections=selected_raw_sections,)
-
-            self._host_sections = self._parser.parse(raw_data)
-            assert isinstance(self._host_sections, ABCHostSections)
+            self._host_sections = self.check(raw_data)
 
             if get_raw_data:
                 return raw_data
-
-            if persisted_sections != self._host_sections.persisted_sections:
-                persisted_sections.update(self._host_sections.persisted_sections)
-                self._section_store.store(persisted_sections)
-
-            # Add information from previous persisted infos
-            self._host_sections.add_persisted_sections(
-                persisted_sections,
-                logger=self._logger,
-            )
 
             return self._host_sections
 

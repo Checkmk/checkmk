@@ -68,21 +68,25 @@ checks = {
                 'used_levels': (80.0, 90.0)
             }, [
                 (
-                    0, '16.00 MB of 2.00 TB used', [
+                    0, 'Used: 16.00 MB', [
                         (
                             'data_size', 16777216.0, 1759218604441.6,
                             1979120929996.8, 0, 2199023255552.0
                         )
                     ]
                 ),
+                (0, 'Allocated used: 16.00 MB', []),
                 (
-                    0, '256.00 MB of 2.00 TB allocated', [
+                    0, 'Allocated: 256.00 MB', [
                         (
                             'allocated_size', 268435456.0, None, None, 0,
                             2199023255552.0
                         )
                     ]
-                )
+                ),
+                (
+                    0, "Maximum size: 2.00 TB", [],
+                ),
             ]
         ),
         (
@@ -90,154 +94,41 @@ checks = {
                 'used_levels': (80.0, 90.0)
             }, [
                 (
-                    0, '1.00 MB of 2.00 TB used', [
+                    0, 'Used: 1.00 MB', [
                         (
                             'data_size', 1048576.0, 1759218604441.6,
                             1979120929996.8, 0, 2199023255552.0
                         )
                     ]
                 ),
+                (0, 'Allocated used: 1.00 MB', []),
                 (
-                    0, '256.00 MB of 2.00 TB allocated', [
+                    0, 'Allocated: 256.00 MB', [
                         (
                             'allocated_size', 268435456.0, None, None, 0,
                             2199023255552.0
                         )
                     ]
-                )
-            ]
-        ),
-        (
-            'MSSQL46.NOC_ALARM_T.NOC_ALARM_T_log', {
-                'used_levels': (80.0, 90.0)
-            }, [
-                (
-                    0, '8.00 MB of 2.00 TB used', [
-                        (
-                            'data_size', 8388608.0, 1759218604441.6,
-                            1979120929996.8, 0, 2199023255552.0
-                        )
-                    ]
                 ),
                 (
-                    0, '256.00 MB of 2.00 TB allocated', [
-                        (
-                            'allocated_size', 268435456.0, None, None, 0,
-                            2199023255552.0
-                        )
-                    ]
-                )
-            ]
-        ),
-        (
-            'MSSQL46.NOC_CONFIG_T.NOC_CONFIG_T_log', {
-                'used_levels': (80.0, 90.0)
-            }, [
-                (
-                    0, '31.00 MB of 2.00 TB used', [
-                        (
-                            'data_size', 32505856.0, 1759218604441.6,
-                            1979120929996.8, 0, 2199023255552.0
-                        )
-                    ]
+                    0, "Maximum size: 2.00 TB", [],
                 ),
-                (
-                    0, '768.00 MB of 2.00 TB allocated', [
-                        (
-                            'allocated_size', 805306368.0, None, None, 0,
-                            2199023255552.0
-                        )
-                    ]
-                )
             ]
         ),
         (
             'MSSQL46.master.mastlog', {
                 'used_levels': (80.0, 90.0)
             }, [
-                (0, '0.00 B used', [('data_size', 0, None, None, None, None)]),
+                (0, 'Used: 0.00 B', [('data_size', 0, None, None, 0.0, None)]),
+                (0, 'Allocated used: 0.00 B', []),
                 (
-                    0, '1.00 MB allocated', [
-                        ('allocated_size', 1048576.0, None, None, None, None)
-                    ]
-                ), (0, 'no maximum size', [])
-            ]
-        ),
-        (
-            'MSSQL46.model.modellog', {
-                'used_levels': (80.0, 90.0)
-            }, [
-                (
-                    0, '32.00 MB used', [
-                        ('data_size', 33554432.0, None, None, None, None)
+                    0, 'Allocated: 1.00 MB', [
+                        ('allocated_size', 1048576.0, None, None, 0.0, None)
                     ]
                 ),
-                (
-                    0, '34.00 MB allocated', [
-                        ('allocated_size', 35651584.0, None, None, None, None)
-                    ]
-                ), (0, 'no maximum size', [])
+                (0, 'Maximum size: unlimited', [])
             ]
         ),
-        (
-            'MSSQL46.msdb.MSDBLog', {
-                'used_levels': (80.0, 90.0)
-            }, [
-                (
-                    0, '3.00 MB of 2.00 TB used', [
-                        (
-                            'data_size', 3145728.0, 1759218604441.6,
-                            1979120929996.8, 0, 2199023255552.0
-                        )
-                    ]
-                ),
-                (
-                    0, '17.00 MB of 2.00 TB allocated', [
-                        (
-                            'allocated_size', 17825792.0, None, None, 0,
-                            2199023255552.0
-                        )
-                    ]
-                )
-            ]
-        ),
-        (
-            'MSSQL46.tempdb.templog', {
-                'used_levels': (80.0, 90.0)
-            }, [
-                (
-                    0, '55.00 MB used', [
-                        ('data_size', 57671680.0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, '160.00 MB allocated',
-                    [('allocated_size', 167772160.0, None, None, None, None)]
-                ), (0, 'no maximum size', [])
-            ]
-        ),
-        (
-            'MSSQL46.test_autoclose.test_autoclose_log', {
-                'used_levels': (80.0, 90.0)
-            }, [
-                (
-                    0, '1.00 MB of 2.00 TB used', [
-                        (
-                            'data_size', 1048576.0, 1759218604441.6,
-                            1979120929996.8, 0, 2199023255552.0
-                        )
-                    ]
-                ),
-                (
-                    0, '32.00 MB of 2.00 TB allocated', [
-                        (
-                            'allocated_size', 33554432.0, None, None, 0,
-                            2199023255552.0
-                        )
-                    ]
-                )
-            ]
-        )
     ]
 }
 

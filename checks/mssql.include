@@ -29,27 +29,27 @@ def _format_item_mssql_datafiles(inst, database, file_name):
 def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, unlimited):
     def calculate_levels(levels, reference_value):
         if isinstance(levels[0], float):
-            if reference_value == 0:
-                return None, None
-            if reference_value != -1:
-                return [(x * reference_value) / 100.0 for x in levels]
+            if reference_value:
+                return (
+                    levels[0] * reference_value / 100.0,
+                    levels[1] * reference_value / 100.0,
+                )
         elif levels[0] is not None:
-            return [x * 1024 * 1024 for x in levels]
+            return (
+                levels[0] * 1024 * 1024,
+                levels[1] * 1024 * 1024,
+            )
 
         return None, None
 
     if unlimited:
-        max_size = -1
-
-    rel_levels = False
+        max_size = None
 
     for param_key, name, perf_key, value, reference_value in [
-        ('used_levels', "used", "data_size", used_size, max_size),
-        ('allocated_used_levels', "allocated used", None, used_size, allocated_size),
-        ('allocated_levels', "allocated", "allocated_size", allocated_size, max_size),
+        ('used_levels', "Used", "data_size", used_size, max_size),
+        ('allocated_used_levels', "Allocated used", None, used_size, allocated_size),
+        ('allocated_levels', "Allocated", "allocated_size", allocated_size, max_size),
     ]:
-        status = 0
-
         levels = params.get(param_key, (None, None))
         if isinstance(levels, list):
             warn, crit = None, None
@@ -59,35 +59,18 @@ def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, 
                     break
         else:
             warn, crit = calculate_levels(levels, reference_value)
-            if isinstance(levels[0], float):
-                rel_levels = True
 
-        if crit is not None and value >= crit:
-            status = 2
-        elif warn is not None and value >= warn:
-            status = 1
+        yield check_levels(
+            value,
+            perf_key,
+            (warn, crit),
+            human_readable_func=get_bytes_human_readable,
+            infoname=name,
+            boundaries=(0, reference_value),
+        )
 
-        if status > 0:
-            wc_msg = " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn),
-                                                get_bytes_human_readable(crit))
-        else:
-            wc_msg = ""
-
-        if perf_key is not None or status != 0:
-            if reference_value == -1:
-                yield status, "%s %s%s" %\
-                    (get_bytes_human_readable(value),
-                        name, wc_msg), \
-                    [(perf_key, value, warn, crit)]
-            else:
-                yield status, "%s of %s %s%s" %\
-                    (get_bytes_human_readable(value),
-                        get_bytes_human_readable(reference_value),
-                        name, wc_msg), \
-                    [(perf_key, value, warn, crit, 0, reference_value)]
-
-    if unlimited and rel_levels:
-        yield 0, "no maximum size", []
+    yield 0, "Maximum size: %s" % ("unlimited"
+                                   if max_size is None else get_bytes_human_readable(max_size))
 
 
 #.

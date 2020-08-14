@@ -2442,7 +2442,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'mssql_counters.pageactivity',
         'mssql_counters.locks_per_batch',
         'mssql_counters.file_sizes',
-        'mssql_databases',
         'mssql_datafiles',
         'mssql_instance',
         'mssql_tablespaces',

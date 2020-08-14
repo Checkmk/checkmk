@@ -80,12 +80,18 @@ class TestParser:
             b"<<<section>>>",
             b"first line",
             b"second line",
-            b"<<<<>>>>",  #  <- omitting this line makes no difference
+            b"<<<<>>>>",  # <- omitting this line makes no difference
             b"<<<<piggyback_other>>>>",
             b"<<<other_section>>>",
             b"first line",
             b"second line",
             b"<<<<>>>>",
+            b"<<<<../b:l*a../>>>>",
+            b"<<<section>>>",
+            b"first line",
+            b"<<<</b_l-u/>>>>",
+            b"<<<section>>>",
+            b"first line",
         ))
 
         ahs = AgentParser(hostname, logger).parse(raw_data)
@@ -102,6 +108,14 @@ class TestParser:
                 b"<<<other_section:cached(1000,900)>>>",
                 b"first line",
                 b"second line",
+            ],
+            ".._b_l_a.._": [
+                b"<<<section:cached(1000,900)>>>",
+                b"first line",
+            ],
+            "_b_l-u_": [
+                b"<<<section:cached(1000,900)>>>",
+                b"first line",
             ],
         }
         assert ahs.persisted_sections == {}

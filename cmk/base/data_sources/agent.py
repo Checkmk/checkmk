@@ -13,6 +13,7 @@ from six import ensure_binary, ensure_str
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.misc
+from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.type_defs import (
     AgentRawData,
@@ -427,8 +428,7 @@ class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
         # Protect Check_MK against unallowed host names. Normally source scripts
         # like agent plugins should care about cleaning their provided host names
         # up, but we need to be sure here to prevent bugs in Check_MK code.
-        # a) Replace spaces by underscores
-        return piggybacked_hostname.replace(" ", "_")
+        return regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", piggybacked_hostname)
 
     @staticmethod
     def _add_cached_info_to_piggybacked_section_header(

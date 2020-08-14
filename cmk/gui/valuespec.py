@@ -47,6 +47,7 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.defines as defines
 from cmk.utils.type_defs import Seconds
+import cmk.utils.regex
 
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
@@ -1109,7 +1110,7 @@ def Hostname(  # pylint: disable=redefined-builtin
 ):
     """A host name with or without domain part. Also allow IP addresses"""
     return TextAscii(
-        regex=re.compile('^[-0-9a-zA-Z_.]+$'),
+        regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME),
         regex_error=_("Please enter a valid hostname or IPv4 address. "
                       "Only letters, digits, dash, underscore and dot are allowed."),
         allow_empty=allow_empty,

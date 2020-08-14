@@ -13,6 +13,9 @@ from cmk.utils.i18n import _
 
 g_compiled_regexes: Dict[Tuple[Any, int], Pattern] = {}
 
+REGEX_HOST_NAME_CHARS = r'-0-9a-zA-Z_.'
+REGEX_HOST_NAME = r'^[%s]+$' % REGEX_HOST_NAME_CHARS
+
 
 def regex(pattern: AnyStr, flags: int = 0) -> Pattern[AnyStr]:
     """Compile regex or look it up in already compiled regexes.

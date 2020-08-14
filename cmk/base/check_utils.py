@@ -18,8 +18,8 @@ RulesetName = str
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
 
 AgentSectionContent = List[List[str]]
-PersistedAgentSection = Tuple[int, int, AgentSectionContent]
-AgentPersistedSections = Dict[SectionName, PersistedAgentSection]
+AgentPersistedSection = Tuple[int, int, AgentSectionContent]
+AgentPersistedSections = Dict[SectionName, AgentPersistedSection]
 AgentSections = Dict[SectionName, AgentSectionContent]
 
 PiggybackRawData = Dict[HostName, List[bytes]]

@@ -79,21 +79,25 @@ mssql_transactionlogs_discovery = []
 
 
 def inventory_mssql_datafiles(mode, parsed_extra):
-    parsed = parsed_extra[0]
-    parsed_databases = parse_mssql_databases(parsed_extra[1])
 
-    settings = host_extra_conf(host_name(), mssql_transactionlogs_discovery)
-    summarize = settings and settings[0].get("summarize_%s" % mode, False)
-    for inst, database, file_name in parsed:
+    return discover_mssql_common(
+        mode,
+        host_extra_conf(host_name(), mssql_transactionlogs_discovery),
+        parsed_extra[0],
+        parse_mssql_databases(parsed_extra[1]),
+    )
+
+
+def discover_mssql_common(mode, params, section, section_databases):
+
+    summarize = params and params[0].get("summarize_%s" % mode, False)
+    for inst, database, file_name in section:
         if mode == 'transactionlogs':
             dbinst = "%s %s" % (inst, database)
-            if parsed_databases.get(dbinst, {}).get('Recovery', u'') == u'SIMPLE':
+            if section_databases.get(dbinst, {}).get('Recovery', u'') == u'SIMPLE':
                 # ignore DBs with SIMPLE Recovery, these do not use transaction logs
                 continue
-        if summarize:
-            yield _format_item_mssql_datafiles(inst, database, None), {}
-        else:
-            yield _format_item_mssql_datafiles(inst, database, file_name), {}
+        yield _format_item_mssql_datafiles(inst, database, None if summarize else file_name), {}
 
 
 def check_mssql_datafiles(item, params, parsed_extra):

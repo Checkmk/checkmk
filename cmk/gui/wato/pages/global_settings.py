@@ -7,7 +7,7 @@
 settings"""
 
 import abc
-from typing import Optional, Union, Iterator
+from typing import Optional, Union, Iterator, Type
 
 import cmk.utils.version as cmk_version
 import cmk.gui.config as config
@@ -39,6 +39,8 @@ from cmk.gui.page_menu import (
     PageMenuCheckbox,
     PageMenuSearch,
     make_simple_link,
+    make_form_submit_link,
+    make_simple_form_page_menu,
     make_display_options_dropdown,
 )
 
@@ -190,10 +192,6 @@ class GlobalSettingsMode(WatoMode):
 
 
 class EditGlobalSettingMode(WatoMode):
-    @abc.abstractmethod
-    def _back_mode(self):
-        raise NotImplementedError()
-
     def _from_vars(self):
         self._varname = html.request.get_ascii_input_mandatory("varname")
         try:
@@ -213,6 +211,24 @@ class EditGlobalSettingMode(WatoMode):
         if varname in ["actions"]:
             return config.user.may("wato.add_or_modify_executables")
         return True
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb, form_name="value_editor", button_name="save")
+
+        reset_possible = self._config_variable.allow_reset() and self._is_configured()
+        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        defvalue = default_values[self._varname]
+        value = self._current_settings.get(self._varname,
+                                           self._global_settings.get(self._varname, defvalue))
+        menu.dropdowns[0].topics[0].entries.append(
+            PageMenuEntry(
+                title=_("Remove explicit setting") if value == defvalue else _("Reset to default"),
+                icon_name="reset",
+                item=make_form_submit_link(form_name="value_editor", button_name="_reset"),
+                is_enabled=reset_possible,
+            ))
+
+        return menu
 
     def action(self):
         if html.request.var("_reset"):
@@ -251,7 +267,9 @@ class EditGlobalSettingMode(WatoMode):
                            domains=[self._config_variable.domain()],
                            need_restart=self._config_variable.need_restart())
 
-        return self._back_mode()
+        page_menu = self.parent_mode()
+        assert page_menu is not None
+        return page_menu.name()
 
     def _save(self):
         watolib.save_global_settings(self._current_settings)
@@ -260,8 +278,11 @@ class EditGlobalSettingMode(WatoMode):
     def _affected_sites(self):
         raise NotImplementedError()
 
+    def _is_configured(self) -> bool:
+        return self._varname in self._current_settings
+
     def page(self):
-        is_configured = self._varname in self._current_settings
+        is_configured = self._is_configured()
         is_configured_globally = self._varname in self._global_settings
 
         default_values = watolib.ABCConfigDomain.get_all_default_globals()
@@ -306,12 +327,6 @@ class EditGlobalSettingMode(WatoMode):
                 html.write(self._valuespec.value_to_text(curvalue))
 
         forms.end()
-        html.button("save", _("Save"))
-        if self._config_variable.allow_reset() and is_configured:
-            curvalue = self._current_settings[self._varname]
-            html.button(
-                "_reset",
-                _("Remove explicit setting") if curvalue == defvalue else _("Reset to default"))
         html.hidden_fields()
         html.end_form()
 
@@ -461,15 +476,12 @@ class ModeEditGlobalSetting(EditGlobalSettingMode):
     def permissions(cls):
         return ["global"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditGlobals
+
     def title(self):
-        return _("Global configuration settings for Check_MK")
-
-    def buttons(self):
-        html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "globalvars")]),
-                            "abort")
-
-    def _back_mode(self):
-        return "globalvars"
+        return _("Edit global setting")
 
     def _affected_sites(self):
         return None  # All sites
@@ -484,9 +496,6 @@ class ModeEditSiteGlobalSetting(EditGlobalSettingMode):
     @classmethod
     def permissions(cls):
         return ["global"]
-
-    def _back_mode(self):
-        return "edit_site_globals"
 
     def _from_vars(self):
         super(ModeEditSiteGlobalSetting, self)._from_vars()

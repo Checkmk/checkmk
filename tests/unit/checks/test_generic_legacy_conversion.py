@@ -2321,7 +2321,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'liebert_pump',
         'liebert_reheating',
         'liebert_system_events',
-        'liebert_temp_air',
         'liebert_temp_fluid',
         'liebert_temp_general',
         'livestatus_status',

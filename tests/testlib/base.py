@@ -53,7 +53,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'juniper_trpz_aps_sessions'),
     ('check', 'k8s_stats_fs'),
     ('check', 'k8s_stats_network'),
-    ('check', 'liebert_temp_air'),
     ('check', 'livestatus_status'),
     ('check', 'logwatch'),
     ('check', 'logwatch_ec'),

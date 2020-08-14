@@ -108,7 +108,7 @@ def _mk_user_obj(username, password, automation=False):
 
 
 @contextlib.contextmanager
-def _create_and_destroy_user(automation=False):
+def _create_and_destroy_user(automation=False, role="user"):
     username = u'test123-' + get_random_string(size=5, from_ascii=ord('a'), to_ascii=ord('z'))
     password = u'Ischbinwischtisch'
     edit_users(_mk_user_obj(username, password, automation=automation))
@@ -127,7 +127,7 @@ def _create_and_destroy_user(automation=False):
                 'locked': False,
                 'language': 'de',
                 'pager': '',
-                'roles': ['user'],
+                'roles': [role],
                 'start_url': None,
                 'ui_theme': 'modern-dark',
             })))
@@ -149,6 +149,20 @@ def with_user(register_builtin_html, load_config):
 @pytest.fixture(scope='function')
 def with_user_login(with_user):
     user_id = with_user[0]
+    login.login(user_id)
+    yield user_id
+    config.clear_user_login()
+
+
+@pytest.fixture(scope='function')
+def with_admin(register_builtin_html, load_config):
+    with _create_and_destroy_user(automation=False, role="admin") as user:
+        yield user
+
+
+@pytest.fixture(scope='function')
+def with_admin_login(with_admin):
+    user_id = with_admin[0]
     login.login(user_id)
     yield user_id
     config.clear_user_login()

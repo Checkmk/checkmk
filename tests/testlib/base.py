@@ -64,8 +64,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'mssql_counters_pageactivity'),
     ('check', 'mssql_counters_sqlstats'),
     ('check', 'mssql_counters_transactions'),
-    ('check', 'mssql_datafiles'),
-    ('check', 'mssql_transactionlogs'),
     ('check', 'netapp_api_vf_stats'),
     ('check', 'netapp_api_vf_stats_traffic'),
     ('check', 'netscaler_sslcertificates'),

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Literal, Optional, Tuple, Union
 from ..agent_based_api.v0.type_defs import CheckGenerator
 
 from ..agent_based_api.v0 import Metric, render, Result, state
@@ -14,7 +14,8 @@ def is_linux_section(section: Dict[str, int]) -> bool:
     return {"PageTables", "Writeback", "Committed_AS"} <= section.keys()
 
 
-def get_levels_mode_from_value(warn: Optional[float]) -> str:
+def get_levels_mode_from_value(
+    warn: Optional[float],) -> Literal["abs_used", "abs_free", "perc_used", "perc_free"]:
     """get levels mode by looking at the value
 
     Levels may be given either as
@@ -29,9 +30,10 @@ def get_levels_mode_from_value(warn: Optional[float]) -> str:
         'abs_used'
 
     """
-    type_ = "perc" if isinstance(warn, float) else "abs"
-    reference = "used" if warn is not None and warn > 0 else "free"
-    return "%s_%s" % (type_, reference)
+    used_level = warn is not None and warn > 0
+    if isinstance(warn, float):  # percent
+        return "perc_used" if used_level else "perc_free"
+    return "abs_used" if used_level else "abs_free"
 
 
 def normalize_levels(

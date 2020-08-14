@@ -12,9 +12,11 @@ from cmk.gui.globals import html
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import PageMenu
-from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.type_defs import MegaMenu
 from cmk.gui.main_menu import mega_menu_registry
+
+from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
+from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 
 NewMode = Union[None, bool, str]
 ActionResult = Union[NewMode, Tuple[NewMode, str]]
@@ -72,6 +74,10 @@ class WatoMode(metaclass=abc.ABCMeta):
         else:
             breadcrumb = Breadcrumb()
 
+            topic_item = self._topic_breadcrumb_item()
+            if topic_item:
+                breadcrumb.append(topic_item)
+
         breadcrumb.append(self._breadcrumb_item())
 
         return breadcrumb
@@ -96,6 +102,34 @@ class WatoMode(metaclass=abc.ABCMeta):
         to link to the correct page.
         """
         return html.makeuri_contextless([("mode", self.name())], filename="wato.py")
+
+    def _topic_breadcrumb_item(self) -> Optional[BreadcrumbItem]:
+        """Return the BreadcrumbItem for the topic of this mode
+
+        For the top level modes we need to prepend the topic of the mode.
+        The mode is sadly not available directly in WatoMode. Instead it is
+        configured in the MainModule class that is related to the WatoMode.
+        There is no 1:1 connection between WatoMode / MainModule classes.
+        For the moment we lookup the main_module_registry to find the topics
+        for as many modes as possible.
+
+        TODO: Once all non top level modes have a parent_mode() method, we
+              know which modes are top level modes. Then we could move all
+              attributes from the MainModules to the WatoModes and create
+              the WATO menu items directly out of the WatoModes.
+        """
+        mode_name = self.name()
+
+        main_module = main_module_registry.get(mode_name)
+        if main_module is None:
+            return None
+            # TODO: Can be activated once all non top level modes have a parent_mode set
+            #raise RuntimeError("Could not determine topic breadcrumb item for mode %r" % mode_name)
+
+        return BreadcrumbItem(
+            title=main_module().topic.title,
+            url=None,
+        )
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         """Returns the data structure representing the page menu for this mode"""

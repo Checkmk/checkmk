@@ -103,10 +103,17 @@ def handle_acknowledgement():
 
 def _release_notes_breadcrumb() -> Breadcrumb:
     breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_setup())
+
+    breadcrumb.append(BreadcrumbItem(
+        title=_("Maintenance"),
+        url=None,
+    ))
+
     breadcrumb.append(BreadcrumbItem(
         title=_("Release notes"),
         url="version.py",
     ))
+
     return breadcrumb
 
 

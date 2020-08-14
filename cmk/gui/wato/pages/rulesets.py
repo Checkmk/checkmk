@@ -48,6 +48,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     rule_option_elements,
 )
+from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import RuleConditions
 from cmk.gui.watolib.rulespecs import (
@@ -57,6 +58,7 @@ from cmk.gui.watolib.rulespecs import (
 )
 
 from cmk.gui.plugins.wato.utils.main_menu import (
+    main_module_registry,
     MainMenu,
     MenuItem,
 )
@@ -361,6 +363,21 @@ class ModeRulesets(RulesetMode):
     @classmethod
     def permissions(cls):
         return ["rulesets"]
+
+    def _topic_breadcrumb_item(self) -> Optional[BreadcrumbItem]:
+        """Return the BreadcrumbItem for the topic of this mode"""
+
+        url = "wato.py?mode=rulesets&group=%s" % self._group_name
+        main_module = main_module_registry.get(url)
+        if main_module is None:
+            # Anomaly: We should not reach this, but currently we do for some pages. Best we can do
+            # at the moment is not to add a topic in this case.
+            return None
+
+        return BreadcrumbItem(
+            title=main_module().topic.title,
+            url=None,
+        )
 
     def _rulesets(self):
         return watolib.NonStaticChecksRulesets()

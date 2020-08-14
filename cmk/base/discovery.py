@@ -460,8 +460,10 @@ def _do_discovery_for(
 
 
 def _perform_host_label_discovery(
-        hostname: HostName, discovered_host_labels: DiscoveredHostLabels,
-        only_new: bool) -> Tuple[DiscoveredHostLabels, Counter[CheckPluginName]]:
+    hostname: HostName,
+    discovered_host_labels: DiscoveredHostLabels,
+    only_new: bool,
+) -> Tuple[DiscoveredHostLabels, Counter[CheckPluginName]]:
 
     # Take over old items if -I is selected
     if only_new:

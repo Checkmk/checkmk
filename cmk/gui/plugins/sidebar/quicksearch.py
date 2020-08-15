@@ -538,12 +538,12 @@ def generate_search_results(query):
 
 # TODO: Simplify code by making static things like _filter_shortname class members
 # and it's getters class methods
-class QuicksearchMatchPlugin(metaclass=abc.ABCMeta):
+class ABCLivestatusMatchPlugin(metaclass=abc.ABCMeta):
     def __init__(self, supported_livestatus_tables, preferred_livestatus_table, filter_shortname):
         self._filter_shortname = filter_shortname
         self._supported_livestatus_tables = supported_livestatus_tables
         self._preferred_livestatus_table = preferred_livestatus_table
-        super(QuicksearchMatchPlugin, self).__init__()
+        super(ABCLivestatusMatchPlugin, self).__init__()
 
     def get_filter_shortname(self):
         return self._filter_shortname
@@ -593,7 +593,7 @@ class QuicksearchMatchPlugin(metaclass=abc.ABCMeta):
         return patterns[0]
 
 
-class MatchPluginRegistry(cmk.utils.plugin_registry.Registry[Type[QuicksearchMatchPlugin]]):
+class MatchPluginRegistry(cmk.utils.plugin_registry.Registry[Type[ABCLivestatusMatchPlugin]]):
     def plugin_name(self, instance):
         return instance.__name__
 
@@ -602,7 +602,7 @@ match_plugin_registry = MatchPluginRegistry()
 
 
 @match_plugin_registry.register
-class GroupMatchPlugin(QuicksearchMatchPlugin):
+class GroupMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self, group_type=None, filter_shortname=None):
         super(GroupMatchPlugin, self).__init__(
             ["%sgroups" % group_type, "%ss" % group_type, "services"],
@@ -679,7 +679,7 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
 
 
 @match_plugin_registry.register
-class ServiceMatchPlugin(QuicksearchMatchPlugin):
+class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self):
         super(ServiceMatchPlugin, self).__init__(["services"], "services", "s")
 
@@ -715,7 +715,7 @@ class ServiceMatchPlugin(QuicksearchMatchPlugin):
 
 
 @match_plugin_registry.register
-class HostMatchPlugin(QuicksearchMatchPlugin):
+class HostMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self, livestatus_field=None, filter_shortname=None):
         super(HostMatchPlugin, self).__init__(["hosts", "services"], "hosts", filter_shortname)
         self._livestatus_field = livestatus_field  # address, name or alias
@@ -793,7 +793,7 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
 
 
 @match_plugin_registry.register
-class HosttagMatchPlugin(QuicksearchMatchPlugin):
+class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self):
         super(HosttagMatchPlugin, self).__init__(["hosts", "services"], "hosts", "tg")
 

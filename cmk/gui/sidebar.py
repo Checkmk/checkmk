@@ -55,10 +55,10 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     write_snapin_exception,
 )
 
-from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin
+from cmk.gui.plugins.sidebar.quicksearch import ABCLivestatusMatchPlugin
 from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer, get_show_more_setting
 
-quicksearch_match_plugins: List[Type[QuicksearchMatchPlugin]] = []
+quicksearch_match_plugins: List[Type[ABCLivestatusMatchPlugin]] = []
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False

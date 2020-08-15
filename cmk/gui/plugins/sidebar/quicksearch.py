@@ -77,7 +77,7 @@ class QuicksearchSnapin(SidebarSnapin):
             generate_results(q)
         except MKException as e:
             html.show_error("%s" % e)
-        except Exception as e:
+        except Exception:
             logger.exception("error generating quicksearch results")
             if config.debug:
                 raise
@@ -92,9 +92,9 @@ class QuicksearchSnapin(SidebarSnapin):
         raise HTTPRedirect(url)
 
 
-# Ensures the provided search string is a regex, does some basic conversion
-# and then tries to verify it is a regex
 def _to_regex(s):
+    """Ensures the provided search string is a regex, does some basic conversion
+    and then tries to verify it is a regex"""
     s = s.replace('*', '.*')
     cmk.gui.utils.validate_regex(s, varname=None)
 
@@ -111,8 +111,8 @@ class LivestatusSearchBase:
         return html.makeuri(new_params, delvars=["q"], filename="view.py")
 
 
-# Handles exactly one livestatus query
 class LivestatusSearchConductor(LivestatusSearchBase):
+    """Handles exactly one livestatus query"""
     def __init__(self, used_filters, filter_behaviour):
         # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
         # filter_behaviour: "continue"
@@ -224,14 +224,16 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             if plugin.is_used_for_table(self._livestatus_table, self._used_filters)
         ]
 
-    # Returns the livestatus table fitting the given filters
     def _determine_livestatus_table(self):
-        # Available tables
-        # hosts / services / hostgroups / servicegroups
+        """Returns the livestatus table fitting the given filters
 
-        # {table} -> {is_included_in_table}
-        # Hostgroups -> Hosts -> Services
-        # Servicegroups -> Services
+        Available tables
+        hosts / services / hostgroups / servicegroups
+
+        {table} -> {is_included_in_table}
+        Hostgroups -> Hosts -> Services
+        Servicegroups -> Services
+        """
 
         preferred_tables = []
         for shortname in self._used_filters.keys():
@@ -453,8 +455,8 @@ class LivestatusQuicksearch(LivestatusSearchBase):
                     LivestatusSearchConductor({filter_name: [_to_regex(self._query)]},
                                               filter_behaviour))
 
-    # Collect the raw data from livestatus
     def _conduct_search(self):
+        """Collect the raw data from livestatus"""
         total_rows = 0
         for idx, search_object in enumerate(self._search_objects):
             search_object.do_query()
@@ -477,22 +479,25 @@ class LivestatusQuicksearch(LivestatusSearchBase):
                             config.quicksearch_dropdown_limit)
                 break
 
-    # Generates elements out of the raw data
     def _evaluate_results(self):
+        """Generates elements out of the raw data"""
         for search_object in self._search_objects:
             search_object.create_result_elements()
 
-    # Renders the elements
     def _render_dropdown_elements(self):
-        # Show search topic if at least two search objects provide elements
+        """Renders the elements
+
+        Show search topic if at least two search objects provide elements
+        """
         show_match_topics = len([x for x in self._search_objects if x.num_rows() > 0]) > 1
 
         for search_object in self._search_objects:
             if not search_object.num_rows():
                 continue
+
             if show_match_topics:
                 match_topic = search_object.get_match_topic()
-                html.div(_("Results for %s") % match_topic, class_="topic")
+                html.div(match_topic, class_="topic")
 
             for entry in sorted(search_object.get_elements(), key=lambda x: x["display_text"]):
                 html.a(entry["display_text"],

@@ -128,7 +128,6 @@ class LivestatusSearchConductor:
 
         self._livestatus_command: str = ""  # Computed livestatus query
         self._rows: Rows = []  # Raw data from livestatus
-        self._elements: List[Result] = []  # Postprocessed rows
         self._queried_livestatus_columns: List[str] = []
 
     def get_filter_behaviour(self) -> str:
@@ -145,9 +144,6 @@ class LivestatusSearchConductor:
 
     def row_limit_exceeded(self) -> bool:
         return self._too_much_rows
-
-    def get_elements(self) -> List[Result]:
-        return self._elements
 
     def get_match_topic(self) -> str:
         if len(self._used_filters.keys()) > 1:
@@ -281,10 +277,11 @@ class LivestatusSearchConductor:
 
         return url_params
 
-    def create_result_elements(self) -> None:
-        self._elements = []
+    def create_result_elements(self) -> List[Result]:
+        elements: List[Result] = []
+
         if not self._rows:
-            return
+            return elements
 
         target_view = self._get_target_view()
 
@@ -317,9 +314,9 @@ class LivestatusSearchConductor:
             entry["url"] = _build_url(url_tokens)
 
             entry["raw_data"] = row
-            self._elements.append(entry)
+            elements.append(entry)
 
-        self._generate_display_texts()
+        return self._generate_display_texts(elements)
 
     def _get_target_view(self, exact_match: bool = True) -> ViewName:
         if exact_match:
@@ -343,46 +340,51 @@ class LivestatusSearchConductor:
 
         raise NotImplementedError()
 
-    def _generate_display_texts(self) -> None:
-        for element in self._elements:
+    def _generate_display_texts(self, elements: List[Result]) -> List[Result]:
+        """Creates the text displayed to the user
+
+        Analyzes all display texts and ensures that we have unique ones"""
+        for element in elements:
             if self._livestatus_table == "services":
                 element["display_text"] = element["raw_data"]["description"]
             else:
                 element["display_text"] = element["text_tokens"][0][1]
 
-        if self._element_texts_unique():
-            return
+        if self._element_texts_unique(elements):
+            return elements
 
         # Some (ugly) special handling when the results are not unique
         # Whenever this happens we try to find a fitting second value
 
         if self._livestatus_table in ["hostgroups", "servicegroups"]:
             # Discard redundant hostgroups
-            new_elements = []
+            new_elements: List[Result] = []
             used_groups: Set[str] = set()
-            for element in self._elements:
+            for element in elements:
                 if element["display_text"] in used_groups:
                     continue
                 new_elements.append(element)
                 used_groups.add(element["display_text"])
-            self._elements = new_elements
-        else:
-            # Add additional info to the display text
-            for element in self._elements:
-                hostname = element["raw_data"].get("host_name", element["raw_data"].get("name"))
-                if "&host_regex=" not in element["url"]:
-                    element["url"] += "&host_regex=%s" % hostname
+            return new_elements
 
-                for shortname, text in element["text_tokens"]:
-                    if shortname in ["h", "al"] and text not in element["display_text"]:
-                        element["display_text"] += " <b>%s</b>" % text
-                        break
-                else:
-                    element["display_text"] += " <b>%s</b>" % hostname
+        # Add additional info to the display text
+        for element in elements:
+            hostname = element["raw_data"].get("host_name", element["raw_data"].get("name"))
+            if "&host_regex=" not in element["url"]:
+                element["url"] += "&host_regex=%s" % hostname
 
-    def _element_texts_unique(self) -> bool:
+            for shortname, text in element["text_tokens"]:
+                if shortname in ["h", "al"] and text not in element["display_text"]:
+                    element["display_text"] += " <b>%s</b>" % text
+                    break
+            else:
+                element["display_text"] += " <b>%s</b>" % hostname
+
+        return elements
+
+    def _element_texts_unique(self, elements: List[Result]) -> bool:
         used_texts: Set[str] = set()
-        for entry in self._elements:
+        for entry in elements:
             if entry["display_text"] in used_texts:
                 return False
             used_texts.add(entry["display_text"])
@@ -402,8 +404,8 @@ class LivestatusQuicksearch:
         except TooManyRowsError as e:
             html.show_warning(str(e))
 
-        self._evaluate_results()
-        self._render_dropdown_elements()
+        results_by_topic = self._evaluate_results()
+        self._show_dropdown_elements(results_by_topic)
 
     def generate_search_url(self) -> str:
         try:
@@ -482,27 +484,27 @@ class LivestatusQuicksearch:
                             config.quicksearch_dropdown_limit)
                 break
 
-    def _evaluate_results(self) -> None:
+    def _evaluate_results(self) -> Dict[str, List[Result]]:
         """Generates elements out of the raw data"""
+        results_by_topic: Dict[str, List[Result]] = {}
         for search_object in self._search_objects:
-            search_object.create_result_elements()
+            results = search_object.create_result_elements()
+            if results:
+                results_by_topic[search_object.get_match_topic()] = results
+        return results_by_topic
 
-    def _render_dropdown_elements(self) -> None:
+    def _show_dropdown_elements(self, results_by_topic: Dict[str, List[Result]]) -> None:
         """Renders the elements
 
         Show search topic if at least two search objects provide elements
         """
-        show_match_topics = len([x for x in self._search_objects if x.num_rows() > 0]) > 1
+        show_match_topics = len(results_by_topic) > 1
 
-        for search_object in self._search_objects:
-            if not search_object.num_rows():
-                continue
-
+        for match_topic, results in sorted(results_by_topic.items(), key=lambda x: x[0]):
             if show_match_topics:
-                match_topic = search_object.get_match_topic()
                 html.div(match_topic, class_="topic")
 
-            for entry in sorted(search_object.get_elements(), key=lambda x: x["display_text"]):
+            for entry in sorted(results, key=lambda x: x["display_text"]):
                 html.a(entry["display_text"],
                        id="result_%s" % self._query,
                        href=entry["url"],

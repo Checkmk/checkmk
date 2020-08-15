@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Predefine conditions that can be used in the WATO rule editor"""
 
-from typing import List
+from typing import List, Optional, Type
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -29,6 +29,7 @@ from cmk.gui.watolib.rulespecs import ServiceRulespec
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.plugins.wato import (
+    WatoMode,
     ConfigDomainGUI,
     SimpleModeType,
     SimpleListMode,
@@ -165,6 +166,10 @@ class ModeEditPredefinedCondition(SimpleEditMode):
     @classmethod
     def permissions(cls):
         return ["rulesets"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModePredefinedConditions
 
     def __init__(self):
         super(ModeEditPredefinedCondition, self).__init__(

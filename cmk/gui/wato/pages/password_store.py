@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
+from typing import List, Optional, Type
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -22,6 +22,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.plugins.wato import (
+    WatoMode,
     ConfigDomainCore,
     SimpleModeType,
     SimpleListMode,
@@ -117,6 +118,10 @@ class ModeEditPassword(SimpleEditMode):
     @classmethod
     def permissions(cls):
         return ["passwords"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModePasswords
 
     def __init__(self):
         super(ModeEditPassword, self).__init__(

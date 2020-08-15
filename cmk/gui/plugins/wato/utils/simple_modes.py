@@ -23,7 +23,6 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
@@ -35,6 +34,15 @@ from cmk.gui.valuespec import (
     Checkbox,
     DocumentationURL,
     RuleComment,
+)
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
 )
 
 
@@ -145,14 +153,34 @@ class SimpleListMode(SimpleWatoModeBase):
         """
         raise MKUserError("_action", _("The action '%s' is not implemented") % action)
 
-    def _new_context_button_label(self) -> str:
-        return _("New %s") % self._mode_type.name_singular()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name=self._mode_type.type_name(),
+                    title=self._mode_type.name_singular().title(),
+                    topics=[
+                        PageMenuTopic(
+                            title=self._mode_type.name_singular().title(),
+                            entries=[
+                                PageMenuEntry(
+                                    title=self._new_context_button_label(),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        html.makeuri_contextless([
+                                            ("mode", self._mode_type.edit_mode_name())
+                                        ])),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(self._new_context_button_label(),
-                            html.makeuri_contextless([("mode", self._mode_type.edit_mode_name())]),
-                            "new")
+    def _new_context_button_label(self) -> str:
+        return _("Add %s") % self._mode_type.name_singular()
 
     def action(self):
         if not html.transaction_valid():
@@ -279,10 +307,8 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
             return _("New %s") % self._mode_type.name_singular()
         return _("Edit %s: %s") % (self._mode_type.name_singular(), self._entry["title"])
 
-    def buttons(self):
-        html.context_button(_("Back"),
-                            html.makeuri_contextless([("mode", self._mode_type.list_mode_name())]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb, form_name="edit", button_name="save")
 
     def valuespec(self):
         general_elements = self._vs_mandatory_elements()
@@ -411,6 +437,5 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
         vs.set_focus("_edit")
         forms.end()
 
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()

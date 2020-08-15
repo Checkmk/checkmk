@@ -7,7 +7,7 @@
 import abc
 import re
 import traceback
-from typing import Any, Dict, List, Set, Tuple, Type
+from typing import Any, Dict, List, Set, Tuple
 
 import livestatus
 
@@ -149,9 +149,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         return self._get_plugin_with_shortname(shortname).get_match_topic()
 
     def _get_plugin_with_shortname(self, shortname):
-        for plugin_class in match_plugin_registry.values():
-            # FIXME: register instances in match_plugin_registry (CMK-5149)
-            plugin = plugin_class()  # type: ignore[call-arg]
+        for plugin in match_plugin_registry.values():
             if plugin.get_filter_shortname() == shortname:
                 return plugin
         raise NotImplementedError()
@@ -218,9 +216,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
     def _get_used_search_plugins(self):
         return [
-            plugin for plugin_class in match_plugin_registry.values()
-            # FIXME: register instances in match_plugin_registry (CMK-5149)
-            for plugin in [plugin_class()]  # type: ignore[call-arg]
+            plugin for plugin in match_plugin_registry.values()
             if plugin.is_used_for_table(self._livestatus_table, self._used_filters)
         ]
 
@@ -424,11 +420,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
         self._conduct_search()
 
     def _determine_search_objects(self):
-        filter_names = {
-            # FIXME: register instances in match_plugin_registry (CMK-5149)
-            "%s" % x().get_filter_shortname()  # type: ignore[call-arg]
-            for x in match_plugin_registry.values()
-        }
+        filter_names = {"%s" % x.get_filter_shortname() for x in match_plugin_registry.values()}
         filter_regex = "|".join(filter_names)
 
         # Goal: "((^| )(hg|h|sg|s|al|tg|ad):)"
@@ -593,15 +585,14 @@ class ABCLivestatusMatchPlugin(metaclass=abc.ABCMeta):
         return patterns[0]
 
 
-class MatchPluginRegistry(cmk.utils.plugin_registry.Registry[Type[ABCLivestatusMatchPlugin]]):
+class MatchPluginRegistry(cmk.utils.plugin_registry.Registry[ABCLivestatusMatchPlugin]):
     def plugin_name(self, instance):
-        return instance.__name__
+        return instance.get_filter_shortname()
 
 
 match_plugin_registry = MatchPluginRegistry()
 
 
-@match_plugin_registry.register
 class GroupMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self, group_type=None, filter_shortname=None):
         super(GroupMatchPlugin, self).__init__(
@@ -678,7 +669,17 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
         return value, [(filter_name, value)]
 
 
-@match_plugin_registry.register
+match_plugin_registry.register(GroupMatchPlugin(
+    group_type="service",
+    filter_shortname="sg",
+))
+
+match_plugin_registry.register(GroupMatchPlugin(
+    group_type="host",
+    filter_shortname="hg",
+))
+
+
 class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self):
         super(ServiceMatchPlugin, self).__init__(["services"], "services", "s")
@@ -714,7 +715,9 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
         return field_value, [(search_key, field_value)]
 
 
-@match_plugin_registry.register
+match_plugin_registry.register(ServiceMatchPlugin())
+
+
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self, livestatus_field=None, filter_shortname=None):
         super(HostMatchPlugin, self).__init__(["hosts", "services"], "hosts", filter_shortname)
@@ -792,7 +795,22 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
         return field_value, url_info
 
 
-@match_plugin_registry.register
+match_plugin_registry.register(HostMatchPlugin(
+    livestatus_field="name",
+    filter_shortname="h",
+))
+
+match_plugin_registry.register(HostMatchPlugin(
+    livestatus_field="alias",
+    filter_shortname="al",
+))
+
+match_plugin_registry.register(HostMatchPlugin(
+    livestatus_field="address",
+    filter_shortname="ad",
+))
+
+
 class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self):
         super(HosttagMatchPlugin, self).__init__(["hosts", "services"], "hosts", "tg")
@@ -879,32 +897,4 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
         return "", url_infos
 
 
-@match_plugin_registry.register
-class ServiceGroupMatchPlugin(GroupMatchPlugin):
-    def __init__(self):
-        super(ServiceGroupMatchPlugin, self).__init__(group_type="service", filter_shortname="sg")
-
-
-@match_plugin_registry.register
-class HostGroupMatchPlugin(GroupMatchPlugin):
-    def __init__(self):
-        super(HostGroupMatchPlugin, self).__init__(group_type="host", filter_shortname="hg")
-
-
-@match_plugin_registry.register
-class HostNameMatchPlugin(HostMatchPlugin):
-    def __init__(self):
-        super(HostNameMatchPlugin, self).__init__(livestatus_field="name", filter_shortname="h")
-
-
-@match_plugin_registry.register
-class HostAliasMatchPlugin(HostMatchPlugin):
-    def __init__(self):
-        super(HostAliasMatchPlugin, self).__init__(livestatus_field="alias", filter_shortname="al")
-
-
-@match_plugin_registry.register
-class HostAddressMatchPlugin(HostMatchPlugin):
-    def __init__(self):
-        super(HostAddressMatchPlugin, self).__init__(livestatus_field="address",
-                                                     filter_shortname="ad")
+match_plugin_registry.register(HosttagMatchPlugin())

@@ -150,7 +150,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
     def _get_plugin_with_shortname(self, shortname):
         for plugin in match_plugin_registry.values():
-            if plugin.get_filter_shortname() == shortname:
+            if plugin.name == shortname:
                 return plugin
         raise NotImplementedError()
 
@@ -188,7 +188,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
         for plugin in self._used_search_plugins:
             columns_to_query.update(set(plugin.get_livestatus_columns(self._livestatus_table)))
-            name = plugin.get_filter_shortname()
+            name = plugin.name
             livestatus_filter_domains.setdefault(name, [])
             livestatus_filter_domains[name].append(
                 plugin.get_livestatus_filters(self._livestatus_table, self._used_filters))
@@ -289,8 +289,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             entry: Dict[str, Any] = {"text_tokens": []}
             url_params: List[Tuple[str, str]] = []
             skip_site = False
-            for filter_shortname in self._used_filters:
-                plugin = self._get_plugin_with_shortname(filter_shortname)
+            for name in self._used_filters:
+                plugin = self._get_plugin_with_shortname(name)
 
                 if plugin.is_group_match():
                     skip_site = True
@@ -301,7 +301,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
                     continue
                 text, url_filters = match_info
                 url_params.extend(url_filters)
-                entry["text_tokens"].append((plugin.get_filter_shortname(), text))
+                entry["text_tokens"].append((plugin.name, text))
 
             url_tokens = [("view_name", target_view)] + url_params
             if not skip_site:
@@ -420,7 +420,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
         self._conduct_search()
 
     def _determine_search_objects(self):
-        filter_names = {"%s" % x.get_filter_shortname() for x in match_plugin_registry.values()}
+        filter_names = {"%s" % x.name for x in match_plugin_registry.values()}
         filter_regex = "|".join(filter_names)
 
         # Goal: "((^| )(hg|h|sg|s|al|tg|ad):)"
@@ -528,30 +528,29 @@ def generate_search_results(query):
 #   '----------------------------------------------------------------------'
 
 
-# TODO: Simplify code by making static things like _filter_shortname class members
-# and it's getters class methods
 class ABCLivestatusMatchPlugin(metaclass=abc.ABCMeta):
-    def __init__(self, supported_livestatus_tables, preferred_livestatus_table, filter_shortname):
-        self._filter_shortname = filter_shortname
+    def __init__(self, supported_livestatus_tables, preferred_livestatus_table, name):
+        self._name = name
         self._supported_livestatus_tables = supported_livestatus_tables
         self._preferred_livestatus_table = preferred_livestatus_table
         super(ABCLivestatusMatchPlugin, self).__init__()
 
-    def get_filter_shortname(self):
-        return self._filter_shortname
+    @property
+    def name(self):
+        return self._name
 
     def get_preferred_livestatus_table(self):
         return self._preferred_livestatus_table
 
     def is_filter_set(self, used_filters):
-        return self.get_filter_shortname() in used_filters
+        return self.name in used_filters
 
     def is_used_for_table(self, livestatus_table, used_filters):
         # Check if this filters handles the table at all
         if livestatus_table not in self._supported_livestatus_tables:
             return False
 
-        if self.get_filter_shortname() not in used_filters:
+        if self.name not in used_filters:
             return False
 
         return True
@@ -579,7 +578,7 @@ class ABCLivestatusMatchPlugin(metaclass=abc.ABCMeta):
         return re.match(pattern, value)
 
     def _create_textfilter_regex(self, used_filters):
-        patterns = used_filters[self.get_filter_shortname()]
+        patterns = used_filters[self.name]
         if len(patterns) > 1:
             return "(%s)" % "|".join(patterns)
         return patterns[0]
@@ -587,18 +586,18 @@ class ABCLivestatusMatchPlugin(metaclass=abc.ABCMeta):
 
 class MatchPluginRegistry(cmk.utils.plugin_registry.Registry[ABCLivestatusMatchPlugin]):
     def plugin_name(self, instance):
-        return instance.get_filter_shortname()
+        return instance.name
 
 
 match_plugin_registry = MatchPluginRegistry()
 
 
 class GroupMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, group_type=None, filter_shortname=None):
+    def __init__(self, group_type=None, name=None):
         super(GroupMatchPlugin, self).__init__(
             ["%sgroups" % group_type, "%ss" % group_type, "services"],
             "%sgroups" % group_type,
-            filter_shortname,
+            name,
         )
         self._group_type = group_type
 
@@ -623,7 +622,7 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
         else:
             filter_prefix = "%s_groups >= " % self._group_type
 
-        for entry in used_filters.get(self.get_filter_shortname()):
+        for entry in used_filters.get(self.name):
             filter_lines.append("Filter: %s%s" % (filter_prefix, entry))
 
         if len(filter_lines) > 1:
@@ -661,7 +660,7 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
         if row:
             value = row.get(row_fieldname)
         else:
-            value = used_filters.get(self.get_filter_shortname())
+            value = used_filters.get(self.name)
 
         if isinstance(value, list):
             value = "|".join(value)
@@ -671,12 +670,12 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
 
 match_plugin_registry.register(GroupMatchPlugin(
     group_type="service",
-    filter_shortname="sg",
+    name="sg",
 ))
 
 match_plugin_registry.register(GroupMatchPlugin(
     group_type="host",
-    filter_shortname="hg",
+    name="hg",
 ))
 
 
@@ -692,7 +691,7 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
 
     def get_livestatus_filters(self, livestatus_table, used_filters):
         filter_lines = []
-        for entry in used_filters.get(self.get_filter_shortname()):
+        for entry in used_filters.get(self.name):
             filter_lines.append("Filter: service_description ~~ %s" % entry)
 
         if len(filter_lines) > 1:
@@ -719,8 +718,8 @@ match_plugin_registry.register(ServiceMatchPlugin())
 
 
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, livestatus_field=None, filter_shortname=None):
-        super(HostMatchPlugin, self).__init__(["hosts", "services"], "hosts", filter_shortname)
+    def __init__(self, livestatus_field, name):
+        super(HostMatchPlugin, self).__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
     def get_match_topic(self):
@@ -740,7 +739,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
 
     def get_livestatus_filters(self, livestatus_table, used_filters):
         filter_lines = []
-        for entry in used_filters.get(self.get_filter_shortname()):
+        for entry in used_filters.get(self.name):
             filter_lines.append("Filter: %s ~~ %s" %
                                 (self._get_real_fieldname(livestatus_table), entry))
 
@@ -797,17 +796,17 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
 
 match_plugin_registry.register(HostMatchPlugin(
     livestatus_field="name",
-    filter_shortname="h",
+    name="h",
 ))
 
 match_plugin_registry.register(HostMatchPlugin(
     livestatus_field="alias",
-    filter_shortname="al",
+    name="al",
 ))
 
 match_plugin_registry.register(HostMatchPlugin(
     livestatus_field="address",
-    filter_shortname="ad",
+    name="ad",
 ))
 
 
@@ -837,10 +836,10 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
     def get_livestatus_filters(self, livestatus_table, used_filters):
         filter_lines = []
 
-        if len(used_filters.get(self.get_filter_shortname())) > 3:
+        if len(used_filters.get(self.name)) > 3:
             raise MKGeneralException("You can only set up to three 'tg:' filters")
 
-        for entry in used_filters.get(self.get_filter_shortname()):
+        for entry in used_filters.get(self.name):
             if ":" not in entry:
                 # Be compatible to pre 1.6 filtering for some time (no
                 # tag-group:tag-value, but tag-value only)
@@ -871,7 +870,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
         hosttag_to_group_dict = self._get_hosttag_dict()
         auxtag_to_group_dict = self._get_auxtag_dict()
 
-        for idx, entry in enumerate(used_filters.get(self.get_filter_shortname())):
+        for idx, entry in enumerate(used_filters.get(self.name)):
             if ":" not in entry:
                 # Be compatible to pre 1.6 filtering for some time (no
                 # tag-group:tag-value, but tag-value only)

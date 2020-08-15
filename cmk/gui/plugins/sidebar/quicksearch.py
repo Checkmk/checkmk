@@ -113,13 +113,12 @@ class TooManyRowsError(MKException):
     pass
 
 
-class LivestatusSearchBase:
-    def _build_url(self, url_params: HTTPVariables):
-        new_params = url_params[:]
-        return html.makeuri(new_params, delvars=["q"], filename="view.py")
+def _build_url(url_params: HTTPVariables) -> str:
+    new_params = url_params[:]
+    return html.makeuri(new_params, delvars=["q"], filename="view.py")
 
 
-class LivestatusSearchConductor(LivestatusSearchBase):
+class LivestatusSearchConductor:
     """Handles exactly one livestatus query"""
     def __init__(self, used_filters: UsedFilters, filter_behaviour: str) -> None:
         # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
@@ -315,7 +314,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             if not skip_site:
                 url_tokens.append(("site", row["site"]))
 
-            entry["url"] = self._build_url(url_tokens)
+            entry["url"] = _build_url(url_tokens)
 
             entry["raw_data"] = row
             self._elements.append(entry)
@@ -390,10 +389,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         return True
 
 
-class LivestatusQuicksearch(LivestatusSearchBase):
+class LivestatusQuicksearch:
     def __init__(self, query: SearchQuery) -> None:
-        super(LivestatusQuicksearch, self).__init__()
-
         self._query: SearchQuery = query
 
         # Each of these objects do exactly one ls query
@@ -427,7 +424,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
                 ("service_regex", self._query),
             ])
 
-        return self._build_url(url_params)
+        return _build_url(url_params)
 
     def _query_data(self) -> None:
         self._determine_search_objects()

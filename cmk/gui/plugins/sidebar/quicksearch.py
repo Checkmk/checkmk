@@ -7,7 +7,8 @@
 import abc
 import re
 import traceback
-from typing import Any, Dict, List, Set, Optional
+from dataclasses import dataclass
+from typing import Dict, List, Set, Optional, Tuple
 
 import livestatus
 
@@ -32,7 +33,15 @@ LivestatusTable = str
 LivestatusColumn = str
 LivestatusFilterHeaders = str
 UsedFilters = Dict[str, List[str]]
-Result = Dict[str, Any]
+
+
+@dataclass
+class Result:
+    """Intermediate representation of a search result"""
+    text_tokens: List[Tuple[str, str]]
+    url: str
+    row: Row
+    display_text: str
 
 
 @snapin_registry.register
@@ -287,7 +296,7 @@ class LivestatusSearchConductor:
 
         # Feed each row to the filters and let them add additional text/url infos
         for row in self._rows:
-            entry: Result = {"text_tokens": []}
+            text_tokens: List[Tuple[str, str]] = []
             url_params: HTTPVariables = []
             skip_site = False
             for name in self._used_filters:
@@ -302,7 +311,7 @@ class LivestatusSearchConductor:
                     continue
                 text, url_filters = match_info
                 url_params.extend(url_filters)
-                entry["text_tokens"].append((plugin.name, text))
+                text_tokens.append((plugin.name, text))
 
             url_tokens: HTTPVariables = []
             url_tokens.append(("view_name", target_view))
@@ -311,10 +320,13 @@ class LivestatusSearchConductor:
             if not skip_site:
                 url_tokens.append(("site", row["site"]))
 
-            entry["url"] = _build_url(url_tokens)
-
-            entry["raw_data"] = row
-            elements.append(entry)
+            elements.append(
+                Result(
+                    text_tokens=text_tokens,
+                    url=_build_url(url_tokens),
+                    row=row,
+                    display_text="",  # Is created later by self._generate_display_texts
+                ))
 
         return self._generate_display_texts(elements)
 
@@ -346,9 +358,9 @@ class LivestatusSearchConductor:
         Analyzes all display texts and ensures that we have unique ones"""
         for element in elements:
             if self._livestatus_table == "services":
-                element["display_text"] = element["raw_data"]["description"]
+                element.display_text = element.row["description"]
             else:
-                element["display_text"] = element["text_tokens"][0][1]
+                element.display_text = element.text_tokens[0][1]
 
         if self._element_texts_unique(elements):
             return elements
@@ -361,33 +373,33 @@ class LivestatusSearchConductor:
             new_elements: List[Result] = []
             used_groups: Set[str] = set()
             for element in elements:
-                if element["display_text"] in used_groups:
+                if element.display_text in used_groups:
                     continue
                 new_elements.append(element)
-                used_groups.add(element["display_text"])
+                used_groups.add(element.display_text)
             return new_elements
 
         # Add additional info to the display text
         for element in elements:
-            hostname = element["raw_data"].get("host_name", element["raw_data"].get("name"))
-            if "&host_regex=" not in element["url"]:
-                element["url"] += "&host_regex=%s" % hostname
+            hostname = element.row.get("host_name", element.row.get("name"))
+            if "&host_regex=" not in element.url:
+                element.url += "&host_regex=%s" % hostname
 
-            for shortname, text in element["text_tokens"]:
-                if shortname in ["h", "al"] and text not in element["display_text"]:
-                    element["display_text"] += " <b>%s</b>" % text
+            for shortname, text in element.text_tokens:
+                if shortname in ["h", "al"] and text not in element.display_text:
+                    element.display_text += " <b>%s</b>" % text
                     break
             else:
-                element["display_text"] += " <b>%s</b>" % hostname
+                element.display_text += " <b>%s</b>" % hostname
 
         return elements
 
     def _element_texts_unique(self, elements: List[Result]) -> bool:
         used_texts: Set[str] = set()
         for entry in elements:
-            if entry["display_text"] in used_texts:
+            if entry.display_text in used_texts:
                 return False
-            used_texts.add(entry["display_text"])
+            used_texts.add(entry.display_text)
         return True
 
 
@@ -504,10 +516,10 @@ class LivestatusQuicksearch:
             if show_match_topics:
                 html.div(match_topic, class_="topic")
 
-            for entry in sorted(results, key=lambda x: x["display_text"]):
-                html.a(entry["display_text"],
+            for result in sorted(results, key=lambda x: x.display_text):
+                html.a(result.display_text,
                        id="result_%s" % self._query,
-                       href=entry["url"],
+                       href=result.url,
                        target="main")
 
 

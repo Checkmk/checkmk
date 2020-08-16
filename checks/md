@@ -104,6 +104,8 @@ def parse_md(info):
     parsed = {}
     instance = {}
     for line in info:
+        if line[0].startswith("Personalities"):
+            continue
         if line[0].startswith("md") and line[1] == ':':
             if line[3].startswith("(") and line[3].endswith(")"):
                 raid_state = line[2] + line[3]

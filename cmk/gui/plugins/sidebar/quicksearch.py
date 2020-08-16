@@ -9,6 +9,7 @@ import re
 import traceback
 from dataclasses import dataclass
 from typing import Dict, List, Set, Optional, Tuple
+from enum import Enum, unique
 
 import livestatus
 
@@ -42,6 +43,16 @@ class Result:
     url: str
     row: Row
     display_text: str
+
+
+@unique
+class FilterBehaviour(Enum):
+    # Continue search
+    CONTINUE = "continue"
+    # Search finished: Only show results of this filter
+    FINISHED_DISTINCT = "finished_distinct"
+    # Search finished: Also show all results of previous filters
+    FINISHED = "finished"
 
 
 @snapin_registry.register
@@ -136,9 +147,8 @@ def _build_url(url_params: HTTPVariables) -> str:
 
 class LivestatusSearchConductor:
     """Handles exactly one livestatus query"""
-    def __init__(self, used_filters: UsedFilters, filter_behaviour: str) -> None:
+    def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
-        # filter_behaviour: "continue"
         self._used_filters = used_filters
         self._filter_behaviour = filter_behaviour
 
@@ -146,7 +156,8 @@ class LivestatusSearchConductor:
         self._rows: Rows = []  # Raw data from livestatus
         self._queried_livestatus_columns: List[str] = []
 
-    def get_filter_behaviour(self) -> str:
+    @property
+    def filter_behaviour(self) -> FilterBehaviour:
         return self._filter_behaviour
 
     def do_query(self) -> None:
@@ -293,7 +304,7 @@ class LivestatusSearchConductor:
 
         return url_params
 
-    def create_result_elements(self) -> List[Result]:
+    def create_results(self) -> List[Result]:
         elements: List[Result] = []
 
         if not self._rows:
@@ -465,11 +476,13 @@ class LivestatusQuicksearch:
                 filter_name = filter_type.strip().rstrip(":")
                 filter_spec.setdefault(filter_name, []).append(filter_text)
                 current_string = current_string[:offset]
-            self._search_objects.append(LivestatusSearchConductor(filter_spec, "continue"))
+            self._search_objects.append(
+                LivestatusSearchConductor(filter_spec, FilterBehaviour.CONTINUE))
         else:
             # No explicit filters set.
             # Use configured quicksearch search order
-            for (filter_name, filter_behaviour) in config.quicksearch_search_order:
+            for (filter_name, filter_behaviour_str) in config.quicksearch_search_order:
+                filter_behaviour = FilterBehaviour[filter_behaviour_str.upper()]
                 self._search_objects.append(
                     LivestatusSearchConductor({filter_name: [_to_regex(self._query)]},
                                               filter_behaviour))
@@ -490,8 +503,9 @@ class LivestatusQuicksearch:
                 raise TooManyRowsError(
                     _("More than %d results") % config.quicksearch_dropdown_limit)
 
-            if search_object.num_rows() > 0 and search_object.get_filter_behaviour() != "continue":
-                if search_object.get_filter_behaviour() == "finished_distinct":
+            if (search_object.num_rows() > 0 and
+                    search_object.filter_behaviour is not FilterBehaviour.CONTINUE):
+                if search_object.filter_behaviour is FilterBehaviour.FINISHED_DISTINCT:
                     # Discard all data of previous filters and break
                     for i in range(idx - 1, -1, -1):
                         self._search_objects[i].remove_rows_from_end(
@@ -502,7 +516,7 @@ class LivestatusQuicksearch:
         """Generates elements out of the raw data"""
         results_by_topic: Dict[str, List[Result]] = {}
         for search_object in self._search_objects:
-            results = search_object.create_result_elements()
+            results = search_object.create_results()
             if results:
                 results_by_topic[search_object.get_match_topic()] = results
         return results_by_topic

@@ -86,14 +86,21 @@ class QuicksearchSnapin(SidebarSnapin):
         }
 
     def _ajax_search(self) -> None:
-        q = _maybe_strip(html.request.get_unicode_input('q'))
-        if not q:
+        """Generate the search result list"""
+        query = _maybe_strip(html.request.get_unicode_input('q'))
+        if not query:
             return
 
         try:
-            generate_results(q)
+            results = LivestatusQuicksearch(query).generate_results()
+            ResultRenderer().show(results, query)
+
+        except TooManyRowsError as e:
+            html.show_warning(str(e))
+
         except MKException as e:
             html.show_error("%s" % e)
+
         except Exception:
             logger.exception("error generating quicksearch results")
             if config.debug:
@@ -101,12 +108,12 @@ class QuicksearchSnapin(SidebarSnapin):
             html.show_error(traceback.format_exc())
 
     def _page_search_open(self) -> None:
-        q = _maybe_strip(html.request.var('q'))
-        if not q:
+        """Generate the URL to the view that is opened when confirming the search field"""
+        query = _maybe_strip(html.request.var('q'))
+        if not query:
             return
 
-        url = generate_search_results(q)
-        raise HTTPRedirect(url)
+        raise HTTPRedirect(LivestatusQuicksearch(query).generate_search_url())
 
 
 def _to_regex(s):
@@ -410,14 +417,9 @@ class LivestatusQuicksearch:
         # Each of these objects do exactly one ls query
         self._search_objects: List[LivestatusSearchConductor] = []
 
-    def generate_dropdown_results(self) -> None:
-        try:
-            self._query_data()
-        except TooManyRowsError as e:
-            html.show_warning(str(e))
-
-        results_by_topic = self._evaluate_results()
-        self._show_dropdown_elements(results_by_topic)
+    def generate_results(self) -> Dict[str, List[Result]]:
+        self._query_data()
+        return self._evaluate_results()
 
     def generate_search_url(self) -> str:
         try:
@@ -505,7 +507,16 @@ class LivestatusQuicksearch:
                 results_by_topic[search_object.get_match_topic()] = results
         return results_by_topic
 
-    def _show_dropdown_elements(self, results_by_topic: Dict[str, List[Result]]) -> None:
+
+def _maybe_strip(param: Optional[str]) -> Optional[str]:
+    if param is None:
+        return None
+    return param.strip()
+
+
+class ResultRenderer:
+    """HTML rendering the matched results"""
+    def show(self, results_by_topic: Dict[str, List[Result]], query: SearchQuery) -> None:
         """Renders the elements
 
         Show search topic if at least two search objects provide elements
@@ -517,26 +528,7 @@ class LivestatusQuicksearch:
                 html.div(match_topic, class_="topic")
 
             for result in sorted(results, key=lambda x: x.display_text):
-                html.a(result.display_text,
-                       id="result_%s" % self._query,
-                       href=result.url,
-                       target="main")
-
-
-def _maybe_strip(param: Optional[str]) -> Optional[str]:
-    if param is None:
-        return None
-    return param.strip()
-
-
-def generate_results(query: SearchQuery) -> None:
-    quicksearch = LivestatusQuicksearch(query)
-    quicksearch.generate_dropdown_results()
-
-
-def generate_search_results(query: SearchQuery) -> str:
-    quicksearch = LivestatusQuicksearch(query)
-    return quicksearch.generate_search_url()
+                html.a(result.display_text, id="result_%s" % query, href=result.url, target="main")
 
 
 #.

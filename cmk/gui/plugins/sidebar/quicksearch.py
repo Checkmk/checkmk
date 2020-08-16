@@ -103,7 +103,7 @@ class QuicksearchSnapin(SidebarSnapin):
             return
 
         try:
-            results = LivestatusQuicksearch(query).generate_results()
+            results = QuicksearchManager(query).generate_results()
             ResultRenderer().show(results, query)
 
         except TooManyRowsError as e:
@@ -124,7 +124,7 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
-        raise HTTPRedirect(LivestatusQuicksearch(query).generate_search_url())
+        raise HTTPRedirect(QuicksearchManager(query).generate_search_url())
 
 
 def _to_regex(s):
@@ -421,7 +421,8 @@ class LivestatusSearchConductor:
         return True
 
 
-class LivestatusQuicksearch:
+class QuicksearchManager:
+    """Producing the results for the given search query"""
     def __init__(self, query: SearchQuery) -> None:
         self._query: SearchQuery = query
 
@@ -491,7 +492,12 @@ class LivestatusQuicksearch:
         return search_objects
 
     def _conduct_search(self, search_objects: List[LivestatusSearchConductor]) -> None:
-        """Collect the raw data from livestatus"""
+        """Collect the raw data from livestatus
+
+        1. The single search objects execute the query.
+        2. The number of results are counted and either limited or other filters are limited,
+           depending on the configured filter behavior.
+        """
         total_rows = 0
         for idx, search_object in enumerate(search_objects):
             search_object.do_query()

@@ -55,33 +55,25 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     write_snapin_exception,
 )
 
-from cmk.gui.plugins.sidebar.quicksearch import ABCLivestatusMatchPlugin
 from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer, get_show_more_setting
-
-quicksearch_match_plugins: List[Type[ABCLivestatusMatchPlugin]] = []
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
-search_plugins: List = []
 
 # TODO: Kept for pre 1.6 plugin compatibility
 sidebar_snapins: Dict[str, Dict] = {}
 
 
 def load_plugins(force):
-    global loaded_with_language, search_plugins
+    global loaded_with_language
     _register_custom_snapins()
 
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
-    # Load all snapins
-    search_plugins = []
-
     utils.load_web_plugins("sidebar", globals())
 
     transform_old_dict_based_snapins()
-    transform_old_quicksearch_match_plugins()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -141,12 +133,6 @@ def transform_old_dict_based_snapins() -> None:
 
         # Help pylint a little bit, it doesn't know that the registry remembers the class above.
         _it_is_really_used = LegacySnapin  # noqa: F841
-
-
-# TODO: Deprecate this one day.
-def transform_old_quicksearch_match_plugins() -> None:
-    for match_plugin in quicksearch_match_plugins:
-        cmk.gui.plugins.sidebar.quicksearch.match_plugin_registry.register(match_plugin)
 
 
 class UserSidebarConfig:

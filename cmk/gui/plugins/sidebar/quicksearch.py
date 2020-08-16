@@ -425,22 +425,22 @@ class LivestatusQuicksearch:
     def __init__(self, query: SearchQuery) -> None:
         self._query: SearchQuery = query
 
-        # Each of these objects do exactly one ls query
-        self._search_objects: List[LivestatusSearchConductor] = []
-
     def generate_results(self) -> Dict[str, List[Result]]:
-        self._query_data()
-        return self._evaluate_results()
+        search_objects = self._determine_search_objects()
+        self._conduct_search(search_objects)
+        return self._evaluate_results(search_objects)
 
     def generate_search_url(self) -> str:
+        search_objects = self._determine_search_objects()
+
         try:
-            self._query_data()
+            self._conduct_search(search_objects)
         except TooManyRowsError:
             pass
 
         # Generate a search page for the topmost search_object with results
         url_params: HTTPVariables = []
-        for search_object in self._search_objects:
+        for search_object in search_objects:
             if search_object.num_rows() > 0:
                 url_params.extend(search_object.get_search_url_params())
                 break
@@ -453,11 +453,12 @@ class LivestatusQuicksearch:
 
         return _build_url(url_params)
 
-    def _query_data(self) -> None:
-        self._determine_search_objects()
-        self._conduct_search()
+    def _determine_search_objects(self) -> List[LivestatusSearchConductor]:
+        """Construct search objects from the query
 
-    def _determine_search_objects(self) -> None:
+        Try to find search object expressions and construct objects or
+        create the search objects in the configured search order
+        """
         filter_names = {"%s" % x.name for x in match_plugin_registry.values()}
         filter_regex = "|".join(filter_names)
 
@@ -468,6 +469,7 @@ class LivestatusQuicksearch:
         for match in matches:
             found_filters.append((match.group(1), match.start()))
 
+        search_objects: List[LivestatusSearchConductor] = []
         if found_filters:
             filter_spec: Dict[str, List[str]] = {}
             current_string = self._query
@@ -476,21 +478,22 @@ class LivestatusQuicksearch:
                 filter_name = filter_type.strip().rstrip(":")
                 filter_spec.setdefault(filter_name, []).append(filter_text)
                 current_string = current_string[:offset]
-            self._search_objects.append(
-                LivestatusSearchConductor(filter_spec, FilterBehaviour.CONTINUE))
+            search_objects.append(LivestatusSearchConductor(filter_spec, FilterBehaviour.CONTINUE))
         else:
             # No explicit filters set.
             # Use configured quicksearch search order
             for (filter_name, filter_behaviour_str) in config.quicksearch_search_order:
                 filter_behaviour = FilterBehaviour[filter_behaviour_str.upper()]
-                self._search_objects.append(
+                search_objects.append(
                     LivestatusSearchConductor({filter_name: [_to_regex(self._query)]},
                                               filter_behaviour))
 
-    def _conduct_search(self) -> None:
+        return search_objects
+
+    def _conduct_search(self, search_objects: List[LivestatusSearchConductor]) -> None:
         """Collect the raw data from livestatus"""
         total_rows = 0
-        for idx, search_object in enumerate(self._search_objects):
+        for idx, search_object in enumerate(search_objects):
             search_object.do_query()
             total_rows += search_object.num_rows()
 
@@ -508,14 +511,14 @@ class LivestatusQuicksearch:
                 if search_object.filter_behaviour is FilterBehaviour.FINISHED_DISTINCT:
                     # Discard all data of previous filters and break
                     for i in range(idx - 1, -1, -1):
-                        self._search_objects[i].remove_rows_from_end(
-                            config.quicksearch_dropdown_limit)
+                        search_objects[i].remove_rows_from_end(config.quicksearch_dropdown_limit)
                 break
 
-    def _evaluate_results(self) -> Dict[str, List[Result]]:
+    def _evaluate_results(
+            self, search_objects: List[LivestatusSearchConductor]) -> Dict[str, List[Result]]:
         """Generates elements out of the raw data"""
         results_by_topic: Dict[str, List[Result]] = {}
-        for search_object in self._search_objects:
+        for search_object in search_objects:
             results = search_object.create_results()
             if results:
                 results_by_topic[search_object.get_match_topic()] = results

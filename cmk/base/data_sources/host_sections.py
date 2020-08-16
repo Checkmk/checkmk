@@ -118,7 +118,7 @@ class MultiHostSections(collections.abc.MutableMapping):
         host_key: HostKey,
         parsed_section_names: List[ParsedSectionName],
         service_description: ServiceName,
-    ):
+    ) -> Dict[str, Dict[str, Any]]:
         """Prepares section keyword arguments for a cluster host
 
         It returns a dictionary containing one optional dictionary[Host, ParsedSection]

@@ -3633,6 +3633,35 @@ class ConfigCache:
 
         return hostname
 
+    def get_clustered_service_nodes(
+        self,
+        hostname: HostName,
+        service_descr: Optional[ServiceName],
+    ) -> Optional[List[HostName]]:
+        """Returns the node names if a service is clustered, otherwise 'None' in order to
+        decide whether we collect section content of the host or the nodes.
+
+        For real hosts or nodes for which the service is not clustered we return 'None',
+        thus the caching works as before.
+
+        If a service is assigned to a cluster we receive the real nodename. In this
+        case we have to sort out data from the nodes for which the same named service
+        is not clustered (Clustered service for overlapping clusters).
+
+        We also use the result for the section cache.
+        """
+        if not service_descr:
+            return None
+
+        nodes = self.get_host_config(hostname).nodes
+        if nodes is None:
+            return None
+
+        return [
+            nodename for nodename in nodes
+            if hostname == self.host_of_clustered_service(nodename, service_descr)
+        ]
+
     def get_piggybacked_hosts_time_settings(
             self,
             piggybacked_hostname: Optional[HostName] = None

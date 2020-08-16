@@ -306,7 +306,7 @@ def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_res
     kwargs = multi_host_sections.get_section_cluster_kwargs(
         HostKey("cluster", None, SourceType.HOST),
         [ParsedSectionName(n) for n in required_sections],
-        "_service_description",
+        ["node1", "node2"],
     )
 
     assert expected_result == kwargs,\
@@ -400,6 +400,8 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
 
     _set_up(monkeypatch, hostname, nodes, cluster_mapping)
 
+    config_cache = config.get_config_cache()
+
     multi_host_sections = MultiHostSections()
     for nodename, node_section_content in host_entries:
         multi_host_sections.setdefault(
@@ -407,12 +409,20 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
             AgentHostSections(sections={SectionName("section_plugin_name"): node_section_content}),
         )
 
+    # TODO: this block actually tests different code, which has its own tests.
+    #       remove this, once we don't need _set_up anymore.
+    #       We can then pass clustered_service_nodes as parameter.
+    clustered_service_nodes = config_cache.get_clustered_service_nodes(hostname, service_descr)
+    expected_clustered_service_nodes = None if None in (
+        nodes, service_descr) else [n for n in nodes if cluster_mapping[n] == hostname]
+    assert clustered_service_nodes == expected_clustered_service_nodes
+
     section_content = multi_host_sections.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.HOST),
         check_api_utils.HOST_ONLY,
         "section_plugin_name",
         False,
-        service_description=service_descr,
+        clustered_service_nodes=clustered_service_nodes,
         check_info={},  # only for parse_function lookup, not needed in this test
     )
     assert expected_result == section_content,\
@@ -423,7 +433,7 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
         check_api_utils.HOST_PRECEDENCE,
         "section_plugin_name",
         False,
-        service_description=service_descr,
+        clustered_service_nodes=clustered_service_nodes,
         check_info={},  # only for parse_function lookup, not needed in this test
     )
     assert expected_result == section_content,\
@@ -434,7 +444,7 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
         check_api_utils.MGMT_ONLY,
         "section_plugin_name",
         False,
-        service_description=service_descr,
+        clustered_service_nodes=clustered_service_nodes,
         check_info={},  # only for parse_function lookup, not needed in this test
     )
     assert section_content is None, \

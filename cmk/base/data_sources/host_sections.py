@@ -31,7 +31,6 @@ from cmk.utils.type_defs import (
     HostName,
     ParsedSectionName,
     SectionName,
-    ServiceName,
     SourceType,
 )
 
@@ -127,7 +126,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
         self,
         host_key: HostKey,
         parsed_section_names: List[ParsedSectionName],
-        service_description: ServiceName,
+        clustered_service_nodes: List[HostName],
     ) -> Dict[str, Dict[str, Any]]:
         """Prepares section keyword arguments for a cluster host
 
@@ -135,10 +134,8 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
         for each of the required sections, or an empty dictionary if no data was found at all.
         """
         # see which host entries we must use
-        nodes_of_clustered_service = self._get_nodes_of_clustered_service(
-            host_key.hostname, service_description) or []
         host_entries = self._get_host_entries(host_key)
-        used_entries = [he for he in host_entries if he[0] in nodes_of_clustered_service]
+        used_entries = [he for he in host_entries if he[0] in clustered_service_nodes]
 
         kwargs: Dict[str, Dict[str, Any]] = {}
         for node_key in used_entries:
@@ -268,7 +265,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
         management_board_info: str,
         check_plugin_name: CheckPluginNameStr,
         for_discovery: bool,
-        service_description: ServiceName,
+        clustered_service_nodes: Optional[List[HostName]] = None,
         *,
         check_info: Dict[str, Dict[str, Any]],
     ) -> FinalSectionContent:
@@ -293,10 +290,8 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
         """
 
         section_name = section_name_of(check_plugin_name)
-        nodes_of_clustered_service = self._get_nodes_of_clustered_service(
-            host_key.hostname, service_description)
         cache_key = (host_key, management_board_info, section_name, for_discovery,
-                     bool(nodes_of_clustered_service))
+                     bool(clustered_service_nodes))
 
         try:
             return self._section_content_cache[cache_key]
@@ -309,7 +304,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
             check_plugin_name,
             SectionName(section_name),
             for_discovery,
-            nodes_of_clustered_service,
+            clustered_service_nodes,
             check_info,
         )
 
@@ -321,54 +316,25 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
                 check_plugin_name,
                 SectionName(section_name),
                 for_discovery,
-                nodes_of_clustered_service,
+                clustered_service_nodes,
                 check_info,
             )
 
         self._section_content_cache[cache_key] = section_content
         return section_content
 
-    def _get_nodes_of_clustered_service(
-        self,
-        hostname: HostName,
-        service_description: ServiceName,
-    ) -> Optional[List[HostName]]:
-        """Returns the node names if a service is clustered, otherwise 'None' in order to
-        decide whether we collect section content of the host or the nodes.
-
-        For real hosts or nodes for which the service is not clustered we return 'None',
-        thus the caching works as before.
-
-        If a service is assigned to a cluster we receive the real nodename. In this
-        case we have to sort out data from the nodes for which the same named service
-        is not clustered (Clustered service for overlapping clusters).
-
-        We also use the result for the section cache.
-        """
-        host_config = self._config_cache.get_host_config(hostname)
-        nodes = host_config.nodes
-
-        if nodes is None:
-            return None
-
-        return [
-            nodename for nodename in nodes
-            if hostname == self._config_cache.host_of_clustered_service(
-                nodename, service_description)
-        ]
-
     # DEPRECATED
     # This function is only kept for the legacy cluster mode from hell
     def _get_section_content(
         self, host_key: HostKey, check_plugin_name: CheckPluginNameStr, section_name: SectionName,
-        for_discovery: bool, nodes_of_clustered_service: Optional[List[HostName]],
+        for_discovery: bool, clustered_service_nodes: Optional[List[HostName]],
         check_info: Dict[str, Dict[str, Any]]
     ) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]:
         # Now get the section_content from the required hosts and merge them together to
         # a single section_content. For each host optionally add the node info.
         section_content: Optional[AbstractSectionContent] = None
         for node_key in self._get_host_entries(host_key):
-            if nodes_of_clustered_service and node_key.hostname not in nodes_of_clustered_service:
+            if clustered_service_nodes and node_key.hostname not in clustered_service_nodes:
                 continue
 
             try:

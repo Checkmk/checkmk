@@ -1682,6 +1682,51 @@ def test_config_cache_service_discovery_name(monkeypatch, use_new_descr, result)
     assert config_cache.service_discovery_name() == result
 
 
+def test_config_cache_get_clustered_service_nodes_no_cluster(monkeypatch):
+    ts = Scenario()
+
+    config_cache = ts.apply(monkeypatch)
+
+    # regardless of config: descr == None -> return None
+    assert config_cache.get_clustered_service_nodes('cluster.test', None) is None
+    # still None, we have no cluster:
+    assert config_cache.get_clustered_service_nodes('cluster.test', 'Test Service') is None
+
+
+def test_config_cache_get_clustered_service_nodes_cluster_no_service(monkeypatch):
+    ts = Scenario()
+    ts.add_cluster('cluster.test', nodes=['node1.test', 'node2.test'])
+    config_cache = ts.apply(monkeypatch)
+
+    # None for a node:
+    assert config_cache.get_clustered_service_nodes('node1.test', 'Test Service') is None
+    # empty list for cluster (we have not clustered the service)
+    assert config_cache.get_clustered_service_nodes('cluster.test', 'Test Service') == []
+
+
+def test_config_cache_get_clustered_service_nodes_clustered(monkeypatch):
+    ts = Scenario()
+    ts.add_host('node1.test')
+    ts.add_host('node2.test')
+    ts.add_cluster('cluster.test', nodes=['node1.test', 'node2.test'])
+    # add a fake rule, that defines a cluster
+    ts.set_option('clustered_services_mapping', [{
+        'value': 'cluster.test',
+        'condition': {
+            'service_description': ['Test Service']
+        },
+    }])
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.get_clustered_service_nodes('cluster.test', 'Test Service') == [
+        'node1.test',
+        'node2.test',
+    ]
+    assert config_cache.get_clustered_service_nodes('cluster.test', 'Test Unclustered') == []
+    # regardless of config: descr == None -> return None
+    assert config_cache.get_clustered_service_nodes('cluster.test', None) is None
+
+
 def test_host_ruleset_match_object_of_service(monkeypatch):
     ts = Scenario()
     ts.add_host("xyz")

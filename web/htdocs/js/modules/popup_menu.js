@@ -376,15 +376,33 @@ function resize_all_mega_menu_popups() {
 }
 
 function resize_mega_menu_popup(menu_popup) {
+    /* Resize a mega menu to the size of its content. Two cases are considered here:
+     *   1) The overview of all topics is opened.
+     *   2) The extended menu that shows all items of a topic is opened.
+     */
     const topics = menu_popup.getElementsByClassName("topic");
     if (topics.length === 0) {
         return;
     }
-    const last_topic = topics[topics.length -1];
-    const navigation_width = document.getElementById("check_mk_navigation").offsetWidth;
-    const menu_width = Math.min(window.innerWidth - navigation_width,
-                                last_topic.offsetLeft + last_topic.offsetWidth);
-    menu_popup.style.width = menu_width + "px";
+
+    const extended_topics = Array.prototype.slice.call(topics).filter(e => utils.has_class(e, "extended"));
+    if (extended_topics.length === 0) {
+        const topic = topics[topics.length - 1];
+        const menu_width = Math.min(maximum_popup_width(), topic.offsetLeft + topic.offsetWidth);
+        menu_popup.style.width = menu_width + "px";
+    } else {
+        const topic = extended_topics[0];
+        const items = topic.getElementsByTagName("ul")[0];
+        const last_item = items.lastChild.previousSibling;
+        /* account for the padding of 20px on both sides  */
+        const items_width = Math.min(maximum_popup_width(), last_item.offsetLeft + last_item.offsetWidth - 20);
+        items.style.width = items_width + "px";
+        menu_popup.style.width = items_width + 40 + "px";
+    }
+}
+
+function maximum_popup_width() {
+    return window.innerWidth - document.getElementById("check_mk_navigation").offsetWidth;
 }
 
 export function mega_menu_show_all_items(current_topic_id)
@@ -393,6 +411,7 @@ export function mega_menu_show_all_items(current_topic_id)
     utils.remove_class(current_topic, "extendable");
     utils.add_class(current_topic, "extended");
     utils.add_class(current_topic.closest(".main_menu"), "extended_topic");
+    resize_mega_menu_popup(current_topic.closest(".main_menu_popup"));
 }
 
 export function mega_menu_show_all_topics(current_topic_id)
@@ -401,6 +420,8 @@ export function mega_menu_show_all_topics(current_topic_id)
     utils.remove_class(current_topic, "extended");
     utils.remove_class(current_topic.closest(".main_menu"), "extended_topic");
     mega_menu_hide_entries(current_topic.closest(".main_menu").id);
+    current_topic.getElementsByTagName("ul")[0].removeAttribute("style");
+    resize_mega_menu_popup(current_topic.closest(".main_menu_popup"));
 }
 
 export function mega_menu_hide_entries(menu_id) {

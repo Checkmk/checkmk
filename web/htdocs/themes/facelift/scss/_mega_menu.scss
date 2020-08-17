@@ -196,7 +196,6 @@
 
             ul {
               display: flex;
-              align-content: flex-start;
               flex-flow: column wrap;
               max-height: calc(100vh - 132px);
               padding-bottom: 24px;
@@ -205,9 +204,8 @@
             }
 
             li {
-              padding: 1px 5px;
-              margin-right: 48px;
-              box-sizing: border-box;
+              width: 300px;
+              padding-left: 0;
 
               &.show_all_items { display: none; }
             }

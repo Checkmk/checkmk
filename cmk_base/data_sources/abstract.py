@@ -37,6 +37,7 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.cpu_tracking as cpu_tracking
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 
 import cmk_base.utils
 import cmk_base.agent_simulator
@@ -678,8 +679,7 @@ class CheckMKAgentDataSource(DataSource):
         # Protect Check_MK against unallowed host names. Normally source scripts
         # like agent plugins should care about cleaning their provided host names
         # up, but we need to be sure here to prevent bugs in Check_MK code.
-        # a) Replace spaces by underscores
-        return piggybacked_hostname.replace(" ", "_")
+        return regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", piggybacked_hostname)
 
     def _add_cached_info_to_piggybacked_section_header(self, orig_section_header, cached_at,
                                                        cache_age):

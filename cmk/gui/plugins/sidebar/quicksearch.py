@@ -203,6 +203,14 @@ class LivestatusSearchConductor(ABCSearchConductor):
 
     It cares about aggregating the queries of different filters together to a single livestatus
     query (see _generate_livestatus_command) in case they are given with "used_filters".
+
+    Based on all the given plugin selection expressions it decides which one to use. There is only a
+    single table selected and queried! This means that incompatible search plugins in a single
+    search query (e.g. service group and host name) are not both executed.
+
+    Based on the used_filters it selects a livestatus table to query. Then it constructs the
+    livestatus query with the help of all search plugins that support searching the previously
+    selected table.
     """
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)
@@ -499,31 +507,17 @@ class QuicksearchManager:
         Try to find search object expressions and construct objects or
         create the search objects in the configured search order
         """
-        filter_names = {"%s" % x.name for x in match_plugin_registry.values()}
-        filter_regex = "|".join(filter_names)
 
-        # Goal: "((^| )(hg|h|sg|s|al|tg|ad):)"
-        regex = "((^| )(%(filter_regex)s):)" % {"filter_regex": filter_regex}
-        found_filters = []
-        matches = re.finditer(regex, self._query)
-        for match in matches:
-            found_filters.append((match.group(1), match.start()))
+        found_filters = self._find_search_object_expressions(self._query)
 
         search_objects: List[LivestatusSearchConductor] = []
         if found_filters:
-            # Create a structure like this: {u'h': [u'heute'], u's': [u'Check_MK']}
-            filter_spec: Dict[str, List[str]] = {}
-            current_string = self._query
-            for filter_type, offset in found_filters[-1::-1]:
-                filter_text = _to_regex(current_string[offset + len(filter_type):]).strip()
-                filter_name = filter_type.strip().rstrip(":")
-                filter_spec.setdefault(filter_name, []).append(filter_text)
-                current_string = current_string[:offset]
-
-            search_objects.append(LivestatusSearchConductor(filter_spec, FilterBehaviour.CONTINUE))
+            # The query contains at least one search expression to search a specific search plugin.
+            used_filters = self._get_used_filters_from_query(self._query, found_filters)
+            search_objects.append(LivestatusSearchConductor(used_filters, FilterBehaviour.CONTINUE))
         else:
-            # No explicit filters set.
-            # Use configured quicksearch search order
+            # No explicit filters specified by search expression. Execute the quicksearch plugins in
+            # the order they are configured to let them answer the query.
             for (filter_name, filter_behaviour_str) in config.quicksearch_search_order:
                 filter_behaviour = FilterBehaviour[filter_behaviour_str.upper()]
                 search_objects.append(
@@ -531,6 +525,41 @@ class QuicksearchManager:
                                               filter_behaviour))
 
         return search_objects
+
+    @staticmethod
+    def _find_search_object_expressions(query: str) -> List[Tuple[str, int]]:
+        """Extract a list of search plugin expressions from the search query
+
+        The returned list contains the name of the search plugin and the character
+        at which the search starts
+        """
+
+        filter_names = {"%s" % x.name for x in match_plugin_registry.values()}
+        filter_regex = "|".join(filter_names)
+
+        # Goal: "((^| )(hg|h|sg|s|al|tg|ad):)"
+        regex = "((^| )(%(filter_regex)s):)" % {"filter_regex": filter_regex}
+        found_filters = []
+        matches = re.finditer(regex, query)
+        for match in matches:
+            found_filters.append((match.group(1), match.start()))
+        return found_filters
+
+    @staticmethod
+    def _get_used_filters_from_query(query: str,
+                                     found_filters: List[Tuple[str, int]]) -> Dict[str, List[str]]:
+        """Extract the expressions for each search plugin
+
+        Create a structure like this: {'h': ['heute'], 's': ['Check_MK']}
+        """
+        used_filters: Dict[str, List[str]] = {}
+        current_string = query
+        for filter_type, offset in found_filters[-1::-1]:
+            filter_text = _to_regex(current_string[offset + len(filter_type):]).strip()
+            filter_name = filter_type.strip().rstrip(":")
+            used_filters.setdefault(filter_name, []).append(filter_text)
+            current_string = current_string[:offset]
+        return used_filters
 
     def _conduct_search(self, search_objects: List[LivestatusSearchConductor]) -> None:
         """Collect the raw data from livestatus

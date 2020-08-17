@@ -55,9 +55,8 @@ class Site:
 
         self.http_proto = "http"
         self.http_address = "127.0.0.1"
-        self.url = "%s://%s/%s/check_mk/" % (self.http_proto, self.http_address, self.id)
-
         self._apache_port = None  # internal cache for the port
+
         self._livestatus_port = None
 
     @property
@@ -68,8 +67,14 @@ class Site:
 
     @property
     def internal_url(self):
+        """This gives the address-port combination where the site-Apache process listens."""
         return "%s://%s:%s/%s/check_mk/" % (self.http_proto, self.http_address, self.apache_port,
                                             self.id)
+
+    # Previous versions of integration/composition tests needed this distinction. This is no
+    # longer the case and can be safely removed once all tests switch to either one of url
+    # or internal_url.
+    url = internal_url
 
     @property
     def livestatus_port(self):

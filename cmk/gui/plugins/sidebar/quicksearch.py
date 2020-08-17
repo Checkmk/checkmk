@@ -40,6 +40,12 @@ Matches = Optional[Tuple[str, HTTPVariables]]
 @dataclass
 class Result:
     """Intermediate representation of a search result"""
+    title: str
+    url: str
+
+
+@dataclass
+class LivestatusResult:
     text_tokens: List[Tuple[str, str]]
     url: str
     row: Row
@@ -203,27 +209,39 @@ class BasicPluginSearchConductor(ABCSearchConductor):
     """Passes queries through to a non livestatus plugin
 
     There is no aggregation done by this conductor. It deals with a single search plugin.  """
+    def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
+        super().__init__(used_filters, filter_behaviour)
+        self._results: List[Result] = []
+
     def do_query(self) -> None:
         """Execute the lookup of the data using the given query"""
+        assert len(self._used_filters) == 1, "Only supporting single filter lookups"
+        name, queries = list(self._used_filters.items())[0]
+
+        plugin = self._get_plugin_with_shortname(name)
+        assert isinstance(plugin, ABCBasicMatchPlugin)
+
+        assert len(queries) == 1, "Only supporting single query lookups"
+        self._results = plugin.get_results(queries[0])
 
     def num_rows(self) -> int:
         """Returns the number of matching results"""
-        return 0
+        return len(self._results)
 
     def remove_rows_from_end(self, num: int) -> None:
         """Strips off some rows from the end of the results"""
+        self._results = self._results[:-num]
 
     def row_limit_exceeded(self) -> bool:
         """Whether or not the results exceeded the config.quicksearch_dropdown_limit"""
-        return False
+        return len(self._results) > config.quicksearch_dropdown_limit
 
     def get_search_url_params(self) -> HTTPVariables:
         """Returns the HTTP variables to link to to show the results on a content page"""
-        return []
+        raise NotImplementedError()  # TODO: Implement this
 
     def create_results(self) -> List[Result]:
-        """Returns the results for the given query"""
-        return []
+        return self._results[:config.quicksearch_dropdown_limit]
 
 
 class LivestatusSearchConductor(ABCSearchConductor):
@@ -388,10 +406,10 @@ class LivestatusSearchConductor(ABCSearchConductor):
         return url_params
 
     def create_results(self) -> List[Result]:
-        elements: List[Result] = []
+        elements: List[LivestatusResult] = []
 
         if not self._rows:
-            return elements
+            return []
 
         target_view = self._get_target_view()
 
@@ -423,7 +441,7 @@ class LivestatusSearchConductor(ABCSearchConductor):
                 url_tokens.append(("site", row["site"]))
 
             elements.append(
-                Result(
+                LivestatusResult(
                     text_tokens=text_tokens,
                     url=_build_url(url_tokens),
                     row=row,
@@ -454,7 +472,7 @@ class LivestatusSearchConductor(ABCSearchConductor):
 
         raise NotImplementedError()
 
-    def _generate_display_texts(self, elements: List[Result]) -> List[Result]:
+    def _generate_display_texts(self, elements: List[LivestatusResult]) -> List[Result]:
         """Creates the text displayed to the user
 
         Analyzes all display texts and ensures that we have unique ones"""
@@ -465,21 +483,21 @@ class LivestatusSearchConductor(ABCSearchConductor):
                 element.display_text = element.text_tokens[0][1]
 
         if self._element_texts_unique(elements):
-            return elements
+            return [Result(title=e.display_text, url=e.url) for e in elements]
 
         # Some (ugly) special handling when the results are not unique
         # Whenever this happens we try to find a fitting second value
 
         if self.livestatus_table in ["hostgroups", "servicegroups"]:
             # Discard redundant hostgroups
-            new_elements: List[Result] = []
+            results: List[Result] = []
             used_groups: Set[str] = set()
             for element in elements:
                 if element.display_text in used_groups:
                     continue
-                new_elements.append(element)
+                results.append(Result(title=element.display_text, url=element.url))
                 used_groups.add(element.display_text)
-            return new_elements
+            return results
 
         # Add additional info to the display text
         for element in elements:
@@ -494,9 +512,9 @@ class LivestatusSearchConductor(ABCSearchConductor):
             else:
                 element.display_text += " <b>%s</b>" % hostname
 
-        return elements
+        return [Result(title=e.display_text, url=e.url) for e in elements]
 
-    def _element_texts_unique(self, elements: List[Result]) -> bool:
+    def _element_texts_unique(self, elements: List[LivestatusResult]) -> bool:
         used_texts: Set[str] = set()
         for entry in elements:
             if entry.display_text in used_texts:
@@ -667,8 +685,8 @@ class ResultRenderer:
             if show_match_topics:
                 html.div(match_topic, class_="topic")
 
-            for result in sorted(results, key=lambda x: x.display_text):
-                html.a(result.display_text, id="result_%s" % query, href=result.url, target="main")
+            for result in sorted(results, key=lambda x: x.title):
+                html.a(result.title, id="result_%s" % query, href=result.url, target="main")
 
 
 #.
@@ -701,6 +719,9 @@ class ABCMatchPlugin(metaclass=abc.ABCMeta):
 
 class ABCBasicMatchPlugin(ABCMatchPlugin):
     """Base class for all non livestatus based match plugins"""
+    @abc.abstractmethod
+    def get_results(self, query: str) -> List[Result]:
+        raise NotImplementedError()
 
 
 class ABCLivestatusMatchPlugin(ABCMatchPlugin):

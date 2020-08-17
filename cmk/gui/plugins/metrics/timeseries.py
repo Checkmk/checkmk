@@ -70,6 +70,27 @@ def evaluate_time_series_expression(expression, rrd_data):
         operands_evaluated = evaluate_time_series_expression(operands[0], rrd_data)
         if transform == 'percentile':
             return time_series_operator_perc(operands_evaluated, conf)
+        if transform == 'value_sort':
+            if isinstance(operands_evaluated, TimeSeries):
+                return operands_evaluated
+
+            aggr_func = {
+                "min": lambda x: min(x or [0]),
+                "max": lambda x: max(x or [0]),
+                "average": lambda x: sum(x) / float(len(x) or 1),
+            }[conf['aggregation']]
+
+            orderlist = sorted(operands_evaluated,
+                               key=lambda metric: aggr_func(clean_time_series_point(metric[3])),
+                               reverse=conf["reverse"])
+
+            # fix multi-line stack line styling
+            if orderlist[0][0] == 'stack':
+                line_types = ['area'] + ['stack'] * (len(orderlist) - 1)
+                orderlist = [(lt,) + metric[1:] for lt, metric in zip(line_types, orderlist)]
+
+            return orderlist
+
         if transform == 'forecast':
             if cmk_version.is_raw_edition():
                 raise MKGeneralException(

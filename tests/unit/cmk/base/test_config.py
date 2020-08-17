@@ -18,7 +18,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import CheckPluginName, HostKey, SectionName, SourceType
 
 from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
@@ -1682,29 +1682,49 @@ def test_config_cache_service_discovery_name(monkeypatch, use_new_descr, result)
     assert config_cache.service_discovery_name() == result
 
 
-def test_config_cache_get_clustered_service_nodes_no_cluster(monkeypatch):
+def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch):
     ts = Scenario()
 
     config_cache = ts.apply(monkeypatch)
 
     # regardless of config: descr == None -> return None
-    assert config_cache.get_clustered_service_nodes('cluster.test', None) is None
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        None,
+        lambda _x: "dummy.test.ip.0",
+    ) is None
     # still None, we have no cluster:
-    assert config_cache.get_clustered_service_nodes('cluster.test', 'Test Service') is None
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        'Test Service',
+        lambda _x: "dummy.test.ip.0",
+    ) is None
 
 
-def test_config_cache_get_clustered_service_nodes_cluster_no_service(monkeypatch):
+def test_config_cache_get_clustered_service_node_keys_cluster_no_service(monkeypatch):
     ts = Scenario()
     ts.add_cluster('cluster.test', nodes=['node1.test', 'node2.test'])
     config_cache = ts.apply(monkeypatch)
 
     # None for a node:
-    assert config_cache.get_clustered_service_nodes('node1.test', 'Test Service') is None
+    assert config_cache.get_clustered_service_node_keys(
+        'node1.test',
+        SourceType.HOST,
+        'Test Service',
+        lambda _x: "dummy.test.ip.0",
+    ) is None
     # empty list for cluster (we have not clustered the service)
-    assert config_cache.get_clustered_service_nodes('cluster.test', 'Test Service') == []
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        'Test Service',
+        lambda _x: "dummy.test.ip.0",
+    ) == []
 
 
-def test_config_cache_get_clustered_service_nodes_clustered(monkeypatch):
+def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch):
     ts = Scenario()
     ts.add_host('node1.test')
     ts.add_host('node2.test')
@@ -1718,13 +1738,28 @@ def test_config_cache_get_clustered_service_nodes_clustered(monkeypatch):
     }])
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.get_clustered_service_nodes('cluster.test', 'Test Service') == [
-        'node1.test',
-        'node2.test',
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        'Test Service',
+        lambda host_config: "dummy.test.ip.%s" % host_config.hostname[4],
+    ) == [
+        HostKey('node1.test', "dummy.test.ip.1", SourceType.HOST),
+        HostKey('node2.test', "dummy.test.ip.2", SourceType.HOST),
     ]
-    assert config_cache.get_clustered_service_nodes('cluster.test', 'Test Unclustered') == []
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        'Test Unclustered',
+        lambda _x: "dummy.test.ip.0",
+    ) == []
     # regardless of config: descr == None -> return None
-    assert config_cache.get_clustered_service_nodes('cluster.test', None) is None
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        None,
+        lambda _x: "dummy.test.ip.0",
+    ) is None
 
 
 def test_host_ruleset_match_object_of_service(monkeypatch):

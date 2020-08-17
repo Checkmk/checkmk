@@ -106,27 +106,8 @@ def mode_fixture(request):
     return request.param
 
 
-def _set_up(monkeypatch, hostname, nodes, cluster_mapping) -> None:
-    test_scen = Scenario()
-
-    if nodes is None:
-        test_scen.add_host(hostname)
-    else:
-        test_scen.add_cluster(hostname, nodes=nodes)
-
-    for node in nodes or []:
-        test_scen.add_host(node)
-
-    config_cache = test_scen.apply(monkeypatch)
-
-    def host_of_clustered_service(hostname, _service_description):
-        return cluster_mapping[hostname]
-
-    def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=False):  # pylint: disable=unused-argument
-        return "127.0.0.1"
-
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
-    monkeypatch.setattr(config_cache, "host_of_clustered_service", host_of_clustered_service)
+@pytest.fixture(name="patch_register")
+def _fixture_patch_register(monkeypatch):
     monkeypatch.setattr(agent_based_register._config, "get_section_plugin",
                         MOCK_SECTIONS.__getitem__)
 
@@ -153,9 +134,7 @@ def _set_up(monkeypatch, hostname, nodes, cluster_mapping) -> None:
         "node": "node1",
     }),
 ])
-def test_get_parsed_section(monkeypatch, node_section_content, expected_result):
-
-    _set_up(monkeypatch, "node1", None, {})
+def test_get_parsed_section(patch_register, node_section_content, expected_result):
 
     multi_host_sections = MultiHostSections()
     multi_host_sections.setdefault(
@@ -198,9 +177,7 @@ def test_get_parsed_section(monkeypatch, node_section_content, expected_result):
         }
     }),
 ])
-def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
-
-    _set_up(monkeypatch, "node1", None, {})
+def test_get_section_kwargs(patch_register, required_sections, expected_result):
 
     node_section_content = {
         SectionName("one"): NODE_1,
@@ -278,9 +255,7 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
         }
     }),
 ])
-def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_result):
-
-    _set_up(monkeypatch, "cluster", ["node2", "node1"], {"node1": "cluster", "node2": "cluster"})
+def test_get_section_cluster_kwargs(patch_register, required_sections, expected_result):
 
     node1_section_content = {
         SectionName("one"): NODE_1,
@@ -304,9 +279,11 @@ def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_res
     )
 
     kwargs = multi_host_sections.get_section_cluster_kwargs(
-        HostKey("cluster", None, SourceType.HOST),
+        [
+            HostKey("node1", "127.0.0.1", SourceType.HOST),
+            HostKey("node2", "127.0.0.1", SourceType.HOST),
+        ],
         [ParsedSectionName(n) for n in required_sections],
-        ["node1", "node2"],
     )
 
     assert expected_result == kwargs,\
@@ -368,39 +345,31 @@ def test_parse_sections_superseded(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "hostname,nodes,host_entries,cluster_mapping,service_descr,expected_result",
+    "hostname,host_entries,cluster_node_keys,expected_result",
     [
         # No clusters
-        ("heute", None, [
+        ("heute", [
             ('heute', NODE_1),
-        ], {
-            "heute": "heute"
-        }, "FooBar", NODE_1),
+        ], None, NODE_1),
         # Clusters: host_of_clustered_service returns cluster name. That means that
         # the service is assigned to the cluster
-        ("cluster", ["node1", "node2"], [
+        ("cluster", [
             ('node1', NODE_1),
             ('node2', NODE_2),
-        ], {
-            "node1": "cluster",
-            "node2": "cluster"
-        }, "FooBar", NODE_1 + NODE_2),
+        ], [
+            HostKey("node1", "127.0.0.1", SourceType.HOST),
+            HostKey("node2", "127.0.0.1", SourceType.HOST),
+        ], NODE_1 + NODE_2),
         # host_of_clustered_service returns either the cluster or node name.
         # That means that the service is assigned to the cluster resp. not to the cluster
-        ("cluster", ["node1", "node2"], [
+        ("cluster", [
             ('node1', NODE_1),
             ('node2', NODE_2),
-        ], {
-            "node1": "node1",
-            "node2": "cluster"
-        }, "FooBar", NODE_2),
+        ], [
+            HostKey("node2", "127.0.0.1", SourceType.HOST),
+        ], NODE_2),
     ])
-def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster_mapping,
-                             service_descr, expected_result):
-
-    _set_up(monkeypatch, hostname, nodes, cluster_mapping)
-
-    config_cache = config.get_config_cache()
+def test_get_section_content(hostname, host_entries, cluster_node_keys, expected_result):
 
     multi_host_sections = MultiHostSections()
     for nodename, node_section_content in host_entries:
@@ -409,46 +378,36 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
             AgentHostSections(sections={SectionName("section_plugin_name"): node_section_content}),
         )
 
-    # TODO: this block actually tests different code, which has its own tests.
-    #       remove this, once we don't need _set_up anymore.
-    #       We can then pass clustered_service_nodes as parameter.
-    clustered_service_nodes = config_cache.get_clustered_service_nodes(hostname, service_descr)
-    expected_clustered_service_nodes = None if None in (
-        nodes, service_descr) else [n for n in nodes if cluster_mapping[n] == hostname]
-    assert clustered_service_nodes == expected_clustered_service_nodes
-
     section_content = multi_host_sections.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.HOST),
         check_api_utils.HOST_ONLY,
         "section_plugin_name",
         False,
-        clustered_service_nodes=clustered_service_nodes,
+        cluster_node_keys=cluster_node_keys,
         check_info={},  # only for parse_function lookup, not needed in this test
     )
-    assert expected_result == section_content,\
-           "Section content: Expected '%s' but got '%s'" % (expected_result, section_content)
+    assert expected_result == section_content
 
     section_content = multi_host_sections.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.HOST),
         check_api_utils.HOST_PRECEDENCE,
         "section_plugin_name",
         False,
-        clustered_service_nodes=clustered_service_nodes,
+        cluster_node_keys=cluster_node_keys,
         check_info={},  # only for parse_function lookup, not needed in this test
     )
-    assert expected_result == section_content,\
-           "Section content: Expected '%s' but got '%s'" % (expected_result, section_content)
+    assert expected_result == section_content
 
     section_content = multi_host_sections.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.MANAGEMENT),
         check_api_utils.MGMT_ONLY,
         "section_plugin_name",
         False,
-        clustered_service_nodes=clustered_service_nodes,
+        cluster_node_keys=None if cluster_node_keys is None else
+        [HostKey(hn, ip, SourceType.MANAGEMENT) for (hn, ip, _st) in cluster_node_keys],
         check_info={},  # only for parse_function lookup, not needed in this test
     )
-    assert section_content is None, \
-           "Section content: Expected 'None' but got '%s'" % (section_content,)
+    assert section_content is None
 
 
 def make_scenario(hostname, tags):

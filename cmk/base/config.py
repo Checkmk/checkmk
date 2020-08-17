@@ -69,6 +69,7 @@ from cmk.utils.type_defs import (
     ContactgroupName,
     HostAddress,
     HostgroupName,
+    HostKey,
     HostName,
     Item,
     Labels,
@@ -78,6 +79,7 @@ from cmk.utils.type_defs import (
     SectionName,
     ServicegroupName,
     ServiceName,
+    SourceType,
     TagGroups,
     TagList,
     Tags,
@@ -3633,12 +3635,14 @@ class ConfigCache:
 
         return hostname
 
-    def get_clustered_service_nodes(
+    def get_clustered_service_node_keys(
         self,
         hostname: HostName,
+        source_type: SourceType,
         service_descr: Optional[ServiceName],
-    ) -> Optional[List[HostName]]:
-        """Returns the node names if a service is clustered, otherwise 'None' in order to
+        lookup_ip_address: Callable[[HostConfig], Optional[HostAddress]],
+    ) -> Optional[List[HostKey]]:
+        """Returns the node keys if a service is clustered, otherwise 'None' in order to
         decide whether we collect section content of the host or the nodes.
 
         For real hosts or nodes for which the service is not clustered we return 'None',
@@ -3658,7 +3662,12 @@ class ConfigCache:
             return None
 
         return [
-            nodename for nodename in nodes
+            HostKey(
+                nodename,
+                lookup_ip_address(self.get_host_config(nodename)),
+                source_type,
+            )
+            for nodename in nodes
             if hostname == self.host_of_clustered_service(nodename, service_descr)
         ]
 

@@ -17,6 +17,7 @@ from typing import (
     Generic,
     List,
     Literal,
+    NamedTuple,
     NewType,
     NoReturn,
     Optional,
@@ -414,6 +415,13 @@ class _Err(Result[T_co, E_co]):
 
     def unwrap_or_else(self, op: Callable[[E_co], T_co]) -> T_co:
         return op(self.err)
+
+
+HostKey = NamedTuple("HostKey", [
+    ("hostname", HostName),
+    ("ipaddress", Optional[HostAddress]),
+    ("source_type", SourceType),
+])
 
 
 class OIDSpec:

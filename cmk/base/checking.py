@@ -491,10 +491,13 @@ def get_aggregated_result(
     kwargs = {}
     try:
         kwargs = multi_host_sections.get_section_cluster_kwargs(
-            HostKey(host_config.hostname, None, source_type),
+            config_cache.get_clustered_service_node_keys(
+                host_config.hostname,
+                source_type,
+                service.description,
+                ip_lookup.lookup_ip_address,
+            ) or [],
             plugin.sections,
-            config_cache.get_clustered_service_nodes(host_config.hostname, service.description) or
-            [],
         ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
             HostKey(host_config.hostname, ipaddress, source_type),
             plugin.sections,
@@ -505,12 +508,13 @@ def get_aggregated_result(
             # the regular host plugins name. In this case retry with the source type
             # forced to MANAGEMENT:
             kwargs = multi_host_sections.get_section_cluster_kwargs(
-                HostKey(host_config.hostname, None, SourceType.MANAGEMENT),
-                plugin.sections,
-                config_cache.get_clustered_service_nodes(
+                config_cache.get_clustered_service_node_keys(
                     host_config.hostname,
+                    SourceType.MANAGEMENT,
                     service.description,
+                    ip_lookup.lookup_ip_address,
                 ) or [],
+                plugin.sections,
             ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
                 HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
                 plugin.sections,
@@ -572,19 +576,18 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
 
     section_content = None
     mgmt_board_info = config.get_management_board_precedence(section_name, config.check_info)
+    source_type = SourceType.MANAGEMENT if mgmt_board_info == LEGACY_MGMT_ONLY else SourceType.HOST
     try:
         section_content = multi_host_sections.get_section_content(
-            HostKey(
-                hostname,
-                ipaddress,
-                SourceType.MANAGEMENT if mgmt_board_info == LEGACY_MGMT_ONLY else SourceType.HOST,
-            ),
+            HostKey(hostname, ipaddress, source_type),
             mgmt_board_info,
             section_name,
             for_discovery=False,
-            clustered_service_nodes=config.get_config_cache().get_clustered_service_nodes(
+            cluster_node_keys=config.get_config_cache().get_clustered_service_node_keys(
                 hostname,
+                source_type,
                 service.description,
+                ip_lookup.lookup_ip_address,
             ),
             check_info=config.check_info,
         )

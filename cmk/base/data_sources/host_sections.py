@@ -15,7 +15,6 @@ from typing import (
     KeysView,
     List,
     MutableMapping,
-    NamedTuple,
     Optional,
     Set,
     Tuple,
@@ -27,7 +26,7 @@ import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
-    HostAddress,
+    HostKey,
     HostName,
     ParsedSectionName,
     SectionName,
@@ -36,8 +35,6 @@ from cmk.utils.type_defs import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.caching as caching
-import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
@@ -47,12 +44,6 @@ from cmk.base.exceptions import MKParseFunctionError
 
 from ._abstract import ABCHostSections
 
-HostKey = NamedTuple("HostKey", [
-    ("hostname", HostName),
-    ("ipaddress", Optional[HostAddress]),
-    ("source_type", SourceType),
-])
-
 
 class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
     """Container object for wrapping the host sections of a host being processed
@@ -61,7 +52,6 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
     def __init__(self, data: Optional[Dict[HostKey, ABCHostSections]] = None) -> None:
         super(MultiHostSections, self).__init__()
         self._data: Dict[HostKey, ABCHostSections] = {} if data is None else data
-        self._config_cache = config.get_config_cache()
         self._section_content_cache = caching.DictCache()
         # The following are not quite the same as section_content_cache.
         # They are introduced for the changed data handling with the migration
@@ -124,21 +114,16 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
 
     def get_section_cluster_kwargs(
         self,
-        host_key: HostKey,
+        node_keys: List[HostKey],
         parsed_section_names: List[ParsedSectionName],
-        clustered_service_nodes: List[HostName],
     ) -> Dict[str, Dict[str, Any]]:
         """Prepares section keyword arguments for a cluster host
 
         It returns a dictionary containing one optional dictionary[Host, ParsedSection]
         for each of the required sections, or an empty dictionary if no data was found at all.
         """
-        # see which host entries we must use
-        host_entries = self._get_host_entries(host_key)
-        used_entries = [he for he in host_entries if he[0] in clustered_service_nodes]
-
         kwargs: Dict[str, Dict[str, Any]] = {}
-        for node_key in used_entries:
+        for node_key in node_keys:
             node_kwargs = self.get_section_kwargs(node_key, parsed_section_names)
             for key, sections_node_data in node_kwargs.items():
                 kwargs.setdefault(key, {})[node_key.hostname] = sections_node_data
@@ -265,8 +250,8 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
         management_board_info: str,
         check_plugin_name: CheckPluginNameStr,
         for_discovery: bool,
-        clustered_service_nodes: Optional[List[HostName]] = None,
         *,
+        cluster_node_keys: Optional[List[HostKey]] = None,
         check_info: Dict[str, Dict[str, Any]],
     ) -> FinalSectionContent:
         """Prepares the section_content construct for a Check_MK check on ANY host
@@ -291,7 +276,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
 
         section_name = section_name_of(check_plugin_name)
         cache_key = (host_key, management_board_info, section_name, for_discovery,
-                     bool(clustered_service_nodes))
+                     bool(cluster_node_keys))
 
         try:
             return self._section_content_cache[cache_key]
@@ -304,8 +289,8 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
             check_plugin_name,
             SectionName(section_name),
             for_discovery,
-            clustered_service_nodes,
-            check_info,
+            cluster_node_keys=cluster_node_keys,
+            check_info=check_info,
         )
 
         # If we found nothing, see if we must check the management board:
@@ -316,8 +301,8 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
                 check_plugin_name,
                 SectionName(section_name),
                 for_discovery,
-                clustered_service_nodes,
-                check_info,
+                cluster_node_keys=cluster_node_keys,
+                check_info=check_info,
             )
 
         self._section_content_cache[cache_key] = section_content
@@ -326,16 +311,19 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
     # DEPRECATED
     # This function is only kept for the legacy cluster mode from hell
     def _get_section_content(
-        self, host_key: HostKey, check_plugin_name: CheckPluginNameStr, section_name: SectionName,
-        for_discovery: bool, clustered_service_nodes: Optional[List[HostName]],
+        self,
+        host_key: HostKey,
+        check_plugin_name: CheckPluginNameStr,
+        section_name: SectionName,
+        for_discovery: bool,
+        *,
+        cluster_node_keys: Optional[List[HostKey]] = None,
         check_info: Dict[str, Dict[str, Any]]
     ) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]:
         # Now get the section_content from the required hosts and merge them together to
         # a single section_content. For each host optionally add the node info.
         section_content: Optional[AbstractSectionContent] = None
-        for node_key in self._get_host_entries(host_key):
-            if clustered_service_nodes and node_key.hostname not in clustered_service_nodes:
-                continue
+        for node_key in cluster_node_keys or [host_key]:
 
             try:
                 host_section_content = self[node_key].sections[section_name]
@@ -357,17 +345,6 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
             section_name,
             check_info,
         )
-
-    def _get_host_entries(self, host_key: HostKey) -> List[HostKey]:
-        host_config = self._config_cache.get_host_config(host_key.hostname)
-        if host_config.nodes is None:
-            return [host_key]
-
-        return [
-            HostKey(hostname,
-                    ip_lookup.lookup_ip_address(self._config_cache.get_host_config(hostname)),
-                    host_key.source_type) for hostname in host_config.nodes
-        ]
 
     # DEPRECATED
     # This function is only kept for the legacy cluster mode from hell

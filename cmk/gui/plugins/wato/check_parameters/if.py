@@ -92,6 +92,13 @@ def _transform_discovery_if_rules(params):
     use_desc = params.pop('use_desc', None)
     if use_desc:
         params['item_appearance'] = 'descr'
+
+    # Up to v1.6, the host rulespec inventory_if_rules had the option to activate the discovery of
+    # the check rmon_stats under this key. However, rmon_stats does honor any of the other options
+    # offered by inventory_if_rules. Therefore, in v1.7, the activation of the discovery of
+    # rmon_stats has been moved to a separate host rulespec (rmon_discovery).
+    params.pop('rmon', None)
+
     return params
 
 
@@ -183,23 +190,6 @@ def _valuespec_inventory_if_rules():
                          '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205',
                          '229'
                      ],
-                 )),
-                ("rmon",
-                 DropdownChoice(
-                     choices=[
-                         (True,
-                          _("Create extra service with RMON statistics data (if available for the device)"
-                           )),
-                         (False, _('Do not create extra services')),
-                     ],
-                     title=_("Collect RMON statistics data"),
-                     help=
-                     _("If you enable this option, for every RMON capable switch port an additional service will "
-                       "be created which is always OK and collects RMON data. This will give you detailed information "
-                       "about the distribution of packet sizes transferred over the port. Note: currently "
-                       "this extra RMON check does not honor the inventory settings for switch ports. In a future "
-                       "version of Check_MK RMON data may be added to the normal interface service and not add "
-                       "an additional service."),
                  )),
             ],
             help=_('This rule can be used to control the inventory for network ports. '

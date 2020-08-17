@@ -275,7 +275,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self.default_raw_data: Final[BoundedAbstractRawData] = default_raw_data
         self.default_host_sections: Final[BoundedAbstractHostSections] = default_host_sections
         self._logger = self.configurator._logger
-        self._section_store = SectionStore(
+        self._section_store: SectionStore[BoundedAbstractPersistedSections] = SectionStore(
             self.configurator.persisted_sections_file_path,
             self._logger,
         )
@@ -372,8 +372,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self._host_sections = None
 
         try:
-            persisted_sections: BoundedAbstractPersistedSections = self._section_store.load(
-                self._use_outdated_persisted_sections)
+            persisted_sections = self._section_store.load(self._use_outdated_persisted_sections)
 
             raw_data = self._get_raw_data(selected_raw_sections=selected_raw_sections,)
 

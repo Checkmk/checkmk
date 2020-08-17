@@ -8,7 +8,7 @@
 import logging
 import time
 from pathlib import Path
-from typing import Union
+from typing import Generic, Union
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import SectionName
@@ -16,7 +16,7 @@ from cmk.utils.type_defs import SectionName
 from cmk.base.check_utils import BoundedAbstractPersistedSections
 
 
-class SectionStore:
+class SectionStore(Generic[BoundedAbstractPersistedSections]):
     def __init__(self, path: Union[str, Path], logger: logging.Logger) -> None:
         super(SectionStore, self).__init__()
         self.path = Path(path)

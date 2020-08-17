@@ -136,7 +136,7 @@ class SNMPConfigurator(ABCConfigurator):
         self.ignore_check_interval = False
         self.selected_raw_sections: Optional[SelectedRawSections] = None
         self.prefetched_sections: Sequence[SectionName] = ()
-        self.section_store = SectionStore(
+        self.section_store: SectionStore[SNMPPersistedSections] = SectionStore(
             self.persisted_sections_file_path,
             self._logger,
         )

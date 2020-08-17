@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import asdict
 from typing import (
     Dict,
     Iterable,
@@ -286,17 +285,10 @@ def cluster_check_lnx_if(
     params: type_defs.Parameters,
     section: Mapping[str, Section],
 ) -> type_defs.CheckGenerator:
-
-    ifaces = [
-        interfaces.Interface(**{  # type: ignore[arg-type]
-            **asdict(iface), "node": node
-        }) for node, (node_ifaces, _) in section.items() for iface in node_ifaces
-    ]
-
-    yield from interfaces.check_multiple_interfaces(
+    yield from interfaces.cluster_check(
         item,
         params,
-        ifaces,
+        {node: node_section[0] for node, node_section in section.items()},
     )
 
 

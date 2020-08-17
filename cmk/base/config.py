@@ -445,6 +445,7 @@ def _collect_discovery_parameter_rulesets_from_globals(global_dict: Dict[str, An
     # once we have no such cases any more
     partially_migrated = [
         "diskstat_inventory",
+        "if_disable_if64_hosts",
         "inventory_if_rules",
     ]
     for ruleset_name in agent_based_register.iter_all_discovery_rulesets():

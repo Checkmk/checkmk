@@ -119,6 +119,7 @@ class PreInterface:
     speed_as_text: str = ''
     group: Optional[str] = None
     node: Optional[str] = None
+    admin_status: Optional[str] = None
 
 
 class Interface(PreInterface):
@@ -382,12 +383,15 @@ def _check_single_matching_conditions(
         porttypes = porttypes[:]
         porttypes.append("")  # Allow main check to set no port type (e.g. hitachi_hnas_fc_if)
     portstates = matching_conditions.get('portstates')
+    admin_states = matching_conditions.get('admin_states')
 
     return (_check_regex_match_conditions(interface.index, match_index) and
             _check_regex_match_conditions(interface.alias, match_alias) and
             _check_regex_match_conditions(interface.descr, match_desc) and
             (porttypes is None or interface.type in porttypes) and
-            (portstates is None or interface.oper_status in portstates))
+            (portstates is None or interface.oper_status in portstates) and
+            (admin_states is None or interface.admin_status is None or
+             interface.admin_status in admin_states))
 
 
 class GroupConfiguration(TypedDict, total=False):
@@ -418,12 +422,15 @@ def _check_group_matching_conditions(
 
 
 class DiscoveredParams(TypedDict, total=False):
-    discovered_state: Iterable[str]
+    discovered_oper_status: Iterable[str]
+    discovered_admin_status: Iterable[str]
     discovered_speed: float
     aggregate: GroupConfiguration
 
 
 def _transform_discovery_rules(params: type_defs.Parameters) -> DiscoveryParams:
+    # See cmk.gui.plugins.wato.check_parameters.if._transform_discovery_if_rules for more
+    # information
 
     params_mutable = dict(**params)
 
@@ -454,6 +461,16 @@ def _transform_discovery_rules(params: type_defs.Parameters) -> DiscoveryParams:
             params_transformed['matching_conditions'][1][key] = params_mutable[key]
             params_transformed['matching_conditions'] = (
                 False, params_transformed['matching_conditions'][1])
+
+    matching_conditions_spec = params_transformed['matching_conditions'][1]
+    try:
+        matching_conditions_spec.get('portstates', []).remove('9')
+        removed_port_state_9 = True
+    except ValueError:
+        removed_port_state_9 = False
+    if removed_port_state_9 and matching_conditions_spec.get('portstates') == []:
+        del matching_conditions_spec['portstates']
+        matching_conditions_spec['admin_states'] = ['2']
 
     return params_transformed
 
@@ -539,10 +556,11 @@ def discover_interfaces(
         if discover_single_interface:
             discovered_params_single: DiscoveredParams = {}
             if discovery_monitor_state:
-                discovered_params_single["discovered_state"] = [interface.oper_status]
-
+                discovered_params_single["discovered_oper_status"] = [interface.oper_status]
             if discovery_monitor_speed:
                 discovered_params_single["discovered_speed"] = interface.speed
+            if interface.admin_status is not None:
+                discovered_params_single['discovered_admin_status'] = [interface.admin_status]
 
             try:
                 index_as_item = int(item) == int(interface.index)
@@ -591,7 +609,7 @@ def discover_interfaces(
             }
 
             if discovery_monitor_state:
-                discovered_params_group["discovered_state"] = [group_oper_status]
+                discovered_params_group["discovered_oper_status"] = [group_oper_status]
             if discovery_monitor_speed:
                 discovered_params_group["discovered_speed"] = group_speed
 
@@ -620,7 +638,7 @@ def _get_value_store_key(
     return key
 
 
-GroupMembers = Dict[Optional[str], List[Dict[str, Optional[str]]]]
+GroupMembers = Dict[Optional[str], List[Dict[str, str]]]
 
 
 def _check_ungrouped_ifs(
@@ -736,12 +754,14 @@ def _check_grouped_ifs(
         if is_up:
             num_up += 1
 
-        group_members.setdefault(interface.node, [])
-        group_members[interface.node].append({
+        groups_node = group_members.setdefault(interface.node, [])
+        member_info = {
             "name": if_member_item,
-            "state": interface.oper_status,
-            "state_name": interface.oper_status_name,
-        })
+            "oper_status_name": interface.oper_status_name,
+        }
+        if interface.admin_status is not None:
+            member_info['admin_status_name'] = statename(interface.admin_status)
+        groups_node.append(member_info)
 
         # Only these values are packed into counters
         # We might need to enlarge this table
@@ -827,7 +847,7 @@ def check_multiple_interfaces(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-    group_name: str = "Group",
+    group_name: str = "Interface group",
     timestamp: Optional[float] = None,
 ) -> type_defs.CheckGenerator:
 
@@ -869,13 +889,78 @@ def _get_rate(
     )
 
 
-def _get_map_operstates(
-        defined_mapping: Iterable[Tuple[Iterable[str], int]]) -> Mapping[str, state]:
-    map_operstates = {}
-    for oper_states, mon_state in defined_mapping:
-        for oper_state in oper_states:
-            map_operstates[oper_state] = state(mon_state)
-    return map_operstates
+def _get_map_states(defined_mapping: Iterable[Tuple[Iterable[str], int]]) -> Mapping[str, state]:
+    map_states = {}
+    for states, mon_state in defined_mapping:
+        for st in states:
+            map_states[st] = state(mon_state)
+    return map_states
+
+
+def _render_status_info_main_interface(
+    oper_status_name: str,
+    admin_status: Optional[str],
+) -> Tuple[str, Optional[str]]:
+    oper_status_info = "Operational state: %s" % oper_status_name
+    if admin_status is None:
+        return oper_status_info, None
+    return oper_status_info, "Admin state: %s" % statename(admin_status)
+
+
+def _render_status_info_group_members(
+    oper_status_name: str,
+    admin_status_name: Optional[str],
+) -> str:
+    if admin_status_name is None:
+        return "(%s)" % oper_status_name
+    return "(op. state: %s, admin state: %s)" % (oper_status_name, admin_status_name)
+
+
+def _check_status(
+    interface_status: str,
+    target_states: Optional[Sequence[str]],
+    states_map: Mapping[str, state],
+) -> state:
+    mon_state = state.OK
+    if target_states is not None and interface_status not in target_states:
+        mon_state = state.CRIT
+    mon_state = states_map.get(interface_status, mon_state)
+    return mon_state
+
+
+def _transform_check_params(params: type_defs.Parameters) -> type_defs.Parameters:
+    # See cmk.gui.plugins.wato.check_parameters.if.transform_if for more information
+
+    params_mutable = dict(params)
+
+    # remove '9' from params['state']
+    states = params_mutable.get('state', [])
+    try:
+        states.remove('9')
+        removed_port_state_9 = True
+    except ValueError:
+        removed_port_state_9 = False
+    if removed_port_state_9 and params_mutable.get('state') == []:
+        del params_mutable['state']
+        params_mutable['admin_state'] = ['2']
+
+    # remove '9' from params['map_operstates']
+    map_operstates = params_mutable.get('map_operstates', [])
+    mon_state_9 = None
+    for oper_states, mon_state in map_operstates:
+        if '9' in oper_states:
+            mon_state_9 = mon_state
+            oper_states.remove('9')
+    if map_operstates:
+        params_mutable['map_operstates'] = [
+            mapping_oper_states for mapping_oper_states in map_operstates if mapping_oper_states
+        ]
+        if not params_mutable['map_operstates']:
+            del params_mutable['map_operstates']
+    if mon_state_9:
+        params_mutable['map_admin_states'] = [(['2'], mon_state_9)]
+
+    return type_defs.Parameters(params_mutable)
 
 
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
@@ -885,11 +970,13 @@ def check_single_interface(
     params: type_defs.Parameters,
     interface: Interface,
     group_members: Optional[GroupMembers] = None,
-    group_name: str = "Group",
+    group_name: str = "Interface group",
     timestamp: Optional[float] = None,
     input_is_rate: bool = False,
     use_discovered_state_and_speed: bool = True,
 ) -> type_defs.CheckGenerator:
+
+    params = _transform_check_params(params)
 
     if timestamp is None:
         timestamp = time.time()
@@ -899,13 +986,14 @@ def check_single_interface(
     # be set to None
     if use_discovered_state_and_speed:
         targetspeed = params.get("speed", params.get("discovered_speed"))
-        targetstates = params.get("state", params.get("discovered_state"))
+        target_oper_states = params.get("state", params.get("discovered_oper_status"))
+        target_admin_states = params.get("admin_state", params.get("discovered_admin_status"))
     else:
         targetspeed = params.get("speed")
-        targetstates = params.get("state")
+        target_oper_states = params.get("state")
+        target_admin_states = params.get("admin_state")
     assumed_speed_in = params.get("assumed_speed_in")
     assumed_speed_out = params.get("assumed_speed_out")
-    map_operstates = _get_map_operstates(params.get("map_operstates", []))
     average = params.get("average")
     unit = "Bit" if params.get("unit") in ["Bit", "bit"] else "B"
     average_bmcast = params.get("average_bm")
@@ -926,7 +1014,7 @@ def check_single_interface(
 
     if group_members:
         # The detailed group info is added later on
-        info_interface = group_name + " Status "
+        info_interface = group_name
     else:
         if "infotext_format" in params:
             bracket_info = ""
@@ -962,35 +1050,54 @@ def check_single_interface(
             else:
                 info_interface = "[%s]" % interface.index
 
-        if info_interface:
-            info_interface += " "
         if interface.node is not None:
-            info_interface = "%son %s: " % (
-                info_interface,
-                interface.node,
-            )
-
-    mon_state = state.OK
-    info_interface += "(%s)" % interface.oper_status_name
-    if targetstates and (interface.oper_status != targetstates and
-                         not (isinstance(targetstates,
-                                         (list, tuple)) and interface.oper_status in targetstates)):
-        mon_state = state.CRIT
-
-    if map_operstates and interface.oper_status in map_operstates:
-        mon_state = map_operstates[interface.oper_status]
+            if info_interface:
+                info_interface = "%s on %s" % (
+                    info_interface,
+                    interface.node,
+                )
+            else:
+                info_interface = "On %s" % interface.node
 
     yield Result(
-        state=mon_state,
+        state=state.OK,
         summary=info_interface,
     )
+
+    info_oper_status, info_admin_status = _render_status_info_main_interface(
+        interface.oper_status_name,
+        interface.admin_status,
+    )
+
+    yield Result(
+        state=_check_status(
+            interface.oper_status,
+            target_oper_states,
+            _get_map_states(params.get("map_operstates", [])),
+        ),
+        summary=info_oper_status,
+    )
+
+    if info_admin_status:
+        yield Result(
+            state=_check_status(
+                str(interface.admin_status),
+                target_admin_states,
+                _get_map_states(params.get("map_admin_states", [])),
+            ),
+            summary=info_admin_status,
+        )
 
     if group_members:
         infos_group = []
         for group_node, members in group_members.items():
             member_info = []
             for member in members:
-                member_info.append("%s (%s)" % (member["name"], member["state_name"]))
+                member_info.append("%s %s" % (member["name"],
+                                              _render_status_info_group_members(
+                                                  member["oper_status_name"],
+                                                  member.get("admin_status_name"),
+                                              )))
 
             nodeinfo = ""
             if group_node is not None and len(group_members) > 1:
@@ -1255,3 +1362,23 @@ def check_single_interface(
                     render_func=lambda x: "%.2f/s" % x,
                     label="%s %s" % (what, _txt),
                 )
+
+
+def cluster_check(
+    item: str,
+    params: type_defs.Parameters,
+    section: Mapping[str, Section],
+) -> type_defs.CheckGenerator:
+
+    ifaces = [
+        Interface(**{  # type: ignore[arg-type]
+            **asdict(iface),
+            "node": node,
+        }) for node, node_ifaces in section.items() for iface in node_ifaces
+    ]
+
+    yield from check_multiple_interfaces(
+        item,
+        params,
+        ifaces,
+    )

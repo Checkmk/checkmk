@@ -56,36 +56,38 @@ def _create_interfaces(bandwidth_change, **kwargs):
 
 
 def _add_node_name_to_results(results, node_name):
-    return [
-        Result(
-            state=results[0].state,
-            summary=results[0].summary.replace(' ', ' on %s: ' % node_name, 1),
-        )
-    ] + results[1:]
+    return [Result(
+        state=results[0].state,
+        summary=results[0].summary + ' on %s' % node_name,
+    )] + results[1:]
 
 
 def _add_group_info_to_results(results, members):
     return [
         Result(
             state=state.OK,
-            summary='Group Status (up)',
+            summary='Interface group',
+        ),
+        Result(
+            state=state.OK,
+            summary='Operational state: up',
         ),
         Result(
             state=state.OK,
             summary=members,
         )
-    ] + results[1:]
+    ] + results[2:]
 
 
 DEFAULT_DISCOVERY_PARAMS = type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)
 
 SINGLE_SERVICES = [
     Service(item='5', parameters={
-        'discovered_state': ['1'],
+        'discovered_oper_status': ['1'],
         'discovered_speed': 10000000
     }),
     Service(item='6', parameters={
-        'discovered_state': ['1'],
+        'discovered_oper_status': ['1'],
         'discovered_speed': 0
     }),
 ]
@@ -96,6 +98,33 @@ def test_discovery_ungrouped_all():
         [DEFAULT_DISCOVERY_PARAMS],
         _create_interfaces(0),
     )) == SINGLE_SERVICES
+
+
+def test_discovery_ungrouped_admin_status():
+    assert list(
+        interfaces.discover_interfaces(
+            [DEFAULT_DISCOVERY_PARAMS],
+            _create_interfaces(0, admin_status='1'),
+        )) == [
+            Service(
+                item='5',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 10000000,
+                    'discovered_admin_status': ['1'],
+                },
+                labels=[],
+            ),
+            Service(
+                item='6',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 0,
+                    'discovered_admin_status': ['1']
+                },
+                labels=[],
+            ),
+        ]
 
 
 def test_discovery_ungrouped_one():
@@ -131,7 +160,7 @@ def test_discovery_ungrouped_off():
         )) == []
 
 
-def test_discovery_legacy_parameters():
+def test_discovery_legacy_parameters_1():
     assert list(
         interfaces.discover_interfaces(
             [
@@ -154,7 +183,7 @@ def test_discovery_legacy_parameters():
             Service(
                 item='enxe4b97ab99f99',
                 parameters={
-                    'discovered_state': ['2'],
+                    'discovered_oper_status': ['2'],
                     'discovered_speed': 10000000,
                 },
                 labels=[],
@@ -162,11 +191,77 @@ def test_discovery_legacy_parameters():
             Service(
                 item='vboxnet0',
                 parameters={
-                    'discovered_state': ['1'],
+                    'discovered_oper_status': ['1'],
                     'discovered_speed': 10000000,
                 },
                 labels=[],
             ),
+        ]
+
+
+def test_discovery_legacy_parameters_2():
+    assert list(
+        interfaces.discover_interfaces(
+            [
+                type_defs.Parameters({
+                    'item_appearance': 'index',
+                    'portstates': ['1', '9'],
+                }),
+            ],
+            _create_interfaces(0, admin_status='3'),
+        )) == [
+            Service(
+                item='1',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 0,
+                    'discovered_admin_status': ['3'],
+                },
+                labels=[],
+            ),
+            Service(
+                item='5',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 10000000,
+                    'discovered_admin_status': ['3'],
+                },
+                labels=[],
+            ),
+            Service(
+                item='6',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 0,
+                    'discovered_admin_status': ['3'],
+                },
+                labels=[],
+            ),
+        ]
+
+
+def test_discovery_legacy_parameters_3():
+    ifaces = _create_interfaces(0, admin_status='1')
+    ifaces[0].admin_status = '2'
+    assert list(
+        interfaces.discover_interfaces(
+            [
+                type_defs.Parameters({
+                    'item_appearance': 'alias',
+                    'portstates': ['9'],
+                }),
+            ],
+            ifaces,
+        )) == [
+            Service(
+                item='lo',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 0,
+                    'discovered_admin_status': ['2'],
+                },
+                labels=[],
+            )
         ]
 
 
@@ -196,7 +291,7 @@ def test_discovery_grouped_simple():
                         'inclusion_condition': {},
                         'exclusion_conditions': [],
                     },
-                    'discovered_state': ['1'],
+                    'discovered_oper_status': ['1'],
                     'discovered_speed': 20000000,
                 },
                 labels=[],
@@ -247,7 +342,7 @@ def test_discovery_grouped_hierarchy():
                         },
                         'exclusion_conditions': [],
                     },
-                    'discovered_state': ['1'],
+                    'discovered_oper_status': ['1'],
                     'discovered_speed': 20000000,
                 },
                 labels=[],
@@ -295,7 +390,7 @@ def test_discovery_grouped_exclusion_condition():
                             'match_desc': ['eth']
                         }],
                     },
-                    'discovered_state': ['1'],
+                    'discovered_oper_status': ['1'],
                     'discovered_speed': 20000000,
                 },
                 labels=[],
@@ -342,7 +437,7 @@ def test_discovery_grouped_by_agent():
                 'aggregate': {
                     'member_appearance': 'index',
                 },
-                'discovered_state': ['1'],
+                'discovered_oper_status': ['1'],
                 'discovered_speed': 0.0,
             },
             labels=[],
@@ -379,7 +474,7 @@ def test_discovery_grouped_by_agent_and_in_rules():
                         'inclusion_condition': {},
                         'exclusion_conditions': [],
                     },
-                    'discovered_state': ['1'],
+                    'discovered_oper_status': ['1'],
                     'discovered_speed': 20000000.0,
                 },
                 labels=[],
@@ -397,7 +492,8 @@ ITEM_PARAMS_RESULTS = (
             'state': ['1'],
         }),
         [
-            Result(state=state.OK, summary='[vboxnet0] (up)'),
+            Result(state=state.OK, summary='[vboxnet0]'),
+            Result(state=state.OK, summary='Operational state: up'),
             Result(state=state.OK, summary='MAC: 0A:00:27:00:00:00'),
             Result(state=state.OK, summary='10 MBit/s'),
             Metric('in', 0.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
@@ -428,7 +524,8 @@ ITEM_PARAMS_RESULTS = (
             'state': ['1'],
         }),
         [
-            Result(state=state.OK, summary='[wlp2s0] (up)'),
+            Result(state=state.OK, summary='[wlp2s0]'),
+            Result(state=state.OK, summary='Operational state: up'),
             Result(state=state.OK, summary='MAC: 64:5D:86:E4:50:2F'),
             Result(state=state.OK, summary='assuming 100 MBit/s'),
             Metric('in', 800000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
@@ -472,6 +569,85 @@ def test_check_single_interface(value_store, item, params, result):
             _create_interfaces(4000000)[int(item) - 1],
             timestamp=5,
         )) == result
+
+
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_single_interface_admin_status(value_store, item, params, result):
+    params = type_defs.Parameters({
+        **params,
+        'discovered_admin_status': '1',
+    })
+    with pytest.raises(IgnoreResultsError):
+        list(
+            interfaces.check_single_interface(
+                item,
+                params,
+                _create_interfaces(0, admin_status='1')[int(item) - 1],
+                timestamp=0,
+            ))
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(4000000, admin_status='1')[int(item) - 1],
+            timestamp=5,
+        )) == result[:2] + [
+            Result(state=state.OK, summary='Admin state: up'),
+        ] + result[2:]
+
+
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_single_interface_legacy_parameters_1(value_store, item, params, result):
+    with pytest.raises(IgnoreResultsError):
+        list(
+            interfaces.check_single_interface(
+                item,
+                type_defs.Parameters({
+                    **params,
+                    'state': ['9'],
+                }),
+                _create_interfaces(0, admin_status='1')[int(item) - 1],
+                timestamp=0,
+            ))
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            type_defs.Parameters({
+                **params,
+                'state': ['9'],
+            }),
+            _create_interfaces(4000000, admin_status='1')[int(item) - 1],
+            timestamp=5,
+        )) == result[:2] + [
+            Result(state=state.CRIT, summary='Admin state: up'),
+        ] + result[2:]
+
+
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_single_interface_legacy_parameters_2(value_store, item, params, result):
+    with pytest.raises(IgnoreResultsError):
+        list(
+            interfaces.check_single_interface(
+                item,
+                type_defs.Parameters({
+                    **params,
+                    'map_operstates': [(['5', '9'], 3)],
+                }),
+                _create_interfaces(0, admin_status='2')[int(item) - 1],
+                timestamp=0,
+            ))
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            type_defs.Parameters({
+                **params,
+                'map_operstates': [(['5', '9'], 3)],
+            }),
+            _create_interfaces(4000000, admin_status='2')[int(item) - 1],
+            timestamp=5,
+        )) == result[:2] + [
+            Result(state=state.UNKNOWN, summary='Admin state: down'),
+        ] + result[2:]
 
 
 @pytest.mark.parametrize('item, params, result', [
@@ -527,11 +703,11 @@ def test_check_single_interface_group(value_store, item, params, result):
         None: [
             {
                 'name': 'vboxnet0',
-                'state_name': 'up'
+                'oper_status_name': 'up'
             },
             {
                 'name': 'wlp2s0',
-                'state_name': 'up'
+                'oper_status_name': 'up'
             },
         ]
     }
@@ -552,6 +728,45 @@ def test_check_single_interface_group(value_store, item, params, result):
             group_members=group_members,
             timestamp=5,
         )) == _add_group_info_to_results(result, 'Members: [vboxnet0 (up), wlp2s0 (up)]')
+
+
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_single_interface_group_admin_status(value_store, item, params, result):
+    group_members: interfaces.GroupMembers = {
+        None: [
+            {
+                'name': 'vboxnet0',
+                'oper_status_name': 'up',
+                'admin_status_name': 'down'
+            },
+            {
+                'name': 'wlp2s0',
+                'oper_status_name': 'up',
+                'admin_status_name': 'testing'
+            },
+        ]
+    }
+    with pytest.raises(IgnoreResultsError):
+        list(
+            interfaces.check_single_interface(
+                item,
+                params,
+                _create_interfaces(0)[int(item) - 1],
+                group_members=group_members,
+                timestamp=0,
+            ))
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(4000000)[int(item) - 1],
+            group_members=group_members,
+            timestamp=5,
+        )) == _add_group_info_to_results(
+            result,
+            'Members: [vboxnet0 (op. state: up, admin state: down), wlp2s0 (op. state: up, '
+            'admin state: testing)]',
+        )
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
@@ -580,21 +795,21 @@ def test_check_single_interface_group_w_nodes(value_store, item, params, result)
         'node1': [
             {
                 'name': 'vboxnet0',
-                'state_name': 'up'
+                'oper_status_name': 'up'
             },
             {
                 'name': 'wlp2s0',
-                'state_name': 'up'
+                'oper_status_name': 'up'
             },
         ],
         'node2': [
             {
                 'name': 'vboxnet0',
-                'state_name': 'up'
+                'oper_status_name': 'up'
             },
             {
                 'name': 'wlp2s0',
-                'state_name': 'up'
+                'oper_status_name': 'up'
             },
         ]
     }
@@ -617,8 +832,8 @@ def test_check_single_interface_group_w_nodes(value_store, item, params, result)
         )
     ) == _add_group_info_to_results(
         result,
-        'Members: [vboxnet0 (up), wlp2s0 (up) on node node1] [vboxnet0 (up), wlp2s0 (up) on node node2]'
-    )
+        'Members: [vboxnet0 (up), wlp2s0 (up) on node node1] [vboxnet0 (up), wlp2s0 (up) on node '
+        'node2]')
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
@@ -648,7 +863,7 @@ def test_check_multiple_interfaces_group_simple(value_store):
             'inclusion_condition': {},
             'exclusion_conditions': [],
         },
-        'discovered_state': ['1'],
+        'discovered_oper_status': ['1'],
         'discovered_speed': 20000000,
         'state': ['8'],
         'speed': 123456,
@@ -668,7 +883,8 @@ def test_check_multiple_interfaces_group_simple(value_store):
             _create_interfaces(4000000),
             timestamp=5,
         )) == [
-            Result(state=state.OK, summary='Group Status (degraded)'),
+            Result(state=state.OK, summary='Interface group'),
+            Result(state=state.OK, summary='Operational state: degraded'),
             Result(state=state.OK,
                    summary='Members: [1 (up), 2 (down), 3 (down), 4 (down), 5 (up), 6 (up)]'),
             Result(state=state.WARN, summary='10 MBit/s (wrong speed, expected: 123 kBit/s)'),
@@ -705,7 +921,7 @@ def test_check_multiple_interfaces_group_exclude(value_store):
                 'match_index': ['4', '5']
             }],
         },
-        'discovered_state': ['1'],
+        'discovered_oper_status': ['1'],
         'discovered_speed': 20000000,
     })
     with pytest.raises(IgnoreResultsError):
@@ -723,9 +939,10 @@ def test_check_multiple_interfaces_group_exclude(value_store):
             _create_interfaces(4000000),
             timestamp=5,
         )) == [
+            Result(state=state.OK, summary='Interface group', details='Interface group'),
             Result(state=state.CRIT,
-                   summary='Group Status (degraded)',
-                   details='Group Status (degraded)'),
+                   summary='Operational state: degraded',
+                   details='Operational state: degraded'),
             Result(state=state.OK,
                    summary='Members: [1 (up), 2 (down), 3 (down), 6 (up)]',
                    details='Members: [1 (up), 2 (down), 3 (down), 6 (up)]'),
@@ -761,7 +978,7 @@ def test_check_multiple_interfaces_group_by_agent(value_store):
         'aggregate': {
             'member_appearance': 'index',
         },
-        'discovered_state': ['1'],
+        'discovered_oper_status': ['1'],
         'discovered_speed': 20000000
     })
     with pytest.raises(IgnoreResultsError):
@@ -784,9 +1001,10 @@ def test_check_multiple_interfaces_group_by_agent(value_store):
         ifaces,
         timestamp=5,
     )) == [
+        Result(state=state.OK, summary='Interface group', details='Interface group'),
         Result(state=state.CRIT,
-               summary='Group Status (degraded)',
-               details='Group Status (degraded)'),
+               summary='Operational state: degraded',
+               details='Operational state: degraded'),
         Result(state=state.OK,
                summary='Members: [4 (down), 6 (up)]',
                details='Members: [4 (down), 6 (up)]'),
@@ -866,9 +1084,11 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
             'inclusion_condition': {
                 'match_index': ['5', '6']
             },
-            'exclusion_conditions': [],
+            'exclusion_conditions': [{
+                'admin_states': ['3'],
+            },],
         },
-        'discovered_state': ['1'],
+        'discovered_oper_status': ['1'],
         'discovered_speed': 20000000,
     })
     node_names = ['node1', 'node2', 'node3']
@@ -877,32 +1097,41 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
             interfaces.check_multiple_interfaces(
                 'group',
                 params,
-                sum((_create_interfaces(0, node=node_name) for node_name in node_names), []),
+                sum((_create_interfaces(
+                    0,
+                    admin_status=str(idx + 1),
+                    node=node_name,
+                ) for idx, node_name in enumerate(node_names)), []),
                 timestamp=0,
             ))
     assert list(
         interfaces.check_multiple_interfaces(
             'group',
             params,
-            sum((_create_interfaces(4000000, node=node_name) for node_name in node_names), []),
+            sum((_create_interfaces(
+                4000000,
+                admin_status=str(idx + 1),
+                node=node_name,
+            ) for idx, node_name in enumerate(node_names)), []),
             timestamp=5,
         )
     ) == [
-        Result(state=state.OK, summary='Group Status (up)'),
+        Result(state=state.OK, summary='Interface group'),
+        Result(state=state.OK, summary='Operational state: up'),
         Result(
             state=state.OK,
-            summary=
-            'Members: [5 (up), 6 (up) on node node1] [5 (up), 6 (up) on node node2] [5 (up), 6 (up) on node node3]'
-        ),
-        Result(state=state.OK, summary='30 MBit/s'),
-        Metric('in', 2400000.0, levels=(187500.0, 750000.0), boundaries=(0.0, 3750000.0)),
+            summary='Members: [5 (op. state: up, admin state: up), 6 (op. state: up, admin state: '
+            'up) on node node1] [5 (op. state: up, admin state: down), 6 (op. state: up, '
+            'admin state: down) on node node2]'),
+        Result(state=state.OK, summary='20 MBit/s'),
+        Metric('in', 1600000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Metric('inmcast', 0.0, levels=(None, None), boundaries=(None, None)),
         Metric('inbcast', 0.0, levels=(None, None), boundaries=(None, None)),
         Metric('inucast', 0.0, levels=(None, None), boundaries=(None, None)),
         Metric('innucast', 0.0, levels=(None, None), boundaries=(None, None)),
         Metric('indisc', 0.0, levels=(None, None), boundaries=(None, None)),
         Metric('inerr', 0.0, levels=(0.01, 0.1), boundaries=(None, None)),
-        Metric('out', 9600000.0, levels=(187500.0, 750000.0), boundaries=(0.0, 3750000.0)),
+        Metric('out', 6400000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Metric('outmcast', 0.0, levels=(None, None), boundaries=(None, None)),
         Metric('outbcast', 0.0, levels=(None, None), boundaries=(None, None)),
         Metric('outucast', 0.0, levels=(None, None), boundaries=(None, None)),
@@ -910,7 +1139,45 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
         Metric('outdisc', 0.0, levels=(None, None), boundaries=(None, None)),
         Metric('outerr', 0.0, levels=(0.01, 0.1), boundaries=(None, None)),
         Metric('outqlen', 0.0, levels=(None, None), boundaries=(None, None)),
-        Result(state=state.CRIT, summary='In: 2.40 MB/s (warn/crit at 188 kB/s/750 kB/s) (64.0%)'),
+        Result(state=state.CRIT, summary='In: 1.60 MB/s (warn/crit at 125 kB/s/500 kB/s) (64.0%)'),
         Result(state=state.CRIT,
-               summary='Out: 9.60 MB/s (warn/crit at 188 kB/s/750 kB/s) (256.0%)'),
+               summary='Out: 6.40 MB/s (warn/crit at 125 kB/s/500 kB/s) (256.0%)'),
     ]
+
+
+def test_cluster_check(monkeypatch, value_store):
+    params = type_defs.Parameters({
+        'errors': (0.01, 0.1),
+        'speed': 10000000,
+        'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
+        'state': ['1'],
+    })
+    section = {}
+    ifaces = []
+    for i in range(3):
+        iface = _create_interfaces(0)[0]
+        iface.node = 'node%s' % i
+        ifaces_node = [iface] * (i + 1)
+        section[iface.node] = ifaces_node
+        ifaces += ifaces_node
+    monkeypatch.setattr('time.time', lambda: 0)
+    with pytest.raises(IgnoreResultsError):
+        list(interfaces.cluster_check(
+            '1',
+            params,
+            section,
+        ))
+    monkeypatch.setattr('time.time', lambda: 1)
+    result_cluster_check = list(interfaces.cluster_check(
+        '1',
+        params,
+        section,
+    ))
+    monkeypatch.setattr('time.time', lambda: 2)
+    result_check_multiple_interfaces = list(
+        interfaces.check_multiple_interfaces(
+            '1',
+            params,
+            ifaces,
+        ))
+    assert result_cluster_check == result_check_multiple_interfaces

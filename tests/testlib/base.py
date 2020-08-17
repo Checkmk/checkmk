@@ -14,8 +14,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
     ('section', 'if'),
-    ('section', 'if64'),
-    ('section', 'if64adm'),
     ('section', 'if_brocade'),
     ('section', 'if_fortigate'),
     ('section', 'if_lancom'),
@@ -33,8 +31,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'docker_container_status'),
     ('check', 'docker_container_status_health'),
     ('check', 'docker_container_status_uptime'),
-    ('check', 'if64'),
-    ('check', 'if64adm'),
     ('check', 'if_fortigate'),
     ('check', 'ipmi'),
     ('check', 'juniper_trpz_aps'),

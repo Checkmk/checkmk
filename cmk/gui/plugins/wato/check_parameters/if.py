@@ -67,6 +67,41 @@ def transform_if(v):
         v["errors_in"] = error_levels
         v["errors_out"] = error_levels
 
+    # Up to and including v1.6, port state '9' was used to represent an ifAdminStatus of 2. From
+    # v1.7 onwards, ifAdminStatus is handled completely separately from the port state. Note that
+    # a unique transform is unfortunately not possible here. For example, translating
+    # {'state': [1, 2, 9]}
+    # into
+    # {'state': [1, 2], 'admin_state': [2]}
+    # might be too restrictive, since now, only ports with ifAdminStatus=2 are OK, whereas before,
+    # also ports with ifAdminStatus=1 could have been OK.
+    states = v.get('state', [])
+    try:
+        states.remove('9')
+        removed_port_state_9 = True
+    except ValueError:
+        removed_port_state_9 = False
+    # if only port state 9 was selected, a unique transform is possible
+    if removed_port_state_9 and v.get('state') == []:
+        del v['state']
+        v['admin_state'] = ['2']
+
+    # map_operstates can be transformed uniquely
+    map_operstates = v.get('map_operstates', [])
+    mon_state_9 = None
+    for oper_states, mon_state in map_operstates:
+        if '9' in oper_states:
+            mon_state_9 = mon_state
+            oper_states.remove('9')
+    if map_operstates:
+        v['map_operstates'] = [
+            mapping_oper_states for mapping_oper_states in map_operstates if mapping_oper_states
+        ]
+        if not v['map_operstates']:
+            del v['map_operstates']
+    if mon_state_9:
+        v['map_admin_states'] = [(['2'], mon_state_9)]
+
     return v
 
 
@@ -216,6 +251,23 @@ def _vs_regex_matching(match_obj):
     )
 
 
+def _note_for_admin_state_options():
+    return _(
+        "Note: The admin state is in general only available for the 64-bit SNMP interface check. "
+        "Additionally, you have to specifically configure checkmk to fetch this information using "
+        "the rule <a href='wato.py?mode=edit_ruleset&varname=use_if64adm'>SNMP Interface check: "
+        "Monitor ifAdminStatus (use 'if64adm' instead of 'if64')</a>. Using this option on hosts "
+        "which are not configured to report the admin state will have no effect.")
+
+
+def _admin_states():
+    return {
+        1: _("up"),
+        2: _("down"),
+        3: _("testing"),
+    }
+
+
 def _vs_matching_conditions():
     return CascadingDropdown(
         title=_("Conditions for this rule to apply"),
@@ -257,16 +309,23 @@ def _vs_matching_conditions():
                         "portstates",
                         ListChoice(
                             title=_("Match port states"),
-                            help=_(
-                                "Apply this rule only to interfaces whose port state is listed "
-                                "below. Note: the state <i>admin down</i> is in fact not a port "
-                                "state but represents an <tt>ifAdminStatus</tt> (SNMP only) of "
-                                "<tt>down</tt> - a port administratively switched off. If you check "
-                                "this option, <tt>ifAdminState</tt> will be fetched in addition, "
-                                "adding approximately 5% of additional SNMP traffic."),
+                            help=_("Apply this rule only to interfaces whose port state is listed "
+                                   "below."),
                             choices=defines.interface_oper_states(),
                             toggle_all=True,
                             default_value=['1'],
+                        ),
+                    ),
+                    (
+                        "admin_states",
+                        ListChoice(
+                            title=_("Match admin states (SNMP with 64-bit counters only)"),
+                            help=_("Apply this rule only to interfaces whose admin state "
+                                   "(<tt>ifAdminStatus</tt>) is listed below. " +
+                                   _note_for_admin_state_options()),
+                            choices=_admin_states(),
+                            toggle_all=True,
+                            default_value=['1', '2', '3'],
                         ),
                     ),
                     (
@@ -318,6 +377,25 @@ def _transform_discovery_if_rules(params):
         if key in params:
             params['matching_conditions'][1][key] = params.pop(key)
             params['matching_conditions'] = (False, params['matching_conditions'][1])
+
+    # Up to and including v1.6, port state '9' was used to represent an ifAdminStatus of 2. From
+    # v1.7 onwards, ifAdminStatus is handled completely separately from the port state. Note that
+    # a unique transform is unfortunately not possible here. For example, translating
+    # {'portstates': [1, 2, 9]}
+    # into
+    # {'portstates': [1, 2], 'admin_states': [2]}
+    # might be too restrictive, since we now restrict to ports with ifAdminStatus=2, whereas before,
+    # also ports with for example ifAdminStatus=1 could have matched.
+    matching_conditions_spec = params['matching_conditions'][1]
+    try:
+        matching_conditions_spec.get('portstates', []).remove('9')
+        removed_port_state_9 = True
+    except ValueError:
+        removed_port_state_9 = False
+    # if only port state 9 was selected, a unique transform is possible
+    if removed_port_state_9 and matching_conditions_spec.get('portstates') == []:
+        del matching_conditions_spec['portstates']
+        matching_conditions_spec['admin_states'] = ['2']
 
     return params
 
@@ -482,6 +560,28 @@ rulespec_registry.register(
         title=lambda: _("Hosts forced to use <tt>if</tt> instead of <tt>if64</tt>"),
     ))
 
+rulespec_registry.register(
+    BinaryHostRulespec(
+        group=RulespecGroupCheckParametersNetworking,
+        help_func=lambda: _(
+            "On hosts where this option is activated, the 64-bit SNMP interface check will "
+            "in addition to the default output also monitor the admin state "
+            "<tt>ifAdminStatus</tt>. The admin state can be used both when configuring the "
+            "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>discovery of "
+            "interfaces (\"Network Interface and Switch Port Discovery\")</a> and the "
+            "<a href='wato.py?mode=edit_ruleset&varname=checkgroup_parameters:if'>corresponding "
+            "monitoring states (\"Network interfaces and switch ports\")</a>. Note that activating "
+            "this option will lead to an increase in SNMP traffic of approximately 5%. Also note "
+            "that after activating or deactivating this option, you have to-rediscover the "
+            "services of affected hosts for this change to have an effect. This is necessary "
+            "because when reporting the admin state, checkmk uses a different check plugin "
+            "(<tt>if64adm</tt> instead of <tt>if64</tt>). However, by default, <tt>if64adm</tt> "
+            "generates the same services as <tt>if64</tt>, but with additional output."),
+        name="use_if64adm",
+        title=lambda: _(
+            "SNMP Interface check: Monitor ifAdminStatus (use 'if64adm' instead of 'if64')"),
+    ))
+
 
 def _vs_if_errors(title):
     return Alternative(
@@ -522,7 +622,8 @@ def _parameter_valuespec_if():
         Dictionary(
             ignored_keys=[
                 "aggregate",
-                "discovered_state",
+                "discovered_oper_status",
+                "discovered_admin_status",
                 "discovered_speed",
             ],  # Created by discovery
             elements=[
@@ -548,19 +649,16 @@ def _parameter_valuespec_if():
                      explicit=Integer(title=_("Other speed in bits per second"),
                                       label=_("Bits per second")))),
                 ("state",
-                 Optional(
-                     ListChoice(title=_("Allowed states:"),
-                                choices=defines.interface_oper_states()),
-                     title=_("Operational state"),
-                     help=
-                     _("If you activate the monitoring of the operational state (<tt>ifOperStatus</tt>) "
-                       "the check will get warning or critical if the current state "
-                       "of the interface does not match one of the expected states. Note: the status 9 (<i>admin down</i>) "
-                       "is only visible if you activate this status during switch port inventory or if you manually "
-                       "use the check plugin <tt>if64adm</tt> instead of <tt>if64</tt>."),
-                     label=_("Ignore the operational state"),
-                     none_label=_("ignore"),
-                     negate=True)),
+                 Optional(ListChoice(title=_("Allowed operational states:"),
+                                     choices=defines.interface_oper_states()),
+                          title=_("Operational state"),
+                          help=_(
+                              "If you activate the monitoring of the operational state "
+                              "(<tt>ifOperStatus</tt>), the check will go critical if the current "
+                              "state of the interface does not match one of the expected states."),
+                          label=_("Ignore the operational state"),
+                          none_label=_("ignore"),
+                          negate=True)),
                 ("map_operstates",
                  ListOf(
                      Tuple(orientation="horizontal",
@@ -569,6 +667,28 @@ def _parameter_valuespec_if():
                                MonitoringState()
                            ]),
                      title=_('Map operational states'),
+                     help=_(
+                         'Map the operational state (<tt>ifOperStatus</tt>) to a monitoring state.')
+                 )),
+                ("admin_state",
+                 Optional(
+                     ListChoice(title=_("Allowed admin states:"), choices=_admin_states()),
+                     title=_("Admin state (SNMP with 64-bit counters only)"),
+                     help=_("If you activate the monitoring of the admin state "
+                            "(<tt>ifAdminStatus</tt>), the check will go critical if the "
+                            "current state of the interface does not match one of the expected "
+                            "states. " + _note_for_admin_state_options()),
+                     label=_("Ignore the admin state"),
+                     none_label=_("ignore"),
+                     negate=True)),
+                ("map_admin_states",
+                 ListOf(
+                     Tuple(orientation="horizontal",
+                           elements=[ListChoice(choices=_admin_states()),
+                                     MonitoringState()]),
+                     title=_('Map admin states (SNMP with 64-bit counters only)'),
+                     help=_("Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state. " +
+                            _note_for_admin_state_options()),
                  )),
                 ("assumed_speed_in",
                  OptionalDropdownChoice(

@@ -37,6 +37,7 @@ import cmk.store as store
 import cmk.tty as tty
 import cmk.cpu_tracking as cpu_tracking
 from cmk.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.regex import regex
 
 import cmk_base.utils
 import cmk_base.console as console
@@ -627,9 +628,8 @@ class CheckMKAgentDataSource(DataSource):
                     # Protect Check_MK against unallowed host names. Normally source scripts
                     # like agent plugins should care about cleaning their provided host names
                     # up, but we need to be sure here to prevent bugs in Check_MK code.
-                    # a) Replace spaces by underscores
                     if host:
-                        host = host.replace(" ", "_")
+                        host = regex("[^-0-9a-zA-Z_.]").sub("_", host)
 
             elif host: # processing data for an other host
                 piggybacked_raw_data.setdefault(host, []).append(line)

@@ -22,10 +22,10 @@ def expected_items() -> Dict[str, List[str]]:
     else:
         agents_items += [
             'agents',
-            'download_agents',
         ]
 
     agents_items += [
+        'download_agents',
         'wato.py?mode=rulesets&group=vm_cloud_container',
         'wato.py?mode=rulesets&group=datasource_programs',
         'wato.py?mode=rulesets&group=custom_integrations',

@@ -177,9 +177,10 @@ class UISidebarPosition(UserAttribute):
         return "personal"
 
     def valuespec(self):
-        return Checkbox(
+        return DropdownChoice(
             title=_("Sidebar position"),
-            label=_("Show sidebar on the left instead of the right"),
+            choices=[(None, _("Right")), ("left", _("Left"))],
+            no_preselect_value=False,
         )
 
     def domain(self):
@@ -196,9 +197,10 @@ class UIIconPlacement(UserAttribute):
         return "personal"
 
     def valuespec(self):
-        return Checkbox(
-            title=_("Icons per item"),
-            label=_("Show one icon per item in the mega menu"),
+        return DropdownChoice(
+            title=_("Main menu icons"),
+            choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
+            no_preselect_value=False,
         )
 
     def domain(self):

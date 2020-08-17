@@ -70,6 +70,12 @@ def evaluate_time_series_expression(expression, rrd_data):
         operands_evaluated = evaluate_time_series_expression(operands[0], rrd_data)
         if transform == 'percentile':
             return time_series_operator_perc(operands_evaluated, conf)
+
+        if transform == 'filter_top':
+            if isinstance(operands_evaluated, TimeSeries):
+                return operands_evaluated
+            return operands_evaluated[:conf["amount"]]
+
         if transform == 'value_sort':
             if isinstance(operands_evaluated, TimeSeries):
                 return operands_evaluated

@@ -249,10 +249,14 @@ checks = {
     ],
     'connections': [
         ('mysql', {}, [
-            (0, 'Max. parallel Connections: 2 (Max.: 4): 50.00%', [
-                ('connections_max_used', 2.0, None, None, None, None),
-                ('connections_max', 4.0, None, None, None, None),
+            (0, 'Max. parallel connections since server start: 50.00%', [
                 ('connections_perc_used', 50.0, None, None, None, None),
+            ]),
+            (0, '', [
+                ('connections_max_used', 2.0, None, None, None, None),
+            ]),
+            (0, '', [
+                ('connections_max', 4.0, None, None, None, None),
             ]),
         ])
     ],

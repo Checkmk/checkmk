@@ -154,7 +154,7 @@ check_info['mysql.innodb_io'] = {
 @get_parsed_item_data
 def check_mysql_connections(_no_item, params, data):
     if 'Max_used_connections' not in data:
-        return 3, 'Connection information are missing'
+        return 3, 'Connection information is missing'
 
     # The maximum number of connections that have been in use simultaneously
     # since the server started.
@@ -165,28 +165,31 @@ def check_mysql_connections(_no_item, params, data):
 
     perc_used = conn / max_conn * 100
 
-    status = 0
-    status_txt = ''
-    perf_data = [
-        ("connections_max_used", conn),
-        ("connections_max", max_conn),
-        ('connections_perc_used', perc_used),
-    ]
+    value_fmt = '%0.2f%%'
 
-    if 'perc_used' in params:
-        warn, crit = params['perc_used']
-        if perc_used >= crit:
-            status = 2
-            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                         'has been reached at least once since program start' % crit
-        elif perc_used >= warn:
-            status = 1
-            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                         'has been reached at least once since program start' % warn
+    status_txt = 'Max. parallel connections since server start'
 
+    yield check_levels(
+        value=perc_used,
+        dsname='connections_perc_used',
+        params=params.get('perc_used'),
+        human_readable_func=lambda perc_used: value_fmt % perc_used,
+        infoname=status_txt,
+    )
 
-    return status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' % \
-            (conn, max_conn, perc_used, status_txt), perf_data
+    yield check_levels(
+        value=conn,
+        dsname='connections_max_used',
+        params=None,
+        human_readable_func=lambda x: '',
+    )
+
+    yield check_levels(
+        value=max_conn,
+        dsname='connections_max',
+        params=None,
+        human_readable_func=lambda x: '',
+    )
 
 
 @discover

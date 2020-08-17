@@ -11,7 +11,7 @@ import re
 import io
 import time
 import zipfile
-from typing import Callable, Dict, List, Optional as _Optional, TypeVar, Union
+from typing import Callable, Dict, List, Optional as _Optional, TypeVar, Union, Type
 from pathlib import Path
 
 from pysmi.compiler import MibCompiler  # type: ignore[import]
@@ -2315,19 +2315,16 @@ class ModeEventConsoleEditGlobalSetting(EditGlobalSettingMode):
     def permissions(cls):
         return ["mkeventd.config"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeEventConsoleSettings
+
     def __init__(self):
         super(ModeEventConsoleEditGlobalSetting, self).__init__()
         self._need_restart = None
 
     def title(self):
         return _("Event Console Configuration")
-
-    def buttons(self):
-        html.context_button(_("Abort"),
-                            watolib.folder_preserving_link([("mode", "mkeventd_config")]), "abort")
-
-    def _back_mode(self):
-        return "mkeventd_config"
 
     def _affected_sites(self):
         return _get_event_console_sync_sites()

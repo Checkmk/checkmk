@@ -12,7 +12,7 @@ factory_settings['mssql_transactionlogs_default_levels'] = {
 }
 
 check_info['mssql_transactionlogs'] = {
-    'parse_function': parse_mssql_datafiles,
+    # 'parse_function': parse_mssql_datafiles,  # section already migrated!
     'inventory_function': lambda parsed: inventory_mssql_datafiles("transactionlogs", parsed),
     'check_function': check_mssql_datafiles,
     'service_description': 'MSSQL Transactionlog %s',

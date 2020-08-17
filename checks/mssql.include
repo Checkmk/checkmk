@@ -95,35 +95,6 @@ def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, 
 mssql_transactionlogs_discovery = []
 
 
-def parse_mssql_datafiles(info):
-    parsed = {}
-    for line in info:
-        if line[-1].startswith("ERROR: "):
-            continue
-        if len(line) == 8:
-            inst, database, file_name, _physical_name, max_size, allocated_size, used_size, unlimited = line
-            unlimited = unlimited == '1'
-        elif len(line) == 6:
-            database, file_name, _physical_name, max_size, allocated_size, used_size = line
-            inst = None
-            unlimited = False
-        else:
-            continue
-
-        mssql_instance = parsed.setdefault((inst, database, file_name), {"unlimited": unlimited})
-        for key, value_str in [
-            ("max_size", max_size),
-            ("allocated_size", allocated_size),
-            ("used_size", used_size),
-        ]:
-            try:
-                value = float(value_str) * 1024 * 1024
-            except ValueError:
-                value = None
-            mssql_instance[key] = value
-    return parsed
-
-
 def inventory_mssql_datafiles(mode, parsed_extra):
     parsed = parsed_extra[0]
     parsed_databases = parse_mssql_databases(parsed_extra[1])

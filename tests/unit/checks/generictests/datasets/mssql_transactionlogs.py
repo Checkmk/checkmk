@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs import parse_mssql_datafiles
 # yapf: disable
 # type: ignore
 
 
 checkname = 'mssql_transactionlogs'
 
-info = [
+parsed = parse_mssql_datafiles([
     [
         'MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log',
         'Z:\\mypath\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'
@@ -47,9 +48,9 @@ info = [
         'MSSQL46', 'test_autoclose', 'test_autoclose_log',
         'Z:\\mypath\\test_autoclose_log.ldf', '2097152', '32', '1', '0'
     ]
-]
+])
 
-discovery = {
+discovery = {  # type: ignore[var-annotated]
     '': [
         ('MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log', {}),
         ('MSSQL46.DASH_CONFIG_T.DASH_CONFIG_T_log', {}),

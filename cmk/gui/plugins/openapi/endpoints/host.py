@@ -7,6 +7,7 @@
 """
 
 from cmk.gui import sites
+from cmk.gui.plugins.openapi.endpoints.utils import add_if_missing, verify_columns
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -59,27 +60,39 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
                          schema_num_minimum=0,
                          schema_num_maximum=3,
                      ),
+                     ParamDict.create(
+                         'columns',
+                         'query',
+                         required=False,
+                         description="The desired columns of the hosts table. If left empty, "
+                         "a default set of columns is used.",
+                         schema_enum=Hosts.__columns__(),
+                         schema_type='array',
+                     )
                  ],
                  response_schema=response_schemas.DomainObjectCollection)
 def list_hosts(param):
     """List currently monitored hosts."""
     live = sites.live()
 
-    q = Query([
-        Hosts.name,
-        Hosts.address,
-        Hosts.alias,
-        Hosts.downtimes_with_info,
-        Hosts.scheduled_downtime_depth,
-    ])
+    default_columns = [
+        'name',
+        'address',
+        'alias',
+        'downtimes_with_info',
+        'scheduled_downtime_depth',
+    ]
+    column_names = add_if_missing(param.get('columns', default_columns), ['name', 'address'])
+    columns = verify_columns(Hosts, column_names)
+    q = Query(columns)
 
     host_name = param.get('host_name')
     if host_name is not None:
         q = q.filter(Hosts.name.contains(host_name))
 
-    alias = param.get('host_alias')
-    if alias is not None:
-        q = q.filter(Hosts.alias.contains(alias))
+    host_alias = param.get('host_alias')
+    if host_alias is not None:
+        q = q.filter(Hosts.alias.contains(host_alias))
 
     in_downtime = param.get('in_downtime')
     if in_downtime is not None:
@@ -105,6 +118,7 @@ def list_hosts(param):
                 identifier=entry['name'],
                 editable=False,
                 deletable=False,
+                extensions=entry,
             ) for entry in result
         ],
         base='',

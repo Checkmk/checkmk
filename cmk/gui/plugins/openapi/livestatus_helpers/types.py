@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
     ScalarExpression,
@@ -24,6 +24,15 @@ class Table(abc.ABC):
     def __tablename__(self):
         raise NotImplementedError("Please set __tablename__ to the name of the livestatus table")
 
+    @classmethod
+    def __columns__(cls) -> List[str]:
+        """Gives a list of all columns which are defined on the Table."""
+        columns = []
+        for key, value in cls.__dict__.items():
+            if isinstance(value, Column):
+                columns.append(key)
+        return columns
+
 
 class NoTable(Table):
     """Like a livestatus table, but not really.
@@ -35,7 +44,11 @@ class NoTable(Table):
     def __tablename__(self):
         raise AttributeError("This table has no name.")
 
-    def __bool__(self):
+    @classmethod
+    def __columns__(cls) -> List[str]:
+        raise NotImplementedError("NoTable instances have no columns.")
+
+    def __bool__(self) -> bool:
         return False
 
 
@@ -129,7 +142,7 @@ class Column:
         copy.label_name = label_name
         return copy
 
-    def __get__(self, obj, obj_type):
+    def __get__(self, obj, obj_type) -> 'Column':
         # As we don't know on which Table this Column is located, we use
         # the descriptor protocol during attribute access to find out.
         if not self.table:

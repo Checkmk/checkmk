@@ -278,6 +278,7 @@ components:
           items:
             $ref: '#/components/schemas/CreateFolder'
           type: array
+          uniqueItems: true
       type: object
     BulkCreateHost:
       properties:
@@ -397,6 +398,7 @@ components:
           items:
             $ref: '#/components/schemas/InputContactGroup'
           type: array
+          uniqueItems: true
       type: object
     BulkInputHostGroup:
       properties:
@@ -407,6 +409,7 @@ components:
           items:
             $ref: '#/components/schemas/InputHostGroup'
           type: array
+          uniqueItems: true
       type: object
     BulkInputServiceGroup:
       properties:
@@ -417,6 +420,7 @@ components:
           items:
             $ref: '#/components/schemas/InputServiceGroup'
           type: array
+          uniqueItems: true
       type: object
     ConcreteFolder:
       discriminator:
@@ -2027,9 +2031,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/contact_group_config/actions/bulk-create/invoke\"\
-          ,\n    json={\n        \"entries\": [\n            {\n                \"\
-          alias\": \"Not on Sundays\",\n                \"name\": \"OnCall\"\n   \
-          \         }\n        ]\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'entries': [{\n            'name': 'OnCall',\n  \
+          \          'alias': 'Not on Sundays'\n        }]\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -2038,10 +2042,9 @@ paths:
           \    f\"{API_URL}/domain-types/contact_group_config/actions/bulk-create/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"entries\": [\n            {\n\
-          \                \"alias\": \"Not on Sundays\",\n                \"name\"\
-          : \"OnCall\"\n            }\n        ]\n    }).encode('utf-8'),\n)\nresponse\
-          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \    },\n    data=json.dumps({\n        'entries': [{\n            'name':\
+          \ 'OnCall',\n            'alias': 'Not on Sundays'\n        }]\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -2773,10 +2776,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/folder_config/actions/bulk-create/invoke\"\
-          ,\n    json={\n        \"entries\": [\n            {\n                \"\
-          attributes\": {\n                    \"foo\": \"bar\"\n                },\n\
-          \                \"name\": \"production\",\n                \"parent\":\
-          \ \"root\"\n            }\n        ]\n    },\n)\nresp.raise_for_status()\n\
+          ,\n    json={\n        'entries': [{\n            'name': 'production',\n\
+          \            'parent': 'root',\n            'attributes': {\n          \
+          \      'foo': 'bar'\n            }\n        }]\n    },\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -2786,10 +2788,9 @@ paths:
           \    f\"{API_URL}/domain-types/folder_config/actions/bulk-create/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"entries\": [\n            {\n\
-          \                \"attributes\": {\n                    \"foo\": \"bar\"\
-          \n                },\n                \"name\": \"production\",\n      \
-          \          \"parent\": \"root\"\n            }\n        ]\n    }).encode('utf-8'),\n\
+          \    },\n    data=json.dumps({\n        'entries': [{\n            'name':\
+          \ 'production',\n            'parent': 'root',\n            'attributes':\
+          \ {\n                'foo': 'bar'\n            }\n        }]\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -3218,6 +3219,148 @@ paths:
           maximum: 3
           minimum: 0
           type: integer
+      - allowEmptyValue: false
+        description: The desired columns of the hosts table. If left empty, a default
+          set of columns is used.
+        in: query
+        name: columns
+        required: false
+        schema:
+          enum:
+          - accept_passive_checks
+          - acknowledged
+          - acknowledgement_type
+          - action_url
+          - action_url_expanded
+          - active_checks_enabled
+          - address
+          - alias
+          - check_command
+          - check_command_expanded
+          - check_flapping_recovery_notification
+          - check_freshness
+          - check_interval
+          - check_options
+          - check_period
+          - check_type
+          - checks_enabled
+          - children
+          - comments
+          - comments_with_extra_info
+          - comments_with_info
+          - contact_groups
+          - contacts
+          - current_attempt
+          - current_notification_number
+          - custom_variable_names
+          - custom_variable_values
+          - custom_variables
+          - display_name
+          - downtimes
+          - downtimes_with_extra_info
+          - downtimes_with_info
+          - event_handler
+          - event_handler_enabled
+          - execution_time
+          - filename
+          - first_notification_delay
+          - flap_detection_enabled
+          - flappiness
+          - groups
+          - hard_state
+          - has_been_checked
+          - high_flap_threshold
+          - icon_image
+          - icon_image_alt
+          - icon_image_expanded
+          - in_check_period
+          - in_notification_period
+          - in_service_period
+          - initial_state
+          - is_executing
+          - is_flapping
+          - label_names
+          - label_source_names
+          - label_source_values
+          - label_sources
+          - label_values
+          - labels
+          - last_check
+          - last_hard_state
+          - last_hard_state_change
+          - last_notification
+          - last_state
+          - last_state_change
+          - last_time_down
+          - last_time_unreachable
+          - last_time_up
+          - latency
+          - long_plugin_output
+          - low_flap_threshold
+          - max_check_attempts
+          - metrics
+          - mk_inventory
+          - mk_inventory_gz
+          - mk_inventory_last
+          - mk_logwatch_files
+          - modified_attributes
+          - modified_attributes_list
+          - name
+          - next_check
+          - next_notification
+          - no_more_notifications
+          - notes
+          - notes_expanded
+          - notes_url
+          - notes_url_expanded
+          - notification_interval
+          - notification_period
+          - notification_postponement_reason
+          - notifications_enabled
+          - num_services
+          - num_services_crit
+          - num_services_handled_problems
+          - num_services_hard_crit
+          - num_services_hard_ok
+          - num_services_hard_unknown
+          - num_services_hard_warn
+          - num_services_ok
+          - num_services_pending
+          - num_services_unhandled_problems
+          - num_services_unknown
+          - num_services_warn
+          - obsess_over_host
+          - parents
+          - pending_flex_downtime
+          - percent_state_change
+          - perf_data
+          - plugin_output
+          - pnpgraph_present
+          - previous_hard_state
+          - process_performance_data
+          - retry_interval
+          - scheduled_downtime_depth
+          - service_period
+          - services
+          - services_with_fullstate
+          - services_with_info
+          - services_with_state
+          - smartping_timeout
+          - staleness
+          - state
+          - state_type
+          - statusmap_image
+          - structured_status
+          - tag_names
+          - tag_values
+          - tags
+          - total_services
+          - worst_service_hard_state
+          - worst_service_state
+          - x_3d
+          - y_3d
+          - z_3d
+          type: array
       responses:
         default:
           content:
@@ -3777,7 +3920,7 @@ paths:
                 $ref: '#/components/schemas/DomainObjectCollection'
           description: ''
           headers: {}
-      summary: List service-groups
+      summary: List host-groups
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group_config
       x-codeSamples:
@@ -3919,9 +4062,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_group_config/actions/bulk-create/invoke\"\
-          ,\n    json={\n        \"entries\": [\n            {\n                \"\
-          alias\": \"Windows Servers\",\n                \"name\": \"windows\"\n \
-          \           }\n        ]\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'entries': [{\n            'name': 'windows',\n \
+          \           'alias': 'Windows Servers'\n        }]\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3930,10 +4073,9 @@ paths:
           \    f\"{API_URL}/domain-types/host_group_config/actions/bulk-create/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"entries\": [\n            {\n\
-          \                \"alias\": \"Windows Servers\",\n                \"name\"\
-          : \"windows\"\n            }\n        ]\n    }).encode('utf-8'),\n)\nresponse\
-          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \    },\n    data=json.dumps({\n        'entries': [{\n            'name':\
+          \ 'windows',\n            'alias': 'Windows Servers'\n        }]\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -4269,6 +4411,252 @@ paths:
           maximum: 3
           minimum: 0
           type: integer
+      - allowEmptyValue: false
+        description: The desired columns of the services table. If left empty, a default
+          set of columns is used.
+        in: query
+        name: columns
+        required: false
+        schema:
+          enum:
+          - accept_passive_checks
+          - acknowledged
+          - acknowledgement_type
+          - action_url
+          - action_url_expanded
+          - active_checks_enabled
+          - cache_interval
+          - cached_at
+          - check_command
+          - check_command_expanded
+          - check_flapping_recovery_notification
+          - check_freshness
+          - check_interval
+          - check_options
+          - check_period
+          - check_type
+          - checks_enabled
+          - comments
+          - comments_with_extra_info
+          - comments_with_info
+          - contact_groups
+          - contacts
+          - current_attempt
+          - current_notification_number
+          - custom_variable_names
+          - custom_variable_values
+          - custom_variables
+          - description
+          - display_name
+          - downtimes
+          - downtimes_with_extra_info
+          - downtimes_with_info
+          - event_handler
+          - event_handler_enabled
+          - execution_time
+          - first_notification_delay
+          - flap_detection_enabled
+          - flappiness
+          - groups
+          - hard_state
+          - has_been_checked
+          - high_flap_threshold
+          - host_accept_passive_checks
+          - host_acknowledged
+          - host_acknowledgement_type
+          - host_action_url
+          - host_action_url_expanded
+          - host_active_checks_enabled
+          - host_address
+          - host_alias
+          - host_check_command
+          - host_check_command_expanded
+          - host_check_flapping_recovery_notification
+          - host_check_freshness
+          - host_check_interval
+          - host_check_options
+          - host_check_period
+          - host_check_type
+          - host_checks_enabled
+          - host_children
+          - host_comments
+          - host_comments_with_extra_info
+          - host_comments_with_info
+          - host_contact_groups
+          - host_contacts
+          - host_current_attempt
+          - host_current_notification_number
+          - host_custom_variable_names
+          - host_custom_variable_values
+          - host_custom_variables
+          - host_display_name
+          - host_downtimes
+          - host_downtimes_with_extra_info
+          - host_downtimes_with_info
+          - host_event_handler
+          - host_event_handler_enabled
+          - host_execution_time
+          - host_filename
+          - host_first_notification_delay
+          - host_flap_detection_enabled
+          - host_flappiness
+          - host_groups
+          - host_hard_state
+          - host_has_been_checked
+          - host_high_flap_threshold
+          - host_icon_image
+          - host_icon_image_alt
+          - host_icon_image_expanded
+          - host_in_check_period
+          - host_in_notification_period
+          - host_in_service_period
+          - host_initial_state
+          - host_is_executing
+          - host_is_flapping
+          - host_label_names
+          - host_label_source_names
+          - host_label_source_values
+          - host_label_sources
+          - host_label_values
+          - host_labels
+          - host_last_check
+          - host_last_hard_state
+          - host_last_hard_state_change
+          - host_last_notification
+          - host_last_state
+          - host_last_state_change
+          - host_last_time_down
+          - host_last_time_unreachable
+          - host_last_time_up
+          - host_latency
+          - host_long_plugin_output
+          - host_low_flap_threshold
+          - host_max_check_attempts
+          - host_metrics
+          - host_mk_inventory
+          - host_mk_inventory_gz
+          - host_mk_inventory_last
+          - host_mk_logwatch_files
+          - host_modified_attributes
+          - host_modified_attributes_list
+          - host_name
+          - host_next_check
+          - host_next_notification
+          - host_no_more_notifications
+          - host_notes
+          - host_notes_expanded
+          - host_notes_url
+          - host_notes_url_expanded
+          - host_notification_interval
+          - host_notification_period
+          - host_notification_postponement_reason
+          - host_notifications_enabled
+          - host_num_services
+          - host_num_services_crit
+          - host_num_services_handled_problems
+          - host_num_services_hard_crit
+          - host_num_services_hard_ok
+          - host_num_services_hard_unknown
+          - host_num_services_hard_warn
+          - host_num_services_ok
+          - host_num_services_pending
+          - host_num_services_unhandled_problems
+          - host_num_services_unknown
+          - host_num_services_warn
+          - host_obsess_over_host
+          - host_parents
+          - host_pending_flex_downtime
+          - host_percent_state_change
+          - host_perf_data
+          - host_plugin_output
+          - host_pnpgraph_present
+          - host_previous_hard_state
+          - host_process_performance_data
+          - host_retry_interval
+          - host_scheduled_downtime_depth
+          - host_service_period
+          - host_services
+          - host_services_with_fullstate
+          - host_services_with_info
+          - host_services_with_state
+          - host_smartping_timeout
+          - host_staleness
+          - host_state
+          - host_state_type
+          - host_statusmap_image
+          - host_structured_status
+          - host_tag_names
+          - host_tag_values
+          - host_tags
+          - host_total_services
+          - host_worst_service_hard_state
+          - host_worst_service_state
+          - host_x_3d
+          - host_y_3d
+          - host_z_3d
+          - icon_image
+          - icon_image_alt
+          - icon_image_expanded
+          - in_check_period
+          - in_notification_period
+          - in_passive_check_period
+          - in_service_period
+          - initial_state
+          - is_executing
+          - is_flapping
+          - label_names
+          - label_source_names
+          - label_source_values
+          - label_sources
+          - label_values
+          - labels
+          - last_check
+          - last_hard_state
+          - last_hard_state_change
+          - last_notification
+          - last_state
+          - last_state_change
+          - last_time_critical
+          - last_time_ok
+          - last_time_unknown
+          - last_time_warning
+          - latency
+          - long_plugin_output
+          - low_flap_threshold
+          - max_check_attempts
+          - metrics
+          - modified_attributes
+          - modified_attributes_list
+          - next_check
+          - next_notification
+          - no_more_notifications
+          - notes
+          - notes_expanded
+          - notes_url
+          - notes_url_expanded
+          - notification_interval
+          - notification_period
+          - notification_postponement_reason
+          - notifications_enabled
+          - obsess_over_service
+          - passive_check_period
+          - pending_flex_downtime
+          - percent_state_change
+          - perf_data
+          - plugin_output
+          - pnpgraph_present
+          - previous_hard_state
+          - process_performance_data
+          - retry_interval
+          - scheduled_downtime_depth
+          - service_period
+          - staleness
+          - state
+          - state_type
+          - tag_names
+          - tag_values
+          - tags
+          type: array
       responses:
         default:
           content:
@@ -4316,7 +4704,7 @@ paths:
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    -G  \\\n    --data-urlencode \"host_alias=example\" \\\n    --data-urlencode\
           \ \"acknowledged=0\" \\\n    --data-urlencode \"in_downtime=1\" \\\n   \
-          \ --data-urlencode \"status=0\"\n    \"$API_URL/objects/host/example.com/collections/services\""
+          \ --data-urlencode \"status=0\" \\\n    \"$API_URL/objects/host/example.com/collections/services\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -4369,6 +4757,252 @@ paths:
           maximum: 3
           minimum: 0
           type: integer
+      - allowEmptyValue: false
+        description: The desired columns of the services table. If left empty, a default
+          set of columns is used.
+        in: query
+        name: columns
+        required: false
+        schema:
+          enum:
+          - accept_passive_checks
+          - acknowledged
+          - acknowledgement_type
+          - action_url
+          - action_url_expanded
+          - active_checks_enabled
+          - cache_interval
+          - cached_at
+          - check_command
+          - check_command_expanded
+          - check_flapping_recovery_notification
+          - check_freshness
+          - check_interval
+          - check_options
+          - check_period
+          - check_type
+          - checks_enabled
+          - comments
+          - comments_with_extra_info
+          - comments_with_info
+          - contact_groups
+          - contacts
+          - current_attempt
+          - current_notification_number
+          - custom_variable_names
+          - custom_variable_values
+          - custom_variables
+          - description
+          - display_name
+          - downtimes
+          - downtimes_with_extra_info
+          - downtimes_with_info
+          - event_handler
+          - event_handler_enabled
+          - execution_time
+          - first_notification_delay
+          - flap_detection_enabled
+          - flappiness
+          - groups
+          - hard_state
+          - has_been_checked
+          - high_flap_threshold
+          - host_accept_passive_checks
+          - host_acknowledged
+          - host_acknowledgement_type
+          - host_action_url
+          - host_action_url_expanded
+          - host_active_checks_enabled
+          - host_address
+          - host_alias
+          - host_check_command
+          - host_check_command_expanded
+          - host_check_flapping_recovery_notification
+          - host_check_freshness
+          - host_check_interval
+          - host_check_options
+          - host_check_period
+          - host_check_type
+          - host_checks_enabled
+          - host_children
+          - host_comments
+          - host_comments_with_extra_info
+          - host_comments_with_info
+          - host_contact_groups
+          - host_contacts
+          - host_current_attempt
+          - host_current_notification_number
+          - host_custom_variable_names
+          - host_custom_variable_values
+          - host_custom_variables
+          - host_display_name
+          - host_downtimes
+          - host_downtimes_with_extra_info
+          - host_downtimes_with_info
+          - host_event_handler
+          - host_event_handler_enabled
+          - host_execution_time
+          - host_filename
+          - host_first_notification_delay
+          - host_flap_detection_enabled
+          - host_flappiness
+          - host_groups
+          - host_hard_state
+          - host_has_been_checked
+          - host_high_flap_threshold
+          - host_icon_image
+          - host_icon_image_alt
+          - host_icon_image_expanded
+          - host_in_check_period
+          - host_in_notification_period
+          - host_in_service_period
+          - host_initial_state
+          - host_is_executing
+          - host_is_flapping
+          - host_label_names
+          - host_label_source_names
+          - host_label_source_values
+          - host_label_sources
+          - host_label_values
+          - host_labels
+          - host_last_check
+          - host_last_hard_state
+          - host_last_hard_state_change
+          - host_last_notification
+          - host_last_state
+          - host_last_state_change
+          - host_last_time_down
+          - host_last_time_unreachable
+          - host_last_time_up
+          - host_latency
+          - host_long_plugin_output
+          - host_low_flap_threshold
+          - host_max_check_attempts
+          - host_metrics
+          - host_mk_inventory
+          - host_mk_inventory_gz
+          - host_mk_inventory_last
+          - host_mk_logwatch_files
+          - host_modified_attributes
+          - host_modified_attributes_list
+          - host_name
+          - host_next_check
+          - host_next_notification
+          - host_no_more_notifications
+          - host_notes
+          - host_notes_expanded
+          - host_notes_url
+          - host_notes_url_expanded
+          - host_notification_interval
+          - host_notification_period
+          - host_notification_postponement_reason
+          - host_notifications_enabled
+          - host_num_services
+          - host_num_services_crit
+          - host_num_services_handled_problems
+          - host_num_services_hard_crit
+          - host_num_services_hard_ok
+          - host_num_services_hard_unknown
+          - host_num_services_hard_warn
+          - host_num_services_ok
+          - host_num_services_pending
+          - host_num_services_unhandled_problems
+          - host_num_services_unknown
+          - host_num_services_warn
+          - host_obsess_over_host
+          - host_parents
+          - host_pending_flex_downtime
+          - host_percent_state_change
+          - host_perf_data
+          - host_plugin_output
+          - host_pnpgraph_present
+          - host_previous_hard_state
+          - host_process_performance_data
+          - host_retry_interval
+          - host_scheduled_downtime_depth
+          - host_service_period
+          - host_services
+          - host_services_with_fullstate
+          - host_services_with_info
+          - host_services_with_state
+          - host_smartping_timeout
+          - host_staleness
+          - host_state
+          - host_state_type
+          - host_statusmap_image
+          - host_structured_status
+          - host_tag_names
+          - host_tag_values
+          - host_tags
+          - host_total_services
+          - host_worst_service_hard_state
+          - host_worst_service_state
+          - host_x_3d
+          - host_y_3d
+          - host_z_3d
+          - icon_image
+          - icon_image_alt
+          - icon_image_expanded
+          - in_check_period
+          - in_notification_period
+          - in_passive_check_period
+          - in_service_period
+          - initial_state
+          - is_executing
+          - is_flapping
+          - label_names
+          - label_source_names
+          - label_source_values
+          - label_sources
+          - label_values
+          - labels
+          - last_check
+          - last_hard_state
+          - last_hard_state_change
+          - last_notification
+          - last_state
+          - last_state_change
+          - last_time_critical
+          - last_time_ok
+          - last_time_unknown
+          - last_time_warning
+          - latency
+          - long_plugin_output
+          - low_flap_threshold
+          - max_check_attempts
+          - metrics
+          - modified_attributes
+          - modified_attributes_list
+          - next_check
+          - next_notification
+          - no_more_notifications
+          - notes
+          - notes_expanded
+          - notes_url
+          - notes_url_expanded
+          - notification_interval
+          - notification_period
+          - notification_postponement_reason
+          - notifications_enabled
+          - obsess_over_service
+          - passive_check_period
+          - pending_flex_downtime
+          - percent_state_change
+          - perf_data
+          - plugin_output
+          - pnpgraph_present
+          - previous_hard_state
+          - process_performance_data
+          - retry_interval
+          - scheduled_downtime_depth
+          - service_period
+          - staleness
+          - state
+          - state_type
+          - tag_names
+          - tag_values
+          - tags
+          type: array
       responses:
         default:
           content:
@@ -4419,7 +5053,7 @@ paths:
           \ \\\n    -G  \\\n    --data-urlencode \"host_name=example.com\" \\\n  \
           \  --data-urlencode \"host_alias=example\" \\\n    --data-urlencode \"acknowledged=0\"\
           \ \\\n    --data-urlencode \"in_downtime=1\" \\\n    --data-urlencode \"\
-          status=0\"\n    \"$API_URL/domain-types/service/collections/all\""
+          status=0\" \\\n    \"$API_URL/domain-types/service/collections/all\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -4808,9 +5442,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/service_group_config/actions/bulk-create/invoke\"\
-          ,\n    json={\n        \"entries\": [\n            {\n                \"\
-          alias\": \"Environment Sensors\",\n                \"name\": \"environment\"\
-          \n            }\n        ]\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'entries': [{\n            'name': 'environment',\n\
+          \            'alias': 'Environment Sensors'\n        }]\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -4819,10 +5453,10 @@ paths:
           \    f\"{API_URL}/domain-types/service_group_config/actions/bulk-create/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        \"entries\": [\n            {\n\
-          \                \"alias\": \"Environment Sensors\",\n                \"\
-          name\": \"environment\"\n            }\n        ]\n    }).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \    },\n    data=json.dumps({\n        'entries': [{\n            'name':\
+          \ 'environment',\n            'alias': 'Environment Sensors'\n        }]\n\
+          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -5203,7 +5837,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
-          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -5212,8 +5846,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
-          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'passphrase':\
+          \ 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -5372,7 +6006,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
-          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -5382,7 +6016,7 @@ paths:
           \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
+          \ data=json.dumps({'passphrase': 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash

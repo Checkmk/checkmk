@@ -138,6 +138,7 @@ def _translate_to_openapi_keys(
     required: Optional[bool] = None,
     example: Optional[str] = None,
     allow_emtpy: Optional[bool] = None,
+    schema_enum: Optional[List[str]] = None,
     schema_type: Optional[OpenAPISchemaType] = None,
     schema_string_pattern: Optional[str] = None,
     schema_string_format: Optional[str] = None,
@@ -150,6 +151,8 @@ def _translate_to_openapi_keys(
             format=schema_string_format,
             pattern=schema_string_pattern,
         )
+    if schema_enum:
+        schema.update(enum=schema_enum,)
     if schema_type in ('number', 'integer'):
         schema.update(
             minimum=schema_num_minimum,
@@ -265,6 +268,7 @@ class ParamDict(dict):
         required: bool = True,
         allow_emtpy: bool = False,
         example: Optional[str] = None,
+        schema_enum: Optional[List[str]] = None,
         schema_type: Optional[OpenAPISchemaType] = 'string',
         schema_string_pattern: Optional[str] = None,
         schema_string_format: Optional[str] = None,
@@ -294,6 +298,10 @@ class ParamDict(dict):
 
             schema_type:
                 May be 'string', 'bool', etc.
+
+            schema_enum:
+                A list of distinct values that this parameter can hold. These will be rendered in
+                the documentation as well.
 
             schema_string_pattern:
                 A regex which is used to filter invalid values. Only  valid for `schema_type`
@@ -335,6 +343,7 @@ class ParamDict(dict):
             allow_emtpy=allow_emtpy,
             schema_type=schema_type,
             example=example,
+            schema_enum=schema_enum,
             schema_num_maximum=schema_num_maximum,
             schema_num_minimum=schema_num_minimum,
             schema_string_format=schema_string_format,

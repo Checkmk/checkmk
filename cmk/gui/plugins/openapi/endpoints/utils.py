@@ -4,11 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, Dict, Literal, Sequence, List, Optional
+from typing import Any, Dict, Literal, Sequence, List, Optional, Type
 
 from connexion import ProblemException  # type: ignore[import]
 
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
 from cmk.gui.plugins.openapi.restful_objects import constructors
 from cmk.gui.groups import load_group_information
 
@@ -89,3 +90,24 @@ def load_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Opt
         )
 
     return group_details
+
+
+def verify_columns(table: Type[Table], column_names: List[str]) -> List[Column]:
+    """Check for any wrong column spellings on the Table classes."""
+    missing = set(column_names) - set(table.__columns__())
+    if missing:
+        raise ProblemException(
+            title="Some columns could not be recognized",
+            detail=(f"The following columns are not known on the {table.__tablename__} table:"
+                    f" {', '.join(missing)}"),
+        )
+
+    return [getattr(table, col) for col in column_names]
+
+
+def add_if_missing(columns: List[str], mandatory=List[str]) -> List[str]:
+    ret = columns[:]
+    for required in mandatory:
+        if required not in ret:
+            ret.append(required)
+    return ret

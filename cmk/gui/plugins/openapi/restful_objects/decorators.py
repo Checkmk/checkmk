@@ -14,7 +14,7 @@ connexion is disabled.
 """
 import functools
 from types import FunctionType
-from typing import Any, cast, Dict, List, Optional, Sequence, Set, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Union
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -185,8 +185,7 @@ def endpoint_schema(path: str,
         if etag in ('output', 'both'):
             headers.update(ETAG_HEADER_PARAM.header_dict())
 
-        # Not sure why mypy doesn't believe this to be a ResponseType. It's not even a TypedDict.
-        responses: ResponseType = cast(ResponseType, {})
+        responses: ResponseType = {}
 
         # We don't(!) support any endpoint without an output schema.
         # Just define one!

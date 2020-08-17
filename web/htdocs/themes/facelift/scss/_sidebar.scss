@@ -539,7 +539,7 @@ div.add_snapin {
     }
 
     *, &:hover * {
-      color: $lightgrey;
+      color: $font-color;
     }
 
     &:hover {
@@ -552,7 +552,7 @@ div.add_snapin {
       font-weight: $font-weight-default;
       line-height: 1.333;
       letter-spacing: $letter-spacing-table;
-      color: $color-nuance-8;
+      color: $snapin-description-font-color;
       text-rendering: optimizeLegibility;
     }
 
@@ -566,7 +566,7 @@ div.add_snapin {
     .head {
       height: auto;
       padding: 8px;
-      color: $font-color-light;
+      color: $font-color;
       text-align: left;
       background: transparent;
 

@@ -166,7 +166,7 @@ $color-nuance-12:                     rgb(158, 226, 115); // green
 $color-nuance-13:                     rgb(243, 244, 246); // light grey
 $color-nuance-14:                     rgba(37, 41, 42, .3); // transparent grey
 $color-nuance-15:                     rgb(130, 50, 50); // dark red
-$color-nuance-16:                     rgb(251, 159, 73); // orange
+$color-nuance-16:                     rgb(255, 150, 68); // orange
 $color-nuance-17:                     rgb(161, 230, 248); // light blue
 
 
@@ -262,8 +262,6 @@ $floatfilter-bg-color:			    null;
 
 $select2-border-color:			    $grey-7;
 $select2-rendered-color:		    $font-color;
-$select2-selected-bg-color:		    $bg-color-default;
-$select2-highlighted-bg-color:		    rgb(93, 93, 93);
 
 $td-single-bg-color:			    null;
 $wato-tr-bg-color:			    null;
@@ -497,12 +495,11 @@ $scatterdot-hilite-color:		    $yellow;
 
 /* TODO:  move variables defined for the UX project to the correct place */
 $page-header-height:                        58px;
-$menubar-topic-title-font-color:            rgba($white, 0.5);
-$menubar-topic-title-border-color:          rgba($white, 0.2);
 $button-bg-color-default:                   rgb(53, 63, 74);
 $button-bg-color-secondary:                 rgb(48, 57, 68);
 $button-bg-color-secondary-hover:           rgb(53, 63, 74);
 $navigation-bg-color:                       $navbar-color;
+$page-menu-bg-color:                        $navbar-color;
 $snapin-bg-color:                           $navbar-color;
 $sidebar-border-color:                      $headline-color;
 $form-bg-color:                             $button-bg-color-default;
@@ -515,3 +512,7 @@ $popup-menu-bg-color:                       $button-bg-color-default;
 $tactical-overview-th-font-color:	    $font-color;
 $tactical-overview-td-bg-color:		    $button-bg-color-default;
 $snapin-heading-border-color:               rgba(255, 255, 255, 0.2);
+$snapin-description-font-color:             $color-nuance-8;
+$simplebar-track-bg-color:                  $headline-color;
+$select2-dropdown-bg-color:                 $button-bg-color-default;
+$select2-dropdown-highlight-color:          $button-bg-color-secondary;

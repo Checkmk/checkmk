@@ -134,7 +134,7 @@ div#top_heading {
       &.shortcuts {
         width: 100%;
         padding: 0 3px;
-        background-color: $navigation-bg-color;
+        background-color: $page-menu-bg-color;
         border-right: 1px solid $headline-color;
 
         a.disabled {
@@ -155,8 +155,8 @@ div#top_heading {
       position: relative;
       display: inline-block;
       padding: 0;
-      background-color: $navigation-bg-color;
-      border-bottom: 2px solid $navigation-bg-color;
+      background-color: $page-menu-bg-color;
+      border-bottom: 2px solid $page-menu-bg-color;
 
       &.disabled {
         display: none;
@@ -212,7 +212,7 @@ div#top_heading {
         padding: $spacing;
         overflow-y: auto;
         text-align: left;
-        background-color: $navigation-bg-color;
+        background-color: $page-menu-bg-color;
         scrollbar-width: none; /* Firefox */
 
         img {
@@ -242,9 +242,9 @@ div#top_heading {
             padding-bottom: 2px;
             margin-bottom: $spacing;
             font-weight: normal;
-            color: $menubar-topic-title-font-color;
+            color: rgba($font-color, .5);
             cursor: default;
-            border-bottom: 1px solid $menubar-topic-title-border-color;
+            border-bottom: 1px solid rgba($font-color, .2);
           }
 
           div.entry {
@@ -254,21 +254,11 @@ div#top_heading {
             a {
               display: flex;
               align-items: center;
-
-              color: #ddd;
+              color: $font-color;
               text-decoration: none;
-
             }
 
-            &.enabled {
-              a:hover {
-                color: #fff;
-
-                img {
-                  opacity: .5;
-                }
-              }
-            }
+            &.enabled a:hover { opacity: .7; }
 
             &.disabled a {
               text-decoration: none;
@@ -276,7 +266,6 @@ div#top_heading {
               cursor: default;
               opacity: .5;
 	    }
-
           }
         }
 

@@ -166,7 +166,7 @@ $color-nuance-12:                     rgb(158, 226, 115); // green
 $color-nuance-13:                     rgb(243, 245, 246); // light grey
 $color-nuance-14:                     rgba(37, 41, 42, .3); // transparent grey
 $color-nuance-15:                     rgb(247, 197, 197); // light red
-$color-nuance-16:                     rgb(251, 159, 73); // orange
+$color-nuance-16:                     rgb(255, 150, 68); // orange
 $color-nuance-17:                     rgb(161, 230, 248); // light blue
 
 
@@ -240,7 +240,7 @@ $data-container-bg-color:		    null;
 $data-container-border:			    null;
 
 $oddeven-table-bg-color:		    transparent;
-$data-td-bg-color:			    $white;
+$data-td-bg-color:			    $base-color;
 $data-table-border-collapse:		    null;
 $data-table-border-spacing:		    0 2px;
 $data-table-border-topmost:		    $primary-table-border;
@@ -262,8 +262,6 @@ $floatfilter-bg-color:			    rgba($white, 0.2);
 
 $select2-border-color:			    $button-border;
 $select2-rendered-color:		    null;
-$select2-selected-bg-color:		    null;
-$select2-highlighted-bg-color:		    null;
 
 $td-single-bg-color:			    $white;
 $wato-tr-bg-color:			    transparent;
@@ -496,12 +494,11 @@ $scatterdot-hilite-color:		    rgb(0, 185, 255);
 /* TODO:  move variables defined for the UX project to the correct place */
 /* TODO:  adapt variables to modern theme */
 $page-header-height:                        58px;
-$menubar-topic-title-font-color:            rgba($white, 0.5);
-$menubar-topic-title-border-color:          rgba($white, 0.2);
 $button-bg-color-default:                   rgb(53, 63, 74);
 $button-bg-color-secondary:                 rgb(48, 57, 68);
 $button-bg-color-secondary-hover:           rgb(53, 63, 74);
 $navigation-bg-color:                       $navbar-color;
+$page-menu-bg-color:                        $white;
 $snapin-bg-color:                           $navbar-color;
 $sidebar-border-color:                      $color-nuance-13;
 $form-bg-color:                             $snapin-bg-color;
@@ -514,3 +511,7 @@ $popup-menu-bg-color:                       $base-color;
 $tactical-overview-th-font-color:	    rgba($font-color, .4);
 $tactical-overview-td-bg-color:		    $base-color;
 $snapin-heading-border-color:               rgba($font-color, 0.2);
+$snapin-description-font-color:             $font-color;
+$simplebar-track-bg-color:                  $bg-color;
+$select2-dropdown-bg-color:                 $bg-color;
+$select2-dropdown-highlight-color:          $bg-color-secondary;

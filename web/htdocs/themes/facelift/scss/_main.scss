@@ -425,10 +425,7 @@ div.really {
   border-color: rgb(136, 0, 0);
 }
 
-div.success {
-  background-color: $button-bg-color-default;
-  border: $button-bg-color-default;
-}
+div.success { background-color: $base-color; }
 
 div.message {
   color: rgb(0, 0, 0);
@@ -1107,21 +1104,22 @@ table.modifydowntimes > tbody > tr {
   }
 
   .select2-dropdown {
-    background-color: $button-bg-color-default;
+    background-color: $select2-dropdown-bg-color;
     border: $button-bg-color-default;
   }
 
   .select2-results__option {
     color: $select2-rendered-color;
-    background-color: $button-bg-color-default;
+    background-color: $select2-dropdown-bg-color;
   }
 
   .select2-results__option[aria-selected=true] {
-    background-color: $button-bg-color-default;
+    background-color: $select2-dropdown-bg-color;
   }
 
   .select2-results__option--highlighted[aria-selected] {
-    background-color: $button-bg-color-secondary;
+    background-color: $select2-dropdown-highlight-color;
+    color: $font-color;
   }
 }
 

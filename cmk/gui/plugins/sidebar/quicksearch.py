@@ -145,32 +145,45 @@ def _build_url(url_params: HTTPVariables) -> str:
     return html.makeuri(new_params, delvars=["q"], filename="view.py")
 
 
-class LivestatusSearchConductor:
-    """Handles exactly one livestatus query"""
+class ABCSearchConductor(metaclass=abc.ABCMeta):
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
         self._used_filters = used_filters
         self._filter_behaviour = filter_behaviour
 
-        self._livestatus_command: str = ""  # Computed livestatus query
-        self._rows: Rows = []  # Raw data from livestatus
-        self._queried_livestatus_columns: List[str] = []
-
     @property
     def filter_behaviour(self) -> FilterBehaviour:
         return self._filter_behaviour
 
+    @abc.abstractmethod
     def do_query(self) -> None:
-        self._execute_livestatus_command()
+        """Execute the lookup of the data using the given query"""
+        raise NotImplementedError()
 
+    @abc.abstractmethod
     def num_rows(self) -> int:
-        return len(self._rows)
+        """Returns the number of matching results"""
+        raise NotImplementedError()
 
+    @abc.abstractmethod
     def remove_rows_from_end(self, num: int) -> None:
-        self._rows = self._rows[:-num]
+        """Strips off some rows from the end of the results"""
+        raise NotImplementedError()
 
+    @abc.abstractmethod
     def row_limit_exceeded(self) -> bool:
-        return self._too_much_rows
+        """Whether or not the results exceeded the config.quicksearch_dropdown_limit"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_search_url_params(self) -> HTTPVariables:
+        """Returns the HTTP variables to link to to show the results on a content page"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def create_results(self) -> List[Result]:
+        """Returns the results for the given query"""
+        raise NotImplementedError()
 
     def get_match_topic(self) -> str:
         if len(self._used_filters.keys()) > 1:
@@ -183,6 +196,32 @@ class LivestatusSearchConductor:
             return match_plugin_registry[name]
         except KeyError:
             raise NotImplementedError()
+
+
+class LivestatusSearchConductor(ABCSearchConductor):
+    """Executes the livestatus search plugins and collects results
+
+    It cares about aggregating the queries of different filters together to a single livestatus
+    query (see _generate_livestatus_command) in case they are given with "used_filters".
+    """
+    def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
+        super().__init__(used_filters, filter_behaviour)
+
+        self._livestatus_command: str = ""  # Computed livestatus query
+        self._rows: Rows = []  # Raw data from livestatus
+        self._queried_livestatus_columns: List[str] = []
+
+    def do_query(self) -> None:
+        self._execute_livestatus_command()
+
+    def num_rows(self) -> int:
+        return len(self._rows)
+
+    def remove_rows_from_end(self, num: int) -> None:
+        self._rows = self._rows[:-num]
+
+    def row_limit_exceeded(self) -> bool:
+        return self._too_much_rows
 
     def _execute_livestatus_command(self) -> None:
         self._rows = []
@@ -472,6 +511,7 @@ class QuicksearchManager:
 
         search_objects: List[LivestatusSearchConductor] = []
         if found_filters:
+            # Create a structure like this: {u'h': [u'heute'], u's': [u'Check_MK']}
             filter_spec: Dict[str, List[str]] = {}
             current_string = self._query
             for filter_type, offset in found_filters[-1::-1]:
@@ -479,6 +519,7 @@ class QuicksearchManager:
                 filter_name = filter_type.strip().rstrip(":")
                 filter_spec.setdefault(filter_name, []).append(filter_text)
                 current_string = current_string[:offset]
+
             search_objects.append(LivestatusSearchConductor(filter_spec, FilterBehaviour.CONTINUE))
         else:
             # No explicit filters set.

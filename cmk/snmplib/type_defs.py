@@ -7,7 +7,7 @@
 import abc
 import collections
 import string
-from typing import Any, AnyStr, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, AnyStr, Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 
 from six import ensure_str
 
@@ -239,6 +239,9 @@ class OIDEnd(OIDEndCompat):
         return "OIDEnd()"
 
 
+SNMPTreeInputOIDs = Iterable[Union[str, OIDSpec, OIDEnd]]
+
+
 class SNMPTree:
     """Specify an OID table to fetch
 
@@ -246,8 +249,12 @@ class SNMPTree:
     be handed a list of lists with the values of the corresponding
     OIDs.
     """
-    def __init__(self, *, base: Union[OIDSpec, str], oids: List[Union[str, OIDSpec,
-                                                                      OIDEnd]]) -> None:
+    def __init__(
+        self,
+        *,
+        base: Union[OIDSpec, str],
+        oids: SNMPTreeInputOIDs,
+    ) -> None:
         super(SNMPTree, self).__init__()
         self._base = self._sanitize_base(base)
         self._oids = self._sanitize_oids(oids)
@@ -273,8 +280,11 @@ class SNMPTree:
         return oid_base
 
     @staticmethod
-    def _sanitize_oids(
-            oids: List[Union[str, OIDSpec, OIDEnd]]) -> List[Union[OIDSpec, OIDEndCompat]]:
+    def _sanitize_oids(oids: SNMPTreeInputOIDs) -> List[Union[OIDSpec, OIDEndCompat]]:
+
+        # This check is stricter than the typization of oids. We do not want oids to be a str,
+        # however, unfortunately, str == Iterable[str], so it is currently not possible to exclude
+        # str by typization. Therefore, for now, we simply keep the check if oids is a list.
         if not isinstance(oids, list):
             raise TypeError("oids must be a list")
 

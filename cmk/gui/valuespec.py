@@ -910,7 +910,7 @@ class EmailAddress(TextUnicode):
 
 
 def IPNetwork(  # pylint: disable=redefined-builtin
-    ip_class: Union[None, Type[ipaddress.IPv4Address], Type[ipaddress.IPv6Address]] = None,
+    ip_class: Union[None, Type[ipaddress.IPv4Network], Type[ipaddress.IPv6Network]] = None,
     # TextAscii
     allow_empty: bool = True,
     size: Union[int, str] = 34,
@@ -920,16 +920,38 @@ def IPNetwork(  # pylint: disable=redefined-builtin
     default_value: Any = DEF_VALUE,
 ) -> TextAscii:
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
-    if ip_class is None:
-        ip_class = ipaddress.IPv4Address
+    def _validate_value_for_one_class(value: str, varprefix: str) -> None:
+        assert ip_class is not None
+        try:
+            ip_class(ensure_str(value))
+        except ValueError as exc:
+            ip_class_text = {
+                ipaddress.IPv4Network: "IPv4",
+                ipaddress.IPv6Network: "IPv6",
+            }[ip_class]
+
+            raise MKUserError(varprefix, _("Invalid %s address: %s") % (ip_class_text, exc))
+
+    def _validate_value_for_both_classes(value: str, varprefix: str):
+        errors = {}
+        for ipc in (ipaddress.IPv4Network, ipaddress.IPv6Network):
+            try:
+                ipc(ensure_str(value))
+                return
+            except ValueError as exc:
+                errors[ipc] = exc
+
+        raise MKUserError(
+            varprefix,
+            _("Invalid host or network address. IPv4: %s, IPv6: %s") %
+            (errors[ipaddress.IPv4Network], errors[ipaddress.IPv6Network]))
 
     def _validate_value(value: str, varprefix: str) -> None:
+        if ip_class is not None:
+            _validate_value_for_one_class(value, varprefix)
+            return
 
-        this_ip_class = ipaddress.IPv4Address if ip_class is None else ip_class
-        try:
-            this_ip_class(ensure_str(value))
-        except ValueError as e:
-            raise MKUserError(varprefix, _("Invalid address: %s") % e)
+        _validate_value_for_both_classes(value, varprefix)
 
     return TextAscii(
         validate=_validate_value,
@@ -945,7 +967,7 @@ def IPv4Network(  # pylint: disable=redefined-builtin
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None) -> TextAscii:
     """Network as used in routing configuration, such as '10.0.0.0/8' or '192.168.56.1'"""
-    return IPNetwork(ip_class=ipaddress.IPv4Interface, size=18, title=title, help=help)
+    return IPNetwork(ip_class=ipaddress.IPv4Network, size=18, title=title, help=help)
 
 
 def IPv4Address(  # pylint: disable=redefined-builtin
@@ -956,8 +978,14 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     help: _Optional[ValueSpecHelp] = None,
     default_value: Any = DEF_VALUE,
 ) -> TextAscii:
-    return IPNetwork(
-        ip_class=ipaddress.IPv4Address,
+    def _validate_value(value: str, varprefix: str):
+        try:
+            ipaddress.IPv4Address(ensure_str(value))
+        except ValueError as exc:
+            raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % exc)
+
+    return TextAscii(
+        validate=_validate_value,
         size=16,
         title=title,
         help=help,

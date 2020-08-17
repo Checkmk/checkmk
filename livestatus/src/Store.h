@@ -73,11 +73,11 @@ public:
     void flushStatehistCache();
     void tryFinishStatehistCache();
     bool addObjectHistcache(Object *object);
-    void addAlertToStatehistCache(Object *object, int state,
+    void addAlertToStatehistCache(const Object &object, int state,
                                   const std::string &output,
                                   const std::string &long_output);
-    void addDowntimeToStatehistCache(Object *object, bool started);
-    void addFlappingToStatehistCache(Object *object, bool started);
+    void addDowntimeToStatehistCache(const Object &object, bool started);
+    void addFlappingToStatehistCache(const Object &object, bool started);
 #else
     explicit Store(MonitoringCore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);

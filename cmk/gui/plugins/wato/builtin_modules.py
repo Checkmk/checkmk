@@ -1145,7 +1145,7 @@ class MainModuleAgentsWindows(MainModule):
 
     @property
     def sort_index(self):
-        return 10
+        return 15
 
     @property
     def is_advanced(self):
@@ -1179,7 +1179,7 @@ class MainModuleAgentsLinux(MainModule):
 
     @property
     def sort_index(self):
-        return 15
+        return 10
 
     @property
     def is_advanced(self):
@@ -1189,8 +1189,8 @@ class MainModuleAgentsLinux(MainModule):
 # Register the builtin agent download page on the top level of WATO only when the agent bakery
 # does not exist (e.g. when using CRE)
 if cmk_version.is_raw_edition():
-    main_module_registry.register(MainModuleAgentsLinux)
     main_module_registry.register(MainModuleAgentsWindows)
+    main_module_registry.register(MainModuleAgentsLinux)
 
 
 @main_module_registry.register

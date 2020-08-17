@@ -34,6 +34,7 @@ LivestatusTable = str
 LivestatusColumn = str
 LivestatusFilterHeaders = str
 UsedFilters = Dict[str, List[str]]
+Matches = Optional[Tuple[str, HTTPVariables]]
 
 
 @dataclass
@@ -743,7 +744,7 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
 
     @abc.abstractmethod
     def get_matches(self, for_view: ViewName, row: Optional[Row], livestatus_table: LivestatusTable,
-                    used_filters: UsedFilters, rows: Rows):
+                    used_filters: UsedFilters, rows: Rows) -> Matches:
         raise NotImplementedError()
 
 
@@ -798,7 +799,7 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
         return "\n".join(filter_lines)
 
     def get_matches(self, for_view: ViewName, row: Optional[Row], livestatus_table: LivestatusTable,
-                    used_filters: UsedFilters, rows: Rows):
+                    used_filters: UsedFilters, rows: Rows) -> Matches:
         supported_views = {
             # View name    url fieldname,                  key in row
             # Group domains (hostgroups, servicegroups)
@@ -822,18 +823,14 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
 
         view_info = supported_views.get(for_view)
         if not view_info:
-            return
+            return None
 
         filter_name, row_fieldname = view_info
-        if row:
-            value = row.get(row_fieldname)
-        else:
-            value = used_filters.get(self.name)
 
-        if isinstance(value, list):
-            value = "|".join(value)
+        value = row[row_fieldname] if row else used_filters[self.name]
+        filter_value = "|".join(value) if isinstance(value, list) else value
 
-        return value, [(filter_name, value)]
+        return filter_value, [(filter_name, filter_value)]
 
 
 match_plugin_registry.register(GroupMatchPlugin(
@@ -869,13 +866,13 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
         return "\n".join(filter_lines)
 
     def get_matches(self, for_view: ViewName, row: Optional[Row], livestatus_table: LivestatusTable,
-                    used_filters: UsedFilters, rows: Rows):
+                    used_filters: UsedFilters, rows: Rows) -> Matches:
         supported_views = ["allservices", "searchsvc"]
         if for_view not in supported_views:
-            return
+            return None
 
         if row:
-            field_value = row.get("description")
+            field_value = row["description"]
             search_key = "service"
         else:
             field_value = self._create_textfilter_regex(used_filters)
@@ -920,7 +917,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
         return "\n".join(filter_lines)
 
     def get_matches(self, for_view: ViewName, row: Optional[Row], livestatus_table: LivestatusTable,
-                    used_filters: UsedFilters, rows: Rows):
+                    used_filters: UsedFilters, rows: Rows) -> Matches:
         supported_views = {
             # View name     Filter name
             # Exact matches (always uses hostname as filter)
@@ -949,13 +946,13 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
 
         view_info = supported_views.get(for_view)
         if not view_info:
-            return
+            return None
 
-        filter_name = view_info.get(self._livestatus_field)
+        filter_name: str = view_info[self._livestatus_field]
 
         if row:
-            field_value = row.get(self._get_real_fieldname(livestatus_table))
-            hostname = row.get("host_name", row.get("name"))
+            field_value: str = row[self._get_real_fieldname(livestatus_table)]
+            hostname = row.get("host_name", row["name"])
             url_info = [(filter_name, hostname)]
         else:
             field_value = self._create_textfilter_regex(used_filters)
@@ -1030,12 +1027,12 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
         return "\n".join(filter_lines)
 
     def get_matches(self, for_view: ViewName, row: Optional[Row], livestatus_table: LivestatusTable,
-                    used_filters: UsedFilters, rows: Rows):
+                    used_filters: UsedFilters, rows: Rows) -> Matches:
         supported_views = {"searchhost": "host_regex", "host": "host"}
 
         filter_name = supported_views.get(for_view)
         if not filter_name:
-            return
+            return None
 
         if row:
             hostname = row.get("host_name", row.get("name"))

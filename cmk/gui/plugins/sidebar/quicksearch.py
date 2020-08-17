@@ -242,9 +242,16 @@ class LivestatusSearchConductor(ABCSearchConductor):
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)
 
+        self._livestatus_table: Optional[str] = None
         self._livestatus_command: str = ""  # Computed livestatus query
         self._rows: Rows = []  # Raw data from livestatus
         self._queried_livestatus_columns: List[str] = []
+
+    @property
+    def livestatus_table(self) -> str:
+        if self._livestatus_table is None:
+            raise RuntimeError("Livestatus table not computed yet")
+        return self._livestatus_table
 
     def do_query(self) -> None:
         self._execute_livestatus_command()
@@ -291,11 +298,11 @@ class LivestatusSearchConductor(ABCSearchConductor):
         self._used_search_plugins = self._get_used_search_plugins()
 
         for plugin in self._used_search_plugins:
-            columns_to_query.update(set(plugin.get_livestatus_columns(self._livestatus_table)))
+            columns_to_query.update(set(plugin.get_livestatus_columns(self.livestatus_table)))
             name = plugin.name
             livestatus_filter_domains.setdefault(name, [])
             livestatus_filter_domains[name].append(
-                plugin.get_livestatus_filters(self._livestatus_table, self._used_filters))
+                plugin.get_livestatus_filters(self.livestatus_table, self._used_filters))
 
         # Combine filters of same domain (h/s/sg/hg/..)
         livestatus_filters = []
@@ -309,7 +316,7 @@ class LivestatusSearchConductor(ABCSearchConductor):
 
         self._queried_livestatus_columns = list(columns_to_query)
         self._livestatus_command = "GET %s\nColumns: %s\n%s\n" % (
-            self._livestatus_table,
+            self.livestatus_table,
             " ".join(self._queried_livestatus_columns),
             "\n".join(livestatus_filters),
         )
@@ -321,7 +328,7 @@ class LivestatusSearchConductor(ABCSearchConductor):
     def _get_used_search_plugins(self) -> List["ABCLivestatusMatchPlugin"]:
         return [
             plugin for plugin in match_plugin_registry.get_livestatus_match_plugins()
-            if plugin.is_used_for_table(self._livestatus_table, self._used_filters)
+            if plugin.is_used_for_table(self.livestatus_table, self._used_filters)
         ]
 
     def _determine_livestatus_table(self) -> None:
@@ -362,7 +369,7 @@ class LivestatusSearchConductor(ABCSearchConductor):
             "hosts": ["name"],
             "hostgroups": ["name"],
             "servicegroups": ["name"],
-        }.get(self._livestatus_table, [])  # TODO: Is the default correct/necessary?
+        }.get(self.livestatus_table, [])  # TODO: Is the default correct/necessary?
 
     def get_search_url_params(self) -> HTTPVariables:
         exact_match = self.num_rows() == 1
@@ -371,7 +378,7 @@ class LivestatusSearchConductor(ABCSearchConductor):
         url_params: HTTPVariables = [("view_name", target_view), ("filled_in", "filter")]
         for plugin in self._used_search_plugins:
             match_info = plugin.get_matches(target_view, self._rows[0] if exact_match else None,
-                                            self._livestatus_table, self._used_filters, self._rows)
+                                            self.livestatus_table, self._used_filters, self._rows)
             if not match_info:
                 continue
             _text, url_filters = match_info
@@ -399,7 +406,7 @@ class LivestatusSearchConductor(ABCSearchConductor):
                 if plugin.is_group_match():
                     skip_site = True
 
-                match_info = plugin.get_matches(target_view, row, self._livestatus_table,
+                match_info = plugin.get_matches(target_view, row, self.livestatus_table,
                                                 self._used_filters, [])
                 if not match_info:
                     continue
@@ -426,22 +433,22 @@ class LivestatusSearchConductor(ABCSearchConductor):
 
     def _get_target_view(self, exact_match: bool = True) -> ViewName:
         if exact_match:
-            if self._livestatus_table == "hosts":
+            if self.livestatus_table == "hosts":
                 return "host"
-            if self._livestatus_table == "services":
+            if self.livestatus_table == "services":
                 return "allservices"
-            if self._livestatus_table == "hostgroups":
+            if self.livestatus_table == "hostgroups":
                 return "hostgroup"
-            if self._livestatus_table == "servicegroups":
+            if self.livestatus_table == "servicegroups":
                 return "servicegroup"
         else:
-            if self._livestatus_table == "hosts":
+            if self.livestatus_table == "hosts":
                 return "searchhost"
-            if self._livestatus_table == "services":
+            if self.livestatus_table == "services":
                 return "searchsvc"
-            if self._livestatus_table == "hostgroups":
+            if self.livestatus_table == "hostgroups":
                 return "hostgroups"
-            if self._livestatus_table == "servicegroups":
+            if self.livestatus_table == "servicegroups":
                 return "svcgroups"
 
         raise NotImplementedError()
@@ -451,7 +458,7 @@ class LivestatusSearchConductor(ABCSearchConductor):
 
         Analyzes all display texts and ensures that we have unique ones"""
         for element in elements:
-            if self._livestatus_table == "services":
+            if self.livestatus_table == "services":
                 element.display_text = element.row["description"]
             else:
                 element.display_text = element.text_tokens[0][1]
@@ -462,7 +469,7 @@ class LivestatusSearchConductor(ABCSearchConductor):
         # Some (ugly) special handling when the results are not unique
         # Whenever this happens we try to find a fitting second value
 
-        if self._livestatus_table in ["hostgroups", "servicegroups"]:
+        if self.livestatus_table in ["hostgroups", "servicegroups"]:
             # Discard redundant hostgroups
             new_elements: List[Result] = []
             used_groups: Set[str] = set()

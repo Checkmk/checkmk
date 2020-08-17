@@ -1,0 +1,12 @@
+Title: fileinfo: Fixed placement of statemarker in service output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p17
+Date: 1597663079
+Class: fix
+
+The statemarker, e.g. for CRIT states, was always set at the end of the service
+output. From now on, each section has it's own statemarker in case of states
+unequal OK.

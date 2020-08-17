@@ -237,26 +237,31 @@ def check_fileinfo(item, params, parsed):
 
     reftime = parsed.get('reftime')
     if reftime is None:
-        return 3, "Missing reference timestamp"
+        yield 3, "Missing reference timestamp"
+        return
 
     outof_range_txt = fileinfo_check_timeranges(params)
 
     file_stat = parsed['files'].get(item)
     if file_stat is not None and not file_stat.missing:
         if file_stat.failed:
-            return 1, "File stat failed"
+            yield 1, "File stat failed"
+            return
         if file_stat.time is None:
-            return 1, 'File stat time failed'
+            yield 1, 'File stat time failed'
+            return
         age = reftime - file_stat.time
         check_definition = [
             ("Size", "size", file_stat.size, get_filesize_human_readable),
             ("Age", "age", age, get_age_human_readable),
         ]
-        return _fileinfo_check_function(check_definition, params, outof_range_txt)
+        for file_entry in _fileinfo_check_function(check_definition, params, outof_range_txt):
+            yield file_entry
     else:
         if outof_range_txt:
-            return 0, "File not found - %s" % outof_range_txt
-        return params.get("state_missing", 3), "File not found"
+            yield 0, "File not found - %s" % outof_range_txt
+            return
+        yield params.get("state_missing", 3), "File not found"
 
 
 # FIXME the following does not apply anymore, because "%s" is allowed in group_name
@@ -401,7 +406,8 @@ def check_fileinfo_groups(_item, params, parsed):
     if files_stat_failed:
         yield 1, "Files with unknown stat: %s" % ", ".join(files_stat_failed)
 
-    yield _fileinfo_check_function(check_definition, params, outof_range_txt)
+    for file_entry in _fileinfo_check_function(check_definition, params, outof_range_txt):
+        yield file_entry
 
     for res in _fileinfo_check_conjunctions(check_definition, params):
         yield res
@@ -424,26 +430,20 @@ def check_fileinfo_groups(_item, params, parsed):
 
 
 def _fileinfo_check_function(check_definition, params, outof_range_txt):
-    infotexts = []
-    states = [0]
-    perfdata = []
+    if outof_range_txt:
+        yield 0, outof_range_txt
+
     for title, key, value, verbfunc in check_definition:
         if value in [None, ""]:
             continue
         infotext = "%s: %s" % (title, verbfunc(value))
         warn, crit = None, None
+        state = 0
         for state, warn, crit, comp_text in _fileinfo_check_file(value, params, key):
             if not state:
                 continue
             infotext += " (warn/crit %s %s/%s)" % (comp_text, verbfunc(warn), verbfunc(crit))
-            states.append(state)
-        infotexts.append(infotext)
-        perfdata.append((key, value, warn, crit))
-
-    if outof_range_txt:
-        states = [0]
-        infotexts = [outof_range_txt] + infotexts
-    return max(states), ", ".join(infotexts), perfdata
+        yield state, infotext, [(key, value, warn, crit)]
 
 
 def _fileinfo_check_file(value, params, key):

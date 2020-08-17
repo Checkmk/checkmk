@@ -60,6 +60,7 @@ import six
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.defines as defines
+import cmk.utils.regex
 
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
@@ -844,7 +845,7 @@ class PageVsAutocomplete(Page):
 class Hostname(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
-        self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
+        self._regex = re.compile(cmk.utils.regex.REGEX_HOST_NAME)
         self._regex_error = _("Please enter a valid hostname or IPv4 address. "
                               "Only letters, digits, dash, underscore and dot are allowed.")
         if "allow_empty" not in kwargs:

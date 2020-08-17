@@ -475,6 +475,16 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _file_cache(self) -> ABCFileCache:
         raise NotImplementedError
 
+    def configure_file_cache(self) -> Dict[str, Any]:
+        return {
+            "path": str(self.configurator.cache_file_path),
+            "max_age": self._max_cachefile_age,
+            "agent_disabled": self.is_agent_cache_disabled(),
+            "disabled": self.get_may_use_cache_file(),
+            "use_outdated": self._use_outdated_cache_file,
+            "simulation": config.simulation_mode,
+        }
+
     def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
         self._max_cachefile_age = max_cachefile_age
 

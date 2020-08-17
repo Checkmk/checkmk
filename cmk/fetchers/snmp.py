@@ -18,6 +18,8 @@ from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTr
 from . import factory
 from ._base import ABCFileCache, ABCFetcher
 
+__all__ = ["SNMPFetcher", "SNMPFileCache"]
+
 
 class SNMPFileCache(ABCFileCache[SNMPRawData]):
     @staticmethod

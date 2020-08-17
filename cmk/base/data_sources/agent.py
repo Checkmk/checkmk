@@ -481,15 +481,7 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
 
     @property
     def _file_cache(self) -> ABCFileCache:
-        return AgentFileCache(
-            self.configurator.cache_file_path,
-            self._max_cachefile_age,
-            self.is_agent_cache_disabled(),
-            self.get_may_use_cache_file(),
-            self._use_outdated_cache_file,
-            config.simulation_mode,
-            self._logger,
-        )
+        return AgentFileCache.from_json(self.configure_file_cache(), logger=self._logger)
 
     def run_raw(self) -> AgentRawData:
         """Return raw data from cache or fetcher."""

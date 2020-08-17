@@ -23,6 +23,7 @@ from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import (
     AgentConfigurator,
     AgentDataSource,
+    AgentFileCache,
     AgentParser,
     AgentSummarizer,
 )
@@ -220,6 +221,10 @@ class TestAgentSummaryResult:
             cpu_tracking_id="agent_cpu_id",
             description="agent description",
         ).make_checker()
+
+    @pytest.mark.usefixtures("scenario")
+    def test_file_cache_deserialization(self, source):
+        assert isinstance(source._file_cache, AgentFileCache)
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source, mode):

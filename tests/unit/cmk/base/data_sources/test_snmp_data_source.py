@@ -6,6 +6,8 @@
 
 # pylint: disable=protected-access
 
+import json
+
 import pytest  # type: ignore[import]
 from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
@@ -16,6 +18,8 @@ import cmk.utils.store as store
 from cmk.utils.type_defs import SectionName, SourceType
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
+
+from cmk.fetchers.snmp import SNMPFileCache
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -165,11 +169,19 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
     assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
 
 
+def test_configure_file_cache_serialization(source):
+    def json_identity(data):
+        return json.loads(json.dumps(data))
+
+    assert json_identity(source.configure_file_cache()) == source.configure_file_cache()
+
+
 def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "snmp"
     assert source._cpu_tracking_id == "snmp"
+    assert isinstance(source._file_cache, SNMPFileCache)
 
     configurator = source.configurator
     assert configurator.hostname == hostname

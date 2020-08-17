@@ -50,22 +50,27 @@ class ABCFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
 class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
     def __init__(
         self,
+        *,
         path: Union[str, Path],
-        max_cachefile_age: Optional[int],
-        is_agent_cache_disabled: bool,
-        may_use_cache_file: bool,
-        use_outdated_cache_file: bool,
-        simulation_mode: bool,
+        max_age: Optional[int],
+        agent_disabled: bool,
+        disabled: bool,
+        use_outdated: bool,
+        simulation: bool,
         logger: logging.Logger,
     ) -> None:
         super().__init__()
         self.path = Path(path)
-        self._max_cachefile_age = max_cachefile_age
-        self._is_agent_cache_disabled = is_agent_cache_disabled
-        self._may_use_cache_file = may_use_cache_file
-        self._use_outdated_cache_file = use_outdated_cache_file
-        self._simulation_mode = simulation_mode
+        self._max_age = max_age
+        self._agent_disabled = agent_disabled
+        self._disabled = disabled
+        self._use_outdated = use_outdated
+        self._simulation = simulation
         self._logger = logger
+
+    @classmethod
+    def from_json(cls, serialized: Dict[str, Any], logger: logging.Logger) -> "ABCFileCache":
+        return cls(logger=logger, **serialized)
 
     @staticmethod
     @abc.abstractmethod
@@ -78,24 +83,24 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def read(self) -> Optional[BoundedAbstractRawData]:
-        assert self._max_cachefile_age is not None
+        assert self._max_age is not None
         if not self.path.exists():
             self._logger.debug("Not using cache (Does not exist)")
             return None
 
-        if self._is_agent_cache_disabled:
+        if self._agent_disabled:
             self._logger.debug("Not using cache (Cache usage disabled)")
             return None
 
-        if not self._may_use_cache_file and not self._simulation_mode:
+        if not self._disabled and not self._simulation:
             self._logger.debug("Not using cache (Don't try it)")
             return None
 
-        may_use_outdated = self._simulation_mode or self._use_outdated_cache_file
+        may_use_outdated = self._simulation or self._use_outdated
         cachefile_age = cmk.utils.cachefile_age(self.path)
-        if not may_use_outdated and cachefile_age > self._max_cachefile_age:
+        if not may_use_outdated and cachefile_age > self._max_age:
             self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)",
-                               cachefile_age, self._max_cachefile_age)
+                               cachefile_age, self._max_age)
             return None
 
         # TODO: Use some generic store file read function to generalize error handling,
@@ -109,7 +114,7 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
         return self._from_cache_file(result)
 
     def write(self, raw_data: BoundedAbstractRawData) -> None:
-        if self._is_agent_cache_disabled:
+        if self._agent_disabled:
             self._logger.debug("Not writing data to cache file (Cache usage disabled)")
             return
 

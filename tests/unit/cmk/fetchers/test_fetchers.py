@@ -10,7 +10,7 @@ from collections import namedtuple
 
 import pytest  # type: ignore[import]
 
-from cmk.snmplib.type_defs import SNMPTree
+from cmk.snmplib.type_defs import SNMPHostConfig, SNMPTree
 
 # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.fetchers.ipmi import *
